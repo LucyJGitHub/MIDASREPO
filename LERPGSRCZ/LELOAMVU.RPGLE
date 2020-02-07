@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD029046           Date 27Nov19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD024811           Date 24Jan20               *
+      *  Prev Amend No. MD029046           Date 27Nov19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD051890           Date 17Sep18               *
       *                 MD039547           Date 20Sep16               *
       *                 CLE071             Date 18Jul18               *
@@ -98,6 +99,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD024811 - Spread rate change is blanking out Funding rate/  *
+      *             spread                                            *
       *  MD029046 - Default Principal Increase settlement from        *
       *             SSI (standard settlement instructions) before     *
       *             trying to default from loan.                      *
@@ -734,6 +737,12 @@
                                                                                               CSF011
      C                   EXSR      SrCustActN                                                 CSF011
                                                                                               CSF011
+      ** Populate Funding spread rate                                                       MD024811
+                                                                                            MD024811
+     C                   IF        DDACTN = 'I' and LO_FSRP <> 0 and                        MD024811
+     C                             DDFRSP = *Blanks                                         MD024811
+     C                   EVAL      DDFRSP = %CHAR(LO_FSRP)                                  MD024811
+     C                   ENDIF                                                              MD024811
       *  Write to database
 
      C     UpdateYN      IFEQ      'Y'

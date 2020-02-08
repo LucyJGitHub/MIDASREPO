@@ -17,11 +17,15 @@
       *                                                               *
       *  (c) Misys Banking Systems 2013                               *
       *                                                               *
-      *  Last Amend No. AR1036834 *CREATE  Date 25Jun13               *
-      *  Prev Amend No. Xxxxxxxxx          Date ddmmmyy               *
+      *  Last Amend No. MD054782           Date 04Dec19               *
+      *  Prev Amend No. AR1036834 *CREATE  Date 25Jun13               *
+      *                 Xxxxxxxxx          Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054782 - Manual transaction reached 999. Increase the size *
+      *             of SQNO to accomodate 9999 transactions.          *
+      *             Recompile.                                        *
       *  AR1036834 - Missing PDCL repayments in facility history.     *
       *              Search and add all missing PDCL repayments.      *
       *              (Child: AR1036835)                               *

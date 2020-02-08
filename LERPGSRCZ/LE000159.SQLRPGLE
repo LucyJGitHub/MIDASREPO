@@ -14,11 +14,16 @@
       *                                                               *
       *  (C) Finastra International Limited 2018                      *
       *                                                               *
-      *  Last Amend No. CLE159   *Create   Date  18Jul18              *
-      *  Prev Amend No. xxxxxx             Date  ddmmmyy              *
+      *  Last Amend No. AR674226           Date  04Dec19              *
+      *  Prev Amend No. CLE159   *Create   Date  18Jul18              *
+      *                 xxxxxx             Date  ddmmmyy              *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR674226 - Manual transaction reached 999. Increase the size *
+      *             of utilisation sequence no. and transaction       *
+      *             sequence. Recompile. (Child: AR674227)            *
+      *           - Applied for MD054782.                             *
       *  CLE159 - LE Fee Amortization Enhancement                     *
       *                                                               *
       *****************************************************************

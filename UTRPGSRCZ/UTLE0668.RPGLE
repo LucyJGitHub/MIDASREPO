@@ -17,12 +17,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1036834 *CREATE  Date 03Oct16               *
+      *  Last Amend No. MD054782           Date 04Dec19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1036834 *CREATE  Date 03Oct16               *
       *                 XXXXXXXXX          Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054782 - Manual transaction reached 999. Increase the size *
+      *             of utilisation sequence no. Recompile.            *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1036834 - Missing PDCL repayments in facility history.     *
       *              Search and add all missing PDCL repayments.      *

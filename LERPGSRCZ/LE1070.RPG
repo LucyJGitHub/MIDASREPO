@@ -16,8 +16,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD041443           Date 19Sep16               *
+      *  Last Amend No. MD054782           Date 04Dec19               *
+      *  Prev Amend No. AR674226           Date 04Dec19               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD041443           Date 19Sep16               *
       *                 240697             Date 06Mar15               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -59,6 +61,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054782 - Modified fix AR674226 to conform with CLE148.     *
+      *  AR674226 - Manual transaction reached 999. Increase the size *
+      *             of utilisation sequence no. and transaction       *
+      *             sequence. (Child: AR674227)                       *
+      *           - Applied for MD054782.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  MD041443 - CBC022001 failed due to invalid character in file *
       *             text description (Recompile)                      *
@@ -169,6 +176,8 @@
      E                    COD       150  3   CYD    15   CCY DETAILS
      E                    CPY@    1   1 80               COPYRIGHT
      E                    POWR    1   7  7 3             POWER ARRAY
+     ILEFCAMPF                                                                              AR674226
+     I              SQNO                            FCSQNO                                  AR674226
       *
      IFSDS1       DS
       ** File status(LEFCAML8) data structure - record format
@@ -816,13 +825,17 @@
       *
      C           FREC1     IFEQ 'LEMNFUPF'
       ** If File Record is Manual Utilisation
-     C           FREC1     OREQ 'LEFCAMPF'
-      ** Or Facility Amendment
+     C********** FREC1     OREQ 'LEFCAMPF'                                                  AR674226
+      ***Or*Facility*Amendment*****************************************                     AR674226
      C**********           Z-ADD0         FCLOAN                                              CLE148
      C                     MOVEL*BLANKS   FCLOAN                                              CLE148
      C                     Z-ADDSQNO      FCUSEQ
       ** Set Utilisation Sequence Number to FCUSEQ
      C                     ELSE
+     C           FREC1     IFEQ 'LEFCAMPF'                                                  AR674226
+     C                     MOVEL*BLANKS   FCLOAN                                            MD054782
+     C                     Z-ADDFCSQNO    FCUSEQ                                            AR674226
+     C                     ELSE                                                             AR674226
      C           FREC1     IFEQ 'FACHISAF'
       ** If File Record is Facility History
      C**********           Z-ADDFALOAN    FCLOAN                                              CLE148
@@ -834,6 +847,7 @@
      C                     MOVELLNRF      FCLOAN                                              CLE148
       ** Set Loan Number to LNRF
      C                     ENDIF
+     C                     ENDIF                                                            AR674226
      C                     ENDIF
       *
       *

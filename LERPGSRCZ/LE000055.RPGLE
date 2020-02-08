@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. AR674226           Date 04Dec19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 AR787620           Date 10Jun11               *
       *                 CLE064             Date 06Dec10               *
@@ -35,6 +36,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR674226 - Manual transaction reached 999. Increase the size *
+      *             of utilisation sequence no. and transaction       *
+      *             sequence. (Child: AR674227)                       *
+      *           - Applied for MD054782.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference                                *
@@ -228,7 +233,8 @@
      D  WDate          S              5P 0
      D  WDateL         S              5P 0
      D  WSequence      S              3S 0
-     D  WSequenceL     S              3S 0
+     D**WSequenceL     S              3S 0                                                  AR674226
+     D  WSequenceL     S              4S 0                                                  AR674226
      D**WLoan***       S              6S 0                                                    CLE148
      D**WLoanL**       S              6S 0                                                    CLE148
      D  WLoan          S              6A                                                      CLE148

@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054117           Date 12Sep19               *
-      *  Prev Amend No. MD053400           Date 03Jul19               *
+      *  Last Amend No. MD054906           Date 15Jan20               *
+      *  Prev Amend No. MD054117           Date 12Sep19               *
+      *                 MD053400           Date 03Jul19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD044506           Date 28Mar17               *
       *                 CSW216             Date 14Mar16               *
@@ -62,6 +63,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054906 - CBS-2882 fix extenstion for Principal Change      *
+      *             Schedule                                          *
+      *           - Receive ACTRJ from IRCIRSVU to properly initialize*
+      *             field for buffer                                  *
       *  MD054117 - Principal change Increase/Decrease capability     *
       *  MD053400 - Details are not correctly reverted back when the  *
       *             amended transaction is rejected in WIP. Skip      *
@@ -1580,7 +1585,7 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetc
- 
+     C                   PARM                    ACTRJ                                      MD054906
       * Set up the names of the message files from which the
       * message handler will get the messages
      C                   EVAL      MsgFArray(1) = 'DRSMM'

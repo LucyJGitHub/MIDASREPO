@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054117           Date 12Sep19               *
-      *  Prev Amend No. MD054095           Date 17Oct19               *
+      *  Last Amend No. MD054906           Date 18Dec19               *
+      *  Prev Amend No. MD054117           Date 12Sep19               *
+      *                 MD054095           Date 17Oct19               *
       *                 MD053400           Date 03Jul19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD052876           Date 27Feb19               *
@@ -104,6 +105,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054906 - CBS-2882 fix extenstion for Principal Change      *
+      *             Schedule                                          *
+      *           - Passed ACTRJ to IRCIRSR to ensure buffer is       *
+      *             built properly                                    *
       *  MD054117 - Principal change Increase/Decrease capability     *
       *  MD054095 - FRA/IRS: Impossible to input a CIRS deal with zero*
       *             rate                                              *
@@ -2055,6 +2060,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   PARM                    MsgDtaArr                                   BUG6377
      C                   PARM                    MsgFArray                                   BUG6377
      C                   PARM                    APIRetC                                     BUG6377
+     C                   PARM                    ACTRJ                                      MD054906
      C                   MOVEL     SACCD         Buffer                                      BUG6377
       *                                                                                      BUG6377
      C                   ELSE                                                                BUG6377
@@ -5319,6 +5325,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
                                                                                              BUG5449
      C     INDATEMDN     LOOKUP    OPCMDAT                                24                 BUG5449
      C                   IF        *IN24 = *ON                                               BUG5449
+     C                             AND ACTRJ <> 'Y'                                         MD054906
      C                   ADD       1             Idx                                         BUG5449
      C                   MOVEL     'DLM2002'     MsgIDArr(Idx)                               BUG5449
                                                                                              BUG5449
@@ -5375,6 +5382,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       *                                                                                       264029
      C                   If        WCTLDYN <> 0                                               264029
      C                             And SONPCD = *Blanks                                       264029
+     C                             AND ACTRJ <> 'Y'                                         MD054906
      C                   Add       1             Idx                                          264029
      C                   Eval      FldNameArr(Idx) = 'SONPCD    '                             264029
      C                   Eval      MsgIdArr(Idx) = 'RS00076'                                  264029
@@ -5390,6 +5398,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
                                                                                 BUG5964
      C                   MOVEL     ZDATE         CZDATE                         BUG5964
      C                   IF        CZDATE <> SONPCD                             BUG5964
+     C                             AND ACTRJ <> 'Y'                                         MD054906
      C                   MOVEL     ZDATE         SONPCD                         BUG5964
      C                   EVAL      RXUNPCD=ZDAYNO                               BUG5964
      C                   EVAL      #1UNPC = RXUNPCD                             MD051725
@@ -5425,14 +5434,17 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   ENDIF                                                               BUG5610
                                                                                              BUG5610
      C                   ELSE                                                                BUG5449
+     C                   IF        ACTRJ <> 'Y'                                             MD054906
      C                   ADD       1             Idx                                         BUG5449
      C                   MOVEL     'DLM0148'     MsgIDArr(Idx)                               BUG5449
      C                   EVAL      FldNameArr(Idx) = 'SFORMAMOPC'                            BUG5449
+     C                   ENDIF                                                              MD054906
      C                   ENDIF                                                               BUG5449
       * Increase/decrease flag must be specified                                             BUG5449
      C**********         IF        BGN2ST = 'Y'                                     BUG5449 MD054117
      C                   IF        PCIDCF = 'Y'                                              BUG5449
      C                   IF        SFORMIDOPC = *BLANKS                                      BUG5449
+     C                             AND ACTRJ <> 'Y'                                         MD054906
      C                   ADD       1             Idx                                         BUG5449
      C                   MOVEL     'DLM1022'     MsgIDArr(Idx)                               BUG5449
      C                   EVAL      FldNameArr(Idx) = 'SFORMIDOPC'                            BUG5449
@@ -5492,9 +5504,11 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   ADD       1             L                                           BUG5449
      C                   ENDDO                                                               BUG5449
      C                   ELSE                                                                BUG5449
+     C                   IF        ACTRJ <> 'Y'                                             MD054906
      C                   ADD       1             Idx                                         BUG5449
      C                   MOVEL     'DLM0155'     MsgIDArr(Idx)                               BUG5449
      C                   EVAL      FldNameArr(Idx) = 'SFREQFOPC'                             BUG5449
+     C                   ENDIF                                                              MD054906
      C                   ENDIF                                                               BUG5449
      C                   ENDIF                                                               BUG5449
      C                   ENDIF                                                               BUG5449
@@ -5559,6 +5573,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
                                                                                              BUG5449
      C     INDATEMDN     LOOKUP    TPCMDAT                                24                 BUG5449
      C                   IF        *IN24 = *ON                                               BUG5449
+     C                             AND ACTRJ <> 'Y'                                         MD054906
      C                   ADD       1             Idx                                         BUG5449
      C                   MOVEL     'DLM2002'     MsgIDArr(Idx)                               BUG5449
                                                                                              BUG5449
@@ -5615,6 +5630,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
       *                                                                                       264029
      C                   If        WCTLDYN <> 0                                               264029
      C                             And STNPCD = *Blanks                                       264029
+     C                             AND ACTRJ <> 'Y'                                         MD054906
      C                   Add       1             Idx                                          264029
      C                   Eval      FldNameArr(Idx) = 'STNPCD    '                             264029
      C                   Eval      MsgIdArr(Idx) = 'RS00077'                                  264029
@@ -5630,6 +5646,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
                                                                                 BUG5964
      C                   MOVEL     ZDATE         CZDATE                         BUG5964
      C                   IF        CZDATE <> STNPCD                             BUG5964
+     C                             AND ACTRJ <> 'Y'                                         MD054906
      C                   MOVEL     ZDATE         STNPCD                         BUG5964
      C                   EVAL      RXTNPCD=ZDAYNO                               BUG5964
      C                   EVAL      #1TNPC = RXTNPCD                             MD051725
@@ -5670,20 +5687,24 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   ENDIF                                                               BUG5610
                                                                                              BUG5610
      C                   ELSE                                                                BUG5449
+     C                   IF        ACTRJ <> 'Y'                                             MD054906
      C                   ADD       1             Idx                                         BUG5449
      C                   MOVEL     'DLM0148'     MsgIDArr(Idx)                               BUG5449
      C*******************EVAL      FldNameArr(Idx) = 'SFORMAMOPC'                     BUG5449BUG5610
      C                   EVAL      FldNameArr(Idx) = 'SFORMAMTPC'                            BUG5610
+     C                   ENDIF                                                              MD054906
      C                   ENDIF                                                               BUG5449
       * Increase/decrease flag must be specified                                             BUG5449
      C**********         IF        BGN2ST = 'Y'                                     BUG5449 MD054117
      C                   IF        PCIDCF = 'Y'                                             MD054117
      C*******************IF        SFORMIDOPC = *BLANKS                               BUG5449BUG5610
      C                   IF        SFORMIDTPC = *BLANKS                                      BUG5610
+     C                   IF        ACTRJ <> 'Y'                                             MD054906
      C                   ADD       1             Idx                                         BUG5449
      C                   MOVEL     'DLM1022'     MsgIDArr(Idx)                               BUG5449
      C*******************EVAL      FldNameArr(Idx) = 'SFORMIDOPC'                     BUG5449BUG5610
      C                   EVAL      FldNameArr(Idx) = 'SFORMIDTPC'                            BUG5610
+     C                   ENDIF                                                              MD054906
      C                   ENDIF                                                               BUG5449
      C                   ENDIF                                                               BUG5449
       *                                                                                      BUG5449
@@ -5737,10 +5758,12 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   ADD       1             L                                           BUG5449
      C                   ENDDO                                                               BUG5449
      C                   ELSE                                                                BUG5449
+     C                   IF        ACTRJ <> 'Y'                                             MD054906
      C                   ADD       1             Idx                                         BUG5449
      C                   MOVEL     'DLM0155'     MsgIDArr(Idx)                               BUG5449
      C*******************EVAL      FldNameArr(Idx) = 'SFREQFOPC'                      BUG5449BUG5610
      C                   EVAL      FldNameArr(Idx) = 'SFREQFTPC'                             BUG5610
+     C                   ENDIF                                                              MD054906
      C                   ENDIF                                                               BUG5449
      C                   ENDIF                                                               BUG5449
      C                   ENDIF                                                               BUG5449

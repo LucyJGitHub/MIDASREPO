@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE154             Date 07Aug12               *
+      *  Last Amend No. AR674226           Date 04Dec19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE154             Date 07Aug12               *
       *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BG26993            Date 26Jan10               *
@@ -22,6 +23,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054782 - Manual transaction reached 999. Increase the size *
+      *             of SQNO to accomodate 9999 transactions.          *
+      *             Recompile.                                        *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *

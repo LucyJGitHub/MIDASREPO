@@ -24,12 +24,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR806351 *CREATE   Date 03Oct16               *
+      *  Last Amend No. MD054782           Date 04Dec19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR806351 *CREATE   Date 03Oct16               *
       *                 XXXXXXXX           Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054782 - Manual transaction reached 999. Increase the size *
+      *             of SQNO to accomodate 9999 transactions.          *
+      *             Recompile.                                        *
       *  MD046248 - Finastra Rebranding                               *
       *  AR806351 - PDCLs with type Y/Z and FAMU = N have records in  *
       *             FACHISA. Delete invalid records in file and tag   *

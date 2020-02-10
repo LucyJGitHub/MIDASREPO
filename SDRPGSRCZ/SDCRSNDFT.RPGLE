@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. MD050480           Date 04May18               *
-      *  Prev Amend No. MD041294           Date 19Sep16               *
+      *  Last Amend No. MD052566           Date 24Jan19               *
+      *  Prev Amend No. MD050480           Date 04May18               *
+      *                 MD041294           Date 19Sep16               *
       *                 MD041311           Date 19Sep16               *
       *                 MD040876           Date 13Sep16               *
       *                 CGL177             Date 11Jan16               *
@@ -20,6 +21,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052566 - Indicia "CRS Agreement" was not retrieved from    *
+      *             the country of tax code table                     *
       *  MD050480 - Deleted country cannot be defined as mailing /    *
       *             phone country                                     *
       *  MD041294 - Customer extension details is missing in          *
@@ -342,7 +345,8 @@
      C                   CALL      'AOCTTXR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
-     C                   PARM      DS_A8LCCD     @PCTRT                                       CGL177
+     C**********         PARM      DS_A8LCCD     @PCTRT                              CGL177 MD052566
+     C                   PARM      ##CTRY        @PCTRT                                     MD052566
      C                   PARM      WCNCD         @PCTRR                                       CGL177
      C     SDCTTX        PARM      SDCTTX        DSFDY
 
@@ -351,7 +355,8 @@
      C                   CALL      'AOCTTXR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
-     C                   PARM      DS_A8LCCD     @PCTRT                                       CGL177
+     C**********         PARM      DS_A8LCCD     @PCTRT                              CGL177 MD052566
+     C                   PARM      ##CTRY        @PCTRT                                     MD052566
      C                   PARM                    @PCTRR
      C     SDCTTX        PARM      SDCTTX        DSFDY
      C                   ENDIF
@@ -407,7 +412,8 @@
      C                   CALL      'AOCTTXR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
-     C                   PARM      DS_A8LCCD     @PCTRT                                       CGL177
+     C**********         PARM      DS_A8LCCD     @PCTRT                              CGL177 MD052566
+     C                   PARM      ##CTRY        @PCTRT                                     MD052566
      C                   PARM      WCNCD         @PCTRR                                       CGL177
      C     SDCTTX        PARM      SDCTTX        DSFDY
 
@@ -416,7 +422,8 @@
      C                   CALL      'AOCTTXR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
-     C                   PARM      DS_A8LCCD     @PCTRT                                       CGL177
+     C**********         PARM      DS_A8LCCD     @PCTRT                              CGL177 MD052566
+     C                   PARM      ##CTRY        @PCTRT                                     MD052566
      C                   PARM                    @PCTRR
      C     SDCTTX        PARM      SDCTTX        DSFDY
      C                   ENDIF
@@ -751,7 +758,8 @@
      C                   CALL      'AOCTTXR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
-     C                   PARM      DS_A8LCCD     @PCTRT                                       CGL177
+     C**********         PARM      DS_A8LCCD     @PCTRT                              CGL177 MD052566
+     C                   PARM      ##CTRY        @PCTRT                                     MD052566
      C                   PARM      WCNCD         @PCTRR                                       CGL177
      C     SDCTTX        PARM      SDCTTX        DSFDY
 
@@ -760,7 +768,8 @@
      C                   CALL      'AOCTTXR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
-     C                   PARM      DS_A8LCCD     @PCTRT                                       CGL177
+     C**********         PARM      DS_A8LCCD     @PCTRT                              CGL177 MD052566
+     C                   PARM      ##CTRY        @PCTRT                                     MD052566
      C                   PARM                    @PCTRR                                       CGL177
      C     SDCTTX        PARM      SDCTTX        DSFDY
      C                   ENDIF
@@ -855,6 +864,22 @@
      C                   PARM      '*KEY   '     Poptn                                        CGL177
      C                   PARM      BBBRCD        PBRCH                                        CGL177
      C     SDBRCH        PARM      SDBRCH        DSSDY                                        CGL177
+                                                                                            MD052566
+      ** Access Customer detail of branch to retrieve country of loation                    MD052566
+      *                                                                                     MD052566
+     C                   MOVEL     *BLANKS       ##CTRY            3                        MD052566
+     C                   IF        PRTCD = *Blanks                                          MD052566
+     C                   CALL      'AOCUSTR0'                                               MD052566
+     C                   PARM      *BLANKS       PRTCD                                      MD052566
+     C                   PARM      '*KEY   '     POPTN                                      MD052566
+     C                   PARM      DS_A8BICN     Pkey2                                      MD052566
+     C                   PARM      *BLANKS       Pkyst                                      MD052566
+     C     SDCUST        PARM      SDCUST        DSSDY                                      MD052566
+                                                                                            MD052566
+     C                   IF        PRTCD = *BLANKS                                          MD052566
+     C                   EVAL      ##CTRY = BBCOLC                                          MD052566
+     C                   ENDIF                                                              MD052566
+     C                   ENDIF                                                              MD052566
 
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.

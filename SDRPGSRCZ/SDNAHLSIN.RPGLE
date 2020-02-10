@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD052465           Date 10Jan19               *
-      *  Prev Amend No. MD040876           Date 13Sep16               *
+      *  Last Amend No. MD052566           Date 24Jan19               *
+      *  Prev Amend No. MD052465           Date 10Jan19               *
+      *                 MD040876           Date 13Sep16               *
       *                 CGL177             Date 11Jan16               *
       *                 MD036509           Date 12Nov15               *
       *                 MD036460           Date 05Nov15               *
@@ -62,6 +63,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052566 - Indicia "CRS Agreement" was not retrieved from    *
+      *             the country of tax code table (Recompile)         *
       *  MD052465 - Not possible to capture mandatory US TIN for      *
       *             FATCA reporting                                   *
       *  MD040876 - CRS MQ (Recompile)                                *

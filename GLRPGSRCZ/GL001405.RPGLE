@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD054662           Date 30Oct19               *
-      *  Prev Amend No. MD051746           Date 03May19               *
+      *  Last Amend No. MD054922           Date 04Feb20               *
+      *  Prev Amend No. MD054662           Date 30Oct19               *
+      *                 MD051746           Date 03May19               *
       *                 AR589183           Date 03May19               *
       *                 AR740400           Date 03May19               *
       *                 MD051723           Date 17Sep18               *
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054922 - MT942 messages are not generated                  *
       *  MD054662 - Emergency fix for case 02186832                   *
       *             Messages requested for current date are not       *
       *             processed (job GLC001415 is not submitted)        *
@@ -202,6 +204,7 @@
      D WkNum6          S              6S 0                                      Working Time
      D WkNum8          S              8S 0                                      Working Time
      D Idx             S              5U 0 INZ(0)                               Index
+     D WkEOF           S              1A                                                    MD054922
 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -233,6 +236,7 @@
      C                   EVAL      PRetCode  = *BLANKS
      C                   EVAL      PWaitTime = 99999
      C                   EVAL      PSubmit   = 'N'
+     C                   EVAL      WkEOF = 'N'                                              MD054922
 
       ** Read PF/GLPRMOPD to get Period of Expiring Request value and
       **                         Minimum Running Periodicity.
@@ -311,9 +315,19 @@
       *
       ** Requests expired.
       *
-     C     MRRDTE        IFLT      WkStartDate                                              MD051746
+     C*****MRRDTE        IFLT      WkStartDate                                     MD051746 MD054922
+     C                   DOW       MRRDTE < WkStartDate                                     MD054922
      C                   EVAL      MRSTAT = 'EXPIRED'                                       MD051746
      C                   UPDATE    GLMR94D0                                                 MD051746
+     C                   READ      GLMR94L5                                                 MD054922
+     C                   IF        %EOF(GLMR94L5)                                           MD054922
+     C                   EVAL      WkEOF = 'Y'                                              MD054922
+     C                   LEAVE                                                              MD054922
+     C                   ENDIF                                                              MD054922
+     C                   ENDDO                                                              MD054922
+                                                                                            MD054922
+     C                   IF        WkEOF = 'Y'                                              MD054922
+     C                   LEAVE                                                              MD054922
      C                   ENDIF                                                              MD051746
       *****
 

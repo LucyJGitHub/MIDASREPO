@@ -10,8 +10,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD041832           Date 08Feb17               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD050452           Date 11Feb20               *
+      *  Prev Amend No. MD054019           Date 11Feb20               *
+      *                 MD041832           Date 08Feb17               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL154             Date 13Oct14               *
       *                 MD042714           Date 21Nov16               *
       *                 AR858062           Date 07Dec11               *
@@ -103,6 +105,12 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD050452 - SO failed due to insufficient balance. Compare    *
+      *             Available Balance to zero to check has balance.   *
+      *           - Applied for MD055126                              *
+      *  MD054019 - RE0733P1 is reporting a Standing Order as failed  *
+      *             even if it is not yet payment date.               *
+      *           - Applied for MD055126                              *
       *  MD041832 - Post to suspense account when the dr account is   *
       *             flagged as Block all debits.                      *
       *  MD046248 - Finastra Rebranding                               *
@@ -1089,6 +1097,44 @@
      C                     MOVE *ON       *IN98                                             BUG12587
      C                     GOTO ERROR                                     S01117
      C                     END                                            S01117
+     C*                                                                                     MD054019
+     C** CALL A/O AOBANKR0 - Access Bank Details                                            MD054019
+     C*                                                                                     MD054019
+     C                     CALL 'AOBANKR0'                                                  MD054019
+     C                     PARM '*MSG   ' @RTCD                                             MD054019
+     C                     PARM '*FIRST ' @OPTN                                             MD054019
+     C           SDBANK    PARM SDBANK    DSFDY                                             MD054019
+     C*                                                                                     MD054019
+     C           @RTCD     IFNE *BLANK                                                      MD054019
+     C                     MOVEL'SDBANKPD'DBFILE                                            MD054019
+     C                     MOVEL'040'     DBASE                                             MD054019
+     C                     MOVEL@OPTN     DBKEY                                             MD054019
+     C                     MOVE *ON       *INU7                                             MD054019
+     C                     MOVE *ON       *IN98                                             MD054019
+     C                     GOTO ERROR                                                       MD054019
+     C                     END                                                              MD054019
+     C*                                                                                     MD054019
+     C*                                                                                     MD054019
+     C** Get Event Control Date                                                             MD054019
+     C** For Accrual for Non-working days Processing Types 0 and 1,                         MD054019
+     C** Event Control Date is BJDNWD -1.                                                   MD054019
+     C*                                                                                     MD054019
+     C                     Z-ADD*ZEROS    EVTDAT  50                                        MD054019
+     C           BJDNWD    SUB  1         EVTDAT                                            MD054019
+     C*                                                                                     MD054019
+     C** If Accrual for Non-working days indicator is equal 2, then                         MD054019
+     C** if the Accrual/Profit Date is less than or equal to Date of                        MD054019
+     C** Next Working Day minus 1, the Event Control Date should be                         MD054019
+     C** the Accrual/Profit Date.  Otherwise, it should be Rundate.                         MD054019
+     C*                                                                                     MD054019
+     C           BKANWD    IFEQ '2'                                                         MD054019
+     C           BKAPDT    IFLE EVTDAT                                                      MD054019
+     C                     Z-ADDBKAPDT    EVTDAT                                            MD054019
+     C                     ELSE                                                             MD054019
+     C                     Z-ADDBJRDNB    EVTDAT                                            MD054019
+     C                     END                                                              MD054019
+     C                     END                                                              MD054019
+     C*                                                                                     MD054019
       *                                                                   S01522
       * Call module prog. for module details.                             S01522
      C                     CALL 'AOMMODR0'                                S01522
@@ -1476,7 +1522,8 @@
      C           CRE009    ANDEQ'Y'                                       CRE009
      C           NXTP      COMP @REPMD                 4444               CRE009
      C                     ELSE                                           CRE009
-0332 C           NXTP      COMP RUND                   4444               RE0730
+0332 C********** NXTP      COMP RUND                   4444                         RE0730  MD054019
+     C           NXTP      COMP EVTDAT                 4444                                 MD054019
      C                     ENDIF                                          CRE009
 0334 C  N44                GOTO END                                       RE0730
       *                                                                                     MD042714
@@ -1662,8 +1709,15 @@
      C           ATYP      ANDEQ'R'                                                        AR1070626
      C           F1IABC    ANDEQ'Y'                                                        AR1049898
      C**N42***** AMOUNT    COMP F1AVA1               42                              CAP207 AR782815
+      *                                                                                     MD054019
+      ** If the Next Payment Date is greater than Event Control Date,                       MD054019
+      ** do not validate for available balance.                                             MD054019
+     C           EVTDAT    IFLE NXTP                                                        MD054019
      C                     Z-SUBF1AVA1    WAVA1  150                                        AR782815
-     C  N42      AMOUNT    COMP WAVA1                42                                     AR782815
+     C**N42***** AMOUNT    COMP WAVA1                42                            AR782815 MD050452
+     C           0         ADD  WAVA1     WAVA1                                             MD050452
+     C                     ENDIF                                                            MD054019
+      *                                                                                     MD054019
       ** Insufficient                                                                         CAP207
      C           *IN42     IFEQ *ON                                                           CAP207
      C           UGREJC    CAT  '08':0    UGREJC                                              CAP207
@@ -1697,6 +1751,10 @@
      C           UGREJC    CAT  '07':0    UGREJC                                              CRE013
      C                     GOTO INVDR                                                         CRE013
      C                     ENDIF                                                              CRE013
+      *                                                                                     MD054019
+      ** If the Next Payment Date is greater than Event Control Date,                       MD054019
+      ** do not validate for available balance.                                             MD054019
+     C           EVTDAT    IFLE NXTP                                                        MD054019
      C  N42                Z-SUBCLBL      UGCLBL 150                                          CRE013
      C**N42***** UGCLBL    ADD  ODLN      ABAL   150                                 CRE013 AR858062
      C                     Z-ADD0         ABAL   150                                        AR858062
@@ -1706,6 +1764,7 @@
      C  N42N37             ADD  UGCLBL    ABAL                                              AR858062
      C  N42      ABAL      SUB  HELD      ABAL                                                CRE013
      C  N42      ABAL      COMP AMOUNT                 42   INSUFFICIENT                      CRE013
+     C                     ENDIF                                                            MD054019
      C           *IN42     IFEQ *ON                                                           CRE013
      C           UGREJC    CAT  '08':0    UGREJC                                              CRE013
      C                     ENDIF                                                              CRE013

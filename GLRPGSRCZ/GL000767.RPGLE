@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD055071           Date 29Jan20               *
-      *  Prev Amend No. MD054986           Date 27Jan20               *
+      *  Last Amend No. MD054940           Date 18Feb20               *
+      *  Prev Amend No. MD055071           Date 29Jan20               *
+      *                 MD054986           Date 27Jan20               *
       *                 MD054905           Date 04Dec19               *
       *                 CGL185             Date 13Mar17               *
       *                 MD041589           Date 23Sep16               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054940 - CRS Issue: Controlling Person Type                *
       *  MD055071- Correct A/C Holder Type for N/PA. With ContPerson  *
       *            = CRS101, Wihtout ContPerson = CRS103              *
       *  MD054986 - CRS Issue: Account Holder/Organisation            *
@@ -532,6 +534,7 @@
      D KDNAH           S             10A
      D KDCTY           S              2A
      D WNUM3           S              3S 0
+     D WTINElem        S                   LIKE(MGELMT)                                     MD054940
 
       *****************************************************************
       /EJECT
@@ -1793,6 +1796,7 @@
      C**********         EXSR      SRWrite                                                  MD054986
 
      C                   EVAL      MGELMT = 'IN'
+     C                   EVAL      WTINElem  = 'IN'                                         MD054940
      C                   EVAL      DCust =  CRCUST                                          MD054986
      C                   EXSR      SRCusCtryLst                                             MD054986
      C**********         EVAL      MGDATA = E5TINO                                          MD054986
@@ -1804,6 +1808,7 @@
      C**********         EVAL      MGDAT2 = *BLANKS                                         MD054986
      C                   ELSE
      C                   EVAL      MGELMT = 'TIN'                                           MD054986
+     C                   EVAL      WTINElem  = 'TIN'                                        MD054940
      C                   EVAL      DCust =  CRCUST
      C                   EXSR      SRCusCtryLst
      C                   ENDIF
@@ -1880,6 +1885,7 @@
      C**********         EVAL      MGDATA = NHCOLC                                          MD054986
      C**********         EXSR      SRWrite                                                  MD054986
      C                   EVAL      MGELMT = 'IN'
+     C                   EVAL      WTINElem  = 'IN'                                         MD054940
      C                   EVAL      DNaho =  NRNAHO                                          MD054986
      C                   EXSR      SRNahCtryLst                                             MD054986
      C**********         EVAL      KGroupNm = MGTPMT                                        MD054986
@@ -1891,6 +1897,7 @@
      C**********         EVAL      MGDAT2 = *BLANKS                                         MD054986
      C                   ELSE
      C                   EVAL      MGELMT = 'TIN'                                           MD054986
+     C                   EVAL      WTINElem  = 'TIN'                                        MD054940
      C                   EVAL      DNaho =  NRNAHO
      C                   EXSR      SRNahCtryLst
      C                   ENDIF
@@ -1991,6 +1998,7 @@
      C**********         EXSR      SRWrite                                                  MD054986
 
      C                   EVAL      MGELMT = 'IN'
+     C                   EVAL      WTINElem  = 'IN'                                         MD054940
      C                   EVAL      DCust =  EXCUSD                                          MD054986
      C                   EXSR      SRCusCtryLst                                             MD054986
      C**********         EVAL      KGroupNm = MGTPMT                                        MD054986
@@ -2002,6 +2010,7 @@
      C**********         EVAL      MGDAT2 = *BLANKS                                         MD054986
      C                   ELSE
      C                   EVAL      MGELMT = 'TIN'                                           MD054986
+     C                   EVAL      WTINElem  = 'TIN'                                        MD054940
      C                   EVAL      DCust =  EXCUSD
      C                   EXSR      SRCusCtryLst
      C                   ENDIF
@@ -2329,6 +2338,7 @@
      C                   EVAL      ACtryIsBy(WTINCnt) = CDCTRY
      C                   IF        WTINCnt > 7
      C**********         EVAL      MGELMT = 'TIN'                                           MD054986
+     C                   EVAL      MGELMT = WTINElem                                        MD054940
      C                   EVAL      KGroupNm = MGTPMT
      C                   EVAL      KElemNm  = MGELMT
      C                   EXSR      SRGetGrpLevl
@@ -2362,7 +2372,8 @@
 
       ** If there are remaining TINs not reported
      C                   IF        WTINCnt > 0
-     C                   EVAL      MGELMT = 'TIN'
+     C**********         EVAL      MGELMT = 'TIN'                                           MD054940
+     C                   EVAL      MGELMT = WTINElem                                        MD054940
      C                   EVAL      KGroupNm = MGTPMT
      C                   EVAL      KElemNm  = MGELMT
      C                   EXSR      SRGetGrpLevl
@@ -2436,6 +2447,7 @@
      C                   EVAL      ACtryIsBy(WTINCnt) = CNCTRY
      C                   IF        WTINCnt > 7
      C**********         EVAL      MGELMT = 'TIN'                                           MD054986
+     C                   EVAL      MGELMT = WTINElem                                        MD054940
      C                   EVAL      KGroupNm = MGTPMT
      C                   EVAL      KElemNm  = MGELMT
      C                   EXSR      SRGetGrpLevl
@@ -2468,7 +2480,8 @@
 
       ** If there are remaining TINs not reported
      C                   IF        WTINCnt > 0
-     C                   EVAL      MGELMT = 'TIN'
+     C**********         EVAL      MGELMT = 'TIN'                                           MD054940
+     C                   EVAL      MGELMT = WTINElem                                        MD054940
      C                   EVAL      KGroupNm = MGTPMT
      C                   EVAL      KElemNm  = MGELMT
      C                   EXSR      SRGetGrpLevl
@@ -2672,18 +2685,33 @@
      C                   EVAL      KElemNm  = 'ControllingPerson'
      C                   EXSR      SRGetGrpLevl
 
+     C                   EVAL      MGELMT = 'CtrlgPersonType'                               MD054940
+     C                   EVAL      MGDATA = 'CRS812'                                        MD054940
+     C                   EXSR      SRWrite                                                  MD054940
+                                                                                            MD054940
+     C                   EVAL      MGELMT = 'Individual'                                    MD054940
+     C                   EVAL      MGDATA = *BLANKS                                         MD054940
+     C                   EVAL      MGTPMT = 'ControllingPerson'                             MD054940
+     C                   EVAL      KGroupNm = 'ControllingPerson'                           MD054940
+     C                   EVAL      KElemNm  = MGELMT                                        MD054940
+     C                   EXSR      SRGetGrpLevl                                             MD054940
+     C                   EXSR      SRWrite                                                  MD054940
+     C                   EVAL      MGTPMT = 'Individual'                                    MD054940
+                                                                                            MD054940
      C                   EVAL      FCust  = JCCUST
      C                   EXSR      SRCRSHDet
      C                   EXSR      SRWrCusDetail
 
-     C                   EVAL      KGroupNm = 'ControllingPerson'
+     C**********         EVAL      KGroupNm = 'ControllingPerson'                           MD054940
+     C                   EVAL      KGroupNm = 'Individual'                                  MD054940
      C                   EVAL      KElemNm  = 'BirthInfo'
      C                   EXSR      SRGetGrpLevl
      C                   EVAL      MGTPMT = *BLANKS
      C                   EVAL      MGELMT = KElemNm
      C                   EVAL      MGDATA = *BLANKS
      C                   EXSR      SRWrite
-     C                   EVAL      MGTPMT = 'ControllingPerson'
+     C**********         EVAL      MGTPMT = 'ControllingPerson'                             MD054940
+     C                   EVAL      MGTPMT = 'Individual'                                    MD054940
 
      C                   EVAL      MGELMT = 'BirthDate'
      C                   EVAL      MGDATA = E5DBTH
@@ -2725,19 +2753,34 @@
      C                   EVAL      KElemNm  = 'ControllingPerson'
      C                   EXSR      SRGetGrpLevl
 
+     C                   EVAL      MGELMT = 'CtrlgPersonType'                               MD054940
+     C                   EVAL      MGDATA = 'CRS812'                                        MD054940
+     C                   EXSR      SRWrite                                                  MD054940
+                                                                                            MD054940
+     C                   EVAL      MGELMT = 'Individual'                                    MD054940
+     C                   EVAL      MGDATA = *BLANKS                                         MD054940
+     C                   EVAL      MGTPMT = 'ControllingPerson'                             MD054940
+     C                   EVAL      KGroupNm = 'ControllingPerson'                           MD054940
+     C                   EVAL      KElemNm  = MGELMT                                        MD054940
+     C                   EXSR      SRGetGrpLevl                                             MD054940
+     C                   EXSR      SRWrite                                                  MD054940
+     C                   EVAL      MGTPMT = 'Individual'                                    MD054940
+                                                                                            MD054940
      C                   EVAL      KNAHO  = JCNAHO
      C                   EXSR      SRCRNHDet
      C                   EXSR      SRWrNahDetail
 
 
-     C                   EVAL      KGroupNm = 'ControllingPerson'
+     C**********         EVAL      KGroupNm = 'ControllingPerson'                           MD054940
+     C                   EVAL      KGroupNm = 'Individual'                                  MD054940
      C                   EVAL      KElemNm  = 'BirthInfo'
      C                   EXSR      SRGetGrpLevl
      C                   EVAL      MGTPMT = *BLANKS
      C                   EVAL      MGELMT = KElemNm
      C                   EVAL      MGDATA = *BLANKS
      C                   EXSR      SRWrite
-     C                   EVAL      MGTPMT = 'ControllingPerson'
+     C**********         EVAL      MGTPMT = 'ControllingPerson'                             MD054940
+     C                   EVAL      MGTPMT = 'Individual'                                    MD054940
 
      C                   EVAL      MGELMT = 'BirthDate'
      C                   EVAL      MGDATA = *BLANKS
@@ -2791,13 +2834,14 @@
 
      C                   EVAL      MGELMT = 'ControllingPerson'
      C                   EVAL      MGDATA = *BLANKS
-     C                   EVAL      MGTPMT = *BLANKS
+     C**********         EVAL      MGTPMT = *BLANKS                                         MD054940
+     C                   EVAL      MGTPMT = 'AccountReport'                                 MD054940
      C                   EVAL      KGroupNm = 'AccountReport'
      C                   EVAL      KElemNm  = MGELMT
      C                   EXSR      SRGetGrpLevl
      C                   EXSR      SRWrite
 
-     C                   EVAL      MGTPMT = 'ControllingPerson'
+     C                   EVAL      MGTPMT = 'ControllingPerson'                             MD054940
      C                   EVAL      MGLEVL = 0
 
      C                   EVAL      MGELMT = 'AccountNumber'
@@ -2813,6 +2857,9 @@
      C     SDCUST        PARM      SDCUST        DSSDY
       *
      C                   IF        PRtCd = *BLANKS
+     C                   EVAL      MGDATA = PCuah                                           MD054940
+     C                   EXSR      SRWrite                                                  MD054940
+                                                                                            MD054940
      C                   EVAL      PAcus  = PCuah
      C                   EXSR      SRAccAcus
 
@@ -2820,19 +2867,34 @@
      C                   EVAL      KElemNm  = 'ControllingPerson'
      C                   EXSR      SRGetGrpLevl
 
+     C                   EVAL      MGELMT = 'CtrlgPersonType'                               MD054940
+     C                   EVAL      MGDATA = 'CRS812'                                        MD054940
+     C                   EXSR      SRWrite                                                  MD054940
+                                                                                            MD054940
+     C                   EVAL      MGELMT = 'Individual'                                    MD054940
+     C                   EVAL      MGDATA = *BLANKS                                         MD054940
+     C                   EVAL      MGTPMT = 'ControllingPerson'                             MD054940
+     C                   EVAL      KGroupNm = 'ControllingPerson'                           MD054940
+     C                   EVAL      KElemNm  = MGELMT                                        MD054940
+     C                   EXSR      SRGetGrpLevl                                             MD054940
+     C                   EXSR      SRWrite                                                  MD054940
+     C                   EVAL      MGTPMT = 'Individual'                                    MD054940
+                                                                                            MD054940
      C                   EVAL      FCust  = PCuah
      C                   EXSR      SRCRSHDet
      C                   EXSR      SRWrCusDetail
 
      C                   IF        CRTYPE = 'P'                                             MD045184
-     C                   EVAL      KGroupNm = 'ControllingPerson'
+     C**********         EVAL      KGroupNm = 'ControllingPerson'                           MD054940
+     C                   EVAL      KGroupNm = 'Individual'                                  MD054940
      C                   EVAL      KElemNm  = 'BirthInfo'
      C                   EXSR      SRGetGrpLevl
      C                   EVAL      MGTPMT = *BLANKS
      C                   EVAL      MGELMT = KElemNm
      C                   EVAL      MGDATA = *BLANKS
      C                   EXSR      SRWrite
-     C                   EVAL      MGTPMT = 'ControllingPerson'
+     C**********         EVAL      MGTPMT = 'ControllingPerson'                             MD054940
+     C                   EVAL      MGTPMT = 'Individual'                                    MD054940
 
      C                   EVAL      MGELMT = 'BirthDate'
      C                   EVAL      MGDATA = E5DBTH
@@ -2857,19 +2919,34 @@
      C                   EVAL      KElemNm  = 'ControllingPerson'
      C                   EXSR      SRGetGrpLevl
 
+     C                   EVAL      MGELMT = 'CtrlgPersonType'                               MD054940
+     C                   EVAL      MGDATA = 'CRS812'                                        MD054940
+     C                   EXSR      SRWrite                                                  MD054940
+                                                                                            MD054940
+     C                   EVAL      MGELMT = 'Individual'                                    MD054940
+     C                   EVAL      MGDATA = *BLANKS                                         MD054940
+     C                   EVAL      MGTPMT = 'ControllingPerson'                             MD054940
+     C                   EVAL      KGroupNm = 'ControllingPerson'                           MD054940
+     C                   EVAL      KElemNm  = MGELMT                                        MD054940
+     C                   EXSR      SRGetGrpLevl                                             MD054940
+     C                   EXSR      SRWrite                                                  MD054940
+     C                   EVAL      MGTPMT = 'Individual'                                    MD054940
+                                                                                            MD054940
      C                   EVAL      KNAHO  = PCuah
      C                   EXSR      SRCRNHDet
      C                   EXSR      SRWrNahDetail
 
      C                   IF        NRTYPE = 'P'                                             MD045184
-     C                   EVAL      KGroupNm = 'ControllingPerson'
+     C**********         EVAL      KGroupNm = 'ControllingPerson'                           MD054940
+     C                   EVAL      KGroupNm = 'Individual'                                  MD054940
      C                   EVAL      KElemNm  = 'BirthInfo'
      C                   EXSR      SRGetGrpLevl
      C                   EVAL      MGTPMT = *BLANKS
      C                   EVAL      MGELMT = KElemNm
      C                   EVAL      MGDATA = *BLANKS
      C                   EXSR      SRWrite
-     C                   EVAL      MGTPMT = 'ControllingPerson'
+     C**********         EVAL      MGTPMT = 'ControllingPerson'                             MD054940
+     C                   EVAL      MGTPMT = 'Individual'                                    MD054940
 
      C                   EVAL      MGELMT = 'BirthDate'
      C                   EVAL      MGDATA = *BLANKS

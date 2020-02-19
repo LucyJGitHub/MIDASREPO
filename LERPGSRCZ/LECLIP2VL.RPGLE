@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD053143           Date 04Apr19               *      
-      *  Prev Amend No. MD052279           Date 14Nov18               *
+      *  Last Amend No. MD023254           Date 18Feb20               *
+      *  Prev Amend No. MD053143           Date 04Apr19               *
+      *                 MD052279           Date 14Nov18               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD034840           Date 10Feb17               *
@@ -115,8 +116,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD023254 - LOAC does not show the correct interest schedule  *
+      *             for a Bank. Add condition to default spread       *
+      *             indicator(DDSPIN) to 'A' when defined loan type   *
+      *             is 70,71,72.                                      *
+      *           - Applied for MD055313                              *
       *  MD053143 - CLE141 Business Day Convention processing to be   *
-      *             applied for loan start date rate fixing.          *      
+      *             applied for loan start date rate fixing.          *
       *  MD052279 - Negative rate loan got unexpected error 45021183  *
       *             (Entry is not allowed for discounted loans or zero*
       *             interests) and 45021165 (Valid rate is req. if no *
@@ -498,7 +504,7 @@
                                                                                             MD053143
      D ClilFilFmt    E DS                  EXTNAME(CLOANCL) PREFIX(@@)
       * (Current) Loans record CL in file Format
- 
+
      D OKFlags1DS    E DS                  EXTNAME(LEECLI1PD)                                BUG3721
       ** Flags to indicate whether transaction fields are valid on 1st screen                BUG3721
       *
@@ -1567,6 +1573,9 @@
      C     DDBRTT        IFNE      *BLANKS
      C     DDRTSP        ORNE      *BLANKS
      C     DDFXRT        ORNE      *BLANKS                                                   BUG9239
+     C     WLNPT         OREQ      70                                                       MD023254
+     C     WLNPT         OREQ      71                                                       MD023254
+     C     WLNPT         OREQ      72                                                       MD023254
      C                   MOVE      'A'           DDSPIN
      C                   ENDIF
      C                   ELSE
@@ -2948,7 +2957,7 @@ E004 C                   ENDIF
       *  SRFCRA - Validate facility currency repayment amount         *
       *****************************************************************
      C     SRFCRA        BEGSR
- 
+
      C     *IN83         IFEQ      '0'
      C                   MOVE      FCCYF         @CYCD
      C                   ELSE
@@ -4088,7 +4097,7 @@ E004 C                   ENDIF
      C                   ELSE
      C                   Z-ADD     ZINTR         WCHKI
      C                   ENDIF
- 
+
      C     WCHKI         IFLT      *ZEROS
      C                   Z-SUB     WCHKI         WCHKI
      C                   MOVE      'Y'           WSUB              1

@@ -12,7 +12,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD054871           Date 24Feb20               *
+      *  Last Amend No. MD054781           Date 24Feb20               *
       *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -20,21 +20,21 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054871 - Defaulting of Country Location for Wholesale      *
+      *  MD054781 - Defaulting of Country Location for Wholesale      *
       *              Customers Alternative Name & Address             *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE026 - Consumer Banking                                    *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,SDALNAV001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -46,128 +46,128 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY includes all the definitions of the
       ** appended error arrays, including the named constant giving the
       ** size of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **---------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Transaction Details in screen format
      D TrnDets       E DS                  EXTNAME(SDALNAPD)
- 
+
       ** Transaction Details OK indicators
      D OKTrnDets     E DS                  EXTNAME(SDEALNAPD)
- 
+
       ** Valid Transaction Details layout
      D ValidAlna     E DS                  EXTNAME(SDVALNAPD)
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       **  Short DS for access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D ZMUSER          DS            17
      D  USRBCH                11     13
- 
+
      D ExtData       E DS                  EXTNAME(SDALEXPD)
       * SD Extra Data - File (D/B) format
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Work fields for bank data
      D WKDFIN          S                   LIKE(BJDFIN)
      D WKRDNB          S                   LIKE(BJRDNB)
      D WKCYCD          S                   LIKE(BJCYCD)
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of of warning message ids etc
      D WIdx            S              3P 0
- 
+
      D I               S              3P 0
- 
+
      D RespMode        S              1A
- 
+
       ** Parameters for AOBANKR0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,SDALNAV002
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -------------------------------+
       ** ¦                                                            ¦
       ** ¦ Initial processing is performed automatically: *inzsr is   ¦
       ** ¦ executed at program activation.                            ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
- 
+
+
       /COPY WNCPYSRC,SDALNAV003
- 
+
       *
       ** Validate Name & Address 1
       /COPY WNCPYSRC,SDALNAV004
@@ -179,12 +179,12 @@
      C                   EXSR      VCNCOSR
       /COPY WNCPYSRC,SDALNAV007
       *
- 
+
      C                   RETURN
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,SDALNAV008
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
@@ -192,9 +192,9 @@
       *****************************************************************
       *
      C     VCNA1SR       BEGSR
- 
+
       * Reset variables updated by validation
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Name & Address 1
@@ -231,9 +231,9 @@
       *****************************************************************
       *
      C     VCNCOSR       BEGSR
- 
+
       * Reset variables updated by validation
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Country Code
@@ -245,9 +245,9 @@
       *
       ** Other parms
       *
-      ** Customer Number                                                                    MD054871
-     C                   PARM                    DDCUST                                     MD054871
-      *                                                                                     MD054871
+      ** Customer Number                                                                    MD054781
+     C                   PARM                    DDCUST                                     MD054781
+      *                                                                                     MD054781
       ** Region code
      C                   PARM                    DDCNCD
       *
@@ -272,7 +272,7 @@
       *    from each validation module.                               *
       *****************************************************************
      C     RESETERRS     BEGSR
- 
+
      C                   EVAL      RetCodeOut = *Blanks
       *
       * Reset error & warning fields/message IDs/message data (arrays)
@@ -282,7 +282,7 @@
      C                   EVAL      WFldNmXAr = *BLANK
      C                   EVAL      WMsgIDXAr = *BLANK
      C                   EVAL      WMsgDtXAr = *BLANK
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -329,38 +329,38 @@
       *                                                               *
       *****************************************************************
      C     *inzsr        BEGSR
- 
+
      C     *entry        PLIST
- 
+
       * Inputs
- 
+
       * Response mode
      C                   PARM                    RespMode
- 
+
       ** Alt Names & Addresses Details
      C                   PARM                    TrnDets
      C                   PARM                    ExtData
       *  Outputs
- 
+
       ** Alt Names & Addresses Details OK inds
      C                   PARM                    OKTrnDets
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx
- 
+
       * Valid Alt Names & Addresses details layout (DS) from/to
       * caller
      C                   PARM                    ValidALNA
@@ -390,10 +390,10 @@
       ** procedure names for database error processing
      C/COPY ZACPYSRC,DBFIELDS
       **---------------------------------------------------------------
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,SDALNAV009
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

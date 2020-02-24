@@ -12,13 +12,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054871           Date 24Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. CRE026  *CREATE    Date 24May06               *
+      *                 CRE026  *CREATE    Date 24May06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054871 - Defaulting of Country Location for Wholesale      *
+      *              Customers Alternative Name & Address             *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE026 - Consumer Banking                                    *
       *                                                               *
@@ -242,6 +245,9 @@
       *
       ** Other parms
       *
+      ** Customer Number                                                                    MD054871
+     C                   PARM                    DDCUST                                     MD054871
+      *                                                                                     MD054871
       ** Region code
      C                   PARM                    DDCNCD
       *

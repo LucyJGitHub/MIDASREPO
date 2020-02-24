@@ -18,13 +18,16 @@
       *    /COPY, Customer Alternative Names & Addresses API          *
       *    amendments must not be applied to this source.             *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054871           Date 24Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. CRE026  *CREATE    Date 24May06               *
+      *                 CRE026  *CREATE    Date 24May06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054871 - Defaulting of Country Location for Wholesale      *
+      *              Customers Alternative Name & Address             *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE026 - Consumer Banking                                    *
       *                                                               *
@@ -33,6 +36,8 @@
  
      FSDCTRYL1  IF   E           K DISK    INFSR(*PSSR)
       * Midas SD Country code file
+     FSDCUSTL0  IF   E           K DISK    INFSR(*PSSR)                                     MD054871
+      * Midas SD Country code file                                                          MD054871
  
  
       *****************************************************************
@@ -126,7 +131,14 @@
  
       *
       ** VALIDATION
- 
+      ** Default Country Code from Customer Details if left blank                           MD054871
+     C                   IF        DDCNCD = *BLANKS                                         MD054871
+     C     DDCUST        CHAIN     SDCUSTL0                           90                    MD054871
+     C                   IF        %FOUND(SDCUSTL0)                                         MD054871
+     C                   EVAL      DDCNCD = BBCOLC                                          MD054871
+     C                   ENDIF                                                              MD054871
+     C                   ENDIF                                                              MD054871
+                                                                                            
       ** Country Code must be a valid Country Code
      C     DDCNCD        CHAIN     @A4REBR                            90
      C                   IF        *IN90 = *ON
@@ -160,6 +172,9 @@
       *
       ** Other parms
       *
+      ** Customer Number                                                                    MD054871
+     C                   PARM                    DDCUST            6                        MD054871
+      *                                                                                     MD054871
       ** Field(s) requiring validation
      C                   PARM                    DDCNCD            2
       *

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER068             Date 25Feb14               *
+      *  Last Amend No. MD055330           Date 14Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER068             Date 25Feb14               *
       *                 CER059             Date 19Jul10               *
       *                 BUG26298           Date 06Oct09               *
       *                 BUG24101           Date 27May09               *
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055330 - ERC0100 continuously running during COB           *
       *  MD046248 - Finastra Rebranding                               *
       *  CER068 - Upgrade CER047 to be compatible with BaFin 3.2.2    *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -76,7 +78,8 @@
       *
       ** ERCRCDPD - Record type 'C' workfile
       *
-     FERCRCDPD  UF A F 2000        DISK    INFSR(*PSSR)
+     F***ERCRCDPD  UF A F 2000        DISK    INFSR(*PSSR)                                  MD055330
+     FERCRCDPD  UF A F 1086        DISK    INFSR(*PSSR)                                     MD055330
      F                                     USROPN
       *                                                                                     BUG26298
       ** ERCRBTPD - Midas @24 KWG transmission file                                         BUG26298
@@ -142,7 +145,8 @@
       *
       ** Variables For Output Specification
       *
-     D  CRcdData       S           2000A
+     D***CRcdData       S           2000A                                                   MD055330
+     D  CRcdData       S           1086A                                                    MD055330
       *
       *****************************************************************
       /EJECT
@@ -151,7 +155,8 @@
       ** Declaration of Input Specification
       *
      IERCRCDPD  NS
-     I                                  1 2000  CRcdData
+     I**********                        1 2000  CRcdData                                    MD055330
+     I                                  1 1086  CRcdData                                    MD055330
       *
       *****************************************************************
       /EJECT

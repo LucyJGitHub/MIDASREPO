@@ -20,28 +20,40 @@
      C                   Parm                    ZADEC                                        ERZ247
      C                   Move(P)   ZFIELD        WSCHN            12                          ERZ247
      C                                                                                        ERZ247
-     C                   If        @SENT = 1 And SSCH1 <> WSCHN                               ERZ247
+     C*****              If        @SENT = 1 And SSCH1 <> WSCHN                               ERZ247
+     C                   If        (@SENT = 1 And SSCH1 <> WSCHN) Or                          ERZ247
+     C                             (@SENT = 1 And SSCH1 <> WSCH1 and                          ERZ247
+     C                             WSCH1 <> *Blanks)                                          ERZ247
      C                   Move(P)   ZFIELD        SSCH2                                        ERZ247
      C                   Move      SPCCY         SSCC2                                        ERZ247
      C                   Z-Add     0             WLAST                                        ERZ247
      C                   Z-Add     2             @SENT                                        ERZ247
      C                   Endif                                                                ERZ247
       *                                                                                       ERZ247
-     C                   If        @SENT = 2 And SSCH2 <> WSCHN                               ERZ247
+     C*****              If        @SENT = 2 And SSCH2 <> WSCHN                               ERZ247
+     C                   If        (@SENT = 2 And SSCH2 <> WSCHN) Or                          ERZ247
+     C                             (@SENT = 2 And SSCH2 <> WSCH2 And                          ERZ247
+     C                             WSCH2 <> *Blanks)                                          ERZ247
      C                   Move(P)   ZFIELD        SSCH3                                        ERZ247
      C                   Move      SPCCY         SSCC3                                        ERZ247
      C                   Z-Add     0             WLAST                                        ERZ247
      C                   Z-Add     3             @SENT                                        ERZ247
      C                   Endif                                                                ERZ247
       *                                                                                       ERZ247
-     C                   If        @SENT = 3 And SSCH3 <> WSCHN                               ERZ247
+     C*****              If        @SENT = 3 And SSCH3 <> WSCHN                               ERZ247
+     C                   If        (@SENT = 3 And SSCH3 <> WSCHN) Or                          ERZ247
+     C                             (@SENT = 3 And SSCH3 <> WSCH3 And                          ERZ247
+     C                             WSCH3 <> *Blanks)                                          ERZ247
      C                   Move(P)   ZFIELD        SSCH4                                        ERZ247
      C                   Move      SPCCY         SSCC4                                        ERZ247
      C                   Z-Add     0             WLAST                                        ERZ247
      C                   Z-Add     4             @SENT                                        ERZ247
      C                   Endif                                                                ERZ247
       *                                                                                       ERZ247
-     C                   If        @SENT = 4 And SSCH4 <> WSCHN                               ERZ247
+     C*****              If        @SENT = 4 And SSCH4 <> WSCHN                               ERZ247
+     C                   If        (@SENT = 4 And SSCH4 <> WSCHN) Or                          ERZ247
+     C                             (@SENT = 4 And SSCH4 <> WSCH4 And                          ERZ247
+     C                             WSCH4 <> *Blanks)                                          ERZ247
      C                   Move(P)   ZFIELD        SSCH5                                        ERZ247
      C                   Move      SPCCY         SSCC5                                        ERZ247
      C                   Z-Add     0             WLAST                                        ERZ247

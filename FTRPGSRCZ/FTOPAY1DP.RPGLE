@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 260045A            Date 29Jan13               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. ERZ248             Date 18Nov19               *
+      *  Prev Amend No. 260045A            Date 29Jan13               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD033641           Date 08Apr15               *
       *                 MD027047           Date 19Aug14               *
@@ -49,6 +50,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  ERZ248 - SWIFT UETR via OPAY API                             *
+      *           Add hooks ERZ248_021->028, ERZ248_045               *
+      *           Amended hooks FTOPA1XC01                            *
       *  260045A - ERZ123: F15 screen enquiry allows all action codes *
       *            (Recompile)                                        *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -241,6 +245,7 @@
      D FTEOPY        E DS                  EXTNAME(FTEOPY1PD)
      D FTOPAYX       E DS                  EXTNAME(FTOPY1APD)                   CFT014
       ** Payment Extension Details layout                                       CFT014
+     D/COPY WNCPYSRC,ERZ248_045                                                 ERZ248
 
      D                 DS
      D**DDFOTX*********        1     52                                         CFT007
@@ -341,6 +346,7 @@
      C                   Else                                                   CFT018
      C                   Move      *Off          *In01                          CFT018
      C                   Endif                                                  CFT018
+     C/COPY WNCPYSRC,ERZ248_021                                                 ERZ248
       *
       ** Set up the payment reference to be used by the message handler         CFT007
      C                   EVAL      TranRef = SPREF                              CFT007
@@ -495,7 +501,9 @@
      C/COPY WNCPYSRC,FTOPA1XC01
      C                   TIME                    DDTIME
      C                   WRITE     FTOPAY1S0
+     C/COPY WNCPYSRC,ERZ248_022                                                 ERZ248
      C                   WRITE     FTOPAY1D1
+     C/COPY WNCPYSRC,ERZ248_023                                                 ERZ248
      C                   WRITE     FTOPAY1F1
       *
       * READ DETAILS SCREEN,
@@ -503,7 +511,9 @@
       * If not write only
       *
      C     WriteOnly     IFNE      'Y'
+      C/COPY WNCPYSRC,ERZ248_024                                                 ERZ248
      C                   READ      FTOPAY1D1                              99    *
+     C/COPY WNCPYSRC,ERZ248_025                                                 ERZ248
      C                   ENDIF
      C/COPY WNCPYSRC,FTOPA1XC02
       *
@@ -519,6 +529,7 @@
       * SET SCREEN ERROR INDICATORS OFF
       *
      C                   MOVEA     @Z0           *IN(10)
+     C/COPY WNCPYSRC,ERZ248_026                                                 ERZ248
       *
       * SET RETURN KEYS
       *
@@ -761,6 +772,7 @@
       *                                                                         CFT018
       * Parameter to indicate program has been called in SSI mode               CFT018
      C                   PARM                    SSIMode           1            CFT018
+     C/COPY WNCPYSRC,ERZ248_027                                                 ERZ248
       *
       ** Initialize program name
       *
@@ -943,6 +955,7 @@
      C                   EVAL      *IN67 = *OFF                                               CSW203
      C                   ENDIF                                                                CSW203
       *
+     C/COPY WNCPYSRC,ERZ248_028                                                               ERZ248
      C** Retrieve the text for FTM2510 using MEC1150
      C*
      C                   CALL      'MEC1150'                            9090

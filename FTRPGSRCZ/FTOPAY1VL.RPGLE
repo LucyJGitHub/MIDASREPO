@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD021318           Date 26Jul13               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. ERZ248             Date 18Nov19               *
+      *  Prev Amend No. MD021318           Date 26Jul13               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD042042           Date 14Feb17               *
       *                 MD037529           Date 26Apr16               *
       *                 CFT142             Date 20Feb15               *
@@ -105,6 +106,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  ERZ248 - SWIFT UETR via OPAY API                             *
+      *           Amended hooks FTOPA1VC01, FTOPA1VC05, FTOPA1VC13,   *
+      *           FTOPA1VC14                                          *
       *  MD021318 - OPAY allowed input of account with block debit    *
       *           - Fix is to condition CSD089 overridable error      *
       *             changes when input is from HATS screen            *

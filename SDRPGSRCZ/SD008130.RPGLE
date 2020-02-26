@@ -17,8 +17,9 @@
       *                                                               *
       *  Called From: SDC008150                                       *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD038025           Date 27Jul16               *
+      *  Last Amend No. ERZ248             Date 18Nov19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD038025           Date 27Jul16               *
       *                 AR1084524          Date 13Feb13               *
       *                 CLE148             Date 23Jul12               *
       *                 AR873924A          Date 08Feb12               *
@@ -35,6 +36,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  ERZ248 - SWIFT UETR via OPAY API (Recompile)                 *
       *  MD046248 - Finastra Rebranding                               *
       *  MD038025 - Review AR875365 to only default ST rate if        *
       *             'number of month' is not zero.                    *

@@ -19,7 +19,7 @@
       *                                                               *
       *****************************************************************
 
-     FDEALSDB   IF   E           K DISK
+     FFXDEALL10 IF   E           K DISK
      FDLDEALL5  IF A E           K DISK
      FUTDL0844P1O    E             PRINTER OFLIND(*IN25)
      F/COPY WNCPYSRC,FC0010F001
@@ -76,7 +76,7 @@
      C                   EXSR      PrintHeader2
      C                   MOVEL     'UTDL0844'    DBPGM
       *
-     C                   READ      DEALSDB                                75
+     C                   READ      FXDEALL10                              75
       *
       ** READ FX DEALS FILE UNTIL END OF FILE
       *
@@ -84,7 +84,8 @@
       *
       ** CHECK IF EXISTING IN FX DEAL EXTENSION FILE
       *
-     C                   MOVE      DLNO          PDLNO
+     C                   MOVE      FHDN38        PDLNO
+     C                   EVAL      PFRNT = FHFRNT
      C     PDLNO         CHAIN     DLDEALL5                           71
       *
      C     *IN71         IFEQ      '1'
@@ -102,7 +103,7 @@
       *
       **READS NEXT RECORD ON FCPREQPD
       *
-     C                   READ      DEALSDB                                75
+     C                   READ      FXDEALL10                              75
      C                   ENDDO
       ** Print Total
      C                   EXSR      PrintHeader1
@@ -124,8 +125,8 @@
 
      C     MoveFXtoQD    BEGSR
 
-     C                   EVAL      F1BRCA = BRCA
-     C                   MOVE      DLNO          F1DLNO
+     C                   EVAL      F1BRCA = FHDBRC
+     C                   MOVE      FHDN38        F1DLNO
      C                   EVAL      F1FCCU = *BLANKS
      C                   EVAL      F1FACT = 0
      C                   EVAL      F1FCNO = 0
@@ -137,7 +138,7 @@
      C                   EVAL      F1TEOF = 0
      C                   EVAL      F1TEOC = 0
      C                   EVAL      F1EXCY = *BLANKS
-     C                   EVAL      F1FRID = *BLANKS
+     C                   EVAL      F1FRID = FHFRNT
 
      C                   IF        *IN25 = *ON
      C                   WRITE     UTDL0844H1

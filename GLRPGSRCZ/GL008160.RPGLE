@@ -10,12 +10,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. ERZ248             Date 18Nov19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE148             Date 23Jul12               *
       *                 CER049  *CREATE    Date 06Dec10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  ERZ248 - SWIFT UETR via OPAY API (Recompile)                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  CER049 - Stamp Tax                                           *
@@ -40,20 +42,20 @@
      D/EJECT
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
       **  Array containing Copyright statement
- 
+
      D CMD@            S             80    DIM(1) CTDATA PERRCD(1)
       ** Array of QCMDEXC commands
- 
+
      D EDT             S              1    DIM(80)
       ** Array of QCMDEXC command to edit
- 
+
      D @STK            S             10    DIM(100)
      D @REC            S              3  0 DIM(100)
       ** Subroutine stack
- 
+
      D DSPGM         ESDS                  EXTNAME(Y2PGDSP)
       ** Program data structure
- 
+
      D LDA           E DS           256    EXTNAME(LDA)
      D  DBZZ19       E                     EXTFLD(ZZ019)
      D ERDTA         E DS                  EXTNAME(CGERDTA)
@@ -167,10 +169,10 @@
      D W#ENP                 385    391
      D INFDS#        E DS                  EXTNAME(Y2I#DSP)
       ** Display file information data structure
- 
+
      D INFDS1        E DS                  EXTNAME(Y2I1DSP)
       ** File information data structure
- 
+
      D RUNDTA        E DS                  EXTNAME(RUNDAT)
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
      D SDBANK        E DS                  EXTNAME(SDBANKPD)

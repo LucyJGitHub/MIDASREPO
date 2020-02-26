@@ -11,19 +11,21 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1084524          Date 13Feb13               *
+      *  Last Amend No. ERZ248             Date 18Nov19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1084524          Date 13Feb13               *
       *                 CER049  *CREATE    Date 06Dec10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  ERZ248 - SWIFT UETR via OPAY API (Recompile)                 *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1084524 - Performance issue on IPAY & OPAY listview        *
       *              (Recompile)                                      *
       *  CER049 - Stamp Tax                                           *
       *                                                               *
       *****************************************************************
- 
+
 O    FGZOTPAYQL1UF   E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
 O    F                                     USROPN
 O    FGZOTPAYDQDO  A E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
@@ -32,9 +34,9 @@ O    F                                     USROPN
 O
 O    D Z_OTPAYDQD    E DS                  EXTNAME(GZOTPAYDQD)
 O    D G_OTPAYDQD    E DS                  EXTNAME(GZOTPAYDQD) PREFIX(G_)
- 
+
       ** ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           50
@@ -77,9 +79,9 @@ O    C                   ELSE
 O    C                   WRITE     W_OTPAYQD0
 O    C                   ENDIF
 O    C                   ENDIF
- 
+
      C                   RETURN
- 
+
      C/SPACE 5
       ********************************************************************
       * *INZSR - Initial subroutine called automatically at program start
@@ -98,7 +100,7 @@ O
 O    C     K_GZOTPAYQL1  KLIST
 O    C                   KFLD                    OTBRCA
 O    C                   KFLD                    OTPREF
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -106,33 +108,33 @@ O    C                   KFLD                    OTPREF
       * *PSSR  --- ABNORMAL ERROR CONDITIONS
       *********************************************************************
      C     *PSSR         BEGSR
- 
+
      C     W#RUN         IFEQ      *BLANKS
- 
+
      C                   MOVE      'Y'           W#RUN             1
- 
+
      C                   MOVEL     '*ERROR'      I#RTCD
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
- 
+
      C                   DUMP
- 
+
       ** If no identified cause of error
- 
+
      C     I#ERMS        IFEQ      *BLANK
      C                   EVAL      I#ERMS = 'UNEXPECTED ERROR'
      C                   ENDIF
- 
+
       ** Log an error on the error log
- 
+
      C                   CLEAR                   BUFFER
      C                   EVAL      BUFFER = I#ERMS
      C                   CALL      'GPWRTELOG'
      C                   PARM                    BUFFER         4000
- 
+
      C                   SETON                                        LRU7U8
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *********************************************************************

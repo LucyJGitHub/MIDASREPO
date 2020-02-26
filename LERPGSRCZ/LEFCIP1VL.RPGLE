@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE071             Date 18Jul18               *
-      *  Prev Amend No. CLE160             Date 18Jul18               *
+      *  Last Amend No. MD046484           Date 11Feb20               *
+      *  Prev Amend No. MD039655           Date 11Feb20               *
+      *                 CLE071             Date 18Jul18               *
+      *                 CLE160             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 MD034007           Date 17Jun15               *
@@ -77,6 +79,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046484 - 'LEC06 10011' Detailed name: 'Midas LE Facility   *
+      *             maintenance. Applied for MD048074                 *
+      *  MD039655 - Facility cannot be rejected.                      *
+      *             Pattern fix from MD-29208 and MD-34908.           *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  CLE160 - Remove Default for Revolving Credit Indicator       *
       *  MD046248 - Finastra Rebranding                               *
@@ -606,6 +612,13 @@
      C                   EVAL      PSUSER = USRID                                           MD024398
      C                   ENDIF                                                  CAP084
  
+      ** Skip validation process if action is reject                                        MD039655
+                                                                                            MD039655
+     C                   IF        @ACTRV <> *BLANK                                         MD039655
+     C                   EXSR      SRRSFD                                                   MD039655
+     C                   RETURN                                                             MD039655
+     C                   ENDIF                                                              MD039655
+                                                                                            MD039655
       ** Call Validation Modules in Sequence
       *
       ** Validate Branch number
@@ -696,6 +709,154 @@
       * RETURN
       *
      C                   RETURN
+      *****************************************************************                     MD039655
+     C/EJECT                                                                                MD039655
+      *****************************************************************                     MD039655
+      ** SRRSFD  - Restore Original Details (for Reject Action)                             MD039655
+      *****************************************************************                     MD039655
+     C     SRRSFD        BEGSR                                                              MD039655
+      *                                                                                     MD046484
+      ** Get Number of Decimal Places for Currency                                          MD046484
+      *                                                                                     MD046484
+     C                   MOVE      DDFCCY        CKEY                                       MD046484
+     C                   MOVE      '*BLANKS'     @RTCD                                      MD046484
+     C                   CALLB     'AOCURRR0'    PLIST2                                     MD046484
+     C                   Z-ADD     A6NBDP        W#NBDP                                     MD046484
+                                                                                            MD039655
+     C                   MOVEL     'A'           FPRCTP                                     MD039655
+     C                   MOVEL     DDACTN        FPCHTP                                     MD039655
+     C                   MOVEL     DDCSSN        FPCNUM                                     MD039655
+     C                   MOVEL     DDFACT        FPFACT                                     MD039655
+     C                   MOVEL     DDFCNO        FPFCNO                                     MD039655
+     C                   MOVEL     DDBRCA        FPBRCA                                     MD039655
+     C                   MOVEL     DDFCCY        FPFCCY                                     MD039655
+                                                                                            MD039655
+     C                   MOVE      *BLANKS       ZFIELD                                     MD039655
+     C                   MOVE      DDFAMT        SVDDFAMT                                   MD039655
+                                                                                            MD039655
+     C     1             SUBST     DDFAMT        WSIGN                                      MD039655
+     C     WSIGN         IFEQ      '-'                                                      MD039655
+     C     14            SUBST     DDFAMT:2      DDFAMT                                     MD039655
+     C                   ELSE                                                               MD039655
+     C     1             SUBST     DDFAMT:15     WSIGN                                      MD039655
+     C     WSIGN         IFEQ      '-'                                                      MD039655
+     C                   EVAL      WDDFAMT = *blanks                                        MD039655
+     C     14            SUBST     DDFAMT        WDDFAMT                                    MD039655
+     C                   EVALR     DDFAMT = WDDFAMT                                         MD039655
+     C                   ENDIF                                                              MD039655
+     C                   ENDIF                                                              MD039655
+                                                                                            MD039655
+     C                   MOVE      DDFAMT        ZFIELD                                     MD039655
+     C                   Z-ADD     W#NBDP        ZADEC                                      MD039655
+     C     13            SUB       W#NBDP        ZADIG                                      MD039655
+     C                   EXSR      ZALIGN                                                   MD039655
+     C                   MOVE      ZFIELD        FPFAMT                                     MD039655
+     C     WSIGN         IFEQ      '-'                                                      MD039655
+     C                   Z-SUB     FPFAMT        FPFAMT                                     MD039655
+     C                   ENDIF                                                              MD039655
+                                                                                            MD039655
+     C                   MOVE      *BLANKS       ZFIELD                                     MD039655
+     C                   MOVE      DDOVAM        ZFIELD                                     MD039655
+     C                   Z-ADD     W#NBDP        ZADEC                                      MD039655
+     C     13            SUB       W#NBDP        ZADIG                                      MD039655
+     C                   EXSR      ZALIGN                                                   MD039655
+     C                   MOVE      ZFIELD        FPOVAM                                     MD039655
+                                                                                            MD039655
+     C                   MOVE      *BLANKS       ZFIELD                                     MD039655
+     C                   MOVE      DDOVPC        ZFIELD                                     MD039655
+     C                   Z-ADD     3             ZADEC                                      MD039655
+     C                   Z-ADD     2             ZADIG                                      MD039655
+     C                   EXSR      ZALIGN                                                   MD039655
+     C                   MOVE      ZFIELD        FPOVPC                                     MD039655
+                                                                                            MD039655
+     C                   MOVEL     DDFCTI        FPFCTI                                     MD039655
+     C                   MOVE      DDDTAP        DATEA                                      MD039655
+     C                   CALLB     'ZDATE1'                                                 MD039655
+     C                   PARM                    DATEA                                      MD039655
+     C                   PARM                    ZDAYNO                                     MD039655
+     C                   PARM                    BJDFIN                                     MD039655
+     C                   PARM                    ErrorFlag                                  MD039655
+     C                   Z-ADD     ZDAYNO        FPDTAP                                     MD039655
+                                                                                            MD039655
+     C                   MOVEL     DDRVCR        FPRVCR                                     MD039655
+     C                   MOVEL     DDMCCY        FPMCCY                                     MD039655
+     C                   MOVEL     DDSECI        FPSECI                                     MD039655
+                                                                                            MD039655
+     C                   MOVE      DDDTEX        DATEA                                      MD039655
+     C                   CALLB     'ZDATE1'                                                 MD039655
+     C                   PARM                    DATEA                                      MD039655
+     C                   PARM                    ZDAYNO                                     MD039655
+     C                   PARM                    BJDFIN                                     MD039655
+     C                   PARM                    ErrorFlag                                  MD039655
+     C                   Z-ADD     ZDAYNO        FPDTEX                                     MD039655
+                                                                                            MD039655
+     C                   MOVEL     DDCRSK        FPCRSK                                     MD039655
+     C                   MOVEL     DDMCSI        FPMCSI                                     MD039655
+     C                   MOVEL     DDNACD        FPNACD                                     MD039655
+     C                   Z-ADD     RVCD          FPRVCD                                     MD039655
+                                                                                            MD039655
+     C                   MOVE      DDDLFS        DATEA                                      MD039655
+     C                   CALLB     'ZDATE1'                                                 MD039655
+     C                   PARM                    DATEA                                      MD039655
+     C                   PARM                    ZDAYNO                                     MD039655
+     C                   PARM                    BJDFIN                                     MD039655
+     C                   PARM                    ErrorFlag                                  MD039655
+     C                   Z-ADD     ZDAYNO        FPDLFS                                     MD039655
+                                                                                            MD039655
+     C                   MOVE      *BLANKS       ZFIELD                                     MD039655
+     C                   MOVE      DDNOMR        ZFIELD                                     MD039655
+     C                   Z-ADD     7             ZADEC                                      MD039655
+     C                   Z-ADD     4             ZADIG                                      MD039655
+     C                   EXSR      ZALIGN                                                   MD039655
+     C                   MOVE      ZFIELD        FPNOMR                                     MD039655
+                                                                                            MD039655
+     C                   Z-ADD     0             FPRVDT                                     MD039655
+     C     DDRVDT        IFNE      *BLANKS                                                  MD039655
+     C                   MOVE      DDRVDT        DATEA                                      MD039655
+                                                                                            MD039655
+     C                   CALLB     'ZDATE1'                                                 MD039655
+     C                   PARM                    DATEA                                      MD039655
+     C                   PARM                    ZDAYNO                                     MD039655
+     C                   PARM                    BJDFIN                                     MD039655
+     C                   PARM                    ErrorFlag                                  MD039655
+     C                   Z-ADD     ZDAYNO        FPRVDT                                     MD039655
+     C                   ENDIF                                                              MD039655
+                                                                                            MD039655
+     C                   MOVEL     DDRVFR        FPRVFR                                     MD039655
+     C                   MOVE      DDRVDY        FPRVDY                                     MD039655
+     C                   MOVEL     DDACOF        FPACOF                                     MD039655
+     C                   MOVEL     DDORBR        FPORBR                                     MD039655
+     C                   MOVEL     DDTRCA        FPTRCA                                     MD039655
+     C                   MOVE      DDCANM        FPCANM                                     MD039655
+     C                   MOVE      DDCAFT        FPCAFT                                     MD039655
+     C                   MOVE      DDCAFN        FPCAFN                                     MD039655
+     C                   MOVEL     DDNAR1        FPNAR1                                     MD039655
+     C                   MOVEL     DDNAR2        FPNAR2                                     MD039655
+     C                   MOVEL     DDNAR3        FPNAR3                                     MD039655
+     C                   MOVEL     DDNAR4        FPNAR4                                     MD039655
+     C                   MOVE      DDACSQ        FPACSQ                                     MD039655
+                                                                                            MD039655
+     C                   MOVEL     'B'           FNRCTP                                     MD039655
+     C                   MOVEL     DDACTN        FNCHTP                                     MD039655
+     C                   MOVEL     DDCSSN        FNCNUM                                     MD039655
+     C                   MOVEL     DDFACT        FNFACT                                     MD039655
+     C                   MOVEL     DDFCNO        FNFCNO                                     MD039655
+     C                   MOVEL     DDMBFC        FNMBFC                                     MD039655
+     C                   MOVEL     DDPRFC        FNPRFC                                     MD039655
+     C                   MOVEL     DDBTIN        FNBTIN                                     MD039655
+     C                   MOVE      DDBLDY        FNBLDY                                     MD039655
+     C                   Z-ADD     @@@OAM1       FNOAM1                                     MD039655
+     C                   Z-ADD     @@@OAM2       FNOAM2                                     MD039655
+     C                   Z-ADD     @@@OAM3       FNOAM3                                     MD039655
+     C                   Z-ADD     @@@OAM4       FNOAM4                                     MD039655
+     C                   Z-ADD     @@@OAM5       FNOAM5                                     MD039655
+     C                   Z-ADD     @@@OAM6       FNOAM6                                     MD039655
+     C                   Z-ADD     @@@OAM7       FNOAM7                                     MD039655
+     C                   Z-ADD     @@@OAM8       FNOAM8                                     MD039655
+     C                   Z-ADD     @@@OAM9       FNOAM9                                     MD039655
+     C                   Z-ADD     @@@OA10       FNOA10                                     MD039655
+                                                                                            MD039655
+     C                   ENDSR                                                              MD039655
       *****************************************************************
      C/EJECT
       *****************************************************************
@@ -745,6 +906,21 @@
      C                   PARM      DDBRCA        @ZBR              3
      C                   PARM                    @ERR              1 0
      C                   ENDIF
+      *                                                                                     MD039655
+      ** Check for reject permission                                                        MD039655
+      *                                                                                     MD039655
+     C     @ACTRV        IFNE      *BLANK                                                   MD039655
+     C     DDACTN        ANDNE     'X'                                                      MD039655
+     C     @ERR          ANDNE     0                                                        MD039655
+      *                                                                                     MD039655
+     C                   MOVE      @ACTRV        @ZACTN                                     MD039655
+      *                                                                                     MD039655
+     C                   CALL      'ZVACTBU'                                                MD039655
+     C                   PARM                    @ZACTN                                     MD039655
+     C                   PARM                    @ZBR                                       MD039655
+     C                   PARM                    @ERR                                       MD039655
+      *                                                                                     MD039655
+     C                   ENDIF                                                              MD039655
       *
      C     @ERR          IFNE      *ZERO
      C     @ERR          IFEQ      1
@@ -3073,6 +3249,10 @@ E4   C                   ENDIF
      C                   PARM                    F1AUSR           10
       * Customer Extra Data file data
      C                   PARM                    ExtData         500
+      *                                                                                     MD039655
+      ** Reject Action                                                                      MD039655
+      *                                                                                     MD039655
+     C                   PARM                    @ACTRV            1                        MD039655
  
       * OUTPUTS
       * Field OK flags (DS) from/to caller

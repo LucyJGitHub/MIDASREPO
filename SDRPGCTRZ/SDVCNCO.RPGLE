@@ -36,8 +36,8 @@
 
      FSDCTRYL1  IF   E           K DISK    INFSR(*PSSR)
       * Midas SD Country code file
-     FSDCUSTL0  IF   E           K DISK    INFSR(*PSSR)                                     MD054781
-      * Midas SD Country code file                                                          MD054781
+     FSDCUSTL1  IF   E           K DISK    INFSR(*PSSR)                                     MD054781
+      * Midas SD Customer Details File                                                      MD054781
 
 
       *****************************************************************
@@ -133,8 +133,8 @@
       ** VALIDATION
       ** Default Country Code from Customer Details if left blank                           MD054781
      C                   IF        DDCNCD = *BLANKS                                         MD054781
-     C     DDCUST        CHAIN     SDCUSTL0                           90                    MD054781
-     C                   IF        %FOUND(SDCUSTL0)                                         MD054781
+     C     DDCUST        CHAIN     SDCUSTL1                           90                    MD054781
+     C                   IF        %FOUND(SDCUSTL1)                                         MD054781
      C                   EVAL      DDCNCD = BBCOLC                                          MD054781
      C                   ENDIF                                                              MD054781
      C                   ENDIF                                                              MD054781

@@ -76,19 +76,19 @@
      C                   EXSR      PrintHeader2
      C                   MOVEL     'UTDL0844'    DBPGM
       *
-     C                   READ      FXDEALL10                              75
+     C                   READ      FXDEALL10
       *
       ** READ FX DEALS FILE UNTIL END OF FILE
       *
-     C     *IN75         DOWEQ     '0'
+     C                   DOW       NOT %EOF(FXDEALL10)
       *
       ** CHECK IF EXISTING IN FX DEAL EXTENSION FILE
       *
      C                   MOVE      FHDN38        PDLNO
      C                   EVAL      PFRNT = FHFRNT
-     C     PDLNO         CHAIN     DLDEALL5                           71
+     C     PDLNO         CHAIN     DLDEALL5
       *
-     C     *IN71         IFEQ      '1'
+     C                   IF        NOT %FOUND(DLDEALL5)
       *
      C                   EVAL      PCTR+=1
      C  N10              EXSR      MoveFXtoQD
@@ -103,7 +103,7 @@
       *
       **READS NEXT RECORD ON FCPREQPD
       *
-     C                   READ      FXDEALL10                              75
+     C                   READ      FXDEALL10
      C                   ENDDO
       ** Print Total
      C                   EXSR      PrintHeader1

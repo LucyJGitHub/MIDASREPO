@@ -54,9 +54,9 @@
                 SNDPGMMSG  MSG('Invalid parameter passed to UTCDL0844') +
                              TOMSGQ(MOPERQ MRUNQ)
                 SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Invalid +
-                          parameter passed. Mode parameter should either be ''U'' +
-                          ''u'' for Update and ''A'' or ''a'' for +
-                          Audit.') MSGTYPE(*ESCAPE)
+                     parameter passed. Mode parameter should either be ''U'' +
+                     u'' for Update and ''A'' or ''a'' for +
+                     Audit.') MSGTYPE(*ESCAPE)
                 GOTO       CMDLBL(END)
              ENDDO
 
@@ -66,49 +66,49 @@
              IF         COND((&MODE *EQ 'U') *OR (&MODE *EQ 'u'))  +
                         THEN(DO)
 
-                        RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREF)
-                        CHGVAR     VAR(&DPLIB) VALUE(&PREF *TCAT 'DPLIB')
-                        CHGVAR     VAR(&DMLIB) VALUE(&PREF *TCAT 'DMLIB')
-                        CHGVAR     VAR(&DTALIB) VALUE(&PREF *TCAT 'DTALIB')
+                RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREF)
+                CHGVAR     VAR(&DPLIB) VALUE(&PREF *TCAT 'DPLIB')
+                CHGVAR     VAR(&DMLIB) VALUE(&PREF *TCAT 'DMLIB')
+                CHGVAR     VAR(&DTALIB) VALUE(&PREF *TCAT 'DTALIB')
 /**/
 
 FLECHK:
 /* Check if YYXXXXXXXX exists */
 /**/
-                        CHKOBJ     OBJ(&DPLIB/YYDEALSDB) OBJTYPE(*FILE)
-                        MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(FLECHK2))
-                        DLTF       FILE(YYDEALSDB)
+                CHKOBJ     OBJ(&DPLIB/YYDEALSDB) OBJTYPE(*FILE)
+                MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(FLECHK2))
+                DLTF       FILE(YYDEALSDB)
 /**/
 FLECHK2:
-                        CHKOBJ     OBJ(&DPLIB/YYDLDLDBQD) OBJTYPE(*FILE)
-                        MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(BACKUP))
-                        DLTF       FILE(YYDLDLDBQD)
+                CHKOBJ     OBJ(&DPLIB/YYDLDLDBQD) OBJTYPE(*FILE)
+                MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(BACKUP))
+                DLTF       FILE(YYDLDLDBQD)
 
 /**/
 /* Create backup */
 /**/
 BACKUP:
-                        CPYF       FROMFILE(&DMLIB/DEALSDB) TOFILE(&DPLIB/YYDEALSDB) +
-                                   MBROPT(*REPLACE) CRTFILE(*YES)
-                        MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
-                        CLRPFM     FILE(YYDEALSDB)
-                        ENDDO
-                        MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
-                        SNDUSRMSG  MSG('Error occurred in copying PF/DEALSDB to +
-                             PF/YYDEALSDB. Process terminated.') MSGTYPE(*INFO)
-                        GOTO       CMDLBL(END)
-                        ENDDO
+                CPYF       FROMFILE(&DMLIB/DEALSDB) TOFILE(&DPLIB/YYDEALSDB) +
+                           MBROPT(*REPLACE) CRTFILE(*YES)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+                CLRPFM     FILE(YYDEALSDB)
+                ENDDO
+                MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                SNDUSRMSG  MSG('Error occurred in copying PF/DEALSDB to +
+                PF/YYDEALSDB. Process terminated.') MSGTYPE(*INFO)
+                GOTO       CMDLBL(END)
+                ENDDO
 
-                        CPYF       FROMFILE(&DMLIB/DLDLDBQD) TOFILE(&DPLIB/YYDLDLDBQD) +
-                                   MBROPT(*REPLACE) CRTFILE(*YES)
-                        MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
-                        CLRPFM     FILE(YYDLDLDBQD)
-                        ENDDO
-                        MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
-                        SNDUSRMSG  MSG('Error occurred in copying PF/DLDLDBQD to +
+                CPYF       FROMFILE(&DMLIB/DLDLDBQD) TOFILE(&DPLIB/YYDLDLDBQD) +
+                           MBROPT(*REPLACE) CRTFILE(*YES)
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+                CLRPFM     FILE(YYDLDLDBQD)
+                ENDDO
+                MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                SNDUSRMSG  MSG('Error occurred in copying PF/DLDLDBQD to +
                              PF/YYDLDLDBQD. Process terminated.') MSGTYPE(*INFO)
-                        GOTO       CMDLBL(END)
-                        ENDDO
+                GOTO       CMDLBL(END)
+                ENDDO
 
              ENDDO
 /**/
@@ -136,27 +136,27 @@ BACKUP:
 ABNOR:
              IF         COND((&MODE *EQ 'U') *OR (&MODE *EQ 'u')) +
                         THEN(DO)
-                        IF         COND(&RUNP *EQ 'YES') THEN(DO)
+                IF         COND(&RUNP *EQ 'YES') THEN(DO)
 
-                                   CPYF       FROMFILE(&DPLIB/YYDEALSDB) TOFILE(&DMLIB/DEALSDB) +
-                                              MBROPT(*REPLACE) FMTOPT(*NONE)
-                                   MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
-                                   SNDUSRMSG  MSG('Error occurred in restoring PF/DEALSDB  from +
-                                              PF/DEALSDB. Process terminated.  Please restore +
-                                              PF/DEALSDB manually from PF/YYDEALSDB.') +
-                                              MSGTYPE(*INFO)
-                                   ENDDO
-
-                                   CPYF       FROMFILE(&DPLIB/YYDLDLDBQD) TOFILE(&DMLIB/DLDLDBQD) +
-                                              MBROPT(*REPLACE) FMTOPT(*NONE)
-                                   MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
-                                   SNDUSRMSG  MSG('Error occurred in restoring PF/DLDLDBQD from +
-                                              PF/DLDLDBQD. Process terminated.  Please restore +
-                                              PF/DLDLDBQD manually from PF/YYDLDLDBQD.') +
-                                              MSGTYPE(*INFO)
-                                   ENDDO
-
+                   CPYF FROMFILE(&DPLIB/YYDEALSDB) TOFILE(&DMLIB/DEALSDB) +
+                        MBROPT(*REPLACE) FMTOPT(*NONE)
+                        MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                        SNDUSRMSG  MSG('Error occurred in restoring PF/DEALSDB +
+                        from  PF/DEALSDB. Process terminated.  Please restore +
+                        PF/DEALSDB manually from PF/YYDEALSDB.') +
+                        MSGTYPE(*INFO)
                         ENDDO
+
+                   CPYF FROMFILE(&DPLIB/YYDLDLDBQD) TOFILE(&DMLIB/DLDLDBQD) +
+                        MBROPT(*REPLACE) FMTOPT(*NONE)
+                        MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+                        SNDUSRMSG  MSG('Error occurred in restoring PF/DLDLDBQD +
+                        from PF/DLDLDBQD. Process terminated.  Please restore +
+                        PF/DLDLDBQD manually from PF/YYDLDLDBQD.') +
+                        MSGTYPE(*INFO)
+                        ENDDO
+
+                ENDDO
              ENDDO
 
  ABNOR1:     SNDPGMMSG  MSG('Error occurred in UTCDL0844 program') TOPGMQ(*EXT) +

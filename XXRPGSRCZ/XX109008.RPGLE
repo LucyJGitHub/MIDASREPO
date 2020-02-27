@@ -15,14 +15,16 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2008            *
       *                                                               *
-      *  Last Amend No. JMI109             Date 23May18               *
-      *  Prev Amend No. 262960             Date 27Nov09               *
+      *  Last Amend No. JMI109CC1          Date 20Feb20               *
+      *  Prev Amend No. JMI109             Date 23May18               *
+      *                 262960             Date 27Nov09               *
       *                 JMI026I02          Date 15Oct08               *
       *                 JMI026             Date 29Sep08               *
       *                 JMI026  *CREATE    Date 30Apr08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  JMI109CC1 - Consider Account Transfer Transactions           *
       *  JMI109 - G-AML PreProcessor (Upgrade to FB Midas)            *
       *  262960 - JMI026 problem - Extract for G-AML processing       *
       *           is incorrect. Formalised fix. Correct the parameter *
@@ -532,6 +534,57 @@
      C                   ENDIF
      C                   ENDDO
       *
+      **  Set-up keys for Account Transfer Transaction records                             JMI109CC1
+     C                   EVAL      WGETP = 'L'                                             JMI109CC1
+     C                   EVAL      WTTP  = ' '                                             JMI109CC1
+     C                   EVAL      WTST  = ' '                                             JMI109CC1
+     C                   EVAL      WCNUM = '      '                                        JMI109CC1
+      ** Set module type                                                                   JMI109CC1
+     C                   EVAL      WMOD = 'AT'                                             JMI109CC1
+      *                                                                                    JMI109CC1
+     C                   IF        WDATE = 0                                               JMI109CC1
+     C     EODKY         SETLL     XXEODPL0                                                JMI109CC1
+     C                   READ      XXEODPL0                               80               JMI109CC1
+     C                   ELSE                                                              JMI109CC1
+     C                   IF        WFLAG = 'Y'                                             JMI109CC1
+     C     APOSTKY       SETLL     @POSTY1                                                 JMI109CC1
+     C                   READ      @POSTY1                                80               JMI109CC1
+     C                   ELSE                                                              JMI109CC1
+     C     APOSTKY       SETLL     @POSTY0                                                 JMI109CC1
+     C                   READ      @POSTY0                                80               JMI109CC1
+     C                   ENDIF                                                             JMI109CC1
+     C                   ENDIF                                                             JMI109CC1
+      *                                                                                    JMI109CC1
+      ** Read while not end of file and GETP = 'L'                                         JMI109CC1
+     C                   DOW       *IN80 = *OFF                                            JMI109CC1
+     C                              and PSTD = WDATE and WDATE <> 0                        JMI109CC1
+     C                             or *IN80 = *OFF and WDATE = 0                           JMI109CC1
+      ** Check if GETP changed                                                             JMI109CC1
+     C                   IF        WGETP <> GETP                                           JMI109CC1
+     C                   LEAVE                                                             JMI109CC1
+     C                   ENDIF                                                             JMI109CC1
+      *                                                                                    JMI109CC1
+      ** Check if record read is to be extracted                                           JMI109CC1
+     C                   EXSR      EXTYN                                                   JMI109CC1
+      *                                                                                    JMI109CC1
+     C                   IF        WEXT = 'N'                                              JMI109CC1
+      ** Write detail for XX109008P1 (not to be extracted)                                 JMI109CC1
+     C                   EXSR      SRPRNT                                                  JMI109CC1
+     C                   ELSE                                                              JMI109CC1
+     C                   EXSR      EXTRACT                                                 JMI109CC1
+     C                   ENDIF                                                             JMI109CC1
+      *                                                                                    JMI109CC1
+     C                   IF        WDATE = 0                                               JMI109CC1
+     C                   READ      XXEODPL0                               80               JMI109CC1
+     C                   ELSE                                                              JMI109CC1
+     C                   IF        WFLAG = 'Y'                                             JMI109CC1
+     C                   READ      @POSTY1                                80               JMI109CC1
+     C                   ELSE                                                              JMI109CC1
+     C                   READ      @POSTY0                                80               JMI109CC1
+     C                   ENDIF                                                             JMI109CC1
+     C                   ENDIF                                                             JMI109CC1
+     C                   ENDDO                                                             JMI109CC1
+      *                                                                                    JMI109CC1
       ** Write Total Extracted at end of file
      C                   EVAL      WEnd = 'Y'
      C                   EXSR      SRPRNT
@@ -875,6 +928,7 @@
       *
       ** For TT, CE, and GL module
      C                   WHEN      WMOD = 'TT' or WMOD = 'CE' or WMOD = 'GL'
+     C                             OR WMOD = 'AT'                                         JMI109CC1
      C                   IF        DRCR = 1
      C                   MOVE      *BLANKS       #CNUM
      C                   MOVEL     CNUM          #CNUM
@@ -931,6 +985,7 @@
       *
       ** For CE, TT, and GL
      C                   WHEN      WMOD = 'CE' or WMOD = 'TT' or WMOD = 'GL'
+     C                             OR WMOD = 'AT'                                         JMI109CC1
      C                   EXSR      SRCUST
      C                   EVAL      VarTmp = %Trim(BBCRNM)
      C                   EVAL      GFLDS = %Trim(GFLDS) + VarTmp + '~'
@@ -2449,6 +2504,7 @@
       *
       ** For TT, CE, and GL
      C                   WHEN      WMOD = 'TT' or WMOD = 'CE' or WMOD = 'GL'
+     C                             OR WMOD = 'AT'                                         JMI109CC1
      C                   IF        DRCR = 1
      C                   EVAL      GFLDS = %Trim(GFLDS) + '~'
      C                   ELSE
@@ -4696,7 +4752,8 @@
      C     ATYPKY        KLIST
      C                   KFLD                    WMOD              2
      C                   KFLD                    WTYP              2
-     C                   KFLD                    WSTYP             2
+     C*****              KFLD                    WSTYP             2                       JMI109CC1
+     C                   KFLD                    WSTYP             5                       JMI109CC1
      C                   KFLD                    WSRNG             3 0
      C                   KFLD                    WERNG             3 0
       *

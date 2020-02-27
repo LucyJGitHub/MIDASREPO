@@ -13,11 +13,13 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2008            *
       *                                                               *
-      *  Last Amend No. JMI109            Date 21May18                *
-      *  Prev Amend No. JMI026  *CREATE   Date 17Sep08                *
+      *  Last Amend No. JMI109CC1         Date 20Feb20                *
+      *  Prev Amend No. JMI109            Date 21May18                *
+      *                 JMI026  *CREATE   Date 17Sep08                *
       *                                                               *
       *-------------------------------------------------------------- *
       *                                                               *
+      *  JMI109CC1 - Consider Account Transfer Transactions           *
       *  JMI109 - Extract for G-AML Interface.(Upgrade to FB Midas)   *
       *  JMI026 - Extract for G-AML Interface.                        *
       *                                                               *
@@ -57,6 +59,9 @@
      FFDDTSTL1  IF   E           K DISK
       * Midas FD Deal type/subtype file
       *
+     FSDATSTL0  IF   E           K DISK                                                    JMI109CC1
+      * Midas SD Account Transfer type/sub-type                                            JMI109CC1
+      *                                                                                    JMI109CC1
      FGLJENHL0  IF   E           K DISK
       * Midas GL Journal entry header update file
       *
@@ -652,11 +657,13 @@
      C                   ENDIF
       *
       * Midas Module should be equal to CE, TT, FT, and GL only.
+      * Allow AT                                                                           JMI109CC1
      C     #GMOD         IFNE      *BLANKS
      C     #GMOD         ANDNE     'CE'
      C     #GMOD         ANDNE     'TT'
      C     #GMOD         ANDNE     'FT'
      C     #GMOD         ANDNE     'GL'
+     C     #GMOD         ANDNE     'AT'                                                    JMI109CC1
      C                   SETON                                        9833
      C                   MOVEL     'XXX1157'     ZAMSID
      C     'GB'          CAT       'XXUSRMSG'    ZAMSGF
@@ -665,8 +672,10 @@
      C                   ENDIF
       *
       * Midas Transaction Type should be blank if Midas Module is not FT.
+      * or AT                                                                              JMI109CC1
      C     #GMOD         IFNE      *BLANKS
      C     #GMOD         IFNE      'FT'
+     C     #GMOD         ANDNE     'AT'                                                    JMI109CC1
      C     #GTYP         ANDNE     *BLANKS
      C                   SETON                                        9834
      C                   MOVEL     'XXX1158'     ZAMSID
@@ -691,9 +700,24 @@
      C                   EXSR      ZASNMS
      C                   ENDIF
       *
+      * Midas Transaction Type should be equal to XT or YT                                 JMI109CC1
+      * for AT module.                                                                     JMI109CC1
+     C     #GMOD         IFEQ      'AT'                                                    JMI109CC1
+     C     #GTYP         ANDNE     'XT'                                                    JMI109CC1
+     C     #GTYP         ANDNE     'YT'                                                    JMI109CC1
+     C*****#GTYP         ANDNE     *BLANKS                                                 JMI109CC1
+     C                   SETON                                        9834                 JMI109CC1
+     C                   MOVEL     'XXX1175'     ZAMSID                                    JMI109CC1
+     C     'GB'          CAT       'XXUSRMSG'    ZAMSGF                                    JMI109CC1
+     C                   MOVEL     #GTYP         ZAMSDA                                    JMI109CC1
+     C                   EXSR      ZASNMS                                                  JMI109CC1
+     C                   ENDIF                                                             JMI109CC1
+      *                                                                                    JMI109CC1
       * Midas Subtype should be blank if Midas Module is not FT.
+      * or AT                                                                              JMI109CC1
      C     #GMOD         IFNE      *BLANKS
      C     #GMOD         IFNE      'FT'
+     C     #GMOD         ANDNE     'AT'                                                    JMI109CC1
      C     #GSTYP        ANDNE     *BLANKS
      C                   SETON                                        9835
      C                   MOVEL     'XXX1161'     ZAMSID
@@ -708,6 +732,9 @@
      C     #GMOD         IFEQ      'FT'
      C     #GSTYP        ANDNE     *BLANKS
      C     #GTYP         ANDEQ     *BLANKS
+     C     #GMOD         OREQ      'AT'                                                    JMI109CC1
+     C     #GSTYP        ANDNE     *BLANKS                                                 JMI109CC1
+     C     #GTYP         ANDEQ     *BLANKS                                                 JMI109CC1
      C                   SETON                                        9835
      C                   MOVEL     'XXX1162'     ZAMSID
      C     'GB'          CAT       'XXUSRMSG'    ZAMSGF
@@ -718,17 +745,39 @@
       *
       * Deal Type/Subtype should be checked only if the subtype is not
       * blank and module is equal to FT.
+      * or AT                                                                              JMI109CC1
      C     #GMOD         IFEQ      'FT'
      C     #GTYP         ANDNE     *BLANKS
      C     #GSTYP        ANDNE     *BLANKS
+     C     #GMOD         OREQ      'AT'                                                    JMI109CC1
+     C     #GTYP         ANDNE     *BLANKS                                                 JMI109CC1
+     C     #GSTYP        ANDNE     *BLANKS                                                 JMI109CC1
      C                   MOVEL     #GTYP         KTYP              2
      C                   MOVEL     #GSTYP        KSTYP             2
+     C                   MOVEL     #GSTYP        KSTYP5            5                       JMI109CC1
       *
      C     KDTST         KLIST
      C                   KFLD                    KTYP
      C                   KFLD                    KSTYP
       *
+     C     KATST         KLIST                                                             JMI109CC1
+     C                   KFLD                    KTYP                                      JMI109CC1
+     C                   KFLD                    KSTYP5                                    JMI109CC1
+      *                                                                                    JMI109CC1
+     C     #GMOD         IFEQ      'FT'                                                    JMI109CC1
      C     KDTST         CHAIN     FDDTSTPD                           55
+      *                                                                                    JMI109CC1
+      * If found due to using the first 2 positions of the sub-type field                  JMI109CC1
+      * check positions 3 - 5 are also blank, if not then error                            JMI109CC1
+     C     *IN55         IFEQ      '0'                                                     JMI109CC1
+     C                   IF        %SUBST(#GSTYP:3:3) <> *BLANKS                           JMI109CC1
+     C                   MOVE      '1'           *IN55                                     JMI109CC1
+     C                   ENDIF                                                             JMI109CC1
+     C                   ENDIF                                                             JMI109CC1
+      *                                                                                    JMI109CC1
+     C                   ELSE                                                              JMI109CC1
+     C     KATST         CHAIN     SDATSTL0                           55                   JMI109CC1
+     C                   ENDIF                                                             JMI109CC1
       ** Record not found
      C     *IN55         IFEQ      '1'
      C                   SETON                                        9835

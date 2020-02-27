@@ -790,21 +790,31 @@
                                                                                             AR736874
      C                   IF        RECORD = 'MMDELDP0'                                      AR736874
       *                                                                                    AR1092035
-     C**********         IF        CDL005 = 'Y'                                   AR1092035 MD055318
-     C**********                   OR CDL011 = 'Y'                                 MD044400 MD055318
-     C**********         MOVEL     HKCSNM        DDCSNM                            AR736874 MD055318
-     C**********         ELSE                                                     AR1092035 MD055318
+     C                   IF        CDL005 = 'Y'                                            AR1092035
+     C                             OR CDL011 = 'Y'                                          MD044400
+     C                   MOVEL     HKCSNM        DDCSNM                                     AR736874
+     C                   ELSE                                                              AR1092035
      C                   MOVEL     HKCNUM        DDCSNM                                    AR1092035
-     C**********         ENDIF                                                    AR1092035 MD055318
+     C                   ENDIF                                                             AR1092035
       *                                                                                    AR1092035
      C                   MOVEL     HKCCY         DDCCY                                      AR736874
      C                   ENDIF                                                              AR736874
      C                   IF        RECORD = 'MMDENBP0'                                      AR736874
-     C**********         MOVEL     HLCSNM        DDCSNM                            AR736874 MD055318
+     C                   IF        CDL005 = 'Y'                                             MD055318
+     C                             OR CDL011 = 'Y'                                          MD055318
+     C                   MOVEL     HLCSNM        DDCSNM                                     AR736874
+     C                   ELSE                                                               MD055318
+     C                   MOVEL     HLCNUM        DDCSNM                                     MD055318
+     C                   ENDIF                                                              MD055318
      C                   MOVEL     HLCCY         DDCCY                                      AR736874
      C                   ENDIF                                                              AR736874
      C                   IF        RECORD = 'MMDENSP0'                                      AR736874
-     C**********         MOVEL     HMCSNM        DDCSNM                            AR736874 MD055318
+     C                   IF        CDL005 = 'Y'                                             MD055318
+     C                             OR CDL011 = 'Y'                                          MD055318
+     C                   MOVEL     HMCSNM        DDCSNM                                     AR736874
+     C                   ELSE                                                               MD055318
+     C                   MOVEL     HMCNUM        DDCSNM                                     MD055318
+     C                   ENDIF                                                              MD055318
      C                   MOVEL     HMCCY         DDCCY                                      AR736874
      C                   ENDIF                                                              AR736874
      C                   ENDIF                                                               BUG6534

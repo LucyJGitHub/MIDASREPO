@@ -16,12 +16,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055356           Date 27Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 BUG5671            Date 31Jan05               *
       *                 CGL029             Date 01Sep03               *
       * Midas Release 4 --------------- Base -------------------------*
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055356 - CLS Pay in Schedule missing warning message       *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  BUG5671- Add Sequence number to detail record                *
@@ -51,11 +53,11 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
- 
+
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,FXCLSPV001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -74,131 +76,131 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of Fields with warnings.
      D WFldNmXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of warning message IDs
      D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of warning message data.
      D WMsgDtXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
       ** External DS for Dealing Details
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** External DS for Currency Details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for Access Programs, short data structure
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Second DS for Access Programs, Long data structure
- 
+
      D CLSHed        E DS                  EXTNAME(FXCLSPSH)
      D                                     PREFIX(H_)
       ** Details of Pay-in schedule - Header
- 
+
      D NwCLSHed      E DS                  EXTNAME(FXVCLSPHPD)
      D                                     PREFIX(H_)
       * FX CLS Pay-in schedule in file format
- 
+
      D NwCLSDet      E DS                  EXTNAME(FXVCLSPDPD)
      D                                     PREFIX(D_)
       * FX CLS Pay-in schedule in file format
- 
+
      D OKFlHedDS     E DS                  EXTNAME(FXECLSPHPD)
      D                                     PREFIX(H_)
       * DS for error indicators flags
- 
+
      D OKFlDetDS     E DS                  EXTNAME(FXECLSPDPD)
      D                                     PREFIX(D_)
       * DS for error indicators flags
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of of warning message ids etc
      D WIx             S              3P 0
- 
+
       ** Response Mode, received as a parameter from the common header
      D RespMode        S              1A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,FXCLSPV002
- 
+
       *****************************************************************
       /EJECT
       ** +--- Start of Main processing -----------------------------------+
@@ -207,9 +209,9 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       /COPY WNCPYSRC,FXCLSPV003
- 
+
       ** Call access object to retrieve Number of decimal places                              186669
                                                                                               186669
      C                   EXSR      CCYNDP                                                     186669
@@ -263,7 +265,7 @@
       *
      C                   ENDSL
       *
- 
+
       *  *-------------------------------------------------------*
       *  * If no errors set up outstanding fields for valid file *
       *  *-------------------------------------------------------*
@@ -278,17 +280,17 @@
      C                   RETURN
       *****************************************************************
      C/EJECT
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,FXCLSPV013
- 
+
       *****************************************************************
       ** VLCLTM - Validate CLS Pay-in Time
       *****************************************************************
      C     VLCLTM        BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate CLS Pay in Time
@@ -432,8 +434,10 @@
      C                   ELSE
      C                   IF        H_PYTOTR <> H_PYNSBR
      C                   ADD       1             WIx
-     C                   MOVE      'PYTOTR'      WFldNmXAr(WIx)
-     C                   MOVE      'FXM3029'     WMsgIdXAr(WIx)
+     C**********         MOVE      'PYTOTR'      WFldNmXAr(WIx)                             MD055356
+     C**********         MOVE      'FXM3029'     WMsgIdXAr(WIx)                             MD055356
+     C                   MOVEL     'PYTOTR'      WFldNmXAr(WIx)                             MD055356
+     C                   MOVEL     'FXM3029'     WMsgIdXAr(WIx)                             MD055356
      C                   ENDIF
      C                   ENDIF
       *
@@ -448,15 +452,17 @@
       ** VLTOTP - Validate total amount for Pay
       *****************************************************************
      C     VLTOTP        BEGSR
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate total amount pay agains nostro balance
       *
      C                   IF        H_PYTOTP <> H_PYNSBP
      C                   ADD       1             WIx
-     C                   MOVE      'PYTOTP'      WFldNmXAr(WIx)
-     C                   MOVE      'FXM3026'     WMsgIdXAr(WIx)
+     C**********         MOVE      'PYTOTP'      WFldNmXAr(WIx)                             MD055356
+     C**********         MOVE      'FXM3026'     WMsgIdXAr(WIx)                             MD055356
+     C                   MOVEL     'PYTOTP'      WFldNmXAr(WIx)                             MD055356
+     C                   MOVEL     'FXM3026'     WMsgIdXAr(WIx)                             MD055356
      C                   ENDIF
       *
       ** Update error info with that returned from the validation module
@@ -484,9 +490,9 @@
       *****************************************************************
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * Response mode (1A), from source system common header
@@ -565,15 +571,15 @@
       *  Set up the name of the MSGF from which the message handler will
       *   get the messages
      C                   EVAL      #MsgFile = 'DRSMM'
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,FXCLSPV014
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -581,9 +587,9 @@
       * RESETERRS - Reset error information that is received back     *
       *    from each validation module.                               *
       *****************************************************************
- 
+
      C     RESETERRS     BEGSR
- 
+
      C                   EVAL      RetCodeOut = *Blanks
       *
       * Reset error & warning fields/message IDs/message data (arrays)
@@ -593,7 +599,7 @@
      C                   MOVEL     *BLANK        WFldNmXAr
      C                   MOVEL     *BLANK        WMsgIDXAr
      C                   MOVEL     *BLANK        WMsgDtXAr
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -601,7 +607,7 @@
       * UPDATERRS - Update error information with that received back  *
       *    from each validation module.                               *
       *****************************************************************
- 
+
      C     UPDATERRS     BEGSR
       *
       * Update error fields/message IDs/message data (arrays)
@@ -643,7 +649,7 @@
       *    Valid file record.                                         *
       *                                                               *
       *****************************************************************
- 
+
      C     SETUPVALID    BEGSR
       *
       ** Header details

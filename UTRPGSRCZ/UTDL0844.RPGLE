@@ -22,8 +22,15 @@
      FFXDEALL10 IF   E           K DISK
      FDLDEALL5  IF A E           K DISK
      FUTDL0844P1O    E             PRINTER OFLIND(*IN25)
-     F/COPY WNCPYSRC,FC0010F001
-     D/COPY ZACPYSRC,STD_D_SPEC
+
+      ** Midas Local Data Area for database error reporting; based on
+      ** external file
+     D LDA           E DS           256    EXTNAME(LDA) DTAARA(LDA)
+
+     D APDUMP        E DS                  EXTNAME(APDUMP) DTAARA(APDUMP)
+
+      ** Array containing Copyright statement
+     D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
 
      D ARRREM          S             50    DIM(15) CTDATA PERRCD(1)
 
@@ -71,9 +78,9 @@
      C                   ENDIF
       ** Print Header
      C                   EVAL      *IN25 = *ON
-     C                   EXSR      PrintHeader1
-     C                   EVAL      *IN25 = *ON
-     C                   EXSR      PrintHeader2
+     C                   WRITE     UTDL0844H1
+     C                   WRITE     UTDL0844H2
+     C                   EVAL      *IN25 = *OFF
      C                   MOVEL     'UTDL0844'    DBPGM
       *
      C                   READ      FXDEALL10
@@ -157,6 +164,7 @@
 
      C                   IF        *IN25 = *ON
      C                   WRITE     UTDL0844H1
+     C                   WRITE     UTDL0844H2
      C                   EVAL      *IN25 = *OFF
      C                   ENDIF
 

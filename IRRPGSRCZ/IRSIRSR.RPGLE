@@ -67,7 +67,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD054906 - CBS-2882 fix extenstion for Principal Change      *
-      *             Schedule                                          *
+      *             Schedule.                                         *
       *           - Receive ACTRJ from IRSIRSVU to properly initialize*
       *             field for buffer                                  *
       *  MD053400 - Details are not correctly reverted back when the  *
@@ -598,7 +598,7 @@
      C                                      DDFOID +                                        AR933170
      C**********                            InSwift2013 + ORDATEAST                  CSW213 MD053400
      C                                      InSwift2013 + ACTRJ +                           MD053400
-     C                                      ORDATEAST                                       MD053400     
+     C                                      ORDATEAST                                       MD053400
      C*******************EVAL      Buffer2=%SUBST(ORDATEAST:4239)+OPDATEAST     BUG4646BUG5357
      C*******************EVAL      BufferEx2=%SUBST(OPDATEAST:3438)+TRDATEAST   BUG4646BUG5357
      C*******************                      +TPDATEAST                       BUG4646BUG5357

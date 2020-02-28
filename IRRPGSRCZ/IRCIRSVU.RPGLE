@@ -109,7 +109,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD054906 - CBS-2882 fix extenstion for Principal Change      *
-      *             Schedule                                          *
+      *             Schedule.                                         *
       *           - Passed ACTRJ to IRCIRSR to ensure buffer is       *
       *             built properly                                    *
       *  MD054095 - FRA/IRS: Impossible to input a CIRS deal with zero*
@@ -2316,7 +2316,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                                      + OPCSAST                                       MD053400
      C                   EVAL      BufferEx7=%SUBST(OPCSAST:6036)+TPCSAST                   MD053400
      C                   EVAL      BufferEx8=%SUBST(TPCSAST:1035)                           MD053400
-     C                   EVAL      BufferEx9=%SUBST(TPCSAST:11034)                          MD053400     
+     C                   EVAL      BufferEx9=%SUBST(TPCSAST:11034)                          MD053400
      C                   ENDIF                                                               BUG6377
 
      C                   RETURN
@@ -8939,4 +8939,4 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      C                   ENDSR
       *****************************************************************
 **  CPY@
-(c) Finastra International Limited 2003 
+(c) Finastra International Limited 2003

@@ -116,7 +116,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD054906 - CBS-2882 fix extenstion for Principal Change      *
-      *             Schedule                                          *
+      *             Schedule.                                         *
       *           - Passed ACTRJ to IRSIRSR to ensure buffer is       *
       *             built properly                                    *
       *  MD054095 - FRA/IRS: Impossible to input a CIRS deal with zero*

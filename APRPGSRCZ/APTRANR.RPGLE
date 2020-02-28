@@ -82,7 +82,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD054906 - CBS-2882 fix extenstion for Principal Change      *
-      *             Schedule                                          *
+      *             Schedule.                                         *
       *           - Passed ACTRJ to IRSIRSR and IRCIRSR to match      *
       *             receiving parameters.                             *
       *  CSD102 - Password Length Extension                           *

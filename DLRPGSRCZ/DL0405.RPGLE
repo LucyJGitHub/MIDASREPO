@@ -28,7 +28,7 @@
       *                                                               *
       *  MD054655 - GLC0802C seq.00001 fails. DBCE length too small   *
       *           - Introduced WDBCE 15,0 to hold result before move  *
-      *             to DBCE                                           *
+      *             to DBCE.                                          *
       *           - Retrieve event currency details before subroutine *
       *             SRNetICD                                          *
       *  MD048346 - FX netting ICD against FX nets will not prioritize*

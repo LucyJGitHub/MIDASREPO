@@ -16,8 +16,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. ERZ247             Date 19Nov19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055398A          Date 27Feb20               *
+      *  Prev Amend No. MD055398           Date 20Feb20               *
+      *                 ERZ247             Date 19Nov19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CFT157             Date 29Aug14               *
       *                 MD000091           Date 06May13               *
       *                 CFT120             Date 28Sep12               *
@@ -45,12 +47,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055398A-Duplicate 0.00 (ERZ247)                            *
+      *           Hooks: ERZ247_019,ERZ247_004,ERZ247_016             *
+      *  MD055398-Duplicate 0.00 (ERZ247)                             *
+      *           Hooks: ERZ247_016                                   *
       *  ERZ247 - Field 71F in MT103 for GPI                          *
       *           Hooks: ERZ247_001,ERZ247_002,ERZ247_003,ERZ247_004, *
       *                  ERZ247_005,ERZ247_006,ERZ247_007,ERZ247_008, *
       *                  ERZ247_009,ERZ247_010,ERZ247_011,ERZ247_012  *
       *                  ERZ247_016                                   *
-      *  MD046248 - Finastra Rebranding                               *	
+      *  MD046248 - Finastra Rebranding                               *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *           (Recompile)                                         *
       *  MD000091 - Event Codes Substitution                          *
@@ -326,6 +332,7 @@
       ** If entered blanks, default 1st sender's charge to 0 with
       ** currency equal to pay currency.
 
+     C/COPY WNCPYSRC,ERZ247_019                                                            MD055398A
      C                   If        (WSCHG = *Blank) And (SDTCH = 'BEN')
      C                             And (@MT103='Y')                                           208219
      C/COPY WNCPYSRC,ERZ247_003                                                               ERZ247

@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD039547           Date 20Sep16               *
+      *  Last Amend No. MD055318           Date 17Feb20               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD039547           Date 20Sep16               *
       *                 CDL051             Date 02May18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD044400           Date 20Mar17               *
@@ -89,6 +90,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055318 - Customer may not be amended error                 *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD039547 - Referred account is not properly validated.       *
       *  CDL051 - Incomplete Deals to Repair                          *
@@ -798,11 +800,21 @@
      C                   MOVEL     HKCCY         DDCCY                                      AR736874
      C                   ENDIF                                                              AR736874
      C                   IF        RECORD = 'MMDENBP0'                                      AR736874
+     C                   IF        CDL005 = 'Y'                                             MD055318
+     C                             OR CDL011 = 'Y'                                          MD055318
      C                   MOVEL     HLCSNM        DDCSNM                                     AR736874
+     C                   ELSE                                                               MD055318
+     C                   MOVEL     HLCNUM        DDCSNM                                     MD055318
+     C                   ENDIF                                                              MD055318
      C                   MOVEL     HLCCY         DDCCY                                      AR736874
      C                   ENDIF                                                              AR736874
      C                   IF        RECORD = 'MMDENSP0'                                      AR736874
+     C                   IF        CDL005 = 'Y'                                             MD055318
+     C                             OR CDL011 = 'Y'                                          MD055318
      C                   MOVEL     HMCSNM        DDCSNM                                     AR736874
+     C                   ELSE                                                               MD055318
+     C                   MOVEL     HMCNUM        DDCSNM                                     MD055318
+     C                   ENDIF                                                              MD055318
      C                   MOVEL     HMCCY         DDCCY                                      AR736874
      C                   ENDIF                                                              AR736874
      C                   ENDIF                                                               BUG6534

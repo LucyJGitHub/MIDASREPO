@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD055344           Date 28Feb20               *
+      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *                 CER050             Date 16Jun19               *
       *                 MD052327           Date 17Nov18               *
       *                 MD052214           Date 26Oct18               *
       *                 MD052213           Date 26Oct18               *
@@ -166,6 +167,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055344 - Event code not found error                        *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate                          *
@@ -4098,7 +4100,9 @@ E001 C                   ENDIF
      C                   EVAL      Idx        += 1                                          AR826996
      C                   EVAL      FldNamXAr(Idx) = 'DDAUTO'                                AR826996
      C                   EVAL      MsgIDXAr(Idx)  = 'LER5605'                               AR826996
-     C                   EVAL      MsgDtaXAr = @CCYBR                                       AR826996
+     C**********         EVAL      MsgDtaXAr(Idx) = @CCYBR                         AR826996 MD055344
+     C                   EVAL      BLen = %Len(%Trim(@CCYBR))                               MD055344
+     C                   EVAL      MsgDtaXAr(Idx) = LenStr +%TRIM(@CCYBR)                   MD055344
      C                   ENDIF                                                              AR826996
      C     AYIPLT        IFNE      *BLANKS                                                  AR826996
      C     AYIPLS        ANDNE     *BLANKS                                                  AR826996
@@ -4119,7 +4123,9 @@ E001 C                   ENDIF
      C                   EVAL      Idx        += 1                                          AR826996
      C                   EVAL      FldNamXAr(Idx) = 'DDAUTO'                                AR826996
      C                   EVAL      MsgIDXAr(Idx)  = 'LER5606'                               AR826996
-     C                   EVAL      MsgDtaXAr = @CCYBR                                       AR826996
+     C**********         EVAL      MsgDtaXAr(Idx) = @CCYBR                         AR826996 MD055344
+     C                   EVAL      BLen = %Len(%Trim(@CCYBR))                               MD055344
+     C                   EVAL      MsgDtaXAr(Idx) = LenStr +%TRIM(@CCYBR)                   MD055344
      C                   ENDIF                                                              AR826996
      C                   ENDIF                                                              AR826996
      C                   ENDIF                                                              AR826996
@@ -9986,7 +9992,7 @@ E004 C                   ENDIF
      C                   ELSE                                                                 CER050
      C                   MOVEL     P@VL01        SVALLE            1                          CER050
      C                   ENDIF                                                                CER050
-      *                                                                                       CER050                                                                                        
+      *                                                                                       CER050
       ** Check for auto allocation of loan numbers system value.                             BUG6108
      C                   CALLB     'AOSVALR0'                                                BUG6108
      C                   PARM      *BLANKS       PRtCd                                       BUG6108

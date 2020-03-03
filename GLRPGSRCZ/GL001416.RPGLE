@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD039029           Date 13Jul16               *
+      *  Last Amend No. EML102             Date 28Nov19               *
+      *  Prev Amend No. CMG009             Date 12Dec19               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD039029           Date 13Jul16               *
       *                 MD036398           Date 02Nov15               *
       *                 MD034442           Date 14Jul15               *
       *                 MD032299           Date 23Mar15               *
@@ -44,6 +46,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  EML102 - Upgrade of UNL007, EML004 to FB2.1 SP21             *
+      *           EML004 - Extended Narrative                         *
+      *           Add Hooks: EML102_015 EML102_016 EML102_017         *
+      *                      EML102_018                               *
+      *           BUG25009 - No MT942 produced on manual request      *
+      *           UNL007 - Extended Narratives                        *
+      *           Add Hooks: GL00141601 GL00141602 GL00141603         *
+      *                      GL00141604                               *
+      *  CMG009 - Upgrade of UMA001 to FB21 SP21                      *
+      *           MT942 without Forward Value Postings                *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039029 - No MT942 generated even if there are shadow       *
       *             postings, for e.g. from Batch Postings, because   *
@@ -76,15 +88,15 @@
       *  CGL013 - MT94x Messages Generation                           *
       *                                                               *
       *****************************************************************
- 
+
      FRSACMTL2  IF   E           K DISK    INCLUDE(RSACMTPO) INFSR(*PSSR)
       ** Midas GL Account Movements.
- 
+
      FGLRSACL0  IF   E           K DISK                      INFSR(*PSSR)
       ** Midas GL MT94x Used Account Movement - Retieval.
      F                                     RENAME(GLRSACD0:GLRSACR0)
      F                                     PREFIX(US)
- 
+
      FGLJENXL1  IF   E           K DISK                      INFSR(*PSSR)
       ** Midas GL Journal Entry - Add. Inf. - Retrieval.
       *                                                                                     BUG23284
@@ -98,7 +110,8 @@
                                                                                             BUG22558
      FOTPAY     IF   E           K DISK                      INFSR(*PSSR)                   BUG22558
       ** Midas FT Outgoing Payments Transactions.                                           BUG22558
- 
+
+      /COPY WNCPYSRC,GL00141601                                                               EML102
      FGLPOSTPD  O  A E             DISK    COMMIT            INFSR(*PSSR)
       ** Midas GL Postings for MT94x Messages.
      F                                     PREFIX(GL)
@@ -109,14 +122,14 @@
      FGLPSTGAL0 IF   E           K DISK                      INFSR(*PSSR)                     216937
       ** Midas GL ostings in Transit - Group Accounts                                         216937
      F/COPY WNCPYSRC,GLH00621
- 
+
      FGLRSACPD  O  A E             DISK    COMMIT            INFSR(*PSSR)
       ** Midas GL MT94x Used Account Movement.
      F***NTRAN1**  IF   E           K DISK                      INFSR(*PSSR)       MD034442 MD036398
      FNTRAN     IF   E           K DISK                      INFSR(*PSSR)                   MD036398
       ** Midas FT Nostro Transfer Transactions.                                             MD034442
      F/COPY WNCPYSRC,GLH00394
- 
+
       *========================================================================*
       *                                                                        *
       * Use of Indicators                                                      *
@@ -139,11 +152,11 @@
       * 99 - Multi-purpose                                                     *
       *                                                                        *
       *========================================================================*
- 
+
       *========================================================================*
       ** Automatically included D-specs
       ** ==============================
- 
+
       ** The following /COPY line includes the LDA layout,
       ** the copyright array definition,
       ** and the following named constants:
@@ -153,33 +166,33 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Manually included D-specs
       ** =========================
- 
+
       ** Named constants
       ** ---------------
- 
+
       ** Arrays and Data Structures
       ** --------------------------
- 
+
      D GLMR94        E DS                  EXTNAME(GLMR94PD)
       **  Data Structure for GL MT941/942 Messages Requests.
- 
+
      D DsUsedMvnt    E DS                  EXTNAME(GLRSACPD)
      D                                     PREFIX(US)
       **  Data structure for Used Movement.
- 
+
      D DsCurrMvnt    E DS                  EXTNAME(RSACMTPD)
       **  Data structure for Current Movement.
- 
+
      D DsCmpMvnt       DS
       ** Data Structure to compare with Used Movements
      D  CmpNWRK                            LIKE(MGNWRK)                         Network
@@ -187,26 +200,26 @@
      D  CmpDSTN                            LIKE(MGDSTN)                         Destination
      D  CmpMTPY                            LIKE(MGMTPY)                         Message Type
      D  CmpDetail                          LIKE(DsCurrMvnt)                     RSACMTPD Detail
- 
+
      D ACCNT         E DS                  EXTNAME(ACCNTAB)
      D                                     PREFIX(AC)
       **  Data structure for Account Details.
- 
+
      D SDNARR        E DS                  EXTNAME(SDNARRPD)
       **  Data structure for Narrative Code.
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       **  Data Structure for Bank Details.
                                                                                               CRE008
      D SCSARD        E DS                  EXTNAME(SCSARDPD) PREFIX(SS)                       CRE008
       **  Data Structure for Switchable features descriptions.                                CRE008
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       **  First DS for access programs, long data structure.
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       **  Second DS for access programs, short data structure.
- 
+
      D                 DS
       **  Arrays containing Transaction Types and corresponding details.
      D*TransType******               50    DIM(60) CTDATA PERRCD(1)                           CRE008
@@ -223,17 +236,18 @@
      D    TrSPOS                      7    OVERLAY(TransType:*NEXT)             Source of Posting
      D      TrFiller4                 1    OVERLAY(TransType:*NEXT)
      D    TrDescrip                  34    OVERLAY(TransType:*NEXT)             Description
- 
+     D/COPY WNCPYSRC,EML102_016                                                               EML102
+
      D                 DS
       ** Data Structure to retrieve the Batch Number and the Item Number
      D GLSPOS                         7A                                        Source of Posting
      D  WBatchNb               1      3A                                        Batch Number
      D  WItemNb                4      6S 0                                      Item Number
      D/COPY WNCPYSRC,GLH00395
- 
+
       ** Declared variables
       ** ------------------
- 
+
      D KeyNWRK         S                   LIKE(MGNWRK)                         Network
      D KeyBRCH         S                   LIKE(ACBRCA)                         Branch
      D KeyCNUM         S                   LIKE(ACCNUM)                         Customer
@@ -244,7 +258,7 @@
      D KeyDSTN         S                   LIKE(MGDSTN)                         Destination
      D KeyMTPY         S                   LIKE(MGMTPY)                         Message Type
      D/COPY WNCPYSRC,GLH00396
- 
+
      D P@RTCD          S              7                                         Return code
      D P@OPTN          S              7                                         Option
      D P@SARD          S              6                                         Sar           CRE008
@@ -256,7 +270,7 @@
      D P@SEQU          S              2                                         Account Sequence
      D P@BRCH          S              3                                         Branch
      D P@NVCD          S              2                                         Narrative Code
- 
+
      D CRE008          S              6                                         CRE008 flag   CRE008
      D PrcAccnt        S              1                                         Process Account
      D PrcMvnt         S              1                                         Process Movement
@@ -264,30 +278,32 @@
      D WkTRYP          S                   LIKE(TRYP)                           Transaction Type
      D WkNARR          S                   LIKE(GLPNAR)                         Posting Narrative
      D CER031          S              1                                                     BUG22558
- 
+
      D PRCGLPN         S              1                                         UpdGLPOSTPD MD032299
      D PRCRSMN         S              1                                         UpdGLRSACPD MD032299
+     D CMG009          S              1                                         CMG009 flag   CMG009
+      /COPY WNCPYSRC,GL00141602                                                               EML102
       ** Input Specs
       ** -----------
- 
+
       *------------------------------------------------------------------------*
       ** C Spec. Declaratives
       ** ====================
- 
+
       *========================================================================*
       *              M  A  I  N     P  R  O  C  E  S  S  I  N  G               *
       *========================================================================*
- 
+
       ** Init processing uses the standard *INZSR subroutine
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    ReturnCode                     Return code
      C                   PARM                    GLMR94                         Request Detail
- 
+
      C                   EVAL      ReturnCode = *BLANKS                         Return code
- 
+
       ** Load key fields
- 
+
      C                   EVAL      KeyNWRK = MRNWRK                             Network
      C                   EVAL      KeyBRCH = MRBRCA                             Branch
      C                   EVAL      KeyCNUM = MRCNUM                             Customer
@@ -297,56 +313,57 @@
      C                   EVAL      KeyNATY = MRNATY                             Net. Account Type
      C                   EVAL      KeyDSTN = MRDSTN                             Destination
      C                   EVAL      KeyMTPY = MRMTPY                             Message Type
- 
+
      C                   EVAL      PrcAccnt = 'Y'                               Process Account
- 
+
       ** Retrieve Account details.
- 
+
      C                   EXSR      $RtvAccNo
- 
+
       ** If the account should not be treated, go to the end of processing.
- 
+
      C                   IF        PrcAccnt = 'N'
      C                   GOTO      EndProc
      C                   ENDIF
- 
+
       ** Read each Movement corresponding to Midas Account.
- 
+
      C     KeyMvnt       SETLL     RSACMTPO
      C     KeyMvnt       READE     RSACMTPO                               27
      C                   DOW       NOT *IN27
- 
+
      C                   EVAL      PrcMvnt = 'Y'                                Process Movement
      C                   EVAL      PRCGLPN = 'Y'                                UpdGLPOSTPD MD032299
      C                   EVAL      PRCRSMN = 'Y'                                UpdGLRSACPD MD032299
- 
+
       ** Check if the movement has been already processed.
- 
+
      C                   EXSR      $UsedMvnt
- 
+
      C                   IF        PrcMvnt = 'Y'
- 
+
       ** Retrieve Transaction Type Details
- 
+
      C                   EXSR      $RtvTrType
- 
+
       ** Load Posting fields
- 
+
      C                   EXSR      $LoadFld
- 
+     C/COPY WNCPYSRC,EML102_017                                                               EML102
+
      C                   ENDIF
- 
+
      C                   IF        PrcMvnt = 'Y'
- 
+
      C                   IF        PRCGLPN = 'Y'                                            MD032299
       ** Add record in Posting file.
- 
+
      C                   WRITE     GLPOSTD0
      C                   ENDIF                                                              MD032299
- 
+
      C                   IF        PRCRSMN = 'Y'                                            MD032299
       ** Add record in Used Account Movement.
- 
+
      C                   EVAL      MGNWRK   = MRNWRK                            Network
      C                   EVAL      MGNATY   = MRNATY                            Net. Account Type
      C                   EVAL      MGDSTN   = MRDSTN                            Destination
@@ -355,30 +372,30 @@
      C                   COMMIT
      C                   ENDIF                                                              MD032299
      C                   ENDIF
- 
+
       ** Read next Movement corresponding to Midas Account.
- 
+
      C     KeyMvnt       READE     RSACMTPO                               27
- 
+
      C                   ENDDO
- 
+
      C     EndProc       TAG
- 
+
      C                   EVAL      *INLR = *ON
- 
+
       *========================================================================*
       * $RtvAccNo : Retrieve Retail Account Number                             *
       *------------------------------------------------------------------------*
- 
+
      C     $RtvAccNo     BEGSR
       *    ---------     -----
- 
+
      C                   EVAL      P@BRCH = MRBRCA
      C                   MOVEL(P)  MRCNUM        P@CUSN
      C                   EVAL      P@CURR = MRCCY
      C                   MOVEL     MRACCD        P@CODE
      C                   MOVEL     MRACSQ        P@SEQU
- 
+
      C                   CALLB     'AOACCTR0'
      C                   PARM      *BLANKS       P@RTCD
      C                   PARM      '*KEY   '     P@OPTN
@@ -389,52 +406,59 @@
      C                   PARM                    P@SEQU
      C                   PARM                    P@BRCH
      C     ACCNT         PARM      ACCNT         DSSDY
- 
+
       ** If no record found in ACCNTAB, do not process the account.
- 
+
      C     P@RTCD        IFNE      *BLANKS                                      Begin P@RTCD
      C                   EVAL      PrcAccnt = 'N'                               Process Account
      C                   EVAL      ReturnCode = 'Error'                         Return code
      C                   END                                                    End P@RTCD
- 
+
       *    ---------     -----
      C     @RtvAccNo     ENDSR
- 
+
       *========================================================================*
       * $UsedMvnt: Check if the Movement has been already processed.           *
       *------------------------------------------------------------------------*
- 
+
      C     $UsedMvnt     BEGSR
       *    ---------     -----
- 
+
       **  The processing retrieves only movements to post during this COB.
- 
+
      C                   IF        PTDT >= BJDNWD
      C                   EVAL      PrcMvnt = 'N'
      C                   GOTO      @UsedMvnt
      C                   ENDIF
- 
+
+     C                   IF        CMG009 = 'Y'                                               CMG009
+     C                             AND  PTDT =  BJRDNB                                        CMG009
+     C                             AND  VUDT >  BJRDNB                                        CMG009
+     C                   EVAL      PrcMvnt = 'N'                                              CMG009
+     C                   GOTO      @UsedMvnt                                                  CMG009
+     C                   ENDIF                                                                CMG009
+     C
       **  This routine verifies if the movement has been already processed.
       **  In fact, the processing checks if the movement is in LF/GLRSACL0.
- 
+
      C                   EVAL      CmpNWRK  = MRNWRK                            Network
      C                   EVAL      CmpNATY  = MRNATY                            Net. Account Type
      C                   EVAL      CmpDSTN  = MRDSTN                            Destination
      C                   EVAL      CmpMTPY  = MRMTPY                            Message Type
      C                   EVAL      CmpDetail= DsCurrMvnt                        Current Movement
- 
+
      C     KeyUseMvnt    SETLL     GLRSACL0
      C     KeyUseMvnt    READE     GLRSACL0                               28
- 
+
      C                   DOW       NOT *IN28
      C                             AND PrcMvnt = 'Y'
      C                   IF        DsCmpMvnt = DsUsedMvnt
      C                   EVAL      PrcMvnt = 'N'
      C                   LEAVE
      C                   ENDIF
- 
+
      C     KeyUseMvnt    READE     GLRSACL0                               28
- 
+
      C                   ENDDO
       ** check if authorised Payment if FT
 b1   C                   Select                                                             MD032299
@@ -502,22 +526,22 @@ x1   C                   Other                                                  
      C                   EVAL      PRCGLPN = 'Y'                                            MD039029
      C                   EVAL      PRCRSMN = 'Y'                                            MD032299
 e1   C                   Endsl                                                              MD032299
- 
- 
+
+
       *    ---------     -----
      C     @UsedMvnt     ENDSR
- 
+
       *========================================================================*
       * $RtvTrType: Retrieve Transaction Type Detail                           *
       *------------------------------------------------------------------------*
- 
+
      C     $RtvTrType    BEGSR
       *    ----------    -----
- 
+
      C                   EVAL      TrIdx = 1
- 
+
       ** Load search argument according transaction type.
- 
+
      C                   SELECT
      C                   WHEN      %SUBST(XRFI:1:2) = 'ZS'                      CM Zero Bal   CRE008
      C                   EVAL      WkTRYP = 'ZS'                                              CRE008
@@ -534,23 +558,23 @@ e1   C                   Endsl                                                  
      C                   OTHER
      C                   EVAL      WkTRYP = TRYP
      C                   ENDSL
- 
+
       ** Retrieve Transaction Type details.
- 
+
      C     WkTRYP        LOOKUP    TrType(TrIdx)                          99
- 
+
       *    ----------    -----
      C     @RtvTrType    ENDSR
- 
+
       *========================================================================*
       * $LoadFld  : Load Posting fields                                        *
       *------------------------------------------------------------------------*
- 
+
      C     $LoadFld      BEGSR
       *    --------      -----
- 
+
      C                   CLEAR                   GLPOSTD0
- 
+
      C                   EVAL      GLRECI  = 'S'                                Record Id
      C                   EVAL      GLCNUM  = CUSN                               Customer number
      C                   EVAL      GLCCY   = CCYD                               Currency code
@@ -658,6 +682,7 @@ e1   C                   Endsl                                                  
      C                   EVAL      GLMGADI6 = BAADI6                            Additional Inf. 6
      C                   EVAL      GLMGAERI = BAAERI                            ERI Indicator
      C                   ENDIF
+      /COPY WNCPYSRC,GL00141603                                                               EML102
      C                   ENDIF
      C/COPY WNCPYSRC,GLH00624
      C                   EVAL      GLMGNWRK = MRNWRK                            Network
@@ -671,33 +696,34 @@ e1   C                   Endsl                                                  
      C                   Exsr      SRZSLOAD                                                   CRE008
      C                   Exsr      SRGALOAD                                                   216937
      C                   Endif                                                                CRE008
- 
+
      C     @LoadFld      ENDSR
       *    --------      -----
      C/COPY WNCPYSRC,GLH00399
- 
+
       *========================================================================*
       * $RtvPosNar: Retrieve Posting Narrative                                 *
       *------------------------------------------------------------------------*
- 
+
      C     $RtvPosNar    BEGSR
       *    ----------    -----
- 
+
      C                   EVAL      WkNARR = *BLANKS
- 
+
      C                   CALL      'AONARRR0'
      C                   PARM      *BLANKS       P@RTCD
      C                   PARM      '*KEY   '     P@OPTN
      C                   PARM      NRTC          P@NVCD
      C     SDNARR        PARM      SDNARR        DSFDY
- 
+
      C                   IF        P@RTCD = *BLANKS
      C                   EVAL      WkNARR = ALDON
      C                   ENDIF
- 
+
       *    ----------    -----
      C     @RtvPosNar    ENDSR
- 
+
+     C/COPY WNCPYSRC,EML102_018                                                               EML102
       *========================================================================*
       * SRZSLOAD - Load Zero Blancing/Sweeping fld 61 details                  *              CRE008
       *------------------------------------------------------------------------*              CRE008
@@ -758,13 +784,13 @@ e1   C                   Endsl                                                  
       *========================================================================*              216937
       * *INZSR    : Init Processing                                            *
       *------------------------------------------------------------------------*
- 
+
      C     *INZSR        BEGSR
       *    ------        -----
- 
+
       ** Initialise Copyright Array
      C                   MOVEA     CPY@          CPY@@            80
- 
+
       ** Initialise LDA
      C     *LOCK         IN        LDA
      C                   EVAL      DBpgm = PSProcPgm
@@ -801,12 +827,12 @@ e1   C                   Endsl                                                  
      c                   ENDIF                                                              BUG22558
                                                                                             BUG22558
       ** Retrieve Bank details.
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*DBERR '     P@RTCD                         Return Code
      C                   PARM      '*FIRST '     P@OPTN                         Option
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Check if Switchable Feature CAP204 is installed.                                     CAP204
       *                                                                                       CAP204
      C                   MOVEL     'N'           CAP204            1                          CAP204
@@ -829,17 +855,30 @@ e1   C                   Endsl                                                  
      C                   EXSR      *PSSR                                                      CAP204
      C                   END                                                                  CAP204
       *                                                                                       CAP204
+      ** Check if feature CMG009 (MT942 without Forward Value Postings) is installed          CMG009
+                                                                                              CMG009
+     C                   EVAL      CMG009 = 'N'                                               CMG009
+                                                                                              CMG009
+     C                   CALLB     'AOSARDR0'                                                 CMG009
+     C                   PARM      *BLANKS       P@RTCD                         Return Code   CMG009
+     C                   PARM      '*VERIFY'     P@OPTN                         Option        CMG009
+     C                   PARM      'CMG009 '     P@SARD                         Feature Ref.  CMG009
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CMG009
+                                                                                              CMG009
+     C                   IF        P@RTCD = *BLANKS                                           CMG009
+     C                   EVAL      CMG009 = 'Y'                                               CMG009
+     C                   ENDIF                                                                CMG009
       ** Key List to access Movements LF/RSACMTL2
- 
+
      C     KeyMvnt       KLIST
      C                   KFLD                    KeyBRCH
      C                   KFLD                    KeyCNUM
      C                   KFLD                    KeyCCY
      C                   KFLD                    KeyACOD
      C                   KFLD                    KeyACSQ
- 
+
       ** Key List to access Used Movements LF/GLRSACL0
- 
+
      C     KeyUseMvnt    KLIST
      C                   KFLD                    KeyNWRK
      C                   KFLD                    KeyBRCH
@@ -850,9 +889,9 @@ e1   C                   Endsl                                                  
      C                   KFLD                    KeyNATY
      C                   KFLD                    KeyDSTN
      C                   KFLD                    KeyMTPY
- 
+
       ** Key List to access the Batch Item Additional Information.
- 
+
      C     KeyAddInf     KLIST
      C                   KFLD                    PTDT
      C                   KFLD                    WBatchNb
@@ -861,39 +900,41 @@ e1   C                   Endsl                                                  
      C     KeyAddInf1    KLIST                                                              BUG23284
      C                   KFLD                    WBatchNb                                   BUG23284
      C                   KFLD                    WItemNb                                    BUG23284
+     C/COPY WNCPYSRC,EML102_015                                                               EML102
       ** Key List to access the Posting in Transit Extension file                             CRE008
                                                                                               CRE008
      C     KeyGLPZS      KLIST                                                                CRE008
      C                   KFLD                    XRFI                                         CRE008
      C                   KFLD                    XRFN                                         CRE008
- 
+     C/COPY WNCPYSRC,GL00141604                                                               EML102
+
      C/COPY WNCPYSRC,GLH00402
       *    ------        -----
      C     @INZSR        ENDSR
- 
+
       *========================================================================*
       * *PSSR     : Program exception error subroutine                         *
       *------------------------------------------------------------------------*
- 
+
      C     *PSSR         BEGSR
       *    ----------    ------
- 
+
      C                   IF        ReturnCode = *BLANKS
      C                   EVAL      ReturnCode = 'PSSR_Error'
      C                   ENDIF
- 
+
      C                   DUMP
      C                   ROLBK
- 
+
      C                   EVAL      *INU7 = *On
      C                   EVAL      *INU8 = *On
      C                   EVAL      *INLR = *On
- 
+
      C                   RETURN
- 
+
       *    ----------    ------
      C     @PSSR         ENDSR
- 
+
       *========================================================================*
 **CTDATA CPY@
 (c) Finastra International Limited 2002

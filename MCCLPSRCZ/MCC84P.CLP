@@ -3,16 +3,17 @@
 /*EXI *  TEXT('Midas MC Management Account Balance Prompt')          */
 /********************************************************************/
 /*                                                                  */
-/*       Midas     Management Accounts Module                   */
+/*       Midas     Management Accounts Module                       */
 /*                                                                  */
 /*       MCC84P - Management Account Balance Prompt 2               */
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. EML108             Date 15Jan20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. BG18886            Date 28May08              */
+/*                      BG18886            Date 28May08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
@@ -22,6 +23,12 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       EML108 - Upgrade FMD003 and fixes to FBM2.1SP21            */
+/*                Added hooks EML108_022 -> EML108_032              */
+/*                Amend core hook MCC84P001                         */
+/*       222591 - 'Relative Period does not exist' is displayed when*/
+/*                a previous report for term1 or term2 is requested */
+/*       FMD003 - Management Accounts Automatic Balance Update      */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BG18886 - Amend non-standard codes.                        */
 /*       S01416 - Account Balances Report                           */
@@ -79,9 +86,11 @@
              CHGVAR     VAR(&RPCD) VALUE('Y')
              CHGVAR     VAR(&TERM1) VALUE('P')
              CHGVAR     VAR(&TERM2) VALUE('Y')
+/*/COPY WNCPYSRC,EML108_022                                          */                   /*EML108*/
              ENDDO
              IF         COND(&RACT *EQ 'D') THEN(CHGVAR VAR(&IN03) +
                           VALUE('1'))
+/*/COPY WNCPYSRC,EML108_023                                          */                   /*EML108*/
 /**/
 ERRMC:
              SNDRCVF    RCDFMT(MCC84MC)
@@ -96,6 +105,7 @@ ERRMC:
              CHGVAR     VAR(&IN20) VALUE('0')
              CHGVAR     VAR(&IN21) VALUE('0')
              CHGVAR     VAR(&IN66) VALUE('0')
+/*/COPY WNCPYSRC,EML108_024                                          */                   /*EML108*/
 /* IF F3, RETURN TO RCF WITH ACTION CODE = END  */
              IF         COND(&IN01 *EQ '1') THEN(DO)
              CHGVAR     VAR(&RCMD) VALUE('E')
@@ -138,12 +148,14 @@ ERRMC:
              CHGVAR     VAR(&SRPDN) VALUE(&RPDN)
              CALL       PGM(AORPERR0) PARM(&RTCD '*KEY' &PERSET +
                           &RPDN &DSFDY)
+/*/COPY WNCPYSRC,EML108_031                                          */                   /*EML108*/
              IF         COND(&RTCD *NE '       ') THEN(DO)
              CHGVAR     VAR(&IN18) VALUE('1')
              CHGVAR     VAR(&MSG2) VALUE('Relative Period does not +
                           exist for this Control Group')
              GOTO       CMDLBL(ERRMC)
              ENDDO
+/*/COPY WNCPYSRC,EML108_032                                          */                   /*EML108*/
              ENDDO
 SKIP:
              IF         COND((&GRPCD *NE '   ') *AND (&IN66 *EQ +
@@ -206,6 +218,7 @@ SKIP:
              ENDDO
 /**/
 /* TERM FOR REPORT (1ST COLUMN)*/
+/*/COPY WNCPYSRC,EML108_025                                          */                   /*EML108*/
              IF         COND(&TERM1 *NE 'P' *AND &TERM1 *NE 'Y' *AND +
                           &TERM1 *NE '1' *AND &TERM1 *NE '2') THEN(DO)
              CHGVAR     VAR(&IN19) VALUE('1')
@@ -213,6 +226,7 @@ SKIP:
                         ''1'' or ''2''')
              GOTO       CMDLBL(ERRMC)
              ENDDO
+/*/COPY WNCPYSRC,EML108_026                                          */                   /*EML108*/
  /* VALIDATE TERM 1 EXISTS IF SELECTED */
              IF         COND(&TERM1 *EQ '1') THEN(DO)
              CHGVAR     VAR(&RTCD) VALUE('TERM1  ')
@@ -275,9 +289,11 @@ SKIP:
                         ''M''')
              GOTO       CMDLBL(ERRMC)
              ENDDO
+/*/COPY WNCPYSRC,EML108_027                                          */                   /*EML108*/
 /**/
 /*  DISPLAY DISPLAY 'ANALYSE BY' SELECTION SCREEN                   */
              CALL       PGM(MC84P) PARM(&GRPCD &RETC &CCY &ANAL)
+/*/COPY WNCPYSRC,EML108_028                                          */                   /*EML108*/
 /**/
              IF         COND(&RETC *EQ 'Y') THEN(GOTO CMDLBL(ERRMC))
              IF         COND(&RETC *EQ 'E') THEN(DO)
@@ -288,9 +304,11 @@ SKIP:
 /************CHGVAR     VAR(&RPARM) VALUE(&CCY ** &RSNO ** &RSLV ** +
                           &RPCD ** &GRPCD ** &SRPDN ** &TERM1 ** +
                           &TERM2 ** &TYPE ** &ANAL)                                 */ /*BG18886*/
+/*/COPY WNCPYSRC,EML108_029                                          */                   /*EML108*/
              CHGVAR     VAR(&RPARM) VALUE(&CCY *CAT &RSNO *CAT &RSLV +
                           *CAT &RPCD *CAT &GRPCD *CAT &SRPDN *CAT +
                           &TERM1 *CAT &TERM2 *CAT &TYPE *CAT &ANAL)                    /*BG18886*/
+/*/COPY WNCPYSRC,EML108_030                                          */                   /*EML108*/
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')

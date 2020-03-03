@@ -9,7 +9,7 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD054045           Date 27Aug19              */
+/*       Last Amend No. EML110             Date 20Jan20              */
 /*       Prev Amend No. MD046248           Date 27Oct17              */
 /*                      MD037757           Date 26Apr16              */
 /*                      MD031644           Date 12Jan15              */
@@ -129,8 +129,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
-/*       MD054045 - Not able to reopen i/c after the 1st attempt     */
-/*                  to reopen failed.                                */
+/*       EML110 - Account Balance Pooling. Upgrade to FBM 2.1        */
+/*                Amend core hook SCC07005                           */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD037757 - When running COB, component CBC022001 00296      */
 /*                  failed                                           */
@@ -504,15 +504,9 @@
 /**********  CALL       PGM(SC001006)                           */           /*AR1090688 MD022394D*/
                                                                                        /*AR1090688*/
 /* Get copy of file SCFMBRTD */                                                         /*MD037757*/
-                                                                                        /*MD054045*/
-             CHKOBJ     OBJ(QTEMP/SCFMBRTD) OBJTYPE(*FILE)                              /*MD054045*/
-             MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD054045*/
-                                                                                        /*MD054045*/
              CRTDUPOBJ  OBJ(SCFMBRTD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
                           TOLIB(QTEMP) DATA(*YES) CST(*NO) TRG(*NO)                     /*MD037757*/
              MONMSG     MSGID(CPF4128) EXEC(GOTO ABNOR)                                 /*MD037757*/
-                                                                                        /*MD054045*/
-             ENDDO                                                                      /*MD054045*/
 
 
 /** Check if CAS005 is on /*                                                              /*CAS005*/

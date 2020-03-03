@@ -13,8 +13,9 @@
 /*                                                                   */                 /*CGL127AY*/
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD002850           Date 08Apr13              */
+/*       Last Amend No. EML102             Date 28Nov19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD002850           Date 08Apr13              */
 /*                      CGL127AY           Date 06Aug12              */
 /*                      CCB020             Date 06Aug12              */
 /*                      CGL127AB           Date 06Aug12              */
@@ -42,7 +43,11 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
-/*       MD046248 - Finastra Rebranding                              */
+/*  EML102 - Upgrade of UNL007 to FB2.1 SP21                         */
+/*           UNL007 - Extended Narratives                            */
+/*                    Use /COPY GLC4450INT, GLC4450MPS, GLC4450MP1,  */
+/*                             GLC4450MP2, GLC4450MP3)               */
+/*  MD046248 - Finastra Rebranding                                   */
 /*  MD002850 - Correct the processing for restart of subtasks        */
 /*             after failure.                                        */
 /*  CGL127AY - COB Restructure - GL COB Optimisation Phase 1         */
@@ -87,7 +92,7 @@
 /*********************************************************************/
 /*********PGM                                                         /*S01189*/
              PGM        PARM(&CNAM &CSEQ)                             /*S01189*/
- 
+
 /**DCL*VAR(&BISCPY)*TYPE(*CHAR)*LEN(64)*VALUE('(c)*+*              */ /*107793*/
 /******COPYRIGHT*ACT*INTERNATIONAL*LIMITED*1990,*1995')*           */ /*107793*/
 /**/                                                                  /*S01408*/
@@ -150,7 +155,7 @@
                                                                                         /*CGL127AY*/
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))                                                /*CGL127AY*/
- 
+
              SNDPGMMSG  MSG('GLC4450 - Postings History +
                           Maintenance') TOMSGQ(MRUNQ)
 /*                                                                      CCB009*/
@@ -159,7 +164,7 @@
 /**********  CALL       PGM(AOSARDR0) PARM(&CCB009 '*VERIFY' +     */                   /*CGL127AY*/
 /**********               'CCB009' &AOFMT)                         */            /*CCB009 CGL127AY*/
 /**********  CHGJOB     SWS(XXXXXX00)                              */                   /*CGL127AY*/
- 
+
 /**Determine*phase*of*system**/                                                    /*107793 CCB020*/
 /**********  RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)                            */ /*107793 CCB020*/
                                                                       /*107793*/

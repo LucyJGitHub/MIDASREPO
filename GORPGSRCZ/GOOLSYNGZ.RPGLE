@@ -12,8 +12,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD101             Date 07Dec18               *
-      *  Prev Amend No. MD050212           Date 02Apr18               *
+      *  Last Amend No. EML102             Date 28Nov19               *
+      *  Prev Amend No. CER073D            Date 28Nov19               *
+      *                 CSD101             Date 07Dec18               *
+      *                 MD050212           Date 02Apr18               *
       *                 CLE071             Date 18Jul18               *
       *                 MD050231           Date 25Mar18               *
       *                 MD046248           Date 27Oct17               *
@@ -106,6 +108,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      * EML102 - Upgrade of UNL007 to FB2.1 SP21                      *
+      *          UNL007 - Extended Narratives                         *
+      *  CER073D - Upgrade of EML014 to FB2.1 SP21                    *
+      *      EML014 - AnaCredit Reporting Enhancement (Recompile)     *
       *  CSD101 - Password Encryption (Recompile)                     *
       *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *

@@ -17,7 +17,7 @@
       *  Prev Amend No. MD053400           Date 03Jul19               *
       *                 MD049387           Date 19Jan18               *
       *                 MD047859           Date 19Sep17               *
-      *                 AR933170           Date 07Jun13               *      
+      *                 AR933170           Date 07Jun13               *
       *                 MD046248           Date 27Oct17               *
       *                 MD044506           Date 28Mar17               *
       *                 CSW216             Date 14Mar16               *
@@ -66,7 +66,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD054906 - CBS-2882 fix extenstion for Principal Change      *
-      *             Schedule                                          *
+      *             Schedule.                                         *
       *           - Receive ACTRJ from IRCIRSVU to properly initialize*
       *             field for buffer                                  *
       *  MD053400 - Details are not correctly reverted back when the  *
@@ -859,7 +859,7 @@
      C                                      + OPCSAST                                       MD053400
      C                   EVAL      BufferEx7=%SUBST(OPCSAST:6036)+TPCSAST                   MD053400
      C                   EVAL      BufferEx8=%SUBST(TPCSAST:1035)                           MD053400
-     C                   EVAL      BufferEx9=%SUBST(TPCSAST:11034)                          MD053400               
+     C                   EVAL      BufferEx9=%SUBST(TPCSAST:11034)                          MD053400
      C                   ENDIF
 
      C                   EVAL      *INLR = *ON

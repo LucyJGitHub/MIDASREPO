@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1084524          Date 13Feb13               *
+      *  Last Amend No. ERZ248             Date 18Nov19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1084524          Date 13Feb13               *
       *                 CFT120             Date 28Sep12               *
       *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -53,6 +54,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  ERZ248 - SWIFT UETR via OPAY API (Recompile)                 *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1084524 - Performance issue on IPAY & OPAY listview        *
       *              (Recompile)                                      *
@@ -89,12 +91,12 @@
       *  CFT006 - Funds Transfer/Swift Messages MT101                 *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FFT101HL3  IF   E           K DISK    INFSR(*PSSR)
      FFT101DL0  IF   E           K DISK    INFSR(*PSSR)
      FFT102HL3  IF   E           K DISK    INFSR(*PSSR)                         CFT008
@@ -103,7 +105,7 @@
      FOTPAYXPD  O    E             DISK    INFSR(*PSSR)
      FOTPAYZZ   UF   E             DISK    INFSR(*PSSR)                         187211
      FOTPAYDQD  O    E             DISK    INFSR(*PSSR)                                     BUG25995
- 
+
       *****************************************************************
       *                                                               *
       * ID F  C  H  L    FUNCTION OF INDICATORS                       *
@@ -126,32 +128,32 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
@@ -159,7 +161,7 @@
       ** Data structure for MULTIBRANCH Indicator using rundat.                 188654
      D RUNDAT          DS                                                       188654
      D  MBIN                  13     13                                         188654
- 
+
       ** General constant fields                                                              CFT032
                                                                                               CFT032
       /COPY FTCPYSRC,SFTVALCSLE                                                               CFT032
@@ -168,7 +170,7 @@
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D #SLST           S              2A   DIM(8) CTDATA PERRCD(8)                            CSW207
      D*CUS1*****       S              4A   DIM(9) CTDATA PERRCD(1)                     CSW207 CSW209
      D CUS1            S              4A   DIM(8) CTDATA PERRCD(1)                            CSW209
@@ -187,7 +189,7 @@
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CER030
      D SLCD          E                     EXTFLD(LCD)                                        CER030
      D/COPY WNCPYSRC,FTM10XUD01
- 
+
       ** External data structure for Customer Details                                         CFT032
                                                                                               CFT032
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                  CFT032
@@ -205,15 +207,15 @@
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** External DS for access programs, long DS
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D TransID         S             15
      D TranSRef        S             16
- 
+
      D Prtcd           S              7
      D Poptn           S              7
      D Pcurr           S              3
@@ -222,7 +224,7 @@
      D Ptype           S              7
      D Pnosn           S              2
      D PSard           S              6A                                                      CER030
- 
+
      D Payref          S             15
      D wtranid         S              1
      D wyy             S              2  0
@@ -239,7 +241,7 @@
      D WChar2c         S              2A                                                      CSW207
      D WChar2d         S              2A                                                      CSW207
      D WChar4          S              4A                                                      CSW207
- 
+
      D AccntCode       DS
      D  wcsno                  1      6
      D  Pcycd                  7      9
@@ -249,7 +251,7 @@
      D**Paccd***              10     13                                                       CGL029
      D**Pacsn***              14     15                                                       CGL029
      D**Pbrca***              16     18                                                       CGL029
- 
+
      D  W#Accnt        S             35
                                                                                 187211
       ** Timestamp for the tranaction                                           187211
@@ -284,36 +286,36 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** Rename Field                                                           CFT008
      IFT102HD0                                                                  CFT008
      I              SINST                       SINSTX                          CFT008
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C                   Exsr      SrInit
- 
+
      C                   Eval      wtranid = %subst(TransID:1:1)
      C                   If        wtranid = 'A' or wtranid = 'B'
      C                   Exsr      SrRFT
      C                   Else                                                   CFT008
      C                   Exsr      SrCCT                                        CFT008
      C                   Endif
- 
+
      C                   If        GOPFLG = 'Y'
      C                   Exsr      SrFmt
      C                   Endif
- 
+
      C                   Seton                                        LR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -327,9 +329,9 @@
       *                                                               *
       *****************************************************************
      C     SrRFT         Begsr
- 
+
      C     KTrans        Chain     FT101DL0                           01
- 
+
      C                   If        *IN01
      C                   Movel     TransID       WKey
      C                   Move      TransRef      Wkey
@@ -338,11 +340,11 @@
      C                   Eval      dbkey = WKey
      C                   Exsr      *PSSR
      C                   Endif
- 
+
       ** Generate Outgoing Payment Record
- 
+
      C                   If        GOPFLG = 'Y'
- 
+
      C                   Eval      SMCY = TRNCCY
      C                   Eval      SMAM = TRNAMT
      C                   Eval      wccy = SMCY
@@ -352,7 +354,7 @@
      C                   Else
      C                   Eval      MDIN = 0
      C                   Endif
- 
+
      C                   Select
      C                   When      A6NBDP = 0
      C                   Z-Add     SMAM          SMAMD
@@ -363,12 +365,12 @@
      C                   Other
      C                   Eval      SMAMD = SMAM / 1000
      C                   Endsl
- 
+
      C                   Eval      PCCY = PAYCCY
      C                   Eval      PYAM = PAYAMT
      C                   Eval      wccy = PCCY
      C                   Exsr      SrCurr
- 
+
      C                   Select
      C                   When      A6NBDP = 0
      C                   Z-Add     PYAM          PYAMD
@@ -379,23 +381,23 @@
      C                   Other
      C                   Eval      PYAMD = PYAM / 1000
      C                   Endsl
- 
+
       ** Access Header Details
- 
+
      C     TransID       Chain     FT101HL3                           01
- 
+
      C                   If        *IN01
      C                   Eval      dbfile = 'FT101HL3'
      C                   Eval      dbase = 4
      C                   Eval      dbkey = TransID
      C                   Exsr      *PSSR
      C                   Endif
- 
+
       ** Ordering Customer
- 
+
      C                   Select
      C                   When      HINPTY <> *Blanks
- 
+
      C                   If        %SUBST(HINPTY:11) = *blanks
      C                   Eval      Pacid = %SUBST(HINPTY:1:10)
      C                   Eval      ORC1 = Pacid
@@ -404,10 +406,10 @@
      C                   Eval      Pacid = wcsno
      C                   Eval      ORC1 = AccntCode
      C                   Endif
- 
+
      C                   Eval      W#Accnt = Pacid
      C                   Exsr      SrAcct
- 
+
      C                   When      HOCUS1 <> *Blanks
      C                   If        %SUBST(HOCUS1:1:1) <> '/'
      C                   Eval      ORC1 = HOCUS1
@@ -534,9 +536,9 @@
      C                   Eval      ORC4 = HOCUS4
      C                   Eval      ORC5 = HOCUS5                                              CFT032
      C                   Eval      ORCT = CUSTTP
- 
+
      C                   When      TINPTY <> *blanks
- 
+
      C                   If        %SUBST(TINPTY:11) = *blanks
      C                   Eval      Pacid = %SUBST(TINPTY:1:10)
      C                   Eval      ORC1 = Pacid
@@ -545,10 +547,10 @@
      C                   Eval      Pacid = wcsno
      C                   Eval      ORC1 = AccntCode
      C                   Endif
- 
+
      C                   Eval      W#Accnt = Pacid
      C                   Exsr      SrAcct
- 
+
      C                   Other
      C                   If        %SUBST(TOCUS1:1:1) <> '/'
      C                   Eval      ORC1 = TOCUS1
@@ -676,19 +678,19 @@
      C                   Eval      ORC5 = TOCUS5                                              CFT032
      C                   Eval      ORCT = DCUSTP
      C                   Endsl
- 
+
      C                   If        TINST1 <> *blanks
- 
+
       ** Destination
- 
+
      C                   Eval      DST1 = TINST1
      C                   Eval      DST2 = TINST2
      C                   Eval      DST3 = TINST3
      C                   Eval      DST4 = TINST4
      C                   Eval      DSTT = INTTTP
- 
+
       ** Account with Institution
- 
+
      C                   Eval      ACB1 = TACA35
      C                   Eval      ACB2 = TACB35
      C                   Eval      ACB3 = TACC35
@@ -696,18 +698,18 @@
      C                   Eval      ACB5 = TACE35
      C                   Eval      ACBT = AWITTP
      C                   Else
- 
+
       ** Destination
- 
+
      C                   Eval      DST1 = TACA35
      C                   Eval      DST2 = TACB35
      C                   Eval      DST3 = TACC35
      C                   Eval      DST4 = TACD35
      C                   Eval      DSTT = AWITTP
      C                   Endif
- 
+
       ** Beneficiary
- 
+
      C**********         If        %SUBST(TBNA35:1:1) <> '/'                                BUG25239
      C                   Eval      BNC1 = TBNA35
      C**********         Else                                                               BUG25239
@@ -718,16 +720,16 @@
      C                   Eval      BNC4 = TBND35
      C                   Eval      BNC5 = TBNE35
      C                   Eval      BNCT = BENTTP
- 
+
       ** Details of Payment
- 
+
      C                   Eval      DTP1 = TRMA35
      C                   Eval      DTP2 = TRMB35
      C                   Eval      DTP3 = TRMC35
      C                   Eval      DTP4 = TRMD35
- 
+
       ** Pay Value Date
- 
+
      C                   Eval      PVDT = EXDATE
      C                   Eval      Zdayno = EXDATE
      C                   CallB     'ZDATE2'
@@ -737,19 +739,19 @@
      C                   Parm                    Zadate
      C                   Eval      PVDTD1 = Zdate
      C                   Move      Zdate         wyy
- 
+
      C                   If        wyy < 72
      C                   Eval      PVDTD2 = 20
      C                   Else
      C                   Eval      PVDTD2 = 19
      C                   Endif
- 
+
      C                   MoveL     Zdate         wddmm
      C                   MoveL     wyy           PVDTD3
      C                   Move      wddmm         PVDTD3
- 
+
      C                   Eval      RLPR = SNDREF
- 
+
       *                                                                                       CSW209
       ** Set Outgoing Payments fields                                                         CSW209
       *                                                                                       CSW209
@@ -760,7 +762,7 @@
      C                   ENDIF                                                                CSW209
                                                                                               CSW209
      C                   Endif
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT                                                                    CFT008
@@ -1195,17 +1197,17 @@
       *                                                               *
       *****************************************************************
      C     SrFmt         Begsr
- 
+
      C                   Eval      RECI = 'D'
- 
+
       ** Payment Reference
- 
+
      C                   CallB     'FTOPAY2RV'
      C                   Parm                    ReturnCode
      C                   Parm      *blanks       PayRef
- 
+
      C                   Eval      PREF = PayRef
- 
+
      C                   Eval      PYTP = 'OP'
      C                   Eval      STMT = 08
      C                   Eval      SWPC = 2
@@ -1224,7 +1226,7 @@
      C                   OTHER                                                              BUG25207
      C                   EVAL      OPCHGC = BJCYCD                                          BUG25207
      C                   ENDSL                                                              BUG25207
- 
+
      C                   Eval      PYST = *blanks
      C                   Eval      BOKC = *blanks
      C                   Eval      PRFC = *blanks
@@ -1233,25 +1235,25 @@
      C                   Eval      AUIN = *blank
      C                   Eval      CQIN = *blank
      C                   Eval      PBCQ = 0
- 
+
       ** Access Branch Details
- 
+
      C**********         CALL      'AOBRCHR0'                                                 CGL029
      C                   CALL      'AOBRCHR1'                                                 CGL029
      C                   Parm      *Blanks       Prtcd
      C                   Parm      '*KEY    '    Poptn
      C                   Parm      BRCA          Pbrch
      C     Sdbrch        Parm      Sdbrch        Dssdy
- 
+
      C                   If        Prtcd <> *Blanks
      C                   Eval      dbfile = 'SDBRCHPD'
      C                   Eval      dbase = 7
      C                   Eval      dbkey = BRCA
      C                   Exsr      *PSSR
      C                   Endif
- 
+
       ** Ordering Bank
- 
+
      C                   Eval      %SUBST(OPORB1:1:6) = A8BICN
      C                   Eval      %SUBST(OPORB1:7:3) = SMCY
      C                   Eval      %SUBST(OPORB1:10:10) = BTIOSA                              CGL029
@@ -1260,14 +1262,14 @@
      C**********         Eval      %SUBST(OPORB1:10:4) = BTIOSA                               CGL029
      C**********         Eval      %SUBST(OPORB1:14:2) = '01'                                 CGL029
      C**********         Eval      %SUBST(OPORB1:16:3) = BRCA                                 CGL029
- 
+
      C                   Eval      %SUBST(wordbk:1:6) = A8BICN
      C                   Eval      %SUBST(wordbk:7:10) = BTIOSA                               CGL029
      C                   Eval      %SUBST(wordbk:17:2) = '01'                                 CGL029
      C**********         Eval      %SUBST(wordbk:7:4) = BTIOSA                                CGL029
      C**********         Eval      %SUBST(wordbk:11:2) = '01'                                 CGL029
      C                   MoveL     wordbk        ORBK
- 
+
      C                   Eval      ORBB = BRCA
      C                   Eval      ORBT = 'P'
      C                   Eval      OPORBT = 'G'
@@ -1294,7 +1296,7 @@
      C                   PARM                    Timestamp                      187211
                                                                                 187211
      C                   Eval      TMST = Timestamp                             187211
- 
+
       * Set DSTT to A and SLDTD1 to 010101                                      187223
      C                   Eval      DSTT = 'A'                                   187223
      C*******************Eval      SLDTD1 = 010101                        187223188654
@@ -1319,7 +1321,7 @@
      C                   EVAL      OPEXC6 = *BLANKS                                           CER030
       *                                                                                       CER030
      C                   ENDIF                                                                CER030
- 
+
      C                   Write     OTPAYDDF
      C                   Write     OTPAYXDF
       *                                                                                     BUG25995
@@ -1343,7 +1345,7 @@
      C                   Z-add     W@Hash        HRDC                           187211
      C                   Update    OTPAYZZF                                     187211
      C                   Endif                                                  187211
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -1357,7 +1359,7 @@
       *                                                               *
       *****************************************************************
      C     SrInit        Begsr
- 
+
      C                   Eval      RECI = *blank
      C                   Eval      PREF = *blanks
      C                   Eval      PYTP = *blanks
@@ -1562,7 +1564,7 @@
      C                   EVAL      OPEXC6 = *BLANKS                                           CER030
       *                                                                         CFT014
      C                   Clear                   OTPAYXDF                       CFT014
- 
+
      C                   Eval      ORC5 = *Blanks                                             CFT032
                                                                                               CFT032
       ** Check if CFT004 is installed                                                         CFT032
@@ -1643,16 +1645,16 @@
       *                                                               *
       *****************************************************************
      C     SrAcct        Begsr
- 
+
       ** Access Account Details
- 
+
      C                   CallB     'AOACCTV1'
      C                   Parm                    Prtcd
      C                   Parm                    Ptype
      C                   Parm                    W#Accnt
      C                   Parm                    DSSDY
- 
- 
+
+
      C                   If        Prtcd <> *Blanks  or Ptype <> '*NOSTRO'
      C                             and Ptype <> '*RETAIL' and
      C                             Ptype <> '*NUMBER' and
@@ -1662,7 +1664,7 @@
      C                   Eval      dbkey = ORC1
      C                   Exsr      *PSSR
      C                   Endif
- 
+
      C                   Select
      C                   When      Ptype = '*NUMBER' or
      C                             Ptype = '*SHNAME'
@@ -1672,7 +1674,7 @@
      C                   When      Ptype = '*RETAIL'
      C                   Eval      ORCT = 'R'
      C                   Endsl
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -1687,22 +1689,22 @@
       *                                                               *
       *****************************************************************
      C     SrCurr        Begsr
- 
+
       ** Access Currency Details
- 
+
      C                   Call      'AOCURRR0'
      C                   Parm      *Blanks       Prtcd
      C                   Parm      '*KEY    '    Poptn
      C                   Parm      wccy          Pcurr
      C     Sdcurr        Parm      Sdcurr        Dssdy
- 
+
      C                   If        Prtcd <> *Blanks
      C                   Eval      dbfile = 'SDCURRPD'
      C                   Eval      dbase = 9
      C                   Eval      dbkey = wccy
      C                   Exsr      *PSSR
      C                   Endif
- 
+
      C                   Endsr
      C
       *****************************************************************
@@ -1716,30 +1718,30 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        Begsr
- 
+
      C     *Entry        Plist
- 
+
       ** Return code
      C                   Parm                    RetCodeIn
       ** Transaction ID (RFTID/CCTID)
      C                   Parm                    TransID
       ** Transaction Reference
      C                   Parm                    TransRef
- 
+
       ** Klist for FT101DL0/FT102DL0
      C     KTrans        Klist
      C                   Kfld                    TransID
      C                   Kfld                    TransRef
- 
+
       ** Access Bank Details
- 
+
      C                   Call      'AOBANKR0'
      C                   Parm      *Blanks       Prtcd
      C                   Parm      '*FIRST   '   Poptn
      C     Sdbank        Parm      Sdbank        Dsfdy
- 
+
      C                   If        Prtcd <> *Blanks
      C                   Eval      dbfile = 'SDBANKPD'
      C                   Eval      dbase = 1
@@ -1759,21 +1761,21 @@
      C                   PARM                    MDIN                          188654
      C                   PARM                    WSLDTD1           6 0         188654
      C                   PARM      *Blanks       WQ0004            7           188654
- 
+
       ** Access Funds Transfer Details
- 
+
      C                   Call      'AOFTFRR0'
      C                   Parm      *Blanks       Prtcd
      C                   Parm      '*FIRST   '   Poptn
      C     Sdftfr        Parm      Sdftfr        Dsfdy
- 
+
      C                   If        Prtcd <> *Blanks
      C                   Eval      dbfile = 'SDFTFRPD'
      C                   Eval      dbase = 2
      C                   Eval      dbkey = '*FIRST'
      C                   Exsr      *PSSR
      C                   Endif
- 
+
       ** Access Module Details                                                                CFT032
                                                                                               CFT032
      C                   Call      'AOMMODR0'                                                 CFT032
@@ -1819,11 +1821,11 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

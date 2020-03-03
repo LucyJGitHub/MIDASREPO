@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054131           Date 13Sep19               *
-      *  Prev Amend No. MD054130           Date 28Aug19               *
+      *  Last Amend No. ERZ248             Date 18Nov19               *
+      *  Prev Amend No. MD054131           Date 13Sep19               *
+      *                 MD054130           Date 28Aug19               *
       *                 MD021318           Date 26Jul13               *
       *                 262474             Date 29Jan13               *
       *                 ERZ123             Date 29Jan13               *
@@ -174,6 +175,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  ERZ248 - SWIFT UETR via OPAY API                             *
+      *           Add hooks ERZ248_029->035                           *
+      *           Amended hooks FTOPA1SC03, FTOPA1SC13, FTOPA1SC15,   *
+      *           FTOPA1SC17, FTOPA1SC31, FTOPA1SC60                  *
       *  MD054131 - Ordering Institution work fields values will be   *
       *             passed to Ordering Bank line fields only when     *
       *             action is Insert.                                 *
@@ -1002,6 +1007,7 @@
      D**OVRFTPRF*****                49    INZ('OVRDBF FILE(FTPREFX1) +             BUG4776 BUG4776R
      D**********                                  TOFILE(FTPREFL0) SHARE(*NO)')     BUG4776 BUG4776R
 
+     D/COPY WNCPYSRC,ERZ248_029                                                 ERZ248
      D/COPY QWINDSRC,FTOPAYSDTA
       *                                                                                       CER001
      D DATALUX         DS          1024                                                       CER001
@@ -1507,6 +1513,7 @@
       *                                                                                       204152
       * Reset First Time through Flag                                                         204152
      C                   EVAL      FirstTime = 'Y'                                            204152
+     C/COPY WNCPYSRC,ERZ248_030                                                               ERZ248
       *                                                                                       204152
      C                   ENDIF
       *
@@ -1924,6 +1931,7 @@
 
      C                   MOVEL     NewPmtScn1    PrvPmtScn1
      C                   MOVEL     NewPmtSc1b    PrvPmtSc1b                     CFT014
+     C/COPY WNCPYSRC,ERZ248_031                                                 ERZ248
      C                   Z-ADD     WIdx_PVAL     PrvN_Warn         3 0
      C                   MOVEL     @CCI@M        @PCI@M
       *
@@ -2471,6 +2479,7 @@
      C     NewPmtSc1b    ORNE      PrvPmtSc1b                                                 206893
      C     WIdx_PVAL     ANDEQ     PrvN_Warn                                                  206893
      C     WIdx_PVAL     ANDNE     0                                                          206893
+     C/COPY WNCPYSRC,ERZ248_032                                                               ERZ248
      C                   GOTO      EndVAL@P
      C                   END
       *
@@ -4469,6 +4478,7 @@
       * Cursor location on screen                                               CFT007
      C                   PARM      0             CursorLoc                      CFT007
      C                   PARM                    SSIMode           1            CFT018
+     C/COPY WNCPYSRC,ERZ248_033                                                 ERZ248
       *                                                                         CFT018
      C                   Endif                                                  CFT018
       *                                                                         CFT018
@@ -9220,6 +9230,7 @@
      C                   MOVEL     *BLANK        NewPmtScnA                                   CSW209
      C                   MOVEL     *BLANK        NewPmtScnC                                   CSW209
      C                   EndIf                                                                CSW209
+     C/COPY WNCPYSRC,ERZ248_034                                                 ERZ248
      C                   END
      C                   EXSR      PAYSCM1                                                    256192
       *                                                                         CFT018
@@ -9521,6 +9532,7 @@
      C                   PARM      0             CursorLoc                      CFT007
      C                   PARM                    SSIMode           1            CFT018
       *                                                                         CFT018
+     C/COPY WNCPYSRC,ERZ248_035                                                 ERZ248
      C                   Endif                                                  CFT018
       *
       * RESET ERRORS

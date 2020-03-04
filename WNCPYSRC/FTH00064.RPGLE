@@ -6,7 +6,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  JMI106 - Split FT Sequence Number based on Settlement Type   *
-      *           (Upgrade to FB Midas)                               *
+      *           (Upgrade to FB Midas).                              *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                                                       JMI106

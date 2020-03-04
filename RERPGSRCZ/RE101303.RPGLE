@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSW218             Date 19Mar18               *      
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 254598             Date 20Feb20               *
+      *  Prev Amend No. CSW218             Date 19Mar18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CSW215             Date 06Apr15               *
       *                 AR972805           Date 27Feb13               *
       *                 AR960455           Date 25Feb13               *
@@ -58,7 +59,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CSW218 - SWIFT Changes 2018                                  *      
+      *  254598 - Increase length of DP32B and DATA2 (JMI106/113)     *
+      *           (Recompile)                                         *
+      *  CSW218 - SWIFT Changes 2018                                  *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW215 - SWIFT Changes 2015                                  *
       *  AR972805 - Remove equate translation as done externally.     *
@@ -109,7 +112,7 @@
       *  CRE008 - Cash Management                                     *
       *                                                               *
       *****************************************************************
- 
+
      FREICSDL1  UF   E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
      FSDCUSTL7  IF   E           K DISK    INFSR(*PSSR)
@@ -128,7 +131,7 @@
      FREICSLPD  O  A E             DISK    INFSR(*PSSR)
      FRE101303AUO    E             PRINTER INFDS(SPOOLU)
      F                                     INFSR(*PSSR)
- 
+
       *****************************************************************
       * Standard D Specifications
      D/COPY ZACPYSRC,RECMSTDD
@@ -138,12 +141,12 @@
      D/COPY MECPYSRC,ME1100_ILE
      D/COPY FTCPYSRC,FT0010D001                                                 213569
       *****************************************************************
- 
+
       ** File Information Data Structure for RE101303AU
      D SPOOLU          DS
      D  PSFileU               83     92
      D  PSFNumU              123    124B 0
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for BANK details
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
@@ -170,7 +173,7 @@
       ** Externally described DS for Zero Balancing/Sweeping Details
      D O_GAHD        E DS                  EXTNAME(REGAHDPD)
       ** Externally described DS for Group Account Details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * Short Data Structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
@@ -179,7 +182,7 @@
      D  MTAG                   1      5
      D  MFLD                   6     55
       * Multiple ocurrence data structure
- 
+
      D P@In            DS           256
      D  I@SNBR                 1      3
      D  I@DSCN                 4      9
@@ -189,7 +192,7 @@
      D  I@FTCS                16     16
      D  I@MMOD                17     18
       ** Data structure for input parameter
- 
+
      D P@Out           DS           256
      D**O@CNSN**               1      6  0                                                    CSD027
      D  O@CNSN                 1      6                                                       CSD027
@@ -206,7 +209,7 @@
      D  O@PCNB                82     87
      D  O@SPRS                88     90
      ** Data structure for ouput parameter
- 
+
      D REFERENCE       DS
      D  IDLINK                 1      9  0
      D  IDSNUM                10     11  0
@@ -214,24 +217,24 @@
      D                 DS                                                       216421
      D  MsgSeq                 1      2  0                                      216421
      D  MsgSeqA                1      2                                         216421
- 
+
      D WDCA            DS
      D  WDate                  1      6
      D  WCcy                   7      9
      D  WAmt                  10     24
      D  WCA                    7     24
- 
+
      D WComponent      DS
      D  WComp1                 1     10
      D  WComp2                11     20
      D  WComp3                21     30
      D  WComp4                31     40
- 
+
      D                 DS
      D  MapTag                 1      5
      D  MapHeader              6      6
      D  MapLookup              1      6
- 
+
      D WMap            DS
      D  WMapLine1              1     50
      D  WMapLine2             51    100
@@ -239,7 +242,7 @@
      D  WMapLine4            151    200
      D  WMapLine5            201    250
      D  WMapLine6            251    300
- 
+
      D**ChildAccount    DS            18                                                      CGL029
      D ChildAccount    DS            24                                                       CGL029
      D  IDCBRC                 1      3
@@ -250,7 +253,7 @@
      D**IDCASN**              17     18  0                                                    CGL029
      D  IDCACD                13     22  0                                                    CGL029
      D  IDCASN                23     24  0                                                    CGL029
- 
+
      D                 DS
      D TbMT101                       54    DIM(36) CTDATA PERRCD(1)
      D    TbTag                       6    Overlay(TbMT101)
@@ -258,7 +261,7 @@
      D    TbDCA                       3    Overlay(TbMT101:*NEXT)
      D    TbComp                     40    Overlay(TbMT101:*NEXT)
      D ALINE           S             35    dim(5)
- 
+
       ** Parameters for AOACCTR0
      D WRetl           S             10
      D WCusN           S              6
@@ -267,7 +270,7 @@
      D WAcctCde        S             10                                                       CGL029
      D WAcctSeq        S              2
      D WBrch           S              3
- 
+
       ** Work fields
      D*SavDECN**       S              6  0                                                    CSD027
      D SavDECN         S              6                                                       CSD027
@@ -296,7 +299,7 @@
      D ChgAmount       S             15  0
      D Wacnum          S             34                                                     AR960455
      D Wacnum2         S             35                                                     AR960455
- 
+
       ** Swift installed flag                                                                 CSW207
      D CSW207          S              1                                                       CSW207
      D CSW209          S              1                                                       CSW209
@@ -406,22 +409,22 @@
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
      C                   EXSR      SRINIT
- 
+
      C                   EXSR      SRPROC
- 
+
      C                   EXSR      SREND
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * SRINIT - Initialisation                                       *
       *****************************************************************
      C     SRINIT        BEGSR
- 
+
       ** Initialise workfields
- 
+
      C                   EVAL      COUNT101 = 0
      C                   EVAL      COUNT103 = 0
      C                   EVAL      COUNT202 = 0
@@ -434,15 +437,15 @@
      C                   BITON     '257'         LF
      C                   MOVEL     CR            CRLF              2
      C                   MOVE      LF            CRLF
- 
+
       * Check if CSW024 is installed
- 
+
      C                   Movel     'N'           CSW024            1
      C                   CALL      'AOSARDR0'
      C                   PARM      '       '     PRTCD             7
      C                   PARM      '*VERIFY'     POPTN             7
      C                   PARM      'CSW024'      PSARD             6
- 
+
      C                   If        @RTCD <> *Blanks
      C                   Z-ADD     27            DBASE                            * * * * * * *
      C                   MOVEL     '*CALL  '     DBKEY                            * DBERR 027 *
@@ -452,7 +455,7 @@
      C                   Else
      C                   Movel     'Y'           CSW024
      C                   Endif
- 
+
       ** Check if SWIFT 2007 is installed                                                     CSW207
                                                                                               CSW207
      C                   CALL      'SWIF2007'                                                 CSW207
@@ -477,7 +480,7 @@
                                                                                               CSW209
      C                   Eval      Q = 5000
      C                   EXSR      SRClear
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -488,15 +491,15 @@
       *
      C     *LOVAL        SETLL     REICSDL1
      C                   READ      REICSDL1                               60
- 
+
      C                   DOW       *IN60 = *OFF
- 
+
      C                   Exsr      GetHierDet
      C                   Exsr      GetAcctDet
- 
+
      C                   Eval      SecondCall = 'N'
      C                   Exsr      SrRout
- 
+
      C                   If        GenerateMsg = '*YES'
                                                                                 213196
       * Check if today is a working day in the account currency                 213196
@@ -505,18 +508,18 @@
       * ii.On non-working days only if holidays included & the msg is a 103)    213196
                                                                                 213196
      C                   Exsr      Det_WrkDay                                   213196
- 
+
       * Check if this is a reply to a received MT101, if so check for
       * translation record.
- 
+
      C                   Exsr      Det_Reply103
- 
+
      C                   If        IDTPSW = 'T'
      C     Ac_Ccy_WrkDay IFEQ      'Y'                                          213196
      C                   EXSR      SRMT101
      C                   Endif                                                  213196
      C                   Else
- 
+
       * if this is a reply MT103, perform formatting using the translation table
      C                   If        Reply103 = 'Y'
      C                   EXSR      SRMT103R
@@ -527,14 +530,14 @@
      C                   EXSR      SRMT103
      C                   Endif                                                  213196
      C                   Endif
- 
+
      C                   Endif
      C                   Endif
- 
+
      C                   READ      REICSDL1                               60
- 
+
      C                   Enddo
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -542,11 +545,11 @@
       * SREND  - Subroutine to End Program                            *
       *****************************************************************
      C     SREND         BEGSR
- 
+
       **   Output Report Header
- 
+
      C                   Write     HEADAU
- 
+
       **   If there is a DB Error, Output the DB Error Information.
      C                   If        *INU7 = *ON
      C                   Write     DBERROR
@@ -558,11 +561,11 @@
      C                   ENDIF                                                  213196
      C                   Write     HASRUN
      C                   Endif
- 
+
       *  End program
      C                   Seton                                        LR
      C                   Return
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -701,13 +704,13 @@
       * SRMT101  - Format MT101 Message details (External Topping)    *
       *****************************************************************
      C     SRMT101       BEGSR
- 
+
       * Re-initialise work fields
      C                   Exsr      SRClear
- 
+
       * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
       *                    M E S S A G E     D A T A
- 
+
       * Field :20:  = 'RE' + Link Reference (last 6 only) + Rund in YYMMDD + Sequence
      C                   Eval      Q = 1
      C     Q             Occur     MULT
@@ -718,7 +721,7 @@
      C                                       WMgde + MsgSeqA                    216421
      C***************************************WMgde + %SUBST(Reference:10:2)     216421
      C                   Eval      MFLD    = SavTrno
- 
+
       * Field :21R:
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
@@ -735,13 +738,13 @@
      C                   Endif                                                  212316
      C*******************Eval      MFLD = 'NONREF'                              212316
      C                   endif
- 
+
       * Field :28D:
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Eval      MTAG = ':28D:'
      C                   Eval      MFLD = '00001/00001'
- 
+
      C**********         IF        CSW207 = 'Y' AND                                 CSW207 BUG15202A
      C**********                   (%SUBST(IDEXA1:1:5) = 'ARNU/' OR                 CSW207 BUG15202A
      C**********                   %SUBST(IDEXA1:1:5) = 'CCPT/' OR                  CSW207 BUG15202A
@@ -872,12 +875,12 @@
      C                   ELSE                                                                 CSW207
                                                                                               CSW207
       * Field :50H: = Ordering Customer
- 
+
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Eval      MTAG = ':50H:'
      C                   Eval      MFLD = IDEXA1
- 
+
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Eval      ZSADD1 = IDEXA2
@@ -889,7 +892,7 @@
      C                   Eval      ZSADD4 = *blank                              211499
      C                   Exsr      SWADF
      C                   ENDIF                                                                CSW207
- 
+
       * Field :30: Requested Execution Date
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
@@ -917,7 +920,7 @@
      C                   END
       *
      C                   Movel     ZMDATE        MFLD
- 
+
       * Field :21:
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
@@ -934,13 +937,13 @@
      C                   Endif                                                  212316
      C*******************Eval      MFLD = 'NONREF'                              212316
      C                   endif
- 
+
       * Field :23E:  Instruction Code
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Eval      MTAG = ':23E:'
      C                   Eval      MFLD = IDINCD
- 
+
       * Field :32B:  Currency and Top amount
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
@@ -967,12 +970,12 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   Eval      MFLD = ZSCCY + ZSAMNT
      C                   Eval      SavAmount = ZSAMNT
- 
+
       * Field :50L: = Instructing Party
- 
+
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C
@@ -995,13 +998,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   Eval      MTAG = ':50L:'
      C                   Eval      ZSADD2 = *blanks                             211499
      C                   Eval      ZSADD3 = *blanks                             211499
      C                   Eval      ZSADD4 = *blanks                             211499
      C                   Exsr      SWADF
- 
+
       * Field :57A: Account with Bank = Sender's BIC
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
@@ -1009,7 +1012,7 @@
      C***********        Eval      MFLD = O@NWSN                                213930
      C                   Eval      MFLD = %SUBST(O@NWSN:1:8) +                  213930
      C                                    %SUBST(O@NWSN:10:3)                   213930
- 
+
       * Field :59: Beneficiary
      C
                                                                                               CSW215
@@ -1047,12 +1050,12 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Eval      MTAG = ':59:'
      C                   Eval      MFLD = '/' + WAccount
- 
+
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Eval      ZSADD2 = *blanks                             211499
@@ -1060,7 +1063,7 @@
      C                   Eval      ZSADD4 = *blanks                             211499
      C                   Exsr      SWADF
      C                   ENDIF                                                                CSW215
- 
+
       * Field :70:
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
@@ -1070,7 +1073,7 @@
      C                   Else
      C                   Eval      MFLD = 'CMT' + '/' + %subst(IDEXA1:2:34)
      C                   Endif
- 
+
      C*******************If        IDENAR <> 'CMX'                              213572
      C                   If        IDTNAR <> 'CMX'                              213572
      C                   Eval      Q = Q + 1
@@ -1078,36 +1081,36 @@
      C                   Eval      MFLD = '/' + IDTNAR                          213572
      C*******************Eval      MFLD = '/' + IDENAR                          213572
      C                   Endif
- 
+
       * Field :71A:  Details  of Charges
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Eval      MTAG = ':71A:'
      C                   Eval      MFLD = IDCHGR
- 
- 
+
+
       * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
       *                    F I L E    O U T P U T
- 
+
       * Output formatted message to MGOMSGPD
      C                   EXSR      WriteMGOMSG
- 
+
       * Write MGOREFPD record
      C                   Eval      MTPY = '101'
      C                   EXSR      WriteMGOREF
- 
+
       * Update REICSDPD file
      C                   Eval      IDMSGT = MGTM
      C                   Eval      IDMSGP = 'Y'
      C                   Eval      IDOMSR = SavTrno
      C                   Eval      IDSNDR = NWSN
      C                   Update    REICSDD0
- 
+
      C                   COMMIT
- 
+
       * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
      C                   EVAL      COUNT101 = COUNT101 + 1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1117,14 +1120,14 @@
       *            defined in MT101/MT103 translation table           *
       *****************************************************************
      C     SRMT103       BEGSR
- 
+
       * Re-initialise work fields
      C                   Exsr      SRClear
      C                   IF        CSW209 = 'Y'                                               CSW209
      C                   MOVEL     *BLANKS       MT103R                                       CSW209
      C                   ENDIF                                                                CSW209
- 
- 
+
+
       * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
       *                    M E S S A G E     D A T A
       *                                                                                       CSW218
@@ -1156,19 +1159,19 @@
      C                                       WMgde + MsgSeqA                    216421
      C***************************************WMgde + %SUBST(Reference:10:2)     216421
      C                   Eval      MFLD    = SavTrno
- 
+
       * Field :23B:
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Eval      MTAG = ':23B:'
      C                   Eval      MFLD = IDBOCD
- 
+
       * Field :23E:
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Eval      MTAG = ':23E:'
      C                   Eval      MFLD = IDINCD
- 
+
       * Field :32A:
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
@@ -1268,7 +1271,7 @@
       * Save :33B: message data to be used in MT202 COV                                       CSW209
      C                   MOVEL     MFLD          Sav33B                                       CSW209
      C                   ENDIF                                                                CSW209
- 
+
       * Field :50a: = Ordering Customer
      C                   IF        CSW209 = 'Y'                                               CSW209
                                                                                               CSW209
@@ -1510,7 +1513,7 @@
      C                   MOVEL     ZSADD4        ADD50A4                                      CSW209
      C                   ENDIF                                                              AR960455
      C                   ENDIF                                                                CSW209
- 
+
      C                   ENDIF                                                                CSW209
                                                                                               CSW209
       * Field :53a:
@@ -1528,9 +1531,9 @@
      C                   PARM      *BLANK        @CSSN            10
      C                   PARM      *BLANK        @PNOI             1
      C     SDNOST        PARM      SDNOST        DSFDY
- 
+
       ** Error on call
- 
+
      C     @RTCD         IFNE      *BLANK
      C     *LOCK         IN        LDA
      C                   Z-ADD     11            DBASE                            * * * * * * *
@@ -1539,7 +1542,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   Eval      PKEY1 = A7CUST
      C                   CALL      'AOCUSTR0'
      C                   PARM      *BLANKS       PRTCD             7
@@ -1558,7 +1561,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Eval      MTAG = ':53A:'
@@ -1567,7 +1570,7 @@
      C                   Move      BBCUST        W202Decn
      C                   Move      BBCSID        W202Nwds
      C                   Endif
- 
+
       * Field :54a:
      C                   If        IDRCVC <> *blanks
      C                   Eval      Q = Q + 1
@@ -1581,9 +1584,9 @@
      C                   Eval      Sav54L5 = *blanks
      C                   Eval      Sav54Tag = MTAG
      C                   Endif
- 
+
       * Field :59: = Beneficiary
- 
+
      C                   EXSR      SRMT103F                                                   CSW215
                                                                                               CSW215
      C                   IF        Wrk59F = 'Y'                                               CSW215
@@ -1603,7 +1606,7 @@
                                                                                               CSW209
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
- 
+
      C                   Eval      ZSADD1 = IDEXA2
      C***********        Eval      ZSADD2 = IDEXA3                              211499
      C***********        Eval      ZSADD3 = IDEXA4                              211499
@@ -1618,7 +1621,7 @@
      C                   MOVEL     ZSADD1        ADD591                                       CSW209
      C                   ENDIF                                                                CSW209
      C                   ENDIF                                                                CSW215
- 
+
       * Field :70:
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
@@ -1633,7 +1636,7 @@
       * Save :70: message data to be used in MT202 COV                                        CSW209
      C                   MOVEL     MFLD          Save70                                       CSW209
      C                   ENDIF                                                                CSW209
- 
+
      C                   If        IDENAR <> 'CMX'
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
@@ -1645,13 +1648,13 @@
      C                   ENDIF                                                                CSW209
                                                                                               CSW209
      C                   Endif
- 
+
       * Field :71A:
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Eval      MTAG = ':71A:'
      C                   Eval      MFLD = IDCHGR
- 
+
       * Field :71F:
      C                   If        IDCHGR = 'BEN'
      C                   Eval      Q = Q + 1
@@ -1682,31 +1685,31 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   Endif
- 
+
      C***********        Eval      MFLD = ZSAMNT                                213569
      C                   Eval      MFLD = ZSCCY + ZSAMNT                        213569
      C                   Endif
- 
+
       * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
       *                    F I L E   O U T P U T
- 
+
       * Output formatted message to MGOMSGPD
      C                   EXSR      WriteMGOMSG
- 
+
       * Write MGOREFPD record
      C                   Eval      MTPY = '103'
      C                   EXSR      WriteMGOREF
- 
+
       * Update REICSDPD file
      C                   Eval      IDMSGT = MGTM
      C                   Eval      IDMSGP = 'Y'
      C                   Eval      IDOMSR = SavTrno
      C                   Eval      IDSNDR = NWSN
      C                   Update    REICSDD0
- 
+
       * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
       *                    M T 2 0 2     G E N E R A T I O N
- 
+
       * Call Cover MT202 extraction if Cover Message Required
      C                   If        IDMCMR = 'Y'
       *  Save MT103 destination address  for MT202 beneficiary
@@ -1715,13 +1718,13 @@
      C                   Exsr      SRRout
      C                   Exsr      SRMT202
      C                   Endif
- 
+
      C                   COMMIT
- 
+
       * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
- 
+
      C                   EVAL      COUNT103 = COUNT103 + 1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1729,13 +1732,13 @@
       * SRMT202 -- Format Cover MT202 Message                         *
       *****************************************************************
      C     SRMT202       BEGSR
- 
+
       * Re-initialise work fields
      C                   Exsr      SRClear
- 
+
       * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
       *                    M E S S A G E     D A T A
- 
+
      C                   IF        CSW209 = 'Y'                                               CSW209
       *                                                                                       CSW209
       * Test if a MT202 or MT202 COV has to be created                                        CSW209
@@ -1806,13 +1809,13 @@
      C                   Eval      MTAG = ':20:'
      C                   Eval      MFLD =  SavTrno
      C                   Movel     'RC'          MFLD
- 
+
       * Field :21: As MT103 TRNO
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Eval      MTAG = ':21:'
      C                   Eval      MFLD = SavTrno
- 
+
       * Field :32A: As field 32A in MT103
      C                   If        Sav32A <> *Blanks
      C                   Eval      Q = Q + 1
@@ -1820,7 +1823,7 @@
      C                   Eval      MTAG = ':32A:'
      C                   Eval      MFLD = Sav32A
      C                   Endif
- 
+
       * Field :57a: As field 54a in MT103
      C                   If        Sav54L1 <> *Blanks
      C                   Eval      Q = Q + 1
@@ -1849,7 +1852,7 @@
      C                   Eval      MFLD = Sav54L5
      C                   Endif
      C                   Endif
- 
+
       * Field :58A: As MT103 Destination
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
@@ -1984,20 +1987,20 @@
      C                   EVAL      MFLD = Sav33B                                              CSW209
                                                                                               CSW209
      C                   ENDIF                                                                CSW209
- 
+
       * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
       *                    F I L E   O U T P U T
- 
+
       * Output formatted message to MGOMSGPD
      C                   EXSR      WriteMGOMSG
- 
+
       * Write MGOREFPD record
      C                   Eval      MTPY = '202'
      C                   EXSR      WriteMGOREF
- 
+
       * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
      C                   EVAL      COUNT202 = COUNT202 + 1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2005,17 +2008,17 @@
       * SRMT103R - Format  Reply MT103 to received MT101              *
       *****************************************************************
      C     SRMT103R      BEGSR
- 
+
       * Re-initialise work fields
      C                   Exsr      SRClear
      C                   IF        CSW209 = 'Y'                                               CSW209
      C                   MOVEL     'Y'           MT103R                                       CSW209
      C                   ENDIF                                                                CSW209
- 
- 
+
+
       * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
       *                    M E S S A G E     D A T A
- 
+
       * Field :20:
       *      'RE' + Link Reference (last 6 only) + Rund in YYMMDD + Sequence
       *      This field cannt be mapped from MT101
@@ -2025,14 +2028,14 @@
      C                   Eval      SavTrno = 'RE' + %SUBST(Reference:4:6) +
      C                                       WMgde + %SUBST(Reference:10:2)
      C                   Eval      MFLD    = SavTrno
- 
+
       * Field :23B:
      C***********        Eval      Q = Q + 1                                    217196
      C*****Q*****        Occur     MULT                                         217196
      C***********        Eval      MTAG = ':23B:'                               217196
      C                   Eval      KTag = ':23B:'
      C                   EXSR      SRTrans
- 
+
      C                   If        WMapFound= 'Y'
      C                   Eval      Q = Q + 1                                    217196
      C     Q             Occur     MULT                                         217196
@@ -2047,16 +2050,16 @@
      C                   Eval      MFLD = IDBOCD
      C                   Endif
      C                   Endif
- 
+
       * Field :23E:
- 
+
      C***********        Eval      Q = Q + 1                                    217196
      C*****Q*****        Occur     MULT                                         217196
      C***********        Eval      MTAG = ':23E:'                               217196
- 
+
      C                   Eval      KTag = ':23E:'
      C                   EXSR      SRTrans
- 
+
      C                   If        WMapFound= 'Y'
      C                   Eval      Q = Q + 1                                    217196
      C     Q             Occur     MULT                                         217196
@@ -2071,7 +2074,7 @@
      C                   Eval      MFLD = IDINCD
      C                   Endif
      C                   Endif
- 
+
       * Field :32A:
      C***********        Eval      Q = Q + 1                                    217196
      C*****Q*****        Occur     MULT                                         217196
@@ -2079,7 +2082,7 @@
       *
      C                   Eval      KTag = ':32A:'
      C                   EXSR      SRTrans
- 
+
      C                   If        WMapFound= 'Y'
      C                   Eval      Q = Q + 1                                    217196
      C     Q             Occur     MULT                                         217196
@@ -2087,7 +2090,7 @@
      C                   Eval      MFLD = WMapLine1
      C                   Movel     MFLD          Sav32A
      C                   Else
- 
+
      C                   If        *IN71 = *OFF And
      C                             TDSDEF = 'Y'
      C                   Eval      Q = Q + 1                                    217196
@@ -2154,7 +2157,7 @@
       *
      C                   Eval      KTag = ':33B:'
      C                   EXSR      SRTrans
- 
+
      C                   If        WMapFound= 'Y'
      C                   Eval      Q = Q + 1                                    217196
      C     Q             Occur     MULT                                         217196
@@ -2167,16 +2170,16 @@
      C                   ENDIF                                                                CSW209
                                                                                               CSW209
      C                   Else
- 
+
      C                   If        *IN71 = *OFF And
      C                             TDSDEF = 'Y'
- 
+
      C                   Eval      Q = Q + 1                                    217196
      C     Q             Occur     MULT                                         217196
      C                   Eval      MTAG = ':33B:'                               217196
- 
+
      C                   Z-add     IDSWFA        ZAMNT
- 
+
      C                   CALL      'ZM0040'                             15
      C                   PARM                    ZAMNT            13 0
      C                   PARM                    ZCCY              3
@@ -2222,7 +2225,7 @@
      C* not need to be output.
      C                   Endif
      C                   Endif
- 
+
       * Field :50a:
       *    First, Field :50A:
      C                   Eval      KTag = ':50A:'
@@ -2251,7 +2254,7 @@
      C                   Goto      Proc50
      C                   Endif
      C                   Endif
- 
+
       *    Then try field :50F:                                                               CSW207
      C                   IF        CSW207 = 'Y'                                               CSW207
      C                   EVAL      KTag = ':50F:'                                             CSW207
@@ -2340,9 +2343,9 @@
      C                   ENDIF                                                                CSW209
                                                                                               CSW209
      C                   Endif
- 
+
      C     Proc50        Tag
- 
+
      C                   If        *IN71 = *OFF And
      C                             TDSDEF = 'Y'
       ** Check 50F                                                                         BUG15202A
@@ -2477,21 +2480,21 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
- 
+
      C     ZSTAG         IFEQ      'A'
- 
+
      C                   Eval      MTAG = ':50A:'
- 
+
      C                   IF        CSW209 = 'Y'                                               CSW209
       * Save :50A: message data to be used in MT202 COV                                       CSW209
      C                   MOVEL     ':50A:'       MTAG50A                                      CSW209
      C                   ENDIF                                                                CSW209
      C                                                                                        CSW209
       * Check further if SWIFT Id is not an agent Id
- 
+
      C                   If        CSW024 = 'Y'
      C                   Movel     IDCCUS        PKEY1
      C                   CALL      'AOCUSTR0'
@@ -2539,26 +2542,26 @@
      C                                                                                        CSW209
      C                   Endif
      C                   Endif
- 
+
      C                   Endif
- 
+
      C                   ELSE                                                   If ZSTAG = 'A'
- 
+
      C                   Eval      MTAG = ':50K:'
- 
+
      C                   IF        CSW209 = 'Y'                                               CSW209
       * Save :50K: message data to be used in MT202 COV                                       CSW209
      C                   MOVEL     ':50K:'       MTAG50A                                      CSW209
      C                   ENDIF                                                                CSW209
      C                                                                                        CSW209
      C                   Endif
- 
+
      C                   IF        Wacnum <> *BLANKS AND MTAG = ':50K'                      AR960455
      C                   EXSR      FormAccnt                                                AR960455
      C                   ELSE                                                               AR960455
      C                   Exsr      SWADF
      C                   ENDIF                                                              AR960455
- 
+
      C                   Else                                                   212836
      C* Requested tag option is 'K'                                             212836
      C                   MOVEL     IDCCUS        ZDEST                          212836
@@ -2715,7 +2718,7 @@
      C**********         ENDIF                                                      CSW207 BUG15202A
       **********                                                                    CSW207 BUG15202A
      C                   Endif
- 
+
       * Field :51A:
       *    First, Field :51A:
      C                   Eval      KTag = ':51A:'
@@ -2736,7 +2739,7 @@
      C* no system defined values  can be retrieved for this field.
      C                   Endif
      C                   Endif
- 
+
       * Field :52a:
       *    First, Field :52A:
      C                   Eval      KTag = ':52A:'
@@ -2805,15 +2808,15 @@
      C                   ENDIF                                                                CSW209
      C                                                                                        CSW209
      C                   Endif
- 
+
      C     Proc52        Tag
- 
+
      C                   If        *IN71 = *OFF And
      C                             TDSDEF = 'Y'
      C* No system defined values can be retrieved for Ordering Institution
      C                   Endif
- 
- 
+
+
       * Field :53a:
       *    First, Field :53A:
      C                   Eval      KTag = ':53A:'
@@ -2884,9 +2887,9 @@
      C                   Eval      MFLD = WMapLine5
      C                   Endif
      C                   Endif
- 
+
      C     Proc53        Tag
- 
+
      C                   If        *IN71 = *OFF And
      C                             TDSDEF = 'Y'
      C* Sender's Correspondent is that defined on the Zero Balancing/Sweeping Details
@@ -2904,9 +2907,9 @@
      C                   PARM      *BLANK        @CSSN            10
      C                   PARM      *BLANK        @PNOI             1
      C     SDNOST        PARM      SDNOST        DSFDY
- 
+
       ** Error on call
- 
+
      C     @RTCD         IFNE      *BLANK
      C     *LOCK         IN        LDA
      C                   Z-ADD     11            DBASE                            * * * * * * *
@@ -2915,7 +2918,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   Eval      PKEY1 = A7CUST
      C                   CALL      'AOCUSTR0'
      C                   PARM      *BLANKS       PRTCD             7
@@ -2934,7 +2937,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Eval      MTAG = ':53A:'
@@ -2944,7 +2947,7 @@
      C                   Move      BBCSID        W202Nwds
      C                   Endif
      C                   Endif
- 
+
       * Field :54a:
       *    First, Field :54A:
      C                   Eval      KTag = ':54A:'
@@ -3033,9 +3036,9 @@
      C                   Eval      Sav54L5 = MFLD
      C                   Endif
      C                   Endif
- 
+
      C     Proc54        Tag
- 
+
      C                   If        *IN71 = *OFF And
      C                             TDSDEF = 'Y'
      C* Receiver's Correspondent is that defined on the Zero Balancing/Sweeping Details
@@ -3052,7 +3055,7 @@
      C                   Eval      Sav54L5 = *blanks
      C                   Endif
      C                   Endif
- 
+
       * Field :55a:
       *    First, Field :55A:
      C                   Eval      KTag = ':55A:'
@@ -3123,14 +3126,14 @@
      C                   Eval      MFLD = WMapLine5
      C                   Endif
      C                   Endif
- 
+
      C     Proc55        Tag
- 
+
      C                   If        *IN71 = *OFF And
      C                             TDSDEF = 'Y'
      C* No system defined values can be retrieved for Third Reimbursement Institution
      C                   Endif
- 
+
       * Field :56a:
       *    First, Field :56A:
      C                   Eval      KTag = ':56A:'
@@ -3222,14 +3225,14 @@
      C                   ENDIF                                                                CSW209
      C                                                                                        CSW209
      C                   Endif
- 
+
      C     Proc56        Tag
- 
+
      C                   If        *IN71 = *OFF And
      C                             TDSDEF = 'Y'
      C* No system defined values can be retrieved for Intermediary Bank
      C                   Endif
- 
+
       * Field :57a:
       *    First, Field :57A:
      C                   Eval      KTag = ':57A:'
@@ -3349,16 +3352,16 @@
      C                   ENDIF                                                                CSW209
      C                                                                                        CSW209
      C                   Endif
- 
+
      C     Proc57        Tag
- 
+
      C                   If        *IN71 = *OFF And
      C                             TDSDEF = 'Y'
      C* No system defined values can be retrieved for Account with Bank
      C                   Endif
- 
+
       * Field :59:
- 
+
       *    First, try field :59A:
      C                   Eval      KTag = ':59A:'
      C                   EXSR      SRTrans
@@ -3454,9 +3457,9 @@
      C                   ENDIF                                                                CSW209
      C                                                                                        CSW209
      C                   Endif
- 
+
      C     Proc59        Tag
- 
+
      C                   If        *IN71 = *OFF And
      C                             TDSDEF = 'Y'
                                                                                               CSW215
@@ -3483,7 +3486,7 @@
      C                                                                                        CSW209
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
- 
+
      C                   Eval      ZSADD1 = IDEXA2
      C***********        Eval      ZSADD2 = IDEXA3                              211499
      C***********        Eval      ZSADD3 = IDEXA4                              211499
@@ -3500,7 +3503,7 @@
      C                   Exsr      SWADF
      C                   ENDIF                                                                CSW215
      C                   Endif
- 
+
       * Field :70:
      C                   Eval      KTag = ':70:'
      C                   EXSR      SRTrans
@@ -3536,7 +3539,7 @@
      C                   ENDIF                                                                CSW209
                                                                                               CSW209
      C                   Else
- 
+
      C                   If        *IN71 = *OFF And
      C                             TDSDEF = 'Y'
      C                   Eval      Q = Q + 1
@@ -3553,7 +3556,7 @@
      C                   MOVEL     'N'           T70MAP                                       CSW209
      C                   MOVEL     MFLD          Save70                                       CSW209
      C                   ENDIF                                                                CSW209
- 
+
      C                   If        IDENAR <> 'CMX'
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
@@ -3567,7 +3570,7 @@
      C                   Endif
      C                   Endif
      C                   Endif
- 
+
       * Field :71A:
      C                   Eval      KTag = ':71A:'
      C                   EXSR      SRTrans
@@ -3577,7 +3580,7 @@
      C                   Eval      MTag = ':71A:'
      C                   Eval      MFLD = WMapLine1
      C                   Else
- 
+
      C                   If        *IN71 = *OFF And
      C                             TDSDEF = 'Y'
      C                   Eval      Q = Q + 1
@@ -3587,7 +3590,7 @@
      C                   Endif
      C                   Endif
      C                   Movel     MFLD          @DETC             3
- 
+
       * Field :71F:
      C                   Eval      KTag = ':71F:'
      C                   EXSR      SRTrans
@@ -3597,7 +3600,7 @@
      C                   Eval      MTag = ':71F:'
      C                   Eval      MFLD = WMapLine1
      C                   Else
- 
+
      C                   If        *IN71 = *OFF And
      C                             TDSDEF = 'Y'
      C                             OR @DETC  = 'BEN'                            213569
@@ -3631,13 +3634,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   Endif
- 
+
      C***********        Eval      MFLD = ZSAMNT                                213569
      C                   Eval      MFLD = ZSCCY + ZSAMNT                        213569
      C                   Endif
      C                   Endif
      C                   Endif
- 
+
       * Field :71G:
      C                   Eval      KTag = ':71G:'
      C                   EXSR      SRTrans
@@ -3647,7 +3650,7 @@
      C                   Eval      MTag = ':71G:'
      C                   Eval      MFLD = WMapLine1
      C                   Else
- 
+
      C                   If        *IN71 = *OFF And
      C                             TDSDEF = 'Y'
      C***********        If        IDCHGR = 'BEN'                                             213569
@@ -3676,7 +3679,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   Endif
- 
+
      C***********        Eval      MFLD = ZSAMNT                                213569
      C                   Eval      MFLD = ZSCCY + ZSAMNT                        213569
      C                   Endif
@@ -3758,27 +3761,27 @@
      C* no system defined values  can be retrieved.
      C                   Endif
      C                   Endif
- 
+
       * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
       *                    F I L E   O U T P U T
- 
+
       * Output formatted message to MGOMSGPD
      C                   EXSR      WriteMGOMSG
- 
+
       * Write MGOREFPD record
      C                   Eval      MTPY = '103'
      C                   EXSR      WriteMGOREF
- 
+
       * Update REICSDPD file
      C                   Eval      IDMSGT = MGTM
      C                   Eval      IDMSGP = 'Y'
      C                   Eval      IDOMSR = SavTrno
      C                   Eval      IDSNDR = NWSN
      C                   Update    REICSDD0
- 
+
       * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
       *                    M T 2 0 2     G E N E R A T I O N
- 
+
       * Call Cover MT202 extraction if Cover Message Required
      C                   If        IDMCMR = 'Y'
       *  Save MT103 destination address  for MT202 beneficiary
@@ -3787,13 +3790,13 @@
      C                   Exsr      SRRout
      C                   Exsr      SRMT202
      C                   Endif
- 
+
      C                   COMMIT
- 
+
       * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
- 
+
      C                   EVAL      COUNT103 = COUNT103 + 1
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -3849,7 +3852,7 @@
      C                   Eval      TNTP = *Blank
      C                   Eval      SBTP = *Blank
      C                   Eval      EVTP = *Blanks
- 
+
      C                   Movel     *Blanks       NWBN
      C                   Select
      C                   When      MTPY = '101'
@@ -3859,13 +3862,13 @@
      C                   When      MTPY = '202'
      C                   Eval      NWBN =  Sav103Dest
      C                   Endsl
- 
+
      C                   Call      'AOCURRR0'
      C                   Parm      '*DBERR'      @RTCD             7
      C                   Parm      '*KEY   '     @OPTN             7
      C                   Parm      IDCCCY        @CCY              3
      C     SDCURR        Parm      SDCURR        DSSDY
- 
+
       ** Error on call
      C     @RTCD         IFNE      *BLANK
      C     *LOCK         IN        LDA
@@ -3875,13 +3878,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   If        A6DPRU = 'Y'
      C                   Eval      MPRY = 'U'
      C                   Else
      C                   Eval      MPRY = 'N'
      C                   End
- 
+
      C                   If        MTPY = '101'
      C                   Eval      MGST = CM101S
      C                   Else
@@ -3900,11 +3903,11 @@
      C                   Eval      CARQ =  *Blanks
      C                   Eval      MPDE =  *Blanks
      C                   Eval      HRDT =  @HRDT
- 
+
      C                   TIME                    MGTM
      C                   Move      BJMRDT        LADT
      C                   Move      MGTM          LATM
- 
+
      C                   If        MGST = 'RSND'
      C                   Move      BJMRDT        RELD
      C                   Eval      RELT = MGTM
@@ -3912,14 +3915,14 @@
      C                   Move      *Blanks       RELD
      C                   Eval      RELT = 0
      C                   End
- 
+
      C                   Eval      RUSR = *blanks
      C                   Eval      RWSN = *blanks
      C                   Movel     SavAmount     AMTX
      C                   Movel     SavAmount     AMTS
      C                   Movel     SavDate       SVDT
      C                   Move      IDCCCY        CCY
- 
+
      C                   Select
      C                   When      MTPY = '103'  And
      C                             IDDSTT = 'N'
@@ -3929,7 +3932,7 @@
      C                   Other
      C                   Eval      NSNO = 0
      C                   Endsl
- 
+
      C                   Move      *blanks       SACN
      C                   Move      *blanks       AORR
      C                   Move      *blanks       DESI
@@ -3938,7 +3941,7 @@
      C                   Move      *blanks       RCBR
      C                   Move      *blanks       OTHT
      C                   Move      *blanks       NETI
- 
+
      C                   If        A6NDWR = 'Y'
      C                   If        A6DNOR = 'Y'
      C                   Eval      DELC = '3'
@@ -3970,7 +3973,7 @@
      C     DELC          ANDEQ     '3'
      C                   MOVEL     '2'           DELC
      C                   END
- 
+
      C                   Move      *blanks       DYST
      C                   Move      *blanks       RSID
      C                   Move      *blanks       MSE1
@@ -3996,9 +3999,9 @@
      C                   Endif
      C                   Eval      CINDV = *Blanks
      C                   Move      *Blanks       CLSS
- 
+
      C                   Write     MGOREFD0                             41
- 
+
      C                   If        *IN41 = *ON
      C                   Z-ADD     1             DBASE                            * * * * * * *
      C                   MOVEL     'Write  '     DBKEY                            * DBERR 001 *
@@ -4006,7 +4009,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   Endif
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -4014,9 +4017,9 @@
       * GetHierDet - Get Heirarchy Details                               *
       ********************************************************************
      C     GetHierDet    BEGSR
- 
+
       ** Access hierarchy detail group detail record
- 
+
      C                   CALLB     'RE100601'
       * Return code
       * Error Message
@@ -4029,11 +4032,11 @@
      C                   PARM      IDHIER        I_HIER            9 0
       * Hierarchy Type
      C                   PARM                    I_HTYP            2
- 
+
      C                   PARM                    O_CMHD
      C                   PARM                    O_ZSHD
      C                   PARM                    O_GAHD
- 
+
       ** Database error if record not found
      C                   IF        X_RTCD = '*NOREC'
      C                   Z-ADD     16            DBASE                            * * * * * * *
@@ -4042,7 +4045,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   Endif
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -4050,13 +4053,13 @@
       * GetAcctDet - Get Heirarchy Details                              *
       *******************************************************************
      C     GetAcctDet    BEGSR
- 
+
      C                   MOVE      IDCCUS        WCusN
      C                   MOVE      IDCCCY        WCur
      C                   MOVE      IDCACD        WAcctCde
      C                   MOVE      IDCASN        WAcctSeq
      C                   MOVE      IDCBRC        WBrch
- 
+
      C                   CALL      'AOACCTR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY    '    POPTN
@@ -4067,9 +4070,9 @@
      C                   PARM                    WAcctSeq
      C                   PARM                    WBrch
      C     ACCNT         PARM      ACCNT         DSSDY
- 
+
       ** Error on call
- 
+
      C     @RTCD         IFNE      *BLANK
      C     *LOCK         IN        LDA
      C                   Z-ADD     17            DBASE                            * * * * * * *
@@ -4145,13 +4148,13 @@
      C                   Endsl
      C     WDest         Chain     RETBDSL0                           70
      C                   Endif
- 
+
      C                   If        *IN70 = *Off
      C                   Movel     'Y'           Reply103
      C                   Endif
- 
+
      C                   Endif
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -4159,14 +4162,14 @@
       * GetDestCno - Get Destination  Customer Number                   *
       *******************************************************************
      C     GetDestCno    BEGSR
- 
+
      C                   Select
       * Destination is Retail, get account number
      C                   When      I@MTPY <> '202'  And
      C                             IDDSTT = 'R'
- 
+
      C                   MOVEL     IDDEST        WRetl
- 
+
      C                   CALL      'AOACCTR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY    '    POPTN
@@ -4177,9 +4180,9 @@
      C                   PARM      *blanks       WAcctSeq
      C                   PARM      *blanks       WBrch
      C     ACCNT         PARM      ACCNT         DSSDY
- 
+
       ** Error on call
- 
+
      C     @RTCD         IFNE      *BLANK
      C     *LOCK         IN        LDA
      C                   Z-ADD     18            DBASE                            * * * * * * *
@@ -4210,9 +4213,9 @@
      C                   PARM      *BLANK        @CSSN            10
      C                   PARM      *BLANK        @PNOI             1
      C     SDNOST        PARM      SDNOST        DSFDY
- 
+
       ** Error on call
- 
+
      C     @RTCD         IFNE      *BLANK
      C     *LOCK         IN        LDA
      C                   Z-ADD     19            DBASE                            * * * * * * *
@@ -4259,9 +4262,9 @@
      C                   PARM      *BLANK        @CSSN            10
      C                   PARM      *BLANK        @PNOI             1
      C     SDNOST        PARM      SDNOST        DSFDY
- 
+
       ** Error on call
- 
+
      C     @RTCD         IFNE      *BLANK
      C     *LOCK         IN        LDA
      C                   Z-ADD     20            DBASE                            * * * * * * *
@@ -4282,12 +4285,12 @@
       * SRClear -- Initialise workfields                                 *
       ********************************************************************
      C     SRClear       BEGSR
- 
+
       *  Clear workfiels
      C**********         Move      *blanks       W202Decn          6 0                        CSD027
      C                   Move      *blanks       W202Decn          6                          CSD027
      C                   Move      *blanks       W202Nwds         20
- 
+
       *  Clear Multiple Data structure
      C                   Eval      X = 1
      C                   Dow       X <= Q
@@ -4296,9 +4299,9 @@
      C                   Eval      MFLD = *Blanks
      C                   Eval      X = X + 1
      C                   Enddo
- 
+
       * Key lists
- 
+
      C                   ENDSR
       *******************************************************************
       /SPACE 5
@@ -4636,7 +4639,7 @@
      C                   Eval      WMapLine1 = TMLIN1
      C                   Endif
      C                   Endif
- 
+
      C                   If        TDMT3T = ':56C:' OR
      C                             TDMT3T = ':57C:'
      C                   Eval      WMapFound = 'Y'
@@ -4650,7 +4653,7 @@
      C                             TDMT3T= ':56A:'  Or
      C                             TDMT3T= ':57A:'  Or
      C                             TDMT3T= ':59A:'
- 
+
      C     '*BIC'        Scan      FldCmp                                 74
      C                   If        *In74 = *On Or
      C                             FldCmp = *Blank
@@ -4722,7 +4725,7 @@
      C                   Eval      WMapFound = 'Y'                              211499
      C                   Endif                                                  211499
      C                   Endif                                                  211499
- 
+
      C     '*NAMAD'      Scan      FldCmp                                 74
      C                   If        *In74 = *On Or
      C                             FldCmp = *Blank
@@ -5045,12 +5048,12 @@
       * Log an event
       ********************************************************************
      C     LOGEVENT      BEGSR
- 
+
       * 'Cash management input cycle sweeping - message(s) generated'
      C                   EVAL      #MSGID = 'RE75428 '
- 
+
       * Get the message details
- 
+
      C                   CALLB     'ZAMSGRTVMS'
      C                   PARM      *BLANK        ReturnCode       10
      C                   PARM      *BLANK        CompMsg        3000
@@ -5059,9 +5062,9 @@
      C                   PARM      'GBREUSRMSG'  #MSGF            10
      C                   PARM      '*LIBL  '     #MSGFL           10
      C                   PARM      '0'           Level             1
- 
+
       * Write an INFORMATION record to the input cycle sweeps log file
- 
+
      C                   Z-ADD     PSRunDate     ILDATE
      C                   TIME                    CurTIME           6 0
      C                   Z-ADD     CurTIME       ILTIME
@@ -5071,7 +5074,7 @@
      C                   MOVEL     PSUser        ILJBUS
      C                   MOVEL     PSJobNo       ILJBNO
      C                   WRITE     REICSLD0
- 
+
      C                   ENDSR
       ********************************************************************
       * Determine Charge Amount                                                 213569
@@ -5220,9 +5223,9 @@
       * *INZSR --- INITIAL PROCESSING                                    *
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
       *  Access Bank Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*DBERR  '    @RTCD             7
      C                   PARM      '*FIRST  '    @OPTN             7
@@ -5256,9 +5259,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   END
- 
+
       *  Access Cash Management Details
- 
+
      C                   CALLB     'AOCMANR0'
      C                   PARM      '*DBERR  '    @RTCD             7
      C                   PARM      '*FIRST  '    @OPTN             7
@@ -5274,9 +5277,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   END
- 
+
       *  Access Retail Details
- 
+
      C                   CALL      'AORETLR0'
      C                   PARM      '*DBERR  '    @RTCD             7
      C                   PARM      '*FIRST  '    @OPTN             7
@@ -5329,11 +5332,11 @@
      C                   END
      C                   MOVE      ZMDATE        MGDE
      C                   MOVE      ZMDATE        Wmgde             6
- 
+
      C     KTBDD         Klist
      C                   Kfld                    KDest
      C                   Kfld                    KTag
- 
+
       ** Check if SWIFT 2015 is installed                                                     CSW215
                                                                                               CSW215
      C                   EVAL      CSW215 = 'N'                                               CSW215
@@ -5364,20 +5367,20 @@
       *          This subroutine DUMPs the program just once.         *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   IF        RunBefore = *BLANK
      C                   EVAL      RunBefore = 'Y'
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   EXSR      SREND
- 
+
      C                   ENDSR
       /EJECT                                                                                AR960455
       *****************************************************************                     AR960455

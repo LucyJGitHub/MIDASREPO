@@ -17,9 +17,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 254598             Date 20Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. BUG24998           Date 17Jul09               *
+      *                 BUG24998           Date 17Jul09               *
       *                 BUG24843           Date 09Jul09               *
       *                 CSW209             Date 01Apr09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -44,6 +45,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  254598 - Increase length of DP32B and DATA2 (JMI106/113)     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG24998 - Bank operation code is missing (Recompile)        *
       *  BUG24843 - 'GL Account not found' error displayed in         *
@@ -64,12 +67,12 @@
       *  CFT006 - Funds Transfer addition of MT101 and MT102 messages *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -88,61 +91,61 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
      D/COPY MECPYSRC,ME1100_ILE
       **
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Cct Details in File Format
      D CctDtl        E DS                  EXTNAME(FT102DPD)
- 
+
       * CCt Details in Screen Format
      D CCtDtlScn     E DS                  EXTNAME(FT102DSPD)
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** EXTERNAL DS FOR CURRENCY DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
      D P8FT            DS           128                                                       221538
@@ -215,70 +218,70 @@
      D  TV5                  261    295                                                       CSW201
                                                                                               CSW201
      D WYA1            S              1    DIM(15)                                            CSW201
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Parameters for ZALIGN
      D Zalignok        S              1
      D Zfield          S             16
      D Zadec           S              1  0
      D Zadig           S              2  0
- 
+
       ** Parameters for ZDATE1
      D DateIn          S              6A
      D DaynoOut        S              5P 0
      D DatFmt          S              1A
      D ErrorFlag       S              1A
- 
+
       ** Constant
      D NbType          C                   CONST(10)
- 
+
       ** Parameters passed on entry - for conversion type
      D CnvTyp          S              2
- 
+
       ** Parameters passed on entry - for conversion type
      D TypAcct         S              1    DIM(10)
- 
+
       ** Working variable for conversion of exchange rate on swift
      D WCctrte         S              1    DIM(16)
- 
+
       ** Working variable for conversion of exchange rate on swift
      D TCctrte         S             16
- 
+
      D AplyType        S              1    Dim(NBTYPE)
- 
+
       ** Position of ',' into an amount
      D Comma           S              2  0
- 
+
       ** Parameters for ME1330
      D Prefix          S             20A
      D SpecialC        S            256A
      D AplyValue       S            256A
      D TypeValue       S              1A
- 
+
      D RetCode         S                   LIKE(RetCodeIn)
       *                                                                                       CSW201
       ** SWIFT 2001 switchable feature                                                        CSW201
      D CSW201          S              1A                                                      CSW201
      D PRtCd           S              7A                                                      CSW201
      D L               S              2P 0                                                    CSW201
- 
+
       ** Swift 2007                                                                           CSW207
      D CSW207          S              1                                                       CSW207
      D RetCd           S              7                                                       CSW207
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
@@ -1640,7 +1643,7 @@
      C                   If        Comma <> 0
      C                   Eval       %subst(TTAMT:Comma:1) = '.'
      C                   Endif
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       @Rtcd             7
      C                   PARM      '*KEY   '     @Optn             7
@@ -1732,7 +1735,7 @@
      C                   If        Comma <> 0
      C                   Eval       %subst(TTAMT:Comma:1) = '.'
      C                   Endif
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       @Rtcd             7
      C                   PARM      '*KEY   '     @Optn             7
@@ -1787,7 +1790,7 @@
       ** Message Reference
       *
      C                   Z-ADD     PHMSGR        CCTMSG
- 
+
       *
      C                   ENDSR
       *

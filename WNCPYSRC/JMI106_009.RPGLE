@@ -16,7 +16,26 @@
      D   DPSEQ                 8     11                                                       JMI106
       *                                                                                       JMI106
      D DATA3           DS          1024                                                       JMI106
+     D   UPSEQ3                       5A                                                      JMI113
+     D   DNWRK                        6A                                                      JMI113
      D   WDP32B                      42A                                                      JMI106
+     D   DP33B                       42A                                                      JMI113
+     D   DP57                       255A                                                      JMI113
+     D   DSPCCY                       3A                                                      JMI113
+     D   DPYAMA                      14A                                                      JMI113
+     D   DSSMCY                       3A                                                      JMI113
+     D   DSMAMA                      14A                                                      JMI113
+     D   DPRFC                        4A                                                      JMI113
+     D   DBOKC                        2A                                                      JMI113
+     D   DPYST                        2A                                                      JMI113
+     D   DACB1                       35A                                                      JMI113
+     D   DACB2                       35A                                                      JMI113
+     D   DACB3                       35A                                                      JMI113
+     D   DACB4                       35A                                                      JMI113
+     D   DACB5                       35A                                                      JMI113
+     D   DSRLPR                      16A                                                      JMI113
+     D   DMTPY                        3A                                                      JMI113
+     D   DP20                       255A                                                      JMI113
       *                                                                                       JMI106
      D DATAI           DS            99                                                       JMI106
      D   DIN01                 1      1                                                       JMI106

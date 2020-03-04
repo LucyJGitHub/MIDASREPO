@@ -17,9 +17,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 254598             Date 20Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. BUG24998           Date 17Jul09               *
+      *                 BUG24998           Date 17Jul09               *
       *                 CSW209             Date 01Apr09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -40,6 +41,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  254598 - Increase length of DP32B and DATA2 (JMI106/113)     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG24998 - Bank operation code is missing (Recompile)        *
       *  CSW209 - SWIFT 2009 Changes                                  *
@@ -64,7 +67,7 @@
      FFT101DL0  IF   E           K DISK    INFSR(*PSSR)
      F                                     INFDS(INFDS)
      FMEINMRL2  IF   E           K DISK                                         185660
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -83,34 +86,34 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
@@ -120,62 +123,62 @@
      D MSGREF          DS
      D REFMSG                  1      8  0
      D REFPRT                  9     11  0
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
      D QUESTION        C                   CONST(-99)
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       **  Data structure for file status of FT deals file.
      D INFDS           DS
      D  RECORD           *RECORD
- 
+
      D OkRftDtB      E DS                  EXTNAME(FTE101BPD)
       ** EXTERNAL DS FOR OK FLAGS DETAIL
- 
+
      D DDsRftDtl     E DS                  EXTNAME(FT101DPD)
       ** EXTERNAL DS FOR RFT DETAIL
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
- 
+
      D*SDFODA******* E DS                  EXTNAME(SDFODAPD)                    184164
      D SDFTFR        E DS                  EXTNAME(SDFTFRPD)                    184164
       ** EXTERNAL DS FOR FUNDS TRANSFER ICD DETAILS
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       ** EXTERNAL DS FOR BRANCH DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D ZMUSER          DS            17
      D  BRC                   11     13
      D  DEPT                  14     16
- 
+
      D MREFARR         S              8    DIM(100)                             185660
       ** Message reference array                                                185660
                                                                                 185660
      D MPRTARR         S              3    DIM(100)                             185660
       ** Message part array                                                     185660
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Ix              S              3P 0
- 
+
       ** Index for arrays of msg ref and part                                   185660
      D MX              S              2  0                                      185660
                                                                                 185660
@@ -184,14 +187,14 @@
       *                                                                                       CGL029
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
       *                                                                                       CGL029
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
       *****************************************************************
       /EJECT
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
@@ -215,44 +218,44 @@
      C                   Movel     *BLANK        MsgDtaArr
      C                   Movel     *BLANK        RetCodeIn
      C                   Z-ADD     0             MX                             185660
- 
- 
+
+
      C                   Select
- 
+
       ** Particular case, where if message key is entered we will return
       ** a RFT message format
      C                   When      MGMSGR <> 0
      C                   Move      MGMSGR        PHMSGR
      C                   Z-ADD     0             @KPRT                          185107
      C                   MOVE      SQ101B        @KPRT                          185107
- 
+
       ** Retrieve contents of the message
      C     Ix            Ifeq      0
      C                   Exsr      RTVMSG
      C                   Endif
- 
+
       ** Translate existing tag values
      C     Ix            Ifeq      0
      C                   Exsr      TRNTAG
      C                   Endif
- 
+
       ** Others cases, a RFT record format is returned
      C                   When      ACTN = 'I'
      C                   Exsr      InsertRcd
- 
+
      C                   When      ACTN = 'X'
      C                   If        TRANSR = *Blanks
      C     RftIdo        Setll     FT101DL0
      C     RftIdo        Reade     FT101DL0                               90
       * If no transaction records, send message back.
- 
+
      C                   If        *IN90 = *On
      C                   Eval      RetCodeIn = '*NORECORD  '
      C                   Endif
      C                   Else
      C     KRftDtl       Chain     FT101DL0                           90
      C                   Endif
- 
+
      C                   Other
       * Just retrieve record
      C     KRftDtl       Chain     FT101DL0                           90
@@ -263,11 +266,11 @@
      C                   Exsr      *PSSR
      C                   EndIf
      C                   Endsl
- 
+
       * Return
      C     ExRtv         TAG
      C                   RETURN
- 
+
       *
       *****************************************************************
       /EJECT
@@ -275,7 +278,7 @@
       * InsertRcd - Insert Record
       *****************************************************************
      C     InsertRcd     Begsr
- 
+
       *
      C                   Movel     SWIFTR        SSWTN            28
       *
@@ -376,7 +379,7 @@
      C                   Movel     @RTN          MsgIdArr(Ix)
      C                   Movel     @RTN          RetCodeIn
      C                   Endsl
- 
+
       ** Load message ref and part array from MEINMRPD so detail                185660
       ** records can be processed later                                         185660
                                                                                 185660
@@ -395,19 +398,19 @@
      C     KMEINMRPD     READE     MEINMRL2                               30    185660
      C                   ENDDO                                                  185660
                                                                                 185660
- 
+
       ** Retrieve contents of the message
      C     Ix            Ifeq      0
      C                   Exsr      RTVMSG
      C                   Endif
- 
+
       ** Translate existing tag values
      C     Ix            Ifeq      0
      C                   Exsr      TRNTAG
      C                   Endif
- 
+
      C                   Endif
- 
+
      C                   Endsr
       /EJECT
       *****************************************************************
@@ -424,7 +427,7 @@
      C                   Parm      *Blanks       PDATA
      C                   PARM      *BLANKS       PDAT2                                        CSW209
      C                   Parm      *Blanks       RTN               7
- 
+
      C                   If        RTN <> 'MIN0096' or *IN90
      C                   Movel     'N'           DDSWSEQOK
      C                   Movel     'N'           DDSWREFOK
@@ -467,10 +470,10 @@
       * *INZSR - INITIAL PROCESSING
       *****************************************************************
      C     *INZSR        Begsr
- 
+
       * Parameters
      C     *ENTRY        Plist
- 
+
       * INPUTS
       * Return code
      C                   Parm                    RetCodeIn
@@ -501,9 +504,9 @@
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
- 
+
       ** Initialize program name
- 
+
      C                   Movel     'FTM1012RV'   DBPGM
       *
       ** Access Bank Details
@@ -547,7 +550,7 @@
      C                   Parm      '*FIRST '     @OPTN             7
      C*****SDFODA********Parm      SDFODA        DSFDY                          184164
      C     SDFTFR        Parm      SDFTFR        DSFDY                          184164
- 
+
       * Database Error
      C                   If        @RTCD <> *Blanks
      C                   Movel     @OPTN         DBKEY
@@ -565,7 +568,7 @@
      C******DTAARA       DEFINE                  ZMUSER                                      BUG7029
      C**********         IN        ZMUSER                                                    BUG7029
      C**********         UNLOCK    ZMUSER                                                    BUG7029
- 
+
      C                   Callb     'ZACRTVJOBA'                         90
      C                   Parm                    PSJobName
      C                   Parm                    PSUser

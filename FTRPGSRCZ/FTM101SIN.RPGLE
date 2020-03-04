@@ -17,9 +17,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 254598             Date 20Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. BUG24998           Date 17Jul09               *
+      *                 BUG24998           Date 17Jul09               *
       *                 CSW209             Date 01Apr09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -46,6 +47,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  254598 - Increase length of DP32B and DATA2 (JMI106/113)     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG24998 - Bank operation code is missing (Recompile)        *
       *  CSW209 - SWIFT 2009 Changes                                  *
@@ -150,51 +153,51 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the FT standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
      D/COPY MECPYSRC,ME1100_ILE
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
@@ -225,16 +228,16 @@
      D OKCre1        E DS                  EXTNAME(FTE101S1PD) PREFIX(OC)
      D OkCre2        E DS                  EXTNAME(FTE101S2PD)
      D OkCre3        E DS                  EXTNAME(FTE101S3PD)
- 
+
       ** Midas Modules details accessed via access program
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       ** Midas Switchable features file accessed via access program
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
       **                                                                                      CSC022
@@ -242,7 +245,7 @@
      D SCCMTJOB      E DS                  EXTNAME(SCCMTJOB) DTAARA(SCCMTJOB)                 CSC022
      D  WDSJobs                4    103A                                                      CSC022
       **                                                                                      CSC022
- 
+
       ** Data structure for MULTIBRANCH Indicator using rundat.
      D RUNDAT          DS
      D  MBIN                  13     13
@@ -258,7 +261,7 @@
       ** Previous Incoming Debit Details                                                      212229
      D PDtlRcdIn     E DS                  EXTNAME(FT101DPD) PREFIX(PD)                       212229
       *                                                                                       212229
- 
+
       ** INDEXS
       ** ------
       ** Index of error message Id arrays
@@ -271,22 +274,22 @@
      D IdxWrn1         S                   LIKE(WIdx)
      D IdxWrn2         S                   LIKE(WIdx)
      D IdxWrn3         S                   LIKE(WIdx)
- 
+
      D q               S              2  0
- 
+
       ** Index for arrays of msg ref and part                                   185660
      D MX              S              2  0                                      185660
                                                                                 185660
- 
+
       ** Number of Fields on the screen
      D NBHdrFld        C                   Const(25)
      D NBCr1Fld        C                   Const(27)
      D NBCr2Fld        C                   Const(18)
      D NBCr3Fld        C                   Const(15)
- 
+
       ** ARRAYS
       ** ------
- 
+
       ** Errors coming from the validation
      D FldNmArr1       S                   LIKE(FldNameArr) DIM(ArrayMax)
      D MsgIdArr1       S                   LIKE(MsgIdArr)   DIM(ArrayMax)
@@ -297,7 +300,7 @@
      D FldNmArr3       S                   LIKE(FldNameArr) DIM(ArrayMax)
      D MsgIdArr3       S                   LIKE(MsgIdArr)   DIM(ArrayMax)
      D MsgDtArr3       S                   LIKE(MsgDtaArr)  DIM(ArrayMax)
- 
+
       ** Warnings coming from the validation
      D WFldNmArr1      S                   LIKE(WFldNamArr) DIM(ArrayMax)
      D WMsgIdArr1      S                   LIKE(WMsgIdArr)  DIM(ArrayMax)
@@ -308,7 +311,7 @@
      D WFldNmArr3      S                   LIKE(WFldNamArr) DIM(ArrayMax)
      D WMsgIdArr3      S                   LIKE(WMsgIdArr)  DIM(ArrayMax)
      D WMsgDtArr3      S                   LIKE(WMsgDtaArr) DIM(ArrayMax)
- 
+
       ** Array of subroutines stack
      D SrStack         S             15    Dim(30)
       ** Array for turning indicator off
@@ -324,7 +327,7 @@
      D @WrkOkCr1       S              1    DIM(NBCr1Fld)
      D @WrkOkCr2       S              1    DIM(NBCr2Fld)
      D @WrkOkCr3       S              1    DIM(NBCr3Fld)
- 
+
      D MREFARR         S              8    DIM(100)                             185660
       ** Message reference array                                                185660
                                                                                 185660
@@ -336,13 +339,13 @@
       **                                                                                      CSC022
       ** FLAGS
       ** -----
- 
+
       ** Response Mode, passed as a constant parameter to the VAL module
       ** This is always 'S' for Synchronous
      D RespMode        S              1A   INZ('S')
- 
+
       ** Main Process control flags
- 
+
       ** Screen indicator
      D @Scrn           S              2A
       ** Action Code
@@ -365,7 +368,7 @@
      D @FileLK         S              1A
       ** BIC Process Flag                                                       CFT007
      D @BIC            S              1A                                        CFT007
- 
+
       ** Other parameters passed to modules
      D WrnToDsp        S              1A
      D RetCdeOut       S             10A
@@ -384,10 +387,10 @@
      D @Network        S                   Like(PNWRK)
      D WRSEQNO         S                   Like(HDRSEQNO)                                     221761
      D WWRSEQNO        S                   Like(HDRSEQNO)                                     221761
- 
+
       ** Old RFT ID (used for reassign in credit display screen)
      D OldRftID        S                   Like(PRFTHDR)
- 
+
       ** Old Transaction reference
      D OldTransID      S                   Like(PTRNSID)
       **                                                                                      CSC022
@@ -398,7 +401,7 @@
      D WArrPtr         S              3S 0                                                    CSC022
      D WSkpComtRolbk   S              1A                                                      CSC022
       **                                                                                      CSC022
- 
+
       ** CRE020 Parameters for QCMDEXC                                                        CRE020
      D SBMAdvice       S            150A   INZ('SBMJOB JOB(REC000881) +                       CRE020
      D                                       JOBD(MBATCH) USER(*JOBD) +                       CRE020
@@ -415,13 +418,13 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1327,7 +1330,7 @@
      C*******************EVAL      PRFTHDR = HDRFTID                            185660
      C*******************ENDIF                                                  185660
      C                   ENDIF
- 
+
      C                   IF        @Actn = 'I'                                  185660
      C                   EVAL      PRFTHDR = HDRFTID                            185660
      C                   ENDIF                                                  185660
@@ -1429,13 +1432,13 @@
      C                   ELSE
      C                   EVAL      @Scrn = 'TP'
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** F12 pressed on other screens
      C                   ELSE
      C                   EVAL      @Scrn = 'DC'
- 
+
      C                   ENDIF
       *
       ** If F10 pressed
@@ -1572,7 +1575,7 @@
      C                   EVAL      @Scrn = 'CH'
      C                   EVAL      HdrInfo  = 'Y'
      C                   EVAL      DtlInfo  = 'N'
- 
+
       ***If*FTM101SIN*was*called*by*ME1200,*set*message*ref.*to*0,*so           185107
       ***the*credit*retrieve*will*not*retrieve*anything**************           185107
       ***************************************************************           185107
@@ -1744,7 +1747,7 @@
      C                   EVAL      NHdrRcdIn = HdrRcdIn                                       212229
      C                   EVAL      NDtlRcdIn = DtlRcdIn                                       212229
      C                   Eval      HDRSEQNO = WWRSEQNO                                        221761
- 
+
       * Remove all forward positions.
      C                   CallB     'FTM101UPP'                          90       178186
      C                   Parm                    RetCodeIn
@@ -1828,9 +1831,9 @@
       *                                                                         185107
      C                   IF        DtlInfo = 'Y'
      C                   IF        CRRFTMSG <> 0 AND CRRFTMSQ <> 0
- 
+
      C                   IF        ME1200 = *BLANKS                             185107
- 
+
       ** Check if msg ref and part array are filled, if so move msg ref         185660
       ** and part to FTM1012RV parameters and goto call FTM1012RV               185660
                                                                                 185660
@@ -1841,16 +1844,16 @@
      C                   MOVE      MPRTARR(MX)   @SWIFTSQ                       185660
      C                   EVAL      @Scrn = 'RC'                                 185660
      C                   ELSE                                                   185660
- 
+
      C                   MOVE      *BLANKS       @MSGKEY                        185660
      C                   MOVE      *BLANKS       @SWIFTSQ                       185660
      C                   EVAL      @Scrn = 'BC'
      C                   ENDIF                                                  185660
- 
+
      C                   ELSE                                                   185107
      C                   EVAL      @SCRN = 'TP'                                 185107
      C                   ENDIF                                                  185107
- 
+
      C                   ELSE
      C                   EVAL      @Scrn = 'RC'
      C                   ENDIF
@@ -1867,18 +1870,18 @@
      C                   ENDIF                                                  185660
                                                                                 185660
      C                   EVAL      @RFTID = HDRFTID                             185660
- 
+
      C                   EVAL      @Scrn = 'RC'
      C                   ENDIF
      **  blanks out key pressed
 ???  C                   EVAL      @KeyP = *BLANKS
- 
+
      **  Taken out this part of fix 185107 to allow sfl readc processing        185107
      **  from browse screen when routing more than one message.                 185107
      C*******************If        DtlInfo = 'Y' and ME1200 <> *BLANKS          185107
      C*******************Eval      @KeyP = '12'                                 185107
      C*******************Endif                                                  185107
- 
+
      C                   ENDIF
       *
      C                   IF        @Actn = 'D' OR @Actn = 'X'
@@ -2099,17 +2102,17 @@
       *****************************************************************
       *
      C     *INZSR        BEGSR
- 
+
      C     *Entry        PLIST
- 
+
       ** OUTPUTS
- 
+
      C                   Parm                    ME1200            1
      C                   Parm                    MsgRef            8
      C                   Parm                    MSGPRT            3            185107
      C                   Parm                    @RftId                         CFT009
      C                   Parm                    @Actn                          CFT009
- 
+
      C                   MOVEL     MsgRef        @MsgKey
      C                   MOVE      MSGPRT        @SWIFTSQ                       185107
       *
@@ -2263,7 +2266,7 @@
      C*******************IF        ME1200 <> *blanks                            185107
      C*******************EVAL      @Actn = 'I'                                  185107
      C*******************ENDIF                                                  185107
- 
+
      C                   EVAL      @FileLk = 'N'
       *
       ** Start program on Browse Screen else if FTM101SIN is called by          185107

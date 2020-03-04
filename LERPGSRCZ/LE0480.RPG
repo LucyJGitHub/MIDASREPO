@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD051219           Date 12Dec19               *
-      *  Prev Amend No. MD055084           Date 17Jan20               *
+      *  Last Amend No. MD053801           Date 04Mar20               *
+      *  Prev Amend No. MD051219           Date 12Dec19               *
+      *                 MD055084           Date 17Jan20               *
       *                 MD049545A          Date 14Jan20               *
       *                 MD049545           Date 14Jan20               *
       *                 MD054239           Date 29Nov19               *
@@ -240,6 +241,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053801 - LVENTEL shows wrong repayment date for principal  *
+      *             repayment. Check settlement type to know if loan  *
+      *             ccy or local ccy to be used for the PTDI checking *
+      *             of repayment date. Apply part of fix AR697905A.   *
+      *             Set the initial interest base date that will be   *
+      *             used in computing the next interest payment date. *
+      *           - Applied for MD055392
       *  MD051219 - FOOB in LEC06A due to Blank record in LELWNEZ1    *
       *  MD055084 - Scenario 1.15 Discrepancy on LE3180P1 and         *
       *             OAM fields                                        *
@@ -3727,6 +3735,7 @@
 0803 C                     Z-ADDINTR      EFFINT 117   70  EFFECTIVE INT.
 0804 C**
 0805 C                     Z-ADDIBDT      INTBD   50       INT.BASE DATE
+     C                     Z-ADDIBDT      WWINTR  50                                        MD053801
 0806 C**
 0807 C                     Z-ADDRBDT      REPBD   50       REP.BASE DATE
      C                     Z-ADDRBDT      WWREP   50                                         BUG9241
@@ -3879,7 +3888,7 @@
 0837 C**
 0838 C   26                Z-ADD99999     VINTR   50       EVENT NOT REQD.
 0839 C  N26                Z-ADDNIDT      VINTR            INTEREST DATE
-     C                     Z-ADDVINTR     WWINTR  50                                         BUG9241
+     C**********           Z-ADDVINTR     WWINTR  50                                BUG9241 MD053801
      C*****N63***VINTR     COMP CKDAT2               74            S01164 S01486
      C     N63N64VINTR     COMP CKDAT2               74            S01164 S01486
 0840 C**
@@ -6166,7 +6175,19 @@
      C           *IN50     ANDEQ'0'                                                           223215
      C                     Z-ADD*ZERO     ZNRDYS                                              223215
      C                     Z-ADDVREPAY    ZDAYNO                                              223215
+      *                                                                                     MD053801
+      ** Set correct currency depending on the settlement type                              MD053801
+      *                                                                                     MD053801
+     C           MDST      IFEQ 01                                                          MD053801
+     C           MDST      OREQ 07                                                          MD053801
+     C           MDST      OREQ 08                                                          MD053801
+     C           MDST      OREQ 02                                                          MD053801
+     C           MDST      OREQ 12                                                          MD053801
      C                     MOVE CCY       ZCCY                                                227082
+     C                     ELSE                                                             MD053801
+     C                     MOVE BJLCCY    ZCCY                                              MD053801
+     C                     ENDIF                                                            MD053801
+      *                                                                                     MD053801
       * If CEU004 on use Settlement ccy if not blank                                          227082
      C           CEU004    IFEQ 'Y'                                                           227082
      C           EMUCCY    IFNE *BLANKS                                                       227082
@@ -9749,6 +9770,8 @@
      C                     END                                            S01195
       *                                                                   S01195
      C                     END                             *E1            S01195
+     C                     ELSE                                                             MD055392
+     C                     MOVE BJSLCD    W@MDSL                                            MD055392
      C                     ENDIF                                                            CLE075AF
       *                                                                   S01195
      C                     ENDSR                                          S01195

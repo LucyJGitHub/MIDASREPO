@@ -80,6 +80,8 @@
      FGLJENXL3O   E           K        DISK         KINFSR *PSSR A                            CGL013
       ** UPD: Midas GL Journal Entry File - Additional Information                            CGL013
       *                                                                                       CGL013
+     FTGZBTEX1O   E           K        DISK                                                 MD055224
+     F            T_GZBITHEX                        KRENAMETGZBTHD0                         MD055224
      F** Core hook for externalisation.                                   S01408
      F/COPY WNCPYSRC,GL0180UFPG                                           S01408
      F*                                                                   S01408
@@ -105,6 +107,11 @@
       *                                                                                       CGL013
      IDSFDY     E DSDSFDY                                                                     CGL013
       ** 200 Byte Data Structure for Incoming Data from Access Program                        CGL013
+     ISDBANK    E DSSDBANKPD                                                                MD055224
+      ** Access Object DS for Bank details file                                             MD055224
+     ISDBRCH    E DSSDBRCHPD                                                                MD055224
+      ** Access Object DS for Branch details file                                           MD055224
+     IDSSDY     E DSDSSDY                                                                   MD055224
      I*                                                                   S01408
      I** Core hook for externalisation.                                   S01408
      I/COPY WNCPYSRC,GL0180UIPG                                           S01408
@@ -116,6 +123,7 @@
      C                     PARM           P@BHNO  3        ADD Batch No
       *****************************************************************
      C/COPY WNCPYSRC,GL0180UC01
+     C                     MOVE 'N'       WWRITE  1                                         MD055224
      C*
      C* Locate Stand Journ Posting Records using Batch Number
      C*
@@ -127,6 +135,20 @@
      C           *IN86     DOWEQ'0'                        .DOW =/= E  OF
      C********** BTJDNB    ANDEQP@IFBN                     ¦              S01251
      C           BTBTNB    ANDEQP@IFBN                     ¦              S01251
+      *                                                                                     MD055224
+     C           WWRITE    IFEQ 'N'                                                         MD055224
+     C                     MOVE 'Y'       WWRITE                                            MD055224
+     C                     CALL 'AOBRCHR1'                                                  MD055224
+     C                     PARM *BLANKS   PRTCD                                             MD055224
+     C                     PARM '*KEY'    POPTN                                             MD055224
+     C                     PARM BTIBCA    WWBRCD  3                                         MD055224
+     C           SDBRCH    PARM SDBRCH    DSSDY                                             MD055224
+      *                                                                                     MD055224
+     C                     MOVE A8ZONE    ZONE                                              MD055224
+     C                     MOVE P@BHNO    DDBTNB                                            MD055224
+     C                     MOVE BJRDNB    DDBEDT                                            MD055224
+     C                     WRITETGZBTHD0                                                    MD055224
+     C                     ENDIF                                                            MD055224
      C*                                                    ¦
      C* Once Stand Jou Posting Record found Write it to GL Batch Posting
      C* File with ADD Batch Number as key to the record.
@@ -189,6 +211,20 @@
       ** Access SAR details file to see if CGL013 is installed.                               CGL013
       *                                                                                       CGL013
      C           *NAMVAR   DEFN           LDA                                                 CGL013
+      **  Access Local Currency Off Bank Details                                            MD055224
+     C                     CALL 'AOBANKR0'                                                  MD055224
+     C                     PARM *BLANKS   PRTCD                                             MD055224
+     C                     PARM '*FIRST'  POPTN                                             MD055224
+     C           SDBANK    PARM SDBANK    DSSDY                                             MD055224
+      *                                                                                     MD055224
+     C           PRTCD     IFNE *BLANKS                                                     MD055224
+     C           *LOCK     IN   LDA                                                         MD055224
+     C                     MOVE 'SDBANKPD'DBFILE                                            MD055224
+     C                     MOVEL'002'     DBASE                                             MD055224
+     C                     MOVEL'*FIRST'  DBKEY                                             MD055224
+     C                     OUT  LDA                                                         MD055224
+     C                     EXSR *PSSR                                                       MD055224
+     C                     ENDIF                                                            MD055224
      C                     CALL 'AOSARDR0'                                                    CGL013
      C                     PARM *BLANKS   PRTCD   7                                           CGL013
      C                     PARM '*VERIFY' POPTN   7                                           CGL013

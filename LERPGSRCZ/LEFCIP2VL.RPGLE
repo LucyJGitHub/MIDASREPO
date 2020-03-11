@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046484           Date 11Feb20               *
-      *  Prev Amend No. MD048074           Date 11Feb20               *
+      *  Last Amend No. MD053093           Date 11Feb20               *
+      *  Prev Amend No. MD046484           Date 11Feb20               *
+      *                 MD048074           Date 11Feb20               *
       *                 MD039655           Date 11Feb20               *
       *                 AR896408           Date 31Jan19               *
       *                 CLE071             Date 18Jul18               *
@@ -73,6 +74,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053093 - Component LEC06 00001 failed in Live due to       *
+      *             truncated CANM                                    *
       *  MD046484 - 'LEC06 10011' Detailed name: 'Midas LE Facility   *
       *             maintenance                                       *
       *  MD048074 - Drawing types, rollover types and allowable CCY   *
@@ -768,7 +771,8 @@
      C                   MOVE      *BLANK        FPCACY                                     MD039655
       *                                                                                     MD039655
      C     DDTRCA        IFEQ      'TR'                                                     MD039655
-     C                   MOVE      DDCANM        K1CNUM                                     MD039655
+     C**********         MOVE      DDCANM        K1CNUM                            MD039655 MD053093
+     C                   MOVEL     DDCANM        K1CNUM                                     MD053093
      C                   MOVE      DDCAFT        K1FACT                                     MD039655
      C                   MOVE      DDCAFN        K1FCNO                                     MD039655
       *                                                                                     MD039655

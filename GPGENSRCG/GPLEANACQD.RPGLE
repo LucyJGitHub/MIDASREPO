@@ -2,6 +2,7 @@
      H COPYRIGHT('(c) Finastra International Limited 2017')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
+/*EXI *  ALWNULL(*USRCTL)                                             *                      CER073D
 /*EXI *  TEXT('Generated Code')                                       *
       *****************************************************************
       *                                                               *
@@ -11,13 +12,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2017                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER073B            Date 25Sep17               *
+      *  Last Amend No. CER073D            Date 28Nov19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER073B            Date 25Sep17               *
       *                 CER073A            Date 05Sep17               *
       *                 CER073  *CREATE    Date 10Jul17               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER073D - Upgrade of EML014 to FB2.1 SP21                    *
+      *      EML014 - AnaCredit Reporting Enhancement                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CER073B - CER073 Change Control 2 (Recompile)                *
       *  CER073A - CER073 Change Control 1 (Recompile)                *
@@ -66,7 +70,8 @@ O
 O    C                   CLEAR                   G_LEANACQD
 O    C                   MOVEL     Z_LEANACQD    G_LEANACQD
 O     * Fix Data
-     C                   CALLB     'GPFIXGDTA'
+     C**********         CALLB     'GPFIXGDTA'                                               CER073D
+     C                   CALL      'GPFIXGDTA'                                               CER073D
 O    C                   PARM                    I#ZONE
 O    C                   PARM      'GZLEANACQD'  I#FILE           10
 O    C                   PARM      G_LEANACQD    IO#BUFFER      4000

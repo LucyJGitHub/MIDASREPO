@@ -1,0 +1,785 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas MC Install deliverable data for FMD003')         *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Management Accounting Module                         *
+      *                                                               *
+      *  UTUMD001B - FMD003 Data files setup                          *
+      *                                                               *
+      *  Called by: UTCLUMD001                                        *
+      *                                                               *
+      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *                                                               *
+      *  Last Amend No. EML108             Date 12Jan09               *
+      *  Prev Amend No. UMD001             Date 12Jan09               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  EML108 - Upgrade FMD003 to FBM2.1SP21 (Recompile ONLY NOT    *
+      *           FOR USE)                                            *
+      *  UMD001 - Upgrade FMD003 to Midas Plus 1.2.1 SP19             *
+      *                                                               *
+      *****************************************************************
+      *
+      ** Midas SC Local files to journal (all rec)
+     FFCREPTL0UF  E           K        DISK                      A
+      *
+      ** Midas FC Report Suffix Update index
+     FFCRSFXL0UF  E           K        DISK                      A
+      *
+      ** Midas FC Report Components Update index
+     FFCRCOML0UF  E           K        DISK                      A
+     FSCSARCL0UF  E           K        DISK                      A
+     F*SCSARZL1UF  E           K        DISK                      A
+     F*SCSARDL0UF  E           K        DISK                      A
+     FSCSAROL0UF  E           K        DISK                      A
+     FCBCMPNL0UF  E           K        DISK                      A
+     FCBDPRLL5UF  E           K        DISK                      A
+     FCBMEXCL3UF  E           K        DISK                      A
+      *
+      /EJECT
+      *
+      ** Field - Description
+     E                    TXT     1  12 50
+      *
+      ** Copyright statement
+     E                    CPY@    1   1 80
+      /EJECT
+      *  Local data area
+     ILDA        UDS                            256
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+      *
+      *  Data Structure for Bank Details
+     ISDBANK    E DSSDBANKPD
+      *
+      *  Data Structure for Bank Details
+     IDSFDY     E DSDSFDY
+      *
+      *  Data structure for compilation
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+      /EJECT
+      *  Define the local data area
+     C           *NAMVAR   DEFN           LDA
+     C                     MOVEL'UTUMD001'DBPGM
+      *
+      ** Define Key values
+     C           *LIKE     DEFN AFSARN    #SARN
+     C           *LIKE     DEFN AFOBNM    #OBNM
+     C           *LIKE     DEFN AFOBTP    #OBTP
+     C           *LIKE     DEFN DXRNAM    #RNAM
+     C           *LIKE     DEFN DYRSFX    #RSFX
+     C           *LIKE     DEFN D3COTT    #COTT
+     C           *LIKE     DEFN D3COTT    #COTT1
+     C           *LIKE     DEFN D3CSEQ    #CSEQ
+     C           *LIKE     DEFN DHCSEQ    #DSEQ
+     C           *LIKE     DEFN DHCSEQ    #CSEQ1
+     C           *LIKE     DEFN DHCSEQ    #DSEQ1
+      *
+      ** Define Key list for SC Switchable feature objects
+     C           KSARO     KLIST
+     C                     KFLD           #SARN
+     C                     KFLD           #OBNM
+     C                     KFLD           #OBTP
+      *
+      ** Define Key list for FC Report Descriptions
+     C           KREPT     KLIST
+     C                     KFLD           #RNAM
+      *
+      ** Define Key list for FC Report Suffix
+     C           KRSFX     KLIST
+     C                     KFLD           #RNAM
+     C                     KFLD           #RSFX
+      *
+      ** Define Key list for SC Switchable feature report name
+     C           KSARR     KLIST
+     C                     KFLD           #SARN
+     C                     KFLD           #RNAM
+      *
+      ** Define Key list for FC Report Components
+     C           KRCOM     KLIST
+     C                     KFLD           #RNAM
+     C                     KFLD           #COTT
+     C                     KFLD           #CSEQ
+      *
+     C           KSARC     KLIST
+     C                     KFLD           #SARN
+     C                     KFLD           #COTT1
+     C                     KFLD           #CSEQ1
+      *
+     C           KCBCM     KLIST
+     C                     KFLD           #COTT1
+     C                     KFLD           #DSEQ1
+      *
+     C           KCBPR     KLIST
+     C                     KFLD           #COTT
+     C                     KFLD           #DSEQ
+     C                     KFLD           #COTT1
+     C                     KFLD           #DSEQ1
+      *
+     C           KMEXC     KLIST
+     C                     KFLD           #COTT
+     C                     KFLD           #DSEQ
+     C                     KFLD           #COTT1
+     C                     KFLD           #DSEQ1
+      *
+      *   Call access programm for Bank details
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   ##RTCD  7
+     C                     PARM '*FIRST'  ##OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Database error
+     C           ##RTCD    IFNE *BLANKS
+     C                     MOVE 'SDBANKPD'DBFILE
+     C                     MOVE '*CALL   'DBKEY
+     C                     Z-ADD1         DBASE
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ********************************************************************
+      *
+      *      MAIN   -   Main part of the processing
+      *
+      ********************************************************************
+      *
+     C                     MOVEL'FMD003'  #SARN     P
+      *
+      ** Activation of feature FMD003 should be done manually using UTMENU |||
+     C*****      #SARN     CHAIN@SARDL0              10
+     C*****      *IN10     IFEQ '1'
+     C*****                MOVEL#SARN     ABSARN
+     C*****                MOVELTXT,1     ABSARD
+     C*****                Z-ADDBJRDNB    ABLCD
+     C*****                MOVEL'I'       ABTYLC
+     C*****                WRITE@SARDL0
+     C*****                ENDIF
+      *****
+      ***Midas SC All non-core SARs keyed on SAR ID
+     C*****      #SARN     CHAINSCSARSD0             10
+     C*****      *IN10     IFEQ '1'
+     C*****                MOVEL#SARN     AXSARN
+     C*****                MOVELTXT,1     AXSARD
+     C*****                WRITESCSARSD0
+     C*****                ENDIF
+      *
+      ** Midas FC Report Descriptions Setup
+     C                     MOVEL'MC0750'  #RNAM     P
+      *
+     C           KREPT     CHAIN@DXREIJ              90
+      *
+      ** Non key fields Setup
+     C           *IN90     IFEQ '1'
+     C                     MOVEL#RNAM     DXRNAM
+     C                     Z-ADDBJRDNB    DXLCD
+     C                     MOVE 'I'       DXCHTP
+     C                     MOVE 'MC'      DXCMOD
+     C                     MOVELTXT,2     DXRDSC
+     C                     MOVE 'Y'       DXGLVL
+     C                     MOVE 'Y'       DXCLVL
+     C                     MOVE 'Y'       DXBLVL
+     C                     MOVE 'Y'       DXALVL
+     C                     MOVE 'Y'       DXDLVL
+     C                     MOVE 'Y'       DXIPCY
+     C                     MOVE 'Y'       DXCLBP
+     C                     MOVE 'Y'       DXPDFL
+     C                     MOVE *BLANKS   DXDFTO
+     C                     MOVE 'N'       DXMIDQ
+     C                     WRITE@DXREIJ
+     C                     ENDIF
+      *
+      ** Midas FC Report Suffix Setup
+     C                     MOVEL'MC0750'  #RNAM     P
+     C                     MOVEL'MCF750P1'#RSFX     P
+      *
+     C           KRSFX     CHAIN@DYREIN              90
+      *
+      ** Non key fields Setup
+     C           *IN90     IFEQ '1'
+     C                     MOVEL#RNAM     DYRNAM
+     C                     MOVEL#RSFX     DYRSFX
+     C                     MOVE 'N'       DYAURP
+     C                     MOVELTXT,3     DYPFTX
+     C                     MOVE 'N'       DYCOLT
+     C                     WRITE@DYREIN
+     C                     ENDIF
+      *
+      ** Midas FC Switchable feature report name Setup
+      *
+      ** Midas FC Switchable feature report objects Setup
+     C                     MOVEL'MCF750P1'#OBNM     P
+     C                     MOVEL'*FILE'   #OBTP     P
+      *
+     C           KSARO     CHAIN@SAROL0              90
+      *
+      ** Non key fields Setup
+     C           *IN90     IFEQ '1'
+     C                     MOVEL#SARN     AFSARN
+     C                     MOVEL#OBNM     AFOBNM
+     C                     MOVEL#OBTP     AFOBTP
+     C                     MOVEL'PRTF'    AFOBAT    P
+     C                     MOVE 'Y'       AFAVAL
+     C                     MOVELTXT,3     AFOBTX
+     C                     Z-ADDBJRDNB    AFLCD
+     C                     MOVE 'I'       AFTYLC
+     C                     WRITE@SAROL0
+     C                     ENDIF
+      *
+      ** Midas FC Report Components Setup
+     C                     MOVEL'MC0750'  #RNAM     P
+     C                     MOVEL'MCC84'   #COTT     P
+     C                     MOVEL'10001'   #CSEQ     P
+      *
+     C           KRCOM     CHAIN@D3REI4              90
+      *
+      ** Non key fields Setup
+     C           *IN90     IFEQ '1'
+     C                     MOVEL#RNAM     D3RNAM
+     C                     MOVEL#COTT     D3COTT
+     C                     MOVEL#CSEQ     D3CSEQ
+     C                     MOVE 'R'       D3MORQ
+     C                     MOVE *BLANKS   D3CLPM
+     C                     MOVE 'MCC84'   D3PRPG
+     C                     MOVE *BLANKS   D3ADTX
+     C                     MOVE 'B'       D3BRTP
+     C                     WRITE@D3REI4
+     C                     ENDIF
+      *
+     C                     MOVEL'MCCF690' #COTT1    P
+     C                     MOVEL'00001'   #CSEQ1    P
+      *
+     C           KSARC     CHAIN@SARCL0              90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL#SARN     ACSARN
+     C                     MOVEL#COTT1    ACCOTT
+     C                     MOVEL#CSEQ1    ACCSEQ
+     C                     MOVEL'Y'       ACAVAL
+     C                     MOVEL'I'       ACTYLC
+     C                     Z-ADDBJRDNB    ACLCD
+     C                     WRITE@SARCL0
+     C                     ENDIF
+      *
+     C                     MOVEL'MCCF790' #COTT1    P
+     C                     MOVEL'00001'   #CSEQ1    P
+      *
+     C           KSARC     CHAIN@SARCL0              90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL#SARN     ACSARN
+     C                     MOVEL#COTT1    ACCOTT
+     C                     MOVEL#CSEQ1    ACCSEQ
+     C                     MOVEL'Y'       ACAVAL
+     C                     MOVEL'I'       ACTYLC
+     C                     Z-ADDBJRDNB    ACLCD
+     C                     WRITE@SARCL0
+     C                     ENDIF
+      *
+     C                     MOVEL'MCCF890' #COTT1    P
+     C                     MOVEL'00001'   #CSEQ1    P
+      *
+     C           KSARC     CHAIN@SARCL0              90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL#SARN     ACSARN
+     C                     MOVEL#COTT1    ACCOTT
+     C                     MOVEL#CSEQ1    ACCSEQ
+     C                     MOVEL'Y'       ACAVAL
+     C                     MOVEL'I'       ACTYLC
+     C                     Z-ADDBJRDNB    ACLCD
+     C                     WRITE@SARCL0
+     C                     ENDIF
+      *
+     C                     MOVEL'MCCF990' #COTT1    P
+     C                     MOVEL'00001'   #CSEQ1    P
+      *
+     C           KSARC     CHAIN@SARCL0              90
+     C           *IN90     IFEQ '1'
+     C                     MOVEL#SARN     ACSARN
+     C                     MOVEL#COTT1    ACCOTT
+     C                     MOVEL#CSEQ1    ACCSEQ
+     C                     MOVEL'Y'       ACAVAL
+     C                     MOVEL'I'       ACTYLC
+     C                     Z-ADDBJRDNB    ACLCD
+     C                     WRITE@SARCL0
+     C                     ENDIF
+      *
+     C                     MOVEL'MCCF690' #COTT1    P
+     C                     MOVEL'00001'   #DSEQ1    P
+     C           KCBCM     CHAIN@DHREGG              10
+     C           *IN10     IFEQ '1'
+     C                     MOVEL#COTT1    DHCOTT
+     C                     MOVEL#DSEQ1    DHCSEQ
+     C                     MOVEL' '       DHCSTS
+     C                     Z-ADD5         DHCSHP
+     C                     Z-ADD20        DHCEPY
+     C                     Z-ADD1000      DHCTSL
+     C                     MOVEL'N'       DHCFOB
+     C                     MOVELTXT,10    DHCTXT
+     C                     MOVEL*BLANKS   DHCPRM
+     C                     MOVEL'N'       DHCRQD
+     C                     MOVEL'MC'      DHCMOD
+     C                     MOVEL'N'       DHCEMI
+     C                     MOVEL'N'       DHCRES
+     C                     Z-ADD1         DHCODP
+     C                     MOVEL'Y'       DHCMEF
+     C                     MOVEL'01'      DHCFRQ
+     C                     Z-ADD0         DHCSDE
+     C                     Z-ADD0         DHCSTI
+     C                     Z-ADD0         DHCEDE
+     C                     Z-ADD0         DHCETI
+     C                     MOVEL'N'       DHCHTB
+     C                     MOVEL'N'       DHCHTA
+     C                     MOVEL'N'       DHCFAL
+     C                     Z-ADD0         DHEODT
+     C                     Z-ADD0         DHEOMT
+     C                     Z-ADD0         DHBOMT
+     C                     Z-ADD0         DHEOYT
+     C                     Z-ADD0         DHEODC
+     C                     Z-ADD0         DHEOMC
+     C                     Z-ADD0         DHBOMC
+     C                     Z-ADD0         DHEOYC
+     C                     MOVEL'N'       DHABIC
+     C                     MOVEL*BLANKS   DHCBSN
+     C                     MOVEL*BLANKS   DHTASK
+     C                     Z-ADD0         DHTSNO
+     C                     WRITE@DHREGG
+     C                     ENDIF
+      *
+     C                     MOVEL'MCCF790' #COTT1    P
+     C                     MOVEL'00001'   #DSEQ1    P
+     C           KCBCM     CHAIN@DHREGG              10
+     C           *IN10     IFEQ '1'
+     C                     MOVEL#COTT1    DHCOTT
+     C                     MOVEL#DSEQ1    DHCSEQ
+     C                     MOVEL' '       DHCSTS
+     C                     Z-ADD5         DHCSHP
+     C                     Z-ADD20        DHCEPY
+     C                     Z-ADD1000      DHCTSL
+     C                     MOVEL'N'       DHCFOB
+     C                     MOVELTXT,11    DHCTXT
+     C                     MOVEL*BLANKS   DHCPRM
+     C                     MOVEL'N'       DHCRQD
+     C                     MOVEL'MC'      DHCMOD
+     C                     MOVEL'N'       DHCEMI
+     C                     MOVEL'N'       DHCRES
+     C                     Z-ADD1         DHCODP
+     C                     MOVEL'N'       DHCMEF
+     C                     MOVEL'22'      DHCFRQ
+     C                     Z-ADD0         DHCSDE
+     C                     Z-ADD0         DHCSTI
+     C                     Z-ADD0         DHCEDE
+     C                     Z-ADD0         DHCETI
+     C                     MOVEL'N'       DHCHTB
+     C                     MOVEL'N'       DHCHTA
+     C                     MOVEL'N'       DHCFAL
+     C                     Z-ADD0         DHEODT
+     C                     Z-ADD0         DHEOMT
+     C                     Z-ADD0         DHBOMT
+     C                     Z-ADD0         DHEOYT
+     C                     Z-ADD0         DHEODC
+     C                     Z-ADD0         DHEOMC
+     C                     Z-ADD0         DHBOMC
+     C                     Z-ADD0         DHEOYC
+     C                     MOVEL'N'       DHABIC
+     C                     MOVEL*BLANKS   DHCBSN
+     C                     MOVEL*BLANKS   DHTASK
+     C                     Z-ADD0         DHTSNO
+     C                     WRITE@DHREGG
+     C                     ENDIF
+      *
+     C                     MOVEL'MCCF890' #COTT1    P
+     C                     MOVEL'00001'   #DSEQ1    P
+     C           KCBCM     CHAIN@DHREGG              10
+     C           *IN10     IFEQ '1'
+     C                     MOVEL#COTT1    DHCOTT
+     C                     MOVEL#DSEQ1    DHCSEQ
+     C                     MOVEL' '       DHCSTS
+     C                     Z-ADD5         DHCSHP
+     C                     Z-ADD20        DHCEPY
+     C                     Z-ADD1000      DHCTSL
+     C                     MOVEL'N'       DHCFOB
+     C                     MOVELTXT,12    DHCTXT
+     C                     MOVEL*BLANKS   DHCPRM
+     C                     MOVEL'N'       DHCRQD
+     C                     MOVEL'MC'      DHCMOD
+     C                     MOVEL'N'       DHCEMI
+     C                     MOVEL'N'       DHCRES
+     C                     Z-ADD1         DHCODP
+     C                     MOVEL'N'       DHCMEF
+     C                     MOVEL'01'      DHCFRQ
+     C                     Z-ADD0         DHCSDE
+     C                     Z-ADD0         DHCSTI
+     C                     Z-ADD0         DHCEDE
+     C                     Z-ADD0         DHCETI
+     C                     MOVEL'N'       DHCHTB
+     C                     MOVEL'N'       DHCHTA
+     C                     MOVEL'N'       DHCFAL
+     C                     Z-ADD0         DHEODT
+     C                     Z-ADD0         DHEOMT
+     C                     Z-ADD0         DHBOMT
+     C                     Z-ADD0         DHEOYT
+     C                     Z-ADD0         DHEODC
+     C                     Z-ADD0         DHEOMC
+     C                     Z-ADD0         DHBOMC
+     C                     Z-ADD0         DHEOYC
+     C                     MOVEL'N'       DHABIC
+     C                     MOVEL*BLANKS   DHCBSN
+     C                     MOVEL*BLANKS   DHTASK
+     C                     Z-ADD0         DHTSNO
+     C                     WRITE@DHREGG
+     C                     ENDIF
+      *
+     C                     MOVEL'MCCF990' #COTT1    P
+     C                     MOVEL'00001'   #DSEQ1    P
+     C           KCBCM     CHAIN@DHREGG              10
+     C           *IN10     IFEQ '1'
+     C                     MOVEL#COTT1    DHCOTT
+     C                     MOVEL#DSEQ1    DHCSEQ
+     C                     MOVEL' '       DHCSTS
+     C                     Z-ADD5         DHCSHP
+     C                     Z-ADD20        DHCEPY
+     C                     Z-ADD1000      DHCTSL
+     C                     MOVEL'N'       DHCFOB
+     C                     MOVELTXT,4     DHCTXT
+     C                     MOVEL*BLANKS   DHCPRM
+     C                     MOVEL'N'       DHCRQD
+     C                     MOVEL'MC'      DHCMOD
+     C                     MOVEL'N'       DHCEMI
+     C                     MOVEL'N'       DHCRES
+     C                     Z-ADD1         DHCODP
+     C                     MOVEL'Y'       DHCMEF
+     C                     MOVEL'01'      DHCFRQ
+     C                     Z-ADD0         DHCSDE
+     C                     Z-ADD0         DHCSTI
+     C                     Z-ADD0         DHCEDE
+     C                     Z-ADD0         DHCETI
+     C                     MOVEL'N'       DHCHTB
+     C                     MOVEL'N'       DHCHTA
+     C                     MOVEL'N'       DHCFAL
+     C                     Z-ADD0         DHEODT
+     C                     Z-ADD0         DHEOMT
+     C                     Z-ADD0         DHBOMT
+     C                     Z-ADD0         DHEOYT
+     C                     Z-ADD0         DHEODC
+     C                     Z-ADD0         DHEOMC
+     C                     Z-ADD0         DHBOMC
+     C                     Z-ADD0         DHEOYC
+     C                     MOVEL'N'       DHABIC
+     C                     MOVEL*BLANKS   DHCBSN
+     C                     MOVEL*BLANKS   DHTASK
+     C                     Z-ADD0         DHTSNO
+     C                     WRITE@DHREGG
+     C                     ENDIF
+      *
+     C                     MOVEL'MCC84'   #COTT1    P
+     C                     MOVEL'10001'   #DSEQ1    P
+     C           KCBCM     CHAIN@DHREGG              10
+     C           *IN10     IFEQ '1'
+     C                     MOVEL#COTT1    DHCOTT
+     C                     MOVEL#DSEQ1    DHCSEQ
+     C                     Z-ADD5         DHCSHP
+     C                     Z-ADD20        DHCEPY
+     C                     Z-ADD1000      DHCTSL
+     C                     MOVEL'N'       DHCFOB
+     C                     MOVELTXT,5     DHCTXT
+     C                     MOVEL*BLANKS   DHCPRM
+     C                     MOVEL'N'       DHCRQD
+     C                     MOVEL'MC'      DHCMOD
+     C                     MOVEL'N'       DHCEMI
+     C                     MOVEL'N'       DHCRES
+     C                     Z-ADD1         DHCODP
+     C                     MOVEL'N'       DHCMEF
+     C                     MOVEL'00'      DHCFRQ
+     C                     Z-ADD0         DHCSDE
+     C                     Z-ADD0         DHCSTI
+     C                     Z-ADD0         DHCEDE
+     C                     Z-ADD0         DHCETI
+     C                     MOVEL'N'       DHCHTB
+     C                     MOVEL'N'       DHCHTA
+     C                     MOVEL'N'       DHCFAL
+     C                     Z-ADD0         DHEODT
+     C                     Z-ADD0         DHEOMT
+     C                     Z-ADD0         DHBOMT
+     C                     Z-ADD0         DHEOYT
+     C                     Z-ADD0         DHEODC
+     C                     Z-ADD0         DHEOMC
+     C                     Z-ADD0         DHBOMC
+     C                     Z-ADD0         DHEOYC
+     C                     MOVEL'N'       DHABIC
+     C                     MOVEL*BLANKS   DHCBSN
+     C                     MOVEL*BLANKS   DHTASK
+     C                     Z-ADD0         DHTSNO
+     C                     WRITE@DHREGG
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANKS   #COTT
+     C                     MOVEL*BLANKS   #COTT1
+     C                     MOVEL'MCCF690' #COTT
+     C                     MOVEL'00001'   #DSEQ
+     C                     MOVEL'GLC42'   #COTT1
+     C                     MOVEL'00001'   #DSEQ1
+     C           KCBPR     CHAIN@DPRLL5              10
+     C           *IN10     IFEQ '1'
+     C                     MOVEL#COTT     DIDSON
+     C                     MOVEL#DSEQ     DIDSOS
+     C                     MOVEL'001'     DIDRUN
+     C                     MOVEL#COTT1    DIDDON
+     C                     MOVEL#DSEQ1    DIDDOS
+     C                     MOVEL' '       DICDST
+     C                     WRITE@DPRLL5
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANKS   #COTT
+     C                     MOVEL*BLANKS   #COTT1
+     C                     MOVEL'MCCF990' #COTT
+     C                     MOVEL'00001'   #DSEQ
+     C                     MOVEL'MCCF690' #COTT1
+     C                     MOVEL'00001'   #DSEQ1
+     C           KCBPR     CHAIN@DPRLL5              10
+     C           *IN10     IFEQ '1'
+     C                     MOVEL#COTT     DIDSON
+     C                     MOVEL#DSEQ     DIDSOS
+     C                     MOVEL'900'     DIDRUN
+     C                     MOVEL#COTT1    DIDDON
+     C                     MOVEL#DSEQ1    DIDDOS
+     C                     MOVEL' '       DICDST
+     C                     WRITE@DPRLL5
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANKS   #COTT
+     C                     MOVEL*BLANKS   #COTT1
+     C                     MOVEL'MCCF690' #COTT
+     C                     MOVEL'00001'   #DSEQ
+     C                     MOVEL'GLC2000' #COTT1
+     C                     MOVEL'00001'   #DSEQ1
+     C           KCBPR     CHAIN@MEXCL3              10
+     C           *IN10     IFEQ '1'
+     C                     MOVEL#COTT     DKCOTT
+     C                     MOVEL#DSEQ     DKCSEQ
+     C                     MOVEL'98'      DKMEUN
+     C                     MOVEL#COTT1    DKMECN
+     C                     MOVEL#DSEQ1    DKMECS
+     C                     WRITE@MEXCL3
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANKS   #COTT
+     C                     MOVEL*BLANKS   #COTT1
+     C                     MOVEL'GLC2000' #COTT
+     C                     MOVEL'00001'   #DSEQ
+     C                     MOVEL'MCCF690' #COTT1
+     C                     MOVEL'00001'   #DSEQ1
+     C           KCBPR     CHAIN@MEXCL3              10
+     C           *IN10     IFEQ '1'
+     C                     MOVEL#COTT     DKCOTT
+     C                     MOVEL#DSEQ     DKCSEQ
+     C                     MOVEL'98'      DKMEUN
+     C                     MOVEL#COTT1    DKMECN
+     C                     MOVEL#DSEQ1    DKMECS
+     C                     WRITE@MEXCL3
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANKS   #COTT
+     C                     MOVEL*BLANKS   #COTT1
+     C                     MOVEL'MCCF790' #COTT
+     C                     MOVEL'00001'   #DSEQ
+     C*****                MOVEL'SDJC400' #COTT1
+     C                     MOVEL'SDJC001' #COTT1
+     C                     MOVEL'00001'   #DSEQ1
+     C           KCBPR     CHAIN@DPRLL5              10
+     C           *IN10     IFEQ '1'
+     C                     MOVEL#COTT     DIDSON
+     C                     MOVEL#DSEQ     DIDSOS
+     C                     MOVEL'001'     DIDRUN
+     C                     MOVEL#COTT1    DIDDON
+     C                     MOVEL#DSEQ1    DIDDOS
+     C                     MOVEL' '       DICDST
+     C                     WRITE@DPRLL5
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANKS   #COTT
+     C                     MOVEL*BLANKS   #COTT1
+     C                     MOVEL'MCCF890' #COTT
+     C                     MOVEL'00001'   #DSEQ
+     C                     MOVEL'MCCF790' #COTT1
+     C                     MOVEL'00001'   #DSEQ1
+     C           KCBPR     CHAIN@DPRLL5              10
+     C           *IN10     IFEQ '1'
+     C                     MOVEL#COTT     DIDSON
+     C                     MOVEL#DSEQ     DIDSOS
+     C                     MOVEL'001'     DIDRUN
+     C                     MOVEL#COTT1    DIDDON
+     C                     MOVEL#DSEQ1    DIDDOS
+     C                     MOVEL' '       DICDST
+     C                     WRITE@DPRLL5
+     C                     ENDIF
+      *
+      ** Reactivate coding only if TFJ008 is installed at Bank
+     C*****                MOVEL*BLANKS   #COTT
+     C*****                MOVEL*BLANKS   #COTT1
+     C*****                MOVEL'MCCF890' #COTT
+     C*****                MOVEL'00001'   #DSEQ
+     C*****                MOVEL'SDJC430' #COTT1
+     C*****                MOVEL'00001'   #DSEQ1
+     C*****      KCBPR     CHAIN@DPRLL5              10
+     C*****      *IN10     IFEQ '1'
+     C*****                MOVEL#COTT     DIDSON
+     C*****                MOVEL#DSEQ     DIDSOS
+     C*****                MOVEL'900'     DIDRUN
+     C*****                MOVEL#COTT1    DIDDON
+     C*****                MOVEL#DSEQ1    DIDDOS
+     C*****                MOVEL' '       DICDST
+     C*****                WRITE@DPRLL5
+     C*****                ENDIF
+      *
+     C                     MOVEL*BLANKS   #COTT
+     C                     MOVEL*BLANKS   #COTT1
+     C                     MOVEL'MCCF890' #COTT
+     C                     MOVEL'00001'   #DSEQ
+     C*****                MOVEL'SDJC400' #COTT1
+     C                     MOVEL'SDJC001' #COTT1
+     C                     MOVEL'00001'   #DSEQ1
+     C           KCBPR     CHAIN@DPRLL5              10
+     C           *IN10     IFEQ '1'
+     C                     MOVEL#COTT     DIDSON
+     C                     MOVEL#DSEQ     DIDSOS
+     C                     MOVEL'901'     DIDRUN
+     C                     MOVEL#COTT1    DIDDON
+     C                     MOVEL#DSEQ1    DIDDOS
+     C                     MOVEL' '       DICDST
+     C                     WRITE@DPRLL5
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANKS   #COTT
+     C                     MOVEL*BLANKS   #COTT1
+     C                     MOVEL'MCC84'   #COTT
+     C                     MOVEL'10001'   #DSEQ
+     C                     MOVEL'MCCF890' #COTT1
+     C                     MOVEL'00001'   #DSEQ1
+     C           KCBPR     CHAIN@DPRLL5              10
+     C           *IN10     IFEQ '1'
+     C                     MOVEL#COTT     DIDSON
+     C                     MOVEL#DSEQ     DIDSOS
+     C                     MOVEL'901'     DIDRUN
+     C                     MOVEL#COTT1    DIDDON
+     C                     MOVEL#DSEQ1    DIDDOS
+     C                     MOVEL' '       DICDST
+     C                     WRITE@DPRLL5
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANKS   #COTT
+     C                     MOVEL*BLANKS   #COTT1
+     C                     MOVEL'NDSSTART'#COTT
+     C                     MOVEL'00001'   #DSEQ
+     C                     MOVEL'MCC84'   #COTT1
+     C                     MOVEL'10001'   #DSEQ1
+     C           KCBPR     CHAIN@DPRLL5              10
+     C           *IN10     IFEQ '1'
+     C                     MOVEL#COTT     DIDSON
+     C                     MOVEL#DSEQ     DIDSOS
+     C                     MOVEL'901'     DIDRUN
+     C                     MOVEL#COTT1    DIDDON
+     C                     MOVEL#DSEQ1    DIDDOS
+     C                     MOVEL' '       DICDST
+     C                     WRITE@DPRLL5
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANKS   #COTT
+     C                     MOVEL*BLANKS   #COTT1
+     C                     MOVEL'MCCF990' #COTT
+     C                     MOVEL'00001'   #DSEQ
+     C                     MOVEL'GLC42'   #COTT1
+     C                     MOVEL'00001'   #DSEQ1
+     C           KCBPR     CHAIN@DPRLL5              10
+     C           *IN10     IFEQ '1'
+     C                     MOVEL#COTT     DIDSON
+     C                     MOVEL#DSEQ     DIDSOS
+     C                     MOVEL'001'     DIDRUN
+     C                     MOVEL#COTT1    DIDDON
+     C                     MOVEL#DSEQ1    DIDDOS
+     C                     MOVEL' '       DICDST
+     C                     WRITE@DPRLL5
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANKS   #COTT
+     C                     MOVEL*BLANKS   #COTT1
+     C                     MOVELTXT,7     #COTT
+     C                     MOVEL'00001'   #DSEQ
+     C                     MOVEL'MCCF990' #COTT1
+     C                     MOVEL'00001'   #DSEQ1
+     C           KCBPR     CHAIN@DPRLL5              10
+     C           *IN10     IFEQ '1'
+     C                     MOVEL#COTT     DIDSON
+     C                     MOVEL#DSEQ     DIDSOS
+     C                     MOVEL'900'     DIDRUN
+     C                     MOVEL#COTT1    DIDDON
+     C                     MOVEL#DSEQ1    DIDDOS
+     C                     MOVEL' '       DICDST
+     C                     WRITE@DPRLL5
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANKS   #COTT
+     C                     MOVEL*BLANKS   #COTT1
+     C                     MOVEL'MCCF990' #COTT
+     C                     MOVEL'00001'   #DSEQ
+     C                     MOVEL'GLC2000' #COTT1
+     C                     MOVEL'00001'   #DSEQ1
+     C           KCBPR     CHAIN@MEXCL3              10
+     C           *IN10     IFEQ '1'
+     C                     MOVEL#COTT     DKCOTT
+     C                     MOVEL#DSEQ     DKCSEQ
+     C                     MOVEL'99'      DKMEUN
+     C                     MOVEL#COTT1    DKMECN
+     C                     MOVEL#DSEQ1    DKMECS
+     C                     WRITE@MEXCL3
+     C                     ENDIF
+      *
+     C                     MOVEL*BLANKS   #COTT
+     C                     MOVEL*BLANKS   #COTT1
+     C                     MOVEL'GLC2000' #COTT
+     C                     MOVEL'00001'   #DSEQ
+     C                     MOVEL'MCCF990' #COTT1
+     C                     MOVEL'00001'   #DSEQ1
+     C           KCBPR     CHAIN@MEXCL3              10
+     C           *IN10     IFEQ '1'
+     C                     MOVEL#COTT     DKCOTT
+     C                     MOVEL#DSEQ     DKCSEQ
+     C                     MOVEL'99'      DKMEUN
+     C                     MOVEL#COTT1    DKMECN
+     C                     MOVEL#DSEQ1    DKMECS
+     C                     WRITE@MEXCL3
+     C                     ENDIF
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      /EJECT
+      *----------------------------------------------------------------
+      *  *PSSR  Program error subroutine
+      *----------------------------------------------------------------
+     C           *PSSR     BEGSR
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     DUMP
+     C                     RETRN
+     C                     ENDSR
+      /EJECT
+**  TXT  Field - Description
+Management Accounts Automatic Balance UPdate
+Management Account Balances
+Midas MC FMD003 Accounts Balances Report
+Midas MC Automatic Balance Update
+Midas MC Management Account Balances
+'10001'
+COBFINISH
+Midas MC Account Balances
+Midas MC Account Daily Balances
+Midas MC FMD003 Average Balances File Maintenance
+Midas MC GE-XB Postings Update
+Midas MC Average Balance Calculation
+**  CPY@
+(c) Misys International Banking Systems Ltd. 2009

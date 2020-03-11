@@ -1,0 +1,649 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Currency Details Extension Window')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - STANDING DATA MODULE                                 *
+      *                                                               *
+      ***SD900210*-*Midas*SD Currencies window*************************         EML110
+      *  XX0021W0 - Midas SD Currencies window                        *         EML110
+      *                                                               *
+      *  Function:  This program maintains the Currency Details       *
+      *             extra data                                        *
+      *                                                               *
+      *  Called By: SD0011R and SD0021E                               *
+      *                                                               *
+      ***(c)*Misys*International*Banking*Systems*Ltd.*2007*************         EML110
+      *  (c) Finastra International Limited 2018                      *         EML110
+      *                                                               *
+      *  Last Amend No. EML110             Date 20Jan20               *
+      *  PREV Amend No. TFJ011  *CREATE    Date 22Jan07               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  EML110 - Account Balance Pooling. Upgrade to FBM 2.1         *
+      *  TFJ011 - Account Pooling                                     *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      * ID F  C  H  L    FUNCTION OF INDICATORS                       *
+      *                                                               *
+      *       03      F3 Pressed EXIT PROGRAM                         *
+      *       12      F12 Pressed GOTO PREVIOUS SCREEN                *
+      *       30      Redisplay the screen                            *
+      *       31      Account Code field in error                     *
+      *       32      Account Sequence Number in error                *
+      *       33      Branch Code in error                            *
+      *       50      Protect fields in ENQUIRE mode                  *
+      ********84      CHAIN to SDCURRY0 failed                        *         EML110
+      ********85      CHAIN to SDCURRY1 failed                        *         EML110
+      *       84      CHAIN to XXCURRY0 failed                        *         EML110
+      *       85      CHAIN to XXCURRY1 failed                        *         EML110
+      *                                                               *
+      *****************************************************************
+     F****SDCURRY1UF  E           K        DISK         KCOMIT       A          EML110
+     F****            SDCURRD0                          KRENAME@CURRY1          EML110
+     FXXCURRY1UF  E           K        DISK         KCOMIT       A              EML110
+     F            XXCURRD0                          KRENAME@CURRY1              EML110
+      * EXTENSION FILE (UNDER COMMITMENT CONTROL)
+     F****SDCURRY0IF  E           K        DISK                                 EML110
+     F****            SDCURRD0                          KRENAME@CURRY0          EML110
+     FXXCURRY0IF  E           K        DISK                                     EML110
+     F            XXCURRD0                          KRENAME@CURRY0              EML110
+      * EXTENSION FILE FOR READ
+     F****SD0021#0CF  E                    WORKSTN                              EML110
+     FXX0021#0CF  E                    WORKSTN                                  EML110
+      * DISPLAY FILE FOR WINDOW
+      *
+      /EJECT
+     E                    CPY@    1   1 80
+      *
+      ** Array containing Copyright statement
+      *
+     E/COPY ZSRSRC,ZEDITZ1
+      ** Midas ZS Ins dec point & 0s for numeric
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+     IA@CPY       DS
+      * Copyright array
+     I                                        1  80 CPY@
+     ILDA       E DSLDA                         256
+     I              SPARE                           W24
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     I                                     *PROGRAM ##PGM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Data Area giving Installation Control Details
+      *
+     IUUSDY     E DSDSSDY
+      * 800 byte DS for incoming data from Access Program
+      *
+     ISDACOD    E DSSDACODPD
+      ** Data Structure for Account Code Details Access Program
+      *
+     IDSACCT    E DSACCNTAB
+      ** Data Structure for Account Code Details
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Data Structure for Bank Details Access Program
+      *
+     ISDBRCH    E DSSDBRCHPD
+      ** EXTERNAL DS FOR BRANCH DETAILS
+      *
+     IDSFDY     E DSDSFDY
+      * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+      *
+     ISCSARD    E DSSCSARDPD
+      ** EXTERNAL DS FOR SAR DETAILS
+     I              LCD                             SARLCD
+      *
+     I/COPY QWINDSRC,SD0020GDTA
+      *  Piece of DS included to receive data from the window manager.
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      **   Standard parameter list for window manager
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ACTN    1
+     C                     PARM           DATA
+     C                     PARM           W0RTN   7
+     C                     PARM           WLEN    30
+     C                     PARM           WWID    30
+     C                     PARM           SROW    30
+     C                     PARM           SCOL    30
+     C                     PARM           TITLE   7
+     C                     PARM           SPARE 256
+      *
+      *****************************************************************
+      *                M A I N    P R O C E S S I N G
+      *****************************************************************
+      ** Initialise data
+     C                     EXSR INIT
+     C                     WRITEASSUMEF
+      *
+      ** Continue to redisplay the screen if *IN30 remains off
+      *
+     C           *IN30     DOUEQ'1'
+      *
+      ** If error write messages
+      *
+     C           ERR       IFEQ 'Y'
+     C                     WRITE#MSGCTL
+     C                     ENDIF
+      *
+      ** Main format of the display file
+      *
+     C******************** EXFMTSD0021F0                                        EML110
+     C                     EXFMTXX0021F0                                        EML110
+     C                     EXSR CLEAR
+      *
+     C           *IN03     CASEQ'1'       EXIT
+     C           *IN05     CASEQ'1'       RESET
+     C           *IN12     CASEQ'1'       PREV
+     C                     CAS            VALID
+     C                     ENDCS
+     C                     ENDDO
+      *
+      ** Exit from program
+      *
+     C                     EXSR END
+      *
+      /EJECT
+      *****************************************************************
+      * Clear message file
+      *****************************************************************
+     C           CLEAR     BEGSR
+     C                     CALL 'Y2CLMSC'
+     C                     PARM ##PGM     ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      * Exit from program
+      *****************************************************************
+     C           END       BEGSR
+     C                     SETON                     LR
+     C                     RETRN
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      * Exit from program if F3 has been presed
+      *****************************************************************
+     C           EXIT      BEGSR
+     C                     MOVE 'Y2U9999' W0RTN
+     C                     EXSR END
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      * Initialise field
+      *****************************************************************
+     C           INIT      BEGSR
+      *
+      ** Only do first time through
+      *
+     C           *IN01     IFEQ '0'
+      *
+      ** Define the LDA for error handling
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      * Obtain default message file
+     C           *NAMVAR   DEFN Y2MGFLA   ZADFMF 10
+     C                     IN   ZADFMF
+      ** Establish switchable features
+      *
+     C******************** MOVE 'N'       TFJ011  1                             EML110
+     C                     MOVE 'N'       EML110  1                             EML110
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C******************** PARM 'TFJ011'  @KEY6   6                             EML110
+     C                     PARM 'EML110'  @KEY6   6                             EML110
+     C           SCSARD    PARM SCSARD    DSFDY
+      *
+     C           @RTCD     IFEQ *BLANKS
+     C******************** MOVE 'Y'       TFJ011                                EML110
+     C                     MOVE 'Y'       EML110                                EML110
+     C                     ENDIF
+      *
+     C           @RTCD     IFEQ '*NRF   '
+     C                     EXSR END
+     C                     ENDIF
+      *
+      ** Define window position
+      *
+     C                     Z-ADDSROW      SWROW
+     C                     Z-ADDSCOL      SWCOL
+     C                     MOVE 'N'       ERR     1
+      *
+      ** Retrieve title for window
+      *
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+     C                     CALL 'SDRTVTXT'
+     C                     PARM           TITLE
+     C                     PARM           ZAMSGF
+     C                     PARM           TEXT  132
+     C                     MOVELTEXT      STITL
+      *
+      ** Protect input fields if enquiry and enable command keys
+      *
+     C           ACTN      IFEQ 'E'
+     C                     SETON                     50
+     C                     ELSE
+      * Enable F5
+     C                     SETON                     45
+     C                     ENDIF
+      *
+     C                     SETON                     01
+     C                     ENDIF
+      *----------------------------------------------------------------
+      ** If delete, program does not require window to be displayed
+      *
+     C           ACTN      IFEQ 'D'
+     C                     EXSR END
+     C                     ENDIF
+      *----------------------------------------------------------------
+      *
+     C           #1CYCD    CHAIN@CURRY0              85
+     C           *IN85     IFEQ *OFF
+      *
+     C           ACTN      IFEQ 'I'
+     C                     MOVE *BLANKS   SACOD
+     C                     MOVE *BLANKS   SACSQ
+     C                     MOVE *BLANKS   SBRCA
+     C                     ENDIF
+      *
+     C           ACTN      IFEQ 'A'
+     C           ACTN      OREQ 'E'
+     C           JACOD     IFEQ *ZEROS
+     C                     MOVE *BLANKS   SACOD
+     C                     ELSE
+     C                     MOVELJACOD     SACOD     P
+     C                     ENDIF
+      *
+     C           JACSQ     IFEQ *ZEROS
+     C                     MOVE *BLANKS   SACSQ
+     C                     ELSE
+     C                     MOVE JACSQ     SACSQ
+     C                     ENDIF
+      *
+     C                     MOVELJBRCA     SBRCA     P
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     MOVE *BLANKS   SACOD
+     C                     MOVE *BLANKS   SACSQ
+     C                     MOVE *BLANKS   SBRCA
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      * Exit from program if F12 has been pressed
+      *****************************************************************
+     C           PREV      BEGSR
+      *
+      ** Set F12 return code and end program
+      *
+     C                     MOVE 'USR0790' W0RTN
+     C                     EXSR END
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      * Reset/Refresh the screen if F5 is pressed
+      *****************************************************************
+     C           RESET     BEGSR
+      *
+      ** Clear the program message queue and call SR/INIT to retrieve
+      ** the last committed data from the extension file.
+      *
+     C                     EXSR CLEAR
+     C                     WRITE#MSGCTL
+     C                     EXSR INIT
+      *
+      ** Reset all error indicators
+      *
+     C                     SETOF                     313233
+     C                     MOVE 'N'       ERR
+      *
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      * Update the extension file
+      *****************************************************************
+      *
+     C           UPDAT     BEGSR
+      *
+     C           SACOD     IFNE *BLANKS
+     C           SACSQ     ANDNE*BLANKS
+     C           SBRCA     ANDNE*BLANKS
+      *
+     C                     MOVELWBICN     UUCUST
+     C                     MOVEL#1CYCD    UUCYCD
+     C                     MOVELSACOD     UUACNO
+     C                     MOVELSACSQ     UUACSN
+     C                     MOVELSBRCA     UUBRCD
+      *
+      ** Call to Access Program - AOACCTR0 Check Account Number
+      ** Access Account Details file for the file fields
+      *
+     C                     CALL 'AOACCTR0'
+     C                     PARM '       ' UUAPRC  7        B:Return Cd
+     C                     PARM '*KEY'    UUAPOP  7        B:Option
+     C                     PARM           UUACID 10        I:Account Identifier
+     C                     PARM           UUCUST  6        I:Customer Number
+     C                     PARM           UUCYCD  3        I:Currency Code
+     C                     PARM           UUACNO 10        I:Account Code Num
+     C                     PARM           UUACSN  2        I:Account Sequence
+     C                     PARM           UUBRCD  3        I:Branch code
+     C           DSACCT    PARM *BLANK    UUSDY            O:Format
+      *
+     C           UUAPRC    IFNE *BLANKS
+     C           ACST      OREQ 'C'
+     C                     MOVEL'XXX1098' ZAMSID
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     SETON                     313233
+     C                     SETOF                     30
+     C                     MOVE 'Y'       ERR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** No record exists so write a new one
+      *
+     C           ERR       IFEQ 'N'
+      *
+     C           *IN85     IFEQ *ON
+      *
+      ** Extension file format
+      *
+     C                     MOVEL#1CYCD    JCCY
+     C                     MOVE SACOD     JACOD
+     C                     MOVE SACSQ     JACSQ
+     C                     MOVELSBRCA     JBRCA
+     C                     WRITE@CURRY1
+      *
+     C                     ELSE
+      *
+      ** record exists so need to update
+      *
+     C           #1CYCD    CHAIN@CURRY1              84
+      *
+      ** Database error has occurred
+      *
+     C           *IN84     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL##PGM     DBPGM
+     C                     MOVEL#1CYCD    DBKEY            ***************
+     C******************** MOVE 'SDCURRY1'DBFILE           * DB ERROR 001*      EML110
+     C                     MOVE 'XXCURRY1'DBFILE           * DB ERROR 001*      EML110
+     C                     Z-ADD1         DBASE            ***************
+     C                     OUT  LDA
+     C                     MOVE 'USR0567' W0RTN
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+     C                     MOVELSACOD     JACOD
+     C                     MOVE SACSQ     JACSQ
+     C                     MOVELSBRCA     JBRCA
+      *
+      ** Extension file format
+      *
+     C                     UPDAT@CURRY1
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+      *****************************************************************
+      * Validate the screen
+      *****************************************************************
+     C           VALID     BEGSR
+      *
+      ** If the action code is enquire then simply exit from program
+      *
+     C           ACTN      IFEQ 'E'
+     C           ACTN      OREQ 'D'
+     C                     EXSR END
+     C                     ENDIF
+      *
+      ** Clear error conditioning fields
+      *
+     C                     MOVEL*BLANKS   W0RTN
+     C                     MOVE 'N'       ERR
+     C                     SETON                     30
+     C                     SETOF                     313233
+      *
+      ** Validate screen fields
+      *
+     C                     EXSR VAL01
+     C                     EXSR VAL02
+     C                     EXSR VAL03
+      *
+      ** If there are any errors *IN30 must be set off
+      *
+      ** Error detected?
+      *
+     C           ERR       IFEQ 'Y'
+     C                     SETOF                     30
+     C                     ENDIF
+      *
+      ** If there is an error in any of the fields then we need to
+      ** redisplay the screen and send all error messages
+      *
+     C           *IN30     IFEQ '1'
+      *
+      ** No errors so update the extension file
+      *
+     C           SACOD     IFNE *BLANKS
+     C           SACSQ     ANDNE*BLANKS
+     C           SBRCA     ANDNE*BLANKS
+      *
+     C           SACOD     OREQ *BLANKS
+     C           SACSQ     ANDEQ*BLANKS
+     C           SBRCA     ANDEQ*BLANKS
+     C                     EXSR UPDAT
+      *
+     C                     ELSE
+      *
+     C                     MOVEL'XXX1097' ZAMSID
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     SETON                     313233
+     C                     SETOF                     30
+     C                     MOVE 'Y'       ERR
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     ENDSR
+      *
+      /EJECT
+      *****************************************************************
+      * Validate Account Code
+      *****************************************************************
+     C           VAL01     BEGSR
+      *
+     C           SACOD     IFNE *BLANKS
+      *
+     C                     CALL 'AOACODR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C           SACOD     PARM SACOD     @ACCD  10
+     C           SDACOD    PARM SDACOD    UUSDY
+      *
+      ** If error, move ERR to Account Code
+     C           @RTCD     IFNE *BLANKS
+     C                     MOVEL'XXX1094' ZAMSID
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     SETON                     31
+     C                     SETOF                     30
+     C                     MOVE 'Y'       ERR
+     C*                    MOVE *BLANKS   SACOD
+     C                     ELSE
+     C                     MOVE A5ACCD    SACOD
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Validate Account Seq. No.
+      *****************************************************************
+     C           VAL02     BEGSR
+      *
+     C           SACSQ     IFNE *BLANKS
+     C                     MOVE SACSQ     WKACSQ  2
+     C                     Z-ADD0         ZADEC
+     C                     Z-ADD2         ZADIG
+     C                     MOVEL*BLANKS   ZFIELD
+     C                     MOVE SACSQ     ZFIELD
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    WACSQ   20
+     C                     MOVE WACSQ     SACSQ
+     C           *IN99     IFEQ *ON
+     C           WACSQ     ORLT 1
+     C           WACSQ     ORGT 99
+     C                     MOVE WKACSQ    SACSQ
+     C                     MOVEL'XXX1095' ZAMSID
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     SETON                     32
+     C                     SETOF                     30
+     C                     MOVE 'Y'       ERR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Validate Branch code
+      *****************************************************************
+     C           VAL03     BEGSR
+      *
+     C           SBRCA     IFNE *BLANKS
+      *
+     C                     CALL 'AOBRCHR0'
+     C                     PARM '        'UUAPRC  7        B:Return Cd
+     C                     PARM '*KEY'    UUAPOP  7        I:Option
+     C                     PARM SBRCA     UUBRCD  3        I:Branch Code
+     C           SDBRCH    PARM SDBRCH    DSFDY            O:Format
+      *
+     C           UUAPRC    IFNE *BLANKS
+     C                     MOVEL'XXX1096' ZAMSID
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     SETON                     33
+     C                     SETOF                     30
+     C                     MOVE 'Y'       ERR
+     C                     ELSE
+     C                     MOVELA8BRCD    SBRCA
+     C                     MOVELA8BICN    WBICN   6
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Send message to program's message queue.
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVEL##PGM     ZAPGMQ
+     C                     END
+      *
+      * If no message file specified, use default
+     C           ZAMSGF    IFEQ *BLANK
+     C                     MOVELZADFMF    ZAMSGF
+     C                     END
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+      * Clear all fields for default mechanism next time
+     C                     MOVEL*BLANK    ZAPGMQ
+     C                     MOVEL*BLANK    ZAPGRL
+     C                     MOVEL*BLANK    ZAMSID
+     C                     MOVEL*BLANK    ZAMSGF
+     C                     MOVEL*BLANK    ZAMSDA
+     C                     MOVEL*BLANK    ZAMSTP
+     C           ZAEXIT    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      ********************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZALIGNZ2
+      ** Midas ZS Val/right aligned numeric fields
+      /EJECT
+     C*****************************************************************
+**  CPY@
+(c) Finastra International Limited 2018

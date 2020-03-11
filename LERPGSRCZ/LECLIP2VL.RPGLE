@@ -11,12 +11,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD052515           Date 24Jan19               *
+      *  Last Amend No. MD055074           Date 21Jan20               *
+      *  Prev Amend No. MD053297           Date 06Sep19               *
+      *                 MD023254           Date 06Sep19               *
+      *                 CLE170             Date 28Feb08               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD052515           Date 24Jan19               *
       *                 MD036008           Date 24Jan19               *
       *                 MD034449           Date 24Jan19               *
-      *                 AR988460           Date 24Jan19               *      
-      *                 MD053143           Date 04Apr19               *      
+      *                 AR988460           Date 24Jan19               *
+      *                 MD053143           Date 04Apr19               *
       *                 MD052279           Date 14Nov18               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -120,6 +124,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055074 - Interests for processing type 80 is mandatory.    *
+      *  MD053297 - Interest not posted correctly for Part sold       *
+      *  MD023254 - LOAC does not show the correct interest schedule  *
+      *             for a Bank. Add condition to default spread       *
+      *             indicator(DDSPIN) to 'A' when defined loan type   *
+      *             is 70,71,72.                                      *
+      *           - Applied for MD053297                              *
+      *  CLE170 - Allow Zero Interest Rate Loans                      *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD052515 - Negative fixed rate loan got unexpected errors    *
       *  MD036008 - Total Interest always displayed as positive.      *
@@ -132,7 +144,7 @@
       *           - Applied for MD034449                              *
       *           - Applied for MD052515                              *
       *  MD053143 - CLE141 Business Day Convention processing to be   *
-      *             applied for loan start date rate fixing.          *      
+      *             applied for loan start date rate fixing.          *
       *  MD052279 - Negative rate loan got unexpected error 45021183  *
       *             (Entry is not allowed for discounted loans or zero*
       *             interests) and 45021165 (Valid rate is req. if no *
@@ -521,7 +533,7 @@
                                                                                             MD053143
      D ClilFilFmt    E DS                  EXTNAME(CLOANCL) PREFIX(@@)
       * (Current) Loans record CL in file Format
- 
+
      D OKFlags1DS    E DS                  EXTNAME(LEECLI1PD)                                BUG3721
       ** Flags to indicate whether transaction fields are valid on 1st screen                BUG3721
       *
@@ -1415,6 +1427,17 @@
       *                                                                                     MD034449
      C                   EXSR      VALAMT                                                   MD034449
       *
+      * If CLE170 is on, and Loan passes the criteria, suppress the error message             CLE170
+      *                                                                                       CLE170
+     C     CLE170        IFEQ      'Y'                                                        CLE170
+     C     WLNPT         ANDNE     63                                                         CLE170
+     C     WLNPT         ANDNE     65                                                         CLE170
+     C     WLNPT         ANDNE     67                                                         CLE170
+     C     WLNPT         ANDNE     80                                                       MD055074
+      * CLE170 is on, Loan is not a Discount Loan - do nothing.                               CLE170
+     C                   ELSE                                                                 CLE170
+      * Loan does not meet criteria, or CLE170 is off - normal processing                     CLE170
+      *                                                                                       CLE170
       ***  If loan is not a guarantee and no base rate has been
       ***  specified, spread rate must be entered
       *
@@ -1440,6 +1463,8 @@
      C                   MOVEL     'LEL0140'     MsgIDXAr(Idx)
      C                   ENDIF
       *
+     C                   ENDIF                                                                CLE170
+      *                                                                                       CLE170
      C     DDRTSPOK      IFNE      'N'
      C                   MOVE      @@ALPH        DDRTSP                                     MD034449
       *                                                                                     MD034449
@@ -1498,6 +1523,16 @@
      C                   Z-ADD     7             PNDEC                                        CLE035
      C                   CALL      'ZALIGN'      PPAR1                                        CLE035
      C                   MOVE      PRVAL         WFXRT                                        CLE035
+      *                                                                                       CLE170
+      ** If CLE170 is on, and Loan passes the criteria, suppress the error message            CLE170
+      *                                                                                       CLE170
+     C     CLE170        IFEQ      'Y'                                                        CLE170
+     C     WLNPT         ANDNE     63                                                         CLE170
+     C     WLNPT         ANDNE     65                                                         CLE170
+     C     WLNPT         ANDNE     67                                                         CLE170
+     C     WLNPT         ANDNE     80                                                       MD055074
+      *                                                                                       CLE170
+     C                   ELSE                                                                 CLE170
       *                                                                                       CLE035
       ***  If loan is not a guarantee and no base rate code or base                           CLE035
       ***  rate has been specified, fixed rate must not be zero                               CLE035
@@ -1515,6 +1550,7 @@
      C**********         MOVEL     'LEL0701'     MsgIDXAr(Idx)                       CLE035 MD031225
      C                   MOVEL     '5021165'     MsgIDXAr(Idx)                              MD031225
      C                   ENDIF                                                                CLE035
+     C                   ENDIF                                                                CLE170
       *                                                                                       CLE035
      C     DDFXRTOK      IFNE      'N'                                                        CLE035
      C                   Z-ADD     WFXRT         CCLRTSP                                      CLE035
@@ -1567,6 +1603,16 @@
      C                   MOVEL     'DDBASR'      FldNamXAr(Idx)                               CLE035
      C                   MOVEL     'LEL0713'     MsgIDXAr(Idx)                                CLE035
      C                   ENDIF                                                                CLE035
+      *                                                                                       CLE170
+      ** If CLE170 is on, and Loan passes the criteria, suppress the error message            CLE170
+      *                                                                                       CLE170
+     C     CLE170        IFEQ      'Y'                                                        CLE170
+     C     WLNPT         ANDNE     63                                                         CLE170
+     C     WLNPT         ANDNE     65                                                         CLE170
+     C     WLNPT         ANDNE     67                                                         CLE170
+     C     WLNPT         ANDNE     80                                                       MD055074
+      *                                                                                       CLE170
+     C                   ELSE                                                                 CLE170
                                                                                               CLE035
       ** Reaching this point if fixed and base rates are either blank or zero                 CLE035
       ** and loan is not a risk, fixed rate becomes mandatory                                 CLE035
@@ -1578,6 +1624,7 @@
      C**********         MOVEL     'LEL0701'     MsgIDXAr(Idx)                       CLE035 MD031225
      C                   MOVEL     '5021165'     MsgIDXAr(Idx)                              MD031225
      C                   ENDIF                                                                CLE035
+     C                   ENDIF                                                                CLE170
                                                                                               CLE035
      C     DDBASROK      IFNE      'N'                                                        CLE035
      C                   EVAL      CCLBASR = WBASR                                            CLE035
@@ -1585,6 +1632,7 @@
      C                   EVAL      BASER = WBASR                                              CLE035
      C                   ENDIF                                                                CLE035
      C                   ENDIF                                                                CLE035
+      *                                                                                       CLE170
      C                   ENDIF                                                                CLE035
       *                                                                                       CLE035
      C                   ENDSR                                                                CLE035
@@ -1637,6 +1685,10 @@
      C     DDBRTT        IFNE      *BLANKS
      C     DDRTSP        ORNE      *BLANKS
      C     DDFXRT        ORNE      *BLANKS                                                   BUG9239
+     C     WLNPT         OREQ      70                                                       MD023254
+     C     WLNPT         OREQ      71                                                       MD023254
+     C     WLNPT         OREQ      72                                                       MD023254
+     C     CLE170        OREQ      'Y'                                                      MD053297
      C                   MOVE      'A'           DDSPIN
      C                   ENDIF
      C                   ELSE
@@ -2178,6 +2230,20 @@
      C     13            SUB       WCDPL         PNDIG
      C                   CALL      'ZALIGN'      PPAR1
      C                   MOVE      PRVAL         WTOTI            13 0
+      * If CLE170 is on, and Loan passes the criteria, and the interest amount is zero        CLE170
+      * suppress the error message.                                                           CLE170
+      *                                                                                       CLE170
+     C     CLE170        IFEQ      'Y'                                                        CLE170
+     C     WLNPT         ANDNE     63                                                         CLE170
+     C     WLNPT         ANDNE     65                                                         CLE170
+     C     WLNPT         ANDNE     67                                                         CLE170
+     C     WLNPT         ANDNE     80                                                       MD055074
+     C     WTOTI         ANDEQ     0                                                          CLE170
+     C     WINTT         ANDEQ     0                                                          CLE170
+      * CLE170 is on, Loan is not a Discount Loan, amount is zero, do nothing                 CLE170
+     C                   ELSE                                                                 CLE170
+      * Loan does not meet criteria, or CLE170 is off - normal processing                     CLE170
+      *                                                                                       CLE170
      C     WIPRD1        IFEQ      '-'                                                      AR988460
      C     PRTCD         ANDEQ     *BLANKS                                                  AR988460
      C                   Z-SUB     WTOTI         WTOTI                                      AR988460
@@ -2190,6 +2256,7 @@
      C                   ENDIF
      C                   ENDIF                                                               BUG3721
      C                   ENDIF
+     C                   ENDIF                                                                CLE170
       *
       ***  ON INSERT
       ***  Check that the interest entered is within the calculated
@@ -3026,7 +3093,7 @@ E004 C                   ENDIF
       *  SRFCRA - Validate facility currency repayment amount         *
       *****************************************************************
      C     SRFCRA        BEGSR
- 
+
      C     *IN83         IFEQ      '0'
      C                   MOVE      FCCYF         @CYCD
      C                   ELSE
@@ -4166,7 +4233,7 @@ E004 C                   ENDIF
      C                   ELSE
      C                   Z-ADD     ZINTR         WCHKI
      C                   ENDIF
- 
+
      C*****WCHKI         IFLT      *ZEROS                                                   AR988460
      C**********         Z-SUB     WCHKI         WCHKI                                      AR988460
      C**********         MOVE      'Y'           WSUB              1                        AR988460
@@ -6476,6 +6543,26 @@ E004 C                   ENDIF
      C                   IF        @RTCD = *BLANKS                                            CRE073
      C                   EVAL      CRE073 = 'Y'                                               CRE073
      C                   ENDIF                                                                CRE073
+      *                                                                                       CLE170
+      ** Check if CLE170 Allow Zero Interest Rate Loan is installed.                          CLE170
+      *                                                                                       CLE170
+     C                   MOVE      'N'           CLE170            1                          CLE170
+     C                   CALLB     'AOSARDR0'                                                 CLE170
+     C                   PARM      *BLANKS       @RTCD                                        CLE170
+     C                   PARM      '*VERIFY'     @OPTN                                        CLE170
+     C                   PARM      'CLE170'      @SARD                                        CLE170
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE170
+      *                                                                                       CLE170
+     C                   IF        @RTCD <> *BLANKS  AND  @RTCD <> '*NRF   '                  CLE170
+     C                   EVAL      DBFile = 'SCSARDPD'                                        CLE170
+     C                   EVAL      DBKey  = 'CLE170'                                          CLE170
+     C                   EVAL      DBase  = 15                                                CLE170
+     C                   EXSR      *PSSR                                                      CLE170
+     C                   ENDIF                                                                CLE170
+                                                                                              CLE170
+     C                   IF        @RTCD = *BLANKS                                            CLE170
+     C                   EVAL      CLE170 = 'Y'                                               CLE170
+     C                   ENDIF                                                                CLE170
       *                                                                                     MD053143
       ** Determine if CLE141 is switched on                                                 MD053143
       *                                                                                     MD053143

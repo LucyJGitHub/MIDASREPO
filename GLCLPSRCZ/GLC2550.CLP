@@ -8,8 +8,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD021155           Date 09Jul13              */
+/*       Last Amend No. EML102             Date 28Nov19              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD021155           Date 09Jul13              */
 /*                      CGL127AC           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -32,6 +33,9 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       EML102 - Upgrade of UNL007 to FB2.1 SP21                    */
+/*                UNL007 - Extended Narratives                       */
+/*                   Use /COPY GLC2550INT, GLC2550MPS, GLC2550002)   */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD021155 - COB Restructure Phase 1 remnants                 */
 /*                - Not all redundant processing removed             */
@@ -109,9 +113,9 @@
 /*                                                                      CCB009*/
 /**********  CALL       PGM(AOSARDR0) PARM(&CCB009 '*VERIFY' +
                           'CCB009' &AOFMT)                         */            /*CCB009 CGL127AC*/
- 
+
              CHGJOB     SWS(XXXXXX00)
- 
+
 /*/COPY WNCPYSRC,GLC2550MPS                                          */
 /**/
 /* Send Message to MRUNQ */
@@ -168,7 +172,7 @@ LOOP1:
 /**/
 /**********  ENDDO                                                 */                   /*CGL127AC*/
 /*/COPY WNCPYSRC,GLC2550007                                          */
- 
+
 /***CREATE*JOURNAL*WITH*AUTHORITY**PUBLIC**ALL*IN*CASE*COB*ENDS*****/                   /*CGL127AC*/
 /***AND*IS*RESTARTED*BY*A*DIFFERENT*USER*WHO*MAY*REQUIRE*AUTHORITY**/                   /*CGL127AC*/
 /***TO*DELETE*THIS*JOURNAL******************************************/                   /*CGL127AC*/
@@ -228,9 +232,9 @@ RETRY:
 /**********  MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(JRNFAIL))  */            /*CRE008 CGL127AC*/
 /*/COPY WNCPYSRC,GLC2550004                                          */
 /**********  ENDDO                                                 */            /*107793 CGL127AC*/
- 
+
 /**********  GOTO       CMDLBL(BYPASS)                             */                   /*CGL127AC*/
- 
+
 JRNFAIL:
 /**********  CHGVAR     VAR(&COUNT) VALUE(&COUNT + 1)              */                   /*CGL127AC*/
 /**********  IF         COND(&COUNT *LE 3) THEN(DO)                */                   /*CGL127AC*/
@@ -268,9 +272,9 @@ BYPASS:
                               TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
              GOTO       CMDLBL(ABNOR)
              ENDDO
- 
+
 /*/COPY WNCPYSRC,GLC2550MPE                                          */
- 
+
              GOTO       CMDLBL(END)
 /*/COPY WNCPYSRC,GLC2550015                                          */
 /**/
@@ -285,7 +289,7 @@ BYPASS:
              SNDPGMMSG  MSG('Program GLC2550 ended abnormally') +
                           TOMSGQ(MOPERQ MRUNQ)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
  END:
 /*/COPY WNCPYSRC,GLC2550END                                          */
                                                                       /*107793*/
@@ -296,7 +300,7 @@ BYPASS:
              ENDCMTCTL
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              ENDDO
- 
+
 /*/COPY WNCPYSRC,GLC2550011                                          */
 /*                                                                      CCB009*/
 /**If*Feature*CCB009*is*NOT*'on'*(close*of*business*journaling),****/            /*CCB009 CGL127AC*/
@@ -306,11 +310,11 @@ BYPASS:
 /**********  MONMSG     MSGID(CPF0000 RPG0000 MCH0000)             */                   /*CGL127AC*/
 /**********  ENDJRNPF   FILE(GLACPHPD) JRN(ICJRN)                  */            /*107793 CGL127AC*/
 /**********  MONMSG     MSGID(CPF0000 RPG0000 MCH0000)             */            /*107793 CGL127AC*/
- 
+
 /**********  DLTJRN     JRN(&JLIB/JGLC2550)                        */                   /*CGL127AC*/
 /**********  MONMSG     MSGID(CPF0000 RPG0000 MCH0000)             */                   /*CGL127AC*/
 /*/COPY WNCPYSRC,GLC2550012                                          */
- 
+
 /**********  CHGJOB     INQMSGRPY(*DFT)                            */                   /*CGL127AC*/
 /**********  MONMSG     MSGID(CPF0000 RPG0000 MCH0000)             */                   /*CGL127AC*/
 /*/COPY WNCPYSRC,GLC2550013                                          */
@@ -321,6 +325,6 @@ BYPASS:
 /**********  CHGJOB     INQMSGRPY(*RQD)                            */                   /*CGL127AC*/
 /**********  MONMSG     MSGID(CPF0000 RPG0000 MCH0000)             */                   /*CGL127AC*/
 /**********  ENDDO                                                 */            /*CCB009 CGL127AC*/
- 
+
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')

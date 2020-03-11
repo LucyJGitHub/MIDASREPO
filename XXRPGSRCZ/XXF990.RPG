@@ -1,0 +1,448 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas XX Automatic Update of MC accounts')             *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Management Accounting Module                         *
+      *                                                               *
+      *  XXF990 - Automatic Update MC Accounts with Movements         *
+      *                                                               *
+      *  Function: This program is called during COB to automatically *
+      *            update MC accounts for all control groups with     *
+      *            todays movements.                                  *
+      *                                                               *
+      *  Called by: XXCF990 - Automatic Update of MC accounts         *
+      *                                                               *
+      *  Parameters: 2A Group code                                    *
+      *              1A Return code                                   *
+      *                                                               *
+      *  (C) Copyright Finastra Systems Technology, Inc. 2020         *
+      *                                                               *
+      *  Last Amend No. EML108             Date 20Jan20               *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  EML108 - Upgrade FMD003 and fixes to FBM2.1SP21              *
+      *  UMD001 - Upgrade FMD003 to Midas Plus 1.2.1 SP19             *
+      *  231735 - Separate update of balances with GE-XB postings and *
+      *           Average Balance calculation.                        *
+      *  222895 - Handle failure in XXCF299A                          *
+      *  FMD003 - Automatic Update of Management Accounts             *
+      *                                                               *
+      *****************************************************************
+      *
+     FGLPERDL1IF  E           K        DISK
+      * GL Period Details
+     FGLHBCGL0IF  E           K        DISK
+      * Control Groups by Group Code
+      * Historic Balances by Period Year/Number
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  50  -  End of file or no records LF/GLHBCGL1                 *
+      *  56  -  DB Error SETGT LF/GLHBCGL1                            *
+      *  U7  -  Database error                                        *
+      *  U8  -  Database error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  U01  -  Update parameters from LF/GLHBCGL1                   *
+      *  I01  -  Initialise parameters                                *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+     E                    CPY@    1   1 80
+     E                    CMD     1   3 80               Commands
+      /COPY ZSRSRC,ZDATE9Z1
+      /COPY ZSRSRC,ZHOLE
+      /SPACE 3
+      * Data structures for access programs
+     IDSBANK    E DSSDBANKPD
+     IDSPERS    E DSGLPERSPD
+     IDSFDY     E DSDSFDY
+     ILDA       E DSLDA
+      * Local data structure used for error handling
+      * DS for 8 sections fields
+     I                                        1   8 DSSECT
+     I                                        1   1 HCIAAC
+     I                                        2   2 HCILAC
+     I                                        3   3 HCIIAC
+     I                                        4   4 HCIEAC
+     I                                        5   5 HCICAC
+     I                                        6   6 HCIMAC
+     I                                        7   7 HCITAC
+     I                                        8   8 HCICTA
+     I            DS
+      * DS for 10 analysis fields
+     I                                        1  10 DSANAL
+     I                                        1   1 HCABAC
+     I                                        2   2 HCABCY
+     I                                        3   3 HCABBR
+     I                                        4   4 HCABCU
+     I                                        5   5 HCABAS
+     I                                        6   6 HCABPC
+     I                                        7   7 HCABBK
+     I                                        8   8 HCABTT
+     I                                        9   9 HCABTS
+     I                                       10  10 HCASCU
+      *
+     IXSECS       DS                              8
+     I                                        1   1 XIAAC
+     I                                        2   2 XILAC
+     I                                        3   3 XIIAC
+     I                                        4   4 XIEAC
+     I                                        5   5 XICAC
+     I                                        6   6 XIMAC
+     I                                        7   7 XITAC
+     I                                        8   8 XICTA
+     IXANL        DS                             10
+     I                                        1   1 XABAC
+     I                                        2   2 XABCY
+     I                                        3   3 XABBR
+     I                                        4   4 XABCU
+     I                                        5   5 XABAS
+     I                                        6   6 XABPC
+     I                                        7   7 XABBK
+     I                                        8   8 XABTT
+     I                                        9   9 XABTS
+     I                                       10  10 XASCU
+      /COPY ZSRSRC,ZDATE9Z2
+      /COPY ZSRSRC,ZHOLI
+      /COPY ZSRSRC,ZHOLDS
+      /EJECT
+      *================================================================
+      *  P R O G R A M     S T A R T                                  *
+      *================================================================
+      *
+      * Receive parameters
+     C           *ENTRY    PLIST
+     C                     PARM           XGRPCD  2
+     C                     PARM           XRETCD  1
+      *
+     C           KCYEAR    KLIST
+     C                     KFLD           HCPSTC
+     C                     KFLD           @CCNRY  2
+     C                     KFLD           @CYEAR  2
+     C                     KFLD           @FPRD   2
+      *
+      * Define the error DS
+     C           *NAMVAR   DEFN           LDA
+      *
+      * Set up copyright
+     C                     MOVEACPY@      BIS@   80
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*KEY   ' P@OPTN  7
+     C           DSBANK    PARM DSBANK    DSFDY
+     C           P@RTCD    IFNE *BLANKS                    --- B001
+     C                     MOVEL'AOBANKR0'#FILE   8        ************
+     C                     Z-ADD1         #BASE   30       * Error 01 *
+     C                     MOVELXGRPCD    DBKEY            ************
+     C                     MOVEL'XXF990'  DBPGM
+     C                     DUMP
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END                             --- E001
+     C                     Z-ADDBJRDNB    XRDAT   50
+     C                     MOVELBJRDNB    XCDAT   5
+     C                     MOVELBJSLCD    ZLOC
+     C                     MOVELBJCYCD    ZCCY
+      *
+      * Read the current record to be processed from the control groups file
+      *
+     C           XGRPCD    CHAINGLHBCGL0             50
+     C           *IN50     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'GLHBCGL0'DBFILE           ************
+     C                     Z-ADD1         DBASE            * Error 02 *
+     C                     MOVELXGRPCD    DBKEY            ************
+     C                     MOVEL'XXF990'  DBPGM
+     C                     DUMP
+     C                     OUT  LDA
+     C                     MOVEL'Y'       XRETCD
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END                             --- E001
+      *
+     C                     EXSR I01
+     C                     EXSR R01
+     C                     EXSR U01
+      *
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+      *
+      *================================================================
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  R01 - SR to retrieve GLHBCGPD details                        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           R01       BEGSR
+      *
+     C                     MOVE ' '       XTRCT1  1
+     C                     MOVE HCPSTB    XPOSB            Post. basis
+     C           HCLPDT    IFEQ 0
+     C                     Z-ADDHCLCD     @@DAYN  50
+     C                     EXSR ZDATE9
+     C                     MOVEL@@VDT     @CCNRY
+     C                     MOVEL@@VDT     @WTEMP  4
+     C                     MOVE @WTEMP    @CYEAR
+     C                     MOVEL'01'      @FPRD
+     C           KCYEAR    CHAINGLPERDL1             10
+     C           *IN10     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE
+     C                     MOVELDTPSTC    DBKEY
+     C                     MOVEL'XXF990'  DBPGM
+     C                     DUMP
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     MOVE DTSPDD    XSTRD            Start date
+     C                     MOVEL'235959'  XSTRT
+     C                     MOVE DSSECT    XSECS            Sections
+     C                     MOVE DSANAL    XANL             Analysis
+     C                     MOVE 'Y'       XTRCT1
+     C                     ELSE
+      *
+     C                     MOVELHCCPNB    @CCNRY
+     C                     MOVE HCCPNB    @WTEMP
+     C                     MOVEL@WTEMP    @CYEAR
+     C                     MOVE @WTEMP    @FPRD
+     C           KCYEAR    CHAINGLPERDL1             10
+     C           *IN10     IFEQ '1'
+     C                     Z-ADD3         DBASE
+     C                     MOVELHCPSTC    DBKEY
+     C                     MOVEL'XXF990'  DBPGM
+     C                     DUMP
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDIF
+     C           HCLPDT    DIV  1000000   WSTRD  110
+     C                     Z-ADDBJRDNB    ZDAYNO
+     C                     Z-ADD1         ZNRDYS
+     C                     EXSR ZBKDT
+     C           WSTRD     IFNE ZDYNBR
+     C                     MOVE 'Y'       XTRCT1
+     C                     ENDIF
+     C                     MOVE WSTRD     XSTRD            Start date
+     C                     MOVELXSTRD     @@DAYN
+     C                     EXSR ZDATE9
+     C                     MULT 1000000   WSTRD
+     C           HCLPDT    SUB  WSTRD     WSTRD            Start time
+     C                     MOVE WSTRD     XSTRT            Start time
+     C                     MOVE DSSECT    XSECS            Sections
+     C                     MOVE DSANAL    XANL             Analysis
+     C                     ENDIF
+      *
+      * Access period set definition file
+      * Error if not found
+     C                     CALL 'AOPERSR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*KEY   ' P@OPTN
+     C                     PARM HCPSTC    P@PERS  1
+     C           DSPERS    PARM DSPERS    DSFDY
+     C           P@RTCD    IFNE *BLANKS                    --- B001
+     C           *LOCK     IN   LDA
+     C                     MOVEL'AOPERSR0'DBFILE
+     C                     Z-ADD4         DBASE
+     C                     MOVELHCPSTC    DBKEY
+     C                     MOVEL'XXF990'  DBPGM
+     C                     DUMP
+     C                     OUT  LDA
+     C                     MOVEL'Y'       XRETCD
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  I01 - Initialise parameter fields                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           I01       BEGSR
+      *
+     C                     MOVE *BLANKS   XPOSB   1        Post. basis
+     C                     MOVE '00000'   XSTRD   5        Start date
+     C                     MOVE *BLANKS   XSECS   8        Sections
+     C                     MOVE *BLANKS   XANL   10        Analysis
+     C                     MOVE '000000'  XSTRT   6        Start time
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  U01 - Main Processing                                        *
+      *                                                               *
+      *****************************************************************
+     C           U01       BEGSR
+      *
+     C                     CALL 'MC0230'
+     C                     PARM           XGRPCD           Group code
+     C                     PARM           XRETCD           Return code
+      * Call XXCF299A to set up OPNQRYF for movement extract
+     C           XRETCD    IFEQ 'Y'                        --- B001
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MC0230  'DBFILE
+     C                     Z-ADD7         DBASE
+     C                     MOVELXGRPCD    DBKEY
+     C                     MOVEL'XXF990'  DBPGM
+     C                     DUMP
+     C                     OUT  LDA
+     C                     MOVEL'Y'       XRETCD
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END                             --- E001
+      *
+     C           XTRCT1    IFEQ 'Y'
+     C                     CALL 'XXCF299X'
+     C                     PARM           HCPSTC           Period set code
+     C                     PARM           HCPSTB           Posting basis
+     C                     PARM           XSTRD            Start date
+     C                     PARM           XSECS            A/c sections
+     C                     PARM           XANL             Analysis codes
+     C                     PARM           XCDAT
+     C                     PARM           XRETCD
+     C                     PARM           XGRPCD
+      *
+     C           XRETCD    IFEQ 'Y'                        --- B001
+     C           *LOCK     IN   LDA
+     C                     MOVEL'XXCF299X'DBFILE
+     C                     Z-ADD8         DBASE
+     C                     MOVELXGRPCD    DBKEY
+     C                     MOVEL'XXF990'  DBPGM
+     C                     DUMP
+     C                     OUT  LDA
+     C                     MOVEL'Y'       XRETCD
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END                             --- E001
+      *
+      * Override UPDBALPD to GLMOVEL0 via QCMDEXC
+     C                     CALL 'QCMDEXC'
+     C                     PARM           CMD,3
+     C                     PARM 80        CMDLEN 155
+      *
+      * Call MC0235 to update management a/c's with movements
+      *
+     C                     CALL 'MC0235'
+     C                     PARM           XGRPCD           Group code
+     C                     PARM           XRETCD           Return code
+      *
+     C                     CALL 'QCMDEXC'
+     C                     PARM           CMD,2
+     C                     PARM 80        CMDLEN 155
+      *
+      * Error if return code is 'Y'
+     C           XRETCD    IFEQ 'Y'                        --- B002
+     C           *LOCK     IN   LDA
+     C                     MOVEL'MC0235'  DBFILE
+     C                     Z-ADD9         DBASE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVEL'XXF990'  DBPGM
+     C                     DUMP
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C                     ENDIF
+      *
+      * Call XXCF991 to update todays total movements and balances
+      *
+     C           HCADCB    IFNE 'N'
+     C                     CALL 'XXCF991'
+     C                     PARM           XGRPCD
+     C                     PARM           XPOSB
+     C                     PARM           XRDAT
+     C                     PARM           XSECS
+     C                     PARM           XANL
+     C                     PARM           XRETCD
+      * Error if return code is 'Y'
+     C           XRETCD    IFEQ 'Y'                        --- B001
+     C           *LOCK     IN   LDA
+     C                     MOVEL'XXCF991 'DBFILE
+     C                     Z-ADD10        DBASE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVEL'XXF990'  DBPGM
+     C                     DUMP
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END                             --- E001
+     C                     ENDIF
+      *
+     C                     CALL 'XXCF299A'
+     C                     PARM           HCPSTC           Period set code
+     C                     PARM           HCPSTB           Posting basis
+     C                     PARM           XCDAT            Start date
+     C                     PARM           XSECS            A/c sections
+     C                     PARM           XANL             Analysis codes
+     C                     PARM 'R'       XTYP    1        Extract type
+     C                     PARM '000000'  XSTTM   6        Start time
+     C                     PARM           XGRPCD
+     C                     PARM           XRETCD
+      * Error if return code is 'Y'
+     C           XRETCD    IFEQ 'Y'                        --- B001
+     C           *LOCK     IN   LDA
+     C                     MOVEL'XXCF299A'DBFILE
+     C                     Z-ADD12        DBASE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVEL'XXF990'  DBPGM
+     C                     DUMP
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END                             --- E001
+      * Override UPDBALPD to GLPERDPD
+     C                     CALL 'QCMDEXC'
+     C                     PARM           CMD,3
+     C                     PARM 80        CMDLEN
+      * Call MC0235 to update management a/c's with movements
+     C                     CALL 'MC0235'
+     C                     PARM           XGRPCD           Group code
+     C                     PARM           XRETCD           Return code
+      *
+     C                     CALL 'QCMDEXC'
+     C                     PARM           CMD,2
+     C                     PARM 80        CMDLEN
+      * Error if return code is 'Y'
+     C           XRETCD    IFEQ 'Y'                        --- B001
+     C           *LOCK     IN   LDA
+     C                     MOVEL'See Dump'DBFILE
+     C                     Z-ADD11        DBASE
+     C                     MOVEL*BLANKS   DBKEY
+     C                     MOVEL'XXF990'  DBPGM
+     C                     DUMP
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END                             --- E001
+      *
+     C                     ENDSR
+      *******************************************************************
+      /COPY ZSRSRC,ZDATE9Z3
+      /COPY ZSRSRC,ZACCH
+      /COPY ZSRSRC,ZBKDT
+**  CPY@
+(C) COPYRIGHT Finastra Systems Technology, Inc. 2020
+**  CMD - Commands for QCMDEXC
+OVRDBF FILE(UPDBALPD) TOFILE(GLMOVEL0)
+DLTOVR FILE(UPDBALPD)
+OVRDBF FILE(UPDBALPD) TOFILE(GLPERDPD) SHARE(*YES)
+     X/COPY ZSRSRC,ZDATE9Z4

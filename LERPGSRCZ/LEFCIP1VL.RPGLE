@@ -11,8 +11,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE071             Date 18Jul18               *
-      *  Prev Amend No. CLE160             Date 18Jul18               *
+      *  Last Amend No. MD053093           Date 11Feb20               *
+      *  Prev Amend No. MD046484           Date 11Feb20               *
+      *                 MD039655           Date 11Feb20               *
+      *                 CLE071             Date 18Jul18               *
+      *                 CLE160             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 MD034007           Date 17Jun15               *
@@ -77,6 +80,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053093 - Component LEC06 00001 failed in Live due to       *
+      *             truncated CANM                                    *
+      *  MD046484 - 'LEC06 10011' Detailed name: 'Midas LE Facility   *
+      *             maintenance. Applied for MD048074                 *
+      *  MD039655 - Facility cannot be rejected.                      *
+      *             Pattern fix from MD-29208 and MD-34908.           *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  CLE160 - Remove Default for Revolving Credit Indicator       *
       *  MD046248 - Finastra Rebranding                               *
@@ -179,13 +188,13 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       **  Facilities Details file
      FFCLTY     IF A E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(FCLTYHHF)
       **  Facility Amendment Retrieval Index
      FLEFCAML0  IF   E           K DISK    INFSR(*PSSR)
- 
+
      FLEAGAML0  IF   E           K DISK    INFSR(*PSSR)                                       CLE041
      F                                     RENAME(LEFCAMPF:LEAGAMDF0)                         CLE041
      F                                     PREFIX(AGL0_)                                      CLE041
@@ -195,21 +204,21 @@
      F                                     PREFIX(LE)
       **  Fees Master file
      FLEFEEDL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
       **  Customer/Facility/Loan Cross-Reference file
      FLEREF     IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(RF)
- 
+
       **  Loan Master file
      FCLOAN     IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(CL)
      F                                     IGNORE(CLOANHHF)
      F                                     IGNORE(CLOANZ1F)
      F                                     IGNORE(CLOANCKF)
- 
+
       **  Live Utilisation Retrieval Index
      FLEMNFUL6  IF   E           K DISK    INFSR(*PSSR)
- 
+
       **  Deals Extension Detail Files by Facility                                            CLE147
      FDLDLDQL0  IF   E           K DISK    INFSR(*PSSR)                                       CLE147
      F                                     PREFIX(DQ)                                         CLE147
@@ -233,7 +242,7 @@
      F                                     PREFIX(CL)                                         CLE147
                                                                                               CLE147
       **  Compile time arrays
- 
+
      D/COPY ZSRSRC,ZALIGNZ1LE
       *
       *****************************************************************
@@ -254,50 +263,50 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(75)
- 
+
       ** Constant to hold input parameter for AOSVALR0                                        CLE160
      D DftRevCRInd     C                   CONST('DftRevolvingCRInd')                         CLE160
                                                                                               CLE160
@@ -305,31 +314,31 @@
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of Fields with warnings.
      D WFldNmXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of warning message IDs
      D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of warning message data.
      D WMsgDtXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
                                                                                              BUG5132
       ** Array of allowable currencies                                                       BUG5132
      D ArrALCY         S              3A   DIM(12)                                           BUG5132
- 
+
       * First DS for Access programs - short data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** Flags to indicate whether transaction fields are valid
      D OKFlagsDS       DS
      D  DDACTNOK                      1A
@@ -393,73 +402,73 @@
      D  KFFACT                        3P 0                                                    CER020
      D  KFFCNO                        2P 0                                                    CER020
      D  KFRCDT                        1A                                                      CER020
- 
+
      D SDFACT        E DS                  EXTNAME(SDFACTPD)
       **   FACILITY TYPE
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
- 
+
      D SDCLND        E DS                  EXTNAME(SDCLNDPD)
       **  CUSTOMER LENDING DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       ** BRANCH CODES
- 
+
      D SDCTRY        E DS                  EXTNAME(SDCTRYPD)
       **   COUNTRY
- 
+
      D SDALTN        E DS                  EXTNAME(SDALTNPD)
       ** ALTERNATE NAME AND ADDRESSES
- 
+
      D SDACOF        E DS                  EXTNAME(SDACOFPD)
       **   ACCOUNT OFFICER DETAILS
- 
+
      D SDPRFC        E DS                  EXTNAME(SDPRFCPD)
       **   PROFIT CENTRES
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      D QQDFAC1       E                     EXTFLD(QQDFAC)                                     CGL029
       **   CUSTOMER
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       **   CURRENCY TYPE
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CLE034
                                                                                               CLE034
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D ValidFacm     E DS                  EXTNAME(LEVFCIMPD)
       * Valid Facility FM layout -> FCLTYFM
- 
+
      D ValidFacn     E DS                  EXTNAME(LEVFCINPD)
       * Valid Facility FN layout -> FCLTYFN
- 
+
      D TranInPrim    E DS                  EXTNAME(LEFCPPPD)
       * Incoming Transaction
- 
+
      D TranInSeco    E DS                  EXTNAME(LEFCSPPD)                                  CLE106
       * Incoming Transaction 2                                                                CLE106
                                                                                               CLE106
       * (Current) Facility record FM in file Format
      D FacmFilFmt    E DS                  EXTNAME(FCLTYFM) PREFIX(@@)
- 
+
       * (Current) Facility record FN in file Format
      D FacnFilFmt    E DS                  EXTNAME(FCLTYFN) PREFIX(@@@)
- 
+
      D ZMUSER          DS            17
      D  USRID                  1     10                                                     MD024398
      D  USRBCH                11     13
       * ZMUSER data layout
      D  DBRN                  11     13
- 
+
      D RUNDAT          DS            13
      D  RUNA                   1      7
      D  RUND                   8     10P 0
@@ -467,7 +476,7 @@
      D  DATF                  12     12
      D  AGMBIN                13     13
       * Rundate data area
- 
+
      D                 DS
      D  RUN                    1     30P 0
      D                                     DIM(10)                              FCTLY DRAW DATES
@@ -494,7 +503,7 @@
      D  OAM8                  50     56P 0
      D  OAM9                  57     63P 0
      D  OA10                  64     70P 0
- 
+
       ** DS for Credit Agreement Details                                                      CLE147
      D CADetails       DS            33                                                       CLE147
      D  DDOAFL                        1A                                                      CLE147
@@ -514,14 +523,14 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of of warning message ids etc
      D WId             S              3P 0
      D WIdx            S              3P 0                                                   BUG4351
- 
+
       ** Response Mode, received as a parameter from the common header
      D RespMode        S              1A
                                                                                              BUG5132
@@ -541,7 +550,7 @@
      D W#NAFN          S              2  0                                                    CLE147
      D W#LIVE          S              1A                                                      CLE147
      D KDLNO           S              6  0                                                    CLE147
- 
+
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
@@ -573,13 +582,13 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       ** +--- Start of Main processing -----------------------------------+
@@ -595,7 +604,7 @@
      C                   UNLOCK    ZMUSER                                                    BUG8550
                                                                                              BUG8550
      C                   EXSR      RESETERRS
- 
+
       ** Check whether user is a web browser user, if so overwrite              CAP084
      C**********         CALL      'SFC000026'                                       CAP084 MD024398
      C**********         PARM      *BLANKS       USER             10                 CAP084 MD024398
@@ -605,7 +614,14 @@
      C                   IF        USRID <> *BLANKS                                         MD024398
      C                   EVAL      PSUSER = USRID                                           MD024398
      C                   ENDIF                                                  CAP084
- 
+
+      ** Skip validation process if action is reject                                        MD039655
+                                                                                            MD039655
+     C                   IF        @ACTRV <> *BLANK                                         MD039655
+     C                   EXSR      SRRSFD                                                   MD039655
+     C                   RETURN                                                             MD039655
+     C                   ENDIF                                                              MD039655
+                                                                                            MD039655
       ** Call Validation Modules in Sequence
       *
       ** Validate Branch number
@@ -672,7 +688,7 @@
      C                   EXSR      VBldy
       ** Validate Account sequence
      C                   EXSR      VAcsq
- 
+
       *                                                                                       CER020
       ** Default and Validate the Previous and Penultimate Expiry Dates                       CER020
       ** if feature is installed                                                              CER020
@@ -688,7 +704,7 @@
       *  *-------------------------------------------------------*
       *  * If no errors set up outstanding fields for valid file *
       *  *-------------------------------------------------------*
- 
+
      C                   IF        Idx = 0
      C                   EXSR      SetupValid
      C                   ENDIF
@@ -696,13 +712,162 @@
       * RETURN
       *
      C                   RETURN
+      *****************************************************************                     MD039655
+     C/EJECT                                                                                MD039655
+      *****************************************************************                     MD039655
+      ** SRRSFD  - Restore Original Details (for Reject Action)                             MD039655
+      *****************************************************************                     MD039655
+     C     SRRSFD        BEGSR                                                              MD039655
+      *                                                                                     MD046484
+      ** Get Number of Decimal Places for Currency                                          MD046484
+      *                                                                                     MD046484
+     C                   MOVE      DDFCCY        CKEY                                       MD046484
+     C                   MOVE      '*BLANKS'     @RTCD                                      MD046484
+     C                   CALLB     'AOCURRR0'    PLIST2                                     MD046484
+     C                   Z-ADD     A6NBDP        W#NBDP                                     MD046484
+                                                                                            MD039655
+     C                   MOVEL     'A'           FPRCTP                                     MD039655
+     C                   MOVEL     DDACTN        FPCHTP                                     MD039655
+     C                   MOVEL     DDCSSN        FPCNUM                                     MD039655
+     C                   MOVEL     DDFACT        FPFACT                                     MD039655
+     C                   MOVEL     DDFCNO        FPFCNO                                     MD039655
+     C                   MOVEL     DDBRCA        FPBRCA                                     MD039655
+     C                   MOVEL     DDFCCY        FPFCCY                                     MD039655
+                                                                                            MD039655
+     C                   MOVE      *BLANKS       ZFIELD                                     MD039655
+     C                   MOVE      DDFAMT        SVDDFAMT                                   MD039655
+                                                                                            MD039655
+     C     1             SUBST     DDFAMT        WSIGN                                      MD039655
+     C     WSIGN         IFEQ      '-'                                                      MD039655
+     C     14            SUBST     DDFAMT:2      DDFAMT                                     MD039655
+     C                   ELSE                                                               MD039655
+     C     1             SUBST     DDFAMT:15     WSIGN                                      MD039655
+     C     WSIGN         IFEQ      '-'                                                      MD039655
+     C                   EVAL      WDDFAMT = *blanks                                        MD039655
+     C     14            SUBST     DDFAMT        WDDFAMT                                    MD039655
+     C                   EVALR     DDFAMT = WDDFAMT                                         MD039655
+     C                   ENDIF                                                              MD039655
+     C                   ENDIF                                                              MD039655
+                                                                                            MD039655
+     C                   MOVE      DDFAMT        ZFIELD                                     MD039655
+     C                   Z-ADD     W#NBDP        ZADEC                                      MD039655
+     C     13            SUB       W#NBDP        ZADIG                                      MD039655
+     C                   EXSR      ZALIGN                                                   MD039655
+     C                   MOVE      ZFIELD        FPFAMT                                     MD039655
+     C     WSIGN         IFEQ      '-'                                                      MD039655
+     C                   Z-SUB     FPFAMT        FPFAMT                                     MD039655
+     C                   ENDIF                                                              MD039655
+                                                                                            MD039655
+     C                   MOVE      *BLANKS       ZFIELD                                     MD039655
+     C                   MOVE      DDOVAM        ZFIELD                                     MD039655
+     C                   Z-ADD     W#NBDP        ZADEC                                      MD039655
+     C     13            SUB       W#NBDP        ZADIG                                      MD039655
+     C                   EXSR      ZALIGN                                                   MD039655
+     C                   MOVE      ZFIELD        FPOVAM                                     MD039655
+                                                                                            MD039655
+     C                   MOVE      *BLANKS       ZFIELD                                     MD039655
+     C                   MOVE      DDOVPC        ZFIELD                                     MD039655
+     C                   Z-ADD     3             ZADEC                                      MD039655
+     C                   Z-ADD     2             ZADIG                                      MD039655
+     C                   EXSR      ZALIGN                                                   MD039655
+     C                   MOVE      ZFIELD        FPOVPC                                     MD039655
+                                                                                            MD039655
+     C                   MOVEL     DDFCTI        FPFCTI                                     MD039655
+     C                   MOVE      DDDTAP        DATEA                                      MD039655
+     C                   CALLB     'ZDATE1'                                                 MD039655
+     C                   PARM                    DATEA                                      MD039655
+     C                   PARM                    ZDAYNO                                     MD039655
+     C                   PARM                    BJDFIN                                     MD039655
+     C                   PARM                    ErrorFlag                                  MD039655
+     C                   Z-ADD     ZDAYNO        FPDTAP                                     MD039655
+                                                                                            MD039655
+     C                   MOVEL     DDRVCR        FPRVCR                                     MD039655
+     C                   MOVEL     DDMCCY        FPMCCY                                     MD039655
+     C                   MOVEL     DDSECI        FPSECI                                     MD039655
+                                                                                            MD039655
+     C                   MOVE      DDDTEX        DATEA                                      MD039655
+     C                   CALLB     'ZDATE1'                                                 MD039655
+     C                   PARM                    DATEA                                      MD039655
+     C                   PARM                    ZDAYNO                                     MD039655
+     C                   PARM                    BJDFIN                                     MD039655
+     C                   PARM                    ErrorFlag                                  MD039655
+     C                   Z-ADD     ZDAYNO        FPDTEX                                     MD039655
+                                                                                            MD039655
+     C                   MOVEL     DDCRSK        FPCRSK                                     MD039655
+     C                   MOVEL     DDMCSI        FPMCSI                                     MD039655
+     C                   MOVEL     DDNACD        FPNACD                                     MD039655
+     C                   Z-ADD     RVCD          FPRVCD                                     MD039655
+                                                                                            MD039655
+     C                   MOVE      DDDLFS        DATEA                                      MD039655
+     C                   CALLB     'ZDATE1'                                                 MD039655
+     C                   PARM                    DATEA                                      MD039655
+     C                   PARM                    ZDAYNO                                     MD039655
+     C                   PARM                    BJDFIN                                     MD039655
+     C                   PARM                    ErrorFlag                                  MD039655
+     C                   Z-ADD     ZDAYNO        FPDLFS                                     MD039655
+                                                                                            MD039655
+     C                   MOVE      *BLANKS       ZFIELD                                     MD039655
+     C                   MOVE      DDNOMR        ZFIELD                                     MD039655
+     C                   Z-ADD     7             ZADEC                                      MD039655
+     C                   Z-ADD     4             ZADIG                                      MD039655
+     C                   EXSR      ZALIGN                                                   MD039655
+     C                   MOVE      ZFIELD        FPNOMR                                     MD039655
+                                                                                            MD039655
+     C                   Z-ADD     0             FPRVDT                                     MD039655
+     C     DDRVDT        IFNE      *BLANKS                                                  MD039655
+     C                   MOVE      DDRVDT        DATEA                                      MD039655
+                                                                                            MD039655
+     C                   CALLB     'ZDATE1'                                                 MD039655
+     C                   PARM                    DATEA                                      MD039655
+     C                   PARM                    ZDAYNO                                     MD039655
+     C                   PARM                    BJDFIN                                     MD039655
+     C                   PARM                    ErrorFlag                                  MD039655
+     C                   Z-ADD     ZDAYNO        FPRVDT                                     MD039655
+     C                   ENDIF                                                              MD039655
+                                                                                            MD039655
+     C                   MOVEL     DDRVFR        FPRVFR                                     MD039655
+     C                   MOVE      DDRVDY        FPRVDY                                     MD039655
+     C                   MOVEL     DDACOF        FPACOF                                     MD039655
+     C                   MOVEL     DDORBR        FPORBR                                     MD039655
+     C                   MOVEL     DDTRCA        FPTRCA                                     MD039655
+     C**********         MOVE      DDCANM        FPCANM                            MD039655 MD053093
+     C                   MOVEL     DDCANM        FPCANM                                     MD053093
+     C                   MOVE      DDCAFT        FPCAFT                                     MD039655
+     C                   MOVE      DDCAFN        FPCAFN                                     MD039655
+     C                   MOVEL     DDNAR1        FPNAR1                                     MD039655
+     C                   MOVEL     DDNAR2        FPNAR2                                     MD039655
+     C                   MOVEL     DDNAR3        FPNAR3                                     MD039655
+     C                   MOVEL     DDNAR4        FPNAR4                                     MD039655
+     C                   MOVE      DDACSQ        FPACSQ                                     MD039655
+                                                                                            MD039655
+     C                   MOVEL     'B'           FNRCTP                                     MD039655
+     C                   MOVEL     DDACTN        FNCHTP                                     MD039655
+     C                   MOVEL     DDCSSN        FNCNUM                                     MD039655
+     C                   MOVEL     DDFACT        FNFACT                                     MD039655
+     C                   MOVEL     DDFCNO        FNFCNO                                     MD039655
+     C                   MOVEL     DDMBFC        FNMBFC                                     MD039655
+     C                   MOVEL     DDPRFC        FNPRFC                                     MD039655
+     C                   MOVEL     DDBTIN        FNBTIN                                     MD039655
+     C                   MOVE      DDBLDY        FNBLDY                                     MD039655
+     C                   Z-ADD     @@@OAM1       FNOAM1                                     MD039655
+     C                   Z-ADD     @@@OAM2       FNOAM2                                     MD039655
+     C                   Z-ADD     @@@OAM3       FNOAM3                                     MD039655
+     C                   Z-ADD     @@@OAM4       FNOAM4                                     MD039655
+     C                   Z-ADD     @@@OAM5       FNOAM5                                     MD039655
+     C                   Z-ADD     @@@OAM6       FNOAM6                                     MD039655
+     C                   Z-ADD     @@@OAM7       FNOAM7                                     MD039655
+     C                   Z-ADD     @@@OAM8       FNOAM8                                     MD039655
+     C                   Z-ADD     @@@OAM9       FNOAM9                                     MD039655
+     C                   Z-ADD     @@@OA10       FNOA10                                     MD039655
+                                                                                            MD039655
+     C                   ENDSR                                                              MD039655
       *****************************************************************
      C/EJECT
       *****************************************************************
       ** VBRCA   - Validate Branch
       *****************************************************************
      C     VBRCA         BEGSR
- 
+
       ** If branch is not yet defined
       ** Default branch from ZMUSER
       *
@@ -716,7 +881,7 @@
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM      DDBRCA        @BRCA             3
      C     SDBRCH        PARM      SDBRCH        DSSDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   Move      'N'           DDBRCAOK
      C                   Add       1             Idx
@@ -745,6 +910,21 @@
      C                   PARM      DDBRCA        @ZBR              3
      C                   PARM                    @ERR              1 0
      C                   ENDIF
+      *                                                                                     MD039655
+      ** Check for reject permission                                                        MD039655
+      *                                                                                     MD039655
+     C     @ACTRV        IFNE      *BLANK                                                   MD039655
+     C     DDACTN        ANDNE     'X'                                                      MD039655
+     C     @ERR          ANDNE     0                                                        MD039655
+      *                                                                                     MD039655
+     C                   MOVE      @ACTRV        @ZACTN                                     MD039655
+      *                                                                                     MD039655
+     C                   CALL      'ZVACTBU'                                                MD039655
+     C                   PARM                    @ZACTN                                     MD039655
+     C                   PARM                    @ZBR                                       MD039655
+     C                   PARM                    @ERR                                       MD039655
+      *                                                                                     MD039655
+     C                   ENDIF                                                              MD039655
       *
      C     @ERR          IFNE      *ZERO
      C     @ERR          IFEQ      1
@@ -761,7 +941,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** If an error was found, set the return code appropriately
      C     DDBRCAOK      IFEQ      'N'
      C                   Eval      RetCodeIn = 'Error'
@@ -775,7 +955,7 @@
      C                   EndIf                                                                CAP084
       *                                                                                       CAP084
      C                   EndIf
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -783,7 +963,7 @@
       ** VFCCY   - Validate currency
       *****************************************************************
      C     VFCCY         BEGSR
- 
+
       **   Must be a valid code on SDCURRPD
      C                   MOVE      DDFCCY        CKEY
       *
@@ -817,7 +997,7 @@
       ** VFAMT   - Validate Facility amount
       *****************************************************************
      C     VFAMT         BEGSR
- 
+
      C                   MOVE      'N'           FacAmChg
       *
       **  Must be valid per ZALIGN
@@ -858,7 +1038,7 @@
      C                   ENDIF                                                                BUG774
       *                                                                                       BUG774
      C     W#FAMT        IFLE      0
- 
+
       ** To allow validation of amount only during Insert
       *
      C     DDACTN        ANDEQ     'I'
@@ -889,7 +1069,7 @@
       ** VOVPC   - Validate Overline %
       *****************************************************************
      C     VOVPC         BEGSR
- 
+
       **  Must be valid per ZALIGN
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVE      DDOVPC        ZFIELD
@@ -923,7 +1103,7 @@
       ** VFCTI   - Fclty/Cmmt Ind
       *****************************************************************
      C     VFCTI         BEGSR
- 
+
       **  Must be 'C','F' OR 'G'
      C     DDFCTI        IFNE      'C'
      C     DDFCTI        ANDNE     'F'
@@ -941,7 +1121,7 @@
       ** VDTAP   - Validate Start date
       *****************************************************************
      C     VDTAP         BEGSR
- 
+
       **  Must be valid date format
      C                   MOVE      DDDTAP        DATEA
      C                   TESTN                   DATEA                9798
@@ -950,7 +1130,7 @@
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    BJDFIN
      C                   PARM                    ErrorFlag         1
- 
+
       **   - invalid format or not numeric
      C     ErrorFlag     IFEQ      'Y'
      C     *IN97         OREQ      '0'
@@ -994,7 +1174,7 @@
       ** VRVCR   - Validate Revolving CR
       *****************************************************************
      C     VRVCR         BEGSR
- 
+
       ** Value must be 'Y','N' or ' '
       ** or 'T' for a 'Credit Agreement' facility.
       ** If CLE160 is ON, default RVCR field to the value in                                  CLE160
@@ -1066,7 +1246,7 @@
       ** VMCCY   - Validate Multi currency
       *****************************************************************
      C     VMCCY         BEGSR
- 
+
       ** Value must be 'Y' or 'N' and cannot be amended from 'Y' to 'N'
      C                   SELECT
      C     DDMCCY        WHENEQ    *BLANKS
@@ -1081,7 +1261,7 @@
      C                   Movel     'LEF0029'     MsgIDXAr(Idx)
      C                   ENDIF
      C                   ENDIF
- 
+
      C     DDMCCY        WHENEQ    'N'
      C     DDACTN        ANDEQ     'A'
      C     @@MCCY        ANDEQ     'Y'
@@ -1089,7 +1269,7 @@
      C                   Add       1             Idx
      C                   Movel     'DDMCCY'      FldNamXAr(Idx)
      C                   Movel     'LEF0029'     MsgIDXAr(Idx)
- 
+
      C     DDMCCY        WHENNE    'Y'
      C     DDMCCY        ANDNE     'N'
      C                   Move      'N'           DDMCCYOK
@@ -1118,7 +1298,7 @@
       ** VSECI   - Validate Secured
       *****************************************************************
      C     VSECI         BEGSR
- 
+
       ** Value must be 'Y','N' or ' '
      C     DDSECI        IFEQ      *BLANKS
      C                   MOVE      'N'           DDSECI
@@ -1140,7 +1320,7 @@
       ** VDTEX   - Validate Date expired
       *****************************************************************
      C     VDTEX         BEGSR
- 
+
       **  Must be valid date format
      C                   MOVE      DDDTEX        DATEA
      C                   TESTN                   DATEA                9798
@@ -1149,7 +1329,7 @@
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    BJDFIN
      C                   PARM                    ErrorFlag         1
- 
+
       **   - invalid format or not numeric
      C     ErrorFlag     IFEQ      'Y'
      C     *IN97         OREQ      '0'
@@ -1234,7 +1414,7 @@
      C                   Z-ADD     ZDAYNO        W#DTEX            5 0
      C                   MOVE      ZDAYNO        WWDTEX            5
      C                   ENDIF
- 
+
      C     DDDTEXOK      IFNE      'N'
      C     DDACTN        ANDEQ     'A'
       **  Update of drawn amount array
@@ -1334,7 +1514,7 @@
       ** VCRSK   - Validate Country of risk
       *****************************************************************
      C     VCRSK         BEGSR
- 
+
      C     DDCRSK        IFEQ      *BLANKS
       *
       **  Default it to country of citizenship
@@ -1382,7 +1562,7 @@
       ** VMCSI   - Validate Multi customer
       *****************************************************************
      C     VMCSI         BEGSR
- 
+
       ** Value must be 'Y' or 'N' and cannot be amended from 'Y' to 'N'
      C                   SELECT
      C     DDMCSI        WHENEQ    *BLANKS
@@ -1397,7 +1577,7 @@
      C                   Movel     'LEF0031'     MsgIDXAr(Idx)
      C                   ENDIF
      C                   ENDIF
- 
+
      C     DDMCSI        WHENEQ    'N'
      C     DDACTN        ANDEQ     'A'
      C     @@MCSI        ANDEQ     'Y'
@@ -1405,14 +1585,14 @@
      C                   Add       1             Idx
      C                   Movel     'DDMCSI'      FldNamXAr(Idx)
      C                   Movel     'LEF0031'     MsgIDXAr(Idx)
- 
+
      C     DDMCSI        WHENNE    'Y'
      C     DDMCSI        ANDNE     'N'
      C                   Move      'N'           DDMCSIOK
      C                   Add       1             Idx
      C                   Movel     'DDMCSI'      FldNamXAr(Idx)
      C                   Movel     'LEF0030'     MsgIDXAr(Idx)
- 
+
      C     DDMCSI        WHENEQ    'Y'
      C     DDTRCA        IFEQ      'TR'
      C     WTRCA         ANDEQ     'CA'
@@ -1423,9 +1603,9 @@
      C                   Movel     'DDMCSI'      FldNamXAr(Idx)
      C                   Movel     'LEF0133'     MsgIDXAr(Idx)
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1433,7 +1613,7 @@
       ** VNACD   - Validate Alt N/A
       *****************************************************************
      C     VNACD         BEGSR
- 
+
       **  Must be valid name & address record on SDALTNPD
      C     DDNACD        IFEQ      *BLANKS
      C     DDNACD        OREQ      'B'
@@ -1456,9 +1636,9 @@
      C                   Movel     'DDNACD'      FldNamXAr(Idx)
      C                   Movel     'LEF0060'     MsgIDXAr(Idx)
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1466,14 +1646,14 @@
       ** VMBFC   - Validate Multi Branch
       *****************************************************************
      C     VMBFC         BEGSR
- 
+
       **  Must be 'Y' or 'N' if entered (DEFAULT 'N' IF BLANK)
       **  Cannot be amended from 'Y' to 'N'
       **  & only allowed in multi-branch system
      C     AGMBIN        IFNE      'Y'
      C                   MOVE      'N'           DDMBFC
      C                   ELSE
- 
+
       **  Validate indicator value
      C     DDMBFC        IFNE      'Y'
      C     DDMBFC        ANDNE     'N'
@@ -1483,7 +1663,7 @@
      C                   Movel     'DDMBFC'      FldNamXAr(Idx)
      C                   Movel     'LEF0061'     MsgIDXAr(Idx)
      C                   ENDIF
- 
+
       **  IF INDICATOR IS 'N' OR ' ' PREVENT AMENDMENT OF FIELD ON FILE
       **  FROM 'Y' TO 'N' ELSE SET FILE FIELD
      C     DDMBFC        IFEQ      'N'
@@ -1498,7 +1678,7 @@
      C                   MOVE      'N'           DDMBFC
      C                   ENDIF
      C                   ENDIF
- 
+
      C     DDMBFC        IFEQ      'Y'
      C     DDTRCA        IFEQ      'TR'
      C     WTRCA         ANDEQ     'CA'
@@ -1510,7 +1690,7 @@
      C                   Movel     'LEF0134'     MsgIDXAr(Idx)
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
       *
      C                   ENDSR
@@ -1520,7 +1700,7 @@
       ** VRVCD   - Validate Rec.CR Date changed (output field only)
       *****************************************************************
      C     VRVCD         BEGSR
- 
+
      C     DDACTN        IFEQ      'A'
       *
       **  If this is the first change of RVCR today then RVCD become
@@ -1529,7 +1709,7 @@
      C     RUND          ANDNE     RVCD
      C                   Z-ADD     RUND          RVCD
      C                   ENDIF
- 
+
      C                   MOVE      RVCD          ZDAYNO
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDAYNO            5 0
@@ -1539,11 +1719,11 @@
      C                   MOVE      ZDATE         DDRVCD
       *
      C                   ENDIF
- 
+
      C     DDACTN        IFEQ      'I'
      C                   MOVEL     *BLANKS       DDRVCD
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1551,7 +1731,7 @@
       ** VDLFS   - Validate Date of Last Fin.Stmt
       *****************************************************************
      C     VDLFS         BEGSR
- 
+
       ** Date of Last Financial Statement Temp field initialized                             BUG8549
      C                   Z-ADD     *ZEROS        W#DLFS                                      BUG8549
       *                                                                                      BUG8549
@@ -1565,7 +1745,7 @@
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    BJDFIN
      C                   PARM                    ErrorFlag         1
- 
+
       **   - invalid format or not numeric
      C     ErrorFlag     IFEQ      'Y'
      C     *IN97         OREQ      '0'
@@ -1585,7 +1765,7 @@
       *
      C                   Z-ADD     ZDAYNO        W#DLFS            5 0
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1593,7 +1773,7 @@
       ** VNOMR   - Validate Nominal rate
       *****************************************************************
      C     VNOMR         BEGSR
- 
+
       **  Must be valid per ZALIGN
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVE      DDNOMR        ZFIELD
@@ -1606,7 +1786,7 @@
      C                   Movel     'DDNOMR'      FldNamXAr(Idx)
      C                   Movel     'LEF0035'     MsgIDXAr(Idx)
      C                   ENDIF
- 
+
      C                   MOVE      ZFIELD        W#NOMR           11 7
       *
      C                   ENDSR
@@ -1620,7 +1800,7 @@
       **  Must clear work field W#RVDT else value retained from                               245541
       **  previous facility.                                                                  245541
      C                   Z-ADD     0             W#RVDT                                       245541
- 
+
      C     DDRVDT        IFNE      *BLANKS
       *
       **  Must be valid date format, greater than approved date (N.B.
@@ -1632,27 +1812,27 @@
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    BJDFIN
      C                   PARM                    ErrorFlag         1
- 
+
      C                   SELECT
      C     ErrorFlag     WHENEQ    'Y'
      C                   Move      'N'           DDRVDTOK
      C                   Add       1             Idx
      C                   Movel     'DDRVDT'      FldNamXAr(Idx)
      C                   Movel     'LEF0036'     MsgIDXAr(Idx)
- 
+
      C     ZDAYNO        WHENLE    RUND
      C     DDACTN        ANDEQ     'I'
      C                   Move      'N'           DDRVDTOK
      C                   Add       1             Idx
      C                   Movel     'DDRVDT'      FldNamXAr(Idx)
      C                   Movel     'LEF0037'     MsgIDXAr(Idx)
- 
+
      C     ZDAYNO        WHENLE    W#DTAP
      C                   Move      'N'           DDRVDTOK
      C                   Add       1             Idx
      C                   Movel     'DDRVDT'      FldNamXAr(Idx)
      C                   Movel     'LEF0038'     MsgIDXAr(Idx)
- 
+
      C     ZDAYNO        WHENGE    W#DTEX
      C     DDACTN        ANDEQ     'I'
      C                   Move      'N'           DDRVDTOK
@@ -1660,10 +1840,10 @@
      C                   Movel     'DDRVDT'      FldNamXAr(Idx)
      C                   Movel     'LEF0039'     MsgIDXAr(Idx)
      C                   ENDSL
- 
+
      C                   Z-ADD     ZDAYNO        W#RVDT            5 0
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1671,7 +1851,7 @@
       ** VRVFR   - Validate Frequency
       *****************************************************************
      C     VRVFR         BEGSR
- 
+
      C     DDRVFR        IFNE      *BLANKS
       *
       **  Must be valid frequency
@@ -1682,7 +1862,7 @@
      C                   Movel     'DDRVFR'      FldNamXAr(Idx)
      C                   Movel     'LEF0040'     MsgIDXAr(Idx)
      C                   ELSE
- 
+
      C     DDRVFR        IFNE      'M'
      C     DDRVFR        ANDNE     'Q'
      C     DDRVFR        ANDNE     'X'
@@ -1719,7 +1899,7 @@
       ** VRVDY   - Validate Day no
       *****************************************************************
      C     VRVDY         BEGSR
- 
+
      C     DDRVDY        IFNE      *BLANKS
       *
       **  Entered only if REV.FRQ. entered, must be valid numeric 1->31
@@ -1730,7 +1910,7 @@
      C                   Movel     'DDRVDY'      FldNamXAr(Idx)
      C                   Movel     'LEF0042'     MsgIDXAr(Idx)
      C                   ELSE
- 
+
      C                   TESTN                   DDRVDY               19
      C     *IN19         IFEQ      *OFF
      C                   Move      'N'           DDRVDYOK
@@ -1738,7 +1918,7 @@
      C                   Movel     'DDRVDY'      FldNamXAr(Idx)
      C                   Movel     'LEF0043'     MsgIDXAr(Idx)
      C                   ELSE
- 
+
      C     *IN19         IFEQ      *ON
      C                   MOVE      DDRVDY        W#RVDY            2 0
      C     W#RVDY        IFGT      31
@@ -1761,7 +1941,7 @@
       ** VACOF   - Validate Account officer
       *****************************************************************
      C     VACOF         BEGSR
- 
+
      C                   MOVE      'N'           WBLACF            1
       *
       **  Default it to country of citizenship
@@ -1809,14 +1989,14 @@
       ** VPRFC   - Validate Profit center
       *****************************************************************
      C     VPRFC         BEGSR
- 
+
       *
       **  VALIDATE PROFIT CENTRE IF PROFIT CENTRE IS USED AND
       **  IS AMENDABLE, OR DURING INSERT.
      C     BKPRCU        IFEQ      'Y'
      C     BKPRCA        IFEQ      'Y'
      C     DDACTN        OREQ      'I'
- 
+
       **  IF PROFIT CENTRE IS USED THEN :-
       **  VALIDATE THE INPUT PROFIT CENTRE IF ENTERED
       *
@@ -1861,11 +2041,11 @@
      C                   Movel     'LEF0045'     MsgIDXAr(Idx)
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1873,7 +2053,7 @@
       ** VORBR   - Validate Originating branch
       *****************************************************************
      C     VORBR         BEGSR
- 
+
       **  Must be valid for user and on SDBRCHPD
      C     AGMBIN        IFEQ      'Y'
       *
@@ -1952,9 +2132,9 @@ E4   C                   ENDIF
       ** VTRCA   - Validate Tranche/Credit agreement ind
       *****************************************************************
      C     VTRCA         BEGSR
- 
+
       **  Validate Tranche/Credit Agreement Indicator
- 
+
      C     DDTRCA        IFNE      'TR'
      C     DDTRCA        ANDNE     'CA'
      C     DDTRCA        ANDNE     *BLANKS
@@ -2169,7 +2349,7 @@ E4   C                   ENDIF
      C                   Movel     'DDCAFN'      FldNamXAr(Idx)
      C                   Movel     'LEF0270'     MsgIDXAr(Idx)
      C                   ELSE
- 
+
      C     DDCAFN        IFLT      '01'
      C     DDCAFN        ORGT      '99'
      C                   Move      'N'           DDCAFNOK
@@ -2212,7 +2392,7 @@ E4   C                   ENDIF
      C                   Movel     'DDCAFN'      FldNamXAr(Idx)
      C                   Movel     'LEF0277'     MsgIDXAr(Idx)
      C                   ENDIF
- 
+
      C                   MOVE      TRCA          WTRCA
      C                   MOVE      MCCY          WMCCY
      C                   MOVE      MCSI          WMCSI
@@ -2337,13 +2517,13 @@ E4   C                   ENDIF
      C     DDCANMOK      ANDNE     'N'
      C     DDCAFTOK      ANDNE     'N'
      C     DDCAFNOK      ANDNE     'N'
- 
+
      C*****DDTRCA        IFNE      TRCASV                                                    BUG4351
- 
+
      C     @@TRCA        IFEQ      '  '
      C     DDTRCA        ANDEQ     'TR'
      C     DDACTN        ANDNE     'I'
- 
+
      C     @@TRCA        OREQ      'TR'
      C     DDTRCA        ANDEQ     '  '
      C     DDACTN        ANDNE     'I'
@@ -2351,7 +2531,7 @@ E4   C                   ENDIF
      C                   EVAL      K8CNUM = @@CNUM                                            CSD027
      C                   Z-ADD     @@FACT        K8FACT
      C                   Z-ADD     @@FCNO        K8FCNO
- 
+
      C     K#KY08        CHAIN     LEMNFUL6                           80
      C     *IN80         IFEQ      '0'
      C                   MOVE      'W'           DDTRCAOK
@@ -2361,7 +2541,7 @@ E4   C                   ENDIF
      C                   ENDIF
      C                   ENDIF
      C**********         ENDIF                                                               BUG4351
- 
+
      C**********         MOVE      DDTRCA        TRCASV            2                         BUG4351
                                                                                               CLE147
       ** Check if the Credit Agreement has been changed and if a live                         CLE147
@@ -2487,9 +2667,9 @@ E4   C                   ENDIF
       *****************************************************************
       ** VBTIN   - Validate Bill/Telex ind
       *****************************************************************
- 
+
      C     VBTIN         BEGSR
- 
+
       **  Must be be 'B', 'T', 'N' or blank
      C     DDBTIN        IFEQ      *BLANKS
      C                   MOVE      BPBTIN        DDBTIN
@@ -2511,7 +2691,7 @@ E4   C                   ENDIF
       ** VBLDY   - Validate Billing days
       *****************************************************************
      C     VBLDY         BEGSR
- 
+
      C                   SELECT
       *
      C     DDBLDY        WHENEQ    *BLANKS
@@ -2535,7 +2715,7 @@ E4   C                   ENDIF
      C                   Movel     'DDBLDY'      FldNamXAr(Idx)
      C                   Movel     'LEF0053'     MsgIDXAr(Idx)
      C                   ELSE
- 
+
      C                   MOVE      DDBLDY        W#BLDY            2 0
      C     DDBTIN        IFEQ      'B'
      C     W#BLDY        IFGT      30
@@ -2546,7 +2726,7 @@ E4   C                   ENDIF
      C                   Movel     'LEF0053'     MsgIDXAr(Idx)
      C                   ENDIF
      C                   ENDIF
- 
+
      C     DDBTIN        IFEQ      'T'
      C     W#BLDY        IFGT      9
      C     W#BLDY        ORLT      1
@@ -2556,7 +2736,7 @@ E4   C                   ENDIF
      C                   Movel     'LEF0053'     MsgIDXAr(Idx)
      C                   ENDIF
      C                   ENDIF
- 
+
      C     DDBTIN        IFEQ      'N'
      C     W#BLDY        ANDNE     0
      C                   Move      'N'           DDBLDYOK
@@ -2575,7 +2755,7 @@ E4   C                   ENDIF
       ** VACSQ   - Validate Account seq
       *****************************************************************
      C     VACSQ         BEGSR
- 
+
       *
       **  Default Account Sequence Number to '01' if blank
      C     DDACSQ        IFEQ      *BLANK
@@ -2646,7 +2826,7 @@ E4   C                   ENDIF
       *    Valid file record.                                         *
       *                                                               *
       *****************************************************************
- 
+
      C     SETUPVALID    BEGSR
       *
       * Fields from LEVFCIMPD - FM File
@@ -2696,9 +2876,9 @@ E4   C                   ENDIF
       *                                                                                       CER020
      C                   ENDIF                                                                CER020
      C/COPY WNCPYSRC,LEH00088
- 
+
      C     DDACTN        IFEQ      'I'
- 
+
      C     ModeOfop      IFEQ      '*FRONT'
      C                   MOVE      F1IUSR        FPIUSR
      C                   MOVE      F1XUSR        FPXUSR
@@ -2714,18 +2894,18 @@ E4   C                   ENDIF
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C     DDACTN        IFEQ      'X'
- 
+
      C     ModeOfop      IFEQ      '*FRONT'
      C                   MOVE      F1IUSR        FPIUSR
      C                   MOVE      F1XUSR        FPXUSR
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     DDACTN        IFEQ      'A'
- 
+
      C     ModeOfop      IFEQ      '*FRONT'
      C                   MOVE      F1AUSR        FPAUSR
      C                   MOVE      F1XUSR        FPXUSR
@@ -2751,17 +2931,17 @@ E4   C                   ENDIF
      C                   ENDIF
       *
      C                   ENDIF
- 
+
      C     ModeOfop      IFEQ      '*FRONT'
      C                   MOVE      F1PCOB        FPPCOB
      C                   ELSE
      C                   MOVE      *BLANKS       FPPCOB
      C                   ENDIF
- 
+
      C     ModeOfop      IFNE      '*FRONT'
      C     DDACTN        ANDEQ     'I'
      C     CLE106        ANDNE     'Y'                                                        CLE106
- 
+
      C******DTAARA       DEFINE                  LEALLO                                       CLE148
      C******LOCK         IN        LEALLO                                                     CLE148
      C*****PCLAST        ADD       1             PCNEXT            8 0                        CLE148
@@ -2798,9 +2978,9 @@ E4   C                   ENDIF
      C                   MOVEL     DDPRFC        FNPRFC
      C                   MOVEL     DDBTIN        FNBTIN
      C                   MOVE      DDBLDY        FNBLDY
- 
+
      C     DDACTN        IFEQ      'A'
- 
+
       **  If this is the first change of RVCR today then RVCD become
       **  run date
       **  and if RVCR has been changed to 'N' then initialise OAM
@@ -2833,9 +3013,9 @@ E4   C                   ENDIF
      C                   Z-ADD     @@@OAM8       FNOAM8
      C                   Z-ADD     @@@OAM9       FNOAM9
      C                   Z-ADD     @@@OA10       FNOA10
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       ***********************************************************
       /EJECT
@@ -2868,7 +3048,7 @@ E4   C                   ENDIF
      C                   MOVE      'Y'           W#ERR4
      C                   LEAVE
      C                   ENDIF
- 
+
      C     DDACTN        IFEQ      'R'
      C     DDACTN        OREQ      'C'
      C     CLMDAT        IFEQ      0
@@ -3038,9 +3218,9 @@ E4   C                   ENDIF
       *****************************************************************
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       * Response mode (1A), from source system common header
      C                   PARM                    RespMode
@@ -3064,7 +3244,7 @@ E4   C                   ENDIF
      C                   PARM                    CLE007            1
       * CLE014
      C                   PARM                    CLE014            1
- 
+
       * Front office inputs (if mode = 'B' or ModeOfop = FRONT)
      C                   PARM                    F1PCOB            3
      C                   PARM                    F1TNRF           15
@@ -3073,7 +3253,11 @@ E4   C                   ENDIF
      C                   PARM                    F1AUSR           10
       * Customer Extra Data file data
      C                   PARM                    ExtData         500
- 
+      *                                                                                     MD039655
+      ** Reject Action                                                                      MD039655
+      *                                                                                     MD039655
+     C                   PARM                    @ACTRV            1                        MD039655
+
       * OUTPUTS
       * Field OK flags (DS) from/to caller
      C                   PARM                    OKFlagsDS
@@ -3145,7 +3329,7 @@ E4   C                   ENDIF
      C                   PARM      '*FIRST '     @OPTN
      C*****SDGELR        PARM      SDGELR        DSFDY                                        CGL029
      C     SDGELR        PARM      SDGELR        DSSDY                                        CGL029
- 
+
       **  ACCESS CUSTOMER LENDING DATA
      C                   CALL      'AOCLNDR0'
      C                   PARM      '*DBERR '     @RTCD
@@ -3305,7 +3489,7 @@ E4   C                   ENDIF
      C                   KFLD                    KFFACT                                       CER020
      C                   KFLD                    KFFCNO                                       CER020
      C                   KFLD                    KFRCDT                                       CER020
- 
+
       **  Facility
      C     K#KY03        KLIST
      C**********         KFLD                    K3CNUM            6 0                        CSD027
@@ -3313,26 +3497,26 @@ E4   C                   ENDIF
      C                   KFLD                    K3FACT            3 0
      C                   KFLD                    K3FCNO            2 0
      C                   KFLD                    K3RCTP            1
- 
+
       ** used for CLOAN
      C     K#KY05        KLIST
      C**********         KFLD                    K5LNRF            6 0                        CLE148
      C                   KFLD                    K5LNRF            6                          CLE148
      C                   KFLD                    K5RCTP            1
- 
+
       ** Key for LEFEDL1
      C     K#KY07        KLIST
      C**********         KFLD                    K7CNUM            6 0                        CSD027
      C                   KFLD                    K7CNUM            6                          CSD027
      C                   KFLD                    K7FCTY            5 0
- 
+
       **  Used for LEREF
      C     K#KY08        KLIST
      C**********         KFLD                    K8CNUM            6 0                        CSD027
      C                   KFLD                    K8CNUM            6                          CSD027
      C                   KFLD                    K8FACT            3 0
      C                   KFLD                    K8FCNO            2 0
- 
+
       **  Used for LEFCAML0
      C     K#KY09        KLIST
      C                   KFLD                    K9BRCA            3
@@ -3340,14 +3524,14 @@ E4   C                   ENDIF
      C                   KFLD                    K9CUST            6                          CSD027
      C                   KFLD                    K9FCTY            3 0
      C                   KFLD                    K9FTNO            2 0
- 
+
       **  Used for LEFCLTL9
      C     K#KY10        KLIST
      C**********         KFLD                    K0CANM            6 0                        CSD027
      C                   KFLD                    K0CANM            6                          CSD027
      C                   KFLD                    K0CAFT            3 0
      C                   KFLD                    K0CAFN            2 0
- 
+
      C     KFCLT         KLIST                                                                CLE147
      C                   KFLD                    KCNUM             6                          CLE147
      C                   KFLD                    KFACT             3 0                        CLE147
@@ -3358,20 +3542,20 @@ E4   C                   ENDIF
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM                    FKEY              3
      C     SDFACT        PARM      SDFACT        DSFDY
- 
+
      C     PLIST2        PLIST
      C                   PARM                    @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM                    CKEY              3
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C     PLIST4        PLIST
      C                   PARM      '*BLANKS'     @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM                    ACOKEY            2
      C     SDACOF        PARM      SDACOF        DSFDY
- 
- 
+
+
      C     PLIST5        PLIST
      C                   PARM      '*BLANKS'     @RTCD
      C                   PARM      '*KEY   '     @OPTN
@@ -3382,7 +3566,7 @@ E4   C                   ENDIF
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3390,9 +3574,9 @@ E4   C                   ENDIF
       * RESETERRS - Reset error information that is received back     *
       *    from each validation module.                               *
       *****************************************************************
- 
+
      C     RESETERRS     BEGSR
- 
+
      C                   EVAL      RetCodeOut = *Blanks
       *
       * Reset error & warning fields/message IDs/message data (arrays)
@@ -3406,7 +3590,7 @@ E4   C                   ENDIF
       ** Reset Index of Warning errors.                                                      BUG5863
                                                                                              BUG5863
      C                   EVAL      WId = *ZERO                                               BUG5863
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3414,7 +3598,7 @@ E4   C                   ENDIF
       * UPDATERRS - Update error information with that received back  *
       *    from each validation module.                               *
       *****************************************************************
- 
+
      C     UPDATERRS     BEGSR
       *
       * Update error fields/message IDs/message data (arrays)

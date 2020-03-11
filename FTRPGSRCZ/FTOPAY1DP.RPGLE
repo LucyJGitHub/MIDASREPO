@@ -511,7 +511,7 @@
       * If not write only
       *
      C     WriteOnly     IFNE      'Y'
-      C/COPY WNCPYSRC,ERZ248_024                                                 ERZ248
+     C/COPY WNCPYSRC,ERZ248_024                                                 ERZ248
      C                   READ      FTOPAY1D1                              99    *
      C/COPY WNCPYSRC,ERZ248_025                                                 ERZ248
      C                   ENDIF

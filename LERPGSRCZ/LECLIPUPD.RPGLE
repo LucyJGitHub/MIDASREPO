@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD054035           Date 03Sep19               *
+      *  Last Amend No. MD054877           Date 14Jan20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD054035           Date 03Sep19               *
       *                 MD054317           Date 09Sep19               *
       *                 CSD102             Date 08Jan19               *      
       *                 MD052589           Date 22Jan19               *
@@ -159,6 +160,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054877 - Interest shadow postings at maturity of guarantee *
+      *             loan not produced. Allow shadow postings genera-  *
+      *             tion at maturity if interest date is zero.        *
       *  CER050 - Annualised Percentage Rate                          *
       *  MD054035 - Prevent file locking of LEFEED                    *
       *  MD054317 - PDCL X not generated for freq based repayment     *      
@@ -7667,11 +7671,11 @@
      C     PTYP          OREQ      68
      C     PTYP          OREQ      69
      C     PTYP          OREQ      70
-     C     NIDT          ANDNE     0
+     C*****NIDT*         ANDNE     0                                                        MD054877
      C     PTYP          OREQ      71
-     C     NIDT          ANDNE     0
+     C*****NIDT*         ANDNE     0                                                        MD054877
      C     PTYP          OREQ      72
-     C     NIDT          ANDNE     0
+     C*****NIDT*         ANDNE     0                                                        MD054877
                                                                                              BUG3721
      C     PTYP          OREQ      80                                                        BUG3721
      C     CLE028        ANDEQ     'Y'                                                       BUG3721

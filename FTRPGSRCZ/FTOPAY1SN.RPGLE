@@ -176,7 +176,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  ERZ248 - SWIFT UETR via OPAY API                             *
-      *           Add hooks ERZ248_029->035                           *
+      *           Add hooks ERZ248_030->035                           *
       *           Amended hooks FTOPA1SC03, FTOPA1SC13, FTOPA1SC15,   *
       *           FTOPA1SC17, FTOPA1SC31, FTOPA1SC60                  *
       *  MD054131 - Ordering Institution work fields values will be   *
@@ -1007,7 +1007,6 @@
      D**OVRFTPRF*****                49    INZ('OVRDBF FILE(FTPREFX1) +             BUG4776 BUG4776R
      D**********                                  TOFILE(FTPREFL0) SHARE(*NO)')     BUG4776 BUG4776R
 
-     D/COPY WNCPYSRC,ERZ248_029                                                 ERZ248
      D/COPY QWINDSRC,FTOPAYSDTA
       *                                                                                       CER001
      D DATALUX         DS          1024                                                       CER001

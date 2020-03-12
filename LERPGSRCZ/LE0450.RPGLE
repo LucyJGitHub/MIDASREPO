@@ -12,6 +12,438 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
+<<<<<<< HEAD
+      *  Last Amend No. MD051347           Date 12Mar20               *
+      *  Prev Amend No. AR819229           Date 12Mar20               *
+      *                 MD055322           Date 26Feb20               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD054326           Date 18Sep19               *
+      *                 MD054335           Date 11Sep19               *
+      *                 MD054132           Date 16Aug19               *
+      *                 MD054108           Date 14Aug19               *
+      *                 MD053947           Date 17Jul19               *
+      *                 MD051883           Date 04Apr19               *
+      *                 MD054008           Date 20Aug19               *
+      *                 MD053295           Date 13Apr19               *
+      *                 AR1097303          Date 16May19               *
+      *                 MD047693           Date 30Jan18               *
+      *                 MD050018           Date 05Nov18               *
+      *                 MD050007           Date 05Nov18               *
+      *                 MD050139           Date 23Mar18               *
+      *                 MD052549           Date 07Jan19               *
+      *                 MD049309           Date 14Feb18               *
+      *                 MD038508           Date 02May16               *
+      *                 MD051958           Date 24Sep18               *
+      *                 MD051957           Date 24Sep18               *
+      *                 MD051944           Date 22Sep18               *
+      *                 MD051921           Date 19Sep18               *
+      *                 MD051874           Date 12Sep18               *
+      *                 MD051845           Date 03Sep18               *
+      *                 MD051695           Date 08Aug18               *
+      *                 MD049363           Date 19Sep18               *
+      *                 CLE071             Date 18Jul18               *
+      *                 MD051788           Date 30Aug18               *
+      *                 MD049745B          Date 29Jun18               *
+      *                 MD049745A          Date 16Mar18               *
+      *                 MD049745           Date 02Mar18               *
+      *                 MD049444           Date 07Mar18               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD049078           Date 12Jan18               *
+      *                 MD048557           Date 27Nov17               *
+      *                 MD048609           Date 22Nov17               *
+      *                 MD046080           Date 21Sep17               *
+      *                 MD047993           Date 23Sep17               *
+      *                 MD035545           Date 11Sep15               *
+      *                 MD033575           Date 20Jun17               *
+      *                 MD045091           Date 10May17               *
+      *                 MD039672           Date 12May17               *
+      *                 MD045010           Date 05Apr17               *
+      *                 CGL184             Date 07Dec16               *
+      *                 MD038365           Date 20Apr16               *
+      *                 MD037915           Date 24Feb16               *
+      *                 MD012157           Date 23Oct13               *
+      *                 CLE154             Date 02Aug12               *
+      *                 CLE141A            Date 28Apr16               *
+      *                 CLE141             Date 01Mar16               *
+      *                 CLE141             Date 08Feb16               *
+      *                 MD031736           Date 02Mar15               *
+      *                 MD021302           Date 29Jan15               *
+      *                 MD020134A          Date 29Jan15               *
+      *                 CGL165             Date 17Mar15               *
+      *                 AR897086           Date 10Mar15               *
+      *                 MD027718           Date 23Sep14               *
+      *                 CLE164             Date 02Dec14               *
+      *                 MD030334           Date 02Dec14               *
+      *                 MD028338           Date 02Dec14               *
+      *                 MD027475           Date 19Aug14               *
+      *                 MD022510A          Date 13May14               *
+      *                 MD024248           Date 05May14               *
+      *                 MD023320A          Date 25Apr14               *
+      *                 MD023320           Date 25Apr14               *
+      *                 MD023310           Date 24Apr14               *
+      *                 CDL093             Date 07Apr14               *
+      *                 CSD095             Date 08Apr14               *
+      *                 MD022450           Date 18Sep13               *
+      *                 259708             Date 18Sep13               *
+      *                 AR1007486          Date 21Jun13               *
+      *                 AR706513B          Date 21Jun13               *
+      *                 AR786878           Date 05Jun13               *
+      *                 AR1083279          Date 29May13               *
+      *                 MD020563           Date 21May13               *
+      *                 MD019872           Date 08May13               *
+      *                 MD020210           Date 01May13               *
+      *                 AR830785           Date 07May13               *
+      *                 AR1085229          Date 06Feb13               *
+      *                 AR1081005          Date 25Jan13               *
+      *                 AR954080           Date 05May12               *
+      *                 AR996719           Date 24Apr13               *
+      *                 MD020118           Date 24Apr13               *
+      *                 MD019942           Date 16Apr13               *
+      *                 AR1095440          Date 26Mar13               *
+      *                 AR1097176          Date 22Mar13               *
+      *                 AR1076968A         Date 07Feb13               *
+      *                 CFC006             Date 06Aug12               *
+      *                 AR1083003          Date 12Feb13               *
+      *                 AR855749           Date 09Feb13               *
+      *                 260891             Date 09Feb13               *
+      *                 AR1078443          Date 17Jan12               *
+      *                 AR996895           Date 25Nov12               *
+      *                 AR1056323          Date 14Nov12               *
+      *                 AR760500           Date 09Nov12               *
+      *                 AR641069           Date 09Nov12               *
+      *                 AR1031595          Date 13Sep12               *
+      *                 AR1031359          Date 12Sep12               *
+      *                 AR720106           Date 14Oct12               *
+      *                 AR748269           Date 14Oct12               *
+      *                 AR689431           Date 14Oct12               *
+      *                 AR741212           Date 14Oct12               *
+      *                 AR700107           Date 01Aug12               *
+      *                 AR736589           Date 01Aug12               *
+      *                 AR628773           Date 01Aug12               *
+      *                 AR571427           Date 01Aug12               *
+      *                 AR402543           Date 01Aug12               *
+      *                 264060A            Date 01Aug12               *
+      *                 AR217244           Date 01Aug12               *
+      *                 AR217563           Date 01Aug12               *
+      *                 263427             Date 01Aug12               *
+      *                 263740             Date 01Aug12               *
+      *                 263411             Date 01Aug12               *
+      *                 263416             Date 01Aug12               *
+      *                 263074             Date 01Aug12               *
+      *                 262967             Date 01Aug12               *
+      *                 262597             Date 01Aug12               *
+      *                 262508             Date 01Aug12               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
+      *                 AR988948           Date 13Jun12               *
+      *                 AR317587           Date 19Aug11               *
+      *                 AR947093A          Date 04May12               *
+      *                 AR851638           Date 24Nov11               *
+      *                 AR814238           Date 11Aug11               *
+      *                 AR824724           Date 05Sep11               *
+      *                 AR821740           Date 29Aug11               *
+      *                 CRE073             Date 06Dec10               *
+      *                 AR755951           Date 19May11               *
+      *                 CLE139             Date 06Dec10               *
+      *                 CLE064             Date 06Dec10               *
+      *                 263666             Date 01Feb10               *
+      *                 CER059             Date 19Jul10               *
+      *                 BUG23094           Date 26Feb09               *
+      *                 BUG22966           Date 18Feb09               *
+      *                 CER016A            Date 19May08               *
+      *                 CER047             Date 19May08               *
+      *                 CER020             Date 19May08               *
+      *                 CER043             Date 19May08               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *  Last Amend No. BUG22968           Date 07Mar09               *
+      *  Prev Amend No. CCB016             Date 12Apr07               *
+      *                 CSC042             Date 16Feb09               *
+      *                 239569             Date 26Jul06               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 257871             Date 28Nov08               *
+      *                 254593             Date 28May08               *
+      *                 247953             Date 25May07               *
+      *                 247263             Date 22May07               *
+      *                 246141             Date 26Mar07               *
+      *                 244734             Date 15Mar07               *
+      *                 095907             Date 16Feb07               *
+      *                 CAS016             Date 29May07               *
+      *                 245082             Date 30Jan07               *
+      *                 164847             Date 30Nov06               *
+      *                 243360             Date 01Dec06               *
+      *                 BUG13140           Date 05Feb07               *
+      *                 BUG12970           Date 07Jan07
+      *                 BUG12990           Date 05Jan07               *
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 BUG12852           Date 14Dec06
+      *                 242286             Date 26Sep06               *
+      *                 242195             Date 04Sep06               *
+      *                 239970             Date 17Jul06               *
+      *                 240956             Date 12Jul06               *
+      *                 205683             Date 06Jun06               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027A            Date 10May06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG10712           Date 27Feb06               *
+      *                 CLE042             Date 06Sep05               *
+      *                 BUG9253            Date 15Nov05               *
+      *                 BUG9201            Date 10Nov05               *
+      *                 235060             Date 20Jul05               *
+      *                 BUG9190            Date 09Nov05               *
+      *                 234555             Date 17Oct05               *
+      *                 BUG8568            Date 14Sep05               *
+      *                 BUG8570            Date 14Sep05               *
+      *                 BUG8569            Date 13Sep05               *
+      *                 CLE106             Date 01Aug04               *
+      *                 CLE038             Date 10May04               *
+      *                 CLE036             Date 22Sep03               *
+      *                 233545             Date 18May05               *
+      *                 233887             Date 13Apr05               *
+      *                 232348             Date 21Feb05               *
+      *                 232315             Date 28Feb05               *
+      *                 CAS009             Date 04May04               *
+      *                 226074             Date 26Mar04               *
+      *                 CSW037A            Date 02May05               *
+      *                 CIR013             Date 25Apr05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 BUG5047            Date 01Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CGL029             Date 01Sep03               *
+      *                 222373             Date 28Oct03               *
+      *                 CAP074             Date 08Aug02               *
+      *                 219314             Date 02Jul03               *
+      *                 219141             Date 24Jun03               *
+      *                 218782             Date 25Jun03               *
+      *                 218755             Date 13Jun03               *
+      *                 CLE034             Date 05May03               *
+      *                 CLE031             Date 17Mar03               *
+      *                 221413             Date 17Sep03               *
+      *                 220565             Date 13Aug03               *
+      *                 CAS005             Date 16Dec02               *
+      *                 218778             Date 13Jun03               *
+      *                 CGL020             Date 12Dec02               *
+      *                 214980             Date 21Feb03               *
+      *                 209805             Date 23Sep02               *
+      *                 CLE028             Date 27Jun02               *
+      *                 CAS004             Date 26Jun02               *
+      *                 216832             Date 30Apr03               *
+      * Midas Release 4.01.03 ----------------------------------------*
+      *                 215250             Date 24Feb03               *
+      *                 209420             Date 09Jan03               *
+      *                 203896             Date 08Jan03               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 186816             Date 19Sep02               *
+      *                 201123             Date 23Aug02               *
+      *                 201762             Date 07Jun02               *
+      *                 204452             Date 02May02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CLE023             Date 19Nov01               *
+      *                 CAS001             Date 18Sep01               *
+      *                 CLE015             Date 13Dec01               *
+      *                 199197             Date 02Jan02               *
+      *                 191755             Date 17Oct01               *
+      *                 185526             Date 17Oct01               *
+      *                 191069             Date 10Oct01               *
+      *                 185822             Date 29Aug01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 180044             Date 18Jul01               *
+      *                 180051             Date 18Jul01               *
+      *                 194962             Date 28Jun01               *
+      *                 189035             Date 28Jun01               *
+      *                 174873             Date 28Jun01               *
+      *                 183896             Date 14Jun01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 166149             Date 05Apr01               *
+      *                 180161             Date 27Jan01               *
+      *                 CLE011             Date 07Nov00               *
+      *                 157669             Date 08Dec00               *
+      *                 187867             Date 21Dec00               *
+      * Midas DBA 3.04 -----------------------------------------------*
+      *                 131520             Date 18Sep00               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 182711             Date 25Aug00               *
+      *                 176823             Date 17Jul00               *
+      *                 CIR004             Date 20Jan00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 169623             Date 07Jan00               *
+      *                 CPB001             Date 01Jun99               *
+      *                 160856             Date 13Oct99               *
+      *                 169210             Date 14Jun99               *
+      *                 165977             Date 25Aug99               *
+      *                 164797             Date 23Jul99               *
+      *                 163483             Date 21Jul99               *
+      *                 CLE009             Date 10May99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 134725             Date 14Jun99               *
+      *                 159924             Date 11Jun99               *
+      *                 160625             Date 07Jun99               *
+      *                 159199             Date 18May99               *
+      *                 153980             Date 11May99               *
+      *                 159204             Date 04May99               *
+     F*                 CPL002             DATE 08Mar99               *
+      *                 158212             Date 28Apr99               *
+      *                 154221             Date 26Apr99               *
+      *                 158270             Date 09Apr99               *
+      *                 157750             Date 07Apr99               *
+      *                 156501             Date 18Mar99               *
+      *                 156585             Date 17Mar99               *
+     F*                 157643             DATE 23Jun98                  *E43239
+     F*                 135147             DATE 03Jun98                  *E43239
+     F*                 135145             DATE 03Jun98                  *E43239
+     F*                 133913             DATE 21May98               *
+      *                 154799             Date 24Feb99               *
+      *                 153368             Date 22Jan99               *
+      *                 151309             Date 17Feb99               *
+      *                 151304             Date 04Jan99               *
+      *                 151295             Date 18Feb99               *
+      *                 147744             Date 16Nov98               *
+      *                 146013             Date 09Nov98               *
+      *                 145917             Date 29Oct98               *
+      *                 144089             Date 14Oct98               *
+      *                 142405             Date 29Oct98               *
+      *                 135349             Date 12Feb99               *
+      *                 141453             Date 17Feb99               *
+      *                 138350             Date 11Feb99               *
+      *                 144915             Date 20Nov98               *
+      *                 144916             Date 17Oct98               *
+      *                 143511             Date 27Sep98               *
+     F*                 145393             Date 28Oct98               *
+     F*                 138979             Date 24Sep98               *
+      *                 CEU020             Date 13Mar98               *
+      *                 135621             Date 21May98               *
+     F*                 134798             Date 07May98               *
+     F*                 CEU004             DATE 02Feb98               *
+     F*                 126030             DATE 26FEB98               *
+     F*                 117756             DATE 25FEB98               *
+     F*                 113271             DATE 25FEB98               *
+     F*                 121768             DATE 19FEB98               *
+      *                 124017             Date 02FEB98               *
+     F*                 126017             DATE 17NOV97               *
+     F*                 128054             Date 23Dec97               *
+     F*                 CLE005             Date 11Jul97               *
+     F*                 123335             Date 24Sep97               *
+     F*                 122098             Date 16Sep97               *
+     F*                 121147             Date 10Sep97               *
+     F*                 CLE004             DATE 30MAY97               *
+     F*                 117334             DATE 17APR97               *
+     F*                 116330             DATE 08APR97               *
+     F*                 116329             DATE 08APR97               *
+     F*                 111688             DATE 27FEB97               *
+     F*                 097885             DATE 31JAN97               *
+     F*                 S01408             DATE 05SEP96               *
+     F*                 CAC001             DATE 01FEB96               *
+     F*                 S01408             DATE 07JUN96               *
+     F*                 100515             DATE 22MAY96               *
+     F*                 S01408             DATE 15MAY96               *
+     F*                 S01408             DATE 25APR96               *
+     F*                 S01408             DATE 10APR96               *
+     F*                 097002             DATE 22JAN96               *
+     F*                 095244             DATE 01NOV95               *
+     F*                 095238             DATE 31OCT95               *
+     F*                 088120             DATE 06JUL95               *
+     F*                 090155             DATE 18OCT95               *
+     F*                 091165             DATE 28JUL95               *
+     F*                 089457             DATE 26JUN95               *
+     F*                 085345             DATE 15JUN95               *
+     F*                 085677             DATE 29MAR95               *
+     F*                 082480             DATE 18APR95               *
+     F*                 078889             DATE 18APR95               *
+     F*                 085807             DATE 10MAR95               *
+     F*                 083571             DATE 15MAR95               *
+     F*                 082149             DATE 25JAN95               *
+     F*                 082151             DATE 25JAN95               *
+     F*                 S01408             DATE 10MAR95               *
+     F*                 S01486             DATE 20OCT94               *
+     F*                 S01518             DATE 02DEC94               *
+     F*                 072582             DATE 12OCT94               *
+     F*                 S01408             DATE 19AUG94               *
+     F*                 S01408             DATE 18MAY94               *
+     F*                 059141             DATE 21APR94               *
+     F*                 S01465             DATE 22MAR94               *
+     F*                 066550             DATE 04FEB94               *
+     F*                 059878             DATE 14DEC93               *
+     F*                 060536             DATE 14DEC93               *
+     F*                 046303             DATE 09DEC93               *
+     F*                 047546             DATE 10NOV92               *
+     F*                 056072             DATE 26OCT93               *
+     F*                 052512             DATE 17MAY93               *
+     F*                 046648             DATE 04NOV92               *
+     F*                 S01392             DATE 02OCT92               *
+     F*                 042529             DATE 28JUL92               *
+     F*                 S01392             DATE 14SEP92               *
+     F*                 BH3482             DATE 19AUG92               *
+     F*                 041445 NY #(41775) DATE 29JUN92               *
+     F*                 NY #(41776)        DATE 18JUN92               *
+     F*                 BH3409             DATE 07JUL92               *
+     F*                 BH1022             DATE 02JUN92               *
+     F*                 BHF976             DATE 02JUN92               *
+     F*                 BCC122             DATE 02JUN92               *
+     F*                 E9688              DATE 02JUN92               *
+     F*                 E26745             DATE 31MAR92               *
+     F*                 BHF499             DATE 31MAR92               *
+     F*                 S10227             DATE 09SEP91               *
+     F*                 S01270             DATE 05FEB91               *
+     F*                 BHF659             DATE 27AUG90               *
+     F*                 S01220             DATE 22AUG90               *
+     F*                 BHF420             DATE 13AUG90               *
+     F*                 E21849             DATE 18JUL90               *
+     F*                 S01260             DATE 14MAY90               *
+     F*                 LN0169             DATE 15MAY90               *
+     F*                 E21291             DATE 05MAR90               *
+     F*                 S01194             DATE 04JAN90               *
+     F*                 E10921             DATE 13DEC89               *
+     F*                 E86114             DATE 13DEC89               *
+     F*                 E16442             DATE 13DEC89               *
+     F*                 E47260             DATE 13DEC89               *
+     F*                 E19721             DATE 30NOV89               *
+     F*                 S01117             DATE 15/06/89              *
+     F*                 S01195             DATE 15/06/89              *
+     F*                 E43688             DATE 14/11/88              *
+     F*                 E14936             DATE 09/09/88              *
+     F*                 E86099             DATE 25/05/88              *
+     F*                 E13532             DATE 16/05/88              *
+     F*                 E12011             DATE 07/04/88              *
+     F*                 S01147             DATE 09/12/87              *
+     F*                 S05452             DATE 20/08/87              *
+     F*                 E86115             DATE 05/05/87              *
+     F*                 E10007             DATE 23/10/86              *
+     F*                 E47259             DATE 25/06/86              *
+     F*                 E80945             DATE 25/06/86              *
+     F*                 E47220             DATE 18/06/86              *
+     F*                 E43546             DATE 12/06/86              *
+     F*                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD051347 - Interest on a loan taken at the wrong date. Also  *
+      *             update value of IBDT to zero if NIPD is less than *
+      *             or equal to rundate. Additional fix to AR819229.  *
+      *  AR819229 - Interest on a loan taken at the wrong date.       *
+      *             Update value of IBDT with NIPD on SR/ROLLOV and   *
+      *             SR/MROLL. (Child: AR823033)                       *
+      *           - Applied for MD051347                              *
+      *  MD055322 - FB2.1 SP21 RECON - Discrepancy on CLOANCK field   *
+      *             ABLN on first COB                                 *
+      *  CER050 - Annualised Percentage Rate                          *
+      *  MD054326 - Repayment amount debited from settlement account  *
+      *             showed discrepancy against balance check          *
+      *             on LEC000496 report                               *
+      *  MD054335 - GLC0340 ccy imbalance caused by 0.01 amount       *
+      *             discrepancy and wrong posting details for         *
+      *             xxVyy IJ / IV                                     *
+      *  MD054132 - Risk Loans COB account key generation for value   *
+      *             date and repayment date events should check the   *
+      *             settlement entries defined on ACKEYAL             *
+      *  MD054108 - Cross ccy settlement entries not generated for    *
+      *             RPSC, auto settle C and settled against nostro  *
+      *             account                                           *
+      *  MD053947 - Cross cyy settlement acct keys is being generated *
+      *             on principal and discount amount.                 *
+      *  MD051883 - CLE031: Changes to Value Date Account Keys        *
+      *  MD054008 - ABLN for past due loans should be up to the next  *
+      *             working date.                                     *
+=======
       *  Last Amend No. MD051347           Date 10Dec18               *
       *  Prev Amend No. AR819229           Date 10Dec18               *      
       *                 MD055322           Date 26Feb20               *
@@ -442,6 +874,7 @@
       *  MD051883 - CLE031: Changes to Value Date Account Keys        *
       *  MD054008 - ABLN for past due loans should be up to the next  *
       *             working date.                                     *      
+>>>>>>> branch 'bugfix/MDSC-31422' of http://blrvslalm0006:7990/scm/md/midasrpg.git
       *  MD053295 - Lending loan with Interest Calculation Basis      *
       *             method 3 (30/360) has wrong interest payment      *
       *             amount for month of March (Recompile)             *

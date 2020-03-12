@@ -92,6 +92,11 @@
 0010 F*                 E13500             DATE 09/06/88              *LE0820
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD054877 - Enhance fix AR1096915, to also exclude risk       *
+      *             parts purchased & risk parts sold.                *
+      *  AR1096915 - Generate shadow posting of maturity interest of  *
+      *              risk/guarantee loan. (Child: AR1096916)          *
+      *            - Applied for MD054877                             *      
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  AR897086 - Cannot input negative all-in-rate on Lending.     *
       *             Allow input and computation for negative          *
@@ -1769,12 +1774,20 @@
 0457 C   86                MOVE TABNAM    EVENT  18                       LE0820
 0458 C  N86                SETON                     40                   LE0820
 0459 C**                                                                  LE0820
+      **   M2s and R2s still required for Risk / Guarantee Loans                           AR1096915
+      *                                                                                    AR1096915
      C           ETP       IFEQ 'M2'                                                         BUG7568
      C           *IN86     ANDEQ*ON                                                          BUG7568
+     C           PTP       ANDNE'70'                                                       AR1096915
+     C           PTP       ANDNE'71'                                                        MD054877
+     C           PTP       ANDNE'72'                                                        MD054877
      C           ETP       OREQ 'P2'                                                          CLE134
      C           *IN86     ANDEQ*ON                                                           CLE134
      C           ETP       OREQ 'R2'                                                         BUG7568
      C           *IN86     ANDEQ*ON                                                          BUG7568
+     C           PTP       ANDNE'70'                                                       AR1096915
+     C           PTP       ANDNE'71'                                                        MD054877
+     C           PTP       ANDNE'72'                                                        MD054877
      C                     MOVE *ON       *IN55                                              BUG7568
      C                     ENDIF                                                             BUG7568
       *                                                                                      BUG7568
@@ -2028,8 +2041,17 @@
 0506 C   43                                                               LE0820
 0507 COR 44      OTHA      SUB  AMOUNT    OTHA                            LE0820
 0508 C***43******                                                         S01392
-0508 C   43N63                                                            S01392
-0509 COR 44      EAMT      ADD  OTHA      EAMT                            LE0820
+0508 C***43N63**                                                                    S01392 AR1096915
+0509 C*OR*44**** EAMT      ADD  OTHA      EAMT                                      LE0820 AR1096915
+      *                                                                                    AR1096915
+     C           *IN43     IFEQ '1'                                                        AR1096915
+     C           *IN63     ANDNE'1'                                                        AR1096915
+     C           PTP       ANDNE'70'                                                       AR1096915
+     C           PTP       ANDNE'71'                                                        MD054877
+     C           PTP       ANDNE'72'                                                        MD054877
+     C           *IN44     OREQ '1'                                                        AR1096915
+     C           EAMT      ADD  OTHA      EAMT                                             AR1096915
+     C                     ENDIF                                                           AR1096915
       *                                                                   181612
       ** Exclude processing of events with zero amount.                   181612
       *                                                                   181612

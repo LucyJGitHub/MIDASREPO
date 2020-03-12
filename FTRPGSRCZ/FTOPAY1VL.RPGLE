@@ -108,7 +108,6 @@
       *                                                               *
       *  ERZ248 - SWIFT UETR via OPAY API                             *
       *           Amended hooks FTOPA1VC01, FTOPA1VC05, FTOPA1VC13,   *
-      *           FTOPA1VC14                                          *
       *  MD021318 - OPAY allowed input of account with block debit    *
       *           - Fix is to condition CSD089 overridable error      *
       *             changes when input is from HATS screen            *

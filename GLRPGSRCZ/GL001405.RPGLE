@@ -34,7 +34,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD055218 - Dump generated in GLC001400 job                   *
+      *  MD055218 - Dump generated in GLC001400 job with update or    *
+      *             delete without prior input. Amended program to    *
+      *             do update file once only                          *
       *  MD054662 - Emergency fix for case 02186832                   *
       *             Messages requested for current date are not       *
       *             processed (job GLC001415 is not submitted)        *

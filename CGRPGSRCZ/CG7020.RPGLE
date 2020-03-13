@@ -4083,24 +4083,24 @@
      C                   MOVEL     'MIDAS  '     W0MSGF
      C                   EXSR      SRERR
      C                   ENDIF
-     C*
-     C** Retail ICD
-     C*
-     C                   CALL      'AORETLR0'
-     C                   PARM      '*MSG   '     ##RTCD
-     C                   PARM      '*FIRST '     ##OPTN
-     C     SDRETL        PARM      SDRETL        DSFDY
-      *
-      **  Database error
-     C     ##RTCD        IFNE      *BLANK
-     C                   MOVEL     'AORETLR0'    W0FILE                         *************
-     C                   MOVEL     '*CALL'       W0KEY                          *DB-ERROR 35*
-     C                   Z-ADD     35            W0ERNB                         *************
-     C                   MOVEL     'MEM5003'     W0MSGD
-     C                   MOVEL     'MIDAS  '     W0MSGF
-     C                   EXSR      SRERR
-     C                   ENDIF
-     C*
+     C*                                                                                     MD054978
+     C** Retail ICD                                                                         MD054978
+     C*                                                                                     MD054978
+     C                   CALL      'AORETLR0'                                               MD054978
+     C                   PARM      '*MSG   '     ##RTCD                                     MD054978
+     C                   PARM      '*FIRST '     ##OPTN                                     MD054978
+     C     SDRETL        PARM      SDRETL        DSFDY                                      MD054978
+      *                                                                                     MD054978
+      **  Database error                                                                    MD054978
+     C     ##RTCD        IFNE      *BLANK                                                   MD054978
+     C                   MOVEL     'AORETLR0'    W0FILE                                     MD054978
+     C                   MOVEL     '*CALL'       W0KEY                                      MD054978
+     C                   Z-ADD     35            W0ERNB                                     MD054978
+     C                   MOVEL     'MEM5003'     W0MSGD                                     MD054978
+     C                   MOVEL     'MIDAS  '     W0MSGF                                     MD054978
+     C                   EXSR      SRERR                                                    MD054978
+     C                   ENDIF                                                              MD054978
+      *                                                                                     MD054978
      C*===========================================================
      C* EURO - CHECK FOR SAR CEU013
      C*===========================================================

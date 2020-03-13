@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD054662           Date 30Oct19               *
-      *  Prev Amend No. MD051746           Date 03May19               *
+      *  Last Amend No. MD055218           Date 11Mar20               *
+      *  Prev Amend No. MD054662           Date 30Oct19               *
+      *                 MD051746           Date 03May19               *
       *                 AR589183           Date 03May19               *
       *                 AR740400           Date 03May19               *
       *                 MD051723           Date 17Sep18               *
@@ -33,6 +34,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055218 - Dump generated in GLC001400 job with update or    *
+      *             delete without prior input. Amended program to    *
+      *             do update file once only                          *
       *  MD054662 - Emergency fix for case 02186832                   *
       *             Messages requested for current date are not       *
       *             processed (job GLC001415 is not submitted)        *
@@ -187,6 +191,7 @@
      D PRetCode        S              7                                         Return code
      D PWaitTime       S              5  0                                      Wait Time
      D PSubmit         S              1                                         Submit Y/N
+     D WUpdate         S              1                                                     MD055218
 
      D P@RTCD          S              7A                                        Return Code
      D P@OPTN          S              7A                                        Option
@@ -311,9 +316,11 @@
       *
       ** Requests expired.
       *
+     C                   EVAL      Wupdate = 'N'                                            MD055218
      C     MRRDTE        IFLT      WkStartDate                                              MD051746
      C                   EVAL      MRSTAT = 'EXPIRED'                                       MD051746
      C                   UPDATE    GLMR94D0                                                 MD051746
+     C                   EVAL      Wupdate = 'Y'                                            MD055218
      C                   ENDIF                                                              MD051746
       *****
 
@@ -399,7 +406,9 @@
 
      C                   ENDIF
 
+     C                   IF        Wupdate = 'N'                                            MD055218
      C                   UPDATE    GLMR94D0
+     C                   ENDIF                                                              MD055218
 
      C                   ENDIF                                                               217556
      C                   ENDIF                                                              AR589183

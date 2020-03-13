@@ -13,11 +13,13 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD054605             Date 17Oct19             *
-      *  Prev Amend No. MD054209   *CREATE   Date 07Sep19             *
+      *  Last Amend No. MD055469             Date 13Mar20             *
+      *  Prev Amend No. MD054605             Date 17Oct19             *
+      *                 MD054209   *CREATE   Date 07Sep19             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055469 - Global APIs have WC_ZONE set to blank.            *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD054209 - Deliverable Data Split for T_WIPCF                *
       *                                                               *
@@ -313,6 +315,22 @@
      C                   eval      ERROR = '*Error'
      C                   Endif
 
+      * Add GPWIPXTD records with blank zone for global API                                 MD055469
+                                                                                            MD055469
+     C/exec SQL                                                                             MD055469
+     C+ insert into GPWIPXTD                                                                MD055469
+     C+ (SELECT WC_ID,                                                                      MD055469
+     C+ WC_API, WC_BONSTP, WC_BOASTP,                                                       MD055469
+     C+ WC_AUTLVL, WC_ZONE, 'C'                                                             MD055469
+     C+ FROM GPWIPCTD A where A.WC_ZONE = '          '                                      MD055469
+     C+ and not exists (select * from GPWIPXTD B                                            MD055469
+     C+ where A.WC_API = B.WC_API and B.WC_ZONE = '          '))                            MD055469
+     C/end-exec                                                                             MD055469
+     C                   If        SQLCode <> 0                                             MD055469
+     C                             and SQLCode <> 100                                       MD055469
+     C                   eval      ERROR = '*Error'                                         MD055469
+     C                   Endif                                                              MD055469
+                                                                                            MD055469
       * Add GPWIPBTD records with zone (bespoke) in case new API
 
      C/exec SQL

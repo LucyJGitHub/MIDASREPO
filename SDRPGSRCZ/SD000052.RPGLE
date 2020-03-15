@@ -650,7 +650,8 @@
 
       ** Ensure Audit Spool File recorded by RCF.
 
-     C                   EVAL      PZSnum = PSFNum2
+     C**********         EVAL      PZSnum = PSFNum2                                         MD055210
+     C                   Z-ADD     PSFNum2       PZSnum                                     MD055210
 
      C                   CALL      'ZSFILE'
      C                   PARM                    PSeq
@@ -1028,13 +1029,13 @@
       ** Ensure Detail Spool File recorded by RCF.
 
      C**********         EVAL      PZSnum = PSFNum1                                         MD055210
+     C                   Z-ADD     PSFNum1       PZSnum                                     MD055210
 
      C                   CALL      'ZSFILE'
      C                   PARM                    PSeq
      C                   PARM      *Blanks       PEnty
      C                   PARM                    PSFile1
-     C**********         PARM                    PZSnum                                     MD055210
-     C                   PARM      PSFNum1       PZSnum                                     MD055210
+     C                   PARM                    PZSnum
      C                   PARM      *Blank        PZSerr
 
       ** If Error occurs during ZSFILE processing, then return to the

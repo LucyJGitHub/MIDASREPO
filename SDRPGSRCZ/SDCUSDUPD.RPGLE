@@ -11,7 +11,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
+<<<<<<< Upstream, based on origin/develop
       *  Last Amend No. MD054883           Date 23Dec19               *
+=======
+      *  Last Amend No. MD055210           Date 03Feb20               *
+>>>>>>> b59a7a9 [MD-55210] - Serious Midas Error encountered when authorizing insert
       *  Prev Amend No. MD053436           Date 21Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
@@ -147,7 +151,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+<<<<<<< Upstream, based on origin/develop
       *  MD054883 - CUSD Reverse API had an increased runtime         *
+=======
+      *  MD055210 - Serious midas error encountered in CUSD           *
+>>>>>>> b59a7a9 [MD-55210] - Serious Midas Error encountered when authorizing insert
       *  MD053436 - Unable to perform end to end testing for          *
       *             Compliance KYC                                    *
       *  CER050 - Annualised Percentage Rate                          *
@@ -389,6 +397,7 @@
       * UPD : Authorisation Log - by Function                                                 CSD012
       *                                                                                       CSD012
      FSDCDSHL0  UF A E           K DISK    COMMIT                                             CSD012
+     F                                     USROPN                                           MD055210
      F                                     PREFIX(T_)                                         CSD012
      F                                     RENAME(@BBREBG:SDCDSHD0)                           CSD012
       * UPD : Customer Details Shadow file by key                                             CSD012
@@ -7474,6 +7483,7 @@
       *                                                                                       CSD028
      C                   IF        PRTCD = *BLANKS                                            CSD028
      C                   EVAL      CSD028 = 'Y'                                               CSD028
+     C                   OPEN      SDCDSHL0                                                 MD055210
      C                   ELSE                                                                 CSD028
      C                   EVAL      CSD028 = 'N'                                               CSD028
      C                   ENDIF                                                                CSD028

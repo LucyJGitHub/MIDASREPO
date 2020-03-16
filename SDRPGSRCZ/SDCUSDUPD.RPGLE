@@ -12,7 +12,8 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. MD055210           Date 03Feb20               *
-      *  Prev Amend No. MD053436           Date 21Sep19               *
+      *  Prev Amend No. MD054883           Date 23Dec19               *
+      *                 MD053436           Date 21Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD031234           Date 16May19               *
@@ -148,6 +149,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD055210 - Serious midas error encountered in CUSD           *
+      *  MD054883 - CUSD Reverse API had an increased runtime         *
       *  MD053436 - Unable to perform end to end testing for          *
       *             Compliance KYC                                    *
       *  CER050 - Annualised Percentage Rate                          *
@@ -3572,6 +3574,8 @@
      C                   PARM                    PAftFTCS                                     CGL177
      C                   PARM      *BLANKS       PBefJACC                                     CGL177
      C                   PARM      *BLANKS       PAftJACC                                     CGL177
+     C                   PARM      *BLANKS       PBefCUAH                                   MD054883
+     C                   PARM      *BLANKS       PAftCUAH                                   MD054883
      C                   PARM      *BLANKS       PBefCUXC                                     CGL177
      C                   PARM      *BLANKS       PAftCUXC                                     CGL177
      C                   PARM      *BLANKS       PACRV                                        CGL177
@@ -3593,6 +3597,8 @@
      C                   PARM      *BLANKS       PAftFTCS                                     CGL177
      C                   PARM      *BLANKS       PBefJACC                                     CGL177
      C                   PARM      *BLANKS       PAftJACC                                     CGL177
+     C                   PARM      *BLANKS       PBefCUAH                                   MD054883
+     C                   PARM      *BLANKS       PAftCUAH                                   MD054883
      C                   PARM      *BLANKS       PBefCUXC                                     CGL177
      C                   PARM      *BLANKS       PAftCUXC                                     CGL177
      C                   PARM      *BLANKS       PACRV                                        CGL177
@@ -3615,6 +3621,8 @@
      C                   PARM      *BLANKS       PAftFTCS                                   MD041429
      C                   PARM      *BLANKS       PBefJACC                                   MD041429
      C                   PARM      *BLANKS       PAftJACC                                   MD041429
+     C                   PARM      *BLANKS       PBefCUAH                                   MD054883
+     C                   PARM      *BLANKS       PAftCUAH                                   MD054883
      C                   PARM      *BLANKS       PBefCUXC                                   MD041429
      C                   PARM      *BLANKS       PAftCUXC                                   MD041429
      C                   PARM      *BLANKS       PACRV                                      MD041429
@@ -5335,11 +5343,14 @@
      C                   PARM      *BLANKS       PBefCUST                                     CGL157
      C                   PARM      *BLANKS       PAftCUST                                     CGL157
      C                   PARM      B_CUADF       PBefACUS                                     CGL157
-     C                   PARM      CUSTDF        PAftACUS                                     CGL157
+     C**********         PARM      CUSTDF        PAftACUS                            CGL157 MD054883
+     C                   PARM      CUADF         PAftACUS                                   MD054883
      C                   PARM                    PBefFTCS                                     CGL157
      C                   PARM                    PAftFTCS                                     CGL157
      C                   PARM      *BLANKS       PBefJACC                                     CGL157
      C                   PARM      *BLANKS       PAftJACC                                     CGL157
+     C                   PARM      *BLANKS       PBefCUAH                                   MD054883
+     C                   PARM      *BLANKS       PAftCUAH                                   MD054883
      C                   PARM      *BLANKS       PBefCUXC                                     CGL157
      C                   PARM      *BLANKS       PAftCUXC                                     CGL157
      C                   PARM      *BLANKS       PACRV                                        CGL157

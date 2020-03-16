@@ -15,8 +15,13 @@
       *  Last Amend No. MD054883           Date 23Dec19               *
 =======
       *  Last Amend No. MD055210           Date 03Feb20               *
+<<<<<<< Upstream, based on origin/develop
 >>>>>>> b59a7a9 [MD-55210] - Serious Midas Error encountered when authorizing insert
       *  Prev Amend No. MD053436           Date 21Sep19               *
+=======
+      *  Prev Amend No. MD054883           Date 23Dec19               *
+      *                 MD053436           Date 21Sep19               *
+>>>>>>> ebd4054 [MD-55210] - Serious Midas Error encountered when authorizing insert
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD031234           Date 16May19               *
@@ -155,7 +160,11 @@
       *  MD054883 - CUSD Reverse API had an increased runtime         *
 =======
       *  MD055210 - Serious midas error encountered in CUSD           *
+<<<<<<< Upstream, based on origin/develop
 >>>>>>> b59a7a9 [MD-55210] - Serious Midas Error encountered when authorizing insert
+=======
+      *  MD054883 - CUSD Reverse API had an increased runtime         *
+>>>>>>> ebd4054 [MD-55210] - Serious Midas Error encountered when authorizing insert
       *  MD053436 - Unable to perform end to end testing for          *
       *             Compliance KYC                                    *
       *  CER050 - Annualised Percentage Rate                          *

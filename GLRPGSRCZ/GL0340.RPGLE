@@ -84,7 +84,7 @@
       *            - Applied for MD-55358.                            *
       *  MD052414 - GL0340P1 reports from UGB has trucated profit     *
       *             centre in FBM 2.1. Adjusted the PRFCJ, TRAT,SPOS, *
-      *             DPMT and ASOC                                     *
+      *             DPMT and ASOC.                                    *
       *            - Applied for MD-55358.                            *
       *  MD046248 - Finastra Rebranding                               *
       *  MD042411 - GLC33202 component failure. BRCA/CCY/ACOD         *

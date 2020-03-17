@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD055344           Date 28Feb20               *
-      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *  Last Amend No. MD055482           Date 17Mar20               *
+      *  Prev Amend No. MD055344           Date 28Feb20               *
+      *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD052327           Date 17Nov18               *
       *                 MD052214           Date 26Oct18               *
@@ -167,6 +168,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055482 - Cannot authorize auto generated events due to     *
+      *             premium amount error                              *
       *  MD055344 - Event code not found error                        *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
@@ -8960,6 +8963,7 @@ B001 C     ZERR          IFNE      *BLANKS
       *                                                                                       CER050
      C                   IF        DDPREM <> *Blanks                                          CER050
      C                             and LoanType <> 'LOAN'                                     CER050
+     C                             AND DDPREM <> '          0.00 '                          MD055482
      C                   Move      'N'           DDPREMOK          1                          CER050
      C                   Add       1             Idx                                          CER050
      C                   MoveL     'DDPREM'      FldNamXAr(Idx)                               CER050

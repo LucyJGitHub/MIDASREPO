@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD055482           Date 17Mar20               *
+      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE141             Date 08Feb16               *
       *                 CLE134             Date 01Aug12               *
@@ -51,6 +52,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055482 - Cannot authorize auto generated events due to     *
+      *             annual premium amount error                       *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate                          *
@@ -231,9 +234,9 @@
       ** SETFLD - Set output screen fields                            *
       *****************************************************************
      C     SETFLD        BEGSR
- 
+
       * Determine Loan type
- 
+
      C                   EXSR      DET_LOANTYPE
       *
       ***  Loan number.
@@ -581,6 +584,10 @@
       ** Populate Annualised Percentage Rate Details                                          CER050
      C                   IF        CER050 = 'Y'                                               CER050
      C                   MOVE      APRC          DDAPRC                                       CER050
+     C                   IF        DDAPRC = 'N'                                             MD055482
+     C                             OR DDAPRC = ' '                                          MD055482
+     C                   EVAL      DDPREM = *Blanks                                         MD055482
+     C                   ELSE                                                               MD055482
       ** Convert Premium Amount into screen field format thru ZSEDIT                          CER050
      C                   MOVE      PREM          ZFLD15                                       CER050
      C                   Z-ADD     LCcyNbdp      ZDECS                                        CER050
@@ -593,6 +600,7 @@
       * OUTPUTS                                                                               CER050
      C                   PARM                    ZOUT21           21                          CER050
      C                   MOVE      ZOUT21        DDPREM                                       CER050
+     C                   ENDIF                                                              MD055482
       ** If APR Calculation required flag is Y, format APR Rate into screen                   CER050
       ** field format thru ZSEDIT                                                             CER050
      C**********         IF        APRC = 'Y'                                                 CER050
@@ -640,7 +648,7 @@
       * DET_LOANTYPE - Determine Loan Type                            *
       *****************************************************************
      C     DET_LOANTYPE  BEGSR
- 
+
      C                   SELECT
      C     PTYP          WHENEQ    61
      C     PTYP          OREQ      62
@@ -658,7 +666,7 @@
      C     PTYP          OREQ      72
      C                   MOVEL     'PTSO'        LoanType          4
      C                   ENDSL
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -747,7 +755,7 @@
      C                   MOVEL     '002'         DBASE                          * DBERR 002 *
      C                   EXSR      *PSSR                                        *************
      C                   END
- 
+
      C                   EVAL      @RTCD = *BLANKS
       *                                                                                       CER020
       ** Check for Switchable Feature CER020                                                  CER020

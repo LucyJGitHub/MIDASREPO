@@ -17,8 +17,7 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. MD055496           Date 18Mar20               *
-      *  Prev Amend No. AR918357           Date 18Mar20               *
-      *                 MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 MD031376           Date 21Nov14               *
       *                 MD031375           Date 21Nov14               *
       *                 CLE164             Date 18Aug14               *
@@ -97,10 +96,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD055496 - Used the correct message id USR9844.              *
-      *  AR918357 - If CLE106 is On, Internal Loan Parts. type/sub-   *
-      *             type must not equal to blanks. (Child: AR918358)  *
-      *             Applied for MD055496.
+      *  MD055496 - Used the correct message id USR9844. ILP Type/    *
+      *             subtype is mandatory for types 61,62,63,70 and    *
+      *             when CLE106 is switched on.                       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD031376 - Fix the validation of PDCL loan type/sub-type.    *
       *  MD031375 - Prevent showing the screen twice.                 *
@@ -2136,22 +2134,31 @@
       * Internal Loan Participation Type/Subtype
       * CASE: WRK.Display Int Loan Part Typ is Display
      C           WUDILP    IFEQ 'Y'                        *IF
-      *                                                                                     AR918357
-      ** CASE:                                                                              AR918357
-      ** - c1 AND c2                                                                        AR918357
-      ** c1 : DTL.Internal Loan Part. Type is Blank                                         AR918357
-      ** c2 : DTL.Internal Loan Part SubTyp is Blank                                        AR918357
-      *                                                                                     AR918357
-     C           CLE106    IFEQ 'Y'                                                         AR918357
-     C           #1ILTY    IFEQ *BLANK                                                      AR918357
-     C           #1ILST    ANDEQ*BLANK                                                      AR918357
-      ** Send message 'Int Loan Pts Typ/Styp must not be blanks'                            AR918357
+      *                                                                                     MD055496
+      ** Internal Loan Part. Type / SubType is mandatory                                    MD055496
+      ** for Proc. types 61,62,63,70                                                        MD055496
+      ** and when CLE106 is switched ON                                                     MD055496
+      *                                                                                     MD055496
+     C           CLE106    IFEQ 'Y'                                                         MD055496
+     C           #1ILTY    IFEQ *BLANK                                                      MD055496
+     C           #1ILST    ANDEQ*BLANK                                                      MD055496
+     C           #1LNPT    ANDEQ61                                                          MD055496
+     C           #1ILTY    OREQ *BLANK                                                      MD055496
+     C           #1ILST    ANDEQ*BLANK                                                      MD055496
+     C           #1LNPT    ANDEQ62                                                          MD055496
+     C           #1ILTY    OREQ *BLANK                                                      MD055496
+     C           #1ILST    ANDEQ*BLANK                                                      MD055496
+     C           #1LNPT    ANDEQ63                                                          MD055496
+     C           #1ILTY    OREQ *BLANK                                                      MD055496
+     C           #1ILST    ANDEQ*BLANK                                                      MD055496
+     C           #1LNPT    ANDEQ70                                                          MD055496
+      ** Send message 'Int Loan Pts Typ/Styp must not be blanks'                            MD055496
      C                     MOVEL'USR9844' ZAMSID                                            MD055496
-     C                     EXSR ZASNMS                                                      AR918357
-     C                     SETON                     993637*                                AR918357
-     C                     ENDIF                                                            AR918357
-     C                     ENDIF                                                            AR918357
-      *                                                                                     AR918357
+     C                     EXSR ZASNMS                                                      MD055496
+     C                     SETON                     993637*                                MD055496
+     C                     ENDIF                                                            MD055496
+     C                     ENDIF                                                            MD055496
+      *                                                                                     MD055496
       * CASE:
       *  - c1 OR c2
       *   |- c1    : DTL.Internal Loan Part. Type is Not Blank
@@ -7953,18 +7960,18 @@
      C                     ELSE                                                            AR1022007
      C                     MOVE 'N'       CRE073                                           AR1022007
      C                     ENDIF                                                           AR1022007
-      ** Access SAR details to see if CLE106 is switched on                                 AR918357
-      *                                                                                     AR918357
-     C                     CALL 'AOSARDR0'                                                  AR918357
-     C                     PARM *BLANKS   PRTCD                                             AR918357
-     C                     PARM '*VERIFY' POPTN                                             AR918357
-     C                     PARM 'CLE106'  PSARD                                             AR918357
-     C           SCSARD    PARM SCSARD    DSFDY                                             AR918357
-      *                                                                                     AR918357
-     C           PRTCD     IFEQ *BLANKS                                                     AR918357
-     C                     MOVE 'Y'       CLE106  1                                         AR918357
-     C                     ENDIF                                                            AR918357
-      *                                                                                     AR918357
+      ** Access SAR details to see if CLE106 is switched on                                 MD055496
+      *                                                                                     MD055496
+     C                     CALL 'AOSARDR0'                                                  MD055496
+     C                     PARM *BLANKS   PRTCD                                             MD055496
+     C                     PARM '*VERIFY' POPTN                                             MD055496
+     C                     PARM 'CLE106'  PSARD                                             MD055496
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD055496
+      *                                                                                     MD055496
+     C           PRTCD     IFEQ *BLANKS                                                     MD055496
+     C                     MOVE 'Y'       CLE106  1                                         MD055496
+     C                     ENDIF                                                            MD055496
+      *                                                                                     MD055496
       *
      C/COPY WNCPYSRC,SD0281RC16
       *================================================================

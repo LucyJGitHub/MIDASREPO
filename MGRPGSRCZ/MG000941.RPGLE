@@ -1598,10 +1598,7 @@
      C                   PARM      *BLANKS       P@RTCD                         Return Code   CMG008
      C                   PARM      '*VERIFY'     P@OPTN                         Option        CMG008
      C                   PARM      'CMG008 '     P@SARD                         Feature Ref   CMG008
-<<<<<<< HEAD
      C     SCSARD        PARM      SCSARD        DSFDY                                        CMG008
-=======
->>>>>>> refs/remotes/origin/feature/MDSC-30825
                                                                                               CMG008
      C                   IF        P@RTCD = *BLANKS                                           CMG008
      C                   MoveL     'Y'           CMG008            1                          CMG008

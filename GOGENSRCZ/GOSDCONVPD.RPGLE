@@ -1,5 +1,4 @@
      H DEBUG
-<<<<<<< HEAD
      H COPYRIGHT('(c) Finastra International Limited 2020')
       *****************************************************************
 /*STD *  RPGBASEBNC                                                   *
@@ -11,19 +10,6 @@
       *  GOSDCONVPD - Bulk Update of Global File GOSDCONVPD           *
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
-=======
-     H COPYRIGHT('(c) Finastra International Limited 2009')
-      *****************************************************************
-/*STD *  RPGBASEBNC                                                   *
-/*EXI *  TEXT('Generated Code')                                       *
-      *****************************************************************
-      *                                                               *
-      *  Midas - Global Processing Module                             *
-      *                                                               *
-      *  GOSDCONVPD - Bulk Update of Global File GZSDCONVPD           *
-      *                                                               *
-      *  (c) Finastra International Limited 2009                      *
->>>>>>> refs/remotes/origin/feature/MDSC-30825
       *                                                               *
       *  Last Amend No. CMG008  *CREATE    Date 20Feb20               *
       *                                                               *

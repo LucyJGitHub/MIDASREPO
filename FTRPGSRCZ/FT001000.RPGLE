@@ -3777,8 +3777,9 @@
      C                   ENDIF                                                                CSW209
      C                   ENDIF                                                                CSW209
       *                                                                                       CSW209
-      ** Only Lines starting with numbers 1 and 2 may be repeated.                            CSW209
+      ***Only*Lines*starting*with*numbers*1*and*2*may*be*repeated.*****                CSW209 CSW220
       ***Lines*starting*with*3,4,5,6,7*and*8*must*not*be*repeated.*****                CSW209 CSW220
+      ** Only Lines starting with numbers 1, 2 and 3 may be repeated.                         CSW220
       ** Lines starting with 4,5,6,7 and 8 must not be repeated.                              CSW220
      C                   Move      WNCode        WNCodeN                                      CSW209
      C**********         IF        WNCodeN > 2 AND                                   CSW209 BUG25323

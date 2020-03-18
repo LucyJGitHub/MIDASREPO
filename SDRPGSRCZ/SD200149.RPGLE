@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. CMG008             Date 20Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG26824           Date 09Dec09               *
       *                 BUG24305           Date 11Jun09               *
       *                 BUG23742           Date 19May09               *
@@ -29,6 +30,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CMG008 - MT940, MT941, MT942, MT950 Translation Table.       *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG26824 - Max length validation error.                      *
@@ -519,7 +522,7 @@
       ** Return the current values of the error indicators
       *
      C                   MOVEA     *IN(40)       IN40_TO_70
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
       *

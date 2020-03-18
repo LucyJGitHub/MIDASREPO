@@ -26,8 +26,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD042041           Date 21Oct16               *
+      *  Last Amend No. CMG008             Date 20Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD042041           Date 21Oct16               *
       *                 AR757762           Date 19Aug14               *
       *                 AR858070           Date 03Nov11               *
       *                 CGL146             Date 10Jul13               *
@@ -78,6 +79,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CMG008 - MT940, MT941, MT942, MT950 Translation Table.       *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD042041 - Tag 61 is not sorted by DRCR and PSTA. Added a    *
       *             system value that when is set to 'Y', program     *
@@ -161,34 +164,34 @@
       *  CGL013 - MT94x Message Generation                            *
       *                                                               *
       *****************************************************************
- 
+
      FMGF942PD  UF   E             DISK    COMMIT
       ** Midas MG MT942 Gen. Extract File - Account detail
- 
+
      FMGX942L0  UF   E           K DISK    COMMIT
       ** Midas MG MT942 Gen. Extract File - Posting Detail
- 
+
      FMGX942L1  UF   E           K DISK    COMMIT                                           MD042041
      F                                     RENAME(MGX942D0:MGX942D1)                        MD042041
- 
+
      FGLNW94L5  IF   E           K DISK
       ** Midas GL Network Accounts - MT94x - Live/Accnt+Dst
- 
+
      FMEP920L0  UF   E           K DISK    COMMIT
       ** Midas ME Incoming MT920 Parts file
- 
+
      FSDCUSTL7  IF   E           K DISK    INFSR(*PSSR)
       ** Midas SD Customers by unique SWIFT ID
- 
+
      FMGOMSGPD  O    E             DISK    COMMIT  PREFIX(Mo_)
       ** Midas MG Master Message Data file
- 
+
      FMGOREFPD  O    E             DISK    COMMIT  PREFIX(Mr_)
       ** Midas MG Master Messages Reference file
- 
+
      FMG000942AUO    E             PRINTER USROPN
       ** Midas MG Interim Transaction Report - Audit
- 
+
       *========================================================================*
       *                                                                        *
       * Use of Indicators                                                      *
@@ -209,11 +212,11 @@
       * 99 - Multi-purpose                                                     *
       *                                                                        *
       *========================================================================*
- 
+
       *========================================================================*
       ** Automatically included D-specs
       ** ==============================
- 
+
       ** The following /COPY line includes the LDA layout,
       ** the copyright array definition,
       ** and the following named constants:
@@ -223,59 +226,59 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Manually included D-specs
       ** =========================
- 
+
       ** Named constants
       ** ---------------
- 
+
      D CRLF            C                   CONST(X'0D25')                       CRLF Control Charact
- 
+
       ** Arrays and Data Structures
       ** --------------------------
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       **  Data Structure for Bank Details.
- 
+
      D SDMGME        E DS                  EXTNAME(SDMGMEPD)
       **  Data structure for message management data.
- 
+
      D SDNWRK        E DS                  EXTNAME(SDNWRKPD)
       **  Data Structure for Network Details.
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       **  Data Structure for Branch details.
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       **  Data Structure for Currency Details.
- 
+
      D GLACCNT       E DS                  EXTNAME(ACCNTAB)  PREFIX(Gl_)
       **  Data Structure for Account Details.
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      D  QQDFA1       E                     EXTFLD(QQDFAC)                                     CGL029
       **  Data Structure for Customer Details.
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD) PREFIX(Sc_)
       **  External data structures for Switchable Features Details
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       **  First DS for access programs, long data structure.
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       **  Second DS for access programs, short data structure.
- 
+
      D DSLDY         E DS                  EXTNAME(DSLDY)
       **  Third DS for access programs, very long data structure.
- 
+
      D MGAccDetl     E DS                  EXTNAME(MGF942PD)
       **  Data structure for MT942 Account details.
      D**MGNetAcc                     25           OVERLAY(MGAccDetl:1)                        CGL029
@@ -316,7 +319,7 @@
       *                                                                                       CER030
      D FldNamXAr       S             10A   DIM(40)                                            CER030
      D/COPY WNCPYSRC,MGH00032
- 
+
      D MGNetAcc        DS                                                                     CGL029
      D  MGAccnt                      24A   OVERLAY(MGNetAcc:7)                                CGL029
      D  WkNWRK                             LIKE(MGNWRK)                                       CGL029
@@ -338,33 +341,33 @@
      D  MGADI6                       65A                                        Additional Inf. 6
      D ArMGADI                       65A   DIM(6) OVERLAY(DsMGADI)
       **  Array containing the Additional Information from 1 to 6
- 
+
      D*MULT*****       DS                  OCCURS(200)                                      BUG22687
      D MULT            DS                  OCCURS(999)                                      BUG22687
       **  Multiple occurrence data structure for message
      D  MTAG                   1      5                                         Tag
      D  MFLD                   6     55                                         Message Field Detail
      D  CTRC                  56     57                                         CR/LF field
- 
+
      D  M              S              5U 0                                      Multi Occurence Idx
      D  P              S              5U 0                                      Previous Occure Idx
      D  L              S              5U 0                                      Last Occurence Idx
- 
+
      D***DsMsgRef      E DS                  OCCURS(100)                                    AR757762
      D DsMsgRef      E DS                  OCCURS(9999)                                     AR757762
       **  Data structure to receive Master Messages Reference.
      D                                     EXTNAME(MGOREFPD) PREFIX(Mr_)
- 
+
      D  Mr             S              5U 0                                      Multi Occurence Idx
- 
+
      D DsResult        DS
       **  Data structure to receive result greater than 50 Characters.
      D  WkMult1                      50A                                        Fisrt 50 characters
      D  WkMult2                      50A                                        Last 50 characters
- 
+
       ** Declared variables
       ** ------------------
- 
+
      D P@RTCD          S              7A                                        Return Code
      D P@OPTN          S              7A                                        Option
      D P@NWRK          S              6A                                        Network Code
@@ -381,7 +384,7 @@
      D KeyIMIR         S                   LIKE(MPIMIR)                         Network
      D KeyMSGR         S                   LIKE(MPMSGR)                         Branch Code - Alpha
      D KeyACTR         S                   LIKE(MPACTR)                         Customer number
- 
+
      D MaxLength       S                   LIKE(ED2MXL)                         Maximum Length
      D CurLength       S                   LIKE(ED2MXL)                         Current Length
      D CurPagSeq       S              5U 0                                      Curr. Page Sequence
@@ -391,14 +394,14 @@
      D SavCCY          S                   LIKE(MGCCY )                         Saved Currency
      D NbItems         S              5U 0                                      Nb. Movement by Msg
      D SavMULT         S             57A                                        Save MULT
- 
+
      D CSW020          S              1    INZ('N')                             SWIFT Decimal Places
- 
+
      D  X              S              5U 0                                      Working index
      D  WkMGDE         S              6A                                        Working field
      D  WkCnum         S              7
      D  WSwiftId       S             12
- 
+
      D PRtcd           S             10A                                                      CER030
      D POptn           S              7A                                                      CER030
      D PSard           S              6A                                                      CER030
@@ -501,60 +504,60 @@
      D/COPY WNCPYSRC,MGH00033
      D/COPY MGCPYSRC,MGCMNFCTDC
      D/COPY OFCPYSRCZ,CGL146_001                                                              CGL146
- 
+
       ** Input Specs
       ** -----------
- 
+
       *------------------------------------------------------------------------*
       ** C Spec. Declaratives
       ** ====================
- 
+
       *========================================================================*
       *              M  A  I  N     P  R  O  C  E  S  S  I  N  G               *
       *========================================================================*
- 
+
       ** Init processing uses the standard *INZSR subroutine
- 
+
       ** Read the first record from the MT942 extract file
- 
+
      C                   READ      MGF942D0                               27
- 
+
       ** Format Message Control.
- 
+
       ** Do While records found on the MT942 extract file
- 
+
      C                   DOW       NOT *IN27
- 
+
       ** Initialize Working fields.
- 
+
      C                   EXSR      $InitWkFld
- 
+
       ** Retrieve Network details.
- 
+
      C                   EXSR      $RtvNwrk
- 
+
       ** Retrieve Branch details.
- 
+
      C                   EXSR      $RtvBrch
- 
+
       ** Retrieve Currency details.
- 
+
      C                   EXSR      $RtvCCY
- 
+
       ** Retrieve Network Account Details.
- 
+
      C                   EXSR      $RtvNWAc
- 
+
       ** Calculate the number of available characters by message.
- 
+
      C                   EXSR      $RtvNbChar
- 
+
       ** Retrieve Message Definition (Tag 20, 21, 25, 28, 34F, 13D)
- 
+
      C                   EXSR      $RtvMsgDfn
- 
+
       ** Process each account movement.
- 
+
      C                   IF        WSort61 = 'Y'                                            MD042041
      C     Key           SETLL     MGX942L1                                                 MD042041
      C                   READE     MGX942D1                               28                MD042041
@@ -563,99 +566,99 @@
      C     Key           READE     MGX942D0                               28
      C                   ENDIF                                                              MD042041
      C                   DOW       NOT *IN28
- 
+
      ** Check the number of items by message
- 
+
      C                   IF        ED2FNI = 'Y'                                 Fix number of items
      C                             AND NbItems = ED2NIM                         Number of items
- 
+
       **   Create Message Details.
- 
+
      C                   EXSR      $CrtMsgDtl
- 
+
       **   Load Master Messages Reference data structure.
- 
+
      C                   EXSR      $LdMsgRef
- 
+
       **   Retrieve Next Message Definition (Tag 20, 21, 25, 28, 34F, 13D).
- 
+
      C                   EXSR      $RtvMsgDfn
- 
+
      C                   ENDIF
- 
+
       ** Update number of items.
- 
+
      C                   EVAL      NbItems = NbItems + 1                        Number of items
- 
+
       ** Check the maximun of occurence.
- 
+
       **  The maximum of occurence before to process a new items is:
       **    the number of occurence
       **    - 2 (tag 61 could be on 2 lines)
       **    - 6 (tag 86 could be on 6 lines)
- 
+
      C                   IF        M >= %ELEM(MULT) - 8
- 
+
       **   Create Message Details.
- 
+
      C                   EXSR      $CrtMsgDtl
- 
+
      C                   ENDIF
- 
+
       ** Save the Previous number of occurence
- 
+
      C                   EVAL      P = M
- 
+
       ** Format field :61:
- 
+
      C                   EXSR      $FMT61
- 
+
       ** Format field :86:
- 
+
      C                   EXSR      $FMT86
- 
+
       ** Check the maximum length.
- 
+
      C                   IF        CurLength > MaxLength
- 
+
       **   Save the Last number of occurence.
       **   Load M with the previous occurence.
- 
+
      C                   EVAL      L = M
      C                   EVAL      M = P
- 
+
       **   By this way, M contains the occurences to unload on MGOMSGPD,
       **                P contains the last occurence processed,
       **                L contains the last occurence to process.
- 
+
       **   Create Message Details.
- 
+
      C                   EXSR      $CrtMsgDtl
- 
+
       **   Load Master Messages Reference data structure.
- 
+
      C                   EXSR      $LdMsgRef
- 
+
       **   Retrieve Next Message Definition (Tag 20, 21, 25, 28, 34F, 13D).
- 
+
      C                   EXSR      $RtvMsgDfn
- 
+
       **   Shift the items not process to the correct occurence.
- 
+
      C                   EXSR      $ShiftItem
- 
+
      C                   ENDIF
- 
+
       ** Delete account movement.
- 
+
      C                   IF        WSort61 = 'Y'                                            MD042041
      C                   DELETE    MGX942D1                             99                  MD042041
      C                   ELSE                                                               MD042041
      C                   DELETE    MGX942D0                             99
      C                   ENDIF                                                              MD042041
- 
+
       ** If Error,
- 
+
      C                   IF        *IN99
      C     *LOCK         IN        LDA
      C                   EXSR      SRAccnt                                                    CGL029
@@ -665,52 +668,52 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Next account movement.
- 
+
      C                   IF        WSort61 = 'Y'                                            MD042041
      C     Key           READE     MGX942D1                               28                MD042041
      C                   ELSE                                                               MD042041
      C     Key           READE     MGX942D0                               28
      C                   ENDIF                                                              MD042041
      C                   ENDDO
- 
+
       ** If Number and Sum of Entries (D/C) has to be generated.
- 
+
      C                   IF        N42LSF = 'Y'                                 Number and Sum of En
- 
+
       ** Format field :90D:
- 
+
      C                   EXSR      $FMT90D
- 
+
       ** Format field :90C:
- 
+
      C                   EXSR      $FMT90C
- 
+
      C                   ENDIF
- 
+
       ** Format field :86: (additional information for the whole message)
- 
+
      C                   EXSR      $FMT86F
- 
+
       ** Create Message Details
- 
+
      C                   EXSR      $CrtMsgDtl
- 
+
       ** Load Master Messages Reference data structure.
- 
+
      C                   EXSR      $LdMsgRef
- 
+
       ** Create Message Reference.
- 
+
      C                   EXSR      $CrtMsgRef
- 
+
       ** Delete the Message.
- 
+
      C                   DELETE    MGF942D0                             99
- 
+
       ** If Error,
- 
+
      C                   IF        *IN99
      C     *LOCK         IN        LDA
      C                   EXSR      SRAccnt                                                    CGL029
@@ -720,36 +723,36 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** COMMIT all changes.
- 
+
      C                   COMMIT
- 
+
       ** Read next messages.
- 
+
      C                   READ      MGF942D0                               27
- 
+
      C                   ENDDO
- 
+
      C                   EVAL      *INLR = *On
      C                   RETURN
- 
+
       *========================================================================*
       * $InitWkFld: Initialize working fields.                                 *
       *------------------------------------------------------------------------*
- 
+
      C     $InitWkFld    BEGSR
       *    ----------    -----
- 
+
      C                   EVAL      MaxLength = *ZEROS                           Maximum Length
      C                   EVAL      Curlength = *ZEROS                           Current Length
      C                   EVAL      CurPagSeq = *ZEROS                           Curr. Page Sequence
      C                   EVAL      CurTRNO   = *BLANKS                          Curr. Transact. Ref.
      C                   EVAL      NbItems   = *Zeros                           Nb. Movement by Msg
- 
- 
+
+
       **  Clear Multi-Occurence for message details (MGOMSGPD)
- 
+
      C*****1****         DO        200           X                                          BUG22687
      C     1             DO        999           X                                          BUG22687
      C     X             OCCUR     MULT
@@ -757,9 +760,9 @@
      C                   ENDDO
      C                   EVAL      M = 0
      C     1             OCCUR     MULT
- 
+
       **  Clear Multi-Occurence for message reference (MGOREFPD)
- 
+
      C*****1****         DO        100           X                                          AR757762
      C     1             DO        9999          X                                          AR757762
      C     X             OCCUR     DsMsgRef
@@ -767,27 +770,27 @@
      C                   ENDDO
      C                   EVAL      Mr = 0
      C     1             OCCUR     DsMsgRef
- 
+
      C     @InitWkFld    ENDSR
       *    --------      -----
- 
+
       *========================================================================*
       * $RtvNwrk: Retrieve Network details.                                    *
       *------------------------------------------------------------------------*
- 
+
      C     $RtvNwrk      BEGSR
       *    --------      -----
- 
+
      C                   IF        SavNWRK <> MGNWRK
- 
+
      C                   CALLB     'AONWRKR1'
      C                   PARM      *BLANKS       P@RTCD                         Return Code
      C                   PARM      '*KEY'        P@OPTN                         Option
      C                   PARM      MGNWRK        P@NWRK                         Network
      C     SDNWRK        PARM      SDNWRK        DSLDY
- 
+
       ** If error,
- 
+
      C                   IF        P@RTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE  = 001                                 * * * * * * * *
@@ -796,31 +799,31 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      SAvNWRK = MGNWRK
- 
+
      C                   ENDIF
- 
+
       *    --------      -----
      C     @ChkNwrk      ENDSR
- 
+
       *========================================================================*
       * $RtvBrch: Retrieve Branch details.                                     *
       *------------------------------------------------------------------------*
- 
+
      C     $RtvBrch      BEGSR
       *    --------      -----
- 
+
      C                   IF        SavBRCA <> MGBRCA
- 
+
      C                   CALL      'AOBRCHR1'
      C                   PARM      *BLANKS       P@RTCD                         Return Code
      C                   PARM      '*KEY'        P@OPTN                         Option
      C                   PARM      MGBRCA        P@BRCD                         Branch Code
      C     SDBRCH        PARM      SDBRCH        DSSDY
- 
+
       ** If error,
- 
+
      C                   IF        P@RTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE  = 002                                 * * * * * * * *
@@ -829,31 +832,31 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      SAvBRCA = MGBRCA
- 
+
      C                   ENDIF
- 
+
       *    --------      -----
      C     @RtvBrch      ENDSR
- 
+
       *========================================================================*
       * $RtvCCY: Retrieve Currency details.                                    *
       *------------------------------------------------------------------------*
- 
+
      C     $RtvCCY       BEGSR
       *    -------       -----
- 
+
      C                   IF        SavCCY  <> MGCCY
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       P@RTCD                         Return Code
      C                   PARM      '*KEY'        P@OPTN                         Option
      C                   PARM      MGCCY         P@CCY                          Currency
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
       ** If Error,
- 
+
      C                   IF        P@RTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE  = 003                                 * * * * * * * *
@@ -862,25 +865,25 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      SAvCCY  = MGCCY
- 
+
      C                   ENDIF
- 
+
       *    -------       -----
      C     @RtvCCY       ENDSR
- 
+
       *========================================================================*
       * $RtvNwAc: Retrieve Network Account Details.                            *
       *------------------------------------------------------------------------*
- 
+
      C     $RtvNwAc      BEGSR
       *    --------      -----
- 
+
      C     Key           CHAIN     GLNW94D0                           99
- 
+
       ** If Error,
- 
+
      C                   IF        *IN99
      C     *LOCK         IN        LDA
      C                   EXSR      SRAccnt                                                    CGL029
@@ -890,13 +893,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Retrieve account details (Account Type)
- 
+
      C                   MOVEL     MGCNUM        P@CNUM                         Customer
      C                   MOVEL     MGACCD        P@ACCD                         Account code
      C                   MOVEL     MGACSQ        P@ACSQ                         Account Sequence
- 
+
      C                   CALLB     'AOACCTR0'
      C                   PARM      *BLANKS       P@RTCD                         Return Code
      C                   PARM      '*KEY'        P@OPTN                         Option
@@ -907,9 +910,9 @@
      C                   PARM                    P@ACSQ                         Account Sequence
      C                   PARM      MGBRCA        P@BRCD                         Branch Code
      C     GLACCNT       PARM      GLACCNT       DSSDY
- 
+
       ** Add the issue on the audit report.
- 
+
      C                   IF        P@RTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EXSR      SRAccnt                                                    CGL029
@@ -919,33 +922,33 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       *    --------      -----
      C     @RtvNwAc      ENDSR
- 
+
       *========================================================================*
       * $RtvNbChar: Calculate the number of available characters by message.   *
       *------------------------------------------------------------------------*
- 
+
      C     $RtvNbChar    BEGSR
       *    ----------    -----
- 
+
      C                   EVAL      MaxLength = ED2MXL                           MT942 maximum length
- 
+
       ** If Number and Sum of Entries (D/C) has to be generated.
       **   2 X ':90D:00001EUR123456789012,45CR' => 2 X 30 characters.
- 
+
      C                   IF        N42LSF = 'Y'                                 Number and Sum of En
      C                   EVAL      MaxLength = MaxLength - 60                   Maximum length
      C                   ENDIF
- 
+
       ** Information to Account Owner.
- 
+
      C     1             DO        6             X
- 
+
       ** If the current Add. Info. is empty, the next one also.
       ** So,we can stop this processing.
- 
+
      C                   IF        ArMGMIO(X) = *BLANKS
      C                   LEAVE
      C                   ENDIF
@@ -954,22 +957,22 @@
      C                   EVAL      MaxLength = MaxLength                        Max. Length
      C                                         - 4                              :86:
      C                   ENDIF
- 
+
      C                   EVAL      MaxLength = MaxLength                        Max. Length
      C                                         - %LEN(%TRIM(ArMGMIO(X)))        Msg Level Info 1-6
      C                                         - 2                              CRLF
      C                   ENDDO
- 
+
       *    --------      -----
      C     @RtvNbChar    ENDSR
- 
+
       *========================================================================*
       * $RtvMsgDfn: Retrieve Message Definition (Tag 20, 21, 25, 28, 34F, 13D) *
       *------------------------------------------------------------------------*
- 
+
      C     $RtvMsgDfn    BEGSR
       *    ----------    -----
- 
+
      C                   IF        CER030 = 'Y' AND EDMCNW = 'Y'                              CER030
       *                                                                                       CER030
      C                   IF        WSort61 = 'Y'                                            MD042041
@@ -1001,59 +1004,59 @@
       *                                                                                       CER030
      C/COPY WNCPYSRC,MGH00034
       ** Format field :20:
- 
+
      C                   EXSR      $FMT20
- 
+
       ** Format field :21:
- 
+
      C                   EXSR      $FMT21
- 
+
       ** Format field :25:
- 
+
      C                   EXSR      $FMT25
- 
+
       ** Format field :28C:
- 
+
      C                   EXSR      $FMT28C
- 
+
       ** Format field :34F: Debit/Credit
- 
+
      C                   IF        MGDFLM = MGCFLM
- 
+
      C                   EXSR      $FMT34F
- 
+
      C                   ELSE
- 
+
       ** Format field :34F: Debit
- 
+
      C                   EXSR      $FMT34FD
- 
+
       ** Format field :34F: Credit
- 
+
      C                   EXSR      $FMT34FC
- 
+
      C                   ENDIF
- 
+
       ** Format field :13D:
- 
+
      C                   EXSR      $FMT13D
- 
+
       *    ----------    -----
      C     @RtvMsgDfn    ENDSR
- 
+
       *========================================================================*
       * $FMT20  : Transaction Reference Number.                                *
       *------------------------------------------------------------------------*
- 
+
      C     $FMT20        BEGSR
       *    ------        -----
- 
+
       ** The Transaction reference is 'GL' + Rundate in format YYMMDD + Sequence hold
       ** in DTAARA/MGMT94DA.
- 
+
      C                   EVAL      M = M + 1
      C     M             OCCUR     MULT
- 
+
      C                   EVAL      MTAG = ':20:'                                Tag
      C                   EVAL      MFLD = #RtvTRNO('GL':#SWIFTDt(BJRDNB))       Build TRNO
      C/COPY WNCPYSRC,MGH00035
@@ -1069,42 +1072,42 @@
      C                   ENDIF                                                                CER030
       *                                                                                       CER030
      C                   EVAL      CTRC = CRLF                                  CR/LF field
- 
+
      C                   EVAL      CurLength = CurLength                        Max. Length
      C                                         + %LEN(%TRIM(MTAG))              Tag Length
      C                                         + %LEN(%TRIM(MFLD))              Data Length
      C                                         + %LEN(%TRIM(CTRC))              CRLF Length
- 
+
       ***Load*the current Transaction Ref.                                                  BUG22687
       **********                                                                            BUG22687
      C**********         EVAL      CurTRNO = MFLD                                           BUG22687
- 
+
       ** Update 920 parts details
- 
+
      C     MGFL25        IFNE      *BLANKS
      C                   EXSR      $MEP920
      C                   ENDIF
- 
+
       *    ------        -----
      C     @FMT20        ENDSR
- 
+
       *========================================================================*
       * $FMT21  : Related Reference.                                           *
       *------------------------------------------------------------------------*
- 
+
      C     $FMT21        BEGSR
       *    ------        -----
- 
+
       ** If a related Reference exists.
- 
+
      C                   IF        MGRREF <> *BLANKS
      C                             OR (CER030 = 'Y' AND EDMCNW = 'Y'                        BUG23029
      C                             AND MGX942 = 'FOUND')                                    BUG23029
      C/COPY WNCPYSRC,MGH00036
- 
+
      C                   EVAL      M = M + 1
      C     M             OCCUR     MULT
- 
+
      C                   EVAL      MTAG = ':21:'                                Tag
      C                   EVAL      MFLD = MGRREF                                Related Reference
      C/COPY WNCPYSRC,MGH00037
@@ -1124,32 +1127,32 @@
      C                   ENDIF                                                                CER030
       *                                                                                       CER030
      C                   EVAL      CTRC = CRLF                                  CR/LF field
- 
+
      C                   EVAL      CurLength = CurLength                        Max. Length
      C                                         + %LEN(%TRIM(MTAG))              Tag Length
      C                                         + %LEN(%TRIM(MFLD))              Data Length
      C                                         + %LEN(%TRIM(CTRC))              CRLF Length
      C                   ENDIF
- 
+
       *    -------       -----
      C     @FMT21        ENDSR
- 
+
       *========================================================================*
       * $FMT25  : Account Identification.                                      *
       *------------------------------------------------------------------------*
- 
+
      C     $FMT25        BEGSR
       *    ------        -----
- 
+
       ** The Account Identifier is:
       **   - MT920 Account Identifier if exist,
       **   - else, the IBAN if exist,
       **   - else, the Retail Account if exist,
       **   - else, the Full Account with the branch if multi-branching environment,
- 
+
      C                   EVAL      M = M + 1
      C     M             OCCUR     MULT
- 
+
      C                   EVAL      MTAG = ':25:'                                Tag
      C                   EXSR      SRAccnt                                                    CGL029
      C                   EVAL      MFLD = #RtvACID(MGAccnt:                     Full Account
@@ -1237,76 +1240,76 @@
      C                   ENDIF                                                                CER030
      C
      C                   EVAL      CTRC = CRLF                                  CR/LF field
- 
+
      C                   EVAL      CurLength = CurLength                        Max. Length
      C                                         + %LEN(%TRIM(MTAG))              Tag Length
      C                                         + %LEN(%TRIM(MFLD))              Data Length
      C                                         + %LEN(%TRIM(CTRC))              CRLF Length
       *    -------       -----
      C     @FMT25        ENDSR
- 
+
       *========================================================================*
       * $FMT28C : Page Number/Continuation Identifier.                         *
       *------------------------------------------------------------------------*
- 
+
      C     $FMT28C       BEGSR
       *    -------       -----
- 
+
      C                   EVAL      CurPagSeq = CurPagSeq + 1                    Current Page Seq
- 
+
      C                   EVAL      M = M + 1
      C     M             OCCUR     MULT
- 
+
      C                   EVAL      MTAG = ':28C:'                               Tag
      C                   EVAL      MFLD = %CHAR(MGSTNO)                         Statement Page Numb
      C                                    + '/'                                 /
      C                                    + %CHAR(CurPagSeq)                    Current Page Seq
      C
      C                   EVAL      CTRC = CRLF                                  CR/LF field
- 
+
      C                   EVAL      CurLength = CurLength                        Max. Length
      C                                         + %LEN(%TRIM(MTAG))              Tag Length
      C                                         + %LEN(%TRIM(MFLD))              Data Length
      C                                         + %LEN(%TRIM(CTRC))              CRLF Length
       *    -------       -----
      C     @FMT28C       ENDSR
- 
+
       *========================================================================*
       * $FMT34F  : Floor Limit Indicator / Debit/Credit                        *
       *------------------------------------------------------------------------*
- 
+
      C     $FMT34F       BEGSR
       *    --------      -----
- 
+
      C                   EVAL      M = M + 1
      C     M             OCCUR     MULT
- 
+
      C                   EVAL      MTAG = ':34F:'                               Tag
      C                   EVAL      MFLD = A6SWCY                                SWIFT Currency Code
      C                                    + #SWIFTAm(MGDFLM:                    Debit Floor Limit
      C                                               A6NBDP:                    Number of Decimal Pl
      C                                               A6SWDP:                    SWIFT Number of Deci
      C                                               CSW020)                    Feature
- 
+
      C                   EVAL      CTRC = CRLF                                  CR/LF field
- 
+
      C                   EVAL      CurLength = CurLength                        Max. Length
      C                                         + %LEN(%TRIM(MTAG))              Tag Length
      C                                         + %LEN(%TRIM(MFLD))              Data Length
      C                                         + %LEN(%TRIM(CTRC))              CRLF Length
       *    --------      -----
      C     @FMT34F       ENDSR
- 
+
       *========================================================================*
       * $FMT34FD : Floor Limit Indicator / Debit                               *
       *------------------------------------------------------------------------*
- 
+
      C     $FMT34FD      BEGSR
       *    --------      -----
- 
+
      C                   EVAL      M = M + 1
      C     M             OCCUR     MULT
- 
+
      C                   EVAL      MTAG = ':34F:'                               Tag
      C                   EVAL      MFLD = A6SWCY                                SWIFT Currency Code
      C                                    + 'D'                                 Debit
@@ -1314,26 +1317,26 @@
      C                                               A6NBDP:                    Number of Decimal Pl
      C                                               A6SWDP:                    SWIFT Number of Deci
      C                                               CSW020)                    Feature
- 
+
      C                   EVAL      CTRC = CRLF                                  CR/LF field
- 
+
      C                   EVAL      CurLength = CurLength                        Max. Length
      C                                         + %LEN(%TRIM(MTAG))              Tag Length
      C                                         + %LEN(%TRIM(MFLD))              Data Length
      C                                         + %LEN(%TRIM(CTRC))              CRLF Length
       *    --------      -----
      C     @FMT34FD      ENDSR
- 
+
       *========================================================================*
       * $FMT34FC : Floor Limit Indicator / Credit                              *
       *------------------------------------------------------------------------*
- 
+
      C     $FMT34FC      BEGSR
       *    --------      -----
- 
+
      C                   EVAL      M = M + 1
      C     M             OCCUR     MULT
- 
+
      C                   EVAL      MTAG = ':34F:'                               Tag
      C                   EVAL      MFLD = A6SWCY                                SWIFT Currency Code
      C                                    + 'C'                                 Debit
@@ -1341,26 +1344,26 @@
      C                                               A6NBDP:                    Number of Decimal Pl
      C                                               A6SWDP:                    SWIFT Number of Deci
      C                                               CSW020)                    Feature
- 
+
      C                   EVAL      CTRC = CRLF                                  CR/LF field
- 
+
      C                   EVAL      CurLength = CurLength                        Max. Length
      C                                         + %LEN(%TRIM(MTAG))              Tag Length
      C                                         + %LEN(%TRIM(MFLD))              Data Length
      C                                         + %LEN(%TRIM(CTRC))              CRLF Length
       *    --------      -----
      C     @FMT34FC      ENDSR
- 
+
       *========================================================================*
       * $FMT13D : Date/Time Indicator.                                         *
       *------------------------------------------------------------------------*
- 
+
      C     $FMT13D       BEGSR
       *    -------       -----
- 
+
      C                   EVAL      M = M + 1
      C     M             OCCUR     MULT
- 
+
      C                   EVAL      MTAG = ':13D:'                               Tag
      C                   EVAL      MFLD = #RtvDtTm(N42LSD:                      Last statement date
      C                                             N42LST:                      Last statement time
@@ -1368,23 +1371,23 @@
      C                                             A8SIGN:                      Time Offset Sign
      C                                             A8STOF:                      System Time Offset
      C                                             A8SSIN)                      System Time Offset S
- 
+
      C                   EVAL      CTRC = CRLF                                  CR/LF field
- 
+
      C                   EVAL      CurLength = CurLength                        Max. Length
      C                                         + %LEN(%TRIM(MTAG))              Tag Length
      C                                         + %LEN(%TRIM(MFLD))              Data Length
      C                                         + %LEN(%TRIM(CTRC))              CRLF Length
       *    -------       -----
      C     @FMT13D       ENDSR
- 
+
       *========================================================================*
       * $FMT61  : Statement Line.                                              *
       *------------------------------------------------------------------------*
- 
+
      C     $FMT61        BEGSR
       *    ------        -----
- 
+
      C                   IF        ED2F61 = 'Y'                                               CER030
      C**********                   and CER030 = 'Y'                               BUG25800 BUG25800A
      C**********                   or  CER030 = 'N'                               BUG25800 BUG25800A
@@ -1403,7 +1406,7 @@
       **   Sub Field 6
       **   Sub Field 7
       **   Sub Field 8
- 
+
      C                   EVAL      DsResult = #SWIFTDt(MGVALD) +                Value Date - YYMMDD
      C                                        %SUBST(#SWIFTDt(MGPSTD):3:4) +    Posting Date - MMDD
      C                                        %TRIM(MGDRCR) +                   Debit/Credit
@@ -1417,45 +1420,45 @@
      C                                        %TRIM(MGSFD7) +                   Sub Field 7
      C                                        %TRIM(MGSFD8)                     Sub Field 8
      C/COPY WNCPYSRC,MGH00040
- 
+
       ** For Field 61 the maximum length is 66 characters,
       ** So, the result could be divided in 2 Occurances.
- 
+
      C                   EVAL      M = M + 1
      C     M             OCCUR     MULT
- 
+
      C                   EVAL      MTAG = ':61:'                                Tag
- 
+
       ** Load the first 50 Characters
- 
+
      C                   EVAL      MFLD = WkMult1                               First 50 Characters
- 
+
       ** If the result is greater than 50 characters,
- 
+
      C                   IF        WkMult2 <> *BLANKS
- 
+
      C                   EVAL      CurLength = CurLength                        Max. Length
      C                                         + %LEN(%TRIM(MTAG))              Tag Length
      C                                         + %LEN(%TRIM(MFLD))              Data Length
      C                                         + %LEN(%TRIM(CTRC))              CRLF Length
- 
+
      C                   EVAL      M = M + 1                                    Next Occurance
      C     M             OCCUR     MULT
- 
+
      C                   EVAL      MFLD = WkMult2                               Last 50 Characters
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      CTRC = CRLF                                  CR/LF field
- 
+
      C                   EVAL      CurLength = CurLength                        Max. Length
      C                                         + %LEN(%TRIM(MTAG))              Tag Length
      C                                         + %LEN(%TRIM(MFLD))              Data Length
      C                                         + %LEN(%TRIM(CTRC))              CRLF Length
- 
+
       ** Second Part of field 61:
       **   Sub Field 9
- 
+
       *                                                                                       CER030
      C                   EVAL      WDCInd = *BLANKS                                        BUG23040B
      C**********         IF        CER030 ='Y' AND EDMCNW = 'Y'                      CER030 BUG24069
@@ -1497,31 +1500,31 @@
      C                   ENDIF                                                                CER030
       *                                                                                       CER030
      C                   ENDIF                                                                CER030
- 
+
      C/COPY WNCPYSRC,MGH00041
      C                   IF        MGSFD9 <> *BLANKS
- 
+
      C                   EVAL      M = M + 1
      C     M             OCCUR     MULT
- 
+
      C                   EVAL      MFLD = %TRIM(MGSFD9)                         Sub Field 9
- 
+
      C                   EVAL      CTRC = CRLF                                  CR/LF field
- 
+
      C                   EVAL      CurLength = CurLength                        Max. Length
      C                                         + %LEN(%TRIM(MTAG))              Tag Length
      C                                         + %LEN(%TRIM(MFLD))              Data Length
      C                                         + %LEN(%TRIM(CTRC))              CRLF Length
- 
+
      C                   ENDIF
- 
+
       *    ------        -----
      C     @FMT61        ENDSR
- 
+
       *========================================================================*
       * $FMT86  : Information to Account Owner.                                *
       *------------------------------------------------------------------------*
- 
+
      C     $FMT86        BEGSR
       *    ------        -----
       *                                                                                       CER030
@@ -1530,57 +1533,57 @@
      C**********         IF        CER030 <>'Y' OR EDMCNW <> 'Y'                     CER030 BUG22853
      C                   IF        CER030 <>'Y'                                             BUG22853
      C/COPY WNCPYSRC,MGH00042
- 
+
      C     1             DO        6             X
- 
+
       ** If the current Add. Info. is empty, the next one also.
       ** So,we can stop this processing.
- 
+
      C                   IF        ArMGADI(X) = *BLANKS
      C                   LEAVE
      C                   ENDIF
- 
+
       ** Retrieve Field 86 details.
- 
+
      C                   EVAL      DsResult = %TRIM(ArMGADI(x))                 Additional Info.
- 
+
       ** For Field 86 the maximum length is 65 characters,
       ** So, the result could be divided in 2 Occurances.
- 
+
      C                   EVAL      M = M + 1
      C     M             OCCUR     MULT
- 
+
      C                   IF        X = 1
      C                   EVAL      MTAG = ':86:'                                Tag
      C                   ENDIF
- 
+
       ** Load the first 50 Characters
- 
+
      C                   EVAL      MFLD = WkMult1                               First 50 Characters
- 
+
       ** If the result is greater than 50 characters,
- 
+
      C                   IF        WkMult2 <> *BLANKS
- 
+
      C                   EVAL      CurLength = CurLength                        Max. Length
      C                                         + %LEN(%TRIM(MTAG))              Tag Length
      C                                         + %LEN(%TRIM(MFLD))              Data Length
      C                                         + %LEN(%TRIM(CTRC))              CRLF Length
- 
+
      C                   EVAL      M = M + 1                                    Next Occurance
      C     M             OCCUR     MULT
- 
+
      C                   EVAL      MFLD = WkMult2                               Last 50 Characters
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      CTRC = CRLF                                  CR/LF field
- 
+
      C                   EVAL      CurLength = CurLength                        Max. Length
      C                                         + %LEN(%TRIM(MTAG))              Tag Length
      C                                         + %LEN(%TRIM(MFLD))              Data Length
      C                                         + %LEN(%TRIM(CTRC))              CRLF Length
- 
+
      C                   ENDDO
      C/COPY WNCPYSRC,MGH00043
       *                                                                                       CER030
@@ -1588,25 +1591,25 @@
      C                   ELSEIF    CER030 ='Y'                                              BUG22853
      C                   EXSR      SRMTCash                                                   CER030
      C                   ENDIF                                                                CER030
- 
+
       *    ------        -----
      C     @FMT86        ENDSR
- 
+
       *========================================================================*
       * $FMT90D  : Number and Sum of Entries.                                  *
       *------------------------------------------------------------------------*
- 
+
      C     $FMT90D       BEGSR
       *    -------       -----
- 
+
       ** Number and Sum of entres
       **   Number of Debit
       **   SWIFT Currency Code
       **   Sum of Debit Posting
- 
+
      C                   EVAL      M = M + 1
      C     M             OCCUR     MULT
- 
+
      C                   EVAL      MTAG = ':90D:'                               Tag
      C                   EVAL      MFLD = %TRIM(%CHAR(MGNBDB)) +                Number of Debit
      C                                    A6SWCY +                              SWIFT Currency Code
@@ -1614,31 +1617,31 @@
      C                                             A6NBDP:                      Number of Decimal Pl
      C                                             A6SWDP:                      SWIFT Number of Deci
      C                                             CSW020)                      Feature
- 
+
      C                   EVAL      CTRC = CRLF                                  CR/LF field
- 
+
      C                   EVAL      CurLength = CurLength                        Max. Length
      C                                         + %LEN(%TRIM(MTAG))              Tag Length
      C                                         + %LEN(%TRIM(MFLD))              Data Length
      C                                         + %LEN(%TRIM(CTRC))              CRLF Length
       *    -------       -----
      C     @FMT90D       ENDSR
- 
+
       *========================================================================*
       * $FMT90C  : Number and Sum of Entries.                                  *
       *------------------------------------------------------------------------*
- 
+
      C     $FMT90C       BEGSR
       *    -------       -----
- 
+
       ** Number and Sum of entres
       **   Number of Credit
       **   SWIFT Currency Code
       **   Sum of credit Posting
- 
+
      C                   EVAL      M = M + 1
      C     M             OCCUR     MULT
- 
+
      C                   EVAL      MTAG = ':90C:'                               Tag
      C                   EVAL      MFLD = %TRIM(%CHAR(MGNBCR)) +                Number of Credit
      C                                    A6SWCY +                              SWIFT Currency Code
@@ -1646,89 +1649,89 @@
      C                                             A6NBDP:                      Number of Decimal Pl
      C                                             A6SWDP:                      SWIFT Number of Deci
      C                                             CSW020)                      Feature
- 
+
      C                   EVAL      CTRC = CRLF                                  CR/LF field
- 
+
      C                   EVAL      CurLength = CurLength                        Max. Length
      C                                         + %LEN(%TRIM(MTAG))              Tag Length
      C                                         + %LEN(%TRIM(MFLD))              Data Length
      C                                         + %LEN(%TRIM(CTRC))              CRLF Length
       *    -------       -----
      C     @FMT90C       ENDSR
- 
+
       *========================================================================*
       * $FMT86F : Information to Account Owner for whole message.              *
       *------------------------------------------------------------------------*
- 
+
      C     $FMT86F       BEGSR
       *    -------       -----
- 
+
      C     1             DO        6             X
- 
+
       ** If the current Add. Info. is empty, the next one also.
       ** So,we can stop this processing.
- 
+
      C                   IF        ArMGMIO(X) = *BLANKS
      C                   LEAVE
      C                   ENDIF
- 
+
       ** Retrieve Field 86 details.
- 
+
      C                   EVAL      DsResult = %TRIM(ArMGMIO(X))                 Additional Info.
- 
+
       ** For Field 86 the maximum length is 65 characters,
       ** So, the result could be divided in 2 Occurances.
- 
+
      C                   EVAL      M = M + 1
      C     M             OCCUR     MULT
- 
+
      C                   IF        X = 1
      C                   EVAL      MTAG = ':86:'                                Tag
      C                   ENDIF
- 
+
       ** Load the first 50 Characters
- 
+
      C                   EVAL      MFLD = WkMult1                               First 50 Characters
- 
+
       ** If the result is greater than 50 characters,
- 
+
      C                   IF        WkMult2 <> *BLANKS
- 
+
      C                   EVAL      CurLength = CurLength                        Max. Length
      C                                         + %LEN(%TRIM(MTAG))              Tag Length
      C                                         + %LEN(%TRIM(MFLD))              Data Length
      C                                         + %LEN(%TRIM(CTRC))              CRLF Length
- 
+
      C                   EVAL      M = M + 1                                    Next Occurance
      C     M             OCCUR     MULT
- 
+
      C                   EVAL      MFLD = WkMult2                               Last 50 Characters
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      CTRC = CRLF                                  CR/LF field
- 
+
      C                   EVAL      CurLength = CurLength                        Max. Length
      C                                         + %LEN(%TRIM(MTAG))              Tag Length
      C                                         + %LEN(%TRIM(MFLD))              Data Length
      C                                         + %LEN(%TRIM(CTRC))              CRLF Length
- 
+
      C                   ENDDO
- 
+
       *    -------       -----
      C     @FMT86F       ENDSR
- 
+
       *========================================================================*
       * $CrtMsgDtl : Create Message details.                                   *
       *------------------------------------------------------------------------*
- 
+
      C     $CrtMsgDtl    BEGSR
       *    ----------    -----
- 
+
       ** Unload multi-occurence MULT in PF/MGOMSGPD.
- 
+
      C     1             DO        M             X
- 
+
      C     X             OCCUR     MULT
      C                   CLEAR                   MGOMSGD0
      C                   EVAL      Mo_MTAG = MTAG                               Message field Tag
@@ -1737,28 +1740,28 @@
      C                   EVAL      Mo_TRNO = CurTRNO                            Transaction referenc
      C                   WRITE     MGOMSGD0
      C                   CLEAR                   MULT
- 
+
      C                   ENDDO
- 
+
       ** Position to the beginning of the Multi-Ocurrance
- 
+
      C                   EVAL      M = 0
      C     1             OCCUR     MULT
- 
+
       *    ----------    -----
      C     @CrtMsgDtl    ENDSR
- 
+
       *========================================================================*
       * $LdMsgRef : Load Master Messages Reference data structure.             *
       *------------------------------------------------------------------------*
- 
+
      C     $LdMsgRef     BEGSR
       *    ---------     -----
- 
+
      C                   ADD       1             Mr
- 
+
      C     Mr            OCCUR     DsMsgRef
- 
+
      C                   EVAL      Mr_MODI = 'GL'                               General Ledger
      C                   EVAL      Mr_TRNO = CurTRNO                            Transaction referenc
      C/COPY WNCPYSRC,MGH00044
@@ -1773,11 +1776,11 @@
      C/COPY OFCPYSRCZ,CGL146_061                                                              CGL146
      C                   MOVE      A8BICN        Mr_SECN                        Customer no of Send.
      C                   EVAL      Mr_NWSN = A8BTID                             Branch TID Address
- 
+
       **  Default Customer no of destination.
       **  If the destination is a customer number, load the destination,
       **  Otherwide, the customer number of the account.
- 
+
      C**********         EVAL      WkCnum = %Subst(MGDSTN:1:6) + '0'                          CSD027
      C**********         TESTN                   WkCnum               99                      CSD027
      C                   IF        %Subst(MGDSTN:7:4) = *BLANKS
@@ -1786,15 +1789,15 @@
      C                   ELSE
      C                   EVAL      Mr_DECN = MGCNUM
      C                   ENDIF
- 
+
       **  Default Destination.
- 
+
      C                   EVAL      Mr_NWDS = MGDSTN
- 
+
       **  If the destination is a SWIFT address, retrieves the customer number of
       **  destination.
      C                   IF        %Subst(MGDSTN : 7 : 4) <> *Blanks
- 
+
      C                   EVAL      WSwiftId = MGDSTN
      C     WSwiftId      CHAIN     @CUSTGE                            99
      C**  Try removing branch 'XXX' if fails the first time.
@@ -1817,7 +1820,7 @@
      C                   PARM      MGDSTN        P@KEY1
      C                   PARM                    P@KYST
      C     SDCUST        PARM      SDCUST        DSSDY
- 
+
      C                   IF        P@RTCD = *BLANKS
      C                   MOVEL     BBCUST        Mr_DECN
      C                   IF        BBCSID <> *BLANKS
@@ -1860,104 +1863,104 @@
      C                   EVAL      Mr_DESI = 'N'                                Demand Statement Id.
      C                   EVAL      Mr_BRCA = MGBRCA                             Branch Code
      C                   EVAL      Mr_CIND = '2'                                1 = 1999, 2 =2000
- 
+
       ** Reset working fields.
- 
+
      C                   EVAL      Curlength = *ZEROS                           Current Length
      C                   EVAL      CurTRNO   = *BLANKS                          Curr. Transact. Ref.
      C                   EVAL      NbItems   = *Zeros                           Nb. Movement by Msg
- 
+
       *    ----------    -----
      C     @LdMsgRef     ENDSR
- 
+
       *========================================================================*
       * $ShiftItem : Shift the items not process to the correct occurence.     *
       *------------------------------------------------------------------------*
- 
+
      C     $ShiftItem    BEGSR
       *    ----------    -----
- 
+
       ** Remark:  M contains the occurences to unload on MGOMSGPD,
       **          P contains the last occurence processed,
       **          L contains the last occurence to process.
- 
+
       ** Position on the first occurence to process.
- 
+
      C                   EVAL      P = P + 1
      C     P             DO        L             X
- 
+
       ** Load working field with item detail to move.
- 
+
      C     X             OCCUR     MULT
      C                   EVAL      SavMULT = MULT
- 
+
       ** Release the old occurence.
- 
+
      C                   CLEAR                   MULT
- 
+
       ** Load working correct occurence with item detail.
- 
+
      C                   EVAL      M = M + 1
      C     M             OCCUR     MULT
      C                   EVAL      MULT = SavMULT
- 
+
      C                   EVAL      CurLength = CurLength                        Max. Length
      C                                         + %LEN(%TRIM(MTAG))              Tag Length
      C                                         + %LEN(%TRIM(MFLD))              Data Length
      C                                         + %LEN(%TRIM(CTRC))              CRLF Length
      C                   ENDDO
- 
+
       *    ----------    -----
      C     @ShiftItem    ENDSR
- 
+
       *========================================================================*
       * $CrtMsgRef : Create Message reference.                                 *
       *------------------------------------------------------------------------*
- 
+
      C     $CrtMsgRef    BEGSR
       *    ----------    -----
- 
+
       ** Unload multi-occurence DsMsgRef in PF/MGOREFPD.
- 
+
      C     1             DO        Mr            X
- 
+
       ** The multi-occurence DsMsgRef has the same layout as PF/MGOREFPD.
- 
+
      C     X             OCCUR     DsMsgRef
      C                   WRITE     MGOREFD0
- 
+
      C                   ENDDO
- 
+
       *    ----------    -----
      C     @CrtMsgRef    ENDSR
- 
+
       *========================================================================*
       * $MEP920    : Update MEP920PD parts details                             *
       *------------------------------------------------------------------------*
- 
+
      C     $MEP920       BEGSR
       *    -------       -----
- 
+
       ** Key to access 920 parts file
- 
+
      C     KMEP          KLIST
      C                   KFLD                    KeyIMIR                        Network
      C                   KFLD                    KeyMSGR                        Branch Code - Alpha
      C                   KFLD                    KeyACTR                        Customer number
- 
+
      C                   MOVEL     MGIMIR        KeyIMIR
      C                   MOVEL     '942'         KeyMSGR
      C                   MOVEL     MGFL25        KeyACTR
- 
+
       **  Find record
- 
+
      C     KMEP          CHAIN     MEP920L0                           99
- 
+
      C                   IF        NOT *IN99
      C                   EVAL      MPM94X = MFLD                                Curr. Transac. Ref
      C                   UPDATE    MEP920P0
      C                   ENDIF
- 
+
       *    -------       -----
      C     @MEP920       ENDSR
       *****************************************************************                       CGL029
@@ -2575,41 +2578,41 @@
       /EJECT                                                                                  CER030
       *****************************************************************                       CER030
      C/COPY WNCPYSRC,MGH00046
- 
+
       *========================================================================*
       * *INZSR    : Init Processing                                            *
       *------------------------------------------------------------------------*
- 
+
      C     *INZSR        BEGSR
       *    ------        -----
- 
+
       ** Initialise Copyright Array
- 
+
      C                   MOVEA     CPY@          CPY@@            80
- 
+
       ** Initialise LDA
- 
+
      C     *LOCK         IN        LDA
      C                   MOVEL     PSProcPgm     DBPGM
      C                   MOVEL     PSProcMod     DBMOD
      C                   OUT       LDA
- 
+
       ** Retrieve Bank details.
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*DBERR '     P@RTCD                         Return Code
      C                   PARM      '*FIRST '     P@OPTN                         Option
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       **  Access SDMGMEPD for message management data.
- 
+
      C                   CALL      'AOMGMER0'
      C                   PARM      '*DBERR '     P@RTCD                         Return Code
      C                   PARM      '*FIRST '     P@OPTN                         Option
      C     SDMGME        PARM      SDMGME        DSFDY
- 
+
       ** Check if feature CSW020 'SWIFT Decimal Places' is present.
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       P@RTCD
      C                   PARM      '*KEY   '     P@OPTN
@@ -2619,9 +2622,9 @@
      C     P@RTCD        IFEQ      *BLANKS
      C                   MOVE      'Y'           CSW020
      C                   ENDIF
- 
+
       ** Key to access Network Account or Posting details.
- 
+
      C     Key           KLIST
      C                   KFLD                    MGNWRK                         Network
      C                   KFLD                    MGBRCA                         Account Branch
@@ -2709,37 +2712,37 @@
       *                                                                                     BUG25529
      C                   ENDIF                                                              BUG25529
                                                                                             BUG25529
- 
+
       *    ------        -----
      C     @INZSR        ENDSR
- 
+
       *========================================================================*
       * *PSSR     : Program exception error subroutine                         *
       *------------------------------------------------------------------------*
- 
+
      C     *PSSR         BEGSR
       *    ----------    ------
- 
+
       **  Write database error to report
- 
+
      C                   OPEN      MG000942AU
      C                   WRITE     HEADAU
      C                   EXSR      SRAccnt                                                    CGL029
      C                   EVAL      DNTAC = MGNetAcc                             Network Account
      C                   WRITE     DBERROR
- 
+
      C                   DUMP
      C                   ROLBK
- 
+
      C                   EVAL      *INU7 = *On
      C                   EVAL      *INU8 = *On
      C                   EVAL      *INLR = *On
- 
+
      C                   RETURN
- 
+
       *    ----------    ------
      C     @PSSR         ENDSR
- 
+
       *========================================================================*
       ***/COPY*MGCPYSRC,MGSWIFTRAN                                                          AR858070
 **  CPY@

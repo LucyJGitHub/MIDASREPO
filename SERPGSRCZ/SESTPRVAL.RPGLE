@@ -11,12 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CMG008             Date 20Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CSE071             Date 19Jul05               *
       *                 CSW037A            Date 02May05               *
@@ -32,6 +33,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CMG008 - MT940, MT941, MT942, MT950 Translation Table.       *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -52,28 +55,28 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FCPOSCS    IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(CP_)
       ** Customer Positions by Customer
- 
+
      FDPOSNL2   IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(DP_)
       ** Depot Positions by Customer
- 
+
      FSECTY     IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(SEC_)
       ** Midas Security Details
- 
+
      FSESTHSL0  IF   E           K DISK    INFSR(*PSSR)
       ** Midas SE Statement History by Message Reference
- 
+
      FSESTPRL2  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SESTPRD0:SESTPRD2)
       ** Midas SE Statement Production Request - Index
- 
+
       /COPY WNCPYSRC,SESTPRV001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -85,20 +88,20 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **---------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
@@ -110,77 +113,77 @@
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D CurStPRIFld   E DS                  EXTNAME(SESTPR1PD) PREFIX(C_)
       ** SESTPR Transaction Details in screen format
       ** Current state (i.e. before any amendment)
- 
+
      D StPRScnIFld   E DS                  EXTNAME(SESTPR1PD)
       ** SESTPR Transaction Details in screen format
- 
+
      D StPRScnOFld   E DS                  EXTNAME(SESTPR2PD)
       ** SESTPR Output only Screen Fields
- 
+
      D StPROkFlags   E DS                  EXTNAME(SEESTPRPD)
       ** SESTPR Transaction Details OK indicators
- 
+
      D NewSEStPR     E DS                  EXTNAME(SEVSTPRPD)
       ** New Statement Production Request in file format
- 
+
      D SDCNST        E DS                  EXTNAME(SDCNSTPD)
       ** External DS for Counterparty Nostro Details
- 
+
      D MEBICD        E DS                  EXTNAME(MEBICDPD)
       ** External DS for Midas BIC Directory Details
- 
+
      D SDSECS        E DS                  EXTNAME(SDSECSPD)
       ** External DS for Securities Customer Details
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       ** External DS for Branch Details
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      D  QQDFAC1      E                     EXTFLD(QQDFAC)                                     CGL029
       ** External DS for Customer Details
- 
+
      D SDNWRK        E DS                  EXTNAME(SDNWRKPD)
       ** External DS for Network Details
- 
+
      D ZMUSER        E DS                  EXTNAME(ZMUSER) DTAARA(ZMUSER)
      D                                     PREFIX(ZMUS_)
       ** Midas ZMUSER Data Area Layout
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       **  Short DS for access programs
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       **  Long DS for access programs
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for error message arrays
      D Idx             S              3P 0
      D SavIdx          S              3P 0
- 
+
       ** Index for warning message arrays
      D WIdx            S              3P 0
- 
+
       ** Fields for dates
      D StartDate       S               D   DATFMT(*ISO) INZ(D'1971-12-31')      Start Date
      D DftDate         S                   LIKE(DDMSTD)                         Run date screen fmt
@@ -192,20 +195,20 @@
      D X               S              2P 0                                      Day No decrease val.
      D WDay            S              2P 0                                      Working Day No
      D WxDay           S              2A                                        Idem, in alpha fmt
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       /COPY WNCPYSRC,SESTPRV002
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -213,9 +216,9 @@
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** +----------------------------------------------------------------+
- 
+
       /COPY WNCPYSRC,SESTPRV003
- 
+
       ** Initializations
       *
                                                                                              BUG8550
@@ -224,7 +227,7 @@
      C                   IN        ZMUSER                                                    BUG8550
       *                                                                                      BUG8550
      C                   EXSR      INIT
- 
+
       ** When the calling module is "*CTL" or "*RPR" and the mode is "Amend",
       ** we must first verify that only amendable fields are modified.
       ** The problem can't arise in the SIN function, as only the amendable
@@ -244,25 +247,25 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
       ** Validate Priority and Delivery Notification
       *
       /COPY WNCPYSRC,SESTPRV004
      C                   EXSR      ValPRNT
       /COPY WNCPYSRC,SESTPRV005
- 
+
       ** Validate Sending Branch
       *
       /COPY WNCPYSRC,SESTPRV006
      C                   EXSR      ValSNDR
       /COPY WNCPYSRC,SESTPRV007
- 
+
       ** Validate Originating Branch
       *
       /COPY WNCPYSRC,SESTPRV008
      C                   EXSR      ValORIG
       /COPY WNCPYSRC,SESTPRV009
- 
+
       ** Validate Safekeeping Customer Number
       *
       /COPY WNCPYSRC,SESTPRV010
@@ -270,91 +273,91 @@
      C                   EXSR      ValCUST
      C                   ENDIF
       /COPY WNCPYSRC,SESTPRV011
- 
+
       ** Validate Type of Statement
       *
       /COPY WNCPYSRC,SESTPRV012
      C                   EXSR      ValTYPE
       /COPY WNCPYSRC,SESTPRV013
- 
+
       ** Validate Frequency
       *
       /COPY WNCPYSRC,SESTPRV014
      C                   EXSR      ValFREQ
       /COPY WNCPYSRC,SESTPRV015
- 
+
       ** Validate Recipient
       *
       /COPY WNCPYSRC,SESTPRV016
      C                   EXSR      ValRECP
       /COPY WNCPYSRC,SESTPRV017
- 
+
       ** Validate Start Date
       *
       /COPY WNCPYSRC,SESTPRV018
      C                   EXSR      ValMSTD
       /COPY WNCPYSRC,SESTPRV019
- 
+
       ** Validate Start Time
       *
       /COPY WNCPYSRC,SESTPRV020
      C                   EXSR      ValSTTM
       /COPY WNCPYSRC,SESTPRV021
- 
+
       ** Validate Day in Month
       *
       /COPY WNCPYSRC,SESTPRV022
      C                   EXSR      ValDAYM
       /COPY WNCPYSRC,SESTPRV023
- 
+
       ** Validate End Date
       *
       /COPY WNCPYSRC,SESTPRV024
      C                   EXSR      ValMETD
       /COPY WNCPYSRC,SESTPRV025
- 
+
       ** Validate End Time
       *
       /COPY WNCPYSRC,SESTPRV026
      C                   EXSR      ValENTM
       /COPY WNCPYSRC,SESTPRV027
- 
+
       ** Validate Next Statement Date
       *
       /COPY WNCPYSRC,SESTPRV028
      C                   EXSR      ValNSTD
       /COPY WNCPYSRC,SESTPRV029
- 
+
       ** Validate Next Statement Time
       *
       /COPY WNCPYSRC,SESTPRV030
      C                   EXSR      ValNSTT
       /COPY WNCPYSRC,SESTPRV031
- 
+
       ** Validate Security Shortname
       *
       /COPY WNCPYSRC,SESTPRV032
      C                   EXSR      ValSESN
       /COPY WNCPYSRC,SESTPRV033
- 
+
       ** Validate Network
       *
       /COPY WNCPYSRC,SESTPRV034
      C                   EXSR      ValNWRK
       /COPY WNCPYSRC,SESTPRV035
- 
+
       ** Validate Related MT549 Message
       *
       /COPY WNCPYSRC,SESTPRV036
      C                   EXSR      ValR549
       /COPY WNCPYSRC,SESTPRV037
- 
+
       ** Validate Message to Cancel
       *
       /COPY WNCPYSRC,SESTPRV038
      C                   EXSR      ValCANC
       /COPY WNCPYSRC,SESTPRV039
- 
+
       ** Validate File Keys Consistency
       *
       /COPY WNCPYSRC,SESTPRV040
@@ -362,13 +365,13 @@
      C                   EXSR      ValFile
      C                   ENDIF
       /COPY WNCPYSRC,SESTPRV041
- 
+
      C     EndMod        TAG
       *
      C                   RETURN
- 
+
       /COPY WNCPYSRC,SESTPRV042
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
@@ -1223,7 +1226,7 @@
      C   98*MDY0         MOVE      DDNSTD        WkDate
      C     WkDate        SUBDUR    StartDate     WkDateM:*D
      C                   ENDIF
- 
+
      C                   IF        %Error OR WkDateM < BJRDNB
      C                   EVAL      DDNSTDOK = 'N'
      C     Idx           COMP      ArrayMax                             99      -Lower-

@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. CMG008             Date 20Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -24,13 +25,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CMG008 - MT940, MT941, MT942, MT950 Translation Table.       *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER030 - Multicash German Feature (Recompile)                *
       *  CGL013 - MT94x Messages Generation                           *
       *                                                               *
       *****************************************************************
- 
+
      FSDNWRKL1  IF   E           K DISK    USROPN
      F                                     RENAME(@EDREJZ:SDNWRKD1)
       ** Midas Message Network Details
@@ -52,24 +55,24 @@
       * 99 - Call error (ZASNMG)                                      *
       *                                                               *
       *****************************************************************
- 
+
       ** Automatically included D-specs
       ** ==============================
       *
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
       *
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Manually included D-specs
       ** =========================
       *
- 
+
       ** Named constants
       ** ---------------
       *
- 
+
       ** Arrays and Data Structures
       ** --------------------------
       *
@@ -79,24 +82,24 @@
      D D@FMT         E DS                  EXTNAME(SDNWRKPD)
       ** @EDREJZ - RPG Name SDNWRKD1 - Real record format data structure
       *
- 
+
      D P@FMT         E DS                  EXTNAME(DSLDY)
       ** Dummy record data structure
       *
- 
+
      D P@NWRK          DS             6
       ** Key slicing data structure (for Record Selection)
      D  W@SL01                 1      1
- 
+
       ** Declared variables
       ** ------------------
       *
- 
+
       *------------------------------------------------------------------------*
       ** C Spec. Declaratives
       ** ====================
       *
- 
+
       ** Entry parameters
       *
      C     *ENTRY        PLIST
@@ -104,20 +107,20 @@
      C                   PARM                    P@OPTN            7            I:Option
      C                   PARM                    P@NWRK                         I:Key field
      C                   PARM                    P@FMT                          O:Format
- 
+
       *========================================================================*
       *              M  A  I  N     P  R  O  C  E  S  S  I  N  G               *
       *========================================================================*
- 
+
      C     P@OPTN        IFEQ      '*SAME  '
      C     *IN01         COMP      '0'                                    91
      C                   GOTO      T@SKIP
      C                   ENDIF
- 
+
      C                   SETOFF                                       909192     ¦ Reset
      C                   SETOFF                                       939495     ¦ error
      C                   SETOFF                                       969798     ¦ indicators
- 
+
       ** First call - open file
       *
      C     *IN01         IFEQ      '0'                                          IF 1 1'st time
@@ -125,7 +128,7 @@
      C                   OPEN      SDNWRKL1                             91        Open file
      C     *IN91         CABEQ     '1'           T@SKIP                   LR      Open error
      C                   ENDIF                                                  FI 1
- 
+
       ** Last call - close file and terminate program
       *
      C     P@OPTN        IFEQ      '*FREE  '                                    IF 2 Free
@@ -133,7 +136,7 @@
      C     *IN92         CABEQ     '1'           T@SKIP                   LR      Close error
      C                   SETON                                        LR          Set ind.
      C                   ENDIF                                                  FI 2
- 
+
       ** Caller requests first record
       *
      C     P@OPTN        IFEQ      '*FIRST '                                    IF 3 First rec
@@ -142,7 +145,7 @@
      C     *IN90         CABEQ     '1'           T@SKIP                   LR      File error
      C                   MOVE      '*NEXT  '     P@OPTN                           Force *Next
      C                   ENDIF                                                  FI 3
- 
+
       ** Caller requests next record
       *
      C     P@OPTN        IFEQ      '*NEXT  '                                    IF 4 Next rec
@@ -150,7 +153,7 @@
      C     *IN94         CABEQ     '1'           T@SKIP                           End of file
      C     *IN90         CABEQ     '1'           T@SKIP                   LR      File error
      C                   ENDIF                                                  FI 4
- 
+
       ** Caller requests last record
       *
      C     P@OPTN        IFEQ      '*LAST  '                                    IF 5 Last rec
@@ -158,7 +161,7 @@
      C     *IN90         CABEQ     '1'           T@SKIP                   LR      File error
      C                   MOVE      '*PREV  '     P@OPTN                           Force *Prev
      C                   ENDIF                                                  FI 5
- 
+
       ** Caller requests previous record
       *
      C     P@OPTN        IFEQ      '*PREV  '                                    IF 6 Prev rec
@@ -166,27 +169,27 @@
      C     *IN94         CABEQ     '1'           T@SKIP                           End of file
      C     *IN90         CABEQ     '1'           T@SKIP                   LR      File error
      C                   ENDIF                                                  FI 6
- 
+
       ** Caller requests record indicated by key
       *
      C     P@OPTN        IFEQ      '*KEY   '                                    IF 7 Keyed
      C     P@OPTN        OREQ      '*VERIFY'                                     OR
- 
+
      C                   IF        %Scan('?':W@SL01:1) <> 0                     IF 8 selection
      C                   CALL      'SD200102'                           98        <SELECT>
      C                   PARM      *BLANK        P@RTC2            7              B:Return code
      C                   PARM      *BLANK        P@NWRK                           B:Key
- 
+
      C     P@RTC2        COMP      *BLANK                             97          No selection
      C     *IN97         CABEQ     '1'           T@SKIP                           No selection
      C     *IN98         CABEQ     '1'           T@SKIP                           Program error
      C                   ENDIF                                                  FI 8
- 
+
      C     P@NWRK        CHAIN     SDNWRKD1                           9590        Get record
      C     *IN95         CABEQ     '1'           T@SKIP                           No rec found
      C     *IN90         CABEQ     '1'           T@SKIP                   LR      File error
      C                   ENDIF                                                  FI 7
- 
+
      C     P@OPTN        IFNE      '*KEY   '                                    IF 8 invalid
      C     P@OPTN        ANDNE     '*NEXT  '                                     parameter
      C     P@OPTN        ANDNE     '*PREV  '
@@ -194,7 +197,7 @@
      C     P@OPTN        ANDNE     '*FREE  '                                     AND
      C                   SETON                                          96        Parm error
      C                   ENDIF                                                  FI 8
- 
+
       ** No record found or End of file - return error code
       *
      C     T@SKIP        TAG                                                    +++ SKIP +++
@@ -209,7 +212,7 @@
      C   96              MOVE      '*OPTION'     P@RTCD                         Option error
      C   97              MOVE      '*NOSEL '     P@RTCD                         No selection
      C   98              MOVE      '*CALL  '     P@RTCD                         Called Pgm.err.
- 
+
       ** Caller requests message sent to program queue
       *
      C     W@RTCD        IFEQ      '*MSG   '                                    IF 9 SND MSG
@@ -223,7 +226,7 @@
      C   96              MOVE      'ACO1007'     P@MGID                           Option error
      C   97              MOVE      'ACO1009'     P@MGID                           No selection
      C   98              MOVE      'ACO1010'     P@MGID                           Call error
- 
+
      C                   CALLB     'ZASNMG'                                       <SND MSG>
      C                   PARM      *BLANK        W@RTCD            7              B:Return code
      C                   PARM      PSProcPgm     P@PGNM           10              I:Prog name
@@ -234,7 +237,7 @@
      C                   PARM                    P@MGDA           50              I:Msg data
      C                   PARM      '*DIAG'       P@MGTP            7              I:Msg type
      C                   ENDIF                                                  FI 9
- 
+
       ** Caller Requests DB Error Handling
       *
      C     W@RTCD        IFEQ      '*DBERR'                                     IF
@@ -242,13 +245,13 @@
      C                   DUMP
      C                   CALLB     'DBERRCTL'
      C                   END                                                    FI
- 
+
      C     P@OPTN        IFNE      '*VERIFY'
      C     P@OPTN        ANDNE     '*FREE'
      C     P@RTCD        ANDNE     '*OPTION'
      C                   MOVEL     D@FMT         P@FMT
      C                   END
- 
+
       ** Return to caller
       *
      C                   RETURN

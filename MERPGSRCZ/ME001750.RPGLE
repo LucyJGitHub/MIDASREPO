@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD034562           Date 02Jun15               *
+      *  Last Amend No. CMG008             Date 20Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD034562           Date 02Jun15               *
       *                 CSW215             Date 06Apr15               *
       *                 CSW213             Date 03Jun13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -35,6 +36,8 @@
       *                                                               *
       *-------------------------------------------------------------- *
       *                                                               *
+      *  CMG008 - MT940, MT941, MT942, MT950 Translation Table.       *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034562 - ACOUNTLINE and ACOUNTIBAN must be accepted for    *
       *             59F even if CSW215 is OFF                         *
@@ -62,93 +65,93 @@
      F                                     SFILE(RSFLRC4:SRRN)                                CSW207
      F                                     INFDS(INFDS#)
      F                                     INFSR(*PSSR)
- 
+
       ** Midas ME Outgoing Message Field Management retrieval index
- 
+
      FMEOUFML1  IF   E           K DISK
      F                                     INFSR(*PSSR)
- 
+
       ** Midas ME Outgoing Message Field Management update index
- 
+
      FMEOUFML0  UF A E           K DISK
      F                                     RENAME(@OUFMPD:@OUFMPDX0)
      F*                                    COMMIT
      F                                     INFSR(*PSSR)
- 
+
      FMEOUFML7  UF   E           K DISK                                                       CSW207
      F                                     RENAME(@OUFMPD:@OUFMPDX7)                          CSW207
      F                                     INFSR(*PSSR)                                       CSW207
                                                                                               CSW207
       ** Copyright notice for inclusion in all programs
- 
+
       ** Copyright array
- 
+
      D A@CPY           DS
      D  CPY@                   1     80
      D                                     DIM(1) CTDATA PERRCD(1)
- 
+
       ** Program data structure
- 
+
      D PGMDS         ESDS                  EXTNAME(Y2PGDSP)
- 
+
       ** Display file information data structure
- 
+
      D INFDS#        E DS                  EXTNAME(Y2I#DSP)
- 
+
       ** Local data area data structure
- 
+
      D WLDA          E DS                  EXTNAME(LDA)
- 
+
       ** Bank's data structure
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Long data structure
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
       ** SAR Details Accessed via access program
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D DSLDY         E DS                  EXTNAME(DSLDY)
- 
+
       ** Data structure for PF/MEISOCPD
- 
+
      D WDBRC         E DS                  EXTNAME(MEISOCL0)
- 
+
       ** Data structure for PF/SDMTPYPD
- 
+
      D SDMTPY        E DS                  EXTNAME(SDMTPYPD)
- 
+
       ** Data Structures for Network definition
- 
+
      D DSNWRK        E DS                  EXTNAME(SDNWRKPD)
- 
+
       ** Data Structures for Message Tag Definition
- 
+
      D DSMTAG        E DS                  EXTNAME(SDMTAGPD)
- 
+
       ** Country codes file format data structure
- 
+
      D SDCTRY        E DS                  EXTNAME(SDCTRYPD)
- 
+
       ** Currency file format data structure
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** Nostro location code file format data structure
- 
+
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
- 
+
       ** Branch details file format data structure
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
- 
+
       ** Data structure used by access program
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
      D ALPNUM          C                   CONST('ABCDEFGHIJKLMNOPQRST-
      D                                     UVWXYZ1234567890')
      D FKEY1           C                   CONST('A=Amend       D=Delete       -
@@ -160,7 +163,7 @@
      D                                     F12-Previous')                                     CSW207
      D FKEY4B          C                   CONST('F3=Exit       F10-Delete     -              CSW207
      D                                     F12-Previous')                                     CSW207
- 
+
      D W0RSF           S              1
      D WRRN            S              5  0
      D WCTR            S              5  0
@@ -274,53 +277,53 @@
      D OMCURR                 23     25A                                                      CSW207
      D OMNOST                 26     27A                                                      CSW207
      D OMACTI                 28     37A                                                      CSW207
- 
+
       ** Initialize
- 
+
      C                   EXSR      SRINIT
- 
+
      C                   DO        *HIVAL
- 
+
       ** Initialise & load subfile page
- 
+
      C                   EXSR      SRIZSF
      C                   EVAL      W0RSF = 'N'
- 
+
       ** Display screen until reload requested
- 
+
      C                   DOW       W0RSF = 'N'
- 
+
       ** Display screen
- 
+
      C                   EXSR      SRDSPS
- 
+
       ** Cancel & exit program
- 
+
      C   03              CAS                     SREXIT
- 
+
       ** Request subfile reload
- 
+
      C***   05              CAS                     SRRQRL                                  BUG14042
      C   05              CAS                     SRREFR                                     BUG14042
- 
+
       ** Exception report
- 
+
      C   11              CAS                     SRREPT
- 
+
       ** Display next SFL page
- 
+
      C   27              CAS                     SRLDSF
- 
+
       ** Process screen input
- 
+
      C                   CAS                     SRPROC
      C                   END
- 
+
      C                   ENDDO
      C                   ENDDO
- 
+
       ** Terminate program
- 
+
      C                   MOVE      '1'           *INLR
       *****************************************************************
       /EJECT
@@ -328,28 +331,28 @@
       ** SRIZSF - Initialise and load subfile page
       *================================================================
      C     SRIZSF        BEGSR
- 
+
       ** Clear subfile
- 
+
      C                   EVAL      *IN80 = *ON
      C                   WRITE     RSFLCTL
      C                   EVAL      *IN80 = *OFF
- 
+
       ** Reset no of records in subfile
- 
+
      C                   Z-ADD     *ZERO         WRRN                 81
      C                   IF        WMODE <> 'ADD'
      C     *LIKE         DEFINE    SEOMNWRK      WZOMNWRK
      C                   EVAL      WZOMNWRK = *BLANKS
      C                   EVAL      WZOMNWRK = SEOMNWRK
- 
+
       ** Position DBF file
- 
+
      C     KPOS          KLIST
      C                   KFLD                    OMNWRK
- 
+
       ** Setup key
- 
+
      C                   EVAL      OMNWRK = SEOMNWRK
      C     KPOS          SETLL     MEOUFML1
      C                   READ      MEOUFML1                             8782
@@ -357,31 +360,31 @@
      C                   EVAL      *IN82 = *OFF
      C                   ENDIF
      C                   EXSR      SRLDSF
- 
+
      C                   ENDSR
       /EJECT
       *================================================================
       ** SRLDSF - Load subfile page
       *================================================================
      C     SRLDSF        BEGSR
- 
+
      C                   EVAL      *IN84 = *OFF
- 
+
       ** Re-establish fields in read-ahead record
- 
+
      C                   IF        *IN27 = *ON AND WMODE <> 'ADD'
      C  N82              READP     MEOUFML1                               90
      C  N82              READ      MEOUFML1                               90
      C                   ENDIF
- 
+
       ** Start at previous highest record in SFL
- 
+
      C                   EVAL      SRRN = WRRN
      C                   EVAL      WCTR = 0
      C                   EVAL      WCTR2 = 0
- 
+
       ** Set required pages based on *Set Cursor or *Subfile Pages
- 
+
      C                   IF        W0RR0 > 0
      C     W0RR0         DIV       WSFPG         WSPG
      C                   MVR                     WSLIN             3 0
@@ -394,22 +397,22 @@
      C                   ELSE
      C                   EVAL      WSPG =  W0SPG
      C                   ENDIF
- 
+
       ** Compute lines required based on pages
- 
+
      C                   EVAL      WSFLN = (WSPG * WSFPG)
      C                   IF        WSFLN > 999
      C                   EVAL      WSFLN = 999
      C                   ENDIF
- 
+
       ** Load next SFL page until SFL page full, or
       ** Scan limit reached
- 
+
      C                   DOW       *IN82 = '0' AND WCTR < WSFLN AND
      C                             WCTR2 < W0SLM
- 
+
       ** Setof record error indicators
- 
+
      C                   MOVE      *ALL'0'       WKIND0            4
      C                   MOVEA     WKIND0        *IN(31)
      C                   EVAL      *IN36 = '0'
@@ -419,7 +422,7 @@
      C                   EVAL      *IN40 = '0'
      C                   EVAL      *IN50 = '0'
      C                   EVAL      *IN51 = '0'
- 
+
      C                   IF        PMMODE = 'E'
      C                   EVAL      *IN20 = '1'
      C                   EVAL      *IN40 = '1'
@@ -428,77 +431,77 @@
      C                   EVAL      *IN21 = '1'
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Filter field
- 
+
      C                   EVAL      WINCLUDE = 'Y'
      C                   SELECT
      C                   WHEN      SEOMMTPY <> *BLANKS
      C                   IF        SEOMMTPY <> OMMTPY
      C                   EVAL      WINCLUDE = 'N'
      C                   ENDIF
- 
+
      C                   WHEN      SEOMMTAG <> *BLANKS
      C                   IF        SEOMMTAG <> OMMTAG
      C                   EVAL      WINCLUDE = 'N'
      C                   ENDIF
- 
+
      C                   WHEN      SEOMSBRC <> *BLANKS
      C                   IF        SEOMSBRC <> OMSBRC
      C                   EVAL      WINCLUDE = 'N'
      C                   ENDIF
- 
+
      C                   WHEN      SEOMCTRY <> *BLANKS
      C                   IF        SEOMCTRY <> OMCTRY
      C                   EVAL      WINCLUDE = 'N'
      C                   ENDIF
- 
+
      C                   WHEN      SEOMCURR <> *BLANKS
      C                   IF        SEOMCURR <> OMCURR
      C                   EVAL      WINCLUDE = 'N'
      C                   ENDIF
- 
+
      C                   WHEN      SEOMNOST <> *BLANKS
      C                   IF        SEOMNOST <> OMNOST
      C                   EVAL      WINCLUDE = 'N'
      C                   ENDIF
- 
+
      C                   WHEN      SEOMACTI <> *BLANKS
      C                   IF        SEOMACTI <> OMACTI
      C                   EVAL      WINCLUDE = 'N'
      C                   ENDIF
- 
+
      C                   WHEN      SEOMFLAG <> *BLANKS
      C                   IF        SEOMFLAG <> OMFLAG
      C                   EVAL      WINCLUDE = 'N'
      C                   ENDIF
- 
+
      C                   ENDSL
- 
+
      C                   IF        WINCLUDE = 'Y'
- 
+
      C                   EXSR      SRISFF
- 
+
      C                   IF        WMODE <> 'ADD'
- 
+
       ** Load SFL fields
- 
+
      C                   EXSR      SRLSFF
      C                   EVAL      SDBRC = WDBRC
      C                   ENDIF
- 
+
       ** Output to subfile
- 
+
       ** if record is not duplicate                                                           CSW207
      C                   IF        WCOMP1 <> WCOMP2                                           CSW207
                                                                                               CSW207
      C                   EVAL      SRRN = SRRN + 1
      C                   ADD       1             WCTR                 81
- 
+
      C                   WRITE     RSFLRCD
- 
+
       ** Increment scan check count
- 
+
      C                   EVAL      WCTR2 = WCTR2 + 1
      C                   ENDIF
                                                                                               CSW207
@@ -517,13 +520,13 @@
      C                   READ      MEOUFML1                               82
      C                   ENDIF
      C                   ENDDO
- 
+
       ** Save highest SFL record load can continue at end point
- 
+
      C                   IF        SRRN > WRRN
- 
+
       ** Calculate top line
- 
+
      C     WCTR          DIV       WSFPG         WSPG
      C                   MVR                     WSLIN
      C                   IF        WSLIN > 0
@@ -534,43 +537,43 @@
      C                   EVAL      SSFRC = SSFRC + 1
      C                   EVAL      WRRN = SRRN
      C                   ENDIF
- 
+
       ** If scan limit reached, display error message
- 
+
      C                   IF        WCTR2 >= W0SLM
- 
+
       ** Send message 'Scan limit reached'
- 
+
      C                   EVAL      ZAMSID = 'ME00010'
      C                   EVAL      ZAMSGF = 'MEMSG'
      C                   EXSR      ZASNMS
      C                   ELSE
      C                   EVAL      WCTR = 0
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *================================================================
       ** SRDSPS - Display screen
       *================================================================
      C     SRDSPS        BEGSR
- 
+
      C                   IF        *IN03 <> *ON
      C                   IF        *IN82 = '1' AND WRRN = 0
- 
+
       ** Send message '*No data to display'
- 
+
      C                   EVAL      ZAMSID = 'ME00001'
      C                   EVAL      ZAMSGF = 'MEMSG'
      C                   EXSR      ZASNMS
      C                   ENDIF
- 
+
      C                   IF        WF12 = 'Y'
      C                   EVAL      ZAMSID = 'MIN0001'
      C                   EVAL      ZAMSGF = 'MEMSG'
      C                   EXSR      ZASNMS
      C                   ENDIF
- 
+
      C                   IF        WFEnquir = 'Y'                                             CSW207
      C                             AND WF12 <> 'Y'                                            CSW207
      C                   EXSR      SRCLR                                                      CSW207
@@ -589,19 +592,19 @@
      C                   ENDIF                                                                CSW207
                                                                                               CSW207
      C                   WRITE     RMSGCTL
- 
+
      C                   EVAL      SCTX1 = WTXTC1
      C                   EVAL      SCTX2 = WTXTC2
- 
+
      C                   WRITE     RCMDTXT1
      C                   WRITE     RCMDTXT2
- 
+
       ** Update screen time
- 
+
      C                   TIME                    STIME
- 
+
      C                   EXFMT     RSFLCTL
- 
+
      C                   EVAL      WFAmend = *Blanks                                          CSW207
      C                   EVAL      WFDelete= *Blanks                                          CSW207
      C                   EVAL      WFEnquir= *Blanks                                          CSW207
@@ -618,17 +621,17 @@
      C                             SEOMFLAG <> *BLANKS
      C                   EXSR      SRRQRL
      C                   ENDIF
- 
+
       ** Maintain subfile position where possible
- 
+
      C                   IF        @#SFRC > *ZERO
      C                   EVAL      SSFRC = @#SFRC
      C                   ENDIF
- 
+
      C                   EVAL      WERROR   = 'N'                                           BUG14042
      C                   EVAL      WF12     = 'N'                                           BUG14042
      C                   EXSR      SRCLR
- 
+
      C                   ENDIF
      C                   ENDSR
       /EJECT
@@ -636,41 +639,41 @@
       ** SRPROC - Process screen input
       *================================================================
      C     SRPROC        BEGSR
- 
+
      C                   IF        WMODE <> 'ADD' AND
      C                             *IN09 = *OFF   AND                                       BUG14042
      C                             WZOMNWRK <> SEOMNWRK
      C                   EXSR      SRRQRL
      C     W0RSF         CABEQ     'Y'           EXPROC
      C                   ENDIF
- 
+
      C                   EVAL      WERR = *BLANK
      C                   EVAL      WNULL = 'Y'
- 
+
      C                   IF        WRRN <> 0
- 
+
      C                   IF        WMODE = 'CHG' OR PMMODE = 'E'
      C                   EXSR      SRPRS1
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        WERR = *BLANK AND
      C                             *IN09 = '1'
- 
+
      C                   EVAL      *IN30 = *OFF
      C                   EVAL      SACTCD = 'I'
- 
+
      C                   EXSR      SRCLR
      C                   WRITE     RMSGCTL
- 
+
      C                   EVAL      PMSGID = 'USR5203'
      C                   CALL      'SDRTVTXT'
      C     PMSGID        PARM      PMSGID        KE0286
      C     PMSGF         PARM      PMSGF         KE0287
      C     PMSGT         PARM      PMSGT         KE0288
      C                   MOVEL     PMSGT         SURPT
- 
+
      C                   EVAL      *IN31 = *OFF
      C                   EVAL      *IN32 = *OFF
      C                   EVAL      *IN33 = *OFF
@@ -680,7 +683,7 @@
      C                   EVAL      *IN41 = *OFF
      C                   EVAL      *IN42 = *OFF
      C                   EVAL      *IN43 = *OFF
- 
+
      C                   EVAL      SOMNWRK = *BLANKS
      C                   EVAL      SOMMTPY = *BLANKS
      C                   EVAL      SOMMTAG = *BLANKS
@@ -691,19 +694,19 @@
      C                   EVAL      SOMACTI = *BLANKS
      C                   EVAL      SOMFLAG = *BLANKS
      C                   EVAL      SOMDESC = *BLANKS
- 
+
      C                   EVAL      WF12 = 'Y'
- 
+
      C                   DOW       WF12 = 'Y' OR WERROR = 'Y'
- 
+
      C                   EVAL      WF12 = 'N'
      C                   EVAL      WERROR = 'N'
      C                   EXFMT     RMNTRCD
- 
+
      C                   IF        *IN03 = *ON
      C                   LEAVESR
      C                   ENDIF
- 
+
      C                   IF        *IN12 = *ON
      C                   EVAL      WF12 = 'Y'
      C                   EXSR      SRCLR
@@ -716,41 +719,41 @@
      C                   EXSR      SRRQRL
      C                   LEAVESR
      C                   ENDIF
- 
+
      C                   EVAL      WERROR = 'N'
      C                   EXSR      SRCLR
- 
+
       ** Validate maintenance screen1
- 
+
      C                   EXSR      SRVREC
      C                   IF        WERROR = 'Y'
      C                   WRITE     RMSGCTL
      C                   ENDIF
- 
+
      C                   IF        WERROR <> 'Y'
      C                   EXSR      SRCLR
      C                   EVAL      WERROR = 'Y'
      C                   DOW       WERROR = 'Y' AND WF12 <> 'Y'
      C                   WRITE     RMSGCTL
      C                   EXFMT     RMN2RCD
- 
+
      C                   IF        *IN03 = *ON
      C                   LEAVESR
      C                   ENDIF
- 
+
      C                   IF        *IN12 = *ON
      C                   EVAL      WF12 = 'Y'
      C                   ELSE
      C                   EVAL      WF12 = 'N'
      C                   ENDIF
- 
+
       ** Validate maintenance screen2
- 
+
      C                   EXSR      SRVREC2
      C                   IF        WERROR <> 'Y'
      C                   EXSR      SRCLR
      C                   ENDIF
- 
+
      C                   ENDDO
      C                   ENDIF
                                                                                               CSW207
@@ -861,36 +864,36 @@
                                                                                               CSW207
      C                   ENDDO                                                                CSW207
      C                   ENDIF                                                                CSW207
- 
+
      C                   ENDDO
- 
+
      C                   IF        SOMACTI <> '*FORMAT'                                       CSW207
      C                             OR CSW207 <> 'Y'                                           CSW207
      C                   EXSR      SRADD
      C                   ENDIF                                                                CSW207
- 
+
      C                   EXSR      SRRQRL
- 
+
      C                   EVAL      PMSGID = 'USR5201'
      C                   CALL      'SDRTVTXT'
      C     PMSGID        PARM      PMSGID        KE0286
      C     PMSGF         PARM      PMSGF         KE0287
      C     PMSGT         PARM      PMSGT         KE0288
      C                   MOVEL     PMSGT         SURPT
- 
+
      C                   EVAL      WF12 = 'N'
- 
+
      C                   ENDIF
- 
+
      C     EXPROC        ENDSR
       /EJECT
       *================================================================
       ** SRPRS1 - Validate input
       *================================================================
      C     SRPRS1        BEGSR
- 
+
      C                   READC     RSFLRCD                                92
- 
+
       ** Check if Subfile needs Reload                                                      BUG14042
      C                   IF        *IN92 = *ON  And                                         BUG14042
      C                             SEOMNWRK = *BLANKS  And                                  BUG14042
@@ -908,11 +911,11 @@
      C                   ENDIF                                                              BUG14042
                                                                                             BUG14042
       ** Process subfile record
- 
+
      C                   DOW       *IN92 = '0'
- 
+
       ** Setof record error indicators
- 
+
      C                   MOVEL     *ALL'0'       WKIND0
      C                   MOVEA     WKIND0        *IN(31)
      C                   EVAL      *IN36 = '0'
@@ -934,7 +937,7 @@
      C                   EXSR      ZASNMS
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        WERR <> 'Y' AND SCSEL = 'A' OR
      C                             WERR <> 'Y' AND SCSEL = 'E' OR
      C                             WERR <> 'Y' AND SCSEL = 'D'
@@ -949,21 +952,21 @@
      C                   EVAL      SOMCURR = OMCURR
      C                   EVAL      SOMNOST = OMNOST
      C                   EVAL      SOMACTI = OMACTI
- 
+
      C                   EVAL      SOMFLAG = OMFLAG
      C                   EVAL      SOMDESC = OMDESC
      C                   EVAL      SOMAUSR = OMAUSR
      C                   EVAL      SOMARDT = OMARDT
      C                   EVAL      SOMATIM = OMATIM
      C                   EXSR      SRVREC3                                                  BUG14042
- 
+
      C                   EVAL      *IN30 = *OFF
      C                   EVAL      *IN44 = *OFF                                             BUG14042
      C                   IF        SCSEL = 'E' OR SCSEL = 'D'
      C                   EVAL      *IN30 = *ON
      C                   EVAL      *IN34 = *ON
      C                   ENDIF
- 
+
      C                   SELECT
      C                   WHEN      SCSEL = 'A'
      C                   EVAL      PMSGID = 'USR5204'
@@ -973,13 +976,13 @@
      C                   WHEN      SCSEL = 'E'
      C                   EVAL      PMSGID = 'USR5206'
      C                   ENDSL
- 
+
      C                   CALL      'SDRTVTXT'                           90
      C     PMSGID        PARM      PMSGID        KE0286
      C     PMSGF         PARM      PMSGF         KE0287
      C     PMSGT         PARM      PMSGT         KE0288
      C                   MOVEL     PMSGT         SURPT
- 
+
      C                   EVAL      *IN31 = *OFF
      C                   EVAL      *IN32 = *OFF
      C                   EVAL      *IN33 = *OFF
@@ -989,12 +992,12 @@
      C                   EVAL      *IN41 = *OFF
      C                   EVAL      *IN42 = *OFF
      C                   EVAL      *IN43 = *OFF
- 
+
      C                   EVAL      WF12 = 'Y'
      C                   EVAL      UPDATEC = 'N'                                              CSW207
- 
+
      C                   DOW       WF12 = 'Y' OR WERROR = 'Y'
- 
+
      C                   EVAL      WF12 = 'N'
      C                   EVAL      WERROR = 'N'
      C**********         EXFMT     RMNTRCD                                                  BUG14042
@@ -1100,11 +1103,11 @@
      C                   EXFMT     RMN2RCD                                                  BUG14042
      C                   ENDIF                                                                CSW207
                                                                                               CSW207
- 
+
      C                   IF        *IN03 = *ON
      C                   LEAVESR
      C                   ENDIF
- 
+
      C                   IF        *IN12 = *ON
      C                   EVAL      WF12 = 'Y'
      C                   EXSR      SRCLR
@@ -1121,9 +1124,9 @@
      C                   EXSR      SRRQRL
      C                   LEAVESR
      C                   ENDIF
- 
+
       ** Validate maintenance screen1
- 
+
      C                   IF        SCSEL = 'A'
      C                   EVAL      WERROR = 'N'
      C                   EXSR      SRCLR
@@ -1134,18 +1137,18 @@
      C                   EXSR      SRVREC2                                                  BUG14042
      C                   ENDIF
      C                   ENDIF
- 
+
      C**********         IF        WERROR <> 'Y'                                            BUG14042
      C**********         EXSR      SRCLR                                                    BUG14042
      C**********         EVAL      WERROR = 'Y'                                             BUG14042
      C**********         DOW       WERROR = 'Y' AND WF12 <> 'Y'                             BUG14042
      C**********         WRITE     RMSGCTL                                                  BUG14042
      C**********         EXFMT     RMN2RCD                                                  BUG14042
- 
+
      C**********         IF        *IN03 = *ON                                              BUG14042
      C**********         LEAVESR                                                            BUG14042
      C**********         ENDIF                                                              BUG14042
- 
+
      C**********         IF        *IN12 = *ON                                              BUG14042
      C**********         EVAL      WF12 = 'Y'                                               BUG14042
      C**********         ELSE                                                               BUG14042
@@ -1160,7 +1163,7 @@
      C**********         ENDIF                                                              BUG14042
      C**********         ENDDO                                                              BUG14042
      C**********         ENDIF                                                              BUG14042
- 
+
      C                   ENDDO
      C                   IF        WFAmend = *Blanks                                          CSW207
      C                   EXSR      SRAMD
@@ -1168,19 +1171,19 @@
      C                   EVAL      WF12 = 'N'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        SCSEL = 'D'
      C                             And *IN10 = *ON                                          BUG14042
      C                   EXSR      SRDEL
      C                   ENDIF
- 
+
      C                   UPDATE    RSFLRCD
      C                   READC     RSFLRCD                                92
- 
+
      C                   EXSR      SRRQRL
- 
+
      C                   ENDDO
- 
+
      C                   IF        PMMODE = 'M' AND SCSEL = 'E' OR
      C                             PMMODE = 'M' AND SCSEL = 'D'
      C                             OR PMMODE = 'M' AND SCSEL = 'A'                            CSW207
@@ -1191,14 +1194,14 @@
      C     PMSGT         PARM      PMSGT         KE0288
      C                   MOVEL     PMSGT         SURPT
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *================================================================
       ** SRVREC - Validate details screen1 fields
       *================================================================
      C     SRVREC        BEGSR
- 
+
      C                   EVAL      *IN31 = *OFF
      C                   EVAL      *IN32 = *OFF
      C                   EVAL      *IN33 = *OFF
@@ -1208,15 +1211,15 @@
      C                   EVAL      *IN41 = *OFF
      C                   EVAL      *IN42 = *OFF
      C                   EVAL      *IN43 = *OFF
- 
+
      C                   EVAL      WERROR = 'N'
- 
+
      C                   CALL      'AONWRKR0'
      C                   PARM      *BLANKS       PRTCD             7
      C                   PARM      '*KEY   '     POPTN             7
      C                   PARM      SOMNWRK       PNWRK             6
      C                   PARM      *BLANKS       DSFDY
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      DSNWRK = DSFDY
      C                   EVAL      SDOMNWRK = EDNETD
@@ -1229,7 +1232,7 @@
      C                   EVAL      *IN31 = *ON
      C                   LEAVESR
      C                   END
- 
+
      C                   CALL      'AOMTPYR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY    '    POPTN
@@ -1256,7 +1259,7 @@
      C                   EVAL      *IN44 = *ON                                              BUG14042
      C                   EVAL      PRTCD = '*NRF'                                           BUG14042
      C                   ENDIF                                                              BUG14042
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      SDOMMTPY = EEMTPD
      C                   ELSE
@@ -1278,14 +1281,14 @@
      C                   EVAL      *IN32 = *ON
      C                   LEAVESR
      C                   ENDIF
- 
+
      C                   CALL      'AOMTAGR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C                   PARM      SOMMTAG       PMTAG             5
      C                   PARM      SOMMTPY       PMTPY             3
      C                   PARM      *BLANKS       DSFDY
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      DSMTAG = DSFDY
      C                   EVAL      SDOMMTAG = EFSCFD
@@ -1298,7 +1301,7 @@
      C                   EVAL      *IN33 = *ON
      C                   LEAVESR
      C                   END
- 
+
      C                   IF        SOMSBRC <> *BLANKS And                                   BUG14042
      C                             SOMSBRC <> '*FTF'  And                                   BUG14042
      C                             SOMSBRC <> '*NFT'                                        BUG14042
@@ -1308,7 +1311,7 @@
      C                   PARM      SOMSBRC       PBRCA             3
      C     SDBRCH        PARM      SDBRCH        DSLDY
      C                   ENDIF                                                              BUG14042
- 
+
      C                   MOVEL     SOMSBRC       WVAL2                                      BUG14042
      C                   IF        PRTCD = *BLANKS
      C                   IF        SOMSBRC  = *BLANKS  OR                                   BUG14042
@@ -1331,7 +1334,7 @@
      C                   EVAL      *IN36 = *ON
      C                   LEAVESR
      C                   ENDIF
- 
+
      C                   IF        SOMCTRY <> *BLANKS And                                   BUG14042
      C                             SOMCTRY <> '*FTF'  And                                   BUG14042
      C                             SOMCTRY <> '*NFT'                                        BUG14042
@@ -1341,7 +1344,7 @@
      C                   PARM      SOMCTRY       WOMCTRY
      C     SDCTRY        PARM      SDCTRY        DSSDY
      C                   ENDIF                                                              BUG14042
- 
+
      C                   MOVEL     SOMCTRY       WVAL2                                      BUG14042
      C                   IF        PRTCD = *BLANKS
      C                   IF        SOMCTRY  = *BLANKS  OR                                   BUG14042
@@ -1363,7 +1366,7 @@
      C                   EVAL      *IN38 = *ON
      C                   LEAVESR
      C                   ENDIF
- 
+
      C**********         IF        SOMNOST <> *BLANKS OR SOMCURR <> *BLANKS                 BUG14042
      C                   IF        SOMCURR <> *BLANKS                                         250600
                                                                                             BUG17503
@@ -1380,7 +1383,7 @@
      C                   PARM      '*KEY   '     POPTN
      C                   PARM      SOMCURR       WSOMCURR
      C     SDCURR        PARM      *BLANKS       DSSDY
- 
+
      C                   IF        PRTCD = *BLANKS
      C**********                   Or SOMCURR = *BLANKS                              BUG14042 250600
      C                   EVAL      SDOMCURR = A6CYNM
@@ -1409,7 +1412,7 @@
      C                   EVAL      WERROR = 'Y'                                             BUG17503
      C                   EVAL      *IN41 = *ON                                              BUG17503
      C                   ELSE                                                               BUG17503
- 
+
      C                   IF        SOMNOST <> *BLANKS AND SOMCURR =  *BLANKS                  250600
      C                   EVAL      ZAMSID = 'ME00149'                                         250600
      C                   EVAL      ZAMSGF = 'MEMSG'                                           250600
@@ -1430,7 +1433,7 @@
      C                   PARM      *BLANKS       @CSSN            10
      C                   PARM      *BLANKS       @PNOI             1
      C     SDNOST        PARM      *BLANKS       DSFDY
- 
+
      C                   IF        PRTCD = *BLANKS
      C                             Or SOMNOST = *BLANKS                                     BUG14042
      C                   IF        @NONB = *BLANKS                                          BUG14042
@@ -1450,9 +1453,9 @@
      C                   ENDIF
      C                   ENDIF                                                                250600
      C                   ENDIF                                                              BUG17503
- 
+
       ** Action
- 
+
      C                   IF        CSW215 = 'Y'                                               CSW215
      C                   Z-ADD     1104003       Y2LSNO                                       CSW215
      C                   ELSE                                                                 CSW215
@@ -1468,7 +1471,7 @@
      C                   PARM                    Y2LSNO            7 0                        CSW215
      C     SOMACTI       PARM                    SELECTION        20
      C                   ENDIF
- 
+
      C                   IF        CSW207 <> 'Y'                                            BUG15140
      C                             AND SOMACTI =  '*FORMAT'                                 BUG15140
      C                   EVAL      ZAMSID = 'MEM0010'                                       BUG15140
@@ -1479,7 +1482,7 @@
      C                   LEAVESR                                                            BUG15140
      C                   ENDIF                                                              BUG15140
                                                                                             BUG15140
- 
+
      C                   IF        SOMACTI <> 'ACOUNTLINE' AND
      C                             SOMACTI <> 'ACOUNTIBAN'
      C                             AND SOMACTI <> '*FORMAT'                                   CSW207
@@ -1517,7 +1520,7 @@
      C                   LEAVESR                                                              CSW208
      C                   ENDIF                                                                CSW215
      C                   ENDIF                                                                CSW208
- 
+
      C     KMEOU         CHAIN     MEOUFML0                                                   CSW207
      C                   IF        %FOUND(MEOUFML0)                                           CSW207
      C                   EVAL      ZAMSID = 'ME00007'                                         CSW207
@@ -1541,16 +1544,16 @@
       ** SRVREC2 - Validate details screen2 fields
       *================================================================
      C     SRVREC2       BEGSR
- 
+
      C                   EVAL      WERROR = 'N'
- 
+
      C                   IF        SOMFLAG = '?'
      C                   CALL      'Y2VLLSR'
      C                   PARM                    PRTCD
      C                   PARM      1104002       Y2LSNO            7 0
      C     SOMFLAG       PARM                    SELECTION        20
      C                   ENDIF
- 
+
      C                   IF        SOMFLAG <> 'M' AND
      C                             SOMFLAG <> 'O' AND
      C                             SOMFLAG <> 'P' AND
@@ -1569,7 +1572,7 @@
      C                   LEAVESR
      C                   ENDIF
      C                   ENDIF
- 
+
      C     EXVREC2       ENDSR
       /EJECT
       *================================================================                     BUG13798
@@ -1799,7 +1802,7 @@
       ** SRADD - Add record
       *================================================================
      C     SRADD         BEGSR
- 
+
      C*****KMEOU         CHAIN     MEOUFML0                                                   CSW207
      C**********         IF        %FOUND(MEOUFML0)                                           CSW207
      C**********         EVAL      ZAMSID = 'ME00007'                                         CSW207
@@ -1808,7 +1811,7 @@
      C**********         EVAL      WERROR = 'Y'                                               CSW207
       **********                                                                              CSW207
      C**********         ELSE                                                                 CSW207
- 
+
      C                   EVAL      OMNWRK = SOMNWRK
      C                   EVAL      OMMTPY = SOMMTPY
      C                   EVAL      OMMTAG = SOMMTAG
@@ -1825,7 +1828,7 @@
      C                   EVAL      OMARDT = BJMRDT
      C                   EVAL      OMAACT = 'I'
      C                   EVAL      OMRDNB = BJRDNB
- 
+
      C                   IF        SOMACTI = '*FORMAT'                                        CSW207
      C                   EVAL      W50FS  = W50FS + 1                                         CSW207
      C                   EVALR     OM50FS = %CHAR(W50FS)                                      CSW207
@@ -1838,9 +1841,9 @@
      C                   ENDIF                                                                CSW207
                                                                                               CSW207
      C                   WRITE     @OUFMPDX0                            91
- 
+
       ** Display error msg if file update not successful
- 
+
      C                   IF        *IN91 = '1'
      C                   EVAL      ZAMSID = 'ME00011'
      C                   EVAL      ZAMSGF = 'MEMSG'
@@ -1852,14 +1855,14 @@
      C                   EXSR      ZASNMS
      C                   ENDIF
      C**********         ENDIF                                                                CSW207
- 
+
      C                   ENDSR
       /EJECT
       *================================================================
       ** SRDEL - Delete record
       *================================================================
      C     SRDEL         BEGSR
- 
+
      C     KMEOU         CHAIN     MEOUFML0                           60
      C                   IF        *IN60 = *ON
      C                   EVAL      ZAMSID = 'ME00008'
@@ -1868,7 +1871,7 @@
      C                   EVAL      WERROR = 'Y'
      C                   LEAVESR
      C                   ENDIF
- 
+
      C                   IF        WDBRC <> SDBRC
      C                   EVAL      ZAMSID = 'ME00009'
      C                   EVAL      ZAMSGF = 'MEMSG'
@@ -1878,12 +1881,12 @@
      C                   EVAL      SDBRC = WDBRC
      C                   LEAVESR
      C                   ENDIF
- 
+
      C                   DOW       NOT %EOF(MEOUFML0)                                         CSW207
      C                   DELETE    @OUFMPDX0                            91
- 
+
       ** Display error msg if file update not successful
- 
+
      C     *IN91         IFEQ      '1'
      C                   EVAL      ZAMSID = 'ME00011'
      C                   EVAL      ZAMSGF = 'MEMSG'
@@ -1895,14 +1898,14 @@
                                                                                               CSW207
      C     KMEOU         READE     MEOUFML0                                                   CSW207
      C                   ENDDO                                                                CSW207
- 
+
      C     EXDEL         ENDSR
       /EJECT
       *================================================================
       ** SRAMD - Amend record
       *================================================================
      C     SRAMD         BEGSR
- 
+
      C                   IF        WFAmend = *Blanks                                          CSW207
      C     KMEOU         CHAIN     MEOUFML0                           60
      C                   ELSE                                                                 CSW207
@@ -1920,7 +1923,7 @@
      C                   EXSR      ZASNMS
      C                   EVAL      WERROR = 'Y'
      C                   ELSE
- 
+
      C                   IF        WDBRC <> SDBRC
      C                   EVAL      ZAMSID = 'ME00009'
      C                   EVAL      ZAMSGF = 'MEMSG'
@@ -1929,7 +1932,7 @@
      C                   EXSR      SRLSFF
      C                   EVAL      SDBRC = WDBRC
      C                   ELSE
- 
+
      C                   DOW       *IN60 = *OFF                                               CSW207
      C                   EVAL      OMNWRK = SOMNWRK
      C                   EVAL      OMMTPY = SOMMTPY
@@ -1946,7 +1949,7 @@
      C                   EVAL      OMATIM = STIME
      C                   MOVE      BJMRDT        OMRDNB
      C                   EVAL      OMAACT = 'A'
- 
+
      C                   IF        SOMACTI = '*FORMAT'                                        CSW207
      C                             AND WFAmend = 'Y'                                          CSW207
      C                   EVAL      OM50F1 = SO50F1                                            CSW207
@@ -1959,9 +1962,9 @@
      C                   ELSE                                                                 CSW207
      C                   UPDATE    @OUFMPDX0                            91
      C                   ENDIF                                                                CSW207
- 
+
       ** Display error msg if file update not successful
- 
+
      C                   IF        *IN91 = *ON
      C                   EVAL      ZAMSID = 'ME00011'
      C                   EVAL      ZAMSGF = 'MEMSG'
@@ -1981,18 +1984,18 @@
                                                                                               CSW207
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *================================================================
       ** ZASNMS - Send message to program's message queue
       *================================================================
      C     ZASNMS        BEGSR
- 
+
      C                   IF        ZAPGMQ = *BLANKS
      C                   EVAL      ZAPGMQ = ##PGM
      C                   ENDIF
- 
+
      C                   CALL      'Y2SNMGC'
      C                   PARM                    ZAPGMQ           10
      C                   PARM                    ZAPGRL            5
@@ -2050,7 +2053,7 @@
       ** SRLSFF - Move MEOUFML1 fields to subfile
       *================================================================
      C     SRLSFF        BEGSR
- 
+
      C                   EVAL      SOMNWRK = OMNWRK
      C                   EVAL      SOMMTPY = OMMTPY
      C                   EVAL      SOMMTAG = OMMTAG
@@ -2060,14 +2063,14 @@
      C                   EVAL      SOMNOST = OMNOST
      C                   EVAL      SOMACTI = OMACTI
      C                   EVAL      SOMFLAG = OMFLAG
- 
+
      C                   ENDSR
       /EJECT
       *================================================================
       ** SRISFF - Initialise subfile fields
       *================================================================
      C     SRISFF        BEGSR
- 
+
      C                   EVAL      SDBRC = *BLANKS
      C                   EVAL      SCSEL = *BLANKS
      C                   EVAL      SACJN = *BLANKS
@@ -2084,45 +2087,45 @@
      C                   EVAL      SOMNOST = *BLANKS
      C                   EVAL      SOMACTI = *BLANKS
      C                   EVAL      SOMFLAG = *BLANKS
- 
+
      C                   ENDSR
       /EJECT
       *================================================================
       ** SRINIT - Initialisation
       *================================================================
      C     SRINIT        BEGSR
- 
+
      C                   MOVEA     CPY@          CPY2@            80
- 
+
       ** Entry parameters
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    P0RTN
      C                   PARM                    PMMODE
- 
+
       ** Update LDA with initial values for DB error fields
- 
+
      C     *DTAARA       DEFINE    LDA           WLDA
      C     *LOCK         IN        WLDA
      C                   EVAL      DBFILE = *BLANKS
      C                   EVAL      DBKEY = *BLANKS
      C                   EVAL      DBPGM = 'ME001750'
      C                   OUT       WLDA
- 
+
       ** Update Screen Time
- 
+
      C                   TIME                    STIME             6 0
- 
+
       ** Get Bank's Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*FIRST  '    POPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       *  If return with an error (LR seton in called program) then
       *  process for database error.
- 
+
      C                   IF        PRTCD <> *BLANK
      C     *LOCK         IN        WLDA
      C                   EVAL      DBKEY = '*FIRST'
@@ -2131,31 +2134,31 @@
      C                   OUT       WLDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Get Midas Rundate
- 
+
      C                   MOVE      BJMRDT        SMRDT
- 
+
      C                   Z-ADD     12            WSFPG
      C                   Z-ADD     1             SSFRC
- 
+
       ** Maximum record number
- 
+
      C                   Z-ADD     *ZERO         WRRN
- 
+
       ** Scan limit
- 
+
      C                   Z-ADD     500           W0SLM
- 
+
       ** Subfile pages
- 
+
      C                   Z-ADD     1             W0SPG
      C                   Z-ADD     0             W0RR0
      C                   EXSR      SRCLR
      C                   Z-ADD     12            WSFLN
- 
+
       ** Setup Command line
- 
+
      C                   EVAL      WTXTC1 = *BLANKS
      C                   EVAL      WTXTC2 = *BLANKS
      C                   IF        PMMODE = 'M'
@@ -2164,11 +2167,11 @@
      C                   ELSE
      C                   EVAL      WTXTC2 = FKEY3
      C                   ENDIF
- 
+
      C     PMMODE        IFEQ      'E'
- 
+
       ** Setup title
- 
+
      C                   EVAL      PMSGID = 'USR5202'
      C                   EVAL      PMSGF = 'SDUSRMSG'
      C                   EVAL      PMSGT = *BLANKS
@@ -2177,25 +2180,25 @@
      C     PMSGF         PARM      PMSGF         WQ0287
      C     PMSGT         PARM      PMSGT         WQ0288
      C                   EVAL      SURPT = PMSGT
- 
+
      C                   ELSE
- 
+
      C                   EVAL      PMSGF = 'SDUSRMSG'
      C                   EVAL      PMSGT = *BLANKS
- 
+
      C                   EVAL      PMSGID = 'USR5201'
      C                   CALL      'SDRTVTXT'                           90
      C     PMSGID        PARM      PMSGID        WQ0286
      C     PMSGF         PARM      PMSGF         WQ0287
      C     PMSGT         PARM      PMSGT         WQ0288
      C                   EVAL      SURPT = PMSGT
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      W0SLM = 99999
      C                   EVAL      WMODE = *BLANKS
      C                   EVAL      WMODE = 'CHG'
- 
+
      C     KMEOU         KLIST
      C                   KFLD                    SOMNWRK
      C                   KFLD                    SOMMTPY
@@ -2247,14 +2250,14 @@
      C                   IF        PRtCde = 'CSW2015'                                         CSW215
      C                   EVAL      CSW215 = 'Y'                                               CSW215
      C                   ENDIF                                                                CSW215
- 
+
      C                   ENDSR
       /EJECT
       *================================================================
       ** SRREPT - Call FC0040X RCF Submit - Standard functions  *
       *================================================================
      C     SRREPT        BEGSR
- 
+
      C                   CALL      'FC0040X'
      C                   PARM      *BLANKS       WRTNCD                         Return code
      C**********         PARM      'ME001752'    WREPNM                         Report name BUG14042
@@ -2266,16 +2269,16 @@
      C                   PARM      'Y'           WMULTB                         Multi-branching
      C                   PARM      'S'           WLEVEL                         Level
      C                   PARM      *BLANKS       WENTITY                        Entity
- 
+
      C                   ENDSR
       /EJECT
       *================================================================
       ** PSSR - Standard db error processing
       *================================================================
      C     *PSSR         BEGSR
- 
+
      C/COPY SDCPYSRC,SDPSSRINTI
- 
+
       *================================================================
      C                   ENDSR
       /EJECT                                                                                  CSW207

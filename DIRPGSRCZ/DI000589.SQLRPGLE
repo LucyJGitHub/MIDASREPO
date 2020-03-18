@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD029739 *RENAMED* Date 15Aug14               *
+      *  Last Amend No. CMG008             Date 20Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD029739 *RENAMED* Date 15Aug14               *
       *                 MD029683           Date 19Aug14               *
       *                 MD027367           Date 04Jun14               *
       *                 MD025966           Date 02Apr14               *
@@ -27,6 +28,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CMG008 - MT940, MT941, MT942, MT950 Translation Table.       *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD029739 - File renaming for integration layer.              *
       *  MD029683 - Nostro Accounts Reconciliation Monitor            *

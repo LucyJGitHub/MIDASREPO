@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL178             Date 04Aug16               *
+      *  Last Amend No. CMG008             Date 20Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL178             Date 04Aug16               *
       *                 CER059             Date 19Jul10               *
       *                 BUG26741           Date 11Nov09               *
       *                 BUG25800           Date 02Sep09               *
@@ -31,6 +32,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CMG008 - MT940, MT941, MT942, MT950 Translation Table.       *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL178 - Generate MT942 based on MT950.                      *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -43,15 +46,15 @@
       *  CGL013 - MT94x Messages Generation                           *
       *                                                               *
       *****************************************************************
- 
+
      FGLNW94L0  UF   E           K DISK    INFSR(*PSSR) COMMIT
       ** Midas GL Network Accounts - MT94x
       *
- 
+
      FSD200124DFCF   E             WORKSTN
       ** Midas SD Networks Details 4 Screen Display
       *
- 
+
       *========================================================================*
       *                                                                        *
       * Use of Indicators                                                      *
@@ -112,12 +115,12 @@
       * 99 - Multi-purpose                                                     *
       *                                                                        *
       *========================================================================*
- 
+
       *========================================================================*
       ** Automatically included D-specs
       ** ==============================
       *
- 
+
       ** The following /COPY line includes the LDA layout,
       ** the copyright array definition,
       ** and the following named constants:
@@ -129,40 +132,40 @@
       **    RunBefore  1A (for the PSSR)
       *
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
       *
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Manually included D-specs
       ** =========================
       *
- 
+
       ** Named constants
       ** ---------------
       *
- 
+
       ** Arrays and Data Structures
       ** --------------------------
       *
- 
+
       ** Data to be passed to the window controller
       *
       /COPY QWINDSRC,SD200124DT
- 
+
      D NewFilRcd     E DS                  EXTNAME(SDNWRKPD)
       ** New Network File Record (i.e. new state after amendments)
       *
- 
+
      D ScrLayout     E DS                  EXTNAME(SD200124DF:SD200124F4)
       ** Details 4 Screen Layout
       *
- 
+
      D RUNDAT        E DS                  EXTNAME(RUNDAT) DTAARA(RUNDAT)
       ** Rundat DS
       *
- 
+
       ** External DS for SAR Details                                                        BUG25800
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                BUG25800
                                                                                             BUG25800
@@ -177,16 +180,16 @@
      D PSard           S              6A                                                    BUG25800
      D CER030          S              1A                                                    BUG25800
      D CGL178          S              1A                                                      CGL178
- 
+
       ** Error Indicators Array
       *
      D IN40_TO_70      S              1    DIM(31)
- 
+
       *------------------------------------------------------------------------*
       ** C Spec. Declaratives
       ** ====================
       *
- 
+
       ** Entry Parameters
       *
      C     *ENTRY        PLIST
@@ -197,17 +200,17 @@
      C                   PARM      *INKJ         KJOut             1
      C     *INKL         PARM      *INKL         KLOut             1
      C                   PARM                    NewFilRcd
- 
+
       *========================================================================*
       *              M  A  I  N     P  R  O  C  E  S  S  I  N  G               *
       *========================================================================*
- 
+
       ** Init processing uses the standard *INZSR subroutine
- 
+
       ** Main loop until F3 or F10 or F12 or no error
       *  ============================================
  B1  C                   DOU       *INKC OR *INKJ OR *INKL OR NOT *IN40
- 
+
       ** If CGL178 is on and MT940 is not to be generated but MT942 is to be generated        CGL178
       ** then set on 57 to display '... from last MT950'                                      CGL178
      C                   If        CGL178 = 'Y'                                               CGL178
@@ -222,13 +225,13 @@
      C                   WRITE     #MSGCTL
      C                   WRITE     SD200124F0
      C                   EXFMT     SD200124F4
- 
+
       ** -- Clear the program message queue and the error indicators
       *     --------------------------------------------------------
      C                   EXSR      $ClrErrSF
      C                   MOVEA     *Zeros        IN40_TO_70
      C                   MOVEA     IN40_TO_70    *IN(40)
- 
+
       ** -- Action keys management
       *     ----------------------
       ** ---- F3 ==> Exit program
@@ -237,7 +240,7 @@
      C                   MOVEL(P)  '*EXIT'       RetCodeOut
      C                   ITER
  E2  C                   ENDIF
- 
+
       ** ---- F5 ==> Refresh the screen
       *
  B2  C                   IF        *INKE
@@ -245,31 +248,31 @@
      C                   EVAL      *IN40 = *On
      C                   ITER
  E2  C                   ENDIF
- 
+
       ** ---- F10 ==> Confirm deletion of the record
       *
  B2  C                   IF        *INKJ
      C                   MOVEL(P)  '*DLTCONF'    RetCodeOut
      C                   ITER
  E2  C                   ENDIF
- 
+
       ** ---- F12 ==> Return to the previous screen
       *
  B2  C                   IF        *INKL
      C                   MOVEL(P)  '*PRV'        RetCodeOut
      C                   ITER
  E2  C                   ENDIF
- 
+
       ** -- Validate the screen
       *     -------------------
       ** ---- Fields defaulting (if Insert or Amend)
       *
      C                   EXSR      $FldDflt
- 
+
       ** ---- Validation
       *
      C                   EXSR      $ValidatSc
- 
+
       ** -- Function keys management if no validation error
       *     ------------------------
       ** ---- F11 ==> Default information to the network account level
@@ -278,23 +281,23 @@
  B2  C                   IF        NOT *IN40 AND *INKK
      C                   EXSR      $DftMsgInf
  E2  C                   ENDIF
- 
+
       ** -- Window processing if no validation error
       *     -----------------
  B2  C                   IF        NOT *IN40
      C                   EXSR      $Window
  E2  C                   ENDIF
- 
+
  E1  C                   ENDDO
- 
+
       ** Exit module
       *
      C                   EXSR      $ExitMod
- 
+
       *========================================================================*
       *                    S  U  B  R  O  U  T  I  N  E  S                     *
       *========================================================================*
- 
+
       *========================================================================*
       * $FldDflt  : Screen fields defaulting                                   *
       *------------------------------------------------------------------------*
@@ -305,70 +308,70 @@
      C                   IF        ActionCode = 'D' OR ActionCode = 'E'
      C                   GOTO      @FldDflt
      C                   ENDIF
- 
+
       ** Allow MT942 Generation on Manual Request: default is 'N'
       *
      C                   IF        F42AMR = *Blank
      C                   EVAL      F42AMR = 'N'
      C                   ENDIF
- 
+
       ** Default Message Status for Manual Request: default is 'R' if
       ** "Allow MT942 Generation on Manual Request" is 'Y'
       *
      C                   IF        F42SMR = *Blank AND F42AMR = 'Y'
      C                   EVAL      F42SMR = 'R'
      C                   ENDIF
- 
+
       ** Allow MT942 Generation on Schedule: default is 'N'
       *
      C                   IF        F42AGS = *Blank
      C                   EVAL      F42AGS = 'N'
      C                   ENDIF
- 
+
       ** Default Message Status for Schedule: default is 'R' if
       ** "Allow MT942 Generation on Schedule" is 'Y'
       *
      C                   IF        F42SGS = *Blank AND F42AGS = 'Y'
      C                   EVAL      F42SGS = 'R'
      C                   ENDIF
- 
+
       ** Allow MT942 Generation on External Request: default is 'N'
       *
      C                   IF        F42AER = *Blank
      C                   EVAL      F42AER = 'N'
      C                   ENDIF
- 
+
       ** Default Message Status for External Request: default is 'R' if
       ** "Allow MT942 Generation on External Request" is 'Y'
       *
      C                   IF        F42SER = *Blank AND F42AER = 'Y'
      C                   EVAL      F42SER = 'R'
      C                   ENDIF
- 
+
       ** Generate MT942 if no Movement: 'Y' if protocol *SWIFT, otherwise 'N'
       *
      C                   IF        F42GNM = *Blank
- 
+
      C                   IF        EDPROT = '*SWIFT'
      C                   EVAL      F42GNM = 'Y'
      C                   ELSE
      C                   EVAL      F42GNM = 'N'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Fix Number of Items per Message: default is 'N'
       *
      C                   IF        F42FNI = *Blank
      C                   EVAL      F42FNI = 'N'
      C                   ENDIF
- 
+
       ** MT942 Re-Extract Shadow Postings: default is 'N'
       *
      C                   IF        F42RSP = *Blank
      C                   EVAL      F42RSP = 'N'
      C                   ENDIF
- 
+
       ** MT942 Re-Extract Real Postings since Last MT940: default is 'N'
       *
      C                   IF        F42RPL = *Blank
@@ -383,7 +386,7 @@
      C                   ENDIF                                                                CER030
       *    ----------    ------
      C     @FldDflt      ENDSR
- 
+
       *========================================================================*
       * $ValidatSc: Validate the screen                                        *
       *------------------------------------------------------------------------*
@@ -399,13 +402,13 @@
      C                   PARM                    IN40_TO_70
      C                   PARM                    NewFilRcd
      C                   ENDIF
- 
+
       ** Set up error indicators
       *
      C                   MOVEA     IN40_TO_70    *IN(40)
       *    ----------    ------
      C     @ValidatSc    ENDSR
- 
+
       *========================================================================*
       * $DftMsgInf: Default message information to the linked network accounts *
       *------------------------------------------------------------------------*
@@ -416,7 +419,7 @@
       *
      C     EDNWRK        SETLL     GLNW94D0
      C     EDNWRK        READE     GLNW94D0                               99
- 
+
      C                   DOW       NOT *IN99
      C                   EVAL      N42MI1 = F42MI1
      C                   EVAL      N42MI2 = F42MI2
@@ -427,7 +430,7 @@
      C                   UPDATE    GLNW94D0
      C     EDNWRK        READE     GLNW94D0                               99
      C                   ENDDO
- 
+
       ** Display an information message
       *
      C                   MOVE      'USR3977'     ZAMSID
@@ -435,7 +438,7 @@
      C                   MOVE      *On           *IN40
       *    ----------    ------
      C     @DftMsgInf    ENDSR
- 
+
       *========================================================================*
       * $Window   : Window processing                                          *
       *------------------------------------------------------------------------*
@@ -444,7 +447,7 @@
       ** Hook to enable the set up of data for the window controller
       *
       /COPY WNCPYSRC,SD200124MV
- 
+
       ** Call the window manager
       *
      C                   CALL      'WN0010'
@@ -454,7 +457,7 @@
      C                   PARM                    Data
      C                   PARM      *Blanks       WdwRtCd           7
      C                   PARM      *Blanks       WdwSpare        256
- 
+
       ** If the returncode isn't blank, always issue a roll back command to
       ** cancel the eventual changes made in the window(s), and set up the
       ** appropriate action key (nothing to do for F12, any other value is
@@ -462,15 +465,15 @@
       *
  B1  C                   IF        WdwRtCd <> *Blanks
      C                   ROLBK
- 
+
  B2  C                   IF        WdwRtCd <> 'USR0790'
      C                   EVAL      *INKC = *On
  E2  C                   ENDIF
- 
+
  E1  C                   ENDIF
       *    ----------    ------
      C     @Window       ENDSR
- 
+
       *========================================================================*
       * $IniScreen: Format the screen according to the received action code    *
       *------------------------------------------------------------------------*
@@ -479,7 +482,7 @@
       ** Fields value
       *
      C                   EVAL      F0NWRK = EDNWRK
- 
+
      C                   EVAL      F42AMR = ED2AMR
      C                   EVAL      F42SMR = ED2SMR
      C                   EVAL      F42AGS = ED2AGS
@@ -499,11 +502,11 @@
      C                   EVAL      F42MI5 = ED2MI5
      C                   EVAL      F42MI6 = ED2MI6
      C                   EVAL      D42F61 = ED2F61                                            CER030
- 
+
       ** Fields defaulting
       *
      C                   EXSR      $FldDflt
- 
+
       ** Protect fields or not
       *
      C                   IF        ActionCode = 'I' OR ActionCode = 'A'
@@ -511,17 +514,17 @@
      C                   ELSE
      C                   EVAL      *IN36 = *On
      C                   ENDIF
- 
+
       ** Allow F10 key
       *                                                               >><<==
      C     ActionCode    COMP      'D'                                    01
- 
+
       ** Display the warning mention '**DELETED**'
       *                                                               >><<==
      C     EDTYLC        COMP      'D'                                    02
       *    ----------    ------
      C     @IniScreen    ENDSR
- 
+
       *========================================================================*
       * $ClrErrSF : Clear program message queue                                *
       *------------------------------------------------------------------------*
@@ -532,13 +535,13 @@
      C                   PARM                    ZAPGRL
       *    ----------    ------
      C     @ClrErrSF     ENDSR
- 
+
       *========================================================================*
       * $ZaSndMsg : Send message to the program message queue                  *
       *------------------------------------------------------------------------*
      C     $ZaSndMsg     BEGSR
       *    ----------    ------
- 
+
      C                   CALL      'Y2SNMGC'
      C                   PARM                    ZAPGM
      C                   PARM                    ZAPGRL
@@ -548,7 +551,7 @@
      C                   PARM                    ZAMSTP
       *    ----------    ------
      C     @ZaSndMsg     ENDSR
- 
+
       *========================================================================*
       * $ExitMod  : Exit from the module                                       *
       *------------------------------------------------------------------------*
@@ -561,12 +564,12 @@
      C                             (ActionCode = 'I' OR ActionCode = 'A')
      C                   EXSR      $ScrToFile
      C                   ENDIF
- 
+
      C                   MOVE      *On           *INLR
      C                   RETURN
       *    ----------    ------
      C     @ExitMod      ENDSR
- 
+
       *========================================================================*
       * $ScrToFile: Move fields from the screen to the file record             *
       *========================================================================*
@@ -593,7 +596,7 @@
      C                   EVAL      ED2F61 = D42F61                                            CER030
       *    ----------    ------
      C     @ScrToFile    ENDSR
- 
+
       *========================================================================*
       * *INZSR    : Init Processing                                            *
       *========================================================================*
@@ -602,26 +605,26 @@
       ** Initialise Copyright Array
       *
      C                   MOVEA     CPY@          CPY@@            80
- 
+
       ** Define fields used by the message sending function
       *
       ** -- If no named caller --> set-up ZAPGM with the current program name
       *
      C                   IF        CallerIn = *Blanks
      C                   MOVEL     PSProcPgm     ZAPGM            10
- 
+
       ** -- Otherwise set-up ZAPGM with the caller name
       *
      C                   ELSE
      C                   MOVEL     CallerIn      ZAPGM
      C                   ENDIF
- 
+
      C                   MOVEL     'SDUSRMSG'    ZAMSGF           10
      C                   MOVEL     '*SAME'       ZAPGRL            5
      C                   MOVEL     *Blanks       ZAMSID            7
      C                   MOVEL     *Blanks       ZAMSDA          132
      C                   MOVEL     *Blanks       ZAMSTP            7
- 
+
       ** Retrieve RUNDAT
       *
      C                   IN        RUNDAT
@@ -660,15 +663,15 @@
      C                   MOVEL     'Y'           CGL178                                       CGL178
      C                   ENDIF                                                                CGL178
       *                                                                                       CGL178
- 
+
       ** Format the screen according to the received action code
       *
      C                   EXSR      $IniScreen
- 
+
       ** Clear the return code
       *
      C                   EVAL      RetCodeOut = *Blanks
- 
+
       ** If the MT942 generation is not allowed by the current network, simply
       ** clear the screen, move the screen fields to the file and exit
       *
@@ -678,24 +681,24 @@
      C                   ENDIF
       *    ----------    ------
      C     @INZSR        ENDSR
- 
+
       *========================================================================*
       * *PSSR     : Program exception error subroutine                         *
       *------------------------------------------------------------------------*
      C     *PSSR         BEGSR
       *    ----------    ------
      C                   DUMP
- 
+
      C                   EVAL      *INU7 = *On
      C                   EVAL      *INU8 = *On
- 
+
      C                   CALLB     'DBERRCTL'
- 
+
      C                   MOVEL(P)  '*ERROR'      RetCodeOut
      C                   EXSR      $ExitMod
       *    ----------    ------
      C     @PSSR         ENDSR
- 
+
       *========================================================================*
 **  CPY@
 (c) Finastra International Limited 2002

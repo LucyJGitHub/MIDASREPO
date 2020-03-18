@@ -640,6 +640,10 @@
      C                   PARM      *BLANKS       PRtcd                          Return Code   CMG008
      C                   PARM      '*VERIFY'     POptn                          Option        CMG008
      C                   PARM      'CMG008 '     PSard                          Feature Ref   CMG008
+<<<<<<< HEAD
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CMG008
+=======
+>>>>>>> refs/remotes/origin/feature/MDSC-30825
                                                                                               CMG008
      C                   IF        PRtcd = *BLANKS                                            CMG008
      C                   EVAL      CMG008 = 'Y'                                               CMG008

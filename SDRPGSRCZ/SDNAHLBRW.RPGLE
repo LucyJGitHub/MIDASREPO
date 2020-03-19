@@ -381,7 +381,7 @@
      C     @@EOF         DOWNE     'Y'
      C     @@CNT         ANDLT     14
 
-      ********** **  Load records with status not 'D'.                                      MD052599
+      ****Load*records*with*status*not*'D'.****************************
 
      C**********         IF        NHCHTP <> 'D'                                            MD052599
 

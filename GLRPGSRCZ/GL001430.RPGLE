@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR401845           Date 12Mar20               *
-      *  Prev Amend No. MD045952           Date 06Jul17               *
+      *  Last Amend No. MD031848           Date 12Mar20               *      
+      *  Prev Amend No. AR401845           Date 12Mar20               *
+      *                 MD045952           Date 06Jul17               *
       *                 MD046248           Date 27Oct17               *
       *                 AR549926           Date 19Aug14               *
       *                 MD026137           Date 04Apr14               *
@@ -54,6 +55,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031848 - Recently Closed account not generating MT940      *
+      *             Amend to include closed today.                    *      
       *  AR401845 - MT940 generation does not take into account       *
       *             regional holidays (CHILD: AR401846)               *
       *           - Replace ZFREQB with ZFRQB2 which considers        *
@@ -123,7 +126,8 @@
       *                                                               *
       *****************************************************************
 
-     FGLNW94L5  IF   E           K DISK                   INFSR(*PSSR)
+     F******GLNW94L5  IF   E           K DISK                   INFSR(*PSSR)                MD031848
+     FGLNW94L1  IF   E           K DISK                   INFSR(*PSSR)                      MD031848
       ** Midas GL Network Accounts - MT94x - Live/Accnt+Dst.- Retrieve
 
      FGLPOSTL0  UF   E           K DISK    COMMIT         INFSR(*PSSR)
@@ -347,8 +351,10 @@
 
       /COPY OFCPYSRCZ,CGL146_044                                                             CGL146A
                                                                                              CGL146A
-     C     *LOVAL        SETLL     GLNW94L5
-     C                   READ      GLNW94L5                               27
+     C*****LOVAL        SETLL     GLNW94L5                                                  MD031848
+     C**********         READ      GLNW94L5                               27                MD031848
+     C     *LOVAL        SETLL     GLNW94L1                                                 MD031848
+     C                   READ      GLNW94L1                               27                MD031848
                                                                                              CGL146A
       /COPY OFCPYSRCZ,CGL146_045                                                             CGL146A
 
@@ -367,6 +373,8 @@
 
      C                   IF        N4G940 <> 'Y'
      C                             OR N40NSD >= BJDNWD AND N40DSI <> 'Y'
+     C                             OR N4RECI = '*' AND N4CHTP = 'D'                         MD031848
+     C                             AND N4LCDT < BJDNWD                                      MD031848
       /COPY OFCPYSRCZ,CGL146_047                                                             CGL146A
      C                   LEAVE
      C                   ENDIF
@@ -440,7 +448,8 @@
       ** Read next Live Network Account.
 
       /COPY OFCPYSRCZ,CGL146_068                                                             CGL146A
-     C                   READ      GLNW94L5                               27
+     C**********         READ      GLNW94L5                               27                MD031848
+     C                   READ      GLNW94L1                               27                MD031848
       /COPY OFCPYSRCZ,CGL146_069                                                             CGL146A
 
      C                   ENDDO

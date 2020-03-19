@@ -12,8 +12,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. EML102             Date 28Nov19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR1067967          Date 12Mar20               *     
+      *  Prev Amend No. EML102             Date 28Nov19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD035961           Date 24Jul15               *
       *                 MD041443           Date 19Sep16               *
       *                 MD029255B          Date 25Nov14               *
@@ -63,6 +64,10 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  AR1067967 -  NOCC is added to NOIS unconditionally causing   *
+      *               account to be unexpectedly charged. Check if a  *
+      *               non-charge posting exists before incrementing   *
+      *               NOIS based on NOCC. (Child: AR1067968)          *     
       *  EML102 - Upgrade of UNL007 to FB2.1 SP21                     *
       *           UNL007 - Extended Narratives                        *
       *           Used GL2000C002, GL2000C003, GL2000C004, GL2000C005,*
@@ -176,6 +181,7 @@
      F*     55  -  Chain fail on LF/GLACBTL0                          *                       181287
      F*     58  -  On = Multibranching. Print branch code             *
      F*     60  -  Output B/F balance details                         *
+     F*     61  -  End of day posting contains a non-charge record    *                    AR1067967
      F*     80  -  LOKUP operation successful                         *
      F*     81  -  EOF on TABTG10, i.e. CCY array completely loaded   *
      F*     84  -  CHAIN failed on RECOM                              *
@@ -627,12 +633,20 @@
       *
      C           KSEDPO    SETLLEODPOTS
      C           KREDPO    READEEODPOTS                  86
+     C                     MOVE '0'       *IN61                                            AR1067967
      C/COPY WNCPYSRC,GL2000C008
       *                                                                                     BUG24792
       ** Incorporate GL2000C008 from R4                                                     BUG24792
       *                                                                                     BUG24792
      C           *IN86     IFEQ '0'                                                         BUG24792
      C*                                                                                     BUG24792
+      *                                                                                    AR1067967
+      ** Check if non-charge postings exists                                               AR1067967
+      *                                                                                    AR1067967
+     C           TRAT      IFNE 91050                                                      AR1067967
+     C                     MOVE '1'       *IN61                                            AR1067967
+     C                     ENDIF                                                           AR1067967
+      *                                                                                    AR1067967     
      C           CGL013    IFEQ 'Y'                                                         BUG24792
      C           CER030    ANDEQ'Y'                                                         AR864876
      C           ATYP      ANDEQ'R'                                                         BUG24792
@@ -663,6 +677,11 @@
      C                     SUB  PSTA      WWCFWB                                            BUG24792
      C                     END                                                              BUG24792
      C           KREDPO    READEEODPOTS                  86                                 BUG24792
+      *                                                                                    AR1067967
+     C           TRAT      IFNE 91050                                                      AR1067967
+     C                     MOVE '1'       *IN61                                            AR1067967
+     C                     ENDIF                                                           AR1067967
+      *                                                                                    AR1067967
      C                     END                                                              BUG24792
      C*                                                                                     BUG24792
      C                     Z-ADDWWCFWB    ECFB                                              BUG24792
@@ -1053,8 +1072,13 @@
       * number of address processed by the number of copies chargeable
       * and adding it to the file (NOIS)
       *
+      ** Only add NOCC to NOIS whenever an actual transaction                              AR1067967
+      ** posting is printed a turnover statement                                           AR1067967
+      *                                                                                    AR1067967
+     C           *IN61     IFEQ '1'                                                        AR1067967
      C           WWADRC    MULT NOCC      WWNOCC 150
      C                     ADD  WWNOCC    NOIS
+     C                     ENDIF                                                           AR1067967
       *
       * Update RECOM
      C                     UPDATRECOMDF
@@ -1116,8 +1140,15 @@
      C/COPY WNCPYSRC,GL2000C012
      C                     WRITEGL2000FA
      C                     WRITEGL2000FB
+     C                     MOVE '0'       *IN61                                            AR1067967
       *
      C           *IN86     DOWEQ'0'
+      *                                                                                    AR1067967
+      ** Check if non-charge postings exists                                               AR1067967
+      *                                                                                    AR1067967
+     C           TRAT      IFNE 91050                                                      AR1067967
+     C                     MOVE '1'       *IN61                                            AR1067967
+     C                     ENDIF                                                           AR1067967
       *
       * If source of posting (SPOS) numeric ==> Journal entry; print
       * batch number

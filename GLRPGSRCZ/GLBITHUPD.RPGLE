@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 249405             Date 09Mar18               *
-      *  Prev Amend No. CGL148             Date 13Jul18               *
+      *  Last Amend No. MD052732           Date 18Mar20               *
+      *  Prev Amend No. 249405             Date 09Mar18               *
+      *                 CGL148             Date 13Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD046060           Date 21Jun17               *
       *                 CGL182             Date 11May17               *
@@ -80,6 +81,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052732 - 4-eyes principle for journal uploads not working  *
+      *             Validate by Insert User if Amend User = blank     *
+      *           - Applied for MD-55406                              *
       *  249405 - Validate Batch In Use Flag field.                   *
       *         - Applied for MD-49830.                               *
       *  CGL148 - Automatic Opening of GL accounts                    *
@@ -1139,9 +1143,15 @@
      C*****BRUSRA        OREQ      USRID                                             CAP084 MD031298
      C     BRUSRA        IFEQ      USRID                                                    MD031298
      C**********         MOVE      'CGL0002'     PRTCD                                CAP084 BUG1698
-     C                   MOVE      'CGL0002'     JERRMSG                                     BUG1698
+     C**********         MOVE      'CGL0002'     JERRMSG                            BUG1698 MD052732
+     C                   MOVE      'CGL0027'     JERRMSG                                    MD052732
      C                   RETURN                                                               CAP084
      C                   ENDIF                                                                CAP084
+     C     BRUSRA        IFEQ      *BLANKS                                                  MD052732
+     C     BRUSRI        ANDEQ     USRID                                                    MD052732
+     C                   MOVE      'CGL0002'     JERRMSG                                    MD052732
+     C                   RETURN                                                             MD052732
+     C                   ENDIF                                                              MD052732
      C                   ENDIF                                                                CAP084
                                                                                               CAP086
      C                   ENDIF                                                                CAP086

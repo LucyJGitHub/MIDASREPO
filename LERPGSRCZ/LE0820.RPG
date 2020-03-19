@@ -11,8 +11,9 @@
 0007 F*                                                                  *LE0820
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. AR897086           Date 24Jan19               *      
+      *  Last Amend No. MD031174           Date 12Mar20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 AR897086           Date 24Jan19               *
       *                 MD051891           Date 05OCt18               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE154             Date 06Aug12               *
@@ -92,11 +93,12 @@
 0010 F*                 E13500             DATE 09/06/88              *LE0820
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD031174 - Value date shadow Posting missing                 *
       *  MD054877 - Enhance fix AR1096915, to also exclude risk       *
       *             parts purchased & risk parts sold.                *
       *  AR1096915 - Generate shadow posting of maturity interest of  *
       *              risk/guarantee loan. (Child: AR1096916)          *
-      *            - Applied for MD054877                             *      
+      *            - Applied for MD054877                             *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  AR897086 - Cannot input negative all-in-rate on Lending.     *
       *             Allow input and computation for negative          *
@@ -1043,6 +1045,9 @@
      I                                       83  92 SFILEU                S01117
      I                                    B 123 1240SFNUMU                S01117
       *                                                                   CLE033
+      **   JNSTAT DATA AREA                                                                 MD031174
+     IJNSTAT     UDS                            200                                         MD031174
+     I                                    P 103 1050PRUN                                    MD031174
      ISDACOD    E DSSDACODL1                                              CLE033
       *                                                                   CLE033
      I*SDSVAL*** E DSSDSVALPD                                                          CLE033 222373
@@ -1104,6 +1109,11 @@
      C                     PARM '*MSG   ' @RTCD   7                       S01194
      C                     PARM '*FIRST ' @OPTN   7                       S01194
      C           SDBANK    PARM SDBANK    DSFDY                           S01194
+     C** PARAMETER LIST FOR PROGRAM 'AOGELRR0'                                              MD031174
+     C           PLISTB    PLIST                                                            MD031174
+     C                     PARM '*MSG   ' @RTCD                                             MD031174
+     C                     PARM '*FIRST ' @OPTN                                             MD031174
+     C           SDGELR    PARM SDGELR    DSSDY                                             MD031174
      C** PARAMETER LIST FOR PROGRAM 'AORETLR0'                            S01194
      C           BGRTBN    IFEQ 'Y'                                       064773
      C           BGIOAC    OREQ 'Y'                                       064773
@@ -1130,6 +1140,8 @@
      C*    DEFINE LDA                                                     S01117
      C           *NAMVAR   DEFN           LDA                             S01117
      C           *LOCK     IN   LDA                                       S01117
+      **   DEFN JNSTAT                                                                      MD031174
+     C           *NAMVAR   DEFN           JNSTAT                                            MD031174
      C**                                                                  S01117
 0366 C**                                                                  LE0820
 0367 C**   EXECUTE FIRST CYCLE CALCS                                      LE0820
@@ -1233,6 +1245,16 @@
      C                     END                                            S01194
      C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.                    S01194
      C           BJDFIN    COMP 'M'                      98MMDDYY, 98 ON  S01194
+      *                                                                                     MD031174
+      **    ACCESS GENERAL LEDGER DETAILS                                                   MD031174
+      *                                                                                     MD031174
+     C                     CALL 'AOGELRR1'PLISTB                                            MD031174
+     C           @RTCD     IFNE *BLANKS                                                     MD031174
+     C                     SETON                     U7U8LR                                 MD031174
+     C                     Z-ADD2         DBASE                                             MD031174
+     C                     MOVE 'SDGELRPD'DBFILE                                            MD031174
+     C                     GOTO ERROR                                                       MD031174
+     C                     END                                                              MD031174
      C*                                                                   S01117
      C                     CALL 'AORETLR0'PLISTC                          S01194
      C           @RTCD     IFNE *BLANKS                                   S01194
@@ -1807,6 +1829,16 @@
      C           *IN55     OREQ *ON                                                          BUG7568
      C                     SETON                     40                                       CLE031
      C                     ENDIF                                                              CLE031
+      *                                                                                     MD031174
+     C           ETP       IFEQ 'V1'                                                        MD031174
+     C           EDAT      ANDGTPRUN                                                        MD031174
+     C           BKANWD    ANDEQ'2'                                                         MD031174
+     C           ETP       OREQ 'V3'                                                        MD031174
+     C           EDAT      ANDGTPRUN                                                        MD031174
+     C           BKANWD    ANDEQ'2'                                                         MD031174
+     C                     SETOF                     40                                     MD031174
+     C                     ENDIF                                                            MD031174
+      *                                                                                     MD031174
 0460 C   40                GOTO ENDDET                                    LE0820
 0461 C**                                                                  LE0820
 0462 C**   SET UP ACCOUNT KEY CURRENCY                                    LE0820

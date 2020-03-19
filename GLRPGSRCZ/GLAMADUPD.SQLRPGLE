@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD053470           Date 13Aug19               *
+      *  Last Amend No. AR891357A          Date 12Mar20               *
+      *  Prev Amend No. AR891357           Date 12Mar20               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD053470           Date 13Aug19               *
       *                 MD053978           Date 25Jul19               *
       *                 CSD101             Date 07Dec18               *
       *                 CSD102             Date 08Jan19               *
@@ -135,6 +137,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR891357A - RUNDT field is not existing on the module.       *
+      *              Change LACD (Last Activity date) should be set to*
+      *              rundate (BJRDNB field not RUNDT).                *
+      *              (Child: AR891358)                                *
+      *  AR891357 - Inactive Retail Accounts set to 'Active' by a     *
+      *           User are reset during CoB to 'Inactive'.            *
+      *           Account/s changed from 'Inactive' to 'Active'       *
+      *           status should have their Last change date updated   *
+      *           equal to the rundate. (Child: AR891358)             *
       *  CER050 - Annualised Percentage Rate                          *
       *  MD053470 - When Additional Overdraft Rate was changed to zero*
       *             with an OD Rate Value Date but without a DR change*
@@ -2774,6 +2785,13 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   EVAL      AC_ADREF1=AMADREF1
      C                   EVAL      AC_ADREF2=AMADREF2
      C*****@Type         IFEQ      '1'                                                 203214 208437
+     C                   TESTB     '4'           AMRETB                   31                AR891357
+     C                   TESTB     '4'           AC_RETB                  32                AR891357
+     C                   IF        *IN31 = *OFF AND                                         AR891357
+     C                             *IN32 = *ON                                              AR891357
+     C**********         EVAL      AC_LACD=RUNDT                                  AR891357 AR891357A
+     C                   EVAL      AC_LACD=BJRDNB                                          AR891357A
+     C                   END                                                                AR891357
      C                   EVAL      AC_RETB=AMRETB
      C**********         END                                                           203214 208437
      C                   EVAL      AC_PRFC=AMPRFC

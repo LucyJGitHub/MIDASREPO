@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. MD054605           Date 17Oct19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD054605           Date 17Oct19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CER070             Date 19Aug14               *
       *                 CDL094             Date 11Jun14               *
@@ -26,6 +27,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
+      *           Applied for MD-55510.                               *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *

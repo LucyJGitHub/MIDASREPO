@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054605           Date 17Oct19               *
-      *  Prev Amend No. MD053583           Date 10Jun19               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD054605           Date 17Oct19               *
+      *                 MD053583           Date 10Jun19               *
       *                 MD050212           Date 02Apr18               *
       *                 MD050231           Date 25Mar18               *
       *                 MD046248           Date 27Oct17               *
@@ -82,6 +83,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
+      *           Applied for MD-55510.                               *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD053583 - Inserted record in CUSD does not appear in the    *
       *             Main List View.                                   *

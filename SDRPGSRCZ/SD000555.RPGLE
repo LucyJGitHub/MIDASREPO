@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD054605           Date 17Oct19               *
-      *  Prev Amend No. MD050212           Date 02Apr18               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD054605           Date 17Oct19               *
+      *                 MD050212           Date 02Apr18               *
       *                 CGL157             Date 17Aug15               *
       *                 MD046248           Date 27Oct17               *
       *                 CER071             Date 01Aug16               *
@@ -23,6 +24,8 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
+      *           Applied for MD-55510.                               *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD050212 - Replication processing for PF/SDCUSTXC            *
       *  CGL157 - CRS Reporting (Recompile)                           *

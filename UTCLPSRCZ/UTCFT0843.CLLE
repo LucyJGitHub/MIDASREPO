@@ -1,0 +1,128 @@
+000100200320/*********************************************************************/
+000101200320/*STD    CLPBASEBND                                                  */
+000102200320/*EXI    TEXT('Update Payment Reference field record in OTPAYDQD')   */
+000103200320/*********************************************************************/
+000104200320/*                                                                   */
+000105200320/*       Midas - Customer Funds Transfer Module                      */
+000106200320/*                                                                   */
+000107200320/*       UTCFT0843 - FT MD045410 Utility Program                     */
+000108200320/*                                                                   */
+000109200320/*       (C) Finastra International Limited 2019                     */
+000110200320/*                                                                   */
+000111200320/*       Last Amend No. MD045410 *CREATE   Date 06Mar20              */
+000112200320/*********************************************************************/
+000113200320/*                                                                   */
+000114200320/*       MD045410 - Some FT Outgoing Payments are missing their      */
+000115200320/*                  UDF records in T_GZOPAYEX.                       */
+000116200320/*                - Corrected Payment Reference Field in OTPAYDQD    */
+000117200320/*                  to match records in OTPAYDD.                     */
+000118200320/*                                                                   */
+000119200320/*********************************************************************/
+000120200320
+000121200320             PGM        PARM(&MODE)
+000122200320
+000123200320             DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
+000124200320             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+000125200320             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
+000126200320             DCL        VAR(&PREF) TYPE(*CHAR) LEN(2)
+000127200320             DCL        VAR(&RUNP) TYPE(*CHAR) LEN(3) VALUE('NO')
+000128200320             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra International +
+000129200320                          Limited 2018')
+000130200320/* Global monitor message */
+000131200320
+000132200320             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO CMDLBL(ABNOR1))
+000134200320
+000135200320/* Start of program */
+000136200320
+000137200320             SNDPGMMSG  MSG('UTCFTXXXX program - Update OTPAYDQD  records from OTPAYDD') +
+000138200320                          TOMSGQ(MRUNQ MOPERQ)
+000139200320
+000140200320/* Create LDA if it does not exist */
+000141200320
+000142200320             CHKOBJ     OBJ(QTEMP/LDA) OBJTYPE(*DTAARA)
+000143200320             MONMSG     MSGID(CPF9815 CPF9801) EXEC(DO)
+000144200320                CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+000145200320             ENDDO
+000146200320
+000147200320/* Check if parameter passed is 'U', 'u', 'A' or 'a' or if invalid */
+000148200320
+000149200320             IF         COND((&MODE *NE 'A') *AND (&MODE *NE 'a') *AND (&MODE *NE 'U') *AND +
+000150200320                          (&MODE *NE 'u')) THEN(DO)
+000152200320
+000153200320                SNDPGMMSG  MSG('Invalid parameter passed to UTCFTXXXX program') TOMSGQ(MOPERQ +
+000154200320                             MRUNQ)
+000155200320                SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Invalid parameter passed. It +
+000156200320                             should either be ''U'' or ''u'' for Update and ''A'' or ''a'' for +
+000157200320                             Audit') MSGTYPE(*ESCAPE)
+000159200320                GOTO       CMDLBL(END)
+000160200320             ENDDO
+000161200320
+000162200320/* Get system prefix */
+000163200320
+000164200320             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREF)
+000165200320
+000166200320             CHGVAR     VAR(&DPLIB) VALUE(&PREF *TCAT 'DPLIB')
+000167200320             CHGVAR     VAR(&DMLIB) VALUE(&PREF *TCAT 'DMLIB')
+000168200320
+000169200320             IF         COND((&MODE *EQ 'U') *OR (&MODE *EQ 'u')) THEN(DO)
+000171200320
+000172200320/* Check if YYOTPAYDQD already exist */
+000173200320
+000174200320                CHKOBJ     OBJ(&DPLIB/YYOTPAYDQD) OBJTYPE(*FILE)
+000175200320                MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(BACKUP))
+000176200320                DLTF       FILE(YYOTPAYDQD)
+000177200320
+000178200320/* Create backup of PF/OTPAYDQD  */
+000179200320
+000180200320 BACKUP:        CPYF       FROMFILE(&DMLIB/OTPAYDQD) TOFILE(&DPLIB/YYOTPAYDQD) +
+000181200320                             MBROPT(*REPLACE) CRTFILE(*YES)
+000183200320                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(DO)
+000184200320                   CLRPFM     FILE(YYOTPAYDQD)
+000185200320                ENDDO
+000186200320                MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+000187200320                   SNDUSRMSG  MSG('Error occurred in copying PF/OTPAYDQD to PF/YYOTPAYDQD. +
+000188200320                                Process terminated.') MSGTYPE(*INFO)
+000190200320                   GOTO       CMDLBL(END)
+000191200320                ENDDO
+000192200320
+000193200320             ENDDO
+000194200320
+000195200320
+000196200320
+000197200320/* Error occurred in program */
+000198200320
+000199200320             IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO CMDLBL(ABNOR))
+000201200320
+000202200320             CALL       PGM(UTFT0843) PARM(&MODE)
+000203200320             SNDPGMMSG  MSG('UTCFTXXXX program completed normally.') TOPGMQ(*EXT) +
+000204200320                          TOMSGQ(MOPERQ MRUNQ)
+000205200320
+000206200320             GOTO       CMDLBL(END)
+000207200320
+000208200320
+000209200320/* Abnormal termination of the program or */
+000210200320/* restore backup if an error occurred in update mode */
+000211200320
+000212200320 ABNOR:      IF         COND((&MODE *EQ 'U') *OR (&MODE *EQ 'u')) THEN(DO)
+000214200320                IF         COND(&RUNP *EQ 'YES') THEN(DO)
+000215200320
+000216200320                   CPYF       FROMFILE(&DPLIB/YYOTPAYDQD) TOFILE(&DMLIB/OTPAYDQD) +
+000217200320                                MBROPT(*REPLACE) FMTOPT(*NONE)
+000219200320                   MONMSG     MSGID(CPF2817 CPF3130 CPF2909) EXEC(DO)
+000220200320                      SNDUSRMSG  MSG('Error occurred in restoring PF/OTPAYDQD from +
+000221200320                                   PF/YYOTPAYDQD. Process terminated.  Please restore manually +
+000222200320                                   PF/OTPAYDQD from PF/YYOTPAYDQD.') MSGTYPE(*INFO)
+000225200320                   ENDDO
+000226200320                   CHGJOB     SWS(00000000)
+000227200320                   CALL       PGM(UTFT00843) PARM(&MODE)
+000228200320                ENDDO
+000229200320             ENDDO
+000230200320
+000231200320 ABNOR1:     SNDPGMMSG  MSG('Error occurred in UTCFTXXXX program.') TOPGMQ(*EXT) TOMSGQ(MOPERQ +
+000232200320                          MRUNQ)
+000233200320
+000234200320 END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International Limited 2018')
+000236200320
+000237200320             SNDPGMMSG  MSG('End of UTCFTXXXX program') TOMSGQ(MRUNQ MOPERQ)
+000238200320
+000239200320             ENDPGM

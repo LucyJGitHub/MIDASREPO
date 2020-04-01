@@ -118,8 +118,15 @@
 
      C                   EXSR      SRINIT
 
+      /free
+         dsply PRtCd;
+      /end-free
      C                   EVAL      PRtCd = WRtCd
-
+      /free
+         dsply MPHAS;
+         dsply WRtCd;
+         dsply WRunDNo;
+      /end-free
      C                   RETURN
       *****************************************************************
       *  P R O G R A M   E N D                                        *

@@ -741,7 +741,8 @@
 
       ** Number 2 of Name and Address Lines must not
       ** be used without number 3
-      ** If CSW220 is ON, disable this validation and instead require number 3                CSW220
+      ** If CSW220 is ON, disable this validation to give                                     CSW220
+      ** way for further validation on SrValAddOMFM                                           CSW220
 
      C                   IF        CSW220 = 'N'                                               CSW220
      C                   IF        WCode = '2' AND
@@ -750,13 +751,6 @@
      C                   EVAL      PMsgID = 'ME00314'
      C                   LEAVESR
      C                   ENDIF
-     C                   ELSEIF    CSW220 = 'Y'                                               CSW220
-     C                   IF        X = IDX AND                                                CSW220
-     C                             Num3Exist <> 'Y'                                           CSW220
-     C                   EVAL      PRetCode = '*ERROR'                                        CSW220
-     C                   EVAL      PMsgID = 'MES0001'                                         CSW220
-     C                   LEAVESR                                                              CSW220
-     C                   ENDIF                                                                CSW220
      C                   ENDIF                                                                CSW220
 
       ** Additional Name and Address lines validation
@@ -793,6 +787,16 @@
      C                   LEAVESR
      C                   ENDIF
      C                   ENDIF
+                                                                                              CSW220
+      ** If CSW220 is ON, number 3 is required                                                CSW220
+     C                   IF        CSW220 = 'Y'                                               CSW220
+     C                   IF        X = IDX AND                                                CSW220
+     C                             Num3Exist <> 'Y'                                           CSW220
+     C                   EVAL      PRetCode = '*ERROR'                                        CSW220
+     C                   EVAL      PMsgID = 'MES0001'                                         CSW220
+     C                   LEAVESR                                                              CSW220
+     C                   ENDIF                                                                CSW220
+     C                   ENDIF                                                                CSW220
 
       ** Validate format for number 3
       ** Format should be 3/XX/

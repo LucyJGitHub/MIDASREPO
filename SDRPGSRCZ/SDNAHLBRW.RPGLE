@@ -16,7 +16,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD052599           Date 17Mar20               *
+      *  Last Amend No. MD052599           Date 02Apr20               *
       *  Prev Amend No. CSD102             Date 08Jan19               *
       *                 MD040639           Date 22Sep16               *
       *                 CGL177             Date 11Jan16               *
@@ -381,7 +381,7 @@
      C     @@EOF         DOWNE     'Y'
      C     @@CNT         ANDLT     14
 
-      ****Load*records*with*status*not*'D'.****************************                     MD052599
+      ****Load*records*with*status*not*'D'.****************************
 
      C**********         IF        NHCHTP <> 'D'                                            MD052599
 
@@ -457,8 +457,10 @@
       **  write to the subfile with non-display set on
 
      C                   MOVE      *On           *In93
+     C                   MOVE      *On           *In88                                      MD052599
      C                   WRITE     SDNAHLS1
      C                   MOVE      *Off          *In93
+     C                   MOVE      *Off          *In88                                      MD052599
      C                   WRITE     SDNAHLS0
      C                   ELSE
 
@@ -673,8 +675,10 @@
       **  write to the subfile with non-display set on
 
      C                   MOVE      *On           *In93
+     C                   MOVE      *On           *IN88                                      MD052599
      C                   WRITE     SDNAHLS3
      C                   MOVE      *Off          *In93
+     C                   MOVE      *Off          *In88                                      MD052599
      C                   WRITE     SDNAHLS2
      C                   ELSE
 
@@ -881,9 +885,11 @@
      C     'D'           IFEQ      NHCHTP                                                   MD052599
      C                   MOVE      'DELETED'     DDNAST                                     MD052599
      C                   MOVE      *On           *In91                                      MD052599
+     C                   MOVE      *On           *In88                                      MD052599
      C                   ELSE                                                               MD052599
      C                   MOVE      *BLANK        DDNAST                                     MD052599
      C                   MOVE      *Off          *In91                                      MD052599
+     C                   MOVE      *Off          *In88                                      MD052599
      C                   ENDIF                                                              MD052599
 
       ** Front Office Non-account Holder

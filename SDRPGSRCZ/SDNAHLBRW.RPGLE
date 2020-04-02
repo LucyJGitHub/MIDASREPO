@@ -879,7 +879,7 @@
      C                   MOVE      NHNARN        DDNARN
      C                   MOVE      NHNATW        DDNATW
      C** If Type of Last Change (NHSCHTP) is equals to 'D', it will be                      MD052599
-     C** indicated as 'DELETED' in the subfile. Else, leave the                             MD052599
+     C** indicated as 'DELETED' in the subfile. Else,  leave the                            MD052599
      C** indicator field as blank.                                                          MD052599
      C*                                                                                     MD052599
      C     'D'           IFEQ      NHCHTP                                                   MD052599

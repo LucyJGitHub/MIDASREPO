@@ -14,12 +14,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD054605           Date 17Oct19               *
-      *  Prev Amend No. MD039670           Date 26Jul16               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD054605           Date 17Oct19               *
+      *                 MD039670           Date 26Jul16               *
       *                 CGL177  *CREATE    Date 11Jan16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
+      *           Applied for MD-55510.                               *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD039670 - FATCA Housekeeping program                        *
       *  CGL177 - CRS Reporting Phase 2                               *

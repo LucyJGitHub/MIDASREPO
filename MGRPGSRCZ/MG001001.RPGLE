@@ -186,9 +186,9 @@
      D WAccLine        S              1A
      D WProhibit       S              1A
      D WACLNE          S              1A                                                    MD035038
-     D CSW220          S              1A                                                    CSW220
-     D PSWIFT          S              6A                                                    CSW220
-     D PRTCD           S              7A                                                    CSW220
+     D CSW220          S              1A                                                      CSW220
+     D PSWIFT          S              6A                                                      CSW220
+     D PRTCD           S              7A                                                      CSW220
      D WExsLine        S              1S 0
      D IDX             S              1S 0
      D X               S              1S 0
@@ -741,23 +741,23 @@
 
       ** Number 2 of Name and Address Lines must not
       ** be used without number 3
-      ** If CSW220 is ON, disable this validation and instead require number 3              CSW220
+      ** If CSW220 is ON, disable this validation and instead require number 3                CSW220
 
-     C                   IF        CSW220 = 'N'                                             CSW220
+     C                   IF        CSW220 = 'N'                                               CSW220
      C                   IF        WCode = '2' AND
      C                             Num3Exist <> 'Y'
      C                   EVAL      PRetCode = '*ERROR'
      C                   EVAL      PMsgID = 'ME00314'
      C                   LEAVESR
      C                   ENDIF
-     C                   ELSEIF    CSW220 = 'Y'                                             CSW220
-     C                   IF        X = IDX AND                                              CSW220
-     C                             Num3Exist <> 'Y'                                         CSW220
-     C                   EVAL      PRetCode = '*ERROR'                                      CSW220
-     C                   EVAL      PMsgID = 'MES0001'                                       CSW220
-     C                   LEAVESR                                                            CSW220
-     C                   ENDIF                                                              CSW220
-     C                   ENDIF                                                              CSW220
+     C                   ELSEIF    CSW220 = 'Y'                                               CSW220
+     C                   IF        X = IDX AND                                                CSW220
+     C                             Num3Exist <> 'Y'                                           CSW220
+     C                   EVAL      PRetCode = '*ERROR'                                        CSW220
+     C                   EVAL      PMsgID = 'MES0001'                                         CSW220
+     C                   LEAVESR                                                              CSW220
+     C                   ENDIF                                                                CSW220
+     C                   ENDIF                                                                CSW220
 
       ** Additional Name and Address lines validation
 
@@ -786,7 +786,6 @@
      C     SrValAddOMFM  BEGSR
 
       ** No repeating numbers must exist
-
      C                   IF        X > 1
      C                   IF        WCode = %SUBST(WInpArr(X-1):1:1)
      C                   EVAL      PRetCode = '*ERROR'
@@ -1582,16 +1581,16 @@
      C                   EVAL      InpParmDS = PInpParm1 +
      C                             PInpParm2 + PInpParm3 +
      C                             PInpParm4 + PInpParm5
-     C
-     C                   CALL      'SWIFTACTV'                                              CSW220
-     C                   PARM      'CSW220'      PSWIFT                                     CSW220
-     C                   PARM      *BLANKS       PRTCD                                      CSW220
-      *                                                                                     CSW220
-     C     PRTCD         IFEQ      'CSWACTV'                                                CSW220
-     C                   MOVE      'Y'           CSW220                                     CSW220
-     C                   ELSE                                                               CSW220
-     C                   MOVE      'N'           CSW220                                     CSW220
-     C                   ENDIF                                                              CSW220
+                                                                                              CSW220
+     C                   CALL      'SWIFTACTV'                                                CSW220
+     C                   PARM      'CSW220'      PSWIFT                                       CSW220
+     C                   PARM      *BLANKS       PRTCD                                        CSW220
+      *                                                                                       CSW220
+     C     PRTCD         IFEQ      'CSWACTV'                                                  CSW220
+     C                   MOVE      'Y'           CSW220                                       CSW220
+     C                   ELSE                                                                 CSW220
+     C                   MOVE      'N'           CSW220                                       CSW220
+     C                   ENDIF                                                                CSW220
      C                   ENDSR
       *****************************************************************
       /EJECT

@@ -108,7 +108,6 @@
       ** +--------------------------------------+
 
      D NumCode         C                   CONST('123')
-     D SWIFT           C                   CONST('SWIFTACTVX')                              CSW220
 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -187,6 +186,9 @@
      D WAccLine        S              1A
      D WProhibit       S              1A
      D WACLNE          S              1A                                                    MD035038
+     D CSW220          S              1A                                                    CSW220
+     D PSWIFT          S              6A                                                    CSW220
+     D PRTCD           S              7A                                                    CSW220
      D WExsLine        S              1S 0
      D IDX             S              1S 0
      D X               S              1S 0
@@ -704,6 +706,7 @@
       *                                                               *
       *****************************************************************
      C     SrValAdd      BEGSR
+
      C                   FOR       X = 1 TO IDX
      C                   EVAL      AddrLine = WInpArr(X)
 
@@ -718,19 +721,11 @@
 
       ** Name and Address Lines must start with number in
       ** range 1 to 3, followed by a '/'
-      ** If CSW220 is ON, number 3 is required                                              CSW220
 
      C                   IF        %CHECK(NumCode:WCode) <> 0
      C                             OR WSlash1 <> '/'
-     C                   IF        CSW220 = 'N'                                             CSW220
      C                   EVAL      PRetCode = '*ERROR'
      C                   EVAL      PMsgID = 'ME00312'
-     C                   ELSEIF    CSW220 = 'Y'                                             CSW220
-     C                   IF        Num3Exist <> 'Y'                                         CSW220
-     C                   EVAL      PRetCode = '*ERROR'                                      CSW220
-     C                   EVAL      PMsgID = 'MES0001'                                       CSW220
-     C                   ENDIF                                                              CSW220
-     C                   ENDIF                                                              CSW220
      C                   LEAVESR
      C                   ENDIF
 
@@ -1587,14 +1582,14 @@
      C                             PInpParm2 + PInpParm3 +
      C                             PInpParm4 + PInpParm5
      C
-     C                   CALL      SWIFT                                                    CSW220
-     C                   PARM      'CSW220'      PSWIFT            6                        CSW220
-     C                   PARM      *BLANKS       PRTCD             7                        CSW220
+     C                   CALL      'SWIFTACTV'                                              CSW220
+     C                   PARM      'CSW220'      PSWIFT                                     CSW220
+     C                   PARM      *BLANKS       PRTCD                                      CSW220
       *                                                                                     CSW220
-     C     PRTCD         IFEQ      'CSWACTIV'                                               CSW220
-     C                   MOVE      'Y'           CSW220            1                        CSW220
+     C     PRTCD         IFEQ      'CSWACTV'                                                CSW220
+     C                   MOVE      'Y'           CSW220                                     CSW220
      C                   ELSE                                                               CSW220
-     C                   MOVE      'N'           CSW220            1                        CSW220
+     C                   MOVE      'N'           CSW220                                     CSW220
      C                   ENDIF                                                              CSW220
      C                   ENDSR
       *****************************************************************

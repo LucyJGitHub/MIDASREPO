@@ -23,14 +23,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD055146           Date 04Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG24173           Date 03Jun09               *
       *                 BUG22798           Date 11Feb09               *
       *                 CER048  *CREATE    Date 19May08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055146 - Failed MXC004802 seq. 00001 and others            *
+      *             Increase Branches to 900.                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG24173 - Exemption Threshold Extract contains no records   *
@@ -137,7 +140,8 @@
       *
      D PBrch           DS
      D  DDWHBRCD               1      3
-     D  Brcd                          3    DIM(32)
+     D***Brcd***                       3    DIM(32)                                         MD055146
+     D  Brcd                          3    DIM(999)                                         MD055146
       *
       ** System rundat information (AGMBIN : multi branching indicator)
       *

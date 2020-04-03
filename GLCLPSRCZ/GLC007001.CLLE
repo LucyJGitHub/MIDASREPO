@@ -10,6 +10,7 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2014                     */
 /*                                                                   */
+/*       Last Amend No. MD055500           Date 03Apr20              */
 /*       Last Amend No. MD046248           Date 27Oct17              */
 /*       Prev Amend No. MD025679B          Date 26Mar14              */
 /*                      MD025679A          Date 21Mar14              */
@@ -17,6 +18,9 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD055500 - GO_ONL_OLP job continuously submitted.           */
+/*                  Submit GO_ONL_OLP only if file GLOLJSTD is not   */
+/*                  allocated by another job.                        */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD025679B - API - PRONO Locking Issue                       */
 /*       MD025679A - API - OLPOSOA Locking Issue Performance Update  */
@@ -24,26 +28,32 @@
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2014')
- 
+
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
+             ALCOBJ     OBJ((GLOLJSTD *FILE *EXCLRD)) WAIT(0)                           /*MD055500*/
+             MONMSG     MSGID(CPF1002 CPF1040 CPF1085) EXEC(GOTO END)                   /*MD055500*/
+                                                                                        /*MD055500*/
+             DLCOBJ     OBJ((GLOLJSTD *FILE *EXCLRD))                                   /*MD055500*/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)                                  /*MD055500*/
+                                                                                        /*MD055500*/
              SBMJOB     JOB(GO_ONL_OLP) JOBD(MBATCH) JOBQ(INTERFACE) +
                           OUTQ(*JOBD) USER(*JOBD) RTGDTA(*JOBD) +
                           RQSDTA('CALL GLC007002') INLLIBL(*JOBD)
- 
+
              GOTO       CMDLBL(END)
- 
+
 ERROR:
              CHGJOB     SWS(XXXXXX11)
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           GLC007001 ended abnormally - see job log') +
                           TOMSGQ(MOPERQ MRUNQ)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
 END:
              ENDPGM

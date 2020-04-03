@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055146           Date 04Feb20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CER071             Date 01Aug16               *
       *                 CER070             Date 19Aug14               *
       *                 CLE134             Date 01Aug12               *
@@ -29,6 +30,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055146 - Failed MXC004802 seq. 00001 and others            *
+      *             Increase Branches to 900.                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CER071 - BAIS - Legal Form field (Recompile)                 *
@@ -182,7 +185,8 @@
       *
       ** Define Arrays for branches code
       *
-     D ArrABCD         S              3A   DIM(200)
+     D***ArrABCD         S              3A   DIM(200)                                       MD055146
+     D ArrABCD         S              3A   DIM(999)                                         MD055146
       *
      D SPOOL1          DS
       *

@@ -1343,7 +1343,8 @@
      C                   IF        *IN64 = '1'
      C                   EVAL      Wi = Wi - 1
      C                   ELSE
-     C                   EVAL      Wi = 32
+     C**********         EVAL      Wi = 32                                                  MD055146
+     C                   EVAL      Wi = 900                                                 MD055146
      C                   ENDIF
      C                   MOVEA     BRCD(1)       ArrABCD(1)
      C                   ENDIF
@@ -1400,9 +1401,11 @@
      C                   EVAL      Wi = Wi + 1
      C                   ENDIF
       *
-      ** Max 200 branches
+      ***Max*200*branches**********************************************
+      ** Max 900 branches
       *
-     C                   IF        Wi < 200
+     C**********         IF        Wi < 200                                                 MD055146
+     C                   IF        Wi < 901                                                 MD055146
       *
       ** Access next branch
       *

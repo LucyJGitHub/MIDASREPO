@@ -133,8 +133,10 @@
       **                             2 - 4 : Branch Code
       ** ArrAbNm : Branch description
       *
-     D ArrAbCd         S              4     DIM(200)
-     D ArrAbNm         S             30     DIM(200)
+     D***ArrAbCd         S              4     DIM(200)                                      MD055146
+     D***ArrAbNm         S             30     DIM(200)                                      MD055146
+     D ArrAbCd         S              4     DIM(999)                                        MD055146
+     D ArrAbNm         S             30     DIM(999)                                        MD055146
       *
       ** WORK Parameter
       *
@@ -261,7 +263,8 @@
       *
      C                   Z-ADD     1             Wj
       *
-     C     1             DO        32            Wx
+     C*****1****         DO        32            Wx                                         MD055146
+     C     1             DO        901           Wx                                         MD055146
      C                   MOVEL     ArrAbCd(Wx)   WChkSel
      C                   IF        WChkSel <> *BLANKS
       *
@@ -678,9 +681,11 @@
       *
      C                   ENDIF
       *
-      ** Max 200 branches
+      ***Max*200*branches**********************************************                     MD055146
+      ** Max 900 branches                                                                   MD055146
       *
-     C                   IF        Wi < 200
+     C**********         IF        Wi < 200                                                 MD055146
+     C                   IF        Wi < 901                                                 MD055146
       *
       ** Access next branch
       *

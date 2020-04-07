@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD053607           Date 19Jul19               *
+      *  Last Amend No. MD031692           Date 12Mar20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD053607           Date 19Jul19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD036070           Date 19Oct15               *
       *                 CDL094             Date 11Jun14               *
@@ -45,6 +46,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *                                                               *
+      *  MD031692 - Incorrect accrual when fee rate is changed on     *
+      *             payment date. Add warning message parameters in   *
+      *             LEFEEMAMD.                                        *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD053607 - Matured Fee did not appear on fees screen.        *
       *           - Recompile due to changes in LEFHSTL1.             *
@@ -105,7 +110,7 @@
      F                                     RENAME(APIDSETD0:APIDSETX0)
      FAPIDSETL1 UF   E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
       ***  Hook to enable non-core files to be included
       *
       *****************************************************************
@@ -198,11 +203,11 @@
       *
      D NwFeScnFmt    E DS                  EXTNAME(LEFEEMPD)
       ***  New Fee in Screen Format
- 
+
      D ClilFilFmt    E DS                  EXTNAME(CLOANCL)
      D                                     PREFIX(CL_)
       ***  Customer Loans record CL in file Format
- 
+
      D FacmFilFmt    E DS                  EXTNAME(FCLTYFM)
      D                                     PREFIX(FA_)
       *
@@ -210,34 +215,34 @@
       * File Receive instructions
      D***FLREC**                1     69                                                      CGL029
      D  FLREC                 21     75                                                       CGL029
- 
+
      D F_PAY         E DS                  EXTNAME(SDESFPPD)
       * File Payment instructions
      D***FLPAY**                1    559                                                      CGL029
      D  FLPAY                 21    565                                                       CGL029
- 
+
      D F_FRI         E DS                  EXTNAME(SDESFFPD)
       * File Fra/irs instructions
- 
+
      D CrPaySttmt    E DS                  EXTNAME(SDESSPPD) PREFIX(@)
       * Pay Settlement Instructions - Current
- 
+
      D CrRecSttmt    E DS                  EXTNAME(SDESSRPD) PREFIX(@)
       * Receive Settlement Instructions - Current
- 
+
      D CrFRASttmt    E DS                  EXTNAME(SDESSFPD) PREFIX(@)
       * FRA/IRS Settlement Instructions - Current
- 
- 
+
+
      D S_REC         E DS                  EXTNAME(SDESSRPD)
       * Screen Receive instructions
- 
+
      D S_PAY         E DS                  EXTNAME(SDESSPPD)
       * Screen Payment instructions
- 
+
      D S_FRI         E DS                  EXTNAME(SDESSFPD)
       * Screen Fra/irs instructions
- 
+
       *
      D OKFee         E DS                  EXTNAME(LEEFEEMPD)
       ***  Error indicators Screen
@@ -250,10 +255,10 @@
       *
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ***  External DS for bank details
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ***  Midas modules details accessed via access program
       *
@@ -272,13 +277,13 @@
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
      D ExtData       E DS                  EXTNAME(LEFEEXPD)
       ***  LE (FEEM) Extra Data - File (D/B) format
- 
+
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
       ** 24X7 status dataarea
- 
+
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
       ** SD data area
- 
+
      D                 DS
      D  @SIFEER                1     19
      D  @SICSSN                1      6
@@ -312,7 +317,7 @@
      D  WFSEQ                 18     19  0
      D**WFPKEY**               1     19  0                                                    CSD027
      D  WFPKEY                 1     19A                                                      CSD027
- 
+
      D CSC022          S              1A   INZ('N')                                          BUG2571
       ** Counter variable                                                                    BUG2571
      D WCMT01          S              1A                                                     BUG2571
@@ -389,7 +394,7 @@
      C     @SCRN         DOWEQ     'M'
      C                   EXSR      SCRN@M
      C                   END
- 
+
       * DO WHILE SCREEN: SETTLEMENT DETAILS
      C     @SCRN         DOWEQ     'S'
      C                   EXSR      SCRN@S
@@ -409,7 +414,7 @@
      C     @SCRN         IFEQ      'T'
      C                   MOVE      '1'           *INLR
      C                   END
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -495,7 +500,7 @@
       * RDNBRW - Read next browse subfile record
       *****************************************************************
      C     RDNBRW        BEGSR
- 
+
       ***  Read next subfile record
       *
      C                   CALLB     'LEFEEMRPB'
@@ -616,7 +621,7 @@
      C                   MOVEL     DDFCNO        ##DDFCNO          2
      C                   MOVEL     DDLNRF        ##DDLNRF          6
      C                   MOVEL     DDFSEQ        ##DDFSEQ          2
- 
+
      C     ZATRNKX0      CHAIN     LEIFEEMX0                          99
      C     *IN99         IFEQ      *OFF                                                         2
      C     DDACTN        ANDNE     'I'
@@ -631,7 +636,7 @@
       *
      C                   CLEAR                   S_PAY
      C                   CLEAR                   S_REC
- 
+
      C     APDSETKX      CHAIN     APIDSETX0                          99
       *
       ***  If Fee details were retrieved and this is an amendment
@@ -649,14 +654,14 @@
      C                   EXSR      TDtDtaSubs
      C                   END                                                                    4
      C                   END                                                                    3
- 
+
       * Setup settlement instructions on amend
- 
+
      C     DDACTN        IFEQ      'A'
      C                   EXSR      SetupAmend
- 
+
       * Data Substitution - Settlement Details
- 
+
      C     GHSUBS        ifne      *blank                                                       3
      C     GHSUBS        SCAN      S_PAY                                  99
      C  N99GHSUBS        SCAN      S_REC                                  99
@@ -664,7 +669,7 @@
      C                   EXSR      SDtDtaSubs
      C                   END                                                                    4
      C                   END                                                                    3
- 
+
      C                   END
      C                   END
       *
@@ -703,7 +708,7 @@
       * SNDM@M - Send a message to main screen
       *****************************************************************
      C     SNDM@M        BEGSR
- 
+
      C                   Z-ADD     Idx           E                 3 0
       *
       ***  If there are fundamental errors in this transaction
@@ -776,7 +781,7 @@
      C                   ELSE
      C                   MOVEL     'N'           @EINKJ
      C                   END
- 
+
       *
       ***  KK = Command kay 11 = Authorise
       *
@@ -786,7 +791,7 @@
      C                   ELSE
      C                   MOVEL     'N'           @EINKK
      C                   END
- 
+
       ***  Write/read display screen
       *
      C                   CALLB     'LEFEEMDSP'
@@ -800,7 +805,7 @@
      C                   PARM                    NwFeScnFmt
       *
       ***  Fields in error
- 
+
      C                   PARM                    OkFee
       *
       ***  Errors
@@ -1008,6 +1013,16 @@
      C                   PARM                    ResetErrs         1
       *                                                                                       245099
      C                   PARM                    CLE006                                       245099
+      *                                                                                     MD031692
+      ** Warning fields/message IDs/message data (arrays) from/to caller                    MD031692
+      *                                                                                     MD031692
+     C                   PARM                    WFldNamArr                                 MD031692
+     C                   PARM                    WMsgIDArr                                  MD031692
+     C                   PARM                    WMsgDtaArr                                 MD031692
+      *                                                                                     MD031692
+      ** Array index (3P0) from/to caller                                                   MD031692
+      *                                                                                     MD031692
+     C                   PARM                    WIdx                                       MD031692
       *
      C                   END
       *
@@ -1017,7 +1032,7 @@
      C     @OPSEL        ANDEQ     'U'
      C     DDACTN        OREQ      'A'
      C     @OPSEL        ANDEQ     'U'
- 
+
      C                   CALLB     'LEFEEMVAL'
       * Response mode (1A), from source system common header
      C                   PARM                    RespMode
@@ -1058,9 +1073,9 @@
      C                   PARM                    F3TRDS            8
       * Customer Extra Data file data
      C                   PARM                    ExtData         500
- 
+
       * OUTPUTS
- 
+
       * Field OK flags (DS) from/to caller
      C                   PARM                    OKFee
       * Error fields/message IDs/message data (arrays) from/to caller
@@ -1129,7 +1144,7 @@
       *
       * CSC011 processing date
      C                   PARM                    WRNDAY
- 
+
       * OUTPUTS
       * (Current) Fee in file format
      C                   PARM                    CrFeFilFmt
@@ -1252,9 +1267,9 @@
       *          inserts, amends, enquiries & authorizations          *
       *****************************************************************
      C     SCRN@S        BEGSR
- 
+
      C                   MOVE      *BLANKS       WWLNRF            6
- 
+
      C     DDFACT        IFNE      *Zero
      C     DDFACT        ANDNE     *Blank
      C                   EVAL      WWLNRF = DDFACT + DDFCNO
@@ -1322,7 +1337,7 @@
      C                   ELSE
      C                   MOVEL     DDACTN        ##ACTN
      C                   ENDIF
- 
+
       *
      C                   CALLB     'ZASETINSIN'
       *
@@ -1420,9 +1435,9 @@
       ***  Extra validation
       *
      C                   CALLB     'LEFEEMEVL'
- 
+
       * INPUTS
- 
+
       * Response mode
      C                   PARM                    RespMode
       * Fee detail file
@@ -1441,9 +1456,9 @@
       *
       *  FRA/IRS instructions
      C                   PARM                    F_FRI
- 
+
       * OUTPUTS
- 
+
       ***  Field OK flags (DS) from/to caller
      C                   PARM                    OKFee
       ***  Error fields/message IDs/message data (arrays) from/to caller
@@ -1501,7 +1516,7 @@
       * DETP@S - Determine parameters for settlement details screen   *
       *****************************************************************
      C     DETP@S        BEGSR
- 
+
      C                   MOVE      VFPSTD        ##DATR
      C                   MOVE      VFPSTD        ##DATP
       *
@@ -1542,7 +1557,7 @@
       ***  If amend, enquire, authorize or delete
       ***  move settlement file fields to screen fields
       ***  Else clear settlement screen fields
- 
+
      C     DDACTN        IFEQ      'A'
      C     DDACTN        OREQ      'E'
      C     DDACTN        OREQ      'X'
@@ -1705,7 +1720,7 @@
      C                   PARM      WTRCcy        #TRCCY                                      CSF011A
      C                   PARM      WTPCcy        #TPCCY                                      CSF011A
       *
- 
+
      C     EDETP@S       ENDSR
       *****************************************************************
       /EJECT
@@ -1787,7 +1802,7 @@
       *
      C                   MOVEL     '*ANY'        FldNameArr(1)
      C                   MOVEL     'LER0350'     MsgIdArr(1)
- 
+
       ***  Write/read display screen
       *
      C                   CALLB     'LEFEEMDSP'
@@ -1997,9 +2012,9 @@
      C                   EVAL      MsgIdArr(1) =  'LEL0817'                                 AR868380
      C                   EVAL      @RTCD = @@RTCD                                           AR868380
      C                   ENDIF                                                              AR868380
- 
+
      C                   END
- 
+
       ***  If there were any errors in the update functions ROLLBACK any
       ***  updates and end this program. Otherwise, COMMIT the updates
       *
@@ -2185,9 +2200,9 @@
       * SetupAmend - Setup Settlement Instructions on Amendment       *
       *                                                               *
       *****************************************************************
- 
+
      C     SetupAmend    BEGSR
- 
+
       ** CONVERSION OF FILE FIELDS TO SCREEN FORMAT
      C                   MOVEL     FEREC         FLREC
      C                   MOVEL     FERECEx       FLRONS                                       CGL029
@@ -2211,35 +2226,35 @@
      C                   MOVE      FESCCY        FLRSCY                                       CLE031
      C                   MOVE      FEPSCY        FLPSCY                                       CLE031
      C                   ENDIF                                                                CLE031
- 
+
      C                   EVAL      WTRCcy = DDECUR                                           CSF011A
      C                   EVAL      WTPCcy = DDECUR                                           CSF011A
      C                                                                                       CSF011A
      C                   CALLB     'ZASETINCVT'
- 
+
       ** Fee Settlement Instructions in file format
      C                   PARM                    F_PAY
      C                   PARM                    F_REC
      C                   PARM      *BLANK        F_FRI
- 
+
       ** Current Settlement Instruction in input format
      C                   PARM      *BLANK        CrPaySttmt
      C                   PARM      *BLANK        CrRecSttmt
      C                   PARM      *BLANK        CrFRASttmt
      C                   PARM      WTRCcy        #TRCCY                                      CSF011A
      C                   PARM      WTPCcy        #TPCCY                                      CSF011A
- 
+
       *  If no Payment or Receive instructions have been supplied
       *  Default them to those currently on the Fee.
- 
+
      C                   IF            (F_PAY = *blank)
      C                   EVAL      F_PAY = CrPaySttmt
      C                   ENDIF
- 
+
      C                   IF            (F_REC = *blank)
      C                   EVAL      F_REC = CrRecSttmt
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2248,13 +2263,13 @@
       * SDtDtaSubs - Settlement Details Data Substitution             *
       *                                                               *
       *****************************************************************
- 
+
      C     SDtDtaSubs    BEGSR
- 
+
       ** PAYMENT INSTRUCTIONS
      C                   RESET                   ReturnCode
      C                   CALLB     'APDTASUBS'
- 
+
       * Return Code
      C                   PARM                    ReturnCode
       * Substitution character
@@ -2263,13 +2278,13 @@
      C                   PARM      S_PAY         IncDATA
       * Current Data
      C                   PARM      CrPaySttmt    CurDATA
- 
+
      C                   MOVEL     IncDATA       S_PAY
- 
+
       ** RECEIPT INSTRUCTIONS
      C                   RESET                   ReturnCode
      C                   CALLB     'APDTASUBS'
- 
+
       * Return Code
      C                   PARM                    ReturnCode
       * Substitution character
@@ -2278,9 +2293,9 @@
      C                   PARM      S_REC         IncDATA
       * Current Data
      C                   PARM      CrRecSttmt    CurDATA
- 
+
      C                   MOVEL     IncDATA       S_REC
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2329,13 +2344,13 @@
      C                   PARM      '*FIRST '     @OPTN
      C*****SDGELR        PARM      SDGELR        DSFDY                                        CGL029
      C     SDGELR        PARM      SDGELR        DSSDY                                        CGL029
- 
+
       **  ACCESS CUSTOMER LENDING DATA
      C                   CALL      'AOCLNDR0'
      C                   PARM      '*DBERR '     @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDCLND        PARM      SDCLND        DSFDY
- 
+
       *
       ***  Access API ICD Details
       *
@@ -2350,40 +2365,40 @@
      C                   MOVEL     @OPTN         DBKEY                          *************
      C                   EXSR      *PSSR
      C                   END
- 
+
       ** Determine if CLE002 is installed
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE002'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CLE002            1
      C                   ELSE
      C                   MOVEL     'Y'           CLE002
      C                   ENDIF
- 
+
       ** Determine if CLE005 is installed
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE005'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CLE005            1
      C                   ELSE
      C                   MOVEL     'Y'           CLE005
      C                   ENDIF
- 
+
       ** Determine if CLE006 is installed
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE006'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CLE006            1
      C                   ELSE
@@ -2396,20 +2411,20 @@
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE007'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CLE007            1
      C                   ELSE
      C                   MOVEL     'Y'           CLE007
      C                   ENDIF
- 
+
       ** Determine if CLE008 is installed
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE008'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CLE008            1
      C                   ELSE
@@ -2422,7 +2437,7 @@
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE014'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CLE014            1
      C                   ELSE
@@ -2435,7 +2450,7 @@
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CEU004'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CEU004            1
      C                   ELSE
@@ -2448,24 +2463,24 @@
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CSC011'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CSC011            1
      C                   ELSE
      C                   MOVEL     'Y'           CSC011
- 
+
      C                   OPEN      APILOGL0
- 
+
      C                   IN        SC24X7
      C                   IN        SDSTAT
- 
+
      C* Is the support system on?
      C     S1SUPP        IFEQ      LIBR
      C                   Z-ADD     S1DATE        WRNDAY            6 0
      C                   ELSE
      C                   MOVE      BJRDNB        WRNDAY
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Determine if CEU013 is installed
@@ -2474,7 +2489,7 @@
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CEU013'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CEU013            1
      C                   ELSE
@@ -2487,25 +2502,25 @@
      C                   KFLD                    KMsgType
      C                   KFLD                    KFrntOffID
      C                   KFLD                    KTimeStamp
- 
+
      C     ZATRNKD0      KLIST
      C                   KFLD                    @FOTRANSEL
      C                   KFLD                    @TMESTPSEL
- 
+
      C     ZATRNKX0      KLIST
      C                   KFLD                    @TMESTPSEL
      C                   KFLD                    @FOTRANSEL
- 
+
      C     APDSETK0      KLIST
      C                   KFLD                    @MSGTYPE
      C                   KFLD                    @FOTRANSEL
      C                   KFLD                    @TMESTPSEL
- 
+
      C     APDSETKX      KLIST
      C                   KFLD                    @MSGTYPE
      C                   KFLD                    @TMESTPSEL
      C                   KFLD                    @FOTRANSEL
- 
+
       ** KLIST for file LEFEED
      C     KEY002        KLIST
      C                   KFLD                    WCNUM

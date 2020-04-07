@@ -12,7 +12,7 @@
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
       *  Last Amend No. CSW220             Date 09Mar20               *
-      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
       *                 MD037229           Date 03Sep18               *
       *                 MD038302           Date 03Sep18               *
       *                 MD046248           Date 27Oct17               *
@@ -782,7 +782,6 @@
      C     SrValAddOMFM  BEGSR
 
       ** No repeating numbers must exist
-
      C                   IF        X > 1
      C                   IF        WCode = %SUBST(WInpArr(X-1):1:1)
      C                   EVAL      PRetCode = '*ERROR'

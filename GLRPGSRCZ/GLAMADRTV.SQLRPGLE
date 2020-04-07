@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CSD101             Date 07Dec18               *
+      *  Last Amend No. MD055514           Date 06Apr20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CSD101             Date 07Dec18               *
       *                 MD051247           Date 16Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD046635           Date 10Aug17               *
@@ -86,6 +87,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055514 - Not able to open a new Retail Account             *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD101 - Password Encryption                                 *
       *  MD051247 - SP15_CUSD API issue                               *
@@ -1509,6 +1511,8 @@
      C                   MOVE      X_BRCA        KBRCA                                        194431
      C     CHKACC        CHAIN     ACCNTL1                            50                      194431
      C                   ENDIF                                                                194431
+      *                                                                                     MD055514
+     C     *IN50         IFEQ      '0'                                                      MD055514
       *                                                                                       194431
       ** Access Customer details of Default Account                                           194431
       *                                                                                       194431
@@ -1703,6 +1707,7 @@
      C                   ENDIF                                                                194431
      C                   ENDIF                                                                194431
       *                                                                                       194431
+     C                   ENDIF                                                              MD055514
      C                   ELSE                                                                 194431
       *                                                                                       194431
      C     CHKACC        CHAIN     ACCNTABF                           44                      194431

@@ -34,8 +34,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. MD041837           Date 16Jun19               *
+      *  Last Amend No. MD055514           Date 06Apr20               *
+      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *                 MD041837           Date 16Jun19               *
       *                 CER050             Date 16Jun19               *
       *                 CSD101             Date 07Dec18               *
       *                 CSD102             Date 08Jan19               *
@@ -140,6 +141,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055514 - Not able to open a new Retail Account             *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  MD041837 - Tax indicator is not defaulted anymore with       *
@@ -2721,6 +2723,29 @@
       *                                                                                       BUG553
      C     *IN50         IFEQ      '0'                                                        BUG553
      C     X_RECI        ANDEQ     'D'                                                        BUG553
+      *                                                                                     MD055514
+     C     X_CNUM        IFEQ      *BLANKS                                                  MD055514
+      *                                                                                     MD055514
+     C     X_RETN        CHAIN     ACNUM                              99                    MD055514
+     C     *IN99         IFEQ      '0'                                                      MD055514
+     C                   MOVE      CNUM          WWCUSK                                     MD055514
+     C                   MOVE      CCY           WWCCYK                                     MD055514
+     C                   MOVE      ACOD          WWACOK                                     MD055514
+     C                   MOVE      ACSQ          WWACSK                                     MD055514
+     C                   MOVE      BRCA          WWBRCK                                     MD055514
+     C     WWACKB        CHAIN     ACCNTLXX                           99                    MD055514
+     C                   ENDIF                                                              MD055514
+      *                                                                                     MD055514
+     C                   ELSE                                                               MD055514
+     C                   MOVE      X_CNUM        WWCUSK                                     MD055514
+     C                   MOVE      X_RCCY        WWCCYK                                     MD055514
+     C                   MOVE      X_ACOD        WWACOK                                     MD055514
+     C                   MOVE      X_SEQR        WWACSK                                     MD055514
+     C                   MOVE      X_BRCA        WWBRCK                                     MD055514
+     C     WWACKB        CHAIN     ACCNTLXX                           99                    MD055514
+     C                   ENDIF                                                              MD055514
+      *                                                                                     MD055514
+     C     *IN99         IFEQ      '0'                                                      MD055514
       *                                                                                       BUG553
       * Save key of account being entered.                                                    BUG553
       *                                                                                       BUG553
@@ -3077,6 +3102,7 @@
       *                                                                                       BUG553
      C                   ENDIF                                                                BUG553
       *                                                                                       BUG553
+     C                   ENDIF                                                              MD055514
      C                   ENDIF                                                                249660
       *                                                                                       249660
      C                   ENDIF                                                                BUG553

@@ -35,7 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD054922 - MT942 messages are not generated                  *
+      *  MD054922 - MT942 messages are not generated.                 *
       *  MD055218 - Dump generated in GLC001400 job with update or    *
       *             delete without prior input. Amended program to    *
       *             do update file once only                          *

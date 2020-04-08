@@ -87,7 +87,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD055514 - Not able to open a new Retail Account             *
+      *  MD055514 - Not able to open a new Retail Account. Amend to   *
+      *             add check if account in REDEFD is valid.          *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD101 - Password Encryption                                 *
       *  MD051247 - SP15_CUSD API issue                               *

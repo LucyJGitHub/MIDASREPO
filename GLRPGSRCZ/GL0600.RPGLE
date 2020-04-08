@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 255478A            Date 03Oct19               *
-      *  Prev Amend No. MD045515           Date 02Jul17               *
+      *  Last Amend No. MD055382           Date 02Apr20               *
+      *  Prev Amend No. 255478A            Date 03Oct19               *
+      *                 MD045515           Date 02Jul17               *
       *                 MD037555           Date 24Feb15               *
       *                 MD048056           Date 16Jan18               *
       *                 MD046248           Date 27Oct17               *
@@ -185,6 +186,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055382 - System generated account statements will be       *
+      *             written to STMTAH only when it's NSTD is less than*
+      *             the system's NWKD.                                *
       *  255478A - Correct the BGNOST to BGN0ST to validate Analytical*
       *            Accounting instead of Leo Letters of Credit.       *
       *            Applied fix for MD054339.                          *
@@ -3243,11 +3247,13 @@
       *                                                               *                     MD038510
       *****************************************************************                     MD038510
      C     WRTSTMT       BEGSR                                                              MD038510
+     C     NSTD          IFLT      NWKD                                                     MD055382
      C                   MOVE      'D'           RECI                                       MD038510
      C                   MOVE      'N'           MSFL                                       MD038510
      C                   BITOFF    '01234567'    GLBT                                       MD038510
      C                   BITON     '2'           GLBT                                       MD038510
      C                   WRITE     STMTAHF                                                  MD038510
+     C                   ENDIF                                                              MD055382
      C                   ENDSR                                                              MD038510
       *****************************************************************
       /EJECT

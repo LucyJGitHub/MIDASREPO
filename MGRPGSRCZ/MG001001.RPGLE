@@ -189,8 +189,11 @@
      D CSW220          S              1A                                                      CSW220
      D PSWIFT          S              6A                                                      CSW220
      D PRTCD           S              7A                                                      CSW220
+     D WPrev           S              1S 0                                                    CSW220
+     D WNext           S              1S 0                                                    CSW220
      D WExsLine        S              1S 0
      D IDX             S              1S 0
+     D W               S              1S 0                                                    CSW220
      D X               S              1S 0
      D Y               S              1S 0
      D Z               S              3S 0
@@ -438,8 +441,8 @@
      C                   LEAVESR
      C                   ENDIF
 
-     ** Line 1 must start with '/' for Account line
-     ** and 1/ for Name and Address Line
+      ** Line 1 must start with '/' for Account line
+      ** and 1/ for Name and Address Line
 
      C                   IF        %SUBST(PInpParm1:1:1) <> '/' AND
      C                             %SUBST(PInpParm1:1:1) <> '1'
@@ -741,8 +744,7 @@
 
       ** Number 2 of Name and Address Lines must not
       ** be used without number 3
-      ** If CSW220 is ON, disable this validation to give                                     CSW220
-      ** way for further validation on SrValAddOMFM                                           CSW220
+      ** If CSW220 is on, 3/ is now mandatory every input                                     CSW220
 
      C                   IF        CSW220 = 'N'                                               CSW220
      C                   IF        WCode = '2' AND
@@ -752,7 +754,7 @@
      C                   LEAVESR
      C                   ENDIF
      C                   ENDIF                                                                CSW220
-
+                                                                                              CSW220
       ** Additional Name and Address lines validation
 
      C                   IF        PCallFrom = 'OMFM'
@@ -858,6 +860,31 @@
      C                   LEAVESR
      C                   ENDIF
 
+      ** SWIFT 2020: Lines starting with 1/, 2/ & 3/ must only occur twice                    CSW220
+                                                                                              CSW220
+     C                   Z-ADD     *ZERO         WPrev                                        CSW220
+     C                   Z-ADD     *ZERO         WNext                                        CSW220
+     C                   IF        CSW220 = 'Y' AND X > 1 AND                                 CSW220
+     C                             X < IDX                                                    CSW220
+     C                   EVAL      WPrev = X - 1                                              CSW220
+     C                   EVAL      WNext = X + 1                                              CSW220
+     C                   IF        WCode = %SUBST(WInpArr(WPrev):1:1) AND                     CSW220
+     C                             WCode = %SUBST(WInpArr(WNext):1:1)                         CSW220
+     C                   EVAL      PRetCode = '*ERROR'                                        CSW220
+     C                   EVAL      PMsgID = 'MES0002'                                         CSW220
+     C                   LEAVESR                                                              CSW220
+     C                   ENDIF                                                                CSW220
+     C                   ENDIF                                                                CSW220
+      *                                                                                       CSW220
+      ** SWIFT 2020: A line starting with '3/' must be present.                               CSW220
+      *                                                                                       CSW220
+     C                   IF        CSW220 = 'Y' AND X = IDX AND                               CSW220
+     C                             Num3Exist <> 'Y'                                           CSW220
+     C                   EVAL      PRetCode = '*ERROR'                                        CSW220
+     C                   EVAL      PMsgID = 'MES0001'                                         CSW220
+     C                   LEAVESR                                                              CSW220
+     C                   ENDIF                                                                CSW220
+                                                                                              CSW220
       ** Validate format for number 3
 
      C                   IF        WCode = '3'
@@ -1376,7 +1403,14 @@
      C     SrExcess      BEGSR
 
      C                   EVAL      WCtr = 35
-     C                   FOR       Y = 1 TO 5
+     C                   IF        CSW220 = 'Y'                                               CSW220
+     C                   EVAL      W = 2                                                      CSW220
+     C                   ELSE                                                                 CSW220
+     C                   EVAL      W = 5                                                      CSW220
+     C                   ENDIF                                                                CSW220
+                                                                                              CSW220
+     C**********         FOR       Y = 1 TO 5                                                 CSW220
+     C                   FOR       Y = 1 TO W                                                 CSW220
      C                   EVAL      Z = %CHECKR(' ':WFrmtL)
 
      C                   IF        Z > WCtr

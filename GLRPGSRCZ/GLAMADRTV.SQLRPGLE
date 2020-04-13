@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD051247           Date 16Jul18               *      
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055514           Date 06Apr20               *
+      *  Prev Amend No. MD051247           Date 16Jul18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD046635           Date 10Aug17               *
       *                 MD037025           Date 10Feb16               *
       *                 CRE101             Date 27Aug14               *
@@ -84,6 +85,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055514 - Not able to open a new Retail Account. Amend to   *
+      *             add check if account in REDEFD is valid.          *
       *  MD051247 - SP15_CUSD API issue                               *
       *  MD046635 - User permissions are not verified on account      *
       *             input via AMAD API. Change the validation so that *
@@ -1448,6 +1451,8 @@
      C                   MOVE      X_BRCA        KBRCA                                        194431
      C     CHKACC        CHAIN     ACCNTL1                            50                      194431
      C                   ENDIF                                                                194431
+      *                                                                                     MD055514
+     C     *IN50         IFEQ      '0'                                                      MD055514
       *                                                                                       194431
       ** Access Customer details of Default Account                                           194431
       *                                                                                       194431
@@ -1613,6 +1618,7 @@
      C                   ENDIF                                                                194431
      C                   ENDIF                                                                194431
       *                                                                                       194431
+     C                   ENDIF                                                              MD055514
      C                   ELSE                                                                 194431
       *                                                                                       194431
      C     CHKACC        CHAIN     ACCNTABF                           44                      194431

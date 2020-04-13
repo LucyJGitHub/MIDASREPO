@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD048812           Date 22Jan18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 240212             Date 18Sep06               *
+      *  Prev Amend No. MD048812           Date 22Jan18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CCB023             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  240212 - Apply 235780: Resolve purging problem               *
       *  MD048812 - MC0530 is looping due to incorrect parameter.     *
       *  MD046248 - Finastra Rebranding                               *
       *  CCB023 - COB Restructure - Input Cycle Termination           *
@@ -271,6 +273,10 @@
      C                     READ MCACHRL1                 20
       *
      C                     ENDDO
+      *                                                                                       240212
+      ** Delete GAP Accrual Header Records                                                    240212
+      *                                                                                       240212
+     C                     EXSR #DLTH                                                         240212
       *
      C                     ENDSR
       *
@@ -291,11 +297,11 @@
       ** Back value date
       *
      C           ACCHDR    SETGTMCACDTD0
-     C           ACCDTL    REDPEMCACDTD0            N    30
+     C********** ACCDTL    REDPEMCACDTD0            N    30                                   240212
       *
       ** If Record before Back value date found, delete rest
       *
-     C           *IN30     IFEQ *OFF
+     C********** *IN30     IFEQ *OFF                                                          240212
       *
      C           ACCDTL    REDPEMCACDTL0                 30
       *
@@ -313,11 +319,44 @@
       *
      C                     ENDDO
       *
-     C                     ENDIF
+     C**********           ENDIF                                                              240212
       *
      C                     ENDSR
       *
       *****************************************************************
+      /TITLE SR/#DLTH                                                                         240212
+      *****************************************************************                       240212
+      *                                                               *                       240212
+      *  #DLTH - Subroutine to delete GAP Accrual Header Records.     *                       240212
+      *                                                               *                       240212
+      *  Called By: #PROC - Detail Processing                         *                       240212
+      *  Calls: None                                                  *                       240212
+      *                                                               *                       240212
+      *****************************************************************                       240212
+      *                                                                                       240212
+     C           #DLTH     BEGSR                           ** #DLTH  **                       240212
+      *                                                                                       240212
+      ** Read GAP Accrual Headers until EOF                                                   240212
+      *                                                                                       240212
+     C           *LOVAL    SETLLMCACHRL1                                                      240212
+     C                     READ MCACHRL1                 40                                   240212
+      *                                                                                       240212
+     C           *IN40     DOWEQ'0'                                                           240212
+      *                                                                                       240212
+     C           ACCDTL    CHAINMCACDTL0             41                                       240212
+     C           *IN41     IFEQ '1'                                                           240212
+     C                     DELETMCACHRD0                                                      240212
+     C                     ENDIF                                                              240212
+      *                                                                                       240212
+      ** Read Next GAP Header Record                                                          240212
+      *                                                                                       240212
+     C                     READ MCACHRL1                 40                                   240212
+      *                                                                                       240212
+     C                     ENDDO                                                              240212
+      *                                                                                       240212
+     C                     ENDSR                                                              240212
+      *                                                                                       240212
+      *****************************************************************                       240212
       /TITLE SR/AUDIT
       *****************************************************************
       *                                                               *

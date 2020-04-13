@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055382           Date 02Apr20               *
-      *  Prev Amend No. 255478A            Date 03Oct19               *
+      *  Last Amend No. AR954846           Date 08Apr20               *
+      *  Prev Amend No. MD055382           Date 02Apr20               *
+      *                 255478A            Date 03Oct19               *
       *                 MD045515           Date 02Jul17               *
       *                 MD037555           Date 24Feb15               *
       *                 MD048056           Date 16Jan18               *
@@ -186,6 +187,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR954846 - No statement produced for newly generated accounts*
+      *             Set NSTD = RUND for STFQ = 'D' to generate report.*
+      *           - Applied for MD-55382                              *
       *  MD055382 - System generated account statements will be       *
       *             written to STMTAH only when it's NSTD is less than*
       *             the system's NWKD.                                *
@@ -1739,7 +1743,14 @@
      C                   EXSR      *PSSR
      C                   GOTO      END
      C                   ENDIF
+      *                                                                                     AR954846
+      **Set NSTD = RUND for STFQ = 'D'                                                      AR954846
+      *                                                                                     AR954846
+     C     STFQ          IFEQ      'D'                                                      AR954846
+     C                   Z-ADD     RUND          NSTD                                       AR954846
+     C                   ELSE                                                               AR954846
      C                   Z-ADD     ZDAYNO        NSTD
+     C                   ENDIF                                                              AR954846
 
       ** If not daily post and accrual date before DNWD, set NSTD to DNWD
 

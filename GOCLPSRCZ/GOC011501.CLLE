@@ -13,12 +13,15 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2012                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD021155           Date 10Jul13              */
+/*       Last Amend No. MD055146           Date 04Feb20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD021155           Date 10Jul13              */
 /*                      MD020205 *CREATE   Date 24Apr13              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD055146 - Failed MXC004802 seq. 00001 and others           */
+/*                  Increase Branches to 900.                        */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD021155 - COB Restructure Phase 1 remnants                 */
 /*                - GOC0115 TS wrong approach                        */
@@ -26,7 +29,7 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&CNAM &CSEQ)
- 
+
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
              DCL        VAR(&CSEQC) TYPE(*CHAR) LEN(5)
@@ -57,41 +60,44 @@
              DCL        VAR(&ENDRRN) TYPE(*DEC) LEN(10 0)
              DCL        VAR(&CSEQ2) TYPE(*DEC) LEN(2 0)
              DCL        VAR(&CSEQ2C) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&GFGPF)     TYPE(*CHAR) LEN(10)                             /*MD055146*/
+             DCL        VAR(&GFGBRC)    TYPE(*CHAR) LEN(10)                             /*MD055146*/
+             DCL        VAR(&GFGLF)     TYPE(*CHAR) LEN(10)                             /*MD055146*/
              DCLF       ACUSIXPD
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              SNDPGMMSG  MSG('GOC011501 - Midas GO Bulk Sync of +
                           GZSDACUSPD - Task Split') TOMSGQ(MRUNQ)
- 
+
              RTVJOBA    TYPE(&JOBTYPE)
- 
+
              CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
                           VALUE(' ')
              MONMSG     MSGID(CPF0000)
- 
+
              CHGJOB SWS(00000000)
- 
+
 /* Check if normal run or restart */
- 
+
              CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
- 
+
 /* Check if any problems with COB components file */
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
              GOTO       CMDLBL(ABNOR)
              ENDDO
- 
+
              CHGVAR     VAR(&RESTART) VALUE(&STAT)
- 
+
 /* Set restart status to 'Y' */
- 
+
              CHGVAR     VAR(&STAT) VALUE('Y')
              CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
- 
+
              RCVF
              IF       COND(&CSEQ *LT 1000) THEN(DO)
                CHGVAR     VAR(&STRRRN) VALUE(1)
@@ -104,28 +110,33 @@
                CHGVAR     VAR(&STRRRN) VALUE((&CSEQ2 * &NORE) +1 )
                CHGVAR     VAR(&ENDRRN) VALUE((&CSEQ2 + 1) * &NORE)
              ENDDO
- 
+
 /* Get zone */
- 
+
              CALL       PGM(GOGETZONE) PARM(&RTCD &ERMS &FULLCHECK +
                           &ZOZONE &ZOSHTC &ZORDNB &ZODNWD &ZOBCCY +
                           &ZONJOB)
- 
+
 /* error */
 /**********  IF         COND(&RTCD ¬= '       ') THEN(DO)                            */ /*MD021155*/
              IF         COND(&RTCD *NE '       ') THEN(DO)                              /*MD021155*/
                 GOTO       CMDLBL(ABNOR)
              ENDDO
- 
- 
+
+
 /* Get synchronisation executables*/
- 
+
+/**********  CALL       PGM(GOGETSYNX) PARM(&GPF &ZOZONE &GLFU +     */                 /*MD055146*/
+/**********               &ZLFOVR &GLFOVR &GLFCLO &ZLFDLO &GLFDLO +  */                 /*MD055146*/
+/**********               &OPNQRY &ZLF &BLFD &BLSY)                  */                 /*MD055146*/
+                                                                                        /*MD055146*/
              CALL       PGM(GOGETSYNX) PARM(&GPF &ZOZONE &GLFU +
                           &ZLFOVR &GLFOVR &GLFCLO &ZLFDLO &GLFDLO +
-                          &OPNQRY &ZLF &BLFD &BLSY)
- 
+                          &OPNQRY &ZLF &BLFD &BLSY &GFGPF &GFGBRC +
+                          &GFGLF)                                                       /*MD055146*/
+
 /* End if bulk synchronisation not done for this file*/
- 
+
 /**********  IF         COND(&BLSY ¬= 'Y') THEN(DO)                                  */ /*MD021155*/
              IF         COND(&BLSY *NE 'Y') THEN(DO)                                    /*MD021155*/
               SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Bulk +
@@ -133,18 +144,18 @@
                             *CAT &GPF) TOPGMQ(*EXT)
              GOTO       CMDLBL(ENDCL)
              ENDDO
- 
- 
+
+
 /* Do bulk synchronisation */
- 
+
              CALL       PGM(QCMDEXC) PARM(&ZLFOVR 60)
              CALL       PGM(QCMDEXC) PARM(&GLFOVR 60)
              CALL       PGM(QCMDEXC) PARM(&OPNQRY 32702)
              OVRDBF     FILE(&GPF) SEQONLY(*YES 4000)
              OVRDBF     FILE(GPGDRPPD) SEQONLY(*YES 5000)
- 
+
 /* Filter duplicates */
- 
+
              IF (&BLFD = 'Y') THEN(DO)
              OPNQRYF    FILE((&ZLF)) OPTION(*INP) KEYFLD(*FILE) +
                           UNIQUEKEY(*ALL) SEQONLY(*YES 5000)
@@ -153,43 +164,43 @@
              CALL       PGM(QCMDEXC) PARM(&GLFCLO 60)
              CALL       PGM(QCMDEXC) PARM(&ZLFDLO 60)
              CALL       PGM(QCMDEXC) PARM(&GLFDLO 60)
- 
+
 /* Error */
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /* Successful completion */
- 
+
              CHGVAR     VAR(&RESTART) VALUE('N')
- 
+
              GOTO       ENDCL
- 
+
  ABNOR:
- 
+
              CHGJOB     SWS(XXXXXX11)
- 
+
              DMPCLPGM
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
 /* Abnormal termination - batch job */
- 
+
              IF         COND(&JOBTYPE = '0') THEN(DO)
                SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                            GOC011501 ended abnormally - see job log') +
                            TOMSGQ(MOPERQ MRUNQ)
                MONMSG     MSGID(CPF0000 MCH0000)
              ENDDO
- 
+
 /* Abnormal termination - interactive job */
- 
+
              IF         COND(&JOBTYPE = '1') THEN(DO)
                 SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           GOC011501 ended abnormally - see job log') +
                           TOPGMQ(*EXT)
                 MONMSG     MSGID(CPF0000 MCH0000)
              ENDDO
- 
+
  ENDCL:
  /********** RCLRSC                                                                  */ /*MD021155*/
  /********** MONMSG     MSGID(CPF0000 MCH0000)                                       */ /*MD021155*/

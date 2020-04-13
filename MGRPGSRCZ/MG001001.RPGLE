@@ -1404,7 +1404,7 @@
 
      C                   EVAL      WCtr = 35
      C                   IF        CSW220 = 'Y'                                               CSW220
-     C                   EVAL      W = 2                                                      CSW220
+     C                   EVAL      W = 1                                                      CSW220
      C                   ELSE                                                                 CSW220
      C                   EVAL      W = 5                                                      CSW220
      C                   ENDIF                                                                CSW220

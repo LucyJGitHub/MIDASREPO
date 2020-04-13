@@ -3967,9 +3967,9 @@
      C                   PARM      *BLANK        RetCodeOut
      C                   PARM                    CrAcFilFmt
      C                   PARM                    CABXFilFmt
-     C***********        PARM                    CARIFilFmt                   CGL029 CSD101 MD054996
-     C***********        PARM                    CACOFilFmt                   CGL029 CSD101 MD054996
-     C***********        PARM                    CAPWFilFmt                   CGL029 CSD101 MD054996
+     C***********        PARM                    CARIFilFmt                          CSD101 MD054997
+     C***********        PARM                    CACOFilFmt                          CSD101 MD054997
+     C***********        PARM                    CAPWFilFmt                          CSD101 MD054997
      C                   PARM                    P1RIFilFmt                                   CGL029
      C                   PARM                    P1COFilFmt                                   CGL029
      C                   PARM                    P1PWFilFmt                                   CGL029

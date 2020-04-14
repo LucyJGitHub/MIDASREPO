@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. CSW220             Date 09Mar20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CSW216             Date 14Mar16               *
       *                 MD035515           Date 19Aug15               *
       *                 MD033754           Date 21Apr15               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW220 - SWIFT Changes 2020                                  *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CSW216 - SWIFT Changes 2016                                  *
@@ -209,6 +211,13 @@
      D @WRK            S              1    DIM(50)
      D @BTB            S             35    DIM(6)
 
+     D AR8XJ           S             40    DIM(5)                                             CSW220
+     D AN8X            S             40    DIM(5)                                             CSW220
+
+     D AJFORM          C                   CONST('ReplaceJFormatSlash')                       CSW220
+     D SWIFT           C                   CONST('SWIFTACTV')                                 CSW220
+     D JFRMAT          C                   CONST('MG001003')                                  CSW220
+
      D/COPY WNCPYSRC,MG0600IIP2
 
      D MULT            DS                  OCCURS(95)
@@ -348,6 +357,13 @@
      D  MGTNXX               167    198                                                       CSW216
      D  MGTIXX               199    199                                                       CSW216
      D  MGETXX               200    200                                                       CSW216
+
+     D D87CDE          DS                                                                     CSW220
+     D  DSRI01                 1     40                                                       CSW220
+     D  DSRI02                41     80                                                       CSW220
+     D  DSRI03                81    120                                                       CSW220
+     D  DSRI04               121    160                                                       CSW220
+     D  DSRI05               161    200                                                       CSW220
       **  Multiple occurrence data structure for reporting party                            MD022425
                                                                                             MD022425
      D/COPY WNCPYSRC,MG0600I001
@@ -362,6 +378,7 @@
       **  Data structure for trading file
 
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
+     D  D83CDE               917   1116                                                       CSW220
       **  Data structure for customer file
 
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
@@ -941,6 +958,50 @@
      C                   MOVEL     'Y'           CSW214                                       CSW214
      C                   ENDIF                                                                CSW214
                                                                                               CSW214
+      *                                                                                       CSW220
+      ** Check if switchable feature CSW220 is switched on                                    CSW220
+      *                                                                                       CSW220
+     C                   CALL      SWIFT                                                      CSW220
+     C                   PARM      'CSW220'      PSWIFT            6                          CSW220
+     C                   PARM      *BLANKS       PRTCD                                        CSW220
+      *                                                                                       CSW220
+     C                   IF        PRTCD = 'CSWACTV'                                          CSW220
+     C                   MOVEL     'Y'           CSW220            1                          CSW220
+     C                   MOVEL     '/NOSI/'      NOSTXN           10                          CSW220
+     C                   MOVE      'NETS'        NOSTXN                                       CSW220
+     C                   MOVEL     '/NOSI/'      NOSTXU           10                          CSW220
+     C                   MOVE      'UKWN'        NOSTXU                                       CSW220
+     C                   ELSE                                                                 CSW220
+     C                   MOVEL     'N'           CSW220                                       CSW220
+     C                   ENDIF                                                                CSW220
+                                                                                              CSW220
+     C                   CALL      'AOSVALR0'                                                 CSW220
+     C                   PARM      *BLANKS       PRTCD                                        CSW220
+     C                   PARM      AJFORM        P@OP01           20                          CSW220
+     C                   PARM      *BLANKS       P@VL01          200                          CSW220
+     C                   PARM      *BLANKS       P@OP02           20                          CSW220
+     C                   PARM      *BLANKS       P@VL02          200                          CSW220
+     C                   PARM      *BLANKS       P@OP03           20                          CSW220
+     C                   PARM      *BLANKS       P@VL03          200                          CSW220
+     C                   PARM      *BLANKS       P@OP04           20                          CSW220
+     C                   PARM      *BLANKS       P@VL04          200                          CSW220
+     C                   PARM      *BLANKS       P@OP05           20                          CSW220
+     C                   PARM      *BLANKS       P@VL05          200                          CSW220
+     C                   PARM      *BLANKS       P@OP06           20                          CSW220
+     C                   PARM      *BLANKS       P@VL06          200                          CSW220
+     C                   PARM      *BLANKS       P@OP07           20                          CSW220
+     C                   PARM      *BLANKS       P@VL07          200                          CSW220
+     C                   PARM      *BLANKS       P@OP08           20                          CSW220
+     C                   PARM      *BLANKS       P@VL08          200                          CSW220
+     C                   PARM      *BLANKS       P@OP09           20                          CSW220
+     C                   PARM      *BLANKS       P@VL09          200                          CSW220
+     C                   PARM      *BLANKS       P@OP10           20                          CSW220
+     C                   PARM      *BLANKS       P@VL10          200                          CSW220
+                                                                                              CSW220
+     C                   MOVEL     ' '           WS                1                          CSW220
+     C                   IF        PRTCD = *BLANKS                                            CSW220
+     C                   EVAL      WS = P@VL01                                                CSW220
+     C                   ENDIF                                                                CSW220
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1492,11 +1553,23 @@
       ** If receiver party info output :87J:
 
      C                   ELSE
-     C     DSRI01        IFNE      *BLANK
-     C     DSRI02        ORNE      *BLANK
-     C     DSRI03        ORNE      *BLANK
-     C     DSRI04        ORNE      *BLANK
-     C     DSRI05        ORNE      *BLANK
+                                                                                              CSW220
+     C                   IF        CSW220 = 'Y'                                               CSW220
+     C                   MOVEA     D87CDE        AR8XJ                                        CSW220
+     C                   EXSR      SWF8XJ                                                     CSW220
+     C                   MOVEA     AN8X          D87CDE                                       CSW220
+     C                   ENDIF                                                                CSW220
+                                                                                              CSW220
+     C*****DSRI01        IFNE      *BLANK                                                     CSW220
+     C*****DSRI02        ORNE      *BLANK                                                     CSW220
+     C*****DSRI03        ORNE      *BLANK                                                     CSW220
+     C*****DSRI04        ORNE      *BLANK                                                     CSW220
+     C*****DSRI05        ORNE      *BLANK                                                     CSW220
+     C     D87CDE        IFNE      *BLANKS                                                    CSW220
+     C     CSW220        ANDEQ     'N'                                                        CSW220
+     C     D87CDE        ORNE      *BLANKS                                                    CSW220
+     C     CSW220        ANDEQ     'Y'                                                        CSW220
+     C     WOUT8X        ANDEQ     'Y'                                                        CSW220
 
      C                   MOVE      *BLANK        DN87              1
      C     DSRI01        IFNE      *BLANK
@@ -1553,6 +1626,19 @@
       ** Else output :87D:
 
      C                   ELSE
+      *                                                                                       CSW220
+      ** If CSW220 is ON, process format J instead of D                                       CSW220
+     C                   IF        CSW220 = 'Y'                                               CSW220
+     C                   ADD       1             X                                            CSW220
+     C     X             OCCUR     MULT                                                       CSW220
+     C                   MOVEL     MGCNUM        ZDEST                                        CSW220
+     C                   MOVE      *BLANKS       ACLINE                                       CSW220
+     C                   MOVE      ' '           TAG                                          CSW220
+     C                   MOVE      '87'          FLDNO                                        CSW220
+     C                   EXSR      SRFMTJ                                                     CSW220
+                                                                                              CSW220
+     C                   ELSE                                                                 CSW220
+                                                                                              CSW220
      C                   ADD       1             X
      C     X             OCCUR     MULT
      C                   MOVE      ':87D:'       MTAG
@@ -1582,6 +1668,7 @@
      C                   MOVEL     DSCNA4        MFLD
      C                   ENDIF
 
+     C                   ENDIF                                                                CSW220
      C                   ENDIF
      C                   ENDIF
 
@@ -2584,8 +2671,19 @@
      C     MGPSTM        IFEQ      00
      C                   ADD       1             X
      C     X             OCCUR     MULT
+                                                                                              CSW220
+     C                   IF        CSW220 = 'Y'                                               CSW220
+     C                   MOVE      ':57J:'       MTAG                                         CSW220
+     C                   IF        NETSL <> 'Y'                                               CSW220
+     C                   MOVEL     NOSTXU        MFLD                                         CSW220
+     C                   ELSE                                                                 CSW220
+     C                   MOVEL     NOSTXN        MFLD                                         CSW220
+     C                   ENDIF                                                                CSW220
+                                                                                              CSW220
+     C                   ELSE                                                                 CSW220
      C                   MOVE      ':57D:'       MTAG
      C                   MOVEL     'UNKNOWN'     MFLD
+     C                   ENDIF                                                                CSW220
      C                   MOVE      'Y'           FLD57U            1
      C                   END
 
@@ -2780,8 +2878,18 @@
      C     MGPSTM        IFEQ      00
      C                   ADD       1             X
      C     X             OCCUR     MULT
+     C                   IF        CSW220 = 'Y'                                               CSW220
+     C                   MOVE      ':57J:'       MTAG                                         CSW220
+     C                   IF        NETSL <> 'Y'                                               CSW220
+     C                   MOVEL     NOSTXU        MFLD                                         CSW220
+     C                   ELSE                                                                 CSW220
+     C                   MOVEL     NOSTXN        MFLD                                         CSW220
+     C                   ENDIF                                                                CSW220
+                                                                                              CSW220
+     C                   ELSE                                                                 CSW220
      C                   MOVE      ':57D:'       MTAG
      C                   MOVEL     'UNKNOWN'     MFLD
+     C                   ENDIF                                                                CSW220
      C                   MOVE      'Y'           FLD57U            1
      C                   END
 
@@ -2990,8 +3098,15 @@
 
      C     CKNETI        IFEQ      'Y'
      C     FLDNO         ANDEQ     '87'
+                                                                                              CSW220
+     C                   IF        CSW220 = 'Y'                                               CSW220
+     C                   MOVEL     NOSTXN        MFLD                                         CSW220
+     C                   MOVE      'J'           TAG                                          CSW220
+     C                   ELSE                                                                 CSW220
      C                   MOVEL     NETTXT        MFLD
      C                   MOVE      'D'           TAG
+     C                   ENDIF                                                                CSW220
+                                                                                              CSW220
      C                   MOVE      @MTAG         MTAG
      C                   ELSE
      C                   CALL      'ZM0050'                             15
@@ -3058,6 +3173,20 @@
 
      C/COPY WNCPYSRC,MG0600C047
 
+      ** If SWIFT 2020 is installed, tag D should be replaced by tag J.                       CSW220
+      ** This is true for tags 82, 87, 83, 53, 56, 57                                         CSW220
+                                                                                              CSW220
+     C                   IF        CSW220 = 'Y' AND FLDNO = '82'                              CSW220
+     C                             OR CSW220 = 'Y' AND FLDNO = '83'                           CSW220
+     C                             OR CSW220 = 'Y' AND FLDNO = '87'                           CSW220
+     C                             OR CSW220 = 'Y' AND FLDNO = '53'                           CSW220
+     C                             OR CSW220 = 'Y' AND FLDNO = '56'                           CSW220
+     C                             OR CSW220 = 'Y' AND FLDNO = '57'                           CSW220
+                                                                                              CSW220
+     C                   EXSR      SRFMTJ                                                     CSW220
+                                                                                              CSW220
+     C                   ELSE                                                                 CSW220
+                                                                                              CSW220
      C                   MOVE      'D'           TAG
      C                   MOVE      @MTAG         MTAG
 
@@ -3092,6 +3221,7 @@
      C     X             OCCUR     MULT
      C                   MOVEL     ZSADD4        MFLD
      C                   ENDIF
+     C                   ENDIF                                                                CSW220
      C                   ENDIF
 
      C                   ENDIF
@@ -3148,6 +3278,9 @@
      C     DSFUND        ANDNE     *BLANK
      C                   ADD       1             X
      C     X             OCCUR     MULT
+     C     CSW220        IFEQ      'Y'                                                        CSW220
+     C     '/':WS        XLATE     DSFUND        DSFUND                                       CSW220
+     C                   ENDIF                                                                CSW220
      C     '/NAME/'      CAT       DSFUND        MFLD
      C                   MOVE      ':83J:'       MTAG
 
@@ -3156,7 +3289,8 @@
       ** Access customer file for Beneficiary Customer Number
 
      C     MGBENN        IFNE      *BLANKS
-     C                   CALL      'AOCUSTR0'
+     C**********         CALL      'AOCUSTR0'                                                 CSW220
+     C                   CALL      'AOCUSTR1'                                                 CSW220
      C                   PARM      '*MSG   '     @RTCD
      C                   PARM      '*KEY   '     @OPTN
 
@@ -3167,7 +3301,8 @@
      C/COPY WNCPYSRC,MG0600C031
 
      C                   PARM      *BLANKS       @KYST             7
-     C     SDCUST        PARM      SDCUST        DSSDY
+     C*****SDCUST        PARM      SDCUST        DSSDY                                        CSW220
+     C     SDCUST        PARM      SDCUST        DSLDY                                        CSW220
 
       ** Customer Not found on SDCUSTPD, check the counterparty
       ** Nostro file.
@@ -3291,6 +3426,107 @@
      C                   ELSE
      C                   MOVEL     ZSADD1        MFLD
      C                   ENDIF
+                                                                                              CSW220
+     C                   ELSE                                                                 CSW220
+     C                   IF        CSW024 = 'Y' AND DSCORP = 'Y'                              CSW220
+                                                                                              CSW220
+     C                   IF        CSW220 = 'Y'                                               CSW220
+     C                   MOVEA     D83CDE        AR8XJ                                        CSW220
+     C                   EXSR      SWF8XJ                                                     CSW220
+     C                   MOVEA     AN8X          D83CDE                                       CSW220
+     C                   ENDIF                                                                CSW220
+                                                                                              CSW220
+     C                   IF        D83CDE <> *BLANKS AND CSW220 = 'N'                         CSW220
+     C                             OR D83CDE <> *BLANKS AND CSW220 = 'Y'                      CSW220
+     C                                AND WOUT8X = 'Y'                                        CSW220
+     C                   EVAL      WOUT8X = 'Y'                                               CSW220
+     C                   MOVE      *BLANK        DN83              1                          CSW220
+     C                   IF        BBRI01 <> *BLANK                                           CSW220
+     C                   ADD       1             X                                            CSW220
+     C     X             OCCUR     MULT                                                       CSW220
+     C                   IF        DN83 <> 'Y'                                                CSW220
+     C                   MOVE      ':83J:'       MTAG                                         CSW220
+     C                   MOVE      'Y'           DN83                                         CSW220
+     C                   ENDIF                                                                CSW220
+     C                   MOVEL     *BLANK        MFLD                                         CSW220
+     C                   MOVEL     BBRI01        MFLD                                         CSW220
+     C                   ENDIF                                                                CSW220
+     C                   IF        BBRI02 <> *BLANK                                           CSW220
+     C                   ADD       1             X                                            CSW220
+     C     X             OCCUR     MULT                                                       CSW220
+     C                   IF        DN83 <> 'Y'                                                CSW220
+     C                   MOVE      ':83J:'       MTAG                                         CSW220
+     C                   MOVE      'Y'           DN83                                         CSW220
+     C                   ENDIF                                                                CSW220
+     C                   MOVE      *BLANK        MFLD                                         CSW220
+     C                   MOVEL     BBRI02        MFLD                                         CSW220
+     C                   ENDIF                                                                CSW220
+     C                   IF        BBRI03 <> *BLANK                                           CSW220
+     C                   ADD       1             X                                            CSW220
+     C     X             OCCUR     MULT                                                       CSW220
+     C                   IF        DN83 <> 'Y'                                                CSW220
+     C                   MOVE      ':83J:'       MTAG                                         CSW220
+     C                   MOVE      'Y'           DN83                                         CSW220
+     C                   ENDIF                                                                CSW220
+     C                   MOVE      *BLANK        MFLD                                         CSW220
+     C                   MOVEL     BBRI03        MFLD                                         CSW220
+     C                   ENDIF                                                                CSW220
+     C                   IF        BBRI04 <> *BLANK                                           CSW220
+     C                   ADD       1             X                                            CSW220
+     C     X             OCCUR     MULT                                                       CSW220
+     C                   IF        DN83 <> 'Y'                                                CSW220
+     C                   MOVE      ':83J:'       MTAG                                         CSW220
+     C                   MOVE      'Y'           DN83                                         CSW220
+     C                   ENDIF                                                                CSW220
+     C                   MOVE      *BLANK        MFLD                                         CSW220
+     C                   MOVEL     BBRI04        MFLD                                         CSW220
+     C                   ENDIF                                                                CSW220
+     C                   IF        BBRI05 <> *BLANK                                           CSW220
+     C                   ADD       1             X                                            CSW220
+     C     X             OCCUR     MULT                                                       CSW220
+     C                   IF        DN83 <> 'Y'                                                CSW220
+     C                   MOVE      ':83J:'       MTAG                                         CSW220
+     C                   MOVE      'Y'           DN83                                         CSW220
+     C                   ENDIF                                                                CSW220
+     C                   MOVE      *BLANK        MFLD                                         CSW220
+     C                   MOVEL     BBRI05        MFLD                                         CSW220
+     C                   ENDIF                                                                CSW220
+     C                   ENDIF                                                                CSW220
+     C                   ENDIF                                                                CSW220
+                                                                                              CSW220
+      ** If CSW220 is ON and tag is format D, process SWIFT 2020 J format                     CSW220
+                                                                                              CSW220
+     C                   IF        WOUT8X <> 'Y' AND ZSTAG = 'D'                              CSW220
+     C                   IF        CSW220 = 'Y'                                               CSW220
+     C                   ADD       1             X                                            CSW220
+     C     X             OCCUR     MULT                                                       CSW220
+     C                   MOVE      *BLANKS       ACLINE                                       CSW220
+     C                   MOVE      '83'          FLDNO                                        CSW220
+     C                   EXSR      SRFMTJ                                                     CSW220
+                                                                                              CSW220
+     C                   ELSE                                                                 CSW220
+     C                   ADD       1             X                                            CSW220
+     C     X             OCCUR     MULT                                                       CSW220
+     C                   MOVE      *BLANKS       ACLINE                                       CSW220
+     C                   MOVE      ' '           TAG                                          CSW220
+     C                   MOVE      '83'          FLDNO                                        CSW220
+     C                   MOVE      'D'           TAG                                          CSW220
+     C                   MOVE      @MTAG         MTAG                                         CSW220
+                                                                                              CSW220
+      ** Address 1                                                                            CSW220
+                                                                                              CSW220
+     C                   MOVE      *BLANKS       SAVMTG            5                          CSW220
+     C     ACLINE        IFNE      *BLANKS                                                    CSW220
+     C                   MOVE      MTAG          SAVMTG                                       CSW220
+     C                   MOVEL     ACLINE        MFLD                                         CSW220
+     C                   ADD       1             X                                            CSW220
+     C     X             OCCUR     MULT                                                       CSW220
+     C                   MOVEL     ZSADD1        MFLD                                         CSW220
+     C                   ELSE                                                                 CSW220
+     C                   MOVEL     ZSADD1        MFLD                                         CSW220
+     C                   ENDIF                                                                CSW220
+     C                   ENDIF                                                                CSW220
+     C                   ENDIF                                                                CSW220
 
      C                   EXSR      SEXTN
      C                   ENDIF
@@ -3364,6 +3600,15 @@
       ** D Type address
 
      C                   ELSE
+                                                                                              CSW220
+      ** If CSW220 is ON, process format J instead of D.                                      CSW220
+                                                                                              CSW220
+     C                   IF        CSW220 = 'Y'                                               CSW220
+     C                   MOVE      '53'          FLDNO                                        CSW220
+     C                   MOVEL     *BLANKS       ACLINE                                       CSW220
+     C                   EXSR      SRFMTJ                                                     CSW220
+                                                                                              CSW220
+     C                   ELSE                                                                 CSW220
      C                   MOVE      ':53D:'       MTAG
      C                   MOVEL     ZSADD1        MFLD
 
@@ -3390,6 +3635,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
+     C                   ENDIF                                                                CSW220
      C                   ENDIF
 
      C                   ENDIF
@@ -3438,7 +3684,8 @@
 
      C/COPY WNCPYSRC,MG0600C051
 
-     C                   MOVEL     MGBENA        ACLINE
+     C**********         MOVEL     MGBENA        ACLINE                                       CSW220
+     C                   MOVEL     MGAWBA        ACLINE                                       CSW220
      C                   MOVE      ' '           TAG
      C                   MOVE      @TAGD         FLDNO
 
@@ -3600,11 +3847,23 @@
      C                   ADD       1             X
      C     X             OCCUR     MULT
      C     @TAGD         IFEQ      '57'
+     C                   IF        CSW220 = 'Y'                                               CSW220
+     C                   MOVE      ':57J:'       MTAG                                         CSW220
+                                                                                              CSW220
+     C                   IF        NETSL <> 'Y'                                               CSW220
+     C                   MOVEL     NOSTXU        MFLD                                         CSW220
+     C                   ELSE                                                                 CSW220
+     C                   MOVEL     NOSTXN        MFLD                                         CSW220
+     C                   ENDIF                                                                CSW220
+     C                   ELSE                                                                 CSW220
      C                   MOVE      ':57D:'       MTAG
+     C                   MOVEL     'UNKNOWN'     MFLD                                         CSW220
+     C                   ENDIF                                                                CSW220
      C                   ELSE
      C                   MOVE      ':87D:'       MTAG
+     C                   MOVEL     'UNKNOWN'     MFLD                                         CSW220
      C                   ENDIF
-     C                   MOVEL     'UNKNOWN'     MFLD
+     C**********         MOVEL     'UNKNOWN'     MFLD                                         CSW220
 
      C/COPY WNCPYSRC,MG0600CCP2
 
@@ -4711,6 +4970,119 @@
      C                   ENDIF                                                              MD022425
      C                   ENDSR                                                              MD022425
      C/EJECT                                                                                MD022425
+      *****************************************************************                       CSW220
+      *   SRFMTJ - Format message detail - Sequence J                 *                       CSW220
+      *   Called by   Main process                                    *                       CSW220
+      *   Calls                                                       *                       CSW220
+      *****************************************************************                       CSW220
+                                                                                              CSW220
+     C     SRFMTJ        BEGSR                                                                CSW220
+                                                                                              CSW220
+     C                   CALL      JFRMAT                                                     CSW220
+     C                   PARM      ZDEST         PCUST            12                          CSW220
+     C                   PARM      FLDNO         PTAG              2                          CSW220
+     C                   PARM      ACLINE        PACLNE           35                          CSW220
+     C                   PARM      *BLANKS       PLINE1           40                          CSW220
+     C                   PARM      *BLANKS       PLINE2           40                          CSW220
+     C                   PARM      *BLANKS       PLINE3           40                          CSW220
+     C                   PARM      *BLANKS       PLINE4           40                          CSW220
+     C                   PARM      *BLANKS       PLINE5           40                          CSW220
+                                                                                              CSW220
+     C                   MOVEL     *BLANKS       MFLD                                         CSW220
+     C                   MOVE      'J'           TAG                                          CSW220
+     C                   MOVE      @MTAG         MTAG                                         CSW220
+     C                   MOVEL     PLINE1        MFLD                                         CSW220
+                                                                                              CSW220
+     C                   MOVEL     *BLANKS       RESULT           34                          CSW220
+     C                   EVAL      RESULT = %SUBST(PLINE2:7)                                  CSW220
+     C                   IF        RESULT <> *BLANKS                                          CSW220
+     C                   ADD       1             X                                            CSW220
+     C     X             OCCUR     MULT                                                       CSW220
+     C                   MOVEL     *BLANKS       MFLD                                         CSW220
+     C                   MOVEL     PLINE2        MFLD                                         CSW220
+     C                   ENDIF                                                                CSW220
+                                                                                              CSW220
+     C                   MOVEL     *BLANKS       RESULT                                       CSW220
+     C                   EVAL      RESULT = %SUBST(PLINE3:7)                                  CSW220
+     C                   IF        RESULT <> *BLANKS                                          CSW220
+     C                   ADD       1             X                                            CSW220
+     C     X             OCCUR     MULT                                                       CSW220
+     C                   MOVEL     *BLANKS       MFLD                                         CSW220
+     C                   MOVEL     PLINE3        MFLD                                         CSW220
+     C                   ENDIF                                                                CSW220
+                                                                                              CSW220
+     C                   MOVEL     *BLANKS       RESULT                                       CSW220
+     C                   EVAL      RESULT = %SUBST(PLINE4:7)                                  CSW220
+     C                   IF        RESULT <> *BLANKS                                          CSW220
+     C                   ADD       1             X                                            CSW220
+     C     X             OCCUR     MULT                                                       CSW220
+     C                   MOVEL     *BLANKS       MFLD                                         CSW220
+     C                   MOVEL     PLINE4        MFLD                                         CSW220
+     C                   ENDIF                                                                CSW220
+                                                                                              CSW220
+     C                   MOVEL     *BLANKS       RESULT                                       CSW220
+     C                   EVAL      RESULT = %SUBST(PLINE5:7)                                  CSW220
+     C                   IF        RESULT <> *BLANKS                                          CSW220
+     C                   ADD       1             X                                            CSW220
+     C     X             OCCUR     MULT                                                       CSW220
+     C                   MOVEL     *BLANKS       MFLD                                         CSW220
+     C                   MOVEL     PLINE5        MFLD                                         CSW220
+     C                   ENDIF                                                                CSW220
+                                                                                              CSW220
+     C                   ENDSR                                                                CSW220
+     C/EJECT                                                                                  CSW220
+      ****************************************************************                        CSW220
+      *                                                              *                        CSW220
+      *  SWF8XJ - Remove invalid codes from MT3xx Receiver Party     *                        CSW220
+      *                                                              *                        CSW220
+      ****************************************************************                        CSW220
+      *                                                                                       CSW220
+     C     SWF8XJ        BEGSR                                                                CSW220
+                                                                                              CSW220
+     C                   MOVEL     'N'           WOUT8X            1                          CSW220
+     C                   Z-ADD     0             WPos              2 0                        CSW220
+     C                   EVAL      AN8X = *BLANKS                                             CSW220
+     C                   IF        AR8XJ(1) <> *BLANKS                                        CSW220
+                                                                                              CSW220
+     C                   Z-ADD     1             W                 1 0                        CSW220
+     C                   Z-ADD     1             Q                 1 0                        CSW220
+                                                                                              CSW220
+     C                   DOW       W < 6                                                      CSW220
+     C                   EVAL      WPos = %SCAN('/ABIC/UKWN':AR8XJ(W):1)                      CSW220
+     C                   IF        WPos = 0                                                   CSW220
+     C                   EVAL      WPos = %SCAN('/GBSC/':AR8XJ(W):1)                          CSW220
+     C                   IF        WPos = 0                                                   CSW220
+     C                   EVAL      WPos = %SCAN('/USCH/':AR8XJ(W):1)                          CSW220
+     C                   IF        WPos = 0                                                   CSW220
+     C                   EVAL      WPos = %SCAN('/USFW/':AR8XJ(W):1)                          CSW220
+     C                   ENDIF                                                                CSW220
+     C                   ENDIF                                                                CSW220
+     C                   ENDIF                                                                CSW220
+                                                                                              CSW220
+     C                   IF        WPos = 0                                                   CSW220
+     C                   EVAL      AN8X(Q) = AR8XJ(W)                                         CSW220
+     C                   ADD       1             Q                                            CSW220
+     C                   ENDIF                                                                CSW220
+                                                                                              CSW220
+     C                   ADD       1             W                                            CSW220
+                                                                                              CSW220
+     C                   ENDDO                                                                CSW220
+                                                                                              CSW220
+     C                   IF        AN8X(1) = *BLANKS                                          CSW220
+     C                             OR AN8X(1) = '/ABIC/' AND AN8X(2) = *BLANKS                CSW220
+     C                   EVAL      WOUT8X = 'N'                                               CSW220
+     C                   ELSE                                                                 CSW220
+     C                   EVAL      WOUT8X = 'Y'                                               CSW220
+     C                   ENDIF                                                                CSW220
+      *                                                                                       CSW220
+     C                   ELSE                                                                 CSW220
+     C                   EVAL      AN8X = *BLANKS                                             CSW220
+      *                                                                                       CSW220
+     C                   ENDIF                                                                CSW220
+      *                                                                                       CSW220
+     C                   ENDSR                                                                CSW220
+      ****************************************************************                        CSW220
+     C/EJECT                                                                                  CSW220
       *****************************************************************
      C/COPY WNCPYSRC,MG0600C036
       *****************************************************************

@@ -18,8 +18,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. JMI111             Date 16May19               *
-      *  Prev Amend No. CGL148             Date 13Jul18               *
+      *  Last Amend No. MD055515           Date 13Apr20               *
+      *  Prev Amend No. JMI111             Date 16May19               *
+      *                 CGL148             Date 13Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD031707           Date 02Jul15               *
       *                 MD024136           Date 08Jan14               *
@@ -54,6 +55,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055515 - Batch Item allows customer as blank to be         *
+      *             accepted. Amend GLVIMAC to ensure that JE Items   *
+      *             with blank Customer will not be allowed even when *
+      *             CGL148 is ON.                                     *
       *  JMI111   - OPICS-Midas GL Interface. Upgrade to FBM 2.1      *
       *             Added hooks: JMI111_001, JMI111_002, JMI111_005   *
       *  CGL148 - Automatic Opening of GL accounts                    *
@@ -1026,6 +1031,7 @@
      C     W2ACTY        AndNE     'R'                                                        CGL148
      C     W2ACTY        AndNE     'N'                                                        CGL148
      C     A5TOIN        AndNE     'Y'                                                        CGL148
+     C     DDACID        AndNE     *Blanks                                                  MD055515
      C                   Move      'W'           DDAcidOK                                     CGL148
      C                   Add       1             WIdx                                         CGL148
      C                   Eval      WFldNmXAr(WIdx) = 'DDACID'                                 CGL148
@@ -1209,6 +1215,7 @@
      C     W2ACTY        ANDNE     'R'                                                        CGL148
      C     W2ACTY        ANDNE     'N'                                                        CGL148
      C     A5TOIN        ANDNE     'Y'                                                        CGL148
+     C     DDACID        ANDNE     *BLANKS                                                  MD055515
      C                   MOVE      'W'           DDAcidOK                                     CGL148
      C                   Add       1             WIdx                                         CGL148
      C                   Eval      WFldNmXAr(WIdx) = 'DDACID'                                 CGL148
@@ -1367,6 +1374,7 @@
      C     W2ACTY        ANDNE     'R'                                                        CGL148
      C     W2ACTY        ANDNE     'N'                                                        CGL148
      C     A5TOIN        ANDNE     'Y'                                                        CGL148
+     C     DDACID        ANDNE     *BLANKS                                                  MD055515
      C                   MOVE      'W'           DDAcidOK                                     CGL148
      C                   Add       1             WIdx                                         CGL148
      C                   Eval      WFldNmXAr(WIdx) = 'DDACID'                                 CGL148

@@ -18,8 +18,9 @@
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
       *                                                               *
-      *  Last Amend No. MD054623           Date 14Jan19               *
-      *  Prev Amend No. JMI113             Date 28May18               *
+      *  Last Amend No. MD055557           Date 13Apr20               *
+      *  Prev Amend No. MD054623           Date 14Jan19               *
+      *                 JMI113             Date 28May18               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL154             Date 13Oct14               *
       *                 CER059             Date 19Jul10               *
@@ -104,6 +105,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD055557 - GLC4114 00003 Halted during COB due to FOOB.      *
+      *             Ensure correct LF override when FNCD = '***'.     *
+      *             Switch on U7 and U8 for correct error handling.   *
       *  MD054623 - Use the format 'Transation Number/Teller ID +     *
       *             Narrative or Transaction Title if the             *
       *             RTSNarrFormat = 'Y'                               *
@@ -982,7 +986,11 @@
       *                                                                                       CRT005
       ** Set up key list for TTRNTM3.                                                         CRT005
       *                                                                                       CRT005
+     C           FNCD      IFEQ '***'                                                       MD055557
+     C                     MOVEL'B'       KTBRI                                             MD055557
+     C                     ELSE                                                             MD055557
      C                     MOVEL'T'       KTBRI                                               CRT005
+     C                     ENDIF                                                            MD055557
      C                     MOVELTBID      KTBID                                               CRT005
      C                     MOVEL'2'       KRCTP                                               CRT005
       *                                                                                       CRT005
@@ -11094,7 +11102,8 @@
       ** Transaction failed.  Re-input necessary.
      C                     DUMP
      C                     CLOSE*ALL
-     C                     SETON                     LR
+     C**********           SETON                     LR                                     MD055557
+     C                     SETON                     U7U8LR                                 MD055557
      C                     RETRN
       *
      C                     ENDSR
@@ -12452,13 +12461,21 @@
       *                                                                                       CRT006
      C                     MOVEL*BLANKS   @CMDT                                               CRT006
      C                     MOVEL@TXT,1    @CMDT                                               CRT006
+     C           FNCD      IFEQ '***'                                                       MD055557
+     C                     MOVEL'B'       @BRIT                                             MD055557
+     C                     ELSE                                                             MD055557
      C                     MOVEL'T'       @BRIT                                               CRT006
+     C                     ENDIF                                                            MD055557
      C                     MOVELTBID      @BIDT                                               CRT006
      C                     CALL 'QCMDEXC'              80                                     CRT006
      C                     PARM           @CMDT                                               CRT006
      C                     PARM 80        @LEN   155                                          CRT006
       *                                                                                       CRT006
+     C           FNCD      IFEQ '***'                                                       MD055557
+     C                     MOVEL'B'       KBRI                                              MD055557
+     C                     ELSE                                                             MD055557
      C                     MOVE 'T'       KBRI                                                CRT006
+     C                     ENDIF                                                            MD055557
      C                     MOVE TBID      KBID                                                CRT006
      C                     Z-ADD99999     KTBTN1                                              CRT006
      C                     OPEN TTRANL1                                                       197289

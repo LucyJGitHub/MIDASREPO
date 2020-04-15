@@ -34,8 +34,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. MD041837           Date 16Jun19               *
+      *  Last Amend No. MD055212           Date 14Feb20               *
+      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *                 MD041837           Date 16Jun19               *
       *                 CER050             Date 16Jun19               *
       *                 CSD101             Date 07Dec18               *
       *                 CSD102             Date 08Jan19               *
@@ -140,6 +141,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055212 - Remove the defaulting of values for DDBAC, DDBAD, *
+      *             DDRAC, DDRAD to 'N'.                              *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  MD041837 - Tax indicator is not defaulted anymore with       *
@@ -3097,10 +3100,10 @@
      C*****BLANKCHK      IFEQ      *BLANKS                                             BUG553 240312
       *                                                                                       BUG553
      C                   MOVE      'Y'           DDPTAD
-     C                   MOVE      'N'           DDRAD
-     C                   MOVE      'N'           DDRAC
-     C                   MOVE      'N'           DDBAD
-     C                   MOVE      'N'           DDBAC
+     C**********         MOVE      'N'           DDRAD                                      MD055212
+     C**********         MOVE      'N'           DDRAC                                      MD055212
+     C**********         MOVE      'N'           DDBAD                                      MD055212
+     C**********         MOVE      'N'           DDBAC                                      MD055212
       *
       ** Dft the Statement Freq to the value held on the GL ICD (SdGelr)
      C                   MOVE      BKDSFC        DDSTFQ

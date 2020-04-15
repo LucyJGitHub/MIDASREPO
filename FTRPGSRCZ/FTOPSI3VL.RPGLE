@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *  Last Amend No. MD021318           Date 26Jul13               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CFT157             Date 29Aug14               *
       *                 AR1097264          Date 27Mar13               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
@@ -43,6 +44,9 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD021318 - OPAY allowed input of account with block debit    *
+      *           - Fix is to condition CSD089 overridable error      *
+      *             changes when input is from HATS screen            *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *            (Recompile)                                        *
@@ -244,6 +248,7 @@
       ** +--------------------------------------+
       *
      D CFT120          S              1A                                                      CFT120
+     D PMode           S              6A                                                    MD021318
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -472,6 +477,7 @@
      C                   Parm                    WMsgDtXAr                                    CFT120
      C                   Parm                    OKFlagsDS4
      C                   Parm                    Val@Fields
+     C                   PARM      *BLANKS       PMode                                      MD021318
       *                                                                                    AR1097264
       ** Retrieve defaulting from FTVCSRF for CDRC                                         AR1097264
       *                                                                                    AR1097264

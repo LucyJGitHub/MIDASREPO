@@ -13,8 +13,10 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2012                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD036885           Date 11May16              */
+/*       Last Amend No. MD048953           Date 08Jan18              */ 
+/*       Prev Amend No. MD027447           Date 17Jun15              */
+/*                      MD046248           Date 27Oct17              */
+/*                      MD036885           Date 11May16              */
 /*                      MD024006A          Date 08Jan14              */
 /*                      MD024006           Date 12Dec13              */
 /*                      MD023005A          Date 31Oct13              */
@@ -29,6 +31,11 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD048953 - Error in adding logical file members with        */
+/*                  multiple data members                            */ 
+/*       MD027447 - No recovery process during component failure.    */
+/*                  Delete duplicate records before RVMV issued and  */
+/*                  make sure CPF message is handled correctly.      */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD036885 - Close of business component CBC022001            */
 /*       MD024006A - Rewrite to simplify generic component again     */
@@ -65,6 +72,7 @@
              DCL        VAR(&ADDMBRRTN) TYPE(*INT)
              DCL        VAR(&RMVRTN) TYPE(*INT)
              DCL        VAR(&ERRFOUND) TYPE(*CHAR) LEN(1)                               /*MD036885*/
+/**********  DCL        VAR(&SPARM) TYPE(*CHAR) LEN(150)            */         /*MD027447 MD048953*/
  
              DCLF       FILE(CHG022001T) OPNID(CHG)
              DCLF       FILE(RGZ022001T) OPNID(RGZ)
@@ -307,6 +315,10 @@
                 CHGVAR     VAR(&RMVRTN) VALUE(1)
                 GOTO       CMDLBL(RMVEND)
              ENDDO
+/********************************************************************/         /*MD027447 MD048953*/
+/***Delete*duplicate*records*from*MBR*before*issuing*RMVM.  */                 /*MD027447 MD048953*/
+/********************************************************************/         /*MD027447 MD048953*/
+/**********  CALLSUBR   SUBR(DELDUP)                                */         /*MD027447 MD048953*/
  
 /** Read list and remove members; note that this may try to */
 /** remove the same member more than once.                  */
@@ -321,12 +333,16 @@
  RMVM:
              IF         COND(&LOOPCOUNT *NE 3) THEN(DO)
                 RMVM       FILE(&MBR_MBFILE) MBR(&MBR_MBNAME)
-                MONMSG     MSGID(CPF7310) EXEC(DO)
-                   RCVMSG     MSGTYPE(*DIAG) MSGID(&MSGID)
+/**********     MONMSG     MSGID(CPF7310) EXEC(DO)                                   */ /*MD027447*/
+/**********        RCVMSG     MSGTYPE(*DIAG) MSGID(&MSGID)                           */ /*MD027447*/
+                MONMSG     MSGID(CPF7310) EXEC(DO)                                      /*MD048953*/
+                   RCVMSG     MSGTYPE(*DIAG) MSGID(&MSGID)                              /*MD048953*/ 
  
 /** If the member has already been removed. */
  
-                   IF         COND(&MSGID *EQ 'CPF5815') THEN(DO)
+/**********        IF         COND(&MSGID *EQ 'CPF5815') THEN(DO)                    */ /*MD027447*/
+/**********     MONMSG MSGID(CPF7310 CPF5815) EXEC(DO)              */         /*MD027447 MD048953*/
+                   IF         COND(&MSGID *EQ 'CPF5815') THEN(DO)                       /*MD048953*/ 
                       GOTO       CMDLBL(RMVREAD)
                    ENDDO
 /** If there is an allocation problem. */
@@ -336,8 +352,11 @@
                       DLYJOB     DLY(10)
                       GOTO       CMDLBL(RMVM)
                    ENDDO
+/**********        ELSE DO                                          */         /*MD027447 MD048953*/
+/**********        IF         COND(&MSGID *NE '       ') THEN(DO)   */         /*MD027447 MD048953*/                    
                    CHGVAR     VAR(&RMVRTN) VALUE(1)
                    GOTO       CMDLBL(RMVEND)
+/**********        ENDDO                                            */         /*MD027447 MD048953*/  
                 ENDDO
              ENDDO
              ELSE       CMD(DO)
@@ -478,7 +497,22 @@
  
  LFRMVEND:
              ENDSUBR    RTNVAL(&LFRMVRTN)
- 
+/******************************************************************************/        /*MD027447*/
+/*                                                                            */        /*MD027447*/
+/* Subroutine to delete duplicate records before RMVM.                        */        /*MD027447*/
+/*                                                                            */        /*MD027447*/
+/******************************************************************************/        /*MD027447*/
+/**********  SUBR       SUBR(DELDUP)                                */         /*MD027447 MD048953*/
+/********************************************************************/         /*MD027447 MD048953*/
+/**********  CHGVAR VAR(&SPARM) +
+                    VALUE('DELETE From MBR022001T A +
+                         Where RRN(A) > +
+                         (Select Min(RRN(B)) From MBR022001T B +
+                          Where A.MBFILE = B.MBFILE and +
+                                A.MBNAME = B.MBNAME)')              */         /*MD027447 MD048953*/
+/**********  RUNSQL SQL(&SPARM) COMMIT(*NONE)                       */         /*MD027447 MD048953*/
+/**********  ENDSUBR                                                */         /*MD027447 MD048953*/
+/********************************************************************/         /*MD027447 MD048953*/
 /******************************************************************************/
 /*                                                                            */
 /* Subroutine to process all logicals for a physical.                         */

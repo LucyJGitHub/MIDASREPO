@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *  Last Amend No. ERZ248             Date 18Nov19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CFT120             Date 28Sep12               *
       *                 CAP211             Date 28Sep12               *
       *                 CRE067             Date 05Oct10               *
       *                 CER059             Date 19Jul10               *
@@ -58,6 +59,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  ERZ248 - SWIFT UETR via OPAY API                             *
+      *           Add hooks ERZ248_041->042                           *
+      *           Amended hooks FTH00195, FTOPAYU010, FTOPAYU013,     *
+      *           FTOPAYUCC1                                          *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *           (Recompile)                                         *
@@ -390,6 +395,7 @@
      C     KOPAYVLD      Chain     FTVOPY2L1                          89        CFT014
      C                   EndIf                                                  CFT014
                                                                                 CFT014
+     C/COPY WNCPYSRC,ERZ248_041                                                 ERZ248
  
      C                   CALLB     'FTOPAYUPD'
       *  Return Code
@@ -602,6 +608,7 @@
      C                   EndIf                                                  CFT014
      C                   EndIf                                                  CFT014
       *
+     C/COPY WNCPYSRC,ERZ248_042                                                 ERZ248
      ** Send message to system operator
      C                   MOVEL     DBerrUpd      DBError          28
  

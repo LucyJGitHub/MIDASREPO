@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. AR926404           Date 16Jan13               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CDL098             Date 06Oct17               *      
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -81,6 +82,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR926404 - Unable to update Front Office ID. Allow changes   *
+      *             on FHFRNT. (Child: AR926405)                      *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CDL098 - Cancelled Deal Numbers                              *      
@@ -505,10 +508,14 @@
       *
      C*****FOTRID        CHAIN     FXDELFOI                           99                      259924
      C     FOTRID        CHAIN     FRNTOFCL1                          99                      259924
+                                                                                            AR926404
+     C                   MOVE      DDDLNO        WKDN38            6 0                      AR926404
       *
       * IF INSERT
       *
      C     DDACTN        IFEQ      'I'
+     C     DDACTN        OREQ      'A'                                                      AR926404
+     C     FHDN38        ANDNE     WKDN38                                                   AR926404
       *
       * FRONT OFFICE TRANSACTION ID CAN'T BE PRESENT ALREADY
       *
@@ -516,7 +523,12 @@
      C                   MOVE      'N'           OKACTN
      C                   ADD       1             Ix
      C                   MOVEL     'DDACTN'      FldNameArr(Ix)
+     C     DDACTN        IFEQ      'I'                                                      AR926404
      C                   MOVEL     'APM0102'     MsgIdArr(Ix)
+     C                   ELSE                                                               AR926404
+     C                   MOVEL     'FOTRID'      FldNameArr(Ix)                             AR926404
+     C                   MOVEL     '45045930'    MsgIdArr(Ix)                               AR926404
+     C                   ENDIF                                                              AR926404
      C**********         MOVEL     FOTRID        MsgDtaArr(Ix)                              MD000091
      C                   EVAL      BLen = %Len(%Trim(FOTRID))                               MD000091
      C                   EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(FOTRID)                    MD000091
@@ -550,7 +562,9 @@
       *
       * ERROR IF DEAL NOT FOUND
       *
-     C     FOASID        CHAIN     FXDELFOI                           99
+     C*****FOASID        CHAIN     FXDELFOI                           99                    AR926404
+     C     FOASID        CHAIN     FRNTOFCL1                          99                    AR926404
+                                                                                            AR926404
      C     *IN99         IFEQ      '1'
      C                   MOVE      'N'           OKACTN
      C                   ADD       1             Ix

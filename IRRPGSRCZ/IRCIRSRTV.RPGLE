@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR933170           Date 19Jun13               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054957           Date 11Dec19               *
+      *  Prev Amend No. AR933170           Date 19Jun13               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -77,6 +78,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054957 - RBRU SP21 Compatibility Patch (Recompile)         *
       *  AR933170 - Front office id does not reflect on DEALSDG. Add  *
       *             DDFOID as parameters. (Child: AR933171)           *
       *  MD046248 - Finastra Rebranding                               *
@@ -516,10 +518,12 @@
      C     FOTRID        CHAIN     FRNTOFCL1                          99                    AR933170
       *                                                                                     AR933170
      C                   MOVE      SDLNO         WKDN38            6 0                      AR933170
+
       * IF INSERT
      C     SACCD         IFEQ      'I'
      C     SACCD         OREQ      'A'                                                      AR933170
      C     DLNO          ANDNE     WKDN38                                                   AR933170
+
       * FRONT OFFICE TRANSACTION ID CAN'T BE PRESENT ALREADY
      C     *IN99         IFEQ      '0'
      C                   MOVE      'N'           OKACTN

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD043945A          Date 20Feb17               *
-      *  Prev Amend No. MD043945           Date 07Feb17               *
+      *  Last Amend No. MD055518           Date 08Apr20               *
+      *  Prev Amend No. MD043945A          Date 20Feb17               *
+      *       Amend No. MD043945           Date 07Feb17               *
       *                 MD046248           Date 27Oct17               *
       *                 MD034016           Date 16Jun15               *
       *                 MD029951           Date 25Feb15               *
@@ -50,6 +51,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055518 - Profit Centre assigned to TI postings is different*
+      *             between MidasPlus and FBMidas.                    *
       *  MD043945A - Inactive account should not be posted in suspense*
       *  MD043945 - Account transfer for blocked account should be    *
       *  MD046248 - Finastra Rebranding                               *
@@ -179,10 +182,10 @@
       ** +--------------------------------------+
       ** Midas GL Account Transfer Manual Input File
      FGLATMIL0  UF   E           K DISK    INFSR(*PSSR)
- 
+
       ***Midas*GL*Account*Transfer*Manual*Input*File*-*Trailer                              BUG27196
      F***GLATTRPD  IF   E             DISK    INFSR(*PSSR)                                  BUG27196
- 
+
       ***Midas*GL*Failed*Account*Transfer*Extract*File*****************                     BUG28036
      F***GLFLTRL1  IF   E           K DISK    INFSR(*PSSR)                                  BUG28036
                                                                                            BUG27831A
@@ -210,23 +213,26 @@
      FGLPUAMPD  O    E             DISK    INFSR(*PSSR)                                       CRE072
      F                                     PREFIX(Pb_)                                        CRE072
      F                                     RENAME(APOSTPDF:GLPUAMD0)                          CRE072
- 
+
+      ** Midas SD Midas/TI Interface ICD                                                    MD055518
+     FSDTIINPD  IF   E           K DISK    INFSR(*PSSR)                                     MD055518
+
       ** Midas GL Generated Entries Account Transfer - Header
      FGETXHH    O    E             DISK    INFSR(*PSSR)
      F                                     PREFIX(H_)
- 
+
       ** Midas GL Generated Entries Account Transfer - Detail
      FGETXPD    O    E             DISK    INFSR(*PSSR)
- 
+
       ** Midas GL Generated Entries Account Transfer - Trailer
      FGETXZZ    O    E             DISK    INFSR(*PSSR)
      F                                     PREFIX(T_)
- 
+
       ** Midas GL Account Transfer Manual Input File - History
      FGLHATMPD  O    E             DISK    INFSR(*PSSR)
      F                                     RENAME(GLATMID0:GLATMID1)
      F                                     PREFIX(H_)                                       BUG27299
- 
+
       ** Midas GL Forward Transfer list                                                     BUG28036
      FGLFTRVPD  O    E             DISK    RENAME(GLFTRVD0:GLFTRVF) INFSR(*PSSR)            BUG28036
      F                                     PREFIX(O_)                                       BUG28036
@@ -235,10 +241,11 @@
      FGL004601P1O    E             PRINTER INFDS(SPOOL1)
      F                                     USROPN
      F                                     INFSR(*PSSR)
- 
+
       ** Midas GL Generated Entries Account Transfer - Audit
      FGL004601AUO    E             PRINTER INFDS(SPOOLU)
      F                                     INFSR(*PSSR)
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -260,10 +267,10 @@
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
       *
       ** Data Area giving Installation Control Details
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
@@ -272,51 +279,51 @@
       ** D specs of the following types should be inserted after the
       ** relevant box.  *** Remove this text afterwards. ***
       ** +-----------------------------------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  Extname(SDBANKPD)
- 
+
       ** External DS for Branch Details
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
- 
+
       ** External DS for Currency Details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** External DS for Module Details
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       ** External DS for General Ledger ICD
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       ** External DS for Trading ICD
      D SDTRAD        E DS                  EXTNAME(SDTRADPD)
      D   QQACCD2     E                     EXTFLD(QQACCD)
- 
+
       ** DS for Customer Details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      D   QQDFAC2     E                     EXTFLD(QQDFAC)
- 
+
       ** External DS for PCA Details
      D SDPCAC        E DS                  EXTNAME(SDPCACPD)
- 
+
       ** External DS for Account Codes
      D SDACOD        E DS                  EXTNAME(SDACODPD)
      D                                     PREFIX(A_)
- 
+
       ** External DS for Account Details
      D SDACCT        E DS                  EXTNAME(ACCNTAB)
      D                                     PREFIX(AC)
- 
+
       ** External DS for A/C Transfer Type/Subtype
      D SDATST        E DS                  EXTNAME(SDATSTPD)
                                                                                               CRE072
@@ -326,42 +333,42 @@
       ** DS for Midas GL Generated Entries Account Transfer - Detail                          CRE072
      D SDGETX        E DS                  EXTNAME(GETXPD)                                    CRE072
      D   QQZZ019     E                     EXTFLD(ZZ019)                                      CRE072
- 
+
       ** Short DS for access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** Long DS for access programs
      D DSLDY         E DS                  EXTNAME(DSLDY)
       ** DS for Main Branch Details
      D MNBRCH        E DS                  EXTNAME(SDBRCHPD)
      D                                     PREFIX(M:1)
- 
+
       ** DS for Debit Branch Details
      D DBBRCH        E DS                  EXTNAME(SDBRCHPD)
      D                                     PREFIX(D:1)
- 
+
       ** DS for Credit Branch Details
      D CRBRCH        E DS                  EXTNAME(SDBRCHPD)
      D                                     PREFIX(C:1)
- 
+
       ** DS for Booking Branch Details
      D BKBRCH        E DS                  EXTNAME(SDBRCHPD)
      D                                     PREFIX(B:1)
- 
+
       ***DS*for*Cheque*Branch*Details                                                        CAP204A
      D***CQBRCH*       E DS                  EXTNAME(SDBRCHPD)                               CAP204A
      D**********                           PREFIX(T:1)                                       CAP204A
- 
+
       ** DS for Account Transfer File
      D GLATMI        E DS                  EXTNAME(GLATMIPD)
- 
+
       ** DS for Account Transfer History File
      D GLHATM        E DS                  EXTNAME(GLHATMPD)
      D                                     PREFIX(H_)
- 
+
       ** DS for GLPOSTL6                                                                      CRE072
      D GLPOST        E DS                  EXTNAME(APOSTPD)                                   CRE072
      D                                     PREFIX(PD_)                                        CRE072
@@ -387,23 +394,23 @@
      D   SFNUM1              123    124B 0
      D   OFLLN1              188    189B 0
      D   PRTLN1              367    368B 0
- 
+
       ** File Information Data Structure for GL004601AU.
      D SPOOLU          DS
      D   SFILEU               83     92
      D   SFNUMU              123    124B 0
- 
+
       ***Array*containing*the*rejection*codes*of*GLFLTRPD**************                     BUG28036
      D*REJCDE***       S              2A   DIM(15)                                          BUG28036
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Parameters for ZEDIT
      D PZField         S             16A
      D PZDec           S              1  0
- 
+
       ** Parameters for ZCONVZ1 and ZCCYCN
      D PAmount         S             15P 0
      D POutAmount      S             15P 0
@@ -417,14 +424,14 @@
      D POutMDIn        S              1A
      D PFrDecPlace     S              1P 0
      D PToDecPlace     S              1P 0
- 
+
       ** Parameters for ZSFILE
      D PSeq            S              5A
      D SEnty           S              3A
      D ZSnum           S              6  0
      D ZSnumU          S              6  0
      D ZSerr           S              1A
- 
+
       ** Parameters for access object programs
      D PRetCode        S              7A
      D POption         S              7A
@@ -441,7 +448,7 @@
      D PBrca           S              3A
      D PRetl           S             10A
      D PSARD           S              6A                                                      CRE072
- 
+
       ** Other fields used
      D WkCtrDt         S              5  0
      D WRun            S              1A
@@ -480,7 +487,7 @@
      D WkCtr           S              2  0                                                  BUG28036
      D WkFwDay         S              2  0 INZ(1)                                           BUG28036
      D*ZNRDYS***       S              2  0 INZ(1)                                           BUG28036
- 
+
       ** Cross Currency work fields
      D WPosFlag        S              1A
      D WDCcy           S              3A
@@ -500,7 +507,7 @@
      D WCMdin          S                   LIKE(A6MDIN)
      D WDSpae          S                   LIKE(A6SPAE)
      D WCSpae          S                   LIKE(A6SPAE)
- 
+
       ** Inter-branch work fields
      D WPosFlag2       S              1A
      D WCNUM1          S              6A
@@ -515,7 +522,7 @@
      D WACOD2          S             10A
      D WACOD3          S             10A
      D WACOD4          S             10A
- 
+
       ** Hash totals calculation
      D ZZAMT           S             15  3 INZ(0)
      D ZZAMT2          S             15  3 INZ(0)                                          AR1014090
@@ -528,7 +535,7 @@
      D***ZZTOTD1         S              3  0 INZ(0)                                         BUG27196
      D ZZTOTI2         S             15  0 INZ(0)
      D ZZTOTD2         S              3  0 INZ(0)
- 
+
      D WFeeBrch        S              3A                                                      CRE067
      D WFeeCust        S              6A                                                      CRE067
      D WFeeSeq         S              2S 0                                                    CRE067
@@ -586,7 +593,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
@@ -608,7 +615,7 @@
      C     *LOVAL        SETLL     GLATMIL0
      C                   READ      GLATMIL0
      C                   DOW       NOT(%EOF(GLATMIL0))
- 
+
       ** Categorise Forward transfers.                                                      BUG28036
                                                                                             BUG28036
      C                   IF        WMODE = 'N' AND R1ABCF <> 'Y'                            BUG28036
@@ -627,12 +634,12 @@
      C**********         EXSR      SRZZAdd                                                  BUG27196
      C**********         EVAL      ZZTOTI1 = ZZTOTI                                         BUG27196
      C**********         EVAL      ZZTOTD1 = ZZTOTD                                         BUG27196
- 
+
       ** Check if account transfer is to execute today
       ** Generate postings
       ** If shadow posting are to be generated, execute                                     BUG27212
       ** forward valued account transfers                                                   BUG27212
- 
+
      C                   IF        R1EXDT <= WkCtrDt AND R1RECI = 'D'
      C                             AND WMODE <> 'N'                                        BUG27831A
      C**********                   OR (R1EXDT >= WkCtrDt AND WMODE = 'N')          BUG27212 BUG27389
@@ -662,50 +669,50 @@
                                                                                             BUG28036
      C                             OR R1RECI = 'D' AND WMODE = 'N'                          BUG28036
      C                             AND WkShdwPost = 'Y'                                     BUG28036
- 
+
       ** Check if change in branch
- 
+
      C                   IF        WBKBrch <> R1BRCA
- 
+
       ** Perform initial print of header
- 
+
      C                   IF        WFirst = 'N'
      C                   EXSR      SROpenPrtf
      C                   EVAL      RRBRCD = R1BRCA
      C                   WRITE     HEADP1
      C                   EVAL      WFirst = 'Y'
- 
+
       ** If not first time run, open a new printer
       ** file for change in branch
- 
+
      C                   ELSE
      C                   EXSR      SRBreakBrc
      C                   ENDIF
- 
+
       ** Retrieve booking branch details
- 
+
      C                   EVAL      WBKBrch = R1BRCA
      C                   EVAL      PBranch = WBKBrch
      C                   EXSR      SRGetBrch
      C                   EVAL      BKBRCH = SDBRCH
      C                   ENDIF
- 
+
      C**********         IF        WNoRec = 99997                                 BUG27825 BUG27825A
      C**********         Z-ADD     0             WNoRec                           BUG27825 BUG27825A
      C**********         ENDIF                                                    BUG27825 BUG27825A
      C**********         EVAL      WNoRec = WNoRec + 1                                     BUG27825A
      C                   ADD       1             WNoRec                                    BUG27825A
- 
+
       ** Generate postings
- 
+
      C                   EXSR      SRGenPost
- 
+
       ** Write to historic file
- 
+
      C     WMODE         IFEQ      'Y'
      C                   EXSR      SRWrtHist
      C                   ENDIF
- 
+
      C                   ENDIF
       *                                                                                       CRE072
       ** Check Reversed Account Transfer                                                      CRE072
@@ -725,28 +732,28 @@
      C                   EXSR      SRChkMvt                                                   CRE072
       *                                                                                       CRE072
      C                   ENDIF                                                                CRE072
- 
+
      C                   READ      GLATMIL0
      C                   ENDDO
- 
+
       ** Print last trailer
- 
+
      C                   IF        T_NORE1 <> 0                                             BUG27196
      C                   EXSR      SRPrntTrl
      C                   ENDIF                                                              BUG27196
- 
+
       ** Write trailer file
- 
+
      C                   EVAL      T_RECI = 'Z'
      C                   EVAL      T_NORE1 = T_NORE1 + 2
      C                   EVAL      T_HRWN = ZZTOTI2
      C                   EVAL      T_HRDC = ZZTOTD2
      C                   WRITE     APOSTZZF
- 
+
       ** Print audit
- 
+
      C                   EXSR      SRAudit
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
       *****************************************************************                     BUG28036
@@ -870,33 +877,33 @@
       *                                                               *
       *****************************************************************
      C     SRGenPost     BEGSR
- 
+
       ** Retrieve branch details of debit and credit branch
- 
+
      C                   IF        WDRBrch <> R1DBBR
      C                   EVAL      WDRBrch = R1DBBR
      C                   EVAL      PBranch = WDRBrch
      C                   EXSR      SRGetBrch
      C                   EVAL      DBBRCH = SDBRCH
      C                   ENDIF
- 
+
      C                   IF        WCRBrch <> R1CRBR
      C                   EVAL      WCRBrch = R1CRBR
      C                   EVAL      PBranch = WCRBrch
      C                   EXSR      SRGetBrch
      C                   EVAL      CRBRCH = SDBRCH
      C                   ENDIF
- 
+
       ** Retreive A/C Transfer Type/Subtype details
- 
+
      C                   EXSR      SRGetATST
- 
+
       ** Transaction Postings
- 
+
      C                   EXSR      SRTranPost
- 
+
       ** Fee Postings
- 
+
      C                   EVAL      WHasFees = 'N'
      C                   IF        R1F1AM <> 0 OR R1F2AM <> 0 OR
      C                             R1F3AM <> 0 OR R1F4AM <> 0 OR
@@ -904,17 +911,17 @@
      C                   EVAL      WHasFees = 'Y'
      C                   EXSR      SRFees
      C                   ENDIF
- 
+
       ***Cheque*Postings                                                                     CAP204A
- 
+
      C**********         EVAL      WChqAmt = R1DAMT                                          CAP204A
      C**********         EXSR      SRChqPost                                                 CAP204A
- 
+
       ** Print exchange rate details
- 
+
      C                   EVAL      *IN30 = *ON
      C                   EXSR      SRPrntDetl2
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -924,12 +931,12 @@
       *                                                               *
       *****************************************************************
      C     SRTranPost    BEGSR
- 
+
      C                   EVAL      DrAmt = R1DAMT
      C                   EVAL      CrAmt = R1CAMT
- 
+
       ** Create normal transaction postings for debit account
- 
+
      C                   EXSR      SRCmnPost
      C                   EVAL      CNUM = R1DBCU
      C                   EVAL      CCY = R1DBCY
@@ -952,9 +959,9 @@
      C                   Z-ADD     R1CHNO        CHQN                                       BUG27561
      C                   BITON     '0'           PRIN
      C                   EVAL      ACOD = R1DBAC
- 
+
       ** Check if post to suspense account or not for debit
- 
+
      C                   EVAL      WSuspAct = 'D'
      C**********         EXSR      SRChkSusp                                               BUG27831A
       *                                                                                     MD043945
@@ -967,9 +974,9 @@
      C                   EXSR      SRSetPsIn                                                  CRE072
      C                   ENDIF                                                                CRE072
      C                   EXSR      SRWrtPost
- 
+
       ** Create normal transaction postings for credit account
- 
+
      C                   EXSR      SRCmnPost
      C                   EVAL      CNUM = R1CRCU
      C                   EVAL      CCY = R1CRCY
@@ -990,9 +997,9 @@
      C                   EVAL      BRCA = R1CRBR
      C                   BITON     '0'           PRIN
      C                   EVAL      ACOD = R1CRAC
- 
+
       ** Check if post to suspense account or not for credit
- 
+
      C                   EVAL      WSuspAct = 'C'
      C**********         EXSR      SRChkSusp                                               BUG27831A
       *                                                                                     MD043945
@@ -1005,7 +1012,7 @@
      C                   EXSR      SRSetPsIn                                                  CRE072
      C                   ENDIF                                                                CRE072
      C                   EXSR      SRWrtPost
- 
+
       ** Check if need to post to wash account                                               CAP204A
                                                                                              CAP204A
      C                   IF        ATWACC <> *ZEROS                                          CAP204A
@@ -1023,11 +1030,11 @@
      C                   ENDIF                                                               CAP204A
                                                                                              CAP204A
       ** Generate postings for cross-currency account transfer
- 
+
      C                   IF        R1DBCY <> R1CRCY
- 
+
       ** Retrieve debit currency details
- 
+
      C                   EVAL      WDCcy = R1DBCY
      C                   EVAL      PCcy = WDCcy
      C                   EXSR      SRGetCcy
@@ -1035,9 +1042,9 @@
      C                   EVAL      WDRate = A6SPRT
      C                   EVAL      WDMdin = A6MDIN
      C                   EVAL      WDSpae = A6SPAE
- 
+
       ** Retrieve credit currency details
- 
+
      C                   EVAL      WCCcy = R1CRCY
      C                   EVAL      PCcy = WCCcy
      C                   EXSR      SRGetCcy
@@ -1064,7 +1071,7 @@
      C                   ENDIF                                                              BUG27201
                                                                                             BUG27201
      C                   ENDIF                                                              BUG27201
- 
+
      C                   EVAL      WDAmt = DrAmt
      C                   EVAL      WCAmt = CrAmt
      C                   EVAL      WDDrCr = 1
@@ -1072,12 +1079,12 @@
      C                   EVAL      WCAsoc = B8BICN
      C                   EVAL      WPosFlag = 'T'
      C                   EXSR      SRCrosCur
- 
+
       ** Generate interbranch postings for cross-currency
       ** Account transfer
- 
+
      C                   EVAL      WPosFlag2 = 'C'
- 
+
      C                   IF        R1DBBR <> R1BRCA
      C                   EVAL      WCNUM1 = D8BICN
      C                   EVAL      WCCY1 = R1DBCY
@@ -1091,7 +1098,7 @@
      C                   EVAL      WACOD4 = M8DTAC
      C                   EXSR      SRIntBrch
      C                   ENDIF
- 
+
      C                   IF        R1CRBR <> R1BRCA
      C                   EVAL      WCNUM1 = C8BICN
      C                   EVAL      WCCY1 = R1CRCY
@@ -1105,33 +1112,33 @@
      C                   EVAL      WACOD4 = M8DFAC
      C                   EXSR      SRIntBrch
      C                   ENDIF
- 
+
       ** Generate postings for single currency account transfer
- 
+
      C                   ELSE
- 
+
      C                   IF        R1DBBR <> R1CRBR
      C                   EVAL      WPosFlag2 = 'S'
      C                   EVAL      WCNUM1 = D8BICN
      C                   EVAL      WCNUM2 = C8BICN
      C                   EVAL      WCCY1 = R1DBCY
      C                   EVAL      WCCY2 = R1CRCY
- 
+
       ** If type of fees is 'net', post gross amount for
       ** single currency inter-branch
- 
+
      C                   IF        R1FGRS = 'N'
- 
+
      C                   IF        R1FPAY = 'D'
      C                   EVAL      WPSTA1 = R1CAMT
      C                   ELSE
      C                   EVAL      WPSTA1 = R1DAMT
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      WPSTA1 = R1DAMT
      C                   ENDIF
- 
+
      C                   EVAL      WBRCA1 = R1DBBR
      C                   EVAL      WBRCA2 = R1CRBR
      C                   EVAL      WDRCR1 = 1
@@ -1140,15 +1147,15 @@
      C                   EVAL      WACOD3 = C8DFAC
      C                   EVAL      WACOD4 = M8DTAC
      C                   EXSR      SRIntBrch
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Print report details
- 
+
      C                   EXSR      SRPrntDetl
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1158,39 +1165,67 @@
       *                                                               *
       *****************************************************************
      C     SRCmnPost     BEGSR
- 
+
       ** Clear detail file
- 
+
      C                   CLEAR                   APOSTPDF
- 
+
       ** Common Entries
- 
+
      C                   EVAL      RECI = 'P'
      C                   EVAL      IPDN = *BLANKS
      C**********         EVAL      PSTD = BJRDNB                                            BUG27212
      C                   EVAL      PSTD = R1EXDT                                            BUG27212
      C                   EVAL      VALD = BJRDNB
      C                   EVAL      ACSQ = 01
- 
+
      C                   EVAL      PNAR = R1TREF
      C                   EVAL      ASOC = '000000'
      C**********         EVAL      SPOS = 'GE-TX'                                           BUG27196
      C                   MOVE      'GE-TX'       SPOS                                       BUG27196
- 
+
      C                   BITOFF    '01234567'    PRIN
      C                   EVAL      GETP = 'L'
      C                   EVAL      ACUM = 1
- 
+
+      ** Defaulting Process Of Profit Centre When Account Transfer                          MD055518
+      ** is a TI posting.                                                                   MD055518
+                                                                                            MD055518
+     C                   CLEAR                   PRFC                                       MD055518
+	...                                                                                    MD055518
+     C                   CALL      'AOPRFMR0'                                               MD055518
+     C                   PARM                    RTCD              1                        MD055518
+     C                   PARM      *BLANK        BOOK              2            Book Code   MD055518
+     C                   PARM      *BLANK        TRTP              5            TransactonType MD055
+     C                   PARM      *BLANKS       SUTP              2            Sub Type    MD055518
+     C                   PARM      R1BRCA        BRAN              3            Branch Code MD055518
+     C**********         PARM      *BLANKS       DEPT1             3            Deptment Code MD0555
+     C**********         PARM      ##USER        USER             10            User        MD055518
+     C                   PARM                    DEPT1             3                        MD055518
+     C                   PARM                    USER             10                        MD055518
+     C                   PARM                    ACOF              2            AccountOfficer MD055
+     C                   PARM                    CUST              6            CustomerNumber MD055
+     C                   PARM                    DPRFC             4            Profit Centre  MD055
+      *
      C**********         IF        BGNOST = 'Y'                                            AR1009263
      C                   IF        BGN0ST = 'Y'                                            AR1009263
      C                   EVAL      PRFC = FTPRFP
      C                   ENDIF
- 
+      *                                                                                     MD055518
+     C                   IF        R1TRTY = 'YT' AND R1TRST = 'TI'                          MD055518
+     C                   IF        RTCD <> '0' OR DPRFC = FTUAPC                            MD055518
+     C                             AND BGNOST = 'Y'                                         MD055518
+     C                   EVAL      PRFC = TIPRFC                                            MD055518
+     C                   ELSE                                                               MD055518
+     C                   EVAL      DPRFC = TIPRFC                                           MD055518
+     C                   ENDIF                                                              MD055518
+     C                   ENDIF                                                              MD055518
+      *
      C                   EVAL      PTIM = 235959
      C                   EVAL      OTST = R1TRST
      C                   EVAL      OTTP = R1TRTY
      C                   EVAL      OTRF = R1TREF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1200,7 +1235,7 @@
       *                                                               *
       *****************************************************************
      C     SRCrosCur     BEGSR
- 
+
      C                   IF        WDCcy <> BJCYCD OR WBCcyEq <> *BLANKS
      C                   EXSR      SRCmnPost
      C                   EVAL      CNUM = B8BICN
@@ -1208,21 +1243,21 @@
      C                   EVAL      PSTA = DrAmt
      C                   EVAL      DRCR = WDDrCr
      C                   EVAL      BRCA = R1BRCA
- 
+
       ** Execute some additional checking for fee posting
- 
+
      C                   IF        WPosFlag = 'F'
      C                   EVAL      ASOC = WPayCust
      C                   ENDIF
- 
+
      C                   MOVE      BLSPTA        ACOD
      C                   EXSR      SRGetAcod
      C                   EXSR      SRWrtPost
- 
+
      C                   EXSR      SRCmnPost
      C                   EVAL      CNUM = B8BICN
      C                   EVAL      CCY = BJCYCD
- 
+
      C                   IF        WPosFlag = 'T' AND WCCcy = BJCYCD
      C                   EVAL      PSTA = WCAmt
      C                   ELSEIF    WDCcy = BJCYCD                                          BUG27201A
@@ -1236,25 +1271,25 @@
      C                   EXSR      SRConvAmt
      C                   EVAL      PSTA = POutAmount
      C                   ENDIF
- 
+
      C                   IF        WDDrCr = 0
      C                   EVAL      DRCR = 1
      C                   ELSE
      C                   EVAL      DRCR = 0
      C                   ENDIF
- 
+
       ** Execute some additional checking for fee posting
- 
+
      C                   IF        WPosFlag = 'F'
      C                   EVAL      ASOC = WPayCust
      C                   ENDIF
- 
+
      C                   EVAL      BRCA = R1BRCA
      C                   MOVE      WDSpae        ACOD
      C                   EXSR      SRGetAcod
      C                   EXSR      SRWrtPost
      C                   ENDIF
- 
+
      C                   IF        WCCcy <> BJCYCD OR WBCcyEq <> *BLANKS
      C                   EXSR      SRCmnPost
      C                   EVAL      CNUM = B8BICN
@@ -1262,9 +1297,9 @@
      C                   EVAL      PSTA = CrAmt
      C                   EVAL      DRCR = WCDrCr
      C                   EVAL      BRCA = R1BRCA
- 
+
       ** Execute some additional checking for transaction posting
- 
+
      C                   MOVE      BLSPTA        ACOD
      C                   EXSR      SRGetAcod
      C                   IF        WPosFlag = 'T'
@@ -1274,14 +1309,14 @@
      C                   ELSE
      C                   EVAL      ASOC = WCAsoc
      C                   ENDIF
- 
+
      C                   EVAL      BRCA = R1BRCA
      C                   EXSR      SRWrtPost
- 
+
      C                   EXSR      SRCmnPost
      C                   EVAL      CNUM = B8BICN
      C                   EVAL      CCY = BJCYCD
- 
+
      C                   IF        WPosFlag = 'T' AND WDCcy = BJCYCD
      C                   EVAL      PSTA = WDAmt
      C                   ELSEIF    WCCcy = BJCYCD                                          BUG27201A
@@ -1295,9 +1330,9 @@
      C                   EXSR      SRConvAmt
      C                   EVAL      PSTA = POutAmount
      C                   ENDIF
- 
+
       ** Execute some additional checking for transaction or fee posting
- 
+
      C                   EVAL      BRCA = R1BRCA
      C                   MOVE      WCSpae        ACOD
      C                   EXSR      SRGetAcod
@@ -1308,17 +1343,17 @@
      C                   ELSE
      C                   EVAL      ASOC = WCAsoc
      C                   ENDIF
- 
+
      C                   IF        WCDrCr = 0
      C                   EVAL      DRCR = 1
      C                   ELSE
      C                   EVAL      DRCR = 0
      C                   ENDIF
- 
+
      C                   EVAL      BRCA = R1BRCA
      C                   EXSR      SRWrtPost
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1328,11 +1363,11 @@
       *                                                               *
       *****************************************************************
      C     SRIntBrch     BEGSR
- 
+
      C                   IF        WPosFlag2 <> 'S'
- 
+
       ** Generate inter-branch postings via Main Branch
- 
+
      C                   IF        BKIEMB = 'Y' AND WBRCA1 <> BKMABR
      C                             AND R1BRCA <> BKMABR
      C                   EXSR      SRCmnPost
@@ -1342,99 +1377,99 @@
      C                   EVAL      BRCA = WBRCA1
      C                   MOVE      WACOD1        ACOD
      C                   EXSR      SRGetAcod
- 
+
       ** Entries specific to fees
- 
+
      C                   IF        WPosFlag2 = 'F'
      C                   IF        (ACSC = 'IN' OR ACSC = 'EX')
      C                   EVAL      ASOC = WPayCust
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EVAL      PSTA = WPSTA1
      C                   EXSR      SRWrtPost
- 
+
      C                   EXSR      SRCmnPost
      C                   EVAL      CNUM = WCNUM1
      C                   EVAL      CCY = WCCY1
      C                   EVAL      PSTA = WPSTA1
- 
+
      C                   IF        WDRCR1 = 0
      C                   EVAL      DRCR = 1
      C                   ELSE
      C                   EVAL      DRCR = 0
      C                   ENDIF
- 
+
      C                   EVAL      BRCA = BKMABR
      C                   MOVE      WACOD2        ACOD
      C                   EXSR      SRGetAcod
      C                   EXSR      SRWrtPost
- 
+
      C                   EXSR      SRCmnPost
      C                   EVAL      CNUM = M8BICN
      C                   EVAL      CCY = WCCY1
      C                   EVAL      PSTA = WPSTA1
- 
+
      C                   IF        WDRCR1 = 0
      C                   EVAL      DRCR = 1
      C                   ELSE
      C                   EVAL      DRCR = 0
      C                   ENDIF
- 
+
      C                   EVAL      BRCA = R1BRCA
      C                   MOVE      WACOD3        ACOD
      C                   EXSR      SRGetAcod
      C                   EXSR      SRWrtPost
- 
+
      C                   EXSR      SRCmnPost
      C                   EVAL      CNUM = B8BICN
      C                   EVAL      CCY = WCCY1
      C                   EVAL      PSTA = WPSTA1
- 
+
      C                   EVAL      DRCR = WDRCR1
      C                   EVAL      BRCA = BKMABR
      C                   MOVE      WACOD4        ACOD
      C                   EXSR      SRGetAcod
      C                   EXSR      SRWrtPost
- 
+
       ** Generate inter-branch postings not via Main Branch
- 
+
      C                   ELSE
      C                   EXSR      SRCmnPost
      C                   EVAL      CNUM = B8BICN
      C                   EVAL      CCY = WCCY1
      C                   EVAL      PSTA = WPSTA1
- 
+
      C                   EVAL      DRCR = WDRCR1
      C                   EVAL      BRCA = WBRCA1
      C                   MOVE      WACOD1        ACOD
      C                   EXSR      SRGetAcod
      C                   EXSR      SRWrtPost
- 
+
      C                   EXSR      SRCmnPost
      C                   EVAL      CNUM = WCNUM1
      C                   EVAL      CCY = WCCY1
      C                   EVAL      PSTA = WPSTA1
- 
+
      C                   IF        WDRCR1 = 0
      C                   EVAL      DRCR = 1
      C                   ELSE
      C                   EVAL      DRCR = 0
      C                   ENDIF
- 
+
      C                   EVAL      BRCA = R1BRCA
      C                   MOVE      WACOD3        ACOD
      C                   EXSR      SRGetAcod
      C                   EXSR      SRWrtPost
- 
+
      C                   ENDIF
- 
+
       ** For transaction postings and cheque postings single currency
- 
+
      C                   ELSE
- 
+
       ** Generate inter-branch postings via Main Branch
- 
+
      C                   IF        BKIEMB = 'Y' AND WBRCA1 <> BKMABR
      C                             AND WBRCA2 <> BKMABR
      C                   EXSR      SRCmnPost
@@ -1445,86 +1480,86 @@
      C                   MOVE      WACOD1        ACOD
      C                   EXSR      SRGetAcod
      C                   EVAL      PSTA = WPSTA1
- 
+
      C                   EXSR      SRWrtPost
- 
+
      C                   EXSR      SRCmnPost
      C                   EVAL      CNUM = WCNUM1
      C                   EVAL      CCY = WCCY1
      C                   EVAL      PSTA = WPSTA1
- 
+
      C                   IF        WDRCR1 = 0
      C                   EVAL      DRCR = 1
      C                   ELSE
      C                   EVAL      DRCR = 0
      C                   ENDIF
- 
+
      C                   EVAL      BRCA = BKMABR
      C                   MOVE      WACOD2        ACOD
      C                   EXSR      SRGetAcod
      C                   EXSR      SRWrtPost
- 
+
      C                   EXSR      SRCmnPost
      C                   EVAL      CNUM = M8BICN
      C                   EVAL      CCY = WCCY2
      C                   EVAL      PSTA = WPSTA1
- 
+
      C                   IF        WDRCR1 = 0
      C                   EVAL      DRCR = 1
      C                   ELSE
      C                   EVAL      DRCR = 0
      C                   ENDIF
- 
+
      C                   EVAL      BRCA = WBRCA2
      C                   MOVE      WACOD3        ACOD
      C                   EXSR      SRGetAcod
      C                   EXSR      SRWrtPost
- 
+
      C                   EXSR      SRCmnPost
      C                   EVAL      CNUM = WCNUM2
      C                   EVAL      CCY = WCCY2
      C                   EVAL      PSTA = WPSTA1
- 
+
      C                   EVAL      DRCR = WDRCR1
      C                   EVAL      BRCA = BKMABR
      C                   MOVE      WACOD4        ACOD
      C                   EXSR      SRGetAcod
      C                   EXSR      SRWrtPost
- 
+
       ** Generate inter-branch postings not via Main Branch
- 
+
      C                   ELSE
      C                   EXSR      SRCmnPost
      C                   EVAL      CNUM = WCNUM2
      C                   EVAL      CCY = WCCY1
      C                   EVAL      PSTA = WPSTA1
- 
+
      C                   EVAL      DRCR = WDRCR1
      C                   EVAL      BRCA = WBRCA1
      C                   MOVE      WACOD1        ACOD
      C                   EXSR      SRGetAcod
      C                   EXSR      SRWrtPost
- 
+
      C                   EXSR      SRCmnPost
      C                   EVAL      CNUM = WCNUM1
      C                   EVAL      CCY = WCCY2
      C                   EVAL      PSTA = WPSTA1
- 
+
      C                   IF        WDRCR1 = 0
      C                   EVAL      DRCR = 1
      C                   ELSE
      C                   EVAL      DRCR = 0
      C                   ENDIF
- 
+
      C                   EVAL      BRCA = WBRCA2
      C                   MOVE      WACOD3        ACOD
      C                   EXSR      SRGetAcod
      C                   EXSR      SRWrtPost
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1534,9 +1569,9 @@
       *                                                               *
       *****************************************************************
      C     SRFees        BEGSR
- 
+
       ** Store fee paying customer details
- 
+
      C                   IF        R1FPAY = 'D'
      C                   EVAL      WPayCust = R1DBCU
      C                   EVAL      WPayBrch = R1DBBR
@@ -1546,9 +1581,9 @@
      C                   EVAL      WPayBrch = R1CRBR
      C                   EVAL      WPayCcy = R1CRCY
      C                   ENDIF
- 
+
       ** Fee 1
- 
+
      C                   IF        R1F1AM <> 0
      C                   EVAL      WFeeNo = '1'
      C                   EVAL      WFeeAmt = R1F1AM
@@ -1580,9 +1615,9 @@
                                                                                               CRE067
      C                   EXSR      SRFeePost
      C                   ENDIF
- 
+
       ** Fee 2
- 
+
      C                   IF        R1F2AM <> 0
      C                   EVAL      WFeeNo = '2'
      C                   EVAL      WFeeAmt = R1F2AM
@@ -1610,9 +1645,9 @@
                                                                                               CRE067
      C                   EXSR      SRFeePost
      C                   ENDIF
- 
+
       ** Fee 3
- 
+
      C                   IF        R1F3AM <> 0
      C                   EVAL      WFeeNo = '3'
      C                   EVAL      WFeeAmt = R1F3AM
@@ -1640,9 +1675,9 @@
                                                                                               CRE067
      C                   EXSR      SRFeePost
      C                   ENDIF
- 
+
       ** Fee 4
- 
+
      C                   IF        R1F4AM <> 0
      C                   EVAL      WFeeNo = '4'
      C                   EVAL      WFeeAmt = R1F4AM
@@ -1670,9 +1705,9 @@
                                                                                               CRE067
      C                   EXSR      SRFeePost
      C                   ENDIF
- 
+
       ** Fee 5
- 
+
      C                   IF        R1F5AM <> 0
      C                   EVAL      WFeeNo = '5'
      C                   EVAL      WFeeAmt = R1F5AM
@@ -1700,9 +1735,9 @@
                                                                                               CRE067
      C                   EXSR      SRFeePost
      C                   ENDIF
- 
+
       ** Fee 6
- 
+
      C                   IF        R1F6AM <> 0
      C                   EVAL      WFeeNo = '6'
      C                   EVAL      WFeeAmt = R1F6AM
@@ -1730,7 +1765,7 @@
                                                                                               CRE067
      C                   EXSR      SRFeePost
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1740,7 +1775,7 @@
       *                                                               *
       *****************************************************************
      C     SRFeePost     BEGSR
- 
+
      C                   EXSR      SRCmnPost
      C**********         EVAL      CNUM = B8BICN                                              CRE067
      C                   EVAL      CNUM = WFeeCust                                            CRE067
@@ -1771,13 +1806,13 @@
      C                   EVAL      ACOD = WFeeAcd
      C                   EXSR      SRGetAcod
      C                   EXSR      SRWrtPost
- 
+
       ** If type of fee is gross, generate additional postings
- 
+
      C                   IF        R1FGRS <> 'N'
- 
+
       ** Create fee postings for debit account if gross fees
- 
+
      C                   IF        R1FPAY = 'D'
      C                   EXSR      SRCmnPost
      C                   EVAL      CNUM = R1DBCU
@@ -1795,7 +1830,7 @@
      C                   BITON     '0'           PRIN
      C                   EVAL      ACOD = R1DBAC
      C                   EVAL      FEEFLG = 'F'
- 
+
      C                   SELECT                                                             MD029951
      C     WFeeNo        WHENEQ    '1 '                                                     MD029951
      C                   EVAL      PNAR = %SUBST(R1TREF:1) + ' ' + R1F1DS                   MD029951
@@ -1812,21 +1847,21 @@
      C                   ENDSL                                                              MD029951
       *                                                                                     MD029951
       ** Check if post to suspense account or not for debit
- 
+
      C                   EVAL      WSuspAct = 'D'
      C**********         EXSR      SRChkSusp                                               BUG27831A
      C                   EXSR      SRGetAcod
      C                   EXSR      SRWrtPost
- 
+
       ***Generate*cheque*postings*for*this*fee*if*applicable                                 CAP204A
- 
+
      C**********         EVAL      WChqAmt = WFeeEqv                                         CAP204A
      C**********         EXSR      SRChqPost                                                 CAP204A
- 
+
      C                   ELSE
- 
+
       ** Create fee postings for credit account if gross fees
- 
+
      C                   EXSR      SRCmnPost
      C                   EVAL      CNUM = R1CRCU
      C                   EVAL      CCY = R1CRCY
@@ -1841,7 +1876,7 @@
      C                   BITON     '0'           PRIN
      C                   EVAL      ACOD = R1CRAC
      C                   EVAL      FEEFLG = 'F'
- 
+
      C                   SELECT                                                             MD029951
      C     WFeeNo        WHENEQ    '1 '                                                     MD029951
      C                   EVAL      PNAR = %SUBST(R1TREF:1) + ' ' + R1F1DS                   MD029951
@@ -1858,18 +1893,18 @@
      C                   ENDSL                                                              MD029951
       *                                                                                     MD029951
       ** Check if post to suspense account or not for credit
- 
+
      C                   EVAL      WSuspAct = 'C'
      C**********         EXSR      SRChkSusp                                               BUG27831A
      C                   EXSR      SRGetAcod
      C                   EXSR      SRWrtPost
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Generate cross-currency entries for fees
- 
+
      C                   IF        WFeeCcy <> WPayCcy
      C                   EVAL      DrAmt = WFeeAmt
      C                   EVAL      CrAmt = WFeeEqv
@@ -1878,9 +1913,9 @@
      C                   EVAL      WCDrCr = 1
      C                   EVAL      WCAsoc = WPayCust
      C                   EVAL      WPosFlag = 'F'
- 
+
       ** Retrieve fee currency details
- 
+
      C                   EVAL      WDCcy = WFeeCcy
      C                   EVAL      PCcy = WDCcy
      C                   EXSR      SRGetCcy
@@ -1888,24 +1923,24 @@
      C                   EVAL      WDRate = A6SPRT
      C                   EVAL      WDMdin = A6MDIN
      C                   EVAL      WDSpae = A6SPAE
- 
+
       ** Retrieve paying customer currency details
- 
+
      C                   EVAL      WCCcy = WPayCcy
      C                   EVAL      PCcy = WCCcy
      C                   EXSR      SRGetCcy
      C                   EVAL      WCSpae = A6SPAE
- 
+
      C                   EXSR      SRCrosCur
- 
+
      C                   ENDIF
- 
+
       ** Generate inter-branch entries for fees
- 
+
      C                   IF        WFeeCcy <> WPayCcy                                         CRE067
      C                   IF        R1BRCA <> WPayBrch
      C                   EVAL      WPosFlag2 = 'F'
- 
+
      C                   IF        R1FPAY = 'D'
      C                   EVAL      WCNUM1 = D8BICN
      C                   EVAL      WCCY1 = R1DBCY
@@ -1917,7 +1952,7 @@
      C                   EVAL      WBRCA1 = R1CRBR
      C                   EVAL      WACOD1 = C8DTAC
      C                   ENDIF
- 
+
      C                   EVAL      WPSTA1 = WFeeEqv
      C                   EVAL      WDRCR1 = 1
      C                   EVAL      WACOD2 = M8DFAC
@@ -1970,12 +2005,12 @@
      C                   ENDIF                                                                CRE067
                                                                                               CRE067
      C                   ENDIF                                                                CRE067
- 
+
       ** Print fee details
- 
+
      C                   EVAL      *IN30 = *OFF
      C                   EXSR      SRPrntDetl2
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1985,29 +2020,29 @@
       *                                                               *
       *****************************************************************
      C*****SRChqPost     BEGSR                                                               CAP204A
- 
+
       ***Cheque*account*should*not*be*blanks*or*be*equal*to                                  CAP204A
       ***Debit*account                                                                       CAP204A
- 
+
      C**********         IF        (R1CHBR <> *BLANKS AND R1CHCU <> *BLANKS                  CAP204A
      C**********                   AND R1CHCY <> *BLANKS AND R1CHAC <> 0                     CAP204A
      C**********                   AND R1CHSQ <> 0) AND (R1CHBR <> R1DBBR                    CAP204A
      C**********                   OR R1CHCU <> R1DBCU OR R1CHCY <> R1DBCY                   CAP204A
      C**********                   OR R1CHAC <> R1DBAC OR R1CHSQ <> R1DBSQ)                  CAP204A
- 
+
       ***Retrieve*Cheque*Branch*details                                                      CAP204A
- 
+
      C**********         IF        WCQBrch <> R1CHBR                                         CAP204A
      C**********         EVAL      WCQBrch = R1CHBR                                          CAP204A
      C**********         EVAL      PBranch = WCQBrch                                         CAP204A
      C**********         EXSR      SRGetBrch                                                 CAP204A
      C**********         EVAL      CQBRCH = SDBRCH                                           CAP204A
      C**********         ENDIF                                                               CAP204A
- 
+
      C**********         IF        R1DBCY <> R1CHCY                                          CAP204A
- 
+
       ***Retrieve*debit*currency*details                                                     CAP204A
- 
+
      C**********         EVAL      WDCcy = R1DBCY                                            CAP204A
      C**********         EVAL      PCcy = WDCcy                                              CAP204A
      C**********         EXSR      SRGetCcy                                                  CAP204A
@@ -2015,9 +2050,9 @@
      C**********         EVAL      WDRate = A6SPRT                                           CAP204A
      C**********         EVAL      WDMdin = A6MDIN                                           CAP204A
      C**********         EVAL      WDSpae = A6SPAE                                           CAP204A
- 
+
       ***Retrieve*cheque*currency*details                                                    CAP204A
- 
+
      C**********         EVAL      WCCcy = R1CHCY                                            CAP204A
      C**********         EVAL      PCcy = WCCcy                                              CAP204A
      C**********         EXSR      SRGetCcy                                                  CAP204A
@@ -2025,9 +2060,9 @@
      C**********         EVAL      WCRate = A6SPRT                                           CAP204A
      C**********         EVAL      WCMdin = A6MDIN                                           CAP204A
      C**********         EVAL      WCSpae = A6SPAE                                           CAP204A
- 
+
       ***Convert*debit*amount*to*cheque*currency                                             CAP204A
- 
+
      C**********         EVAL      PAmount = WChqAmt                                         CAP204A
      C**********         EVAL      PFrCurrency = R1DBCY                                      CAP204A
      C**********         EVAL      PToCurrency = R1CHCY                                      CAP204A
@@ -2040,14 +2075,14 @@
      C**********         EXSR      SRCrosCnv                                                 CAP204A
      C**********         EVAL      DrAmt = WChqAmt                                           CAP204A
      C**********         EVAL      CrAmt = POutAmount                                        CAP204A
- 
+
      C**********         ELSE                                                                CAP204A
      C**********         EVAL      DrAmt = WChqAmt                                           CAP204A
      C**********         EVAL      CrAmt = WChqAmt                                           CAP204A
      C**********         ENDIF                                                               CAP204A
- 
+
       ***Create*normal*cheque*postings*for*debit*account                                     CAP204A
- 
+
      C**********         EXSR      SRCmnPost                                                 CAP204A
      C**********         EVAL      CNUM = R1DBCU                                             CAP204A
      C**********         EVAL      CCY = R1DBCY                                              CAP204A
@@ -2061,16 +2096,16 @@
      C**********         EVAL      CHQN = R1CHNO                                             CAP204A
      C**********         BITON     '0'           PRIN                                        CAP204A
      C**********         EVAL      ACOD = R1DBAC                                             CAP204A
- 
+
       ***Check*if*post*to*suspense*account*or*not*for*debit                                  CAP204A
- 
+
      C**********         EVAL      WSuspAct = 'D'                                            CAP204A
      C**********         EXSR      SRChkSusp                                                 CAP204A
      C**********         EXSR      SRGetAcod                                                 CAP204A
      C**********         EXSR      SRWrtPost                                                 CAP204A
- 
+
       ***Create*normal*cheque*postings*for*cheque*account                                    CAP204A
- 
+
      C**********         EXSR      SRCmnPost                                                 CAP204A
      C**********         EVAL      CNUM = R1CHCU                                             CAP204A
      C**********         EVAL      CCY = R1CHCY                                              CAP204A
@@ -2085,9 +2120,9 @@
      C**********         EVAL      ACOD = R1CHAC                                             CAP204A
      C**********         EXSR      SRGetAcod                                                 CAP204A
      C**********         EXSR      SRWrtPost                                                 CAP204A
- 
+
       ***Generate*cross-currency*postings                                                    CAP204A
- 
+
      C**********         IF        R1DBCY <> R1CHCY                                          CAP204A
      C**********         EVAL      WDAmt = DrAmt                                             CAP204A
      C**********         EVAL      WDDrCr = 0                                                CAP204A
@@ -2095,11 +2130,11 @@
      C**********         EVAL      WCAsoc = '000000'                                         CAP204A
      C**********         EVAL      WPosFlag = 'C'                                            CAP204A
      C**********         EXSR      SRCrosCur                                                 CAP204A
- 
+
       ***Generate*interbranch*postings                                                       CAP204A
- 
+
      C**********         EVAL      WPosFlag2 = 'C'                                           CAP204A
- 
+
      C**********         IF        R1DBBR <> R1BRCA                                          CAP204A
      C**********         EVAL      WCNUM1 = D8BICN                                           CAP204A
      C**********         EVAL      WCCY1 = R1DBCY                                            CAP204A
@@ -2111,7 +2146,7 @@
      C**********         EVAL      WACOD4 = M8DFAC                                           CAP204A
      C**********         EXSR      SRIntBrch                                                 CAP204A
      C**********         ENDIF                                                               CAP204A
- 
+
      C**********         IF        R1CHBR <> R1BRCA                                          CAP204A
      C**********         EVAL      WCNUM1 = T8BICN                                           CAP204A
      C**********         EVAL      WCCY1 = R1CHCY                                            CAP204A
@@ -2123,11 +2158,11 @@
      C**********         EVAL      WACOD4 = M8DTAC                                           CAP204A
      C**********         EXSR      SRIntBrch                                                 CAP204A
      C**********         ENDIF                                                               CAP204A
- 
+
       ***Cheque*currency*is*the*same*as*debit*currency                                       CAP204A
- 
+
      C**********         ELSE                                                                CAP204A
- 
+
      C**********         IF        R1DBBR <> R1CHBR                                          CAP204A
      C**********         EVAL      WPosFlag2 = 'S'                                           CAP204A
      C**********         EVAL      WCNUM1 = D8BICN                                           CAP204A
@@ -2143,13 +2178,13 @@
      C**********         EVAL      WACOD3 = T8DTAC                                           CAP204A
      C**********         EVAL      WACOD4 = M8DFAC                                           CAP204A
      C**********         EXSR      SRIntBrch                                                 CAP204A
- 
+
      C**********         ENDIF                                                               CAP204A
- 
+
      C**********         ENDIF                                                               CAP204A
- 
+
      C**********         ENDIF                                                               CAP204A
- 
+
      C**********         ENDSR                                                               CAP204A
       *****************************************************************
       /EJECT
@@ -2159,25 +2194,25 @@
       *                                                               *
       *****************************************************************
      C     SRWrtPost     BEGSR
- 
+
       ** Calculate hash integer and decimal first
- 
+
      C                   EVAL      ZZAMT = PSTA/1000
      C                   EVAL      ZZTOTI = ZZTOTI2
      C                   EVAL      ZZTOTD = ZZTOTD2
      C                   EXSR      SRZZAdd
      C                   EVAL      ZZTOTI2 = ZZTOTI
      C                   EVAL      ZZTOTD2 = ZZTOTD
- 
+
       ** Add 1 to the no. of records written
- 
+
      C**********         IF        T_NORE1 = 99997                                BUG27825 BUG27825A
      C**********         Z-ADD     0             T_NORE1                          BUG27825 BUG27825A
      C**********         ENDIF                                                    BUG27825 BUG27825A
      C**********         EVAL      T_NORE1 = T_NORE1 + 1                                   BUG27825A
      C                   ADD       1             T_NORE1                                   BUG27825A
      C                   WRITE     APOSTPDF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2187,13 +2222,13 @@
       *                                                               *
       *****************************************************************
      C     SRWrtHist     BEGSR
- 
+
      C                   EVAL      GLHATM = GLATMI
      C                   EVAL      H_R1RECI = 'M'                                           BUG27389
      C                   WRITE     GLATMID1
- 
+
      C                   DELETE    GLATMID0
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2203,22 +2238,22 @@
       *                                                               *
       *****************************************************************
      C     SRZZAdd       BEGSR
- 
+
       **   Setup fields to be hashed
- 
+
      C**********         Z-ADD     ZZAMT         ZZAMT                  91                 AR1014090
      C***91*****         Z-SUB     ZZAMT         ZZAMT                                     AR1014090
      C**********         Z-ADD     ZZAMT         ZZAMTI                                    AR1014090
      C**********         MOVE      ZZAMT         ZZAMTD                                    AR1014090
- 
+
       ** Add decimal part and check for carry
- 
+
      C**********         ADD       ZZAMTD        ZZTOTD                                    AR1014090
      C*****ZZTOTD        COMP      ZZAMTD                               91                 AR1014090
      C***91*****         ADD       1             ZZAMTI                                    AR1014090
- 
+
       ** Add integer part
- 
+
      C**********         ADD       ZZAMTI        ZZTOTI                                    AR1014090
      C                   MOVE      *BLANKS       WCHMT                                     AR1014090
      C                   Z-ADD     0             ZZAMT2                                    AR1014090
@@ -2237,7 +2272,7 @@
      C                   ADD       ZZAMT         ZZAMT2                                    AR1014090
      C                   Z-ADD     ZZAMT2        ZZTOTI                                    AR1014090
      C                   MOVE      ZZAMT2        ZZTOTD                                    AR1014090
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2247,30 +2282,30 @@
       *                                                               *
       *****************************************************************
      C     SROpenPrtf    BEGSR
- 
+
       ** If the prtf is not open
- 
+
      C                   OPEN      GL004601P1
- 
+
       ** Ensure Detail Spool File recorded by RCF.
- 
+
      C                   EVAL      ZSnum = SFNUM1
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    PSeq
      C                   PARM      *BLANK        SEnty
      C                   PARM                    SFILE1
      C                   PARM                    ZSnum
      C                   PARM      *BLANK        ZSerr
- 
+
       ** If Error occurs during ZSFILE processing, then return to the
       ** Calling Program.
- 
+
      C     ZSerr         IFEQ      'Y'
      C                   SETON                                        U7U8LR
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2280,19 +2315,19 @@
       *                                                               *
       *****************************************************************
      C     SRBreakBrc    BEGSR
- 
+
      C                   EXSR      SRPrntTrl
      C                   IF        NOT(%EOF(GLATMIL0))
      C                   CLOSE     GL004601P1
- 
+
       ** Open prtf if the prtf is not open
- 
+
      C                   OPEN      GL004601P1
      C                   EVAL      RRBRCD = R1BRCA
- 
+
      C                   WRITE     HEADP1
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2302,20 +2337,20 @@
       *                                                               *
       *****************************************************************
      C     SRPrntTrl     BEGSR
- 
+
       ** Setup trailer fields
- 
+
      C                   EVAL      RRBRCD = WBKBrch
      C                   EVAL      NORE = WNoRec
      C                   EVAL      WNoRec = 0
- 
+
       ** Write out report trailer.
- 
+
      C**********         EVAL      RqdLn1 = 3                                               BUG27825
      C                   EVAL      RqdLn1 = 8                                               BUG27825
      C                   EXSR      SROverflow
      C                   WRITE     TRAILP1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2325,14 +2360,14 @@
       *                                                               *
       *****************************************************************
      C     SRFrmtDetl    BEGSR
- 
+
       ** Setup report fields
- 
+
      C                   EVAL      RRTREF = R1TREF
      C                   MOVE      R1CHNO        RRCHNO
- 
+
       ** Check if print of debit or credit details
- 
+
      C                   IF        *IN31 = *OFF
      C                   MOVE      R1DBAC        RRACNO
      C                   EVAL      RRNARR = R1DBSN
@@ -2347,7 +2382,7 @@
      C                   EVAL      PCust = R1CRCU                                           MD034016
      C                   MOVE      R1CAMT        PZField
      C                   ENDIF
- 
+
      C                   EXSR      SRGetCust
      C                   EVAL      RRCRNM = BBCRNM
      C                   EVAL      PCcy = RRCCY
@@ -2355,7 +2390,7 @@
      C                   EVAL      PZDec = A6NBDP
      C                   EXSR      SRZEdit
      C                   EVAL      RRAMT = PZField
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2365,14 +2400,14 @@
       *                                                               *
       *****************************************************************
      C     SRPrntDetl    BEGSR
- 
+
      C                   EVAL      WAcctPrnt = 'N'
      C                   EVAL      RqdLn1 = 7
      C                   EXSR      SROverflow
- 
+
       ** If account details not printed during
       ** overflow, print account details
- 
+
      C                   IF        WAcctPrnt = 'N'
      C                   EVAL      *IN31 = *OFF
      C                   EXSR      SRFrmtDetl
@@ -2381,7 +2416,7 @@
      C                   EXSR      SRFrmtDetl
      C                   WRITE     DETAIL
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2391,24 +2426,24 @@
       *                                                               *
       *****************************************************************
      C     SRFrmtDetl2   BEGSR
- 
+
       ** Setup report fields
- 
+
      C                   IF        *IN30 = *OFF
      C                   EVAL      RRFEE = WFeeNo
      C                   EVAL      RRFCCY = WFeeCcy
- 
+
      C                   EVAL      PCcy = RRFCCY
      C                   EXSR      SRGetCcy
      C                   EVAL      PZDec = A6NBDP
      C                   MOVE      WFeeAmt       PZField
      C                   EXSR      SRZEdit
      C                   EVAL      RRFAMT = PZField
- 
+
      C                   ELSE
      C                   EVAL      RREXRT = R1EXCH
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2418,12 +2453,12 @@
       *                                                               *
       *****************************************************************
      C     SRPrntDetl2   BEGSR
- 
+
      C                   EXSR      SRFrmtDetl2
      C                   EVAL      RqdLn1 = 3
      C                   EXSR      SROverflow
      C                   WRITE     DETAIL2
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2433,75 +2468,75 @@
       *                                                               *
       *****************************************************************
      C     SRAudit       BEGSR
- 
+
       ** Ensure Audit Spool File recorded by RCF.
- 
+
      C                   EVAL      ZSnumU = SFNUMU
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    PSeq
      C                   PARM      *BLANK        SEnty
      C                   PARM                    SFILEU
      C                   PARM                    ZSnumU
      C                   PARM      *BLANK        ZSerr
- 
+
       ** If Error occurs during ZSFILE processing, then return to the
       ** Calling Program.
- 
+
      C     ZSERR         IFEQ      'Y'
      C                   SETON                                        U7U8LR
      C                   RETURN
      C                   ENDIF
- 
+
      C                   WRITE     HEADAU
- 
+
       ** If there is a DB Error, Output the DB Error Information.
- 
+
      C                   IF        *INU7 = *ON
      C                   WRITE     DBERROR
      C                   ELSE
- 
+
       ** If there is a record read, write audit control report.
- 
+
      C**********         IF        WTotRec <> 0                                             BUG27196
- 
+
      C**********         READ      GLATTRPD                                                 BUG27196
      C**********         IF        NOT(%EOF(GLATTRPD))                                      BUG27196
      C**********         EVAL      RCOUNT1 = T1NORC                                         BUG27196
      C**********         EVAL      RHASI1 = T1HRWN                                          BUG27196
      C**********         EVAL      RHASD1 = T1HRDC                                          BUG27196
      C**********         ENDIF                                                              BUG27196
- 
+
      C**********         EVAL      RCOUNT2 = WTotRec                                        BUG27196
      C**********         EVAL      RHASI2 = ZZTOTI1                                         BUG27196
      C**********         EVAL      RHASD2 = ZZTOTD1                                         BUG27196
- 
+
       ***Check*if*there*is*a*difference                                                     BUG27196
- 
+
      C**********         IF        (RCOUNT1 <> RCOUNT2) OR (RHASI1 <> RHASI2)               BUG27196
      C**********                   OR (RHASD1 <> RHASD2)                                    BUG27196
      C**********         EVAL      *IN40 = *ON                                              BUG27196
      C**********         EVAL      *INU7 = *ON                                              BUG27196
      C**********         EVAL      *INU8 = *ON                                              BUG27196
      C**********         ENDIF                                                              BUG27196
- 
+
      C                   IF        T_NORE1-2 <> 0                                           BUG27196
      C                   EVAL      RCOUNT3 = T_NORE1
      C                   EVAL      RHASI3 = ZZTOTI2
      C                   EVAL      RHASD3 = ZZTOTD2
      C                   WRITE     CONTROL
      C                   ELSE
- 
+
       ** Or, if no records read, Output "No Details" message.
- 
+
      C                   WRITE     NODTLS
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      *INLR ='1'
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2511,16 +2546,16 @@
       *                                                               *
       *****************************************************************
      C     SROverflow    BEGSR
- 
+
      C                   EVAL      DifLn1 = OFLLN1 - PRTLN1
- 
+
       ** If overflow has occured, write header
- 
+
      C                   IF        DifLn1 <= RqdLn1
      C                   WRITE     HEADP1
- 
+
       ** Reprint account details if overflow for fees
- 
+
      C                   IF        WHasFees = 'Y'
      C                   EVAL      *IN31 = *OFF
      C                   EXSR      SRFrmtDetl
@@ -2530,9 +2565,9 @@
      C                   WRITE     DETAIL
      C                   EVAL      WAcctPrnt = 'Y'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2542,16 +2577,16 @@
       *                                                               *
       *****************************************************************
      C     SRGetCust     BEGSR
- 
+
      C                   CALL      'AOCUSTR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*KEY   '     POption
      C                   PARM                    PCust
      C                   PARM      *BLANKS       PKyst
      C     SDCUST        PARM      SDCUST        DSSDY
- 
+
       ** Database error processing
- 
+
      C                   IF        PRetCode <> *BLANK
      C     *LOCK         IN        LDA
      C                   EVAL      DBFile = 'SDCUSTPD'
@@ -2561,7 +2596,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2571,15 +2606,15 @@
       *                                                               *
       *****************************************************************
      C     SRGetBrch     BEGSR
- 
+
      C                   CALL      'AOBRCHR1'
      C                   PARM      *BLANK        PRetCode
      C                   PARM      '*KEY   '     POption
      C                   PARM                    PBranch
      C     SDBRCH        PARM      SDBRCH        DSSDY
- 
+
       ** Database error processing
- 
+
      C                   IF        PRetCode <> *BLANK
      C     *LOCK         IN        LDA
      C                   EVAL      DBFile = 'SDBRCHPD'
@@ -2589,7 +2624,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2599,15 +2634,15 @@
       *                                                               *
       *****************************************************************
      C     SRGetCcy      BEGSR
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANK        PRetCode
      C                   PARM      '*KEY   '     POption
      C                   PARM                    PCcy
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
       ** Database error processing
- 
+
      C                   IF        PRetCode <> *BLANK
      C     *LOCK         IN        LDA
      C                   EVAL      DBFile = 'SDCURRPD'
@@ -2617,7 +2652,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2627,16 +2662,16 @@
       *                                                               *
       *****************************************************************
      C     SRGetATST     BEGSR
- 
+
      C                   CALL      'AOATSTR0'
      C                   PARM      *BLANK        PRetCode
      C                   PARM      '*KEY   '     POption
      C                   PARM      R1TRTY        PTrty
      C                   PARM      R1TRST        PTrst
      C     SDATST        PARM      SDATST        DSLDY
- 
+
       ** Database error processing
- 
+
      C                   IF        PRetCode <> *BLANK
      C     *LOCK         IN        LDA
      C                   EVAL      DBFile = 'SDATSTPD'
@@ -2646,7 +2681,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2656,17 +2691,17 @@
       *                                                               *
       *****************************************************************
      C     SRGetAcod     BEGSR
- 
+
      C                   MOVE      ACOD          PAcod
      C                   CALL      'AOACODR0'
- 
+
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*KEY'        POption
      C                   PARM                    PAcod
      C     SDACOD        PARM      SDACOD        DSSDY
- 
+
       ** Database error processing
- 
+
      C                   IF        PRetCode <> *BLANK
      C     *LOCK         IN        LDA
      C                   EVAL      DBFile = 'SDACODPD'
@@ -2678,13 +2713,13 @@
      C                   ELSE
      C                   EVAL      ACSC = A_A5ACSC
      C                   EVAL      ATYP = A_A5ACTY
- 
+
      C                   IF        ATYP = 'R'
      C                   EVAL      RIND = 1
      C                   ELSE
      C                   EVAL      RIND = 0
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDSR
       *****************************************************************
@@ -2695,9 +2730,9 @@
       *                                                               *
       *****************************************************************
      C     SRGetAcct     BEGSR
- 
+
       ** Access GL Account Details
- 
+
      C                   CALL      'AOACCTR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*KEY   '     POption
@@ -2708,9 +2743,9 @@
      C                   PARM                    PAcsq
      C                   PARM                    PBrca
      C     SDACCT        PARM      SDACCT        DSSDY
- 
+
       ** Database error processing
- 
+
      C                   IF        PRetCode <> *BLANK AND PRetCode <> '*NRF'
      C                             AND PRetCode <> '*CLOSE'
      C     *LOCK         IN        LDA
@@ -2721,11 +2756,11 @@
      C                   EVAL      DBase = 11
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
      C                   ELSEIF    PRetCode = '*NRF'
      C                   CLEAR                   SDACCT
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2735,7 +2770,7 @@
       *                                                               *
       *****************************************************************
      C     SRConvAmt     BEGSR
- 
+
      C                   CALL      'ZCONVZ1'
      C                   PARM                    PAmount
      C                   PARM                    PFrXRate
@@ -2745,7 +2780,7 @@
      C                   PARM                    PFrDecPlace
      C                   PARM      WBNbdp        PToDecPlace
      C                   PARM                    POutAmount
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2755,7 +2790,7 @@
       *                                                               *
       *****************************************************************
      C     SRCrosCnv     BEGSR
- 
+
      C                   CALL      'ZCCYCN'
      C                   PARM                    PAmount
      C                   PARM                    PFrCurrency
@@ -2769,7 +2804,7 @@
      C                   PARM                    POutAmount
      C                   PARM                    POutXRat
      C                   PARM                    POutMDIn
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2779,11 +2814,11 @@
       *                                                               *
       *****************************************************************
      C     SRZEdit       BEGSR
- 
+
      C                   CALL      'ZEDIT'
      C                   PARM                    PZField
      C                   PARM                    PZDec
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3380,13 +3415,13 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       ** Receive Parameter List.
      C     *ENTRY        PLIST
      C                   PARM                    WMODE             1
       *
      C     *DTAARA       DEFINE                  LDA
- 
+
      C     KyDrAc        KLIST                                                              BUG28036
      C                   KFLD                    R1DBCU                                     BUG28036
      C                   KFLD                    R1DBCY                                     BUG28036
@@ -3434,14 +3469,14 @@
      C                   IN        RUNDAT                                                   MD043945
       *                                                                                     MD043945
       ** Access Bank details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANK        PRetCode
      C                   PARM      '*FIRST '     POption
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database error processing
- 
+
      C                   IF        PRetCode <> *BLANK
      C     *LOCK         IN        LDA
      C                   EVAL      DBFile = 'SDBANKPD'
@@ -3451,21 +3486,21 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Get base currency details
- 
+
      C                   EVAL      PCcy = BJCYCD
      C                   EXSR      SRGetCcy
      C                   EVAL      WBNbdp = A6NBDP
      C                   EVAL      WBCcyEq = A6SPAE
- 
+
       ** Access General Ledger ICD
- 
+
      C                   CALL      'AOGELRR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*FIRST '     POption
      C     SDGELR        PARM      SDGELR        DSFDY
- 
+
      C                   IF        PRetCode <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFile = 'SDGELRPD'
@@ -3475,22 +3510,22 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Retrieve main branch internal customer
- 
+
      C                   IF        BKMABR <> *BLANKS
      C                   EVAL      PBranch = BKMABR
      C                   EXSR      SRGetBrch
      C                   EVAL      MNBRCH = SDBRCH
      C                   ENDIF
- 
+
       ** Access Trade ICD
- 
+
      C                   CALL      'AOTRADR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*FIRST '     POption
      C     SDTRAD        PARM      SDTRAD        DSFDY
- 
+
      C                   IF        PRetCode <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFile = 'SDTRADPD'
@@ -3517,14 +3552,14 @@
      C**********         OUT       LDA                                                      AR958673
      C**********         EXSR      *PSSR                                                    AR958673
      C**********         ENDIF                                                              AR958673
- 
+
       ** Access the Midas Modules
- 
+
      C                   CALL      'AOMMODR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*FIRST '     POption
      C     SDMMOD        PARM      SDMMOD        DSFDY
- 
+
      C                   IF        PRetCode <> *Blanks
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'SDMMODPD'
@@ -3579,7 +3614,7 @@
      C                   EVAL      CRE072 = 'N'                                               CRE072
      C                   ENDIF                                                                CRE072
       *                                                                                       CRE072
- 
+
       ** Set correct event control date depending on processing mode                       BUG27831B
                                                                                            BUG27831B
      C                   IF        WMODE = 'N'                                             BUG27831B
@@ -3602,20 +3637,20 @@
                                                                                            BUG27831B
       ** Set event control date to the less of the Accrual Profit Date and Date
       ** of the Next Working Day minus 1
- 
+
      C                   EVAL      WkCtrDt = BJDNWD - 1
- 
+
      C                   IF        WkCtrDt > BKAPDT
      C                   EVAL      WkCtrDt = BKAPDT
      C                   ENDIF
                                                                                             BUG28036
      C                   ENDIF                                                              BUG28036
- 
+
       ** Write to GETXHH
- 
+
      C                   EVAL      H_RECI = 'H'
      C                   WRITE     APOSTHHF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3632,21 +3667,21 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *BLANK
      C                   EVAL      WRun = 'Y'
      C                   DUMP
- 
+
      C                   ENDIF
- 
+
       ** Write Audit Report
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EXSR      SRAudit
- 
+
      C                   ENDSR
       *****************************************************************                     BUG28036
      C/COPY ZSRSRC,ZCHKHLE                                                                  BUG28036
      C/COPY ZSRSRC,ZACCHLE                                                                  BUG28036
- 
+

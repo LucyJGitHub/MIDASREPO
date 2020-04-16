@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD051554           Date 28Sep18               *
-      *  Prev Amend No. MD053295           Date 13Apr19               *
+      *  Last Amend No. MD054957           Date 11Dec19               *
+      *  Prev Amend No. MD051554           Date 28Sep18               *
+      *                 MD053295           Date 13Apr19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD047993           Date 23Sep17               *
       *                 MD035545           Date 11Sep15               *      
@@ -62,6 +63,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054957 - RBRU SP21 Compatibility Patch (Recompile)         *
       *  MD051554 - Leap Year Fix for interest calculation basis to   *
       *             be used for 1st Jan should not be present in      *
       *             FRA/IRS module                                    *

@@ -9,7 +9,7 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD053948           Date 13Apr20              */
+/*       Last Amend No. MD053498           Date 13Apr20              */
 /*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -33,7 +33,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
-/*       MD053948 - MM-Limit not displayed in "Exposure by customer/*/
+/*       MD053498 - MM-Limit not displayed in "Exposure by customer/*/
 /*                  parent enquiry" menu when S01433 is ON.         */
 /*                  Fix is to introduce new logical files which will*/
 /*                  hold the MM-Limit. New files will be used only  */
@@ -80,7 +80,7 @@
              DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)                /*S01474*/
              DCL        VAR(&S01474) TYPE(*CHAR) LEN(1)               /*S01474*/
              DCL        VAR(&S01473) TYPE(*CHAR) LEN(1)               /*S01473*/
-             DCL        VAR(&S01433) TYPE(*CHAR) LEN(1)                                 /*MD053948*/
+             DCL        VAR(&S01433) TYPE(*CHAR) LEN(1)                                 /*MD053498*/
              DCL        VAR(&LINEXP) TYPE(*CHAR) LEN(1)               /*S01474*/
              DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10) +
                           VALUE('  DMLIB')                            /*S01474*/
@@ -148,12 +148,12 @@
              CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &FMT)    /*S01473*/
              IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
                           VAR(&S01473) VALUE('Y'))                    /*S01473*/
-                                                                                        /*MD053948*/
-/* Check if Enhanced Dealing Limits (S01433) is switched on */                          /*MD053948*/
-             CHGVAR     VAR(&SARD) VALUE('S01433')                                      /*MD053948*/
-             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &FMT)                      /*MD053948*/
+                                                                                        /*MD053498*/
+/* Check if Enhanced Dealing Limits (S01433) is switched on */                          /*MD053498*/
+             CHGVAR     VAR(&SARD) VALUE('S01433')                                      /*MD053498*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &FMT)                      /*MD053498*/
              IF         COND(&RTCD *EQ '       ') THEN(CHGVAR VAR(&S01433) +
-                          VALUE('Y'))                                                   /*MD053948*/
+                          VALUE('Y'))                                                   /*MD053498*/
                                                                       /*S01474*/
 /* If the feature is present, override the Leo files to the files +
    on the Leo system */                                               /*S01474*/
@@ -310,13 +310,13 @@ MSG:         IF         COND(&ERR *EQ 'Y') THEN(DO)                   /*S01474*/
              GOTO       CMDLBL(END)                                   /*S01474*/
              ENDDO                                                    /*S01474*/
              ENDDO                                                    /*S01474*/
-                                                                                        /*MD053948*/
-             IF         COND(&S01433 *EQ 'Y') THEN(DO)                                  /*MD053948*/
-                OVRDBF     FILE(EMCEJ) TOFILE(EMCEJ4)                                   /*MD053948*/
-                OVRDBF     FILE(EMCEJ2) TOFILE(EMCEJ5)                                  /*MD053948*/
-                OVRDBF     FILE(EMCEJ3) TOFILE(EMCEJ6)                                  /*MD053948*/
-             ENDDO                                                                      /*MD053948*/
-                                                                                        /*MD053948*/
+                                                                                        /*MD053498*/
+             IF         COND(&S01433 *EQ 'Y') THEN(DO)                                  /*MD053498*/
+                OVRDBF     FILE(EMCEJ) TOFILE(EMCEJ4)                                   /*MD053498*/
+                OVRDBF     FILE(EMCEJ2) TOFILE(EMCEJ5)                                  /*MD053498*/
+                OVRDBF     FILE(EMCEJ3) TOFILE(EMCEJ6)                                  /*MD053498*/
+             ENDDO                                                                      /*MD053498*/
+                                                                                        /*MD053498*/
 /*/COPY WNCPYSRC,EMC0301003                                          */
 /**/
              CALL       EM0301
@@ -352,9 +352,9 @@ END:                                                                  /*S01474*/
              ENDDO                                                    /*S01474*/
 /*/COPY WNCPYSRC,EMC0301002                                          */
                                                                       /*S01474*/
-             IF         COND(&S01433 *EQ 'Y') THEN(DO)                                  /*MD053948*/
-             DLTOVR     FILE(*ALL)                                                      /*MD053948*/
-             ENDDO                                                                      /*MD053948*/
+             IF         COND(&S01433 *EQ 'Y') THEN(DO)                                  /*MD053498*/
+             DLTOVR     FILE(*ALL)                                                      /*MD053498*/
+             ENDDO                                                                      /*MD053498*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
            ENDPGM

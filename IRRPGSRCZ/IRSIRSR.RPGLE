@@ -16,6 +16,9 @@
       *  Last Amend No. MD054906           Date 15Jan20               *
       *  Prev Amend No. MD054117           Date 12Sep19               *
       *                 MD053400           Date 03Jul19               *
+      *                 MD049387           Date 19Jan18               *
+      *                 MD047859           Date 19Sep17               *
+      *                 AR933170           Date 19Jun13               *      
       *                 MD051249           Date 17Jul18               *      
       *                 MD046248           Date 27Oct17               *
       *                 MD044506           Date 28Mar17               *
@@ -72,6 +75,11 @@
       *  MD053400 - Details are not correctly reverted back when the  *
       *             amended transaction is rejected in WIP. Skip      *
       *             validation if action is Reject.                   *
+      *  MD049387 - Principal Change Schedule values not accepted     *
+      *  MD047859 - Correct buffer conflict of AR933171 fix           *
+      *  AR933170 - Front office id does not reflect on DEALSDG. Add  *
+      *             DDFOID as parameters. (Child: AR933171)           *
+      *           - Partially applied by MD047859.                    *
       *  MD051249 - Set APIRetc to '0' after PSSR.                    *      
       *  MD046248 - Finastra Rebranding                               *
       *  MD044506 - MT300 98D trade execution date can not be before  *
@@ -373,6 +381,7 @@
      D BufferEx8       S           9999                                         BUG4646
      D BufferEx9       S           9999                                         BUG4646
      D APIRetc         S              1A
+     D DDFOID          S             20                                                     AR933170
  
      D ModeOfOp        S              6A
      D PRtCd           S              7A
@@ -613,6 +622,7 @@
      C                                      FORMULAOC + FORMULATC +             BUG4646
      C**********                            FORMULAOPC+ FORMULATPC + ORDATEAST        BUG4646 CSW213
      C                                      FORMULAOPC+ FORMULATPC +                          CSW213
+     C                                      DDFOID +                                        AR933170
      C**********                            InSwift2013 + ORDATEAST                  CSW213 MD053400
      C                                      InSwift2013 + ACTRJ +                           MD053400
      C                                      ORDATEAST                                       MD053400
@@ -746,22 +756,38 @@
      C**********         EVAL      BufferEx6=%SUBST(TCFSAST:12523)+PCSAST            MD031775 CSW216
      C**********         EVAL      BufferEx7=%SUBST(PCSAST:9322)                     MD031775 CSW216
                                                                                               CSW216
-     C**********         EVAL      Buffer2=%SUBST(ORDATEAST:888)+OPDATEAST           CSW216 MD053400
-     C**********         EVAL      BufferEx2=%SUBST(OPDATEAST:87)+TRDATEAST          CSW216 MD053400
-     C**********                               +TPDATEAST                            CSW216 MD053400
-     C**********         EVAL      BufferEx3=%SUBST(TPDATEAST:486)+OCFSAST           CSW216 MD053400
-     C**********         EVAL      BufferEx4=%SUBST(OCFSAST:5685)+TCFSAST            CSW216 MD053400
-     C**********         EVAL      BufferEx5=%SUBST(TCFSAST:2484)                    CSW216 MD053400
-     C**********         EVAL      BufferEx6=%SUBST(TCFSAST:12483)+PCSAST            CSW216 MD053400
-     C**********         EVAL      BufferEx7=%SUBST(PCSAST:9282)                     CSW216 MD053400
-     C                   EVAL      Buffer2=%SUBST(ORDATEAST:887)+OPDATEAST                  MD053400
-     C                   EVAL      BufferEx2=%SUBST(OPDATEAST:86)+TRDATEAST                 MD053400
+     C**********         EVAL      Buffer2=%SUBST(ORDATEAST:888)+OPDATEAST           CSW216 MD047859
+     C**********         EVAL      BufferEx2=%SUBST(OPDATEAST:87)+TRDATEAST          CSW216 MD047859
+     C**********                               +TPDATEAST                            CSW216 MD047859
+     C**********         EVAL      BufferEx3=%SUBST(TPDATEAST:486)+OCFSAST           CSW216 MD047859
+     C**********         EVAL      BufferEx4=%SUBST(OCFSAST:5685)+TCFSAST            CSW216 MD047859
+     C**********         EVAL      BufferEx5=%SUBST(TCFSAST:2484)                    CSW216 MD047859
+     C**********         EVAL      BufferEx6=%SUBST(TCFSAST:12483)+PCSAST            CSW216 MD047859
+     C**********         EVAL      BufferEx7=%SUBST(PCSAST:9282)                     CSW216 MD047859
+     C**********         EVAL      Buffer2=%SUBST(ORDATEAST:908)+OPDATEAST         MD047859 MD049387
+     C**********         EVAL      BufferEx2=%SUBST(OPDATEAST:107)+TRDATEAST       MD047859 MD049387
+     C**********                               +TPDATEAST                          MD047859 MD049387
+     C**********         EVAL      BufferEx3=%SUBST(TPDATEAST:506)+OCFSAST         MD047859 MD049387
+     C**********         EVAL      BufferEx4=%SUBST(OCFSAST:5705)+TCFSAST          MD047859 MD049387
+     C**********         EVAL      BufferEx5=%SUBST(TCFSAST:2504)                  MD047859 MD049387
+     C**********         EVAL      BufferEx6=%SUBST(TCFSAST:12503)+PCSAST          MD047859 MD049387
+     C**********         EVAL      BufferEx7=%SUBST(PCSAST:9302)                   MD047859 MD049387
+     C**********         EVAL      Buffer2=%SUBST(ORDATEAST:868)+OPDATEAST         MD049387 MD053400
+     C**********         EVAL      BufferEx2=%SUBST(OPDATEAST:67)+TRDATEAST        MD049387 MD053400
+     C**********                               +TPDATEAST                          MD049387 MD053400
+     C**********         EVAL      BufferEx3=%SUBST(TPDATEAST:466)+OCFSAST         MD049387 MD053400
+     C**********         EVAL      BufferEx4=%SUBST(OCFSAST:5665)+TCFSAST          MD049387 MD053400
+     C**********         EVAL      BufferEx5=%SUBST(TCFSAST:2464)                  MD049387 MD053400
+     C**********         EVAL      BufferEx6=%SUBST(TCFSAST:12463)+PCSAST          MD049387 MD053400
+     C**********         EVAL      BufferEx7=%SUBST(PCSAST:9262)                   MD049387 MD053400
+     C                   EVAL      Buffer2=%SUBST(ORDATEAST:867)+OPDATEAST                  MD053400
+     C                   EVAL      BufferEx2=%SUBST(OPDATEAST:66)+TRDATEAST                 MD053400
      C                                         +TPDATEAST                                   MD053400
-     C                   EVAL      BufferEx3=%SUBST(TPDATEAST:485)+OCFSAST                  MD053400
-     C                   EVAL      BufferEx4=%SUBST(OCFSAST:5684)+TCFSAST                   MD053400
-     C                   EVAL      BufferEx5=%SUBST(TCFSAST:2483)                           MD053400
-     C                   EVAL      BufferEx6=%SUBST(TCFSAST:12482)+PCSAST                   MD053400
-     C                   EVAL      BufferEx7=%SUBST(PCSAST:9281)                            MD053400
+     C                   EVAL      BufferEx3=%SUBST(TPDATEAST:465)+OCFSAST                  MD053400
+     C                   EVAL      BufferEx4=%SUBST(OCFSAST:5664)+TCFSAST                   MD053400
+     C                   EVAL      BufferEx5=%SUBST(TCFSAST:2463)                           MD053400
+     C                   EVAL      BufferEx6=%SUBST(TCFSAST:12462)+PCSAST                   MD053400
+     C                   EVAL      BufferEx7=%SUBST(PCSAST:9261)                            MD053400
      C                   ENDIF
  
      C                   EVAL      *INLR = *ON
@@ -880,6 +906,8 @@
      C**********         PARM                    PDlSts                                      BUG5871
      C                   PARM                    DDSTS                                       BUG5871
  
+     C                   EVAL      DDFOID = RSFRNT                                          AR933170
+      *                                                                                     AR933170
      C     ESrSIRSCVT    ENDSR
       *****************************************************************
       /EJECT

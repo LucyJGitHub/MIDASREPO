@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *  Last Amend No. MD031740           Date 09Nov15               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165             Date 23Feb15               *
       *                 CER059             Date 19Jul10               *
       *                 CER048             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031740 - Change the Spot Rate validation to warning.       *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -130,6 +132,8 @@
  
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
+     D WIdx            S              3P 0                                                  MD031740
+                                                                                            MD031740
  
      D CSD006F         S              1A
  
@@ -158,6 +162,10 @@
      C                   MOVE      *BLANK        MsgIDXAr
      C                   MOVE      *BLANK        MsgDtaXAr
      C                   Z-ADD     0             Idx
+     C                   MOVE      *BLANK        WFldNmXAr                                  MD031740
+     C                   MOVE      *BLANK        WMsgIDXAr                                  MD031740
+     C                   MOVE      *BLANK        WMsgDtXAr                                  MD031740
+     C                   Z-ADD     0             WIdx                                       MD031740
      C                   EVAL      AVTLEX = 'N'
      C                   Z-ADD     AVSPRT        PrevSprt
  
@@ -251,10 +259,15 @@
      C                   ENDIF
       *
      C                   IF        Figure = '*LOWER' OR Figure = '*UPPER'
-     C                   EVAL      DDSPRTOK = 'N'
-     C                   EVAL      Idx = Idx + 1
-     C                   EVAL      FldNamXAr(Idx) = 'DDSPRT    '
-     C                   EVAL      MsgIdXAr(Idx) = 'USR0363'
+     C**********         EVAL      DDSPRTOK = 'N'                                           MD031740
+     C**********         EVAL      Idx = Idx + 1                                            MD031740
+     C**********         EVAL      FldNamXAr(Idx) = 'DDSPRT    '                            MD031740
+     C**********         EVAL      MsgIdXAr(Idx) = 'USR0363'                                MD031740
+      *                                                                                     MD031740
+     C                   EVAL      WIdx = WIdx + 1                                          MD031740
+     C                   EVAL      WFldNmXAr(WIdx) = 'DDSPRT    '                           MD031740
+     C                   EVAL      WMsgIDXAr(WIdx) = 'USR0363'                              MD031740
+      *                                                                                     MD031740
      C                   GOTO      EEXSPRT
      C                   ENDIF
       *
@@ -444,6 +457,10 @@
      C                   PARM                    AVTLEX
       ** New Spot Rate
      C                   PARM                    CurrSprt
+      * Warning fields/message IDs/message data (arrays) from/to caller                     MD031740
+     C                   PARM                    WFldNmXAr                                  MD031740
+     C                   PARM                    WMsgIDXAr                                  MD031740
+     C                   PARM                    WMsgDtXAr                                  MD031740
       *
      C     *LIKE         DEFINE    A6DTFR        DDDTFR
      C     *LIKE         DEFINE    A6CYCD        DDCYCD

@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054037           Date 23Sep19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. ERZ248             Date 18Nov19               *
+      *  Prev Amend No. MD054037           Date 23Sep19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD037804           Date 25May16               *
       *                 AR924677           Date 03Nov14               *
@@ -93,6 +94,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  ERZ248 - SWIFT UETR via OPAY API (Recompile)                 *
       *  MD054037 - Outward payment routing from incoming (OPIN = Y)  *
       *             via API                                           *
       *  CSD102 - Password Length Extension (Recompile)               *

@@ -17,8 +17,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 07May13               *
+      *  Last Amend No. MD021318A          Date 08Aug13               *
+      *  Prev Amend No. MD021318           Date 26Jul13               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD000091           Date 07May13               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE067             Date 05Oct10               *
@@ -48,6 +50,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD021318A - Array index error due to incorrect position of   *
+      *              adding 1 to Idx                                  *
+      *  MD021318 - OPAY allowed input of account with block debit    *
+      *           - Fix is to condition CSD089 overridable error      *
+      *             changes when input is from HATS screen            *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
@@ -234,6 +241,7 @@
      D   LenStr                1      2                                                     MD000091
      D   MsgDtaTmp                   99                                                     MD000091
       **                                                                                    MD000091
+     D PMode           S              6A                                                    MD021318
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -398,21 +406,40 @@
      C                   If        *IN31 = *On
       * Send error to screen
      C**********         Add       1             Idx                                          CSD089
-     C                   Add       1             WIx                                          CSD089
+     C**********         Add       1             WIx                                 CSD089 MD021318
      C                   If        ADSLSH <> '/'
      C**********         Move      'N'           OKRco1                                       CSD089
      C**********         Movel     'SRCO1'       FldNamXAr(Idx)                               CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Add       1             Idx                                       MD021318A
+     C                   Move      'N'           OKRco1                                     MD021318
+     C                   Movel     'SRCO1'       FldNamXAr(Idx)                             MD021318
+     C                   ELSE                                                               MD021318
+     C                   Add       1             WIx                                       MD021318A
      C                   Move      'W'           OKRco1                                       CSD089
      C                   Movel     'SRCO1'       WFldNmXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   Else
      C**********         Move      'N'           OKRco2                                       CSD089
      C**********         Movel     'SRCO2'       FldNamXAr(Idx)                               CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Add       1             Idx                                       MD021318A
+     C                   Move      'N'           OKRco2                                     MD021318
+     C                   Movel     'SRCO2'       FldNamXAr(Idx)                             MD021318
+     C                   ELSE                                                               MD021318
+     C                   Add       1             WIx                                       MD021318A
      C                   Move      'W'           OKRco2                                       CSD089
      C                   Movel     'SRCO2'       WFldNmXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   End
      C**********         Movel     'MMA1038'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C**********         Add       1             Idx                              MD021318 MD021318A
+     C                   Movel     'MMA1038'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
+     C**********         Add       1             WIx                              MD021318 MD021318A
      C                   Movel     'MMA1038'     WMsgIdXAr(WIx)                               CSD089
- 
+     C                   ENDIF                                                              MD021318
      C                   Else
      C                   Eval      @RCRT = 'S'
       *
@@ -497,10 +524,17 @@
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SRCO1'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA1051'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKRco1                                     MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'SRCO1'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'MMA1051'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKRco1                                       CSD089
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SRCO1'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   End
  
      C                   If        AD#2 = 'Y'
@@ -508,10 +542,17 @@
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SRCO2'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA1051'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKRco2                                     MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'SRCO2'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'MMA1051'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKRco2                                       CSD089
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SRCO2'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   End
  
      C                   If        AD#3 = 'Y'
@@ -519,10 +560,17 @@
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SRCO3'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA1051'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKRco3                                     MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'SRCO3'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'MMA1051'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKRco3                                       CSD089
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SRCO3'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   End
  
      C                   If        AD#4 = 'Y'
@@ -530,10 +578,17 @@
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SRCO4'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA1051'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKRco4                                     MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'SRCO4'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'MMA1051'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKRco4                                       CSD089
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SRCO4'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   End
  
      C                   If        AD#5 = 'Y'
@@ -541,10 +596,17 @@
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SRCO5'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA1051'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKRco5                                     MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'SRCO5'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'MMA1051'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKRco5                                       CSD089
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SRCO5'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   End
  
       *  If no errors then customer is an address
@@ -711,6 +773,8 @@
  
       *  Validation Work Fields
      C                   Parm                    Val@Fields
+      ** Screen Input Function                                                              MD021318
+     C                   PARM                    PMode                                      MD021318
  
       ** =================================================================
       ** Program, module and procedure names for database error processing.

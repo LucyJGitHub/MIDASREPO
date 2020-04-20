@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054059           Date 28Nov19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD023379           Date 20Feb14               *
+      *  Prev Amend No. MD021318           Date 26Jul13               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD050928A          Date 28Jun18               *
       *                 MD050928           Date 15May18               *
       *                 MD046248           Date 27Oct17               *
@@ -108,6 +109,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD023379 - Default Details of Charges according to ICD for   *
+      *             MT103                                             *
+      *  MD021318 - OPAY allowed input of account with block debit    *
+      *           - Fix is to condition CSD089 overridable error      *
+      *             changes when input is from HATS screen            *
       *  MD054059 - Missing outgoing payment reference in the         *
       *             extension files                                   *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -743,6 +749,7 @@
      D TimeStampC      S             26A   INZ('0001-01-01-00.00.00.000000')                BUG18500
      D TimeStampZ      S             26Z                                                    BUG18500
      D BtnPressed      S             10A                                                   AR1090283
+     D PMode           S              6A                                                    MD021318
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -815,10 +822,10 @@
      C                   If        @CFT014 = 'Y'                                              244540
      C                   Eval      @MT103 = *Blank                                            244540
      C                   ExSr      SrBMT103                                                   244540
-     C                   If        SDTCH = '   ' and                                          245108
-     C                             @MT103 = 'Y'                                               245108
-     C                   Eval      SDTCH = 'SHA'                                              245108
-     C                   Endif                                                                245108
+     C**********         If        SDTCH = '   ' and                                 245108 MD023379
+     C**********                   @MT103 = 'Y'                                      245108 MD023379
+     C**********         Eval      SDTCH = 'SHA'                                     245108 MD023379
+     C**********         Endif                                                       245108 MD023379
      C                   EndIf                                                                244540
      C                   EndIf                                                                244540
       *  Processing depends upon Action Code
@@ -1379,6 +1386,8 @@
       *  Funds Transfer Details                                                               257758
      C                   PARM                    SDFTFR                                       257758
      C                   PARM                    InputUser                                  MD042042
+      ** Screen Input Function                                                              MD021318
+     C                   PARM      *BLANKS       PMode                                      MD021318
                                                                                               257758
      C/COPY WNCPYSRC,FTOPAYVUC7
 
@@ -1425,6 +1434,8 @@
      C                   PARM                    ValidPmntB
       *  Validation Work Fields from/to caller
      C                   Parm                    Val@Fields
+      ** Screen Input Function                                                              MD021318
+     C                   PARM      *BLANKS       PMode                                      MD021318
 
 
      C                   ENDSR
@@ -1566,6 +1577,8 @@
       *  Validation Work Fields from/to caller
      C                   Parm                    Val@Fields
      C                   PARM                    InputUser                                  MD042042
+      ** Screen Input Function                                                              MD021318
+     C                   PARM      *BLANKS       PMode                                      MD021318
 
 
      C                   ENDSR
@@ -1615,6 +1628,8 @@
       ** Charges to the debit of - field changed (Y or blank)
      C                   PARM                    PCDROCHG          1
      C                   PARM                    InputUser                                  MD042042
+      ** Screen Input Function                                                              MD021318
+     C                   PARM      *BLANKS       PMode                                      MD021318
 
      C                   EndSr
 

@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054696           Date 29Oct19               *
-      *  Prev Amend No. MD054538           Date 08Oct19               *
+      *  Last Amend No. MD039064           Date 31May16               *      
+      *  Prev Amend No. MD054696           Date 29Oct19               *
+      *                 MD054538           Date 08Oct19               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD052075           Date 07Jun19               *
@@ -222,6 +223,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039064 - Incorrect mapping for RPIF details                *      
       *  MD054696 - Journal Entries Avoid Shadow Postings Update.     *
       *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *
       *  MD054538 - Buffer issue on Rollover Maintenance              *
@@ -3199,6 +3201,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     TempData#9    ExtData                                    MD029663
      C                   ADD       IRCSLn        Bfp                                        MD030454
      C                   ADD       168           Bfp                                        MD030454
+     C                   ADD       20            Bfp                                        MD039064
      C                   EVAL      InSwift2013 = %SUBST(BufferTotal:Bfp:RPIFLn)             MD030454
                                                                                             MD029663
      C                   CALL      'IRCIRSVU'
@@ -3917,6 +3920,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C     CFEXLn        SUBST     BUFFER:Bfp    ExtData
      C                   ADD       CFEXLn        Bfp                                          CSW213
      C                   ADD       61            Bfp                                          CSW213
+     C                   ADD       20            Bfp                                        MD039064
      C     RPIFLn        SUBST     BUFFER:Bfp    InSwift2013                                  CSW213
 
      C                   CALL      'IRCACFVU'
@@ -5124,6 +5128,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C     IRSSLn        SUBST     BUFFER:Bfp    ExtData                                     BUG6671
      C                   ADD       IRSSLn        Bfp                                          CSW213
      C                   ADD       168           Bfp                                          CSW213
+     C                   ADD       20            Bfp                                        MD039064
      C     RPIFLn        SUBST     BUFFER:Bfp    InSwift2013                                  CSW213
                                                                                              BUG6671
 

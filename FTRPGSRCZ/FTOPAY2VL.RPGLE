@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *  Last Amend No. MD021318           Date 26Jul13               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 AR787620           Date 10Jun11               *
       *                 CRE067             Date 05Oct10               *
@@ -54,6 +55,9 @@
       *                 CAP031  *CREATE    Date 22Apr99               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD021318 - OPAY allowed input of account with block debit    *
+      *           - Fix is to condition CSD089 overridable error      *
+      *             changes when input is from HATS screen            *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *           (Recompile)                                         *
@@ -245,6 +249,7 @@
      D RespMode        S              1A
  
      D I               S              3  0
+     D PMode           S              6A                                                    MD021318
      D/COPY WNCPYSRC,FTH00284
                                                                                 CFT014
       ** Program message queue                                                  CFT014
@@ -430,6 +435,8 @@
  
       *  Validation Work Fields
      C                   Parm                    Val@Fields
+      ** Screen Input Function                                                              MD021318
+     C                   PARM                    PMode                                      MD021318
  
       * Update error info with that returned from the validation module
      C                   Exsr      UPDATERRS
@@ -474,6 +481,8 @@
  
       *  Validation Work Fields
      C                   Parm                    Val@Fields
+      ** Screen Input Function                                                              MD021318
+     C                   PARM                    PMode                                      MD021318
  
      C/COPY WNCPYSRC,FTH00250
       * Update error info with that returned from the validation module
@@ -519,6 +528,8 @@
  
       *  Validation Work Fields
      C                   Parm                    Val@Fields
+      ** Screen Input Function                                                              MD021318
+     C                   PARM                    PMode                                      MD021318
  
       * Update error info with that returned from the validation module
      C                   Exsr      UPDATERRS
@@ -749,6 +760,7 @@
      C                   Parm                    WMsgDtXAr                      CFT014
      C                   Parm                    OKFlagsDS                      CFT014
      C                   Parm                    Val@Fields                     CFT014
+     C                   PARM                    PMode                                      MD021318
                                                                                 CFT014
       ** Update error info with that retured from the validation module         CFT014
                                                                                 CFT014
@@ -793,6 +805,7 @@
      C                   Parm                    WMsgDtXAr                      CFT014
      C                   Parm                    OKFlagsDS                      CFT014
      C                   Parm                    Val@Fields                     CFT014
+     C                   PARM                    PMode                                      MD021318
                                                                                 CFT014
       ** Update error info with that returned from the validation module        CFT014
                                                                                 CFT014
@@ -942,6 +955,8 @@
  
       *  Validation Work Fields from/to caller
      C                   Parm                    Val@Fields
+      ** Screen Input Function                                                              MD021318
+     C                   PARM                    PMode                                      MD021318
  
       ***Set*up*the*name*of the MSGF from which the message handler will        CFT007
       ****get*the*messages                                                      CFT007

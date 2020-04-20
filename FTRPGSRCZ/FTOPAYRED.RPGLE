@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR787620           Date 10Jun11               *
+      *  Last Amend No. MD048836           Date 07Dec17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR787620           Date 10Jun11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -33,6 +34,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048836 - Function buttons are not working after F8 or F7   *
+      *             are clicked/pressed on OPAY screen                *
       *  MD046248 - Finastra Rebranding                               *
       *  AR787620 - Hooks Incorporation                               *
       *             WNCPYSRC,FTH00055                                 *
@@ -53,7 +56,7 @@
       ** +--------------------------------------+
       * Trades file
      FOTPAY     IF   E           K DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -65,19 +68,19 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
@@ -184,10 +187,11 @@
       * Read until end of file or a valid record is found or an error
       *
      C     *IN99         DOUEQ     '1'
-     C     PREF          ORNE      *BLANKS
-     C     @@ERR         ANDEQ     *ZERO
-     C     AUIN          ANDNE     'Y'
-     C     RECI          ANDEQ     'D'
+     C     @@ERR         OREQ      *ZERO                                                    MD048836
+     C*****PREF*         ORNE      *BLANKS                                                  MD048836
+     C*****@@ERR         ANDEQ     *ZERO                                                    MD048836
+     C*****AUIN*         ANDNE     'Y'                                                      MD048836
+     C*****RECI*         ANDEQ     'D'                                                      MD048836
       *
       * Read
      C                   READ      OTPAY                                  99
@@ -234,10 +238,11 @@
       * Read until end of file or a valid record is found or an error
       *
      C     *IN99         DOUEQ     '1'
-     C     PREF          ORNE      *BLANKS
-     C     @@ERR         ANDEQ     *ZERO
-     C     AUIN          ANDNE     'Y'
-     C     RECI          ANDEQ     'D'
+     C     @@ERR         OREQ      *ZERO                                                    MD048836
+     C*****PREF*         ORNE      *BLANKS                                                  MD048836
+     C*****@@ERR         ANDEQ     *ZERO                                                    MD048836
+     C*****AUIN*         ANDNE     'Y'                                                      MD048836
+     C*****RECI*         ANDEQ     'D'                                                      MD048836
       *
       * Read file
       *

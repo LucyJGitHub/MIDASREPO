@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD042042           Date 14Feb17               *
+      *  Last Amend No. MD021318           Date 26Jul13               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD042042           Date 14Feb17               *
       *                 CFT157             Date 29Aug14               *
       *                 CSW213             Date 03Jun13               *
       *                 AR1028639          Date 17Dec12               *
@@ -68,6 +69,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD021318 - OPAY allowed input of account with block debit    *
+      *           - Fix is to condition CSD089 overridable error      *
+      *             changes when input is from HATS screen            *
       *  MD046248 - Finastra Rebranding                               *
       *  MD042042 - Input Officer 1 and Input Officer 2 are being     *
       *             populated with WIP authoriser. Use the WIP input  *
@@ -379,6 +383,7 @@
      D C#RTCD          S              7                                                       CRE067
                                                                                               CRE067
      D WDATE           S              5  0                                                    CRE067
+     D PMode           S              6A                                                    MD021318
                                                                                               CRE067
      D ##DTA           DS           256                                                       CRE067
      D  ##FCCY                 1      3                                                       CRE067
@@ -604,6 +609,7 @@
      C                   Parm                    WMsgDtXAr                                    240689
      C                   Parm                    OKFlagsDS
      C                   Parm                    Val@Fields
+     C                   PARM                    PMode                                      MD021318
  
       ** Update error info with that retured from the validation module
  
@@ -2043,6 +2049,8 @@
       ** Charges to the debit of - field changed (Y or blank)                   CFT009
      C                   PARM                    PCDROCHG          1            CFT009
      C                   PARM                    InputUser                                  MD042042
+      ** Screen Input Function                                                              MD021318
+     C                   PARM                    PMode                                      MD021318
  
      C     *LOCK         In        LDA
      C                   Movel     'FTOPAY4VL'   DBPGM

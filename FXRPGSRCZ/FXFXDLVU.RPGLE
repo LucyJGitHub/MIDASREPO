@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD039547           Date 20Sep16               *
+      *  Last Amend No. AR926404           Date 16Jan13               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD039547           Date 20Sep16               *
       *                 MD046248           Date 27Oct17               *
       *                 MD047971           Date 16Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -116,11 +117,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR926404 - Unable to update Front Office ID. Allow changes   *
+      *             on FHFRNT. (Child: AR926405)                      *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD039547 - Referred account is not properly validated.       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD047971 - Do not allow amendment to settlement account if   *
-      *             that side is already netted.                      *     
+      *             that side is already netted.                      *
       *  CDL099 - Split Value Date                                    *
       *  MD044506 - MT300 98D trade execution date can not be before  *
       *             value date.                                       *
@@ -1316,9 +1319,9 @@
      C                   PARM                    InCDL099                                     CDL099
      C/COPY WNCPYSRC,FXFXDLXC03
       *                                                                                       CTI004
-     C                   If        DDFOID <> *blanks                                          CTI004
+     C**********         If        DDFOID <> *blanks                                 CTI004 AR926404
      C                   Eval      F3FRNT = DDFOID                                            CTI004
-     C                   EndIf                                                                CTI004
+     C**********         EndIf                                                       CTI004 AR926404
       *                                                                                       254420
      C     Idx           IFNE      0                                                          254420
      C                   GOTO      INVALID                                                    254420

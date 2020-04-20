@@ -13,8 +13,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD039064           Date 31May16               *      
-      *  Prev Amend No. MD054696           Date 29Oct19               *
+      *  Last Amend No. MD054696           Date 29Oct19               *
+      *  Prev Amend No. MD039064           Date 31May16               *
       *                 MD054538           Date 08Oct19               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
@@ -222,9 +222,9 @@
       *                 CAP084  *CREATE    Date 24Mar03               *
       *                                                               *
       *---------------------------------------------------------------*
-      *                                                               *
-      *  MD039064 - Incorrect mapping for RPIF details                *      
+      *                                                               *     
       *  MD054696 - Journal Entries Avoid Shadow Postings Update.     *
+      *  MD039064 - Incorrect mapping for RPIF details                * 
       *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *
       *  MD054538 - Buffer issue on Rollover Maintenance              *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *

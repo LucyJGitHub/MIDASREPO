@@ -36,7 +36,6 @@
 000135200320      ** ¦ =======                              ¦
 000136200320      ** +--------------------------------------+
 000137200320     FOTPAY     IF   E           K DISK
-000138200320     F*********OTPAYQD0  UF   E           K DISK
 000139200320     FOTPAYQL0  UF A E           K DISK
 000140200320     FUTFT0843P1O    E             PRINTER OFLIND(*IN66)
 000141200320     FUTFT0843AUO    E             PRINTER
@@ -171,7 +170,7 @@
 000270200320     C                   Eval      ACTION = 'INSERT'
 000271200320     C                   EVAL      STYPE = %SUBST(OTPREF:14:2)
 000272200320     C                   ADD       1             NINSERTDD
-000273200320     C                   EXSR      PRINTP1                                      RONSTAR
+000273200420     C                   EXSR      PRINTP1
 000274200320     C                   IF        *IN30 = *ON
 000275200320     C                   WRITE     OTPAYQD0
 000276200320     C                   ENDIF
@@ -277,4 +276,4 @@
 000376200320      *
 000377200320      *
 000378200320** WCPY@
-000379200320(c) Finastra International Limited 2004
+000379200420(c) Finastra International Limited 2020

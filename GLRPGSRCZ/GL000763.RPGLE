@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD054905           Date 04Dec19               *
-      *  Prev Amend No. MD051055           Date 31Aug16               *
+      *  Last Amend No. MD055078           Date 18Feb20               *
+      *  Prev Amend No. MD054905           Date 04Dec19               *
+      *                 MD051055           Date 31Aug16               *
       *                 MD040953           Date 31Aug16               *
       *                 MD040841           Date 26Aug16               *
       *                 MD040832           Date 26Aug16               *
@@ -20,6 +21,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055078 - Information on non-account holders is missing     *
       *  MD054905 - Change Message Ref Id format                      *
       *  MD051055 - Incorrect report when multiple account selected   *
       *  MD040953 - Same accounts excluded twice produced 2 same      *
@@ -1416,11 +1418,13 @@
      C                   EVAL      D5COPR = MGDATA
 
      C                   WHEN      MGELMT = 'Name'
+     C                   EVAL      D5FNME = *BLANKS                                         MD055078
+     C                   EVAL      D5LNME = *BLANKS                                         MD055078
      C                   EVAL      D5FNME = MGDATA
      C                   EVAL      KTopElmName = 'Name'
      C                   EVAL      KMGSEQU = MGSEQU
-     C                   EVAL      D5FNME = *BLANKS
-     C                   EVAL      D5LNME = *BLANKS
+     C**********         EVAL      D5FNME = *BLANKS                                         MD055078
+     C**********         EVAL      D5LNME = *BLANKS                                         MD055078
 
      C     KAcctN3       SETLL     GLCRMDLB
      C                   READ      GLCRMDLB

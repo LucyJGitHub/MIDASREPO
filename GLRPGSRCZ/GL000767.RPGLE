@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD055071           Date 29Jan20               *
-      *  Prev Amend No. MD054986           Date 27Jan20               *
+      *  Last Amend No. MD055078           Date 18Feb20               *
+      *  Prev Amend No. MD055071           Date 29Jan20               *
+      *                 MD054986           Date 27Jan20               *
       *                 MD054905           Date 04Dec19               *
       *                 CGL185             Date 13Mar17               *
       *                 MD041589           Date 23Sep16               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055078 - Information on non-account holders is missing     *
       *  MD055071- Correct A/C Holder Type for N/PA. With ContPerson  *
       *            = CRS101, Wihtout ContPerson = CRS103              *
       *  MD054986 - CRS Issue: Account Holder/Organisation            *
@@ -2780,10 +2782,16 @@
      C                   DOW       NOT %EOF(SDCUAHL0)
 
      C                   IF        CAPCNT <> *Blanks
-     C                   MOVE      CAPCNT        WNUM3
+     C                   MOVE      CAPCNT        WNUM3                                      MD055078
+     C                   ELSE                                                               MD055078
+     C                   EVAL      WNUM3 = *ZERO                                            MD055078
+     C                   ENDIF                                                              MD055078
+     C**********         MOVE      CAPCNT        WNUM3                                      MD055078
+     C                   IF        WNUM3 <> *ZERO                                           MD055078
+     C                             OR CACINT = 'Y'                                          MD055078
      C                   EVAL      IxConPer =IxConPer + 1
      C                   EVAL      MGSEQU =  IxConPer
-     C                   IF        WNUM3 <> *ZERO
+     C**********         IF        WNUM3 <> *ZERO                                           MD055078
      C                   EVAL      MGCUST = EXCUSD
      C                   EVAL      MGACHO = EXCUSD
      C                   EVAL      MGMTYP = 'CUST'
@@ -2805,6 +2813,7 @@
      C                   EXSR      SRWrite
 
      C                   EVAL      MGELMT = 'ControllingPerson'
+     C                   EVAL      PCuah = CAAUTH                                           MD055078
      C                   CALL      'AOCUSTR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY'        POptn
@@ -2881,7 +2890,7 @@
      C                   ENDIF
 
      C                   ENDIF
-     C                   ENDIF
+     C**********         ENDIF                                                              MD055078
      C     XCust         READE     SDCUAHL0
      C                   ENDDO
 
@@ -4333,6 +4342,11 @@
 
      C                   DOW       NOT %EOF(SDCUAHL0)
      C                   IF        CAPCNT <> *Blanks
+     C                   MOVE      CAPCNT        WNUM3                                      MD055078
+     C                   ELSE                                                               MD055078
+     C                   EVAL      WNUM3 = 0                                                MD055078
+     C                   ENDIF                                                              MD055078
+     C                   IF        WNUM3 <> *ZERO                                           MD055078
      C                             OR CACINT = 'Y'                                          MD055071
      C**********         MOVE      CAPCNT        WNUM3                                      MD055071
      C**********         IF        WNUM3 <> *ZERO                                           MD055071

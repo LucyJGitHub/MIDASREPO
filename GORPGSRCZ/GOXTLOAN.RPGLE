@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD035257           Date 19Feb20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD037863           Date 27Jul16               *
       *                 MD022920           Date 19Nov13               *
       *                 AR1081071          Date 13Jan15               *
@@ -43,6 +44,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD035257 - Pass I#LOC to GOSETLOAN.                          *
+      *           - Applied for MD054829.                             *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037863 - Generate maturity repayment event only when       *
@@ -239,6 +242,7 @@
      C                   PARM                    SL_CNUM
      C                   PARM                    SL_MLNR
      C                   PARM                    SL_OLNO
+     C                   PARM                    I#LOC                                     MD035257
       * OUTPUTS
      C                   PARM                    T_TRAP
 

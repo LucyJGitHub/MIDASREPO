@@ -1217,7 +1217,7 @@
      C                             AND BGNOST = 'Y'                                         MD055518
      C                   EVAL      PRFC = TIPRFC                                            MD055518
      C                   ELSE                                                               MD055518
-     C                   EVAL      DPRFC = TIPRFC                                           MD055518
+     C                   EVAL      PRFC = DPRFC                                             MD055518
      C                   ENDIF                                                              MD055518
      C                   ENDIF                                                              MD055518
       *

@@ -11,12 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD051696           Date 12Mar20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSW037A            Date 02May05               *
+      *                 CSW037A            Date 02May05               *
       *                 CSD025             Date 11Jan05               *
       *                 CSW037             Date 15Dec04               *
       *                 CSW036             Date 15Dec04               *
@@ -25,6 +26,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051696 - File Out of Balance error on component SDC0602    *
+      *             SD1420AU audit report under SDCMRKPD file         *
       *  MD046248 - Finastra Rebranding                               *
       *  CSW037A- Additional Field extended to 40 chars (recompile)   *
       *  CSD025 - Customer De-Activation                              *
@@ -49,6 +52,7 @@
      FSDCUSTPD  IF   E             DISK
      FSDREPCPD  IF   E             DISK
      FSDACRCPD  IF   E             DISK
+     FSDCMRKPD  IF   E             DISK                                                     MD051696
       *
       ** User space DS
      D INPUT           DS
@@ -171,6 +175,21 @@
      C                   READ      SDACRCPD                               06
      C                   END
      C                   END
+      *                                                                                     MD051696
+      ** If SDCMRKPD                                                                        MD051696
+     C     AHFLNM        IFEQ      'SDCMRKPD'                                               MD051696
+      *                                                                                     MD051696
+      ** Calculate the no. of deleted records for SDCMRKPD                                  MD051696
+     C     1             SETLL     SDCMRKD0                                                 MD051696
+     C                   READ      SDCMRKD0                               07                MD051696
+     C     *IN07         DOWNE     '1'                                                      MD051696
+     C     D7TYLC        IFEQ      'D'                                                      MD051696
+     C                   ADD       1             AHNODL                                     MD051696
+     C                   SUB       1             AHNORC                                     MD051696
+     C                   END                                                                MD051696
+     C                   READ      SDCMRKD0                               07                MD051696
+     C                   END                                                                MD051696
+     C                   END                                                                MD051696
       *
       * Update Table files Trailer (TABLETX) for Narrative Codes.
       *

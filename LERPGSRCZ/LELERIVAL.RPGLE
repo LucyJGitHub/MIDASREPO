@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE071             Date 18Jul18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055380           Date 17Apr20               *
+      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD034840           Date 10Feb17               *
       *                 CLE154             Date 10Aug12               *
       *                 MD039304           Date 19Jul16               *
@@ -110,6 +111,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055380 - Rollover can't be completed when main loan in WIP.*
+      *             Reverse fix AR820729.                             *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034840 - No error issued for input of base rate even if    *
@@ -668,11 +671,11 @@
      C                   EXSR      SRRSFD                                                   AR702532
      C                   RETURN                                                             AR702532
      C                   ENDIF                                                              AR702532
- 
-      *                                                                                     AR820729
-      ** Check if loan details have been amended                                            AR820729
-      *                                                                                     AR820729
-     C                   EXSR      SRLSTS                                                   AR820729
+
+      **********                                                                   AR820729 MD055380
+      ***Check*if*loan*details*have*been*amended                                   AR820729 MD055380
+      **********                                                                   AR820729 MD055380
+     C**********         EXSR      SRLSTS                                          AR820729 MD055380
       *
       *  *------------------------------------------------------*
       *  *  Display warning message if loan is syndicated       *
@@ -8668,25 +8671,25 @@
      C                   ENDIF                                                              AR702532
       *                                                                                     AR702532
      C                   ENDSR                                                              AR702532
-      *****************************************************************                     AR820729
-      /EJECT                                                                                AR820729
-      *****************************************************************                     AR820729
-      *                                                               *                     AR820729
-      * SRLSTS  -  Validate Loan Status                               *                     AR820729
-      *                                                               *                     AR820729
-      *****************************************************************                     AR820729
-     C     SRLSTS        BEGSR                                                              AR820729
-      *                                                                                     AR820729
-      ** Do not allow amendment when there is a pending change on                           AR820729
-      ** loan details                                                                       AR820729
-      *                                                                                     AR820729
-     C                   If        L_CLLSTS = 'R'                                           AR820729
-     C                   ADD       1             Idx                                        AR820729
-     C                   EVAL      FldNameArr(Idx) = 'DDLNRF'                               AR820729
-     C                   EVAL      MsgIDArr(Idx) = '5046110'                                AR820729
-     C                   Endif                                                              AR820729
-      *                                                                                     AR820729
-     C                   ENDSR                                                              AR820729
+      *****************************************************************            AR820729 MD055380
+      */EJECT***                                                                   AR820729 MD055380
+      *****************************************************************            AR820729 MD055380
+      **********                                                      *            AR820729 MD055380
+      * SRLSTS**-**Validate*Loan*Status                               *            AR820729 MD055380
+      **********                                                      *            AR820729 MD055380
+      *****************************************************************            AR820729 MD055380
+     C*****SRLSTS        BEGSR                                                     AR820729 MD055380
+      **********                                                                   AR820729 MD055380
+      ***Do*not*allow*amendment*when*there*is*a*pending*change*on                  AR820729 MD055380
+      ***loan*details                                                              AR820729 MD055380
+      **********                                                                   AR820729 MD055380
+     C**********         If        L_CLLSTS = 'R'                                  AR820729 MD055380
+     C**********         ADD       1             Idx                               AR820729 MD055380
+     C**********         EVAL      FldNameArr(Idx) = 'DDLNRF'                      AR820729 MD055380
+     C**********         EVAL      MsgIDArr(Idx) = '5046110'                       AR820729 MD055380
+     C**********         Endif                                                     AR820729 MD055380
+      **********                                                                   AR820729 MD055380
+     C**********         ENDSR                                                     AR820729 MD055380
       *****************************************************************
       /EJECT
       *****************************************************************

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD052327           Date 17Nov18               *
-      *  Prev Amend No. MD052214           Date 26Oct18               *
+      *  Last Amend No. MD055380           Date 17Apr20               *
+      *  Prev Amend No. MD052327           Date 17Nov18               *
+      *                 MD052214           Date 26Oct18               *
       *                 MD052213           Date 26Oct18               *
       *                 CLE071             Date 18Jul18               *
       *                 MD027418           Date 18Jul18               *
@@ -164,6 +165,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055380 - Rollover can't be completed when main loan in WIP.*
+      *             Reverse fix AR820729.                             *
       *  MD052327 - A serious MIDAS error occurred while Inserting    *
       *             a New Participation Sold                          *
       *  MD052214 - Warning message with outside block not appearing. *
@@ -1819,10 +1822,10 @@
      C**********         MOVE      *ZEROS        CCLTOLN                               245411 CLE148
      C                   MOVE      *BLANKS       CCLTOLN                                      CLE148
      C                   ENDIF                                                                245411
-      *                                                                                     AR820729
-      ** Validate Rollover Status                                                           AR820729
-      *                                                                                     AR820729
-     C                   EXSR      SRRSTS                                                   AR820729
+      **********                                                                   AR820729 MD055380
+      ***Validate*Rollover*Status                                                  AR820729 MD055380
+      **********                                                                   AR820729 MD055380
+     C**********         EXSR      SRRSTS                                          AR820729 MD055380
       *                                                                                       CER020
       ** Validate Initial Start and Final Maturity Date                                       CER020
       *                                                                                       CER020
@@ -8686,24 +8689,24 @@ B001 C     ZERR          IFNE      *BLANKS
       *                                                                                       240510
      C                   ENDSR                                                                240510
       /EJECT                                                                                  240510
-      *****************************************************************                     AR820729
-      *  SRRSTS - Validate Rollover Status                            *                     AR820729
-      *****************************************************************                     AR820729
-     C     SRRSTS        BEGSR                                                              AR820729
-      *                                                                                     AR820729
-      ** Do not allow amendment when there is a pending change on                           AR820729
-      ** rollover details                                                                   AR820729
-      *                                                                                     AR820729
-     C     DDACTN        IFEQ      'A'                                                      AR820729
-     C     CLRSTS        ANDEQ     'R'                                                      AR820729
-     C     DDACTN        OREQ      'R'                                                      AR820729
-     C     CLRSTS        ANDEQ     'R'                                                      AR820729
-     C                   ADD       1             Idx                                        AR820729
-     C                   MOVEL     '5046109'     MsgIDXAr(Idx)                              AR820729
-     C                   MOVEL     'DDLNRF'      FldNamXAr(Idx)                             AR820729
-     C                   ENDIF                                                              AR820729
-     C                   ENDSR                                                              AR820729
-      /EJECT                                                                                AR820729
+      *****************************************************************            AR820729 MD055380
+      ***SRRSTS*-*Validate*Rollover*Status                            *            AR820729 MD055380
+      *****************************************************************            AR820729 MD055380
+     C*****SRRSTS        BEGSR                                                     AR820729 MD055380
+      **********                                                                   AR820729 MD055380
+      ***Do*not*allow*amendment*when*there*is*a*pending*change*on                  AR820729 MD055380
+      ***rollover*details                                                          AR820729 MD055380
+      **********                                                                   AR820729 MD055380
+     C*****DDACTN        IFEQ      'A'                                             AR820729 MD055380
+     C*****CLRSTS        ANDEQ     'R'                                             AR820729 MD055380
+     C*****DDACTN        OREQ      'R'                                             AR820729 MD055380
+     C*****CLRSTS        ANDEQ     'R'                                             AR820729 MD055380
+     C**********         ADD       1             Idx                               AR820729 MD055380
+     C**********         MOVEL     '5046109'     MsgIDXAr(Idx)                     AR820729 MD055380
+     C**********         MOVEL     'DDLNRF'      FldNamXAr(Idx)                    AR820729 MD055380
+     C**********         ENDIF                                                     AR820729 MD055380
+     C**********         ENDSR                                                     AR820729 MD055380
+      */EJECT***                                                                   AR820729 MD055380
       *****************************************************************                       CER020
       *                                                               *                       CER020
       *  SRVInStDt - Validate Initial Start Date                      *                       CER020

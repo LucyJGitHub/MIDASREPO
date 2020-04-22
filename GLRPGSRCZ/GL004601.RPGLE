@@ -16,7 +16,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD055518           Date 08Apr20               *
+      *  Last Amend No. MD055518           Date 22Apr20               *
       *  Prev Amend No. MD051765           Date 18Jul19               *
       *                 MD043945A          Date 20Feb17               *
       *                 MD043945           Date 07Feb17               *
@@ -1194,21 +1194,21 @@
       ** is a TI posting.                                                                   MD055518
                                                                                             MD055518
      C                   CLEAR                   PRFC                                       MD055518
-	...                                                                                    MD055518
+	                                                                                       MD055518
      C                   CALL      'AOPRFMR0'                                               MD055518
      C                   PARM                    RTCD              1                        MD055518
-     C                   PARM      *BLANK        BOOK              2            Book Code   MD055518
-     C                   PARM      *BLANK        TRTP              5            TransactonType MD055
-     C                   PARM      *BLANKS       SUTP              2            Sub Type    MD055518
-     C                   PARM      R1BRCA        BRAN              3            Branch Code MD055518
-     C**********         PARM      *BLANKS       DEPT1             3            Deptment Code MD0555
-     C**********         PARM      ##USER        USER             10            User        MD055518
+     C                   PARM      *BLANK        BOOK              2                        MD055518
+     C                   PARM      *BLANK        TRTP              5                        MD055518
+     C                   PARM      *BLANKS       SUTP              2                        MD055518
+     C                   PARM      R1BRCA        BRAN              3                        MD055518
+     C**********         PARM      *BLANKS       DEPT1             3                        MD055518
+     C**********         PARM      ##USER        USER             10                        MD055518
      C                   PARM                    DEPT1             3                        MD055518
      C                   PARM                    USER             10                        MD055518
-     C                   PARM                    ACOF              2            AccountOfficer MD055
-     C                   PARM                    CUST              6            CustomerNumber MD055
-     C                   PARM                    DPRFC             4            Profit Centre  MD055
-      *
+     C                   PARM                    ACOF              2                        MD055518
+     C                   PARM                    CUST              6                        MD055518
+     C                   PARM                    DPRFC             4                        MD055518
+      *                                                                                     MD055518
      C**********         IF        BGNOST = 'Y'                                            AR1009263
      C                   IF        BGN0ST = 'Y'                                            AR1009263
      C                   EVAL      PRFC = FTPRFP
@@ -1222,7 +1222,7 @@
      C                   EVAL      PRFC = DPRFC                                             MD055518
      C                   ENDIF                                                              MD055518
      C                   ENDIF                                                              MD055518
-      *
+      *                                                                                     MD055518
      C                   EVAL      PTIM = 235959
      C                   EVAL      OTST = R1TRST
      C                   EVAL      OTTP = R1TRTY

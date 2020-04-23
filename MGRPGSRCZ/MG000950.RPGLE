@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CMG006             Date 15Oct19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. EML104             Date 06Feb20               *
+      *  Prev Amend No. CMG006             Date 15Oct19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD042357           Date 02Dec16               *
       *                 MD042041           Date 21Oct16               *
       *                 MD024641           Date 10Feb14               *
@@ -51,6 +52,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  EML104 - Upgrade EML010 to FB Midas 2.1 SP21                 *
+      *           Structured field :86:                               *
+      *           Used hook MGH00092, MGH00094                        *
+      *           Added hook EML104_014                               *
       *  CMG006 - Account identification of MT940 and MT942.          *
       *  MD046248 - Finastra Rebranding                               *
       *  MD042357 - Do not write IBAN to SWIFT Account on MGOREFPD    *
@@ -1190,6 +1195,7 @@
      C                   Eval      EVTP = *Blanks
      C                   Eval      NWRK = MGNWRK
      C/COPY OFCPYSRCZ,CGL146_063                                                              CGL146
+     C/COPY WNCPYSRC,EML104_014                                                               EML104
 
      C**********         Call      'AOBRCHR0'                                                 CGL029
      C                   CALL      'AOBRCHR1'                                                 CGL029

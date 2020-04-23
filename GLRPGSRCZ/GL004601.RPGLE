@@ -1216,7 +1216,7 @@
       *                                                                                     MD055518
      C                   IF        R1TRTY = 'YT' AND R1TRST = 'TI'                          MD055518
      C                   IF        RTCD <> '0' OR DPRFC = FTUAPC                            MD055518
-     C                             AND BGNOST = 'Y'                                         MD055518
+     C                             AND BGN0ST = 'Y'                                         MD055518
      C                   EVAL      PRFC = TIPRFC                                            MD055518
      C                   ELSE                                                               MD055518
      C                   EVAL      PRFC = DPRFC                                             MD055518

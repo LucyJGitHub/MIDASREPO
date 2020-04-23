@@ -1190,6 +1190,11 @@
      C                   EVAL      GETP = 'L'
      C                   EVAL      ACUM = 1
 
+     C**********         IF        BGNOST = 'Y'                                            AR1009263
+     C                   IF        BGN0ST = 'Y'                                            AR1009263
+     C                   EVAL      PRFC = FTPRFP
+     C                   ENDIF
+
       ** Defaulting Process Of Profit Centre When Account Transfer                          MD055518
       ** is a TI posting.                                                                   MD055518
                                                                                             MD055518
@@ -1201,18 +1206,11 @@
      C                   PARM      *BLANK        TRTP              5                        MD055518
      C                   PARM      *BLANKS       SUTP              2                        MD055518
      C                   PARM      R1BRCA        BRAN              3                        MD055518
-     C**********         PARM      *BLANKS       DEPT1             3                        MD055518
-     C**********         PARM      ##USER        USER             10                        MD055518
      C                   PARM                    DEPT1             3                        MD055518
      C                   PARM                    USER             10                        MD055518
      C                   PARM                    ACOF              2                        MD055518
      C                   PARM                    CUST              6                        MD055518
      C                   PARM                    DPRFC             4                        MD055518
-      *                                                                                     MD055518
-     C**********         IF        BGNOST = 'Y'                                            AR1009263
-     C                   IF        BGN0ST = 'Y'                                            AR1009263
-     C                   EVAL      PRFC = FTPRFP
-     C                   ENDIF
       *                                                                                     MD055518
      C                   IF        R1TRTY = 'YT' AND R1TRST = 'TI'                          MD055518
      C                   IF        RTCD <> '0' OR DPRFC = FTUAPC                            MD055518

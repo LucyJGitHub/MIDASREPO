@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *  Last Amend No. MD055656           Date 20Apr20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CFT120             Date 28Sep12               *
       *                 CRE067             Date 05Oct10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -26,6 +27,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055656 - OPAY messages sent via JMS API end in error       *
+      *             (ERZ248) (Recompile)                              *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *           (Recompile)                                         *
@@ -578,7 +581,7 @@
      C                   PARM      '*BLANKS'     @RtCd
      C                   PARM      '*FIRST '     @Optn
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C     @RtCd         IFNE      *BLANKS
      C                   MOVEL     'SDBANKPD'    DBFILE
      C                   MOVEL     '001'         DBASE
@@ -592,7 +595,7 @@
      C                   PARM      *BLANKS       @RtCd
      C                   PARM      '*FIRST '     @Optn
      C     SDMMOD        PARM      SDMMOD        DSFDY
- 
+
      C     @RtCd         IFNE      *BLANKS
      C                   MOVEL     'SDMMODPD'    DBFILE
      C                   MOVEL     '002'         DBASE

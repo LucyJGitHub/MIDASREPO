@@ -16,9 +16,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD055518           Date 22Apr20               *
-      *  Prev Amend No. MD043945A          Date 20Feb17               *
-      *       Amend No. MD043945           Date 07Feb17               *
+      *  Last Amend No. MD043945A          Date 20Feb17               *
+      *  Prev Amend No. MD043945           Date 07Feb17               *
       *                 MD046248           Date 27Oct17               *
       *                 MD034016           Date 16Jun15               *
       *                 MD029951           Date 25Feb15               *
@@ -51,8 +50,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD055518 - Profit Centre assigned to TI postings is different*
-      *             between MidasPlus and FBMidas.                    *
       *  MD043945A - Inactive account should not be posted in suspense*
       *  MD043945 - Account transfer for blocked account should be    *
       *  MD046248 - Finastra Rebranding                               *
@@ -214,9 +211,6 @@
      F                                     PREFIX(Pb_)                                        CRE072
      F                                     RENAME(APOSTPDF:GLPUAMD0)                          CRE072
 
-      ** Midas SD Midas/TI Interface ICD                                                    MD055518
-     FSDTIINPD  IF   E           K DISK    INFSR(*PSSR)                                     MD055518
-
       ** Midas GL Generated Entries Account Transfer - Header
      FGETXHH    O    E             DISK    INFSR(*PSSR)
      F                                     PREFIX(H_)
@@ -245,7 +239,6 @@
       ** Midas GL Generated Entries Account Transfer - Audit
      FGL004601AUO    E             PRINTER INFDS(SPOOLU)
      F                                     INFSR(*PSSR)
-
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1193,32 +1186,6 @@
      C                   EVAL      PRFC = FTPRFP
      C                   ENDIF
 
-      ** Defaulting Process Of Profit Centre When Account Transfer                          MD055518
-      ** is a TI posting.                                                                   MD055518
-                                                                                            MD055518
-     C                   CLEAR                   PRFC                                       MD055518
-	                                                                                       MD055518
-     C                   CALL      'AOPRFMR0'                                               MD055518
-     C                   PARM                    RTCD              1                        MD055518
-     C                   PARM      *BLANK        BOOK              2                        MD055518
-     C                   PARM      *BLANK        TRTP              5                        MD055518
-     C                   PARM      *BLANKS       SUTP              2                        MD055518
-     C                   PARM      R1BRCA        BRAN              3                        MD055518
-     C                   PARM                    DEPT1             3                        MD055518
-     C                   PARM                    USER             10                        MD055518
-     C                   PARM                    ACOF              2                        MD055518
-     C                   PARM                    CUST              6                        MD055518
-     C                   PARM                    DPRFC             4                        MD055518
-      *                                                                                     MD055518
-     C                   IF        R1TRTY = 'YT' AND R1TRST = 'TI'                          MD055518
-     C                   IF        RTCD <> '0' OR DPRFC = FTUAPC                            MD055518
-     C                             AND BGN0ST = 'Y'                                         MD055518
-     C                   EVAL      PRFC = TIPRFC                                            MD055518
-     C                   ELSE                                                               MD055518
-     C                   EVAL      PRFC = DPRFC                                             MD055518
-     C                   ENDIF                                                              MD055518
-     C                   ENDIF                                                              MD055518
-      *                                                                                     MD055518
      C                   EVAL      PTIM = 235959
      C                   EVAL      OTST = R1TRST
      C                   EVAL      OTTP = R1TRTY
@@ -3682,4 +3649,3 @@
       *****************************************************************                     BUG28036
      C/COPY ZSRSRC,ZCHKHLE                                                                  BUG28036
      C/COPY ZSRSRC,ZACCHLE                                                                  BUG28036
-

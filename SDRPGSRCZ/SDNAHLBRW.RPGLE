@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD040639           Date 22Sep16               *
+      *  Last Amend No. MD052599           Date 13Apr20               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD040639           Date 22Sep16               *
       *                 CGL177             Date 11Jan16               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL132             Date 01May13               *
@@ -35,7 +36,10 @@
       *                 CGL032  *CREATE    Date 05Jul04               *
       *                                                               *
       *---------------------------------------------------------------*
-      *                                                               *
+      *  MD052599 - BFM2.1 Logically deleted Non-account Holder       *
+      *             dropped from the Maintenance screen. Remove       *
+      *             checking of NHCHTP, and add display of DELETE     *
+      *             and disable DDOPT for the deleted record.         *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD040639 - Hats compatibility issue (Recompile)              *
       *  CGL177 - CRS Reporting Phase 2                               *
@@ -374,9 +378,9 @@
      C     @@EOF         DOWNE     'Y'
      C     @@CNT         ANDLT     14
 
-      **  Load records with status not 'D'.
+      ****Load*records*with*status*not*'D'.****************************
 
-     C                   IF        NHCHTP <> 'D'
+     C**********         IF        NHCHTP <> 'D'                                            MD052599
 
       **  Increment the subfile record no. and records written fields.
 
@@ -409,7 +413,7 @@
      C                   Z-ADD     @@RRN         DDSFRN
      C                   WRITE     SDNAHLS1
 
-     C                   ENDIF
+     C**********         ENDIF                                                              MD052599
 
       **  Read a valid Non-account holder
 
@@ -450,8 +454,10 @@
       **  write to the subfile with non-display set on
 
      C                   MOVE      *On           *In93
+     C                   MOVE      *On           *In91                                      MD052599
      C                   WRITE     SDNAHLS1
      C                   MOVE      *Off          *In93
+     C                   MOVE      *Off          *In91                                      MD052599
      C                   WRITE     SDNAHLS0
      C                   ELSE
 
@@ -593,7 +599,7 @@
 
       **  Load records with status not 'D'.
 
-     C                   IF        NHCHTP <> 'D'
+     C**********         IF        NHCHTP <> 'D'                                            MD052599
 
       **  Increment the subfile record no. and records written fields.
 
@@ -626,7 +632,7 @@
      C                   Z-ADD     @@RRN         DDSFRN
      C                   WRITE     SDNAHLS3
 
-     C                   ENDIF
+     C**********         ENDIF                                                              MD052599
 
       ** Read a valid Non-A/C Holder
 
@@ -666,8 +672,10 @@
       **  write to the subfile with non-display set on
 
      C                   MOVE      *On           *In93
+     C                   MOVE      *On           *In91                                      MD052599
      C                   WRITE     SDNAHLS3
      C                   MOVE      *Off          *In93
+     C                   MOVE      *Off          *In91                                      MD052599
      C                   WRITE     SDNAHLS2
      C                   ELSE
 
@@ -867,6 +875,17 @@
      C                   MOVE      NHNAHO        DDNAHO
      C                   MOVE      NHNARN        DDNARN
      C                   MOVE      NHNATW        DDNATW
+     C** If Type of Last Change (NHSCHTP) is equals to 'D', it will be                      MD052599
+     C** indicated as 'DELETED' in the subfile. Else,  leave the                            MD052599
+     C** indicator field as blank.                                                          MD052599
+     C*                                                                                     MD052599
+     C     'D'           IFEQ      NHCHTP                                                   MD052599
+     C                   MOVE      'DELETED'     DDNAST                                     MD052599
+     C                   MOVE      *On           *In91                                      MD052599
+     C                   ELSE                                                               MD052599
+     C                   MOVE      *BLANK        DDNAST                                     MD052599
+     C                   MOVE      *Off          *In91                                      MD052599
+     C                   ENDIF                                                              MD052599
 
       ** Front Office Non-account Holder
 

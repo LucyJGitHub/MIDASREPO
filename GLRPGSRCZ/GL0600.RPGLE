@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR954846           Date 09Jan20               *
-      *  Prev Amend No. 255478A            Date 03Oct19               *
+      *  Last Amend No. MD055382           Date 02Apr20               *
+      *  Prev Amend No. AR954846           Date 09Jan20               *
+      *                 255478A            Date 03Oct19               *
       *                 MD045515           Date 02Jul17               *
       *                 MD037555           Date 24Feb15               *
       *                 MD048056           Date 16Jan18               *
@@ -186,6 +187,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055382 - System generated account statements will be       *
+      *             written to STMTAH only when it's NSTD is less than*
+      *             the system's NWKD.                                *
       *  AR954846 - No statement produced for newly generated accounts*
       *             Set NSTD = RUND for STFQ = 'D' to generate report.*
       *           - Applied for MD-54704                              *
@@ -3254,11 +3258,13 @@
       *                                                               *                     MD038510
       *****************************************************************                     MD038510
      C     WRTSTMT       BEGSR                                                              MD038510
+     C     NSTD          IFLT      NWKD                                                     MD055382
      C                   MOVE      'D'           RECI                                       MD038510
      C                   MOVE      'N'           MSFL                                       MD038510
      C                   BITOFF    '01234567'    GLBT                                       MD038510
      C                   BITON     '2'           GLBT                                       MD038510
      C                   WRITE     STMTAHF                                                  MD038510
+     C                   ENDIF                                                              MD055382
      C                   ENDSR                                                              MD038510
       *****************************************************************
       /EJECT

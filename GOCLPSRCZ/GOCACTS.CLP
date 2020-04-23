@@ -15,8 +15,9 @@
 /*                                                                   */                 /*CGO001AA*/
 /*       (c) Finastra International Limited 2009                     */
 /*                                                                   */
-/*       Last Amend No. MD052296           Date 26Nov18              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD055146           Date 04Feb20              */
+/*       Prev Amend No. MD052296           Date 26Nov18              */
+/*                      MD046248           Date 27Oct17              */
 /*                      AR1097467          Date 17Apr13              */
 /*                      CGO001AA           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -24,6 +25,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD055146 - Failed MXC004802 seq. 00001 and others           */
+/*                  Increase Branches to 900.                        */
 /*       MD052296 - Problems caused by use of special characters     */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR1097467B - Expected 15% COB run optimization not met      */
@@ -68,6 +71,22 @@
              DCL        VAR(&BLSY  )  TYPE(*CHAR) LEN(1)
 
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
+                                                                                        /*MD055146*/
+             DCL        VAR(&GFGPF)     TYPE(*CHAR) LEN(10)                             /*MD055146*/
+             DCL        VAR(&GFGBRC)    TYPE(*CHAR) LEN(10)                             /*MD055146*/
+             DCL        VAR(&GFGLF)     TYPE(*CHAR) LEN(10)                             /*MD055146*/
+             DCL        VAR(&STM_STR1)  TYPE(*CHAR) LEN(80)                             /*MD055146*/
+             DCL        VAR(&STM_STR2)  TYPE(*CHAR) LEN(80)                             /*MD055146*/
+             DCL        VAR(&STM_STR3)  TYPE(*CHAR) LEN(80)                             /*MD055146*/
+                                                                                        /*MD055146*/
+             DCL        VAR(&STM1) TYPE(*CHAR) LEN(42) VALUE('CREATE +
+                          VIEW QTEMP/GOFILE AS SELECT * FROM ')                         /*MD055146*/
+             DCL        VAR(&STM2)     TYPE(*CHAR) LEN(7) VALUE(' WHERE ')              /*MD055146*/
+             DCL        VAR(&STM3)     TYPE(*CHAR) LEN(12) VALUE(' IN (SELECT ')        /*MD055146*/
+             DCL        VAR(&STM4)     TYPE(*CHAR) LEN(6) VALUE(' FROM ')               /*MD055146*/
+             DCL        VAR(&STM5)     TYPE(*CHAR) LEN(1) VALUE(')')                    /*MD055146*/
+                                                                                        /*MD055146*/
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2009')
@@ -206,9 +225,15 @@
 
 /* Get synchronisation executables*/
 
+/**********  CALL       PGM(GOGETSYNX) PARM(&GPF &ZOZONE &GLFU +     */                 /*MD055146*/
+/**********               &ZLFOVR &GLFOVR &GLFCLO &ZLFDLO &GLFDLO +  */                 /*MD055146*/
+/**********               &OPNQRY &ZLF &BLFD &BLSY)                  */      /*BG1364*/ /*MD055146*/
+                                                                                        /*MD055146*/
              CALL       PGM(GOGETSYNX) PARM(&GPF &ZOZONE &GLFU +
                           &ZLFOVR &GLFOVR &GLFCLO &ZLFDLO &GLFDLO +
-                          &OPNQRY &ZLF &BLFD &BLSY)
+                          &OPNQRY &ZLF &BLFD &BLSY &GFGPF &GFGBRC +
+                          &GFGLF)                                                       /*MD055146*/
+                                                                                        /*MD055146*/
 
 /* End if bulk synchronisation not done for this file*/
 /**********  IF         COND(&BLSY ¬= 'Y') THEN(DO)                                     /*MD052296*/
@@ -222,8 +247,38 @@
 
 /* Do bulk synchronisation */
              CALL       PGM(QCMDEXC) PARM(&ZLFOVR 60)
-             CALL       PGM(QCMDEXC) PARM(&GLFOVR 60)
-             CALL       PGM(QCMDEXC) PARM(&OPNQRY 32702)
+/**********  CALL       PGM(QCMDEXC) PARM(&GLFOVR 60)                                   /*MD055146*/
+/**********  CALL       PGM(QCMDEXC) PARM(&OPNQRY 32702)                                /*MD055146*/
+                                                                                        /*MD055146*/
+             DLTF       FILE(QTEMP/RUNSQLSTM)                                           /*MD055146*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD055146*/
+             DLTF       FILE(QTEMP/RUNSQL)                                              /*MD055146*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD055146*/
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM) TEXT('TEMPORARY SOURCE FILE +
+                          FOR RUNSQLSTM')                                               /*MD055146*/
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)                                                /*MD055146*/
+             DLTF       FILE(QTEMP/GOFILE)                                              /*MD055146*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD055146*/
+                                                                                        /*MD055146*/
+             CALL       PGM(UTWRTSQL2) PARM(&STM_STR1 &STM_STR2 +
+                          &STM_STR3 '*CLEAR')                                           /*MD055146*/
+                                                                                        /*MD055146*/
+             CHGVAR     VAR(&STM_STR1) VALUE(&STM1 *CAT &GFGPF)                         /*MD055146*/
+             CHGVAR     VAR(&STM_STR2) VALUE(&STM2 *CAT &GFGBRC *CAT +
+                          &STM3 *CAT 'A8BRCD' *CAT &STM4 *CAT +
+                          'GZSDBRCHPD' *CAT &STM5)                                      /*MD055146*/
+                                                                                        /*MD055146*/
+             CALL       PGM(UTWRTSQL2) PARM(&STM_STR1 &STM_STR2 +
+                          &STM_STR3 '*WRITE')                                           /*MD055146*/
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)                                                 /*MD055146*/
+             MONMSG     MSGID(SQL9010)                                                  /*MD055146*/
+                                                                                        /*MD055146*/
+             OVRDBF     FILE(GOFILE) TOFILE(&GFGLF) SHARE(*YES) +
+                          OPNSCOPE(*JOB)                                                /*MD055146*/
+                                                                                        /*MD055146*/
              OVRDBF     FILE(&GPF) SEQONLY(*YES 4000)
              OVRDBF     FILE(GPGDRPPD) SEQONLY(*YES 5000)
 /* Filter duplicates                                                                  */
@@ -233,9 +288,12 @@
              ENDDO
 /**********  CALL       PGM(GOACCNTAB1) PARM(&ZOZONE)                */               /*AR1097467B*/
              CALL       PGM(GOACCNTAB1) PARM(&ZOZONE &STRRRN &ENDRRN)                 /*AR1097467B*/
-             CALL       PGM(QCMDEXC) PARM(&GLFCLO 60)
+/**********  CALL       PGM(QCMDEXC) PARM(&GLFCLO 60)                */                 /*MD055146*/
              CALL       PGM(QCMDEXC) PARM(&ZLFDLO 60)
-             CALL       PGM(QCMDEXC) PARM(&GLFDLO 60)
+/**********  CALL       PGM(QCMDEXC) PARM(&GLFDLO 60)                */                 /*MD055146*/
+                                                                                        /*MD055146*/
+             DLTOVR     FILE(GOFILE)                                                    /*MD055146*/
+                                                                                        /*MD055146*/
 
 /* error */
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +

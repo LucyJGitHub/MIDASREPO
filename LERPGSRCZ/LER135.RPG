@@ -22,8 +22,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR674226           Date 04Dec19               *
-      *  Prev Amend No. MD054703           Date 14Jan20               *
+      *  Last Amend No. MD055069           Date 26Feb20               *
+      *  Prev Amend No. AR674226           Date 04Dec19               *
+      *                 MD054703           Date 14Jan20               *
       *                 MD023855           Date 14Jan20               *      
       *                 MD054101           Date 08Aug19               *
       *                 MD053873           Date 10Jul19               *
@@ -286,6 +287,11 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD055069 - LER160P1 shows incorrect amount. Add condition to *
+      *             check which date to be used in the calculation.   *
+      *           - FEAMTO is not adjusted of recalculated total fee  *
+      *             due amount from RECALC/RECALL. Update fee outst.  *
+      *             amount the same way FEAMTP is adjusted.           *
       *  AR674226 - Manual transaction reached 999. Increase the size *
       *             of utilisation sequence no. and transaction       *
       *             sequence. (Child: AR674227)                       *
@@ -2391,6 +2397,7 @@
      C                     MOVE *BLANKS   LKPRFC                                            AR995302
      C                     Z-ADD0         WARY                                              AR753180
      C                     Z-ADD0         R       40                                        AR753180
+     C                     Z-ADD0         WLOANA 130                                        MD055069
      C                     Z-ADD0         FEPOST                                            MD047522
      C                     MOVEL*BLANK    WPAYTD  1                                         MD052216
      C/COPY WNCPYSRC,LER135CCP2                                           S01408
@@ -4701,6 +4708,7 @@
      C                     ENDIF                                          153672
      C                     ENDIF                                          CLE005
      C                     Z-ADDFEAMTO    W#AMTO                                              258597
+     C                     ADD  ADDUE     W#AMTO                                            MD055069
       *
      C                     Z-ADDFELPDT    STDATE         19
      C   19                Z-ADDFEPSTD    STDATE
@@ -6421,6 +6429,10 @@
      C**********           ADD  ADDUE     FEAMTP                                       243496 245803
      C           FELOAN    IFEQ *BLANKS                                                     AR734175
      C                     ADD  ADDUE     FEAMTP                                             243496B
+     C                     ADD  ADDUE     FEAMTO                                            MD055069
+     C                     ELSE                                                             MD055069
+     C                     ADD  WLOANA    FEAMTO                                            MD055069
+     C                     Z-ADD0         WLOANA                                            MD055069
      C                     ENDIF                                                            AR734175
      C                     ADD  WFEE      FEAMTO
      C                     ADD  ADJTOT    FEAMTO                                              227253
@@ -10895,7 +10907,11 @@
      C                     ENDIF                                                              258414
       *                                                                                       CLE071
      C           *IN29     IFEQ *OFF                                                          258414
+     C           HIRCVD    IFLT FELPDT                                                      MD055069
      C                     MOVELHIRCVD    ENDATE                                              CLE071
+     C                     ELSE                                                             MD055069
+     C                     MOVELFELPDT    ENDATE                                            MD055069
+     C                     ENDIF                                                            MD055069
      C                     ELSE                                                               CLE071
      C                     MOVELFELPDT    ENDATE                                              CLE071
      C                     ENDIF                                                              CLE071
@@ -10972,7 +10988,11 @@
      C                     ELSE                                                               CLE071
      C           LFKEY3    READELEFHSTFB                 29                                   CLE071
      C           *IN29     IFEQ *OFF                                                          258414
+     C           HIRCVD    IFLT FELPDT                                                      MD055069
      C                     MOVELHIRCVD    ENDATE                                              258414
+     C                     ELSE                                                             MD055069
+     C                     MOVELFELPDT    ENDATE                                            MD055069
+     C                     ENDIF                                                            MD055069
      C                     ELSE                                                               258414
      C                     MOVELFELPDT    ENDATE                                              258414
      C                     ENDIF                                                              258414
@@ -11782,6 +11802,7 @@
      C                     ENDIF                                                              CLE073
      C                     ENDIF                                                              CLE073
      C                     Z-ADDFEAMTO    W#AMTO                                            MD052216
+     C                     ADD  WLOANA    W#AMTO                                            MD055069
       *                                                                                       CLE073
      C                     Z-ADDFELPDT    STDATE         19                                   CLE073
      C   19                Z-ADDFEPSTD    STDATE                                              CLE073
@@ -13533,7 +13554,11 @@
      C           *IN27     DOUEQ'1'                                                         MD031473
      C           *IN27     IFEQ '0'                                                         MD031473
      C           CLE071    IFEQ 'Y'                                                           CLE071
+     C           HIRCVD    IFLT FELPDT                                                      MD055069
      C                     Z-ADDHIRCVD    ENDATE                                            MD031473
+     C                     ELSE                                                             MD055069
+     C                     Z-ADDFELPDT    ENDATE                                            MD055069
+     C                     ENDIF                                                            MD055069
      C                     ELSE                                                               CLE071
      C                     Z-ADD@HLAMT    FAMT                                              MD031473
      C                     Z-ADD@HLRT     FRT                                               MD031473
@@ -13629,6 +13654,9 @@
      C           TDUE      ADD  FETADJ    ADDUE  130                                        MD031473
      C                     ADD  FEAMTA    ADDUE                                             MD031473
      C                     SUB  FEAMTS    ADDUE                                             MD031473
+     C           ADDUE     SUB  FEAMTP    WLOANA                                            MD055069
+     C                     SUB  FEWOFF    WLOANA                                            MD055069
+     C                     SUB  FEAMTW    WLOANA                                            MD055069
      C           FEAUTO    IFEQ 'Y'                                                         MD031473
      C           FEAUTO    OREQ 'C'                                                         MD031473
      C           CLE134    ANDEQ'Y'                                                         MD031473
@@ -13726,6 +13754,9 @@
      C           TDUE      ADD  FETADJ    ADDUE  130                                          CLE073
      C                     ADD  FEAMTA    ADDUE                                               CLE073
      C                     SUB  FEAMTS    ADDUE                                               CLE073
+     C           ADDUE     SUB  FEAMTP    WLOANA                                            MD055069
+     C                     SUB  FEWOFF    WLOANA                                            MD055069
+     C                     SUB  FEAMTW    WLOANA                                            MD055069
      C           FEAUTO    IFEQ 'Y'                                                           CLE073
      C           FEAUTO    OREQ 'C'                                                           CLE134
      C           CLE134    ANDEQ'Y'                                                           CLE134

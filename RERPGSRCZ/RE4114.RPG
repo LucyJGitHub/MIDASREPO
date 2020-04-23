@@ -20,8 +20,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD050865           Date 05Jun18               *
-      *  Prev Amend No. MD046354           Date 03Oct17               *
+      *  Last Amend No. MD054623           Date 14Jan20               *   
+      *  Prev Amend No. MD050865           Date 05Jun18               *
+      *                 MD046354           Date 03Oct17               *
       *                 MD054057           Date 05Nov19               *
       *                 CER050             Date 16Jun19               *
       *                 MD050139           Date 23Mar18               *
@@ -154,6 +155,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD054623 - Use the format 'Transation Number/Teller ID +     *
+      *             Narrative or Transaction Title if the             *
+      *             RTSNarrFormat = 'Y'                               *
+      *             Applied for MD055669                              *
       *  MD050865 - Include window processing for Retail Teller System*
       *             transaction screens.                              *
       *           - Recompiled over changes in RE4114GDTA and         *
@@ -1305,6 +1310,9 @@ o    I**********                             16  18 @BRCA                       
      I            DS                                                                          239242
      I                                        1 200 SVAL2                                     239242
      I                                        1   1 SVAL21                                    239242
+     I            DS                                                                        MD054623
+     I                                        1 200 RTSN1                                   MD054623
+     I                                        1   1 RTSN11                                  MD054623
       *                                                                   CRT012
       * System Value                                                      CRT012
      I            DS                                                      CRT012
@@ -1313,6 +1321,9 @@ o    I**********                             16  18 @BRCA                       
      I            DS                                                                          239242
      I I            'UseAccountName'          1  20 SVALK2                                    239242
       *                                                                                       239242
+     I            DS                                                                        MD054623
+     I I            'RTSNarrFormat'           1  20 RTSNK1                                  MD054623
+      *                                                                                     MD054623
       /COPY ZSRSRC,ZTNLU1Z1
       ** Array for SR.ZTNLU1
       *
@@ -6285,6 +6296,9 @@ o    I**********                             16  18 @BRCA                       
      C                     ELSE
      C*
      C                     MOVE *OFF      *IN71
+     C           RTSNAR    IFEQ 'Y'                                                         MD054623
+     C                     MOVELSVRTNM    SNARR                                             MD054623
+     C                     ENDIF                                                            MD054623
      C                     MOVE @@NARR    TTNARR
      C                     ENDIF
      C*
@@ -7360,6 +7374,7 @@ o    I**********                             16  18 @BRCA                       
      C                     MOVELA1CLIN    @CLIN1  1
      C                     MOVELA1PASB    @PASS1  2
      C                     MOVELA1RTNM    @NRTD1 30
+     C                     MOVELA1RTNM    SVRTNM 30                                         MD054623
       *
       ** If function code = '00H' or '00P'?
      C           *IN23     IFEQ '1'
@@ -7799,6 +7814,83 @@ o    I**********                             16  18 @BRCA                       
      C                     MOVELSVAL1     W#BSRD  1                                           CDL081
      C                     MOVELSVAL2     W#NBRD  1                                           CDL081
      C                     ENDIF                                                              CDL081
+      *                                                                                     MD054623
+      ** Check if RTSNarrFormat is set to 'Y'                                               MD054623
+      *                                                                                     MD054623
+     C                     MOVE *BLANKS   RTSNK2                                            MD054623
+     C                     MOVE *BLANKS   RTSNK3                                            MD054623
+     C                     MOVE *BLANKS   RTSNK4                                            MD054623
+     C                     MOVE *BLANKS   RTSNK5                                            MD054623
+     C                     MOVE *BLANKS   RTSNK6                                            MD054623
+     C                     MOVE *BLANKS   RTSNK7                                            MD054623
+     C                     MOVE *BLANKS   RTSNK8                                            MD054623
+     C                     MOVE *BLANKS   RTSNK7                                            MD054623
+     C                     MOVE *BLANKS   RTSNK8                                            MD054623
+      *                                                                                     MD054623
+     C                     CALL 'AOSVALR0'                                                  MD054623
+     C                     PARM *BLANKS   RTNCDE  7                                         MD054623
+     C                     PARM           RTSNK1 20                                         MD054623
+     C                     PARM           RTSN1 200                                         MD054623
+     C                     PARM           RTSNK2 20                                         MD054623
+     C                     PARM           RTSN2 200                                         MD054623
+     C                     PARM           RTSNK3 20                                         MD054623
+     C                     PARM           RTSN3 200                                         MD054623
+     C                     PARM           RTSNK4 20                                         MD054623
+     C                     PARM           RTSN4 200                                         MD054623
+     C                     PARM           RTSNK5 20                                         MD054623
+     C                     PARM           RTSN5 200                                         MD054623
+     C                     PARM           RTSNK6 20                                         MD054623
+     C                     PARM           RTSN6 200                                         MD054623
+     C                     PARM           RTSNK7 20                                         MD054623
+     C                     PARM           RTSN7 200                                         MD054623
+     C                     PARM           RTSNK8 20                                         MD054623
+     C                     PARM           RTSN8 200                                         MD054623
+     C                     PARM           RTSNK9 20                                         MD054623
+     C                     PARM           RTSN9 200                                         MD054623
+     C                     PARM           RTSNK0 20                                         MD054623
+     C                     PARM           RTSN10200                                         MD054623
+      *                                                                                     MD054623
+     C           RTNCDE    IFNE *BLANKS                                                     MD054623
+     C           RTSN10    IFEQ '*NRF'                                                      MD054623
+     C                     MOVE RTSNK0    DBKEY                                             MD054623
+     C                     ENDIF                                                            MD054623
+     C           RTSN9     IFEQ '*NRF'                                                      MD054623
+     C                     MOVE RTSNK9    DBKEY                                             MD054623
+     C                     ENDIF                                                            MD054623
+     C           RTSN8     IFEQ '*NRF'                                                      MD054623
+     C                     MOVE RTSNK8    DBKEY                                             MD054623
+     C                     ENDIF                                                            MD054623
+     C           RTSN7     IFEQ '*NRF'                                                      MD054623
+     C                     MOVE RTSNK7    DBKEY                                             MD054623
+     C                     ENDIF                                                            MD054623
+     C           RTSN6     IFEQ '*NRF'                                                      MD054623
+     C                     MOVE RTSNK6    DBKEY                                             MD054623
+     C                     ENDIF                                                            MD054623
+     C           RTSN5     IFEQ '*NRF'                                                      MD054623
+     C                     MOVE RTSNK5    DBKEY                                             MD054623
+     C                     ENDIF                                                            MD054623
+     C           RTSN4     IFEQ '*NRF'                                                      MD054623
+     C                     MOVE RTSNK4    DBKEY                                             MD054623
+     C                     ENDIF                                                            MD054623
+     C           RTSN3     IFEQ '*NRF'                                                      MD054623
+     C                     MOVE RTSNK3    DBKEY                                             MD054623
+     C                     ENDIF                                                            MD054623
+     C           RTSN2     IFEQ '*NRF'                                                      MD054623
+     C                     MOVE RTSNK2    DBKEY                                             MD054623
+     C                     ENDIF                                                            MD054623
+     C           RTSN1     IFEQ '*NRF'                                                      MD054623
+     C                     MOVE RTSNK1    DBKEY                                             MD054623
+     C                     ENDIF                                                            MD054623
+     C           *LOCK     IN   LDA                                                         MD054623
+     C                     MOVEL'SDSVALPD'DBFILE           *************                    MD054623
+     C                     Z-ADD40        DBASE            ** DB ERR 40 **                  MD054623
+     C                     EXSR DBERR                      *************                    MD054623
+     C                     ENDIF                                                            MD054623
+     C           RTSN11    IFEQ 'Y'                                                         MD054623
+     C                     MOVE 'Y'       RTSNAR  1                                         MD054623
+     C                     ELSE                                                             MD054623
+     C                     MOVE 'N'       RTSNAR                                            MD054623
+     C                     ENDIF                                                            MD054623
       *                                                                                       CDL081
      C                     CALL 'AOMMODR0'                                                  MD046354
      C                     PARM '*MSG    '@RTCD                                             MD046354

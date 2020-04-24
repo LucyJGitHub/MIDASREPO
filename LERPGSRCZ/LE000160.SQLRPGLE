@@ -19,11 +19,15 @@
       *                                                               *
       *  (C) Finastra International Limited 2018                      *
       *                                                               *
-      *  Last Amend No. MD031156           Date 18Jul18               *
-      *  Prev Amend No. CLE159  *Create    Date 18Jul18               *
+      *  Last Amend No. MD055472           Date 21Apr20               *
+      *  Prev Amend No. MD031156           Date 18Jul18               *
+      *                 CLE159  *Create    Date 18Jul18               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055472 - Descrepancy between lower release versus on half  *
+      *             adjust of accrual. Use a system value to determine*
+      *             whether to half adjust or not.                    *
       *  MD031156 - LEC000159 00001 Failed in COB due to decimal data *
       *             error in LE000160                                 *
       *  CLE159 - Lending Fee Amortization Enhancement                *
@@ -82,6 +86,9 @@
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Second DS for access programs, long data structure
       *
+     DSVALAHF          C                   CONST('AccrualHalfAdjust   ')                    MD055472
+      ** Declared Constants                                                                 MD055472
+      *                                                                                     MD055472
      D @@FAMT          S                   Like(FEFAMT)
      D REOFES          S             30S 9
      D SVOFES          S             30S 9
@@ -98,6 +105,33 @@
      D DAYDIF          S                   Like(FEPSTD)
      D WPrcss          S              1                                                     MD031156
       *
+      ** Define system values parameters.                                                   MD055472
+                                                                                            MD055472
+     D PRtcd           S              7A                                                    MD055472
+     D PSysVal01       S             20A                                                    MD055472
+     D PCurSet01       S            200A                                                    MD055472
+     D PSysVal02       S             20A                                                    MD055472
+     D PCurSet02       S            200A                                                    MD055472
+     D PSysVal03       S             20A                                                    MD055472
+     D PCurSet03       S            200A                                                    MD055472
+     D PSysVal04       S             20A                                                    MD055472
+     D PCurSet04       S            200A                                                    MD055472
+     D PSysVal05       S             20A                                                    MD055472
+     D PCurSet05       S            200A                                                    MD055472
+     D PSysVal06       S             20A                                                    MD055472
+     D PCurSet06       S            200A                                                    MD055472
+     D PSysVal07       S             20A                                                    MD055472
+     D PCurSet07       S            200A                                                    MD055472
+     D PSysVal08       S             20A                                                    MD055472
+     D PCurSet08       S            200A                                                    MD055472
+     D PSysVal09       S             20A                                                    MD055472
+     D PCurSet09       S            200A                                                    MD055472
+     D PSysVal10       S             20A                                                    MD055472
+     D PCurSet10       S            200A                                                    MD055472
+      *                                                                                     MD055472
+      ** Define variables for API ICD                                                       MD055472
+     D SVAHF           S              1A                                                    MD055472
+      *                                                                                     MD055472
       /EJECT
       *****************************************************************
       /EJECT
@@ -403,7 +437,11 @@
       *
      C                   z-add     KEYDAT        F2DATE
       *
+     C                   IF        SVAHF = 'Y'                                              MD055472
      C                   z-add(H)  REOFES        F2OFEA
+     C                   ELSE                                                               MD055472
+     C                   z-add     REOFES        F2OFEA                                     MD055472
+     C                   ENDIF                                                              MD055472
       *
      C     F2OFEA        Iflt      *Zeros
      C                   z-add     *Zeros        F2OFEA
@@ -411,7 +449,11 @@
       *
      C                   z-add     @@PCNT        F2APCT
       *
+     C                   IF        SVAHF = 'Y'                                              MD055472
      C                   z-add(H)  READJS        F2ADJA
+     C                   ELSE                                                               MD055472
+     C                   z-add     READJS        F2ADJA                                     MD055472
+     C                   ENDIF                                                              MD055472
       *
      C     F2ADJA        Iflt      *Zeros
      C                   Z-ADD     *Zeros        F2ADJA
@@ -434,8 +476,13 @@
       *
      C                   ENDIF                                                              MD031156
       *
+     C                   IF        SVAHF = 'Y'                                              MD055472
      C                   z-add(H)  REDAFS        F2DAFA
      C                   z-add(H)  RETOFS        F2TOFA
+     C                   ELSE                                                               MD055472
+     C                   z-add     REDAFS        F2DAFA                                     MD055472
+     C                   z-add     RETOFS        F2TOFA                                     MD055472
+     C                   ENDIF                                                              MD055472
       *
      C     F2TOFA        Iflt      *Zeros
      C                   z-add     *Zeros        F2TOFA
@@ -525,6 +572,40 @@
      C     BKAPDT        Ifle      WECD
      C                   z-add     BKAPDT        WECD
      C                   Endif
+      *                                                                                     MD055472
+      ** Access system value 'AccrualHalfAdjust'                                            MD055472
+      *                                                                                     MD055472
+     C                   EVAL      PSysVal01 = SVALAHF                                      MD055472
+      *                                                                                     MD055472
+     C                   CALL      'AOSVALR0'                                               MD055472
+     C                   PARM      *BLANKS       PRtCd                                      MD055472
+     C                   PARM                    PSysVal01                                  MD055472
+     C                   PARM                    PCurSet01                                  MD055472
+     C                   PARM                    PSysVal02                                  MD055472
+     C                   PARM                    PCurSet02                                  MD055472
+     C                   PARM                    PSysVal03                                  MD055472
+     C                   PARM                    PCurSet03                                  MD055472
+     C                   PARM                    PSysVal04                                  MD055472
+     C                   PARM                    PCurSet04                                  MD055472
+     C                   PARM                    PSysVal05                                  MD055472
+     C                   PARM                    PCurSet05                                  MD055472
+     C                   PARM                    PSysVal06                                  MD055472
+     C                   PARM                    PCurSet06                                  MD055472
+     C                   PARM                    PSysVal07                                  MD055472
+     C                   PARM                    PCurSet07                                  MD055472
+     C                   PARM                    PSysVal08                                  MD055472
+     C                   PARM                    PCurSet08                                  MD055472
+     C                   PARM                    PSysVal09                                  MD055472
+     C                   PARM                    PCurSet09                                  MD055472
+     C                   PARM                    PSysVal10                                  MD055472
+     C                   PARM                    PCurSet10                                  MD055472
+      *                                                                                     MD055472
+     C                   IF        PRtCd = *BLANKS                                          MD055472
+     C                             AND PCurSet01 = 'N'                                      MD055472
+     C                   EVAL      SVAHF = 'N'                                              MD055472
+     C                   ELSE                                                               MD055472
+     C                   EVAL      SVAHF = 'Y'                                              MD055472
+     C                   ENDIF                                                              MD055472
       *
       * Write audit file header
      C                   write     HEADAU                                       Audit Report

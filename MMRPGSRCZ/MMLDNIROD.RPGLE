@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 260405             Date 04Apr20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 23Feb15               *
       *                 MD026788           Date 18Nov14               *
       *                 CDL096             Date 22Sep14               *
@@ -85,6 +86,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260405 - BRT Participation Date of Birth field is missing.   *
+      *           Upgrade fix 235425. Recompile over changed SDCBRTPD.*
+      *         - Applied for MD055446.                               *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax                                *
@@ -175,7 +179,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSDCBRTL1  IF   E           K DISK    INFSR(*PSSR)
      FDLINTRL2  IF   E           K DISK
      FDLINTRL1  IF   E           K DISK
@@ -188,7 +192,7 @@
       *********                                                                   BUG23550 BUG23711A
      F***SDCSINLD  IF   E           K DISK                                        BUG23550 BUG23711A
      F/COPY WNCPYSRC,MMLDNIOF01
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -200,47 +204,47 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D DlFilFmt      E DS                  EXTNAME(MMDELDPP)
       * Deal in File Format
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)                                 BUG5916
      D @BJDFIN       E                     EXTFLD(BJDFIN)                                    BUG5916
       ** EXTERNAL DS FOR BANK DETAILS                                                        BUG5916
@@ -270,14 +274,14 @@
                                                                                              BUG5916
      D DSFDY         E DS                  EXTNAME(DSFDY)                                    BUG5916
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                                   BUG5916
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
       *                                                                                     BUG22911
       ** Data area for Midas SD Tax Parameter File                                          BUG22911
      D SDTXPA        E DS                  EXTNAME(SDTXPAPD)                                BUG22911
       *                                                                                     BUG22911
- 
+
      D                 DS
      D  @@YEAR                 1      4  0
      D  @@MNTH                 5      6  0
@@ -407,12 +411,12 @@
      D ZINTR           S             30  9                                                 BUG23711A
      D WFlag           S              1A                                                   BUG23711A
      D/COPY WNCPYSRC,MMLDNIOD01
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -427,7 +431,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *
       ** Initialization
       *

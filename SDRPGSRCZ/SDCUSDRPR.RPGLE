@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 260405A            Date 04Apr20               *
+      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD030956           Date 09Oct14               *
       *                 AR787620           Date 10Jun11               *
       *                 CER059             Date 19Jul10               *
@@ -78,6 +79,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260405A - BRT Participation Date of Birth field is missing.  *
+      *            Recompiled due to changes in SDCUBRPD, SDICUBRPD   *
+      *            and SDVCUBRPD.                                     *
+      *          - Applied for MD055446.                              *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  MD046248 - Finastra Rebranding                               *

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. 260405             Date 04Apr20               *
+      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *                 CER050             Date 16Jun19               *
       *                 CSD101             Date 07Dec18               *
       *                 MD046248           Date 27Oct17               *
       *                 222427             Date 05Dec16               *
@@ -83,6 +84,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260405 - BRT Participation Date of Birth field is missing.   *
+      *           Upgrade fix 235425. Recompile over changed SDCBRTPD.*
+      *         - Applied for MD055446.                               *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -171,7 +175,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Retail III Table file
      FTABTBRE   IF   E             DISK    INFSR(*PSSR)
      F                                     PREFIX(R_)
@@ -194,7 +198,7 @@
                                                                                 CRE007
       ** BRT Customer Details                                                   CRE007
      FSDCBRTL1  IF   E           K DISK    INFSR(*PSSR)                         CRE007
- 
+
      F/COPY WNCPYSRC,GLAMADSF01
       *****************************************************************
       ** +--------------------------------------+
@@ -207,34 +211,34 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
@@ -250,17 +254,17 @@
      D ACSQN                 160    161  0                                                    222549
      D BRANCH                162    164                                                       222549
      D AREF15                141    161                                                       222549
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Breakdown of Account Number
      D                 DS
      D*ACKEY**                 1     18                                                       CGL029
@@ -278,11 +282,11 @@
      D WWICSP                  1      2                                                       194431
      D WWICTP                  3      7                                                       194431
      D WWICCY                  8     10                                                       194431
- 
+
      D RUNDAT          DS            13
       ** Rundate data area
      D  AGMBIN                13     13
- 
+
       * Current Account in File Format
      D CrAcFilFmt    E DS                  EXTNAME(ACCNTAB)
      D                                     PREFIX(C_)
@@ -307,7 +311,7 @@
      D***CAPWFilFmtEx           34     43                                              CGL029 CSD101
      D CAPWFilFmt1             1    146                                                       CSD101
      D CAPWFilFmtEx          214    223                                                       CSD101
- 
+
       * Term/Notice Periods and Penalties                                                   MD021858
      D ExPPFilFmt    E DS                  EXTNAME(REPENAPD)                                MD021858
      D                                     PREFIX(E_)                                       MD021858
@@ -331,7 +335,7 @@
       * (Current) Account in Screen Format - Other Details
      D CurAcOthr     E DS                  EXTNAME(GLAMODPD)
      D                                     PREFIX(@)
- 
+
       * New Account in File Format
      D NwAcFilFmt    E DS                  EXTNAME(GLVAMADPD)
       * New Account in File Format (Extension File)
@@ -354,7 +358,7 @@
      D***NAPWFilFmtEx          101    110                                             CGL029  CSD101
      D NAPWFilFmt1             1    146                                                       CSD101
      D NAPWFilFmtEx          214    223                                                       CSD101
- 
+
      D P1RIFilFmt    E DS                  EXTNAME(GLVAMRIPD)                                 CGL029
      D                                     PREFIX(P1)                                         CGL029
      D P1RIFilFmt1             1    144                                                       CGL029
@@ -379,7 +383,7 @@
      D NewAcComm     E DS                  EXTNAME(GLAMCOPD)
       * New Account in Screen Format - Other Details
      D NewAcOthr     E DS                  EXTNAME(GLAMODPD)
- 
+
       * Previous Account in Screen Format - First Details
      D PrvAcPrim     E DS                  EXTNAME(GLAMADPD)
      D                                     PREFIX(@P)
@@ -395,40 +399,40 @@
       * Previous Account in Screen Format - Other Details
      D PrvAcOthr     E DS                  EXTNAME(GLAMODPD)
      D                                     PREFIX(@P)
- 
+
       * Error indicators
      D OKAcPrim      E DS                  EXTNAME(GLEAMADPD)
      D OKAcDebt      E DS                  EXTNAME(GLEAMDIPD)
      D OKAcCrdt      E DS                  EXTNAME(GLEAMCIPD)
      D OKAcComm      E DS                  EXTNAME(GLEAMCOPD)
      D OKAcOthr      E DS                  EXTNAME(GLEAMODPD)
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
- 
+
      D RETABLE       E DS                  EXTNAME(TABTBRE)
      D                                     PREFIX(R_)
       ** EXTERNAL DS FOR RETAIL TABLE FILE
                                                                                 180721
      D SDBSRT        E DS                  EXTNAME(SDBSRTPD)                    180721
       ** EXTERNAL DS FOR MIDAS BASE RATE CODE DETAILS                           180721
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)
       ** EXTERNAL DS FOR SAR DETAILS
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       ** EXTERNAL DS FOR CUSTOMER DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
      DDSLDY          E DS                  EXTNAME(DSLDY)                       180721
@@ -459,7 +463,7 @@
                                                                                               CSC022
       ** Array to hold commitment jobs name                                                   CSC022
      D WCMT            S             10A   DIM(10)                                            CSC022
- 
+
      D/COPY QWINDSRC,GLAMADDTA                                                                189774
      D/COPY WNCPYSRC,GLAMADSD01
                                                                                               189774
@@ -467,19 +471,19 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
      D Ix              S              3P 0
- 
+
       ** Index for arrays of of warning message ids etc
      D WIdx            S              3P 0
- 
+
       ** Response Mode, passed as a constant parameter to the VAL module
       ** This is always 'S' for Synchronous
      D RespMode        S              1A   INZ('S')
- 
+
       ** Initialise Indicators
      D @INKC           S              1    INZ(*OFF)
      D @INKE           S              1    INZ(*OFF)
@@ -491,7 +495,7 @@
      D @INKL           S              1    INZ(*OFF)
      D @INKP           S              1    INZ(*OFF)
      D @IN49           S              1    INZ(*OFF)
- 
+
      D WGLKEY          S             24                                                       CGL029
      D ACCD            S             24                                                       CGL029
      D #DACCN          S             24                                                       CGL029
@@ -510,14 +514,14 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,GLAMADS001
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -690,9 +694,9 @@
      C                   MOVE      ACCSEQ        DDACSQ                                       222549
      C                   MOVE      *BLANKS       DDACNO                                       222549
      C                   ENDIF                                                                222549
- 
+
       * Update 'previous' screen
- 
+
      C                   MOVEL     NewAcPrim     PrvAcPrim
       *
      C     WRITEONLY     IFEQ      'N'
@@ -815,43 +819,43 @@
       *
       * Response mode
      C                   PARM                    RespMode
- 
+
       * Screen Format
      C                   PARM      'F0'          WFMT              2
- 
+
       ** ICD
      C                   PARM                    RETABLE
- 
+
       ** Account Primary details
      C                   PARM                    NewAcPrim
                                                                                 180721
       * Front Office Transaction ID                                             180721
      C                   PARM                    FOTRID                         180721
- 
+
       ** Account Primary Details OK inds
      C                   PARM                    OKAcPrim
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx
- 
+
       * Full GL Account Number
      C**********         PARM                    WGLKEY           18                          CGL029
      C                   PARM                    WGLKEY                                       CGL029
- 
+
       * IBAN Sequence                                                           CFT004
      C                   PARM                    DDIBSQ            3            CFT004
- 
+
       * Valid Account layout (DS) from/to caller
      C                   PARM                    NwAcFilFmt
      C                   PARM                    NABXFilFmt
@@ -945,9 +949,9 @@
       * SRPSDK - PROCESS SCREEN: Key Screen
       *****************************************************************
      C     SRPSDK        BEGSR
- 
+
       * Update 'previous' screen
- 
+
      C                   MOVEL     NewAcPrim     PrvAcPrim
       *
      C     WRITEONLY     IFEQ      'N'
@@ -1061,41 +1065,41 @@
       *
       * Response mode
      C                   PARM                    RespMode
- 
+
       * Screen Format
      C                   PARM      'FK'          WFMT
- 
+
       ** ICD
      C                   PARM                    RETABLE
- 
+
       ** Account Primary details
      C                   PARM                    NewAcPrim
                                                                                 180721
       * Front Office Transaction ID                                             180721
      C                   PARM                    FOTRID                         180721
- 
+
       ** Account Primary Details OK inds
      C                   PARM                    OKAcPrim
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx
- 
+
       * Full GL Account Number
      C                   PARM                    WGLKEY
       * IBAN Sequence                                                           CFT004
      C                   PARM                    DDIBSQ                         CFT004
- 
+
       * Valid Account layout (DS) from/to caller
      C                   PARM                    NwAcFilFmt
      C                   PARM                    NABXFilFmt
@@ -1181,9 +1185,9 @@
       * SRPSD1 - PROCESS SCREEN: First Detail Screen
       *****************************************************************
      C     SRPSD1        BEGSR
- 
+
       * Update 'previous' screen
- 
+
      C                   MOVEL     NewAcPrim     PrvAcPrim
      C/COPY WNCPYSRC,GLAMADSC09
       *
@@ -1356,7 +1360,7 @@
       *
       ** Call AMD module
      C     DDACTN        IFEQ      'A'
- 
+
      C                   CALLB     'GLAMADAMD'
       *
       * INPUTS
@@ -1409,7 +1413,7 @@
       *
       * Reset of Fields in Error Required (Y/N)
      C                   PARM      'Y'           ResetErrs         1
- 
+
      C                   ENDIF
       *
      C                   CALLB     'GLAMAD1VL'
@@ -1418,41 +1422,41 @@
       *
       * Response mode
      C                   PARM                    RespMode
- 
+
       * Screen Format
      C                   PARM      'F1'          WFMT
- 
+
       ** ICD
      C                   PARM                    RETABLE
- 
+
       ** Account Primary details
      C                   PARM                    NewAcPrim
                                                                                 180721
       * Front Office Transaction ID                                             180721
      C                   PARM                    FOTRID                         180721
- 
+
       ** Account Primary Details OK inds
      C                   PARM                    OKAcPrim
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx
- 
+
       * Full GL Account Number
      C                   PARM                    WGLKEY
       * IBAN Sequence                                                           CFT004
      C                   PARM                    DDIBSQ                         CFT004
- 
+
       * Valid Account layout (DS) from/to caller
      C                   PARM                    NwAcFilFmt
      C                   PARM                    NABXFilFmt
@@ -1626,9 +1630,9 @@
       * SRPSD2 - PROCESS SCREEN: Second Detail Screen
       *****************************************************************
      C     SRPSD2        BEGSR
- 
+
       * Update 'previous' screen
- 
+
      C                   MOVEL     NewAcDebt     PrvAcDebt
       *
       ** WRITE/READ DISPLAY SCREEN - Second Details
@@ -1774,7 +1778,7 @@
       *
       ** Call AMD module
      C     DDACTN        IFEQ      'A'
- 
+
      C                   CALLB     'GLAMADAMD'
       *
       * INPUTS
@@ -1827,7 +1831,7 @@
       *
       * Reset of Fields in Error Required (Y/N)
      C                   PARM      'Y'           ResetErrs         1
- 
+
      C                   ENDIF
       *
      C                   CALLB     'GLAMAD2VL'
@@ -1841,10 +1845,10 @@
                                                                                 180721
       * Front Office Transaction ID                                             180721
      C                   PARM                    FOTRID                         180721
- 
+
       ** Debit Details OK inds
      C                   PARM                    OKAcDebt
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
@@ -1857,7 +1861,7 @@
      C                   PARM                    WMsgDtaArr                                   CER055
       * Array index (3P0) from/to caller                                                      CER055
      C                   PARM                    WIdx                                         CER055
- 
+
       * Valid Account layout (DS) from/to caller
      C                   PARM                    NwAcFilFmt
      C                   PARM                    NABXFilFmt
@@ -1935,9 +1939,9 @@
       * SRPSD3 - PROCESS SCREEN: Third Detail Screen
       *****************************************************************
      C     SRPSD3        BEGSR
- 
+
       * Update 'previous' screen
- 
+
      C                   MOVEL     NewAcCrdt     PrvAcCrdt
       *
       ** WRITE/READ DISPLAY SCREEN - Third Details
@@ -2102,7 +2106,7 @@
       *
       ** Call AMD module
      C     DDACTN        IFEQ      'A'
- 
+
      C                   CALLB     'GLAMADAMD'
       *
       * INPUTS
@@ -2155,7 +2159,7 @@
       *
       * Reset of Fields in Error Required (Y/N)
      C                   PARM      'Y'           ResetErrs         1
- 
+
      C                   ENDIF
       *
      C                   CALLB     'GLAMAD3VL'
@@ -2166,16 +2170,16 @@
      C                   PARM                    NewAcPrim
      C                   PARM                    NewAcCrdt
      C                   PARM                    NewAcComm                                    208221
- 
+
       ** ICD
      C                   PARM                    R_TCAL
                                                                                 180721
       * Front Office Transaction ID                                             180721
      C                   PARM                    FOTRID                         180721
- 
+
       ** Credit Details OK inds
      C                   PARM                    OKAcCrdt
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
@@ -2188,7 +2192,7 @@
      C                   PARM                    WMsgDtaArr                                 AR847249
       ** Array index (3P0) from/to caller                                                   AR847249
      C                   PARM                    WIdx                                       AR847249
- 
+
       * Valid Account layout (DS) from/to caller
      C                   PARM                    NwAcFilFmt
      C                   PARM                    NARIFilFmt
@@ -2270,7 +2274,7 @@
       * SRPSD4 - PROCESS SCREEN: Fourth Detail Screen
       *****************************************************************
      C     SRPSD4        BEGSR
- 
+
       * IF INSERT                                                               176842
       * DO DEFAULTING FOR CHARGES & COMMISSIONS SCREEN                          176842
       * (Only do this once per transaction unless details on other screens      176842
@@ -2294,9 +2298,9 @@
      C**********         MOVEL     DDACCN        #DACCN                                CGL029 222427
      C**********         END                                                           176842 222427
      C                   END                                                    176842
- 
+
       * Update 'previous' screen
- 
+
      C                   MOVEL     NewAcComm     PrvAcComm
       *
       ** WRITE/READ DISPLAY SCREEN - Fourth Details
@@ -2485,7 +2489,7 @@
      C                   PARM                    CrAcFilFmt                     176842
      C                   PARM                    NABXFilFmt                                   208221
      C                   PARM                    NewAcPrim                                    222427
- 
+
       * OUTPUTS :                                                               176842
       * Screen 4 Output                                                         176842
      C                   PARM                    DDCEXA1          11            176842
@@ -2497,7 +2501,7 @@
      C                   PARM                    DDCEXG1           8            176842
      C                   PARM                    DDDRMG1                        CDE002
      C                   PARM                    DDCRMG1                        CDE002
- 
+
      C                   ENDSR                                                  176842
       *****************************************************************         176842
       /EJECT
@@ -2517,16 +2521,16 @@
       ** Account Primary & Commission details
      C                   PARM                    NewAcPrim
      C                   PARM                    NewAcComm
- 
+
       ** ICD
      C                   PARM                    RETABLE
- 
+
       ** CCRM Revenue Analysis                                                  CDE002
      C                   PARM                    CDE002                         CDE002
                                                                                 CDE002
       ** Commission Details OK inds
      C                   PARM                    OKAcComm
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
@@ -2540,7 +2544,7 @@
      C                   PARM                    WMsgDtaArr                                   208221
       * Array index (3P0) from/to caller                                                      208221
      C                   PARM                    WIdx                                         208221
- 
+
       * Valid Account layout (DS) from/to caller
      C                   PARM                    NACOFilFmt
       *
@@ -2645,9 +2649,9 @@
      C                   ENDIF                                                  CRE007
      C                   ENDIF                                                  CRE007
      C                   ENDIF                                                  CRE007
- 
+
       * Update 'previous' screen
- 
+
      C                   MOVEL     NewAcOthr     PrvAcOthr
       *
       ** WRITE/READ DISPLAY SCREEN - Fifth Details
@@ -2811,18 +2815,18 @@
      C                   PARM                    NewAcPrim
      C                   PARM                    NewAcOthr
      C/COPY OFCPYSRCZ,CRE101_028                                                              CRE101
- 
+
       ** Other Details OK inds
      C                   PARM                    OKAcOthr
      C/COPY OFCPYSRCZ,CRE101_058                                                              CRE101
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * Warning fields/message IDs/message data (arrays) from/to caller                       CER047
      C                   PARM                    WFldNamArr                                   CER047
      C                   PARM                    WMsgIDArr                                    CER047
@@ -4745,10 +4749,10 @@
       *
      C                   EXSR      SRINIT
       *
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,GLAMADS002
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

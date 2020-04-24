@@ -10,10 +10,12 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055446           Date 04Apr20               *
+      *  Prev Amend No. 260405             Date 04Apr20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. CRE051             Date 14Jan09               *
+      *                 CRE051             Date 14Jan09               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CSD031             Date 10Apr06               *
@@ -35,6 +37,15 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD055446 - There are parties and fields missing from the BRT *
+      *             details tab in Customer Input plus date of birth  *
+      *             issues.                                           *
+      *           - Check printer overflow before RE2196F3 format.    *
+      *             because printer overflow error is occur for DOB 5 *
+      *  260405 - BRT Participation Date of Birth field is missing.   *
+      *           Upgrade fix 235425. Report century on the date      *
+      *           of birth field.                                     *
+      *         - Applied for MD055446.                               *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE051 - BRT S17 Changes for 2009                            *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -78,7 +89,8 @@
      F            INTPSDDF                          KRENAMENEWINTFF
      FNEWCINPDO   E                    DISK
      F            COINTDDF                          KRENAMENEWCINFF
-     FRE2196P1O   E                    PRINTER
+     F***RE2196P1O   E                    PRINTER                                           MD055446
+     FRE2196P1O   E             20     PRINTER                                              MD055446
      F                                              KINFDS SPOOL
      F*
      F*-------------------------------------------------------------------------
@@ -136,6 +148,7 @@
      E                    BRTLX       5  1
      E                    WKPTY       5130
      E                    DOB         5  6 0
+     E                    DOBC        5  2 0                                                  260405
      E*
      IPTYSEQF
      I              DLNO                            ZDLNO
@@ -487,6 +500,14 @@
      I                                       19  240H4DOB
      I                                       25  300H5DOB
      I*
+     I            DS                                                                          260405
+     I                                        1  100DOBC                                      260405
+     I                                        1   20H1DOBC                                    260405
+     I                                        3   40H2DOBC                                    260405
+     I                                        5   60H3DOBC                                    260405
+     I                                        7   80H4DOBC                                    260405
+     I                                        9  100H5DOBC                                    260405
+      *                                                                                       260405
      I** BRT LIABLE DATA STRUCTURE 1
      I            DS
      I                                        1   5 BRTLX
@@ -849,7 +870,11 @@
      C                     MOVE *ZEROS    CENDAT
      C                     MOVE DDDOB     DDDAT
      C                     MOVE MMDOB     MMDAT
+     C           DOBC,Z    IFEQ *ZEROS                                                        260405
      C                     MOVE '  '      CCDAT
+     C                     ELSE                                                               260405
+     C                     MOVE DOBC,Z    CCDAT                                               260405
+     C                     ENDIF                                                              260405
      C                     MOVE YYDOB     YYDAT
      C*
      C           FMTDO9    ENDSR
@@ -1178,6 +1203,7 @@
      C** PRINT FORM TYPE 3
      C*
      C                     WRITERE2196H3                   *1
+     C                     EXSR CHKOF                                                       MD055446
      C                     WRITERE2196F3                   *1
      C*
      C** INCREMENT NO OF FORMS
@@ -1212,6 +1238,7 @@
      C*
      C** PRINT FORM TYPE 3
      C*
+     C                     EXSR CHKOF                                                       MD055446
      C                     WRITERE2196F3                    **2
      C*
      C                     END                              E*2
@@ -1243,6 +1270,7 @@
      C*
      C** PRINT FORM TYPE 3
      C*
+     C                     EXSR CHKOF                                                       MD055446
      C                     WRITERE2196F3                    **2
      C*
      C                     END                              E*2
@@ -1274,6 +1302,7 @@
      C*
      C** PRINT FORM TYPE 3
      C*
+     C                     EXSR CHKOF                                                       MD055446
      C                     WRITERE2196F3                    **2
      C*
      C                     END                              E*2
@@ -1305,6 +1334,7 @@
      C*
      C** PRINT FORM TYPE 3
      C*
+     C                     EXSR CHKOF                                                       MD055446
      C                     WRITERE2196F3                    **2
      C*
      C                     END                              E*2
@@ -2608,11 +2638,29 @@
      C** Print Form Type 3                                                                    CRE051
      C*                                                                                       CRE051
      C                     WRITERE2196H3                                                      CRE051
+     C                     EXSR CHKOF                                                       MD055446
      C                     WRITERE2196F3                                                      CRE051
      C*                                                                                       CRE051
      C                     ENDSR                                                              CRE051
      C*                                                                                       CRE051
      C/EJECT                                                                                  CRE051
+     C**********************************************************                            MD055446
+     C*                                                        *                            MD055446
+     C*   CHKOF  - CHECK PRINTER OVERFLOW FOR RE2196F3         *                            MD055446
+     C*                                                        *                            MD055446
+     C**********************************************************                            MD055446
+     C*                                                                                     MD055446
+     C           CHKOF     BEGSR                                                            MD055446
+      *                                                                                     MD055446
+     C           *IN20     IFEQ '1'                                                         MD055446
+     C                     WRITERE2196HH                                                    MD055446
+     C                     WRITERE2196F2                                                    MD055446
+     C                     WRITERE2196H3                                                    MD055446
+     C                     MOVE '0'       *IN20                                             MD055446
+     C                     ENDIF                                                            MD055446
+      *                                                                                     MD055446
+     C                     ENDSR                                                            MD055446
+     C/EJECT                                                                                MD055446
      C*****************************************************************
      C*
      C*     DBERR  - DATABASE ERROR HANDLING

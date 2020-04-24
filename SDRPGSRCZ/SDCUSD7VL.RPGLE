@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD040876           Date 13Sep16               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055446           Date 04Apr20               *
+      *  Prev Amend No. MD040876           Date 13Sep16               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -37,6 +38,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      * MD055446 - There are parties and fields missing from the BRT  *	
+      *            details tab in Customer Input plus date of birth   *	
+      *            issues.                                            *	
+      *          - Include Input and Output BRT century parameter for *
+      *            coding standard.                                   *
       *  MD040876 - CRS MQ (Recompile)                                *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -151,6 +157,20 @@
  
      D BrtFilFmt     E DS                  EXTNAME(SDVCUBRPD)
       * Valid Customer Base Rate Tax File
+      ** ** Customer Base Rate Tax in screen format (Century)                               MD055446
+     D CuBrtCent       DS                                                                   MD055446
+     D  DDD1DOB                       2S 0                                                  MD055446
+     D  DDD2DOB                       2S 0                                                  MD055446
+     D  DDD3DOB                       2S 0                                                  MD055446
+     D  DDD4DOB                       2S 0                                                  MD055446
+     D  DDD5DOB                       2S 0                                                  MD055446
+      ** Valid Customer BRT (Century) details layout                                        MD055446
+     D BrtFilFmtCent   DS                                                                   MD055446
+     D  BR1DBC                        2S 0                                                  MD055446
+     D  BR2DBC                        2S 0                                                  MD055446
+     D  BR3DBC                        2S 0                                                  MD055446
+     D  BR4DBC                        2S 0                                                  MD055446
+     D  BR5DBC                        2S 0                                                  MD055446
  
      D ChgNamArr       S              1    DIM(5)
       ** Changed Party Names Array
@@ -1052,6 +1072,8 @@
  
       ** Customer Base Rate Tax
      C                   PARM                    CuBrt
+      ** Customer Base Rate Tax - Century                                                   MD055446
+     C                   PARM                    CuBrtCent                                  MD055446
  
       *
       ** OUTPUTS
@@ -1080,6 +1102,8 @@
       *
       * Valid BRT file layout (DS) to/from caller
      C                   PARM                    BrtFilFmt
+      * Valid BRT file layout (DS) to/from caller - Century                                 MD055446
+     C                   PARM                    BrtFilFmtCent                              MD055446
       *
       **--------------------------------------------------------------------------------------------
       ** The following /COPY sets the values of program, module and

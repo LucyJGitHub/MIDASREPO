@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD040876           Date 13Sep16               *
+      *  Last Amend No. 260405             Date 04Apr20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD040876           Date 13Sep16               *
       *                 MD046248           Date 27Oct17               *
       *                 CSW216             Date 14Mar16               *
       *                 CER071             Date 01Aug16               *
@@ -59,6 +60,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260405 - BRT Participation Date of Birth field is missing.   *
+      *           Upgrade fix 235425. Recompile over changed SDCBRTPD.*
+      *         - Applied for MD055446.                               *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD040876 - CRS MQ (Recompile)                                *
       *  MD046248 - Finastra Rebranding                               *
@@ -100,7 +104,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -114,49 +118,49 @@
       ** the copyright array definition,
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * (Current) Customer in Screen Format
      D CustScnFm1    E DS                  EXTNAME(SDCUPRPD)
      D                                     PREFIX(@)
@@ -194,7 +198,7 @@
      D                                     PREFIX (@12)                                       CSD079
      D CustCuCtnm    E DS                  EXTNAME (SDCCTNPD)                              AR1086546
      D                                     PREFIX (@24)                                    AR1086546
- 
+
       * New Customer in Screen Format
      D NewCusScn1    E DS                  EXTNAME(SDCUPRPD)
      D NewCusScn2    E DS                  EXTNAME(SDCUSEPD)
@@ -227,12 +231,12 @@
      D                                     PREFIX(@23)                                        CSD079
      D NewCusCtnm    E DS                   EXTNAME (SDCCTNPD)                             AR1086546
      D                                     PREFIX(@25)                                     AR1086546
- 
+
       ** External DS for SAR Details                                                          CSD079
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CSD079
       * (Current) Customer in File Format
      D CustFilFmt    E DS                  EXTNAME(SDCUSTPD)
- 
+
       * (Current) Base Rate Tax details in File Format
      D BrTxFilFmt    E DS                  EXTNAME(SDCBRTPD)
                                                                                               CSD079
@@ -263,37 +267,37 @@
       ** Currency/Time of Netting Details                                                  AR1086546
      D CtnmFilFmt    E DS                  EXTNAME(SDCTNMPD)                               AR1086546
                                                                                            AR1086546
- 
+
      D RUNDAT          DS
      D  @MBIN                 13     13
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
- 
+
      D SDPORT        E DS                  EXTNAME(SDPORTPD)
       **  Data structure for Portfolio Management ICD File
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning error message ids etc                                  AR855391
      D WIdx            S              3P 0                                                  AR855391
- 
+
       * Error indicators
      D OKCuPrim      E DS                  EXTNAME(SDECUPRPD)
      D OKCuSeco      E DS                  EXTNAME(SDECUSEPD)
@@ -335,8 +339,8 @@
      D PMODE           S              1                                                       CSD079
                                                                                               CSD079
      D CDL002          S              1                                                       CSD079
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -495,7 +499,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS

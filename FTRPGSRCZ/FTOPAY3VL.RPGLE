@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD021318           Date 26Jul13               *
-      *  Prev Amend No. MD055002           Date 31Jan20               *
+      *  Last Amend No. MD055656           Date 20apr20               *
+      *  Prev Amend No. MD021318           Date 26Jul13               *
+      *                 MD055002           Date 31Jan20               *
       *                 MD046248           Date 27Oct17               *
       *                 MD042042           Date 14Feb17               *
       *                 MD034973           Date 16Jul15               *
@@ -59,6 +60,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055656 - OPAY messages sent via JMS API end in error       *
+      *             (ERZ248) (Recompile)                              *
       *  MD021318 - OPAY allowed input of account with block debit    *
       *           - Fix is to condition CSD089 overridable error      *
       *             changes when input is from HATS screen            *

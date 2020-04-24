@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD023379           Date 20Feb14               *
-      *  Prev Amend No. MD021318           Date 26Jul13               *
+      *  Last Amend No. MD055656           Date 20Apr20               *
+      *  Prev Amend No. MD023379           Date 20Feb14               *
+      *                 MD021318           Date 26Jul13               *
       *                 CSD102             Date 08Jan19               *
       *                 MD050928A          Date 28Jun18               *
       *                 MD050928           Date 15May18               *
@@ -109,6 +110,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055656 - OPAY messages sent via JMS API end in error       *
+      *             (ERZ248)                                          *
+      *             Amend Hooks FTH00402, FTOPAYVUCA, FTOPAYVUC7      *
       *  MD023379 - Default Details of Charges according to ICD for   *
       *             MT103                                             *
       *  MD021318 - OPAY allowed input of account with block debit    *

@@ -76,7 +76,7 @@
       *             details tab in Customer Input plus date of birth  *	
       *             issues.                                           *	
       *           - Added BRT DOB century as output parameter and move*
-      *             the value of SDBCRTPD DOB century fields.         *  
+      *             the value of SDBCRTPD DOB century fields.         *
       *  260405 - BRT Participation Date of Birth field is missing.   *
       *           Upgrade fix 235425. Recompile over changed SDCBRTPD.*
       *         - Applied for MD055446.                               *
@@ -2213,7 +2213,6 @@
      C     H3NAME        IFNE      *BLANK
      C                   MOVEL     'Y'           DDFPAR
      C                   END
-      **  Further Parties indicator
      C                   MOVE      H1DOBC        CuBrtxCent1                                MD055446
      C                   MOVE      H2DOBC        CuBrtxCent2                                MD055446
      C                   MOVE      H3DOBC        CuBrtxCent3                                MD055446

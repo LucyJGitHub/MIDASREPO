@@ -158,7 +158,7 @@
       *             issues.                                           *
       *           - Added BRT DOB Century fields on TransInEx2,       *
       *             FillerBufEx2 and BufferEx2. Also as parameter to  *
-      *             SDCUSDCVT, SDCUSD6VL, SDCUSD7VL and SDCUSDUPD.    *              
+      *             SDCUSDCVT, SDCUSD6VL, SDCUSD7VL and SDCUSDUPD.    *
       *  MD052432 - System does not recognise the defined authority   *
       *              holders (i.e. controlling persons for CRS)       *
       *  MD053634 - Requested Customer “Authority Holders Link Report *
@@ -1254,7 +1254,6 @@
      C                   EVAL      TranInMsrt = TransCUMR                                     CSW213
      C                   EVAL      TranInBrTx = TransCUBR                                     CSW213
      C                   MOVE      TransCent     TranInBRTCent                              MD055446
-     C*                  EVAL      TranInBRTCent = TransCent                                MD055446
      C                   EVAL      TranInPriv = TransCUPB                                     CSW213
      C                   EVAL      TranInCumi = TransCUMI                                     CSW213
      C                   EVAL      TranInCuad = TransCUAD                                     CSW213
@@ -1628,10 +1627,6 @@
      C                   PARM                    ##OX1
      C                   PARM                    MESLEN                                      BUG5082
                                                                                              BUG5082
-      ** Base Rate Century                                                                  MD055446
-      *                                                                                     MD055446
-     C*                  EVAL      BrtxFilFmtCen = TI_BRTCent                               MD055446
-      *                                                                                     MD055446
      C                   CALLB     'SDCUSDRTV'
       *
       * INPUTS

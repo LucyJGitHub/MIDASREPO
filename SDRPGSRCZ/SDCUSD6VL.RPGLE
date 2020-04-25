@@ -176,7 +176,7 @@
      D  DDXDOBDD                      2A                                                    MD055446
      D  DDXDOBMM                      2A                                                    MD055446
      D  DDXDOBYY                      2A                                                    MD055446
-     D  DDXDOB                 1      6A
+     D  DDXDOB                 1      6A                                                    MD055446
      D                 DS                                                                   MD055446
      D  DDXDOBCDD                     2A                                                    MD055446
      D  DDXDOBCMM                     2A                                                    MD055446

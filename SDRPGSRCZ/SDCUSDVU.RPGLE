@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD052432           Date 18Dec18               *
-      *  Prev Amend No. MD053634           Date 21Oct19               *
+      *  Last Amend No. MD055446           Date 04Apr20               *
+      *  Prev Amend No. MD052432           Date 18Dec18               *
+      *                 MD053634           Date 21Oct19               *
       *                 MD054610           Date 18Oct10               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
@@ -152,6 +153,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055446 - There are parties and fields missing from the BRT *
+      *             details tab in Customer Input plus date of birth  *
+      *             issues.                                           *
+      *           - Added BRT DOB Century fields on TransInEx2,       *
+      *             FillerBufEx2 and BufferEx2. Also as parameter to  *
+      *             SDCUSDCVT, SDCUSD6VL, SDCUSD7VL and SDCUSDUPD.    *
       *  MD052432 - System does not recognise the defined authority   *
       *              holders (i.e. controlling persons for CRS)       *
       *  MD053634 - Requested Customer “Authority Holders Link Report *
@@ -463,6 +470,21 @@
      D TranInBrTx    E DS                  EXTNAME(SDCUBRPD)
      D   TranInBrT1            1    500
      D   TranInBrT2          501    693
+     D TranInBRTCent   DS                                                                   MD055446
+     D   TI_DD1DOB                    2S 0                                                  MD055446
+     D   TI_DD2DOB                    2S 0                                                  MD055446
+     D   TI_DD3DOB                    2S 0                                                  MD055446
+     D   TI_DD4DOB                    2S 0                                                  MD055446
+     D   TI_DD5DOB                    2S 0                                                  MD055446
+     D   TI_BRTCent            1     10S 0                                                  MD055446
+     D*  TI_BRTCentS           1     10S 0                                                  MD055446
+     D                 DS                                                                   MD055446
+     D TranInBRTDS             1     10P 0                                                  MD055446
+     D   TI_DD1DOBD                   2P 0                                                  MD055446
+     D   TI_DD2DOBD                   2P 0                                                  MD055446
+     D   TI_DD3DOBD                   2P 0                                                  MD055446
+     D   TI_DD4DOBD                   2P 0                                                  MD055446
+     D   TI_DD5DOBD                   2P 0                                                  MD055446
      D TranInPriv    E DS                  EXTNAME(SDCUPBPD)
      D TranInMT3X    E DS                  EXTNAME(SDCUMTPD)                                BUG14485
      D                                     PREFIX(MT)                                       BUG14485
@@ -549,6 +571,13 @@
       * Valid Customer BRT details layout
      D ValidCuBr     E DS                  EXTNAME(SDVCUBRPD)
      D                                     PREFIX(V_)
+      ** Valid Customer BRT (Century) details layout                                        MD055446
+     D ValidCuBrCent   DS                                                                   MD055446
+     D  V_BR1DBC                      2S 0                                                  MD055446
+     D  V_BR2DBC                      2S 0                                                  MD055446
+     D  V_BR3DBC                      2S 0                                                  MD055446
+     D  V_BR4DBC                      2S 0                                                  MD055446
+     D  V_BR5DBC                      2S 0                                                  MD055446
 
      D ValidTIcd     E DS                  EXTNAME(SDVTICDPD)                                BUG3362
      D                                     PREFIX(V_)                                        BUG3362
@@ -624,6 +653,12 @@
       * (Current) Customer BRT details record in file Format
      D BrtxFilFmt    E DS                  EXTNAME(SDCBRTPD)
       * (Current) BRT Participator history record in file Format
+     D  BrtxFilFmtC1         718    719P 0                                                  MD055446
+     D  BrtxFilFmtC2         720    721P 0                                                  MD055446
+     D  BrtxFilFmtC3         722    723P 0                                                  MD055446
+     D  BrtxFilFmtC4         724    725P 0                                                  MD055446
+     D  BrtxFilFmtC5         726    727P 0                                                  MD055446
+     D  BrtxFilFmtCen        718    727P 0                                                  MD055446
      D BrptFilFmt    E DS                  EXTNAME(PTYHSTPD)
      D                                     PREFIX(P)
                                                                                              BUG3362
@@ -707,6 +742,12 @@
      D**********                           PREFIX(@)                                          CSD079
      D                                     PREFIX(F@)                                         CSD079
                                                                                               CSD079
+     D CurCuBrtCent    DS                                                                   MD055446
+     D   F@@DD1DOB                    2S 0                                                  MD055446
+     D   F@@DD2DOB                    2S 0                                                  MD055446
+     D   F@@DD3DOB                    2S 0                                                  MD055446
+     D   F@@DD4DOB                    2S 0                                                  MD055446
+     D   F@@DD5DOB                    2S 0                                                  MD055446
       * (Current) Customer in Screen Format - Private Banking Details
      D CurCuPriv     E DS                  EXTNAME(SDCUPBPD)
      D**********                           PREFIX(@)                                          CSD079
@@ -905,6 +946,7 @@
      D  TransCUEX                          LIKE(ExtData)                                    MD044880
      D  TransCRSS                          LIKE(SDCRSS)                                       CGL157
      D  TransCR50                     1A                                                    MD054028
+     D  TransCent                    10A                                                    MD055446
                                                                                               CSW213
      D TransInEx3      DS          9999                                                       CSW213
      D  TransCARS              1   9999                                                       CSW213
@@ -1116,7 +1158,8 @@
      D***FillerBufEx2    S           5980A                                           CGL132 MD044880
      D***FillerBufEx2    S           5915A                                           MD044880 CGL157
      D***FillerBufEx2    S           5591A                                           CGL157 MD054028
-     D FillerBufEx2    S           5590A                                                    MD054028
+     D***FillerBufEx2    S           5590A                                         MD054028 MD055446
+     D FillerBufEx2    S           5580A                                                    MD055446
      D FillerBufEx3    S           9999A                                                      CSW213
      D***FillerBufEx4    S           6898A                                           CSW213 MD041996
      D***FillerBufEx4    S           5974A                                         MD041996 MD044880
@@ -1210,6 +1253,7 @@
      C                   EVAL      TranInMT3X = TransCUMT                                     CSW213
      C                   EVAL      TranInMsrt = TransCUMR                                     CSW213
      C                   EVAL      TranInBrTx = TransCUBR                                     CSW213
+     C                   MOVE      TransCent     TranInBRTCent                              MD055446
      C                   EVAL      TranInPriv = TransCUPB                                     CSW213
      C                   EVAL      TranInCumi = TransCUMI                                     CSW213
      C                   EVAL      TranInCuad = TransCUAD                                     CSW213
@@ -1536,6 +1580,7 @@
      C                                       + ExtData                                      MD044880
      C                                       + TranInCRSS                                     CGL157
      C                                       + DDAPRC                                       MD054028
+     C                                       + TranInBRTCent                                MD055446
      C                                       + FillerBufEx2                                   CSW213
                                                                                               CSW213
      C                   EVAL      BufferEx3 = FillerBufEx3                                   CSW213
@@ -1711,7 +1756,12 @@
 
      C                   MOVE      CustFilFmt    ValidCusd
      C**********         MOVE      BrtxFilFmt    ValidCuBr                                  BUG14161
-     C                   MOVEL     BrtxFilFmt    ValidCuBr                                  BUG14161
+     C                   MOVEL     BrtxFilFmt    ValidCuBr
+     C                   Eval      V_BR1DBC = BrtxFilFmtC1                                  MD055446
+     C                   Eval      V_BR2DBC = BrtxFilFmtC2                                  MD055446
+     C                   Eval      V_BR3DBC = BrtxFilFmtC3                                  MD055446
+     C                   Eval      V_BR4DBC = BrtxFilFmtC4                                  MD055446
+     C                   Eval      V_BR5DBC = BrtxFilFmtC5                                  MD055446
      C                   MOVE      PrivFilFmt    ValidPriv
      C                   MOVE      TIcdFilFmt    ValidTiCd                                   BUG3362
      C                   MOVEL     CumiFilFmt    ValidCumi                                    CSD079
@@ -1777,6 +1827,9 @@
      C                   PARM                    CFX001                                      BUG5082
       *                                                                                     MD054028
      C                   PARM                    DDAPRC                                     MD054028
+      *                                                                                     MD055446
+      ** Valid Base Rate Tax layout (DS) from/to caller - Century                           MD055446
+     C*                  PARM                    ValidCuBrCent                              MD055446
       *
       * Output parameters
       *
@@ -1808,6 +1861,7 @@
      C                   PARM                    CurCuFTCR                                    CGL132
      C                   PARM                    CurCuCRSH                                    CGL157
      C                   PARM                    CurCuCRSD                                    CGL157
+     C                   PARM                    CurCuBrTCent                               MD055446
 
      C                   MOVE      DDAPRC        ADDDAPRC          1                        MD054028
       ** Customer Details
@@ -2484,7 +2538,9 @@
       *
       ** Screen validation
      C                   PARM      '0'           SinVal            1
-      *
+      *                                                                                     MD055446
+      ** Customer Base Rate Tax Details (Century)                                           MD055446
+     C                   PARM                    TranInBRTCent                              MD055446
 
       *
       * OUTPUTS
@@ -2511,6 +2567,9 @@
       *
       * Changed Party Names Array
      C                   PARM                    ChgNamArr         5
+      *                                                                                     MD055446
+      ** Valid Base Rate Tax layout (DS) from/to caller - Century                           MD055446
+     C                   PARM                    ValidCuBrCent                              MD055446
 
      C                   ENDSR
       *****************************************************************
@@ -2540,6 +2599,9 @@
       *
       ** Customer Base Rate Tax Details
      C                   PARM                    TranInBrtx
+      *                                                                                     MD055446
+      ** Customer Base Rate Tax Details (Century)                                           MD055446
+     C                   PARM                    TranInBRTCent                              MD055446
       *
       * OUTPUTS
       *
@@ -2565,6 +2627,9 @@
 
       * Valid Base Rate Tax layout (DS) from/to caller
      C                   PARM                    ValidCuBr
+      *                                                                                     MD055446
+      ** Valid Base Rate Tax layout (DS) from/to caller - Century                           MD055446
+     C                   PARM                    ValidCuBrCent                              MD055446
 
      C                   ENDSR
       *****************************************************************
@@ -2846,6 +2911,9 @@
      C                   PARM                    CFX001                                       CSD079
       *                                                                                     MD054028
      C                   PARM                    DDAPRC                                     MD054028
+      *                                                                                     MD055446
+      ** Valid Base Rate Tax layout (DS) from/to caller - Century                           MD055446
+     C*                  PARM                    ValidCuBrCent                              MD055446
       *
       * Output parameters
       * Customer Details - screen formats
@@ -2876,6 +2944,7 @@
      C                   PARM                    CurCuFTCR                                    CGL132
      C                   PARM                    CurCuCRSH                                    CGL157
      C                   PARM                    CurCuCRSD                                    CGL157
+     C                   PARM                    CurCuBrTCent                               MD055446
 
      C                   MOVE      DDAPRC        ADDDAPRC                                   MD054028
       ** Substitute the data for the various parts of the transaction,
@@ -3670,6 +3739,7 @@
      C                   CLEAR                   CurCuFTCR                                    CGL132
      C                   CLEAR                   CurCuCRSH                                    CGL157
      C                   CLEAR                   CurCuCRSD                                    CGL157
+     C                   CLEAR                   CurCuBrTCent                               MD055446
 
      C                   MOVE      *ALL'Y'       OKCuPrim
      C                   MOVE      *ALL'Y'       OKCuSeco
@@ -4476,6 +4546,7 @@
      C                   PARM      *BLANKS       PTransType                                   CSD028
      C                   PARM      *BLANKS       DACTN             1                          CSD028
      C                   PARM                    CTI006                                     MD030956
+     C                   PARM                    ValidCuBrCent                              MD055446
                                                                                               CER059
      C**********         IF        @RTCD = *BLANKS                                   CER059 MD053634
      C**********                   AND (DDACTN <> 'D'                              AR741363 MD053634

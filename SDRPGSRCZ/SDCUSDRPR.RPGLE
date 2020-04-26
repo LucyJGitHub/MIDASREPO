@@ -14,9 +14,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 260405A            Date 04Apr20               *
-      *  Prev Amend No. MD054028           Date 05Sep19               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054028           Date 05Sep19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 MD030956           Date 09Oct14               *
       *                 AR787620           Date 10Jun11               *
       *                 CER059             Date 19Jul10               *
@@ -79,10 +78,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  260405A - BRT Participation Date of Birth field is missing.  *
-      *            Recompiled due to changes in SDCUBRPD, SDICUBRPD   *
-      *            and SDVCUBRPD.                                     *
-      *          - Applied for MD055446.                              *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  MD046248 - Finastra Rebranding                               *
@@ -164,18 +159,18 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FZATRNERRL0IF   E           K DISK    INFSR(*PSSR)
- 
+
      FSDICUSDL0 IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SDICUSDD0:SDICUSDX0)
      FSDICUSDL1 UF   E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
      FSDICUBRL0 IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SDICUBRD0:SDICUBRX0)
      FSDICUBRL1 UF   E           K DISK    INFSR(*PSSR) COMMIT
- 
+
      FSDICUPBL0 IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SDICUPBD0:SDICUPBX0)
      FSDICUPBL1 UF   E           K DISK    INFSR(*PSSR) COMMIT
@@ -187,7 +182,7 @@
       ** API Invalid Log File from Support Database                                           CSC011
      FAPILOGL0  UF   E           K DISK    INFSR(*PSSR) USROPN                                CSC011
      F                                     COMMIT                                             CSC011
- 
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,SDCUSDR001
       * Invalid Customers Details extra data file                                             CER001
@@ -216,7 +211,7 @@
                                                                                               CER001
       ** Midas ER Country Codes - LU Ext. index                                               CER001
      FSDCTX2L0  IF   E           K DISK    INFSR(*PSSR)                                       CER001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -228,57 +223,57 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D @EI             S              1    DIM(60)
- 
+
    41 ** Array of Fields in error, temporary store
    42D TmpFldNmAr      S             10A   DIM(ArrayMax)
    42 ** Array of error message IDs, temporary store
    42D TmpMsgIdAr      S                   DIM(ArrayMax)
    42D                                     LIKE(#MsgID)
- 
+
       * Current Customer in File Format
      D CrCuFilFmt    E DS                  EXTNAME(SDCUSTPD)
      D                                     PREFIX(C_)
@@ -297,7 +292,7 @@
       * Current Customer in File Format - Private Banking Details
      D CrPbFilFmt    E DS                  EXTNAME(SDVCUPBPD)
      D                                     PREFIX(C_)
- 
+
      D CrTIFilFmt    E DS                  EXTNAME(SDVTICDPD)                                BUG3362
      D                                     PREFIX(C_)                                        BUG3362
                                                                                              BUG3362
@@ -333,7 +328,7 @@
       * Current Customer in Screen Format - Message Details
      D CurCuMsg      E DS                  EXTNAME(SDCUMRPD)
      D                                     PREFIX(@)
- 
+
       * New Customer in File Format
      D NwCuFilFmt    E DS                  EXTNAME(SDVCUSDPD)
      D NwSwFilFmt    E DS                  EXTNAME(SDVSWSDPD)                                 CSW207
@@ -345,7 +340,7 @@
       * New TI Details in File Format                                                        BUG3362
      D NwTIFilFmt    E DS                  EXTNAME(SDVTICDPD)                                BUG3362
      D                                     PREFIX(V_)                                        BUG3362
- 
+
       ** New Customer extension in File Format (#6LXVF)                                       CER001
      D NwDlFilFmt1   E DS                  EXTNAME(SDVCULX2PD)                                CER001
       ** New Customer extension in File Format (#LLXVL)                                       CER001
@@ -367,9 +362,9 @@
      D NewCuMT3x     E DS                  EXTNAME(SDCUMTPD)                                  CSW024
       * New Customer in Screen Format - Message Details
      D NewCuMsg      E DS                  EXTNAME(SDCUMRPD)
- 
- 
- 
+
+
+
       * Previous Customer in Screen Format - Primary Details
      D PrvCuPrim     E DS                  EXTNAME(SDCUPRPD)
      D                                     PREFIX(@P)
@@ -391,8 +386,8 @@
       * Previous Customer in Screen Format - Message Details
      D PrvCuMsg      E DS                  EXTNAME(SDCUMRPD)
      D                                     PREFIX(@P)
- 
- 
+
+
       * Error indicators
      D OKCuPrim      E DS                  EXTNAME(SDECUPRPD)
      D OKCuSeco      E DS                  EXTNAME(SDECUSEPD)
@@ -400,11 +395,11 @@
      D OKCuMsg       E DS                  EXTNAME(SDECUMRPD)
      D OKCuBrt       E DS                  EXTNAME(SDECUBRPD)
      D OKCuPriv      E DS                  EXTNAME(SDECUPBPD)
- 
+
       ** Swift Extension                                                                      CSW207
      D NewCuSwft     E DS                  EXTNAME(SDCUSWPD)                                  CSW207
      D OKCuSwft      E DS                  EXTNAME(SDECUSWPD)                                 CSW207
- 
+
       * Further Details Parameter Data Structure
      D***FURDETS          DS           565                                                   BUG3362
      D***FURDETS          DS           701                                           BUG3362 BUG4454
@@ -427,34 +422,34 @@
      D FDBRCD                703    705                                                      BUG4454
      D FDLICD                706    708                                                      BUG4454
      D***FDTAIN                709    709                                         BUG26917 BUG26917A
- 
- 
- 
+
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)
       ** EXTERNAL DS FOR SAR DETAILS
- 
+
      D SDAPI         E DS                  EXTNAME(SDAPIPD)                     CAP011
       ** EXTERNAL DS FOR API ICD                                                CAP011
                                                                                 CAP011
      D SDPLCS        E DS                  EXTNAME(SDPLCSPD)                    222373
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
      D ExtData       E DS                  EXTNAME(SDCUEXPD)
       * SD Custom Extra Data - File (D/B) format
      D RegData       E DS                  EXTNAME(SDCURXPD)                                  CER001
       * SD Customer Extension Details  - File (D/B) format                                    CER001
- 
+
       ** 24X7 status data area                                                                CSC011
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)                     CSC011
                                                                                               CSC011
@@ -467,7 +462,7 @@
                                                                                               CSD012
       ** Changed Party Names Array
      D ChgNamArr       S              1    DIM(5)
- 
+
      D/COPY QWINDSRC,SDCUSDDTA                                                                189774
                                                                                               189774
      DPDATA            DS          1024                                                       CER001
@@ -491,14 +486,14 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       **   Timestamp selected
      D @TMESTPSEL      S             26Z
- 
+
       ** Response Mode, passed as a constant parameter to the VAL module
       ** This is always 'S' for Synchronous
      D RespMode        S              1A   INZ('S')
- 
+
       ** -------------------------------------------------------------------
       ** Fields for getting the starting field number from file (parameters
       ** to ZACGTFLDNO, plus the offset to the requested field).
@@ -516,7 +511,7 @@
      D FormatM         S             10A   INZ('SDCUSDPD')                                    201725
      D FormatB         S             10A   INZ('SDCUSDPD')                                    201725
      D FormatV         S             10A   INZ('SDCUSDPD')                                    201725
- 
+
      D FieldP          S             10A   INZ('DDACTN')
      D FieldS          S             10A   INZ('DDCSID')
      D FieldF          S             10A   INZ('DDCORP')                                      CSW024
@@ -526,7 +521,7 @@
      D***FieldV          S             10A   INZ('DDPRBA')                                   BUG9081
      D FieldV          S             10A   INZ('DDHOLD')                                     BUG9081
      D FieldExt        S             10A   INZ('L6LXPAPS')                                    CER001
- 
+
      D FldOffsetP      S              5P 0
      D FldOffsetS      S              5P 0
      D FldOffsetF      S              5P 0                                                    CSW024
@@ -535,11 +530,11 @@
      D FldOffstBF      S              5P 0
      D FldOffsetV      S              5P 0
      D FldOffsetExt    S              5P 0                                                    CER001
- 
+
      D FieldNo         S              5P 0
- 
+
       ** End of fields for getting starting field number
- 
+
       ** Fields for getting the ending field number from file (parameters
       ** to ZACGTFLDNO, plus the offset to the requested field).
      D*FieldPL*********S             10A   INZ('DDMTSC')                                     BUG5952
@@ -551,23 +546,23 @@
      D FieldML         S             10A   INZ('DDDNW9')
      D FieldBL         S             10A   INZ('DD5STS')
      D FieldVL         S             10A   INZ('DDPBST')
- 
+
      D FldOffstPL      S              5P 0
      D FldOffstSL      S              5P 0
      D FldOffstFL      S              5P 0                                                    CSW024
      D FldOffstML      S              5P 0
      D FldOffstBL      S              5P 0
      D FldOffstVL      S              5P 0
- 
+
       ** End of fields for getting ending field number
- 
+
      D WKCUST          S                   LIKE(DDCUSN)
      D WeF             S              1A   INZ(*BLANK)                                        CSW024
      D WeB             S              1A   INZ(*BLANK)                                        CSW024
      D WeS             S              1A   INZ(*BLANK)                                        CSW024
      D WeM             S              1A   INZ(*BLANK)                                        CSW024
      D WeV             S              1A   INZ(*BLANK)                                        CSW024
- 
+
                                                                                 CAP011
       ** Flags to indicate whether substitution is required in                  CAP011
       ** each of the various parts the transaction                              CAP011
@@ -622,19 +617,19 @@
                                                                                               CLE025
      D PTransType      S              4                                                       CSD028
       ** -------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,SDCUSDR002
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -798,10 +793,10 @@
       *                                                                                       CER001
      C                   MOVE      *ON           *INLR
      C                   ENDIF
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,SDCUSDR013
- 
+
       /EJECT
       *****************************************************************
       * SCRN@I - BROWSE INVALID CUSTOMERS
@@ -1121,7 +1116,7 @@
      C                   IF        *IN97 = '0'
      C     'DDPBST    '  LOOKUP    FldNameArr                             97
      C                   ENDIF
- 
+
      C                   IF        *IN97 = '1'
      C                   EVAL      DDACTN = *BLANKS
      C                   EVAL      DDACTNOK = 'N'
@@ -1216,11 +1211,11 @@
       * Send the Customers error messages to the primary details screen
       * and GO TO PRIMARY DETAILS SCREEN
       *
- 
+
      C                   EXSR      SNDM@P
      C                   Z-ADD     *ZERO         WIdx_PVAL
      C                   MOVE      'P'           @SCRN
- 
+
       * ELSE IF NO INVALID Customer READ FROM SUBFILE
       *
      C                   ELSE
@@ -1237,7 +1232,7 @@
       * SNDM@P - SEND A MESSAGE TO PRIMARY DETAILS SCREEN
       *****************************************************************
      C     SNDM@P        BEGSR
- 
+
      C                   Z-ADD     Idx           E                 3 0
       *
       ** If there are fundamental errors in this transaction
@@ -1276,13 +1271,13 @@
       *
      C     *IN99         DOWEQ     '0'
      C/COPY WNCPYSRC,SDCUSDRC03
- 
+
      C**********         CALLB     'ZACGTFLDNO'                                              BUG9081
      C**********         PARM      *BLANK        ReturnCode                                  BUG9081
      C**********         PARM                    FormatP                                     BUG9081
      C**********         PARM                    ABFIELDNAM                                  BUG9081
      C**********         PARM      *ZERO         FieldNo                                     BUG9081
- 
+
      C**********         IF        ReturnCode = *blank                                       BUG9081
      C                   IF        ABFIELDID <=  FldOffsetS                                  BUG9081
      C                   ADD       1             E
@@ -1301,7 +1296,7 @@
      C                   ENDIF                                                  CPB002
      C                   ENDIF
      C/COPY WNCPYSRC,SDCUSDRC04
- 
+
      C     ZATRNKD0      READE     ZATRNERRD0                             99
      C                   ENDDO
       *
@@ -1328,13 +1323,13 @@
       ** and set OK flag for field to 'N'
       *
      C     *IN99         DOWEQ     '0'
- 
+
      C**********         CALLB     'ZACGTFLDNO'                                              BUG9081
      C**********         PARM      *BLANK        ReturnCode                                  BUG9081
      C**********         PARM                    FormatB                                     BUG9081
      C**********         PARM                    ABFIELDNAM                                  BUG9081
      C**********         PARM      *ZERO         FieldNo                                     BUG9081
- 
+
      C**********         IF        ReturnCode = *blank                                       BUG9081
      C                   IF        ABFIELDID  >  FldOffsetB And                              BUG9081
      C                             ABFIELDID <=  FldOffsetV                                  BUG9081
@@ -1349,7 +1344,7 @@
      C                   END
      C                   MOVE      'N'           @EI(F)
      C                   ENDIF
- 
+
      C     ZATRNKD0      READE     ZATRNERRD0                             99    *
      C                   END
       *
@@ -1376,13 +1371,13 @@
       ** and set OK flag for field to 'N'
       *
      C     *IN99         DOWEQ     '0'
- 
+
      C**********         CALLB     'ZACGTFLDNO'                                              BUG9081
      C**********         PARM      *BLANK        ReturnCode                                  BUG9081
      C**********         PARM                    FormatV                                     BUG9081
      C**********         PARM                    ABFIELDNAM                                  BUG9081
      C**********         PARM      *ZERO         FieldNo                                     BUG9081
- 
+
      C**********         IF        ReturnCode = *blank                                       BUG9081
      C                   IF        ABFIELDID  = 52          Or                               BUG9081
      C                             ABFIELDID  >  FldOffsetV                                  BUG9081
@@ -1399,7 +1394,7 @@
      C                   END
      C                   MOVE      'N'           @EI(F)
      C                   ENDIF
- 
+
      C     ZATRNKD0      READE     ZATRNERRD0                             99    *
      C                   END
       *
@@ -1426,13 +1421,13 @@
       ** and set OK flag for field to 'N'
       *
      C     *IN99         DOWEQ     '0'
- 
+
      C**********         CALLB     'ZACGTFLDNO'                                              BUG9081
      C**********         PARM      *BLANK        ReturnCode                                  BUG9081
      C**********         PARM                    FormatS                                     BUG9081
      C**********         PARM                    ABFIELDNAM                                  BUG9081
      C**********         PARM      *ZERO         FieldNo                                     BUG9081
- 
+
      C**********         IF        ReturnCode = *blank                                       BUG9081
      C                   IF        ABFIELDID  >  FldOffsetS And                              BUG9081
      C                             ABFIELDID  <  FldOffsetF                                  BUG9081
@@ -1447,7 +1442,7 @@
      C                   END
      C                   MOVE      'N'           @EI(F)
      C                   ENDIF
- 
+
      C     ZATRNKD0      READE     ZATRNERRD0                             99
      C                   END
       *
@@ -1524,14 +1519,14 @@
       ** and set OK flag for field to 'N'
       *
      C     *IN99         DOWEQ     '0'
- 
+
      C/COPY WNCPYSRC,SDCUSDRC05
      C**********         CALLB     'ZACGTFLDNO'                                              BUG9081
      C**********         PARM      *BLANK        ReturnCode                                  BUG9081
      C**********         PARM                    FormatM                                     BUG9081
      C**********         PARM                    ABFIELDNAM                                  BUG9081
      C**********         PARM      *ZERO         FieldNo                                     BUG9081
- 
+
      C**********         IF        ReturnCode = *blank                                       BUG9081
      C                   IF        ABFIELDID  >  FldOffsetM And                              BUG9081
      C                             ABFIELDID <=  FldOffsetB                                  BUG9081
@@ -1547,7 +1542,7 @@
      C                   MOVE      'N'           @EI(F)
      C                   ENDIF
      C/COPY WNCPYSRC,SDCUSDRC06
- 
+
      C     ZATRNKD0      READE     ZATRNERRD0                             99
      C                   END
       *
@@ -1581,7 +1576,7 @@
      C                   ELSE
      C                   MOVEL     'N'           @EINKJ
      C                   END
- 
+
       * Update 'previous' screen
       ** Update Previous Warning messages                                                     CGP001
      C                   MOVEL     NewCuPrim     PrvCuPrim
@@ -1694,7 +1689,7 @@
       *                                                                                       195255
      C                   EXSR      FURDET
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1757,13 +1752,13 @@
      C                   CALLB     'SDCUSD2VL'
       *                  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       * INPUTS :
- 
+
       * Response mode
      C                   PARM                    RespMode
- 
+
       ** Customer Primary Details
      C                   PARM                    NewCuPrim
- 
+
       * Customer Extra Data file data
      C                   PARM                    ExtData
                                                                                               CLE025
@@ -1774,12 +1769,12 @@
                                                                                               CSW207
       ** Customer SWIFT Extension                                                             CSW207
      C                   PARM                    NewCuSwft                                    CSW207
- 
+
       * OUTPUTS :
- 
+
       ** Customer Primary Details OK inds
      C                   PARM                    OKCuPrim
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
@@ -1867,7 +1862,7 @@
       * SCRN@B - PROCESS BASE RATE TAX DETAILS SCREEN
       *****************************************************************
      C     SCRN@B        BEGSR
- 
+
       * IF ACTION CODE IS DELETE
       * BYPASS SCREEN PROCESSING AND PROCESS BRT DATA
       *
@@ -1876,7 +1871,7 @@
      C                   MOVE      'U'           @SCRN
      C                   GOTO      EndBDSP
      C                   ENDIF
- 
+
       *                                                                         CAP014
       * If no changes are allowed, protect (but still validate)                 CAP014
       * all instructions by passing action code 'E' to SDCUSD6DP                CAP014
@@ -1887,7 +1882,7 @@
      C                   MOVEL     DDACTN        ##ACTN                         CAP014
      C                   ENDIF                                                  CAP014
      C                   MOVEL     ##ACTN        DDACTN                         CAP014
- 
+
      C                   CALLB     'SDCUSD6DP'
       * INPUT PARAMETERS :
       * Return code
@@ -2007,10 +2002,10 @@
      C                   MOVE      '1'           BRTSCREEN
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
       *
- 
+
      C                   Z-ADD     *ZERO         Idx
      C                   Z-ADD     *ZERO         WIdx_BVAL
      C                   MOVE      *ALL'Y'       OKCuBrt
@@ -2023,7 +2018,7 @@
       *
       *
       * Update 'previous' screens and previous number of warnings
- 
+
      C                   MOVEL     NewCuBrt      PrvCuBrt
      C                   Z-ADD     WIdx_BVAL     PrvN_Warn         3 0
       *
@@ -2134,9 +2129,9 @@
      C                   ELSE
      C                   MOVEL     'N'           @EINKJ
      C                   END
- 
+
       * Update 'previous' screens and previous number of warnings
- 
+
      C                   MOVEL     NewCuPrim     PrvCuPrim
      C                   MOVEL     NewCuSeco     PrvCuSeco
      C                   Z-ADD     WIdx_SVAL     PrvN_Warn
@@ -2534,9 +2529,9 @@
       * SCRN@M - PROCESS MESSAGE DETAILS SCREEN
       *****************************************************************
      C     SCRN@M        BEGSR
- 
+
       * Update 'previous' screens and previous number of warnings
- 
+
      C                   MOVEL     NewCuMsg      PrvCuMsg
      C                   Z-ADD     WIdx_MVAL     PrvN_Warn
       *
@@ -2640,24 +2635,24 @@
      C                   PARM                    NewCuMsg
       * Customer Extra Data file data
      C                   PARM                    ExtData
- 
+
       ** Message details OK inds
      C                   PARM                    OKCuMsg
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx_MVAL
- 
+
       * Valid Customer layout (DS) from/to caller
      C                   PARM                    NwCuFilFmt
       *
@@ -2719,12 +2714,12 @@
       * SCRN@V - PROCESS Private Banking Details Screen
       *****************************************************************
      C     SCRN@V        BEGSR
- 
- 
+
+
       * Update 'previous' screens and previous number of warnings
- 
+
      C                   MOVEL     NewCuPriv     PrvCuPriv
- 
+
      C                   CALLB     'SDCUSD5DP'
       * INPUT PARAMETERS :
       * Return code
@@ -3043,7 +3038,7 @@
       *
      C     DDACTN        IFEQ      'I'
      C     DDACTN        OREQ      'A'
- 
+
      C                   Z-ADD     *ZERO         Idx
      C                   MOVE      *ALL'Y'       OKCuPriv
       *
@@ -3585,7 +3580,7 @@
      C                   PARM                    NewCuBrt
      C                   PARM                    NewCuPriv
      C                   PARM                    NewCuSwft                                    CSW207
- 
+
       *
       * Update 'Current' Customer with Customer in Screen Format
       *
@@ -4093,7 +4088,7 @@
       *
      C                   CALLB     'SDCUSD7VL'
       * INPUTS
- 
+
       * Response mode
      C                   PARM                    RespMode
       *
@@ -4103,31 +4098,31 @@
      C                   PARM                    DDACTN
      C                   PARM                    DDCUSN
      C                   PARM                    DDTAIN
- 
+
       ** Customer Base Rate Tax
      C                   PARM                    NewCuBrt
- 
+
       ** OUTPUTS
- 
+
       ** Customer Base Rate Tax OK indicators
      C                   PARM                    OKCuBrt
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx_TVAL
- 
+
       * Changed Party Name Array
      C                   PARM                    ChgNamArr
       *
@@ -4159,7 +4154,7 @@
      C                   MOVE      '0'           CHGNAME
      C                   MOVE      'S'           @SCRN
      C                   ENDIF
- 
+
      C     EndVAL@T      ENDSR
       *****************************************************************
       /EJECT
@@ -4855,7 +4850,7 @@
      C     ZATRNKX0      KLIST
      C                   KFLD                    @TMESTPSEL
      C                   KFLD                    @FOTRANSEL
- 
+
      C     KAPILOGL0     KLIST                                                                CSC011
      C                   KFLD                    KMsgType                                     CSC011
      C                   KFLD                    KFrntOffID                                   CSC011
@@ -4866,7 +4861,7 @@
       *                                                                                       CER001
      C     K@KEY         KLIST                                                                CER001
      C                   KFLD                    K@CUST                                       CER001
- 
+
       ** Get the field number for the action code field; the primary
       ** screen fields start from that number.  Subtract one from it to
       ** give the value to subtract from each field's number.
@@ -4875,11 +4870,11 @@
      C                   PARM                    FormatP
      C                   PARM                    FieldP
      C                   PARM      *ZERO         FieldNo
- 
+
      C                   IF        ReturnCode = *blank
      C                   EVAL      FldOffsetP = FieldNo - 1
      C                   ENDIF
- 
+
       ** Get the field number for the SWIFT ID field; the secondary
       ** screen fields start from that number.  Subtract one from it to
       ** give the value to subtract from each field's number.
@@ -4888,7 +4883,7 @@
      C                   PARM                    FormatS
      C                   PARM                    FieldS
      C                   PARM                    FieldNo
- 
+
      C                   IF        ReturnCode = *blank
      C                   EVAL      FldOffsetS = FieldNo - 1
      C                   ENDIF
@@ -4914,7 +4909,7 @@
      C                   PARM                    FormatM
      C                   PARM                    FieldM
      C                   PARM                    FieldNo
- 
+
      C                   IF        ReturnCode = *blank
      C                   EVAL      FldOffsetM = FieldNo - 1
      C                   ENDIF
@@ -4927,7 +4922,7 @@
      C                   PARM                    FormatB
      C                   PARM                    FieldB
      C                   PARM                    FieldNo
- 
+
      C                   IF        ReturnCode = *blank
      C                   EVAL      FldOffsetB = FieldNo - 1
      C                   ENDIF
@@ -4940,34 +4935,34 @@
      C                   PARM                    FormatV
      C                   PARM                    FieldV
      C                   PARM                    FieldNo
- 
+
      C                   IF        ReturnCode = *blank
      C                   EVAL      FldOffsetV = FieldNo - 1
      C                   ENDIF
       *
- 
+
       ** Get the field number for the margin type field; the primary
       ** screen fields end at that number.
- 
+
      C                   CALLB     'ZACGTFLDNO'
      C                   PARM                    ReturnCode
      C                   PARM                    FormatP
      C                   PARM                    FieldPL
      C                   PARM      *ZERO         FieldNo
- 
+
      C                   IF        ReturnCode = *blank
      C                   EVAL      FldOffstPL = FieldNo
      C                   ENDIF
- 
+
       ** Get the field number for the stop statement download field.
       ** The secondary screen fields end at that number.
- 
+
      C                   CALLB     'ZACGTFLDNO'
      C                   PARM                    ReturnCode
      C                   PARM                    FormatS
      C                   PARM                    FieldSL
      C                   PARM                    FieldNo
- 
+
      C                   IF        ReturnCode = *blank
      C                   EVAL      FldOffstSL = FieldNo
      C                   ENDIF
@@ -4993,7 +4988,7 @@
      C                   PARM                    FormatM
      C                   PARM                    FieldML
      C                   PARM                    FieldNo
- 
+
      C                   IF        ReturnCode = *blank
      C                   EVAL      FldOffstML = FieldNo
      C                   ENDIF
@@ -5007,7 +5002,7 @@
      C                   PARM                    FormatC
      C                   PARM                    FieldBF
      C                   PARM                    FieldNo
- 
+
      C                   IF        ReturnCode = *blank
      C                   EVAL      FldOffstBF = FieldNo - 1
      C                   ENDIF
@@ -5032,7 +5027,7 @@
       *
      C                   MOVEL     'I'           @SCRN             1
       *
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,SDCUSDR014
       *                                                                                       CER001
@@ -5080,7 +5075,7 @@
      C**********         EVAL      CER048 = 'N'                                   BUG26917 BUG26917A
      C**********         ENDIF                                                    BUG26917 BUG26917A
       **********                                                                  BUG26917 BUG26917A
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

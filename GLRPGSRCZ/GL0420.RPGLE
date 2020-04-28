@@ -14,8 +14,9 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. CGL188             Date 19Feb18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. LRI100             Date 17Mar20               *
+      *  Prev Amend No. CGL188             Date 19Feb18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL184             Date 07Dec16               *
       *                 MD037536           Date 26Apr16               *
       *                 MD033999           Date 29Jun15               *
@@ -158,6 +159,8 @@
 0008 F*                                                               *
 0013 F*---------------------------------------------------------------*
       *                                                               *
+      *  LRI100 - Statement Format Changes                            *
+      *         - Upgrade CARs LRI009/LRI010 to FB Midas.             *
       *  CGL188 - COB Optimisation of GL0420                          *
       *           Used /Copys:  GL0420FFP2, GL0420FFP3, GL0420I017,   *
       *                         GL0420IIP4, GL0420IIP5, GL0420CP21,   *

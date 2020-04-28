@@ -53,7 +53,9 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD055518 - Profit Centre assigned to TI postings is different*
-      *             between MidasPlus and FBMidas.                    *
+      *             between MidasPlus and FBMidas. Profit Centre of   *
+      *             TI postings will be defaulted based on the TI ICD *
+      *             and Default Profit Center Matrix.                 *
       *  MD051765 - Component GLC0340 00003 daily journal does not    *
       *             balance.                                          *
       *  MD043945A - Inactive account should not be posted in suspense*
@@ -217,9 +219,6 @@
      F                                     PREFIX(Pb_)                                        CRE072
      F                                     RENAME(APOSTPDF:GLPUAMD0)                          CRE072
 
-      ** Midas SD Midas/TI Interface ICD                                                    MD055518
-     FSDTIINPD  IF   E           K DISK    INFSR(*PSSR)                                     MD055518
-
       ** Midas GL Generated Entries Account Transfer - Header
      FGETXHH    O    E             DISK    INFSR(*PSSR)
      F                                     PREFIX(H_)
@@ -306,6 +305,9 @@
 
       ** External DS for General Ledger ICD
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
+
+      ** External DS for TI ICD                                                             MD055518
+     D SDTIIN        E DS                  EXTNAME(SDTIINPD)
 
       ** External DS for Trading ICD
      D SDTRAD        E DS                  EXTNAME(SDTRADPD)
@@ -581,7 +583,8 @@
                                                                                               CRE072
       ** Switchable features                                                                  CRE072
      D CRE072          S              1A                                                      CRE072
-                                                                                              CRE067
+     D CTI006          S              1A                                                    MD055518
+                                                                                                   CRE067
       ** Other variables                                                                    BUG28036
      D/COPY ZSRSRC,ZHOLILE                                                                  BUG28036
      D/COPY ZSRSRC,ZHOLELE                                                                  BUG28036
@@ -1197,9 +1200,7 @@
 
       ** Defaulting Process Of Profit Centre When Account Transfer                          MD055518
       ** is a TI posting.                                                                   MD055518
-                                                                                            MD055518
-     C                   CLEAR                   PRFC                                       MD055518
-	                                                                                       MD055518
+                                                                                            MD055518    
      C                   CALL      'AOPRFMR0'                                               MD055518
      C                   PARM                    RTCD              1                        MD055518
      C                   PARM      *BLANK        BOOK              2                        MD055518
@@ -1207,7 +1208,7 @@
      C                   PARM      *BLANKS       SUTP              2                        MD055518
      C                   PARM      R1BRCA        BRAN              3                        MD055518
      C                   PARM                    DEPT1             3                        MD055518
-     C                   PARM                    USER             10                        MD055518
+     C                   PARM      R1USER        USER             10                        MD055518
      C                   PARM                    ACOF              2                        MD055518
      C                   PARM                    CUST              6                        MD055518
      C                   PARM                    DPRFC             4                        MD055518
@@ -3621,7 +3622,47 @@
      C                   EVAL      CRE072 = 'N'                                               CRE072
      C                   ENDIF                                                                CRE072
       *                                                                                       CRE072
-
+      *                                                                                       CRE072
+      ** Check if switchable feature CTI006                                                 MD055518
+      *                                                                                     MD055518
+     C                   CALL      'AOSARDR0'                                               MD055518
+     C                   PARM      *BLANKS       PRetCode                                   MD055518
+     C                   PARM      '*VERIFY'     POption                                    MD055518
+     C                   PARM      'CTI006'      PSARD                                      MD055518
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD055518
+      *                                                                                     MD055518
+     C                   IF        PRetCode <> *BLANKS  AND                                 MD055518
+     C                             PRetCode <> '*NRF   '                                    MD055518
+     C     *LOCK         IN        LDA                                                      MD055518
+     C                   EVAL      DBFile = 'SCSARDPD'                                      MD055518
+     C                   EVAL      DBKey  = 'CTI006'                                        MD055518
+     C                   EVAL      DBPgm = 'GL004601'                                       MD055518
+     C                   EVAL      DBase = 14                                               MD055518
+     C                   OUT       LDA                                                      MD055518
+     C                   EXSR      *PSSR                                                    MD055518
+     C                   ENDIF                                                              MD055518
+      *                                                                                     MD055518
+     C                   IF        PRetCode = *BLANKS                                       MD055518
+     C                   EVAL      CTI006 = 'Y'                                             MD055518
+     C                   ELSE                                                               MD055518
+     C                   EVAL      CTI006 = 'N'                                             MD055518
+     C                   ENDIF                                                              MD055518
+      *                                                                                     MD055518
+      ** Retrieve TI Details                                                                MD055518
+     C                   IF        CTI006 = 'Y' or BGN3ST = 'Y'                             MD055518
+     C                   CALL      'AOTIINR0'                                               MD055518
+     C                   PARM      '*MSG'        WWRTCD            7                        MD055518
+     C                   PARM      '*FIRST'      WWOPTN            7                        MD055518
+     C     SDTIIN        PARM      SDTIIN        DSFDY                                      MD055518
+      *   Error?                                                                            MD055518
+     C     WWRTCD        IFNE      *BLANKS                                                  MD055518
+     C                   MOVEL     '*FIRST'      DBKEY                                      MD055518
+     C                   MOVEL     'SDTIINPD'    DBFILE                                     MD055518
+     C                   Z-ADD     15            DBASE                                      MD055518
+     C                   EXSR      *PSSR                                                    MD055518
+     C                   ENDIF                                                              MD055518
+     C                   ENDIF                                                              MD055518
+      *                                                                                     MD055518
       ** Set correct event control date depending on processing mode                       BUG27831B
                                                                                            BUG27831B
      C                   IF        WMODE = 'N'                                             BUG27831B

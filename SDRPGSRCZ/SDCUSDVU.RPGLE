@@ -1827,9 +1827,6 @@
      C                   PARM                    CFX001                                      BUG5082
       *                                                                                     MD054028
      C                   PARM                    DDAPRC                                     MD054028
-      *                                                                                     MD055446
-      ** Valid Base Rate Tax layout (DS) from/to caller - Century                           MD055446
-     C*                  PARM                    ValidCuBrCent                              MD055446
       *
       * Output parameters
       *
@@ -2911,9 +2908,6 @@
      C                   PARM                    CFX001                                       CSD079
       *                                                                                     MD054028
      C                   PARM                    DDAPRC                                     MD054028
-      *                                                                                     MD055446
-      ** Valid Base Rate Tax layout (DS) from/to caller - Century                           MD055446
-     C*                  PARM                    ValidCuBrCent                              MD055446
       *
       * Output parameters
       * Customer Details - screen formats

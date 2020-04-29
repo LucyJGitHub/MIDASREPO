@@ -70,7 +70,7 @@
       *             details tab in Customer Input plus date of birth  *	
       *             issues.                                           *	
       *           - Added BRT DOB century on FillerBufEx2, BufferEx2  *
-      *             and as output parameter in SDCUSDCVT.             * 
+      *             and as output parameter in SDCUSDCVT.             *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -333,7 +333,7 @@
      D***FillerBufEx2    S           5980A                                           CGL132 MD044880
      D***FillerBufEx2    S           5915A                                         MD044880 MD054028
      D***illerBufEx2    S           5914A                                          MD054028 MD055446
-     D FillerBufEx2    S           5903A                                                    MD055446
+     D FillerBufEx2    S           5904A                                                    MD055446
      D FillerBufEx3    S           9999A                                                      CSW213
      D***FillerBufEx4    S           6898A                                           CSW213 MD041996
      D***FillerBufEx4    S           5974A                                         MD041996 MD044880

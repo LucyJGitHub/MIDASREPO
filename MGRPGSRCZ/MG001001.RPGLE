@@ -782,6 +782,7 @@
      C     SrValAddOMFM  BEGSR
 
       ** No repeating numbers must exist
+
      C                   IF        X > 1
      C                   IF        WCode = %SUBST(WInpArr(X-1):1:1)
      C                   EVAL      PRetCode = '*ERROR'

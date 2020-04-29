@@ -13,9 +13,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055446           Date 04Apr20               *
-      *  Prev Amend No. MD040876           Date 13Sep16               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. MD040876           Date 13Sep16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -38,11 +37,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      * MD055446 - There are parties and fields missing from the BRT  *	
-      *            details tab in Customer Input plus date of birth   *	
-      *            issues.                                            *	
-      *          - Include Input and Output BRT century parameter for *
-      *            coding standard.                                   *
       *  MD040876 - CRS MQ (Recompile)                                *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -58,7 +52,7 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
@@ -68,10 +62,10 @@
      FINTPSL8   IF   E           K DISK    RENAME(INTPSDDF:INTPSLF8)
      F                                     PREFIX(C_)
      FPTYHSTPR  IF   E           K DISK
- 
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,SDCUDTV001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -83,113 +77,99 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * New Customer in File Format
      D CuFilFmt      E DS                  EXTNAME(SDVCUSDPD)
- 
+
       ** Customer Base Rate Tax in screen format
      D CuBrt         E DS                  EXTNAME(SDCUBRPD)
- 
+
       ** Customer Base Rate Tax OK indicators
      D OKCuBrt       E DS                  EXTNAME(SDECUBRPD)
- 
+
       ** EXTERNAL DS FOR BANK DETAILS
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       **  Short DS for access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** Data structure for run date and Multibranch Indicator using rundat.
      D RUNDAT          DS
      D  RDNB                   8     10P 0
- 
+
      D BrtFilFmt     E DS                  EXTNAME(SDVCUBRPD)
       * Valid Customer Base Rate Tax File
-      ** ** Customer Base Rate Tax in screen format (Century)                               MD055446
-     D CuBrtCent       DS                                                                   MD055446
-     D  DDD1DOB                       2S 0                                                  MD055446
-     D  DDD2DOB                       2S 0                                                  MD055446
-     D  DDD3DOB                       2S 0                                                  MD055446
-     D  DDD4DOB                       2S 0                                                  MD055446
-     D  DDD5DOB                       2S 0                                                  MD055446
-      ** Valid Customer BRT (Century) details layout                                        MD055446
-     D BrtFilFmtCent   DS                                                                   MD055446
-     D  BR1DBC                        2S 0                                                  MD055446
-     D  BR2DBC                        2S 0                                                  MD055446
-     D  BR3DBC                        2S 0                                                  MD055446
-     D  BR4DBC                        2S 0                                                  MD055446
-     D  BR5DBC                        2S 0                                                  MD055446
- 
+
      D ChgNamArr       S              1    DIM(5)
       ** Changed Party Names Array
- 
+
      D LFLG            S              1    DIM(10)
       ** Liable Flag Array
- 
+
      D EFLD            S              5S 0 DIM(10)
       ** Effective Date Array
- 
+
      D EFLDA           S              5    DIM(10)
       ** Effective Date Array Alpha
- 
+
      D LCHD            S              5S 0 DIM(10)
       ** Liable Change Date Array
- 
+
      D LCHDA           S              5    DIM(10)
       ** Liable Change Date Array
- 
+
      D                 DS
      D CuBrtScrn               1    704
      D DETAI1                  9    147
@@ -273,7 +253,7 @@
      D OLDBR3                408    408
      D OLDBR4                547    547
      D OLDBR5                686    686
- 
+
      D                 DS
      D PP1DET                  1    139
      D PT1TTL                  1      4
@@ -340,66 +320,66 @@
      D PT5NIN                679    687
      D NEWDB5                688    693
      D NEWSQ5                694    695
- 
- 
+
+
      D                 DS
      D TDATE                   1      6
      D TDAY                    1      2
      D TMONTH                  3      4
      D TYEAR                   5      6
- 
+
      D                 DS
      D  DATE                   1      6
      D  DAY                    1      2  0
      D  MONTH                  3      4  0
      D  YEAR                   5      6  0
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
       ** Index for arrays of of warning message ids etc
      D WIdx            S              3P 0
- 
+
       ** Timestamp for the transaction
      D TimeStamp       S               Z
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,SDCUDTV002
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       /COPY WNCPYSRC,SDCUDTV003
- 
+
       ** Initial Routine
       *
       /COPY WNCPYSRC,SDCUDTV004
      C                   EXSR      INITIAL
       /COPY WNCPYSRC,SDCUDTV005
       *
- 
+
       ** Validate New Participant Prompt
       *
       /COPY WNCPYSRC,SDCUDTV006
@@ -418,16 +398,16 @@
       *
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,SDCUDTV012
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
       ** Validate New Participant Prompt
       *****************************************************************
      C     VCNPPT        BEGSR
- 
+
       * Reset variables updated by validation
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate New Participant Prompt
@@ -463,12 +443,12 @@
      C                   PARM                    DD3STSOK          1
      C                   PARM                    DD4STSOK          1
      C                   PARM                    DD5STSOK          1
- 
+
       * Update error info with that returned from validation
- 
+
      C                   EXSR      UPDATERRS
- 
- 
+
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -476,11 +456,11 @@
       ** Populate DS Parameter Fields for Base Rate Tax
       *****************************************************************
      C     VCHISP        BEGSR
- 
+
       ** If there are no errors
- 
+
      C     Idx           IFEQ      0
- 
+
      C* INITIALIZE SDCBRTPD DETAILS
      C*
      C                   MOVEL     *BLANK        PP1DET
@@ -489,10 +469,10 @@
      C                   MOVEL     *BLANK        PP4DET
      C                   MOVEL     *BLANK        PP5DET
      C                   MOVEL     *BLANK        PTAXIN            1
- 
+
       **SET*UP*SDCBRTPD*DETAILS*IF*A/C*HOLDER*TYPE*IS*'I'*OR*'J'***                           CRE007
       * SET UP SDCBRTPD DETAILS IF A/C HOLDER TYPE IS 'I','J' or 'R'                          CRE007
- 
+
      C     DDAHLT        IFEQ      'I'
      C     DDAHLT        OREQ      'J'
      C     DDAHLT        OREQ      'R'                                                        CRE007
@@ -502,9 +482,9 @@
      C                   MOVE      DETAI4        PP4DET
      C                   MOVE      DETAI5        PP5DET
      C                   ENDIF
- 
+
       ** Chain to BRT file using entry parameters
- 
+
      C                   MOVE      DDCUSN        XCNUM
      C     XCNUM         CHAIN     SDCBRTD0                           99
      C     *IN99         IFEQ      *OFF
@@ -534,7 +514,7 @@
      C                   ENDIF
       *
      C                   ENDIF
- 
+
      C     DDACTN        IFEQ      'D'
      C                   MOVE      'C'           BRRECI
      C                   ELSE
@@ -542,20 +522,20 @@
      C                   ENDIF
      C                   MOVE      BJRDNB        BRXLCD
      C                   MOVE      DDACTN        BRCHTP
- 
+
       ** Action Code - Amend
- 
+
      C     DDACTN        IFEQ      'A'
      C     DDAHLT        IFEQ      'I'
      C     DDAHLT        OREQ      'J'
      C     DDAHLT        OREQ      'R'                                                        CRE007
- 
+
       ** Store next available sequence number
- 
+
      C                   Z-ADD     0             NEWNOP            1 0
- 
+
       ** If party status is not blank, process party data
- 
+
      C     DD1STS        IFNE      *BLANKS
      C     CHGNAMARR(1)  OREQ      'Y'
      C                   MOVE      PT1TTL        BR1TIT
@@ -574,7 +554,7 @@
      C                   ADD       1             NXASQN
      C                   ENDIF
      C                   ENDIF
- 
+
      C     DD2STS        IFNE      *BLANKS
      C     CHGNAMARR(2)  OREQ      'Y'
      C                   MOVE      PT2TTL        BR2TIT
@@ -593,7 +573,7 @@
      C                   ADD       1             NXASQN
      C                   ENDIF
      C                   ENDIF
- 
+
      C     DD3STS        IFNE      *BLANKS
      C     CHGNAMARR(3)  OREQ      'Y'
      C                   MOVE      PT3TTL        BR3TIT
@@ -612,7 +592,7 @@
      C                   ADD       1             NXASQN
      C                   ENDIF
      C                   ENDIF
- 
+
      C     DD4STS        IFNE      *BLANKS
      C     CHGNAMARR(4)  OREQ      'Y'
      C                   MOVE      PT4TTL        BR4TIT
@@ -631,7 +611,7 @@
      C                   ADD       1             NXASQN
      C                   ENDIF
      C                   ENDIF
- 
+
      C     DD5STS        IFNE      *BLANKS
      C     CHGNAMARR(5)  OREQ      'Y'
      C                   MOVE      PT5TTL        BR5TIT
@@ -653,9 +633,9 @@
      C
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Action Code - Insert
- 
+
      C     DDACTN        IFEQ      'I'
      C                   Z-ADD     1             NXASQN
      C                   MOVEA     *BLANKS       LFLG
@@ -741,7 +721,7 @@
      C                   ENDIF
      C
      C                   ENDIF
- 
+
      C** Action Code - Insert or Amend
      C
      C     DDACTN        IFEQ      'I'
@@ -754,7 +734,7 @@
      C                   MOVE      DDTXIN        BRTXIN
      C                   MOVE      DDPSTR        BRPSTR                                       CRE007
      C                   Z-ADD     NXASQN        BRNASQ
- 
+
      C     DDACTN        IFEQ      'I'
      C                   Z-ADD     0             BRAHCD
      C                   ELSE
@@ -770,7 +750,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C     DDAHLT        IFNE      'I'
      C     DDAHLT        ANDNE     'J'
      C     DDAHLT        ANDNE     'R'                                                        CRE007
@@ -779,7 +759,7 @@
      C                   EVAL      DD3NAM=*BLANKS
      C                   EVAL      DD4NAM=*BLANKS
      C                   EVAL      DD5NAM=*BLANKS
- 
+
       ** If A/C holder type is now B, C, N or O, set taxable indicator
      C     DDAHLT        IFEQ      'B'
      C     DDAHLT        OREQ      'C'
@@ -793,7 +773,7 @@
      C
      C                   MOVE      *BLANK        BRPSTR                                       CRE007
      C                   ENDIF
- 
+
       ** Update participant fields
      C     DD1NAM        IFEQ      *BLANK
      C                   MOVE      *BLANK        BR1TIT
@@ -809,7 +789,7 @@
      C                   MOVE      *ZEROS        BR1DOB
      C                   MOVE      *ZEROS        BR1SQN
      C                   ENDIF
- 
+
      C     DD2NAM        IFEQ      *BLANK
      C                   MOVE      *BLANK        BR2TIT
      C                   MOVE      *BLANK        BR2NAM
@@ -824,7 +804,7 @@
      C                   MOVE      *ZEROS        BR2DOB
      C                   MOVE      *ZEROS        BR2SQN
      C                   ENDIF
- 
+
      C     DD3NAM        IFEQ      *BLANK
      C                   MOVE      *BLANK        BR3TIT
      C                   MOVE      *BLANK        BR3NAM
@@ -839,7 +819,7 @@
      C                   MOVE      *ZEROS        BR3DOB
      C                   MOVE      *ZEROS        BR3SQN
      C                   ENDIF
- 
+
      C     DD4NAM        IFEQ      *BLANK
      C                   MOVE      *BLANK        BR4TIT
      C                   MOVE      *BLANK        BR4NAM
@@ -854,7 +834,7 @@
      C                   MOVE      *ZEROS        BR4DOB
      C                   MOVE      *ZEROS        BR4SQN
      C                   ENDIF
- 
+
      C     DD5NAM        IFEQ      *BLANK
      C                   MOVE      *BLANK        BR5TIT
      C                   MOVE      *BLANK        BR5NAM
@@ -869,7 +849,7 @@
      C                   MOVE      *ZEROS        BR5DOB
      C                   MOVE      *ZEROS        BR5SQN
      C                   ENDIF
- 
+
      C                   ENDIF
       *
      C                   ENDIF
@@ -882,7 +862,7 @@
       *    from each validation module.                               *
       *****************************************************************
      C     RESETERRS     BEGSR
- 
+
      C                   EVAL      RetCodeOut = *Blanks
       *
       * Reset error & warning fields/message IDs/message data (arrays)
@@ -892,7 +872,7 @@
      C                   MOVEL     *BLANK        WFldNmXAr
      C                   MOVEL     *BLANK        WMsgIDXAr
      C                   MOVEL     *BLANK        WMsgDtXAr
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1055,11 +1035,11 @@
       *                                                               *
       *****************************************************************
      C     *inzsr        BEGSR
- 
+
      C     *entry        PLIST
- 
+
       * INPUTS
- 
+
       * Response mode
      C                   PARM                    RespMode          1
       *
@@ -1069,41 +1049,37 @@
      C                   PARM                    DDACTN            1
      C                   PARM                    DDCUSN            6
      C                   PARM                    DDAHLT            1
- 
+
       ** Customer Base Rate Tax
      C                   PARM                    CuBrt
-      ** Customer Base Rate Tax - Century                                                   MD055446
-     C                   PARM                    CuBrtCent                                  MD055446
- 
+
       *
       ** OUTPUTS
- 
+
       ** Customer Base Rate Tax OK indicators
      C                   PARM                    OKCuBrt
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx
- 
+
       * Changed Party Name Array
      C                   PARM                    ChgNamArr
       *
       * Valid BRT file layout (DS) to/from caller
      C                   PARM                    BrtFilFmt
-      * Valid BRT file layout (DS) to/from caller - Century                                 MD055446
-     C                   PARM                    BrtFilFmtCent                              MD055446
       *
       **--------------------------------------------------------------------------------------------
       ** The following /COPY sets the values of program, module and
@@ -1143,13 +1119,13 @@
       *                                                               *
       *****************************************************************
      C     ZDATE1        BEGSR
- 
+
      C                   CALLB     'ZDATE1'
      C                   PARM                    ZDATEA            6
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    BJDFIN
      C                   PARM                    ErrorFlag         1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1159,13 +1135,13 @@
       *                                                               *
       *****************************************************************
      C     ZDATE2        BEGSR
- 
+
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDAYNO
      C                   PARM                    BJDFIN
      C                   PARM                    ZDATEB            6 0
      C                   PARM                    ZADATE            7
- 
+
      C                   ENDSR
       *****************************************************************
       **--------------------------------------------------------------------------------------------

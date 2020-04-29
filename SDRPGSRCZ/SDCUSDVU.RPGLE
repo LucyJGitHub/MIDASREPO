@@ -158,7 +158,7 @@
       *             issues.                                           *
       *           - Added BRT DOB Century fields on TransInEx2,       *
       *             FillerBufEx2 and BufferEx2. Also as parameter to  *
-      *             SDCUSDCVT, SDCUSD6VL, SDCUSD7VL and SDCUSDUPD.    *
+      *             SDCUSDCVT, SDCUSD6VL and SDCUSDUPD.               *
       *  MD052432 - System does not recognise the defined authority   *
       *              holders (i.e. controlling persons for CRS)       *
       *  MD053634 - Requested Customer “Authority Holders Link Report *
@@ -2596,9 +2596,6 @@
       *
       ** Customer Base Rate Tax Details
      C                   PARM                    TranInBrtx
-      *                                                                                     MD055446
-      ** Customer Base Rate Tax Details (Century)                                           MD055446
-     C                   PARM                    TranInBRTCent                              MD055446
       *
       * OUTPUTS
       *
@@ -2624,9 +2621,6 @@
 
       * Valid Base Rate Tax layout (DS) from/to caller
      C                   PARM                    ValidCuBr
-      *                                                                                     MD055446
-      ** Valid Base Rate Tax layout (DS) from/to caller - Century                           MD055446
-     C                   PARM                    ValidCuBrCent                              MD055446
 
      C                   ENDSR
       *****************************************************************

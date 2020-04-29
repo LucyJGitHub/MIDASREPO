@@ -15,12 +15,14 @@
 /********(c)*Misys*International*Banking*Systems*Ltd.*2007************/        /*JMI113*/
 /*       (c) Finastra International Limited 2018                     */        /*JMI113*/
 /*                                                                   */
-/*       Last Amend No. JMI113             Date 22May18              */
-/*       Prev Amend No. JMI019             Date 21Feb07              */
+/*       Last Amend No. EMGFIX             Date 28Apr20              */
+/*       Prev Amend No. JMI113             Date 22May18              */
+/*                      JMI019             Date 21Feb07              */
 /*                      JMI019  *CREATE    Date 23Jul03              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       EMGFIX - Wrong program called                               */
 /*       JMI113 - Midas GCMS Interface. Upgrade to FBM 2.1           */
 /*       JMI019 - Upgrade as is except for JMI020                    */
 /*       JMI019 - Midas GCMS Interface                               */
@@ -76,7 +78,8 @@ START:
              CHGVAR     VAR(&MODE) VALUE('RECV')
              CHGVAR     VAR(&RTCD) VALUE(' ')
 /*           CALL       PGM(GLJ013) PARM(&MODE &RTCD) */ /*JMI019*/  /*JMI113*/
-             CALL       PGM(XX113103) PARM(&MODE &RTCD) /*JMI113*/
+/*           CALL       PGM(XX113103) PARM(&MODE &RTCD)*/  /*JMI113*/ /*EMGFIX*/
+             CALL       PGM(XX113013) PARM(&MODE &RTCD) /*EMGFIX*/
              DLTOVR     FILE(*ALL)
 
 /** If either job user switches 7 or 8 are on, perform abnormal */

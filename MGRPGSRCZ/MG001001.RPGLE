@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD037229           Date 03Sep18               *
+      *  Last Amend No. MD055694           Date 09Mar20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD037229           Date 03Sep18               *
       *                 MD038302           Date 03Sep18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD035038           Date 14Jul15               *
@@ -23,6 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055694 - SWIFT Changes 2021                                *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD037229 - Remove the validation of town after ISO code in   *
       *             first occurrence of 3/                            *
@@ -184,8 +186,14 @@
      D WAccLine        S              1A
      D WProhibit       S              1A
      D WACLNE          S              1A                                                    MD035038
+     D CSW221          S              1A                                                    MD055694
+     D PSWIFT          S              6A                                                    MD055694
+     D PRTCD           S              7A                                                    MD055694
+     D WPrev           S              1S 0                                                  MD055694
+     D WNext           S              1S 0                                                  MD055694
      D WExsLine        S              1S 0
      D IDX             S              1S 0
+     D W               S              1S 0                                                  MD055694
      D X               S              1S 0
      D Y               S              1S 0
      D Z               S              3S 0
@@ -433,8 +441,8 @@
      C                   LEAVESR
      C                   ENDIF
 
-     ** Line 1 must start with '/' for Account line
-     ** and 1/ for Name and Address Line
+      ** Line 1 must start with '/' for Account line
+      ** and 1/ for Name and Address Line
 
      C                   IF        %SUBST(PInpParm1:1:1) <> '/' AND
      C                             %SUBST(PInpParm1:1:1) <> '1'
@@ -736,14 +744,17 @@
 
       ** Number 2 of Name and Address Lines must not
       ** be used without number 3
+      ** If CSW221 is on, 3/ is now mandatory every input                                   MD055694
 
+     C                   IF        CSW221 = 'N'                                             MD055694
      C                   IF        WCode = '2' AND
      C                             Num3Exist <> 'Y'
      C                   EVAL      PRetCode = '*ERROR'
      C                   EVAL      PMsgID = 'ME00314'
      C                   LEAVESR
      C                   ENDIF
-
+     C                   ENDIF                                                              MD055694
+                                                                                            MD055694
       ** Additional Name and Address lines validation
 
      C                   IF        PCallFrom = 'OMFM'
@@ -779,6 +790,16 @@
      C                   LEAVESR
      C                   ENDIF
      C                   ENDIF
+                                                                                            MD055694
+      ** If CSW221 is ON, number 3 is required                                              MD055694
+     C                   IF        CSW221 = 'Y'                                             MD055694
+     C                   IF        X = IDX AND                                              MD055694
+     C                             Num3Exist <> 'Y'                                         MD055694
+     C                   EVAL      PRetCode = '*ERROR'                                      MD055694
+     C                   EVAL      PMsgID = 'MES0001'                                       MD055694
+     C                   LEAVESR                                                            MD055694
+     C                   ENDIF                                                              MD055694
+     C                   ENDIF                                                              MD055694
 
       ** Validate format for number 3
       ** Format should be 3/XX/
@@ -840,6 +861,31 @@
      C                   LEAVESR
      C                   ENDIF
 
+      ** SWIFT 2021: Lines starting with 1/, 2/ & 3/ must only occur twice                  MD055694
+                                                                                            MD055694
+     C                   Z-ADD     *ZERO         WPrev                                      MD055694
+     C                   Z-ADD     *ZERO         WNext                                      MD055694
+     C                   IF        CSW221 = 'Y' AND X > 1 AND                               MD055694
+     C                             X < IDX                                                  MD055694
+     C                   EVAL      WPrev = X - 1                                            MD055694
+     C                   EVAL      WNext = X + 1                                            MD055694
+     C                   IF        WCode = %SUBST(WInpArr(WPrev):1:1) AND                   MD055694
+     C                             WCode = %SUBST(WInpArr(WNext):1:1)                       MD055694
+     C                   EVAL      PRetCode = '*ERROR'                                      MD055694
+     C                   EVAL      PMsgID = 'MES0002'                                       MD055694
+     C                   LEAVESR                                                            MD055694
+     C                   ENDIF                                                              MD055694
+     C                   ENDIF                                                              MD055694
+      *                                                                                     MD055694
+      ** SWIFT 2021: A line starting with '3/' must be present.                             MD055694
+      *                                                                                     MD055694
+     C                   IF        CSW221 = 'Y' AND X = IDX AND                             MD055694
+     C                             Num3Exist <> 'Y'                                         MD055694
+     C                   EVAL      PRetCode = '*ERROR'                                      MD055694
+     C                   EVAL      PMsgID = 'MES0001'                                       MD055694
+     C                   LEAVESR                                                            MD055694
+     C                   ENDIF                                                              MD055694
+                                                                                            MD055694
       ** Validate format for number 3
 
      C                   IF        WCode = '3'
@@ -1358,7 +1404,14 @@
      C     SrExcess      BEGSR
 
      C                   EVAL      WCtr = 35
-     C                   FOR       Y = 1 TO 5
+     C                   IF        CSW221 = 'Y'                                             MD055694
+     C                   EVAL      W = 1                                                    MD055694
+     C                   ELSE                                                               MD055694
+     C                   EVAL      W = 5                                                    MD055694
+     C                   ENDIF                                                              MD055694
+                                                                                            MD055694
+     C**********         FOR       Y = 1 TO 5                                               MD055694
+     C                   FOR       Y = 1 TO W                                               MD055694
      C                   EVAL      Z = %CHECKR(' ':WFrmtL)
 
      C                   IF        Z > WCtr
@@ -1567,6 +1620,16 @@
      C                   EVAL      InpParmDS = PInpParm1 +
      C                             PInpParm2 + PInpParm3 +
      C                             PInpParm4 + PInpParm5
+                                                                                            MD055694
+     C                   CALL      'SWIFTACTV'                                              MD055694
+     C                   PARM      'CSW221'      PSWIFT                                     MD055694
+     C                   PARM      *BLANKS       PRTCD                                      MD055694
+      *                                                                                     MD055694
+     C     PRTCD         IFEQ      'CSWACTV'                                                MD055694
+     C                   MOVE      'Y'           CSW221                                     MD055694
+     C                   ELSE                                                               MD055694
+     C                   MOVE      'N'           CSW221                                     MD055694
+     C                   ENDIF                                                              MD055694
      C                   ENDSR
       *****************************************************************
       /EJECT

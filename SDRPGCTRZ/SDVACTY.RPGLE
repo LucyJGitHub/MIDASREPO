@@ -17,12 +17,13 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055446           Date 04Apr20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
       *                 CRE007             Date 01Mar01               *
@@ -31,6 +32,12 @@
       * Midas DBA 3.00 ---------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
+      *                                                               *
+      *  MD055446 - There are parties and fields missing from the BRT *	
+      *             details tab in Customer Input plus date of birth  *	
+      *             issues.                                           *	
+      *           - Parties to be entered is changed from 'not equal' *
+      *             to 'less than' two (2) for Account Holder Type J  *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CRE007 - Base Rate Tax 2001.                                 *
@@ -39,8 +46,8 @@
       *                                                               *
       *                                                               *
       *****************************************************************
- 
- 
+
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -52,56 +59,56 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Customer Base Rate Tax in screen format
      D CuBrt         E DS                  EXTNAME(SDCUBRPD)
- 
+
      D ValidBrt      E DS                  EXTNAME(SDVCUBRPD)
       * Valid Base Rate Tax participant details layout
- 
+
       ** Customer Base Rate Tax in screen format, local to this module
      D CuBrtLoc        DS
      D  DETAI1                 1    138A
@@ -114,18 +121,18 @@
      D  DETAI5               555    692A
      D  OTHER5               582    692A
      D  POST5401             693    693A                                                      CRE007
- 
+
      D @DETAILS        S            139    DIM(5)
      D WKXSQN          S              2  0 DIM(5)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -140,18 +147,18 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   MOVE      *BLANK        RetCodeIn
- 
+
      C                   MOVE      *BLANK        FldNamXAr
      C                   MOVE      *BLANK        MsgIDXAr
      C                   MOVE      *BLANK        MsgDtaXAr
      C                   Z-ADD     0             Idx
- 
+
       ** comments
- 
+
       *
       ** VALIDATION
       *
@@ -235,7 +242,7 @@
      C                   MOVE      @DETAILS(4)   DETAI4
      C                   MOVE      @DETAILS(5)   DETAI5
      C                   MOVE      CuBrtloc      CuBrt
- 
+
      C                   EVAL      BR1SQN=WKXSQN(1)
      C                   EVAL      BR2SQN=WKXSQN(2)
      C                   EVAL      BR3SQN=WKXSQN(3)
@@ -254,11 +261,11 @@
      C                   ENDIF                                                                CRE007
                                                                                               CRE007
      C                   ELSE                                                                 CRE007
- 
+
       * Account Holder Type I - 1, 3, 4 or 5 parties must be entered
- 
+
      C     DDAHLT        IFEQ      'I'
- 
+
      C     Z             IFEQ      0
      C                   MOVE      'N'           DD1NAMOK
      C                   ADD       1             Idx
@@ -271,18 +278,19 @@
      C                   MOVEL     'USR4168'     MsgIdXAr(Idx)
      C                   MOVE      'Error'       RetCodeIn
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
       * Account Holder Type J - 2 parties must be entered
- 
+
      C     Z             IFEQ      0
      C                   MOVE      'N'           DD1NAMOK
      C                   ADD       1             Idx
      C                   MOVEL     'DD1NAM'      FldNamXAr(Idx)
      C                   MOVEL     'USR4169'     MsgIdXAr(Idx)
      C                   ELSE
-     C     Z             IFNE      2
+     C*****Z****         IFNE      2                                                        MD055446
+     C     Z             IFLT      2                                                        MD055446
      C                   ADD       1             Idx
      C                   MOVEL     '*any  '      FldNamXAr(Idx)
      C                   MOVEL     'USR4169'     MsgIdXAr(Idx)
@@ -300,7 +308,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -330,9 +338,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

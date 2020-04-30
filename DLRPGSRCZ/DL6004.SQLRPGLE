@@ -17,14 +17,17 @@
       *                                                               *
       *  Calls    : GL000050 APR Calculation program                  *
       *                                                               *
-      *  Last Amend No. MD054544           Date 04Oct19               *
-      *  Prev Amend No. MD054479           Date 27Sep19               *
+      *  Last Amend No. MD055146           Date 04Feb20               *
+      *  Prev Amend No. MD054544           Date 04Oct19               *
+      *                 MD054479           Date 27Sep19               *
       *                 MD054107           Date 11Sep19               *
       *                 MD054017           Date 04Sep19               *
       *                 CER050  *Create    Date 16Jun19               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055146 - Failed MXC004802 seq. 00001 and others            *
+      *             Increase Branches to 900.                         *
       *  MD054544 - Cashflow is incorrect for CALL LOAN after         *
       *             authorising the amendment on Maturity Date and    *
       *             Next Interest Payment Date                        *
@@ -167,20 +170,33 @@
       ** Output outputs
       *
       ** Output dates
-     D BR              S              3    DIM(100)                             Branch Codes
-     D CO              S              3    DIM(100)                             Company codes
-     D IC              S              6    DIM(100)                             Internal Cust no.
+     D*BR*******       S              3    DIM(100)                    Branch Codes         MD055146
+     D*CO*******       S              3    DIM(100)                    Company codes        MD055146
+     D*IC*******       S              6    DIM(100)                    Internal Cust no.    MD055146
+     D BR              S              3    DIM(999)                                         MD055146
+     D CO              S              3    DIM(999)                                         MD055146
+     D IC              S              6    DIM(999)                                         MD055146
       ** Standard code for loading array of branch and company codes
-     D CP              S              6    DIM(100)                             Branch Parent
-     D CR              S             20    DIM(100)                             Branch report name
-     D CT              S             10    DIM(100)                             Branch town
-     D CA              S              8    DIM(100)                             Branch ALFA sort
-     D CZ              S              2    DIM(100)                             Branch CTRY CTZN
-     D CL              S              2    DIM(100)                             Branch CTRY loccatio
-     D PI              S              2    DIM(100)                             Branch PARNT IND
-     D PR              S             20    DIM(100)                             Parent report name
-     D PT              S             10    DIM(100)                             Parent town
-     D PA              S              8    DIM(100)                             Parent ALFA sort
+     D*CP*******       S              6    DIM(100)                    Branch Parent        MD055146
+     D*CR*******       S             20    DIM(100)                    Branch report name   MD055146
+     D*CT*******       S             10    DIM(100)                    Branch town          MD055146
+     D*CA*******       S              8    DIM(100)                    Branch ALFA sort     MD055146
+     D*CZ*******       S              2    DIM(100)                    Branch CTRY CTZN     MD055146
+     D*CL*******       S              2    DIM(100)                    Branch CTRY loccatio MD055146
+     D*PI*******       S              2    DIM(100)                    Branch PARNT IND     MD055146
+     D*PR*******       S             20    DIM(100)                    Parent report name   MD055146
+     D*PT*******       S             10    DIM(100)                    Parent town          MD055146
+     D*PA*******       S              8    DIM(100)                    Parent ALFA sort     MD055146
+     D CP              S              6    DIM(999)                                         MD055146
+     D CR              S             20    DIM(999)                                         MD055146
+     D CT              S             10    DIM(999)                                         MD055146
+     D CA              S              8    DIM(999)                                         MD055146
+     D CZ              S              2    DIM(999)                                         MD055146
+     D CL              S              2    DIM(999)                                         MD055146
+     D PI              S              2    DIM(999)                                         MD055146
+     D PR              S             20    DIM(999)                                         MD055146
+     D PT              S             10    DIM(999)                                         MD055146
+     D PA              S              8    DIM(999)                                         MD055146
      D CY              S              3    DIM(200) FROMFILE(TABTG30) PERRCD(1) CCY/CCY details
      D CYD             S             37    DIM(200) ALT(CY)
      D CC              S              2    DIM(200)                             Country codes
@@ -757,7 +773,8 @@ tina C                   ENDIF
       ** Load array of branch and company codes from SDBRCHPD
      C     *LOVAL        SETLL     SDBRCHL1
      C                   READ      SDBRCHL1                               80
-     C                   Z-ADD     1             X                 2 0
+     C**********         Z-ADD     1             X                 2 0                      MD055146
+     C                   Z-ADD     1             X                 3 0                      MD055146
       *
      C     *IN80         DOWEQ     *OFF
      C                   MOVE      A8BRCD        BR(X)

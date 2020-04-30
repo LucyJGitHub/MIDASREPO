@@ -30,8 +30,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR976772           Date 23May12               *
+      *  Last Amend No. MD055146           Date 04Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR976772           Date 23May12               *
       *                 CSW212             Date 03May12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CSW209             Date 01Apr09               *
@@ -69,6 +70,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055146 - Failed MXC004802 seq. 00001 and others            *
+      *             Increase Branches to 900.                         *
       *  MD046248 - Finastra Rebranding                               *
       *  AR976772 - Value date century is not populated for all types *
       *  CSW212 - SWIFT 2012 Changes                                  *
@@ -172,8 +175,10 @@
      D ar2             S              1    dim(14) alt(ar1)                                   CSW209
       ** Escape Sequence Translation Array                                                    CSW209
       *                                                                                       CSW209
-     D br@midas        S              3    dim(99)
-     D br@swift        S             11    dim(99)
+     D***br@midas        S              3    dim(99)                                        MD055146
+     D***br@swift        S             11    dim(99)                                        MD055146
+     D br@midas        S              3    dim(999)                                         MD055146
+     D br@swift        S             11    dim(999)                                         MD055146
       ** Midas branch code v SWIFT branch code
       *
      D                 DS

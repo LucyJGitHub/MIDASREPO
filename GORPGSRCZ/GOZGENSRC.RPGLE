@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGP017             Date 06Aug12               *
+      *  Last Amend No. MD055146           Date 04Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGP017             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -27,6 +28,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055146 - Failed MXC004802 seq. 00001 and others            *
+      *             Increase Branches to 900.                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *
       *  BUG10215 - Global replication needs a global interface       *
@@ -42,7 +45,8 @@
      FGPCPYSRG  O    E           K DISK    RENAME(GPCPYSRG:GPCPYSRGF)
  
      D***SRC_GORPG       S             80    DIM(290) CTDATA PERRCD(1)               BUG10215 CGP017
-     D SRC_GORPG       S             80    DIM(299) CTDATA PERRCD(1)                          CGP017
+     D***SRC_GORPG       S             80    DIM(299) CTDATA PERRCD(1)               CGP017 MD055146
+     D SRC_GORPG       S             80    DIM(306) CTDATA PERRCD(1)                        MD055146
      D***SRC_GPRPG       S             80    DIM(147) CTDATA PERRCD(1)               BUG10215 CGP017
      D SRC_GPRPG       S             80    DIM(152) CTDATA PERRCD(1)                          CGP017
      D*SRC_GORPG*******S*************80    DIM(288) CTDATA PERRCD(1)                        BUG10215
@@ -742,11 +746,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CGP017             Date 06Aug12               *
-      *  Prev Amend No. BUG10215 *REBUILD  Date 27Sep06               *
+      *  Last Amend No. MD055146           Date 04Feb20               *
+      *  Prev Amend No. CGP017             Date 06Aug12               *
+      *                 BUG10215 *REBUILD  Date 27Sep06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055146 - Failed MXC004802 seq. 00001 and others            *
+      *             Increase Branches to 900.                         *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *
       *  BUG10215 - Global replication needs a global interface       *
       *                                                               *
@@ -766,9 +773,11 @@
      D Z_@ZLF        E DS                  EXTNAME(@ZPF      )
      D G_@ZLF        E DS                  EXTNAME(@GPF      )
      D                                     PREFIX(G_)
- 
-B    D BR              S              3    DIM(99)
-B    D SL              S             27    DIM(99)
+
+B    D***BR*****         S              3    DIM(99)                                        MD055146
+B    D***SL*****         S             27    DIM(99)                                        MD055146
+B    D BR              S              3    DIM(999)                                         MD055146
+B    D SL              S             27    DIM(999)                                         MD055146
 B
 B    D SYNLOGREC       DS
 B    D  BSCNTW                 1      9S 0
@@ -849,8 +858,9 @@ B    C   02              EVAL      G_@GBRC       = @ZBRC
       * Update Synchronization Totals
       ********************************************************************
      C     UPD_SYNTOT    BEGSR
- 
-B    C                   Z-ADD     1             I                 2 0
+
+B    C**********         Z-ADD     1             I                 2 0                      MD055146
+B    C                   Z-ADD     1             I                 3 0                      MD055146
 B    C   01@ZBRC         LOOKUP    BR(I)                                  99
 B    C   02G_@GBRC       LOOKUP    BR(I)                                  99
 B    C     *IN99         IFEQ      *OFF
@@ -908,7 +918,8 @@ B    C                   MOVEL     SYNLOGREC     SL(I)
      C                   WRITE     GPSBLOGD0
  
 B     * Write branch totals
-B    C                   Z-ADD     1             I                 2 0
+B    C**********         Z-ADD     1             I                 2 0                      MD055146
+B    C                   Z-ADD     1             I                 3 0                      MD055146
 B    C     BR(I)         DOWNE     '***'
 B    C                   MOVEL     BR(I)         BSBRCA
 B    C                   MOVEL     SL(I)         SYNLOGREC

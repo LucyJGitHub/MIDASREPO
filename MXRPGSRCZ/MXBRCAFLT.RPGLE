@@ -14,10 +14,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055146           Date 04Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. 257335             Date 22Oct08               *
+      *                 257335             Date 22Oct08               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CSD027             Date 09Dec05               *
@@ -29,6 +30,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055146 - Failed MXC004802 seq. 00001 and others            *
+      *             Increase Branches to 900.                         *
       *  MD046248 - Finastra Rebranding                               *
       *  257335 - COB: Component MXC0480 failed with array index      *
       *           error in MXBRCAFLT (apply fix 250079)               *
@@ -73,7 +76,8 @@
  
       * Maximum number of branches
      D***MaxNoBchs       C                   CONST(100)                                       257335
-     D MaxNoBchs       C                   CONST(500)                                         257335
+     D***MaxNoBchs       C                   CONST(500)                              257335 MD055146
+     D MaxNoBchs       C                   CONST(999)                                       MD055146
  
       * Branches for export
      D #_BRCD          S              3    DIM(MaxNoBchs)

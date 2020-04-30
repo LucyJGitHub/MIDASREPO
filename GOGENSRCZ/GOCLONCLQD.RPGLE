@@ -11,12 +11,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD055146           Date 04Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE148             Date 23Jul12               *
       *                 CER049  *CREATE    Date 06Dec10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055146 - Failed MXC004802 seq. 00001 and others            *
+      *             Increase Branches to 900.                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  CER049  - Stamp Tax                                          *
@@ -36,9 +39,11 @@
      D Z_CLONCQL0    E DS                  EXTNAME(CLONCLQD  )
      D G_CLONCQL0    E DS                  EXTNAME(GZCLONCLQD)
      D                                     PREFIX(G_)
- 
-B    D BR              S              3    DIM(99)
-B    D SL              S             27    DIM(99)
+
+B    D***BR*****         S              3    DIM(99)                                        MD055146
+B    D***SL*****         S             27    DIM(99)                                        MD055146
+     D BR              S              3    DIM(999)                                         MD055146
+     D SL              S             27    DIM(999)                                         MD055146
 B
 B    D SYNLOGREC       DS
 B    D  BSCNTW                 1      9S 0
@@ -113,8 +118,9 @@ B    C   02              EVAL      G_LQBRCA      = LQBRCA
       * Update Synchronization Totals
       ********************************************************************
      C     UPD_SYNTOT    BEGSR
- 
-B    C                   Z-ADD     1             I                 2 0
+
+B    C**********         Z-ADD     1             I                 2 0                      MD055146
+     C                   Z-ADD     1             I                 3 0                      MD055146
 B    C   01LQBRCA        LOOKUP    BR(I)                                  99
 B    C   02G_LQBRCA      LOOKUP    BR(I)                                  99
 B    C     *IN99         IFEQ      *OFF
@@ -173,8 +179,9 @@ B    C                   MOVEL     SYNLOGREC     SL(I)
      C                   WRITE     GPSBLOGD0
  
 B     ** Write branch totals
- 
-B    C                   Z-ADD     1             I                 2 0
+
+B    C**********         Z-ADD     1             I                 2 0                      MD055146
+     C                   Z-ADD     1             I                 3 0                      MD055146
 B    C     BR(I)         DOWNE     '***'
 B    C                   MOVEL     BR(I)         BSBRCA
 B    C                   MOVEL     SL(I)         SYNLOGREC

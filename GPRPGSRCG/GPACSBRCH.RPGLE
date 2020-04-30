@@ -11,17 +11,20 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055146           Date 04Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CGP010  *CREATE    Date 17Jan05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055146 - Failed MXC004802 seq. 00001 and others            *
+      *             Increase Branches to 900.                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -32,7 +35,8 @@
      FGZSDBRCHL0IF   E           K DISK    INFSR(*PSSR)
  
       * Maximum number of branches
-     D MaxNoBrns       C                   CONST(100)
+     D***MaxNoBrns       C                   CONST(100)                                     MD055146
+     D MaxNoBrns       C                   CONST(9999)                                      MD055146
  
       * Branches
      D #_BRCH          S              3    DIM(MaxNoBrns)

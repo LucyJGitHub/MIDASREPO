@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1079991          Date 29Jan13               *
+      *  Last Amend No. MD055146           Date 04Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1079991          Date 29Jan13               *
       *                 AR1064845          Date 05Dec12               *
       *                 262126             Date 12Oct09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -28,6 +29,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055146 - Failed MXC004802 seq. 00001 and others            *
+      *             Increase Branch count to 900.                     *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1079991 - Deleted zonal journal entry records were not     *
       *              removed from the global file                     *
@@ -187,15 +190,25 @@
      C                   PARM                    O_BLFD            1                          BG1364
                                                                                               BG1364
      C                   PARM                    O_BLSY            1
+     C                   PARM                    O_GFGPF          10                        MD055146
+     C                   PARM                    O_GFGBRC         10                        MD055146
+     C                   PARM                    O_GFGLF          10                        MD055146
  
      C                   MOVE      *BLANK        I#RTCD            7
      C                   MOVE      *BLANK        I#ERMS           50
+     C                   MOVE      *BLANKS       O_GFGPF                                    MD055146
+     C                   MOVE      *BLANKS       O_GFGBRC                                   MD055146
+     C                   MOVE      *BLANKS       O_GFGLF                                    MD055146
+                                                                                            MD055146
  
      C     I_GPF         CHAIN     GPGLOBFD0                          99
  
      C     *in99         IFEQ      *OFF
      C                   MOVEL     GFBLSY        O_BLSY
      C                   MOVEL     GFGLFU        O_GLFU
+     C                   MOVEL     GFGPF         O_GFGPF                                    MD055146
+     C                   MOVEL     GFGBRC        O_GFGBRC                                   MD055146
+     C                   MOVEL     GFGLF         O_GFGLF                                    MD055146
      C                   ELSE
      C                   MOVEL     '?'           O_BLSY
      C                   ENDIF

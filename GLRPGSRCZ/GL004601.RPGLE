@@ -54,7 +54,7 @@
       *  MD055518 - Profit Centre assigned to TI postings is different*
       *             between MidasPlus and FBMidas. Profit Centre of   *
       *             TI postings will be defaulted based on the TI ICD *
-      *             and Default Profit Center Matrix.                 *
+      *             and Default Profit Center Matrix                  *
       *  MD043945A - Inactive account should not be posted in suspense*
       *  MD043945 - Account transfer for blocked account should be    *
       *  MD046248 - Finastra Rebranding                               *

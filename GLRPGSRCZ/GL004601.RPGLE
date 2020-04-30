@@ -305,8 +305,8 @@
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
 
       ** External DS for TI ICD                                                             MD055518
-     D SDTIIN        E DS                  EXTNAME(SDTIINPD)
-
+     D SDTIIN        E DS                  EXTNAME(SDTIINPD)                                MD055518
+                                                                                            MD055518
       ** External DS for Trading ICD
      D SDTRAD        E DS                  EXTNAME(SDTRADPD)
      D   QQACCD2     E                     EXTFLD(QQACCD)

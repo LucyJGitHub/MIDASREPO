@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend no. MD051359           Date 19Jun18               *
-      *  Prev Amend No. CSW218             Date 19Mar18               *      
+      *  Last Amend No. MD055146           Date 04Feb20               *
+      *  Prev Amend No. MD051359           Date 19Jun18               *
+      *                 CSW218             Date 19Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 247160             Date 05Jul07               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -60,6 +61,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055146 - Failed MXC004802 seq. 00001 and others            *
+      *             Increase Branches to 900.                         *
       *  MD051359 - TI outgoing message processing of block 3 tag 119 *
       *             defaults to 'STP'                                 *
       *  CSW218 - SWIFT Changes 2018                                  *      
@@ -140,8 +143,10 @@
       /EJECT
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)              Copyright
      D @@W             S              1    DIM(20)                              Work Array
-     D @@BC            S              3    DIM(200)                             branches
-     D @@BT            S             11    DIM(200)                             branch TIDs
+     D***@@BC***         S              3    DIM(200)                           branches    MD055146
+     D***@@BT***         S             11    DIM(200)                           branch TIDs MD055146
+     D @@BC            S              3    DIM(999)                                         MD055146
+     D @@BT            S             11    DIM(999)                                         MD055146
       *
      D ARR             DS
      D  @ARR                   1   9999

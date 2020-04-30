@@ -11,12 +11,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1084524          Date 13Feb13               *
+      *  Last Amend No. MD055146           Date 04Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1084524          Date 13Feb13               *
       *                 CER049  *CREATE    Date 06Dec10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055146 - Failed MXC004802 seq. 00001 and others            *
+      *             Increase Branches to 900.                         *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1084524 - Performance issue on IPAY & OPAY listview        *
       *              (Recompile)                                      *
@@ -37,9 +40,11 @@
      D Z_INPAYQL0    E DS                  EXTNAME(INPAYDQD  )
      D G_INPAYQL0    E DS                  EXTNAME(GZINPAYDQD)
      D                                     PREFIX(G_)
- 
-B    D BR              S              3    DIM(99)
-B    D SL              S             27    DIM(99)
+
+B    D***BR*****         S              3    DIM(99)                                        MD055146
+B    D***SL*****         S             27    DIM(99)                                        MD055146
+     D BR              S              3    DIM(999)                                         MD055146
+     D SL              S             27    DIM(999)                                         MD055146
 B
 B    D SYNLOGREC       DS
 B    D  BSCNTW                 1      9S 0
@@ -112,8 +117,9 @@ B
       * Update Synchronization Totals
       ********************************************************************
      C     UPD_SYNTOT    BEGSR
- 
-     C                   Z-ADD     1             I                 2 0
+
+B    C**********         Z-ADD     1             I                 2 0                      MD055146
+     C                   Z-ADD     1             I                 3 0                      MD055146
      C   01IPBRCA        LOOKUP    BR(I)                                  99
      C   02G_IPBRCA      LOOKUP    BR(I)                                  99
      C     *IN99         IFEQ      *OFF
@@ -172,8 +178,9 @@ B
      C                   WRITE     GPSBLOGD0
  
 B     ** Write branch totals
- 
-     C                   Z-ADD     1             I                 2 0
+
+     C**********         Z-ADD     1             I                 2 0                      MD055146
+     C                   Z-ADD     1             I                 3 0                      MD055146
      C     BR(I)         DOWNE     '***'
      C                   MOVEL     BR(I)         BSBRCA
      C                   MOVEL     SL(I)         SYNLOGREC

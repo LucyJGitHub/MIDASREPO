@@ -11,13 +11,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2017                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER073B            Date 25Sep17               *
+      *  Last Amend No. MD055146           Date 04Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER073B            Date 25Sep17               *
       *                 CER073A            Date 05Sep17               *
       *                 CER073  *CREATE    Date 10Jul17               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055146 - Failed MXC004802 seq. 00001 and others            *
+      *             Increase Branches to 900.                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CER073B - CER073 Change Control 2 (Recompile)                *
       *  CER073A - CER073 Change Control 1 (Recompile)                *
@@ -39,8 +42,10 @@
      D G_LEANACI1    E DS                  EXTNAME(GZLEANACQD)
      D                                     PREFIX(G_)
 
-     D BR              S              3    DIM(99)
-     D SL              S             27    DIM(99)
+     D***BR*****         S              3    DIM(99)                                        MD055146
+     D***SL*****         S             27    DIM(99)                                        MD055146
+     D BR              S              3    DIM(999)                                         MD055146
+     D SL              S             27    DIM(999)                                         MD055146
 
      D SYNLOGREC       DS
      D  BSCNTW                 1      9S 0
@@ -121,7 +126,8 @@ Z    C                   EVAL      G_ACBRCD      = ACBRCD
       ********************************************************************
      C     UPD_SYNTOT    BEGSR
 
-B    C                   Z-ADD     1             I                 2 0
+B    C**********         Z-ADD     1             I                 2 0                      MD055146
+     C                   Z-ADD     1             I                 3 0                      MD055146
 B    C   01ACBRCD        LOOKUP    BR(I)                                  99
 B    C   02G_ACBRCD      LOOKUP    BR(I)                                  99
 B    C     *IN99         IFEQ      *OFF
@@ -179,7 +185,8 @@ B    C     *IN99         IFEQ      *OFF
      C                   WRITE     GPSBLOGD0
 
       * Write branch totals
-     C                   Z-ADD     1             I                 2 0
+     C**********         Z-ADD     1             I                 2 0                      MD055146
+     C                   Z-ADD     1             I                 3 0                      MD055146
      C     BR(I)         DOWNE     '***'
      C                   MOVEL     BR(I)         BSBRCA
      C                   MOVEL     SL(I)         SYNLOGREC

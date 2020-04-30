@@ -11,12 +11,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD024037           Date 18Dec13               *
+      *  Last Amend No. MD055146           Date 04Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD024037           Date 18Dec13               *
       *                 CGL145B *CREATE    Date 30Oct13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055146 - Failed MXC004802 seq. 00001 and others            *
+      *             Increase Branches to 900.                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD024037 - Facility availability Enquiry did not display a   *
       *             future datead charge to CL Balance (Recompile)    *
@@ -38,8 +41,10 @@
      D G_GLFOCLI0    E DS                  EXTNAME(GZGLFOCLTD)
      D                                     PREFIX(G_)
 B
-B    D BR              S              3    DIM(999)
-B    D SL              S             27    DIM(999)
+B    D***BR*****         S              3    DIM(99)                                        MD055146
+B    D***SL*****         S             27    DIM(99)                                        MD055146
+     D BR              S              3    DIM(999)                                         MD055146
+     D SL              S             27    DIM(999)                                         MD055146
 B
 B    D SYNLOGREC       DS
 B    D  BSCNTW                 1      9S 0

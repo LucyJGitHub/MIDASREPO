@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD051931           Date 23Sep18               *
+      *  Last Amend No. MD055146           Date 04Feb20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD051931           Date 23Sep18               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD046080           Date 17Sep17               *
@@ -44,6 +45,8 @@
       *                 CLE134  *CREATE    Date 01Aug12               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055146 - Failed MXC004802 seq. 00001 and others            *
+      *             Increase Branches to 900.                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD051931 - Oustanding PDCL Z amount not paid but has         *
       *             sufficient balance                                *
@@ -313,8 +316,10 @@
      D DSRVCR          S                   INZ LIKE(i_RVCR)
      D DSVlDt          S                   INZ LIKE(i_VLDT)
 
-     D DSBRCH          S                   INZ DIM(500) LIKE(SDBRCH)
-     D DSBrCd          S                   INZ DIM(500) LIKE(A8BRCD)
+     D***DSBRCH*         S                   INZ DIM(500) LIKE(SDBRCH)                      MD055146
+     D***DSBrCd*         S                   INZ DIM(500) LIKE(A8BRCD)                      MD055146
+     D DSBRCH          S                   INZ DIM(999) LIKE(SDBRCH)                        MD055146
+     D DSBrCd          S                   INZ DIM(999) LIKE(A8BRCD)                        MD055146
 
      D DSCURR          S                   INZ DIM(500) LIKE(SDCURR)
      D DSCyCd          S                   INZ DIM(500) LIKE(A6CYCD)

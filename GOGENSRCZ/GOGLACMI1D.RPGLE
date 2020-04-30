@@ -11,11 +11,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE101  *CREATE    Date 18Aug14               *
+      *  Last Amend No. MD055146           Date 04Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE101  *CREATE    Date 18Aug14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055146 - Failed MXC004802 seq. 00001 and others            *
+      *             Increase Branches to 900.                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE101 - Interim Interest Statement on a Frequency           *
       *                                                               *
@@ -34,10 +37,11 @@
      D Z_GLACMI10    E DS                  EXTNAME(GLACMI1D  )
      D G_GLACMI10    E DS                  EXTNAME(GZGLACMI1D)
      D                                     PREFIX(G_)
- 
-     D BR              S              3    DIM(99)
-     D SL              S             27    DIM(99)
- 
+
+B    D***BR*****         S              3    DIM(99)                                        MD055146
+B    D***SL*****         S             27    DIM(99)                                        MD055146
+     D BR              S              3    DIM(999)                                         MD055146
+     D SL              S             27    DIM(999)                                         MD055146
      D SYNLOGREC       DS
      D  BSCNTW                 1      9S 0
      D  BSCNTD                10     18S 0
@@ -122,8 +126,9 @@
       * Update Synchronization Totals
       ********************************************************************
      C     UPD_SYNTOT    BEGSR
- 
-     C                   Z-ADD     1             I                 2 0
+
+B    C**********         Z-ADD     1             I                 2 0                      MD055146
+     C                   Z-ADD     1             I                 3 0                      MD055146
      C   01MIBRCA        LOOKUP    BR(I)                                  99
      C   02G_MIBRCA      LOOKUP    BR(I)                                  99
      C     *IN99         IFEQ      *OFF
@@ -181,7 +186,8 @@
      C                   WRITE     GPSBLOGD0
  
       * Write branch totals
-     C                   Z-ADD     1             I                 2 0
+B    C**********         Z-ADD     1             I                 2 0                      MD055146
+     C                   Z-ADD     1             I                 3 0                      MD055146
      C     BR(I)         DOWNE     '***'
      C                   MOVEL     BR(I)         BSBRCA
      C                   MOVEL     SL(I)         SYNLOGREC

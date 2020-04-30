@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054696           Date 29Oct19               *
-      *  Prev Amend No. MD054538           Date 08Oct19               *
+      *  Last Amend No. MD055446           Date 04Apr20               *
+      *  Prev Amend No. MD054696           Date 29Oct19               *
+      *                 MD054538           Date 08Oct19               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD052075           Date 07Jun19               *
@@ -222,6 +223,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055446 - There are parties and fields missing from the BRT *	
+      *             details tab in Customer Input plus date of birth  *	
+      *             issues.                                           *	
+      *           - Include BRT century fields on TransInEx2.         *
       *  MD054696 - Journal Entries Avoid Shadow Postings Update.     *
       *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *
       *  MD054538 - Buffer issue on Rollover Maintenance              *
@@ -660,6 +665,7 @@
      D  TransCUEX                          LIKE(SDCUEX)                                     MD044880
      D  TransCRSH                          LIKE(SDCRSS)                                       CGL157
      D  TransCR50                     1A                                                    MD054028
+     D  TransBRTCent                 10A                                                    MD055446
                                                                                               CSW213
      D TransInEx3      DS          9999                                                       CSW213
      D  TransCARS              1   9999                                                       CSW213
@@ -7322,6 +7328,9 @@ RGC  D RPIF4LN         S              4  0                                      
       *** APR Calculation Required Field (CUSD)                                             MD054028
      C                   EVAL      TransCR50 = %SUBST(BufferEx2:Bfp:1)                      MD054028
      C                   EVAL      Bfp  += 1                                                MD054028
+      *** BRT Customer Details - Century                                                    MD055446
+     C                   EVAL      TransBRTCent = %SUBST(BufferEx2:Bfp:10)                  MD055446
+     C                   EVAL      Bfp  += 10                                               MD055446
      C                                                                                      MD054028
      C                   EVAL      BFEX2Ln -= Bfp                                           MD022093
                                                                                             MD022093

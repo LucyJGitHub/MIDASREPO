@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD040876           Date 13Sep16               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055446           Date 04Apr20               *
+      *  Prev Amend No. MD040876           Date 13Sep16               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -28,6 +29,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      * MD055446 - There are parties and fields missing from the BRT  *	
+      *            details tab in Customer Input plus date of birth   *	
+      *            issues.                                            *	
+      *          - format DDXDOB to DDMMYYYY format before SDVPADT.   *
       *  MD040876 - CRS MQ (Recompile)                                *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -37,19 +42,19 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       * Interest Payment File 8
      FINTPSL8   IF   E           K DISK    RENAME(INTPSDDF:INTPSLF8)
      F                                     PREFIX(C_)
- 
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,SDCUDBV001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -61,89 +66,89 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
- 
+
+
      D                 DS
      D TDATE                   1      6
      D TDAY                    1      2
      D TMONTH                  3      4
      D TYEAR                   5      6
- 
+
      D                 DS
      D  DATE                   1      6
      D  DAY                    1      2  0
      D  MONTH                  3      4  0
      D  YEAR                   5      6  0
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Customer Base Rate Tax in screen format
      D CuBrt         E DS                  EXTNAME(SDCUBRPD)
- 
+
       ** Customer Base Rate Tax OK indicators
      D OKCuBrt       E DS                  EXTNAME(SDECUBRPD)
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       **  Short DS for access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
- 
+
+
      D ValidBrt      E DS                  EXTNAME(SDVCUBRPD)
       * Valid Base Rate Tax participant details layout
- 
+
       ** External DS for SAR details                                                          CSC011
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CSC011
                                                                                               CSC011
@@ -153,19 +158,44 @@
       ** SD data area                                                                         CSC011
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CSC011
                                                                                               CSC011
+      ** ** Customer Base Rate Tax in screen format (Century)                               MD055446
+     D CuBrtCent       DS                                                                   MD055446
+     D  DDD1DOB                       2S 0                                                  MD055446
+     D  DDD2DOB                       2S 0                                                  MD055446
+     D  DDD3DOB                       2S 0                                                  MD055446
+     D  DDD4DOB                       2S 0                                                  MD055446
+     D  DDD5DOB                       2S 0                                                  MD055446
+      ** Valid Customer BRT (Century) details layout                                        MD055446
+     D ValidBrtCent    DS                                                                   MD055446
+     D  BR1DBC                        2S 0                                                  MD055446
+     D  BR2DBC                        2S 0                                                  MD055446
+     D  BR3DBC                        2S 0                                                  MD055446
+     D  BR4DBC                        2S 0                                                  MD055446
+     D  BR5DBC                        2S 0                                                  MD055446
+     D                 DS                                                                   MD055446
+     D  DDXDOBDD                      2A                                                    MD055446
+     D  DDXDOBMM                      2A                                                    MD055446
+     D  DDXDOBYY                      2A                                                    MD055446
+     D  DDXDOB                 1      6A                                                    MD055446
+     D                 DS                                                                   MD055446
+     D  DDXDOBCDD                     2A                                                    MD055446
+     D  DDXDOBCMM                     2A                                                    MD055446
+     D  DDXDOBCCC                     2A                                                    MD055446
+     D  DDXDOBCYY                     2A                                                    MD055446
+     D  DDXDOBCENT             1      8A
       ** Changed Party Names Array
      D ChgNamArr       S              1    DIM(5)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
       ** Index for arrays of of warning message ids etc
      D WIdx            S              3P 0
- 
+
      D CSC011          S              1A                                                      CSC011
      D PRtCd           S              7A                                                      CSC011
      D POptn           S              7A                                                      CSC011
@@ -176,26 +206,26 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,SDCUDBV002
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
- 
+
+
       ** Pass fields not requiring validation to BrtFilFmt fields
       *
       ** Participant 1 Title
@@ -242,10 +272,10 @@
      C                   MOVE      DDACTN        BRCHTP
       *
       /COPY WNCPYSRC,SDCUDBV003
- 
+
       * Call Validation Modules in Sequence
- 
- 
+
+
       ** Validate Account Holder Type Parties (Cross Validation)
       *
       ** NOTE - LIMITATION
@@ -275,8 +305,8 @@
      C                   EXSR      VCXNAM
      C                   EVAL      BR1NAM = DDXNAM
       /COPY WNCPYSRC,SDCUDBV009
- 
- 
+
+
       ** Validate Party 1 Address Line 1
       *
       /COPY WNCPYSRC,SDCUDBV010
@@ -288,7 +318,7 @@
      C                   EVAL      BR1AD1 = DDXAD1
       /COPY WNCPYSRC,SDCUDBV011
       *
- 
+
       ** Validate Party 1 Address Line 2
       *
       /COPY WNCPYSRC,SDCUDBV012
@@ -301,20 +331,23 @@
      C                   EVAL      BR1AD2 = DDXAD2
       /COPY WNCPYSRC,SDCUDBV013
       *
- 
+
       ** Validate Party 1 Address Line 3
       *
       /COPY WNCPYSRC,SDCUDBV014
      C                   EVAL      DDXNAM = DD1NAM
-     C                   EVAL      DDXAD1 = DD1AD2
-     C                   EVAL      DDXAD2 = DD1AD3
+      ** Applied fix of 260405A                                                             MD055446
+     C**********         EVAL      DDXAD1 = DD1AD2                                          MD055446
+     C**********         EVAL      DDXAD2 = DD1AD3                                          MD055446
+     C                   EVAL      DDXAD2 = DD1AD2                                          MD055446
+     C                   EVAL      DDXAD3 = DD1AD3                                          MD055446
      C                   EVAL      ErrFldNam = 'DD1AD3'
      C                   EVAL      DDXAD3OK = 'Y'
      C                   EXSR      VCXAD3
      C                   EVAL      BR1AD3 = DDXAD3
       /COPY WNCPYSRC,SDCUDBV015
       *
- 
+
       ** Validate Party 1 Postcode 2
       *
       /COPY WNCPYSRC,SDCUDBV016
@@ -327,7 +360,7 @@
      C                   EVAL      BR1PC2 = DDXPC2
       /COPY WNCPYSRC,SDCUDBV017
       *
- 
+
       ** Validate Party 1 BRT Liable
       *
       /COPY WNCPYSRC,SDCUDBV018
@@ -339,16 +372,20 @@
      C                   EVAL      BR1BRL = DDXBRT
       /COPY WNCPYSRC,SDCUDBV019
       *
- 
+
       ** Validate Party 1 Date of Birth
       *
       /COPY WNCPYSRC,SDCUDBV020
      C                   EVAL      DDXNAM = DD1NAM
      C                   EVAL      DDXDOB = DD1DOB
+     C                   EXSR      CVTDATE6ATO8A                                            MD055446
+     C                   MOVE      DDD1DOB       DDXDOBCCC                                  MD055446
      C                   EVAL      ErrFldNam = 'DD1DOB'
      C                   EVAL      DDXDOBOK = 'Y'
      C                   EXSR      VCXDOB
-     C                   EVAL      BR1DOB = BRXDOB
+     C**********         EVAL      BR1DOB = BRXDOB                                          MD055446
+     C                   MOVE      DD1DOB        BR1DOB                                     MD055446
+     C                   EVAL      BR1DBC = DDD1DOB                                         MD055446
       /COPY WNCPYSRC,SDCUDBV021
       *
       *
@@ -432,10 +469,14 @@
       /COPY WNCPYSRC,SDCUDBV034
      C                   EVAL      DDXNAM = DD2NAM
      C                   EVAL      DDXDOB = DD2DOB
+     C                   EXSR      CVTDATE6ATO8A                                            MD055446
+     C                   MOVE      DDD2DOB       DDXDOBCCC                                  MD055446
      C                   EVAL      ErrFldNam = 'DD2DOB'
      C                   EVAL      DDXDOBOK = 'Y'
      C                   EXSR      VCXDOB
-     C                   EVAL      BR2DOB = BRXDOB
+     C**********         EVAL      BR2DOB = BRXDOB                                          MD055446
+     C                   MOVE      DD2DOB        BR2DOB                                     MD055446
+     C                   EVAL      BR2DBC = DDD2DOB                                         MD055446
       /COPY WNCPYSRC,SDCUDBV035
       *
       *
@@ -519,10 +560,14 @@
       /COPY WNCPYSRC,SDCUDBV048
      C                   EVAL      DDXNAM = DD3NAM
      C                   EVAL      DDXDOB = DD3DOB
+     C                   EXSR      CVTDATE6ATO8A                                            MD055446
+     C                   MOVE      DDD3DOB       DDXDOBCCC                                  MD055446
      C                   EVAL      ErrFldNam = 'DD3DOB'
      C                   EVAL      DDXDOBOK = 'Y'
      C                   EXSR      VCXDOB
-     C                   EVAL      BR3DOB = BRXDOB
+     C**********         EVAL      BR3DOB = BRXDOB                                          MD055446
+     C                   MOVE      DD3DOB        BR3DOB                                     MD055446
+     C                   EVAL      BR3DBC = DDD3DOB                                         MD055446
       /COPY WNCPYSRC,SDCUDBV049
       *
       *
@@ -606,10 +651,14 @@
       /COPY WNCPYSRC,SDCUDBV062
      C                   EVAL      DDXNAM = DD4NAM
      C                   EVAL      DDXDOB = DD4DOB
+     C                   EXSR      CVTDATE6ATO8A                                            MD055446
+     C                   MOVE      DDD4DOB       DDXDOBCCC                                  MD055446
      C                   EVAL      ErrFldNam = 'DD4DOB'
      C                   EVAL      DDXDOBOK = 'Y'
      C                   EXSR      VCXDOB
-     C                   EVAL      BR4DOB = BRXDOB
+     C**********         EVAL      BR4DOB = BRXDOB                                          MD055446
+     C                   MOVE      DD4DOB        BR4DOB                                     MD055446
+     C                   EVAL      BR4DBC = DDD4DOB                                         MD055446
       /COPY WNCPYSRC,SDCUDBV063
       *
       *
@@ -693,10 +742,14 @@
       /COPY WNCPYSRC,SDCUDBV076
      C                   EVAL      DDXNAM = DD5NAM
      C                   EVAL      DDXDOB = DD5DOB
+     C                   EXSR      CVTDATE6ATO8A                                            MD055446
+     C                   MOVE      DDD5DOB       DDXDOBCCC                                  MD055446
      C                   EVAL      ErrFldNam = 'DD5DOB'
      C                   EVAL      DDXDOBOK = 'Y'
      C                   EXSR      VCXDOB
-     C                   EVAL      BR5DOB = BRXDOB
+     C**********         EVAL      BR5DOB = BRXDOB                                          MD055446
+     C                   MOVE      DD5DOB        BR5DOB                                     MD055446
+     C                   EVAL      BR5DBC = DDD5DOB                                         MD055446
       /COPY WNCPYSRC,SDCUDBV077
       *
       *
@@ -721,16 +774,16 @@
       *
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,SDCUDBV084
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
       ** Validate Account Holder Type Parties
       *****************************************************************
      C     VCAHLT        BEGSR
- 
+
       * Reset variables updated by validation
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate BRT Tax Indicator
@@ -766,13 +819,13 @@
       *
       *
       * Update error info with that returned from validation
- 
+
      C                   EXSR      UPDATERRS
       *
      C     RetCodeOut    IFEQ      'Error'
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -780,9 +833,9 @@
       ** Validate BRT Tax Indicator
       *****************************************************************
      C     VCBTAX        BEGSR
- 
+
       * Reset variables updated by validation
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate BRT Tax Indicator
@@ -826,7 +879,7 @@
       *
       *
       * Update error info with that returned from validation
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -836,9 +889,9 @@
       ** Validate Party Name
       *****************************************************************
      C     VCXNAM        BEGSR
- 
+
       * Reset variables updated by validation
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Party 1 Name
@@ -886,7 +939,7 @@
       *
       *
       * Update error info with that returned from validation
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -896,9 +949,9 @@
       ** Validate Party Address Line 1
       *****************************************************************
      C     VCXAD1        BEGSR
- 
+
       * Reset variables updated by validation
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Party Address Line 1
@@ -946,7 +999,7 @@
       *
       *
       * Update error info with that returned from validation
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -956,9 +1009,9 @@
       ** Validate Party Address Line 2
       *****************************************************************
      C     VCXAD2        BEGSR
- 
+
       * Reset variables updated by validation
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Party Address Line 2
@@ -1009,7 +1062,7 @@
       *
       *
       * Update error info with that returned from validation
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -1019,9 +1072,9 @@
       ** Validate Party Address Line 3
       *****************************************************************
      C     VCXAD3        BEGSR
- 
+
       * Reset variables updated by validation
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Party 1 Address Line 3
@@ -1071,7 +1124,7 @@
       *
       *
       * Update error info with that returned from validation
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -1081,9 +1134,9 @@
       ** Validate Party Post Code 2
       *****************************************************************
      C     VCXPC2        BEGSR
- 
+
       * Reset variables updated by validation
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Party Post Code 2
@@ -1133,7 +1186,7 @@
       *
       *
       * Update error info with that returned from validation
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -1143,9 +1196,9 @@
       ** Validate Party Base Rate Tax Liable
       *****************************************************************
      C     VCXBRT        BEGSR
- 
+
       * Reset variables updated by validation
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Party Base Rate Tax Liable
@@ -1196,7 +1249,7 @@
       *
       *
       * Update error info with that returned from validation
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -1206,10 +1259,14 @@
       ** Validate Party Date of Birth
       *****************************************************************
      C     VCXDOB        BEGSR
- 
+
       * Reset variables updated by validation
- 
+
      C                   EXSR      RESETERRS
+      ** Clear century field if '00                                                         MD055446
+     C                   IF        DDXDOBCCC = '00'                                         MD055446
+     C                   EVAL      DDXDOBCCC = *BLANKS                                      MD055446
+     C                   ENDIF                                                              MD055446
       *
       ** Validate Party Date of Birth
       *
@@ -1222,7 +1279,8 @@
       *
       ** Party Date of Birth
       ** Party Base Rate Tax Liable
-     C                   PARM                    DDXDOB            6
+     C**********         PARM                    DDXDOB            6                        MD055446
+     C                   PARM                    DDXDOBCENT                                 MD055446
      C                   PARM                    DDXBRT
       *
       ** Party Name
@@ -1246,7 +1304,8 @@
      C                   PARM                    MsgDtaXAr
       *
       ** Party Date of Birth
-     C                   PARM                    BRXDOB            6 0
+     C**********         PARM                    BRXDOB            6 0                      MD055446
+     C                   PARM                    BRXDOB            8 0                      MD055446
       *
       ** Party Date of Birth OK Indicator
      C                   PARM                    DDXDOBOK          1
@@ -1267,7 +1326,7 @@
       *
       *
       * Update error info with that returned from validation
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -1277,7 +1336,7 @@
       ** Check for Name Change among Parties
       *****************************************************************
      C     VCNEWP        BEGSR
- 
+
       *
       ** Check Name Change among Parties
       *
@@ -1305,7 +1364,7 @@
       * Changed Party Names Array
      C                   PARM                    ChgNamArr
       *
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1313,7 +1372,7 @@
       ** Validate Participant Status Fields
       *****************************************************************
      C     VCNSTS        BEGSR
- 
+
       *
       ** Validate Participant Status Fields
       *
@@ -1345,7 +1404,7 @@
      C                   PARM                    DD3STSOK          1
      C                   PARM                    DD4STSOK          1
      C                   PARM                    DD5STSOK          1
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1353,9 +1412,9 @@
       ** Check for S352 warning
       *****************************************************************
      C     VCS352        BEGSR
- 
+
       * Reset variables updated by checking
- 
+
      C                   EXSR      RESETERRS
       *
      C**********         MOVE      DDCUSN        XCNUM             6 0                        CSD027
@@ -1387,10 +1446,10 @@
      C                   EXSR      ZDATE1
      C                   Z-ADD     ZDAYNO        APR6CY            5 0
      C*
- 
+
      C**  If any participant BRT is 'N' and there is an interest payment
      C**  for which no S352 statement has been issued, send warning
- 
+
      C     DD1BRT        IFEQ      'N'
      C     DD2BRT        OREQ      'N'
      C     DD3BRT        OREQ      'N'
@@ -1405,12 +1464,25 @@
      C                   MOVE      'USR4171'     WMsgIdXAr(1)
      C                   ENDIF
      C                   ENDIF
- 
+
       * Update error info with that returned from checking
- 
+
      C                   EXSR      UPDATERRS
       *
      C     EndS352       ENDSR
+     C/EJECT                                                                                MD055446
+      *****************************************************************                     MD055446
+      ** Convert DOB from 6A to 8A                                                          MD055446
+      *****************************************************************                     MD055446
+     C     CVTDATE6ATO8A BEGSR                                                              MD055446
+      *                                                                                     MD055446
+     C                   EVAL      DDXDOBCENT = *BLANKS                                     MD055446
+     C                   EVAL      DDXDOBCDD = DDXDOBDD                                     MD055446
+     C                   EVAL      DDXDOBCMM = DDXDOBMM                                     MD055446
+     C                   EVAL      DDXDOBCYY = DDXDOBYY                                     MD055446
+      *                                                                                     MD055446
+     C                   ENDSR                                                              MD055446
+      *                                                                                     MD055446
       *****************************************************************
      C/EJECT
       *****************************************************************
@@ -1418,7 +1490,7 @@
       *    from each validation module.                               *
       *****************************************************************
      C     RESETERRS     BEGSR
- 
+
      C                   EVAL      RetCodeOut = *Blanks
       *
       * Reset error & warning fields/message IDs/message data (arrays)
@@ -1428,7 +1500,7 @@
      C                   MOVEL     *BLANK        WFldNmXAr
      C                   MOVEL     *BLANK        WMsgIDXAr
      C                   MOVEL     *BLANK        WMsgDtXAr
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1477,11 +1549,11 @@
       *                                                               *
       *****************************************************************
      C     *inzsr        BEGSR
- 
+
      C     *entry        PLIST
- 
+
       * INPUTS
- 
+
       * Response mode
      C                   PARM                    RespMode          1
       *
@@ -1491,41 +1563,45 @@
      C                   PARM                    DDACTN            1
      C                   PARM                    DDCUSN
      C                   PARM                    DDAHLT
- 
+
       ** Customer Base Rate Tax
      C                   PARM                    CuBrt
       *
       ** Screen validation
      C                   PARM                    SinVal            1
- 
- 
- 
+      ** Customer Base Rate Tax - Century                                                   MD055446
+     C                   PARM                    CuBrtCent                                  MD055446
+
+
+
       ** OUTPUTS
- 
+
       ** Customer Base Rate Tax     OK inds
      C                   PARM                    OKCuBrt
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx
- 
+
       * Valid Base Rate Tax layout (DS) from/to caller
      C                   PARM                    ValidBrt
       *
       * Changed Party Name Array
      C                   PARM                    ChgNamArr
+      * Valid Base Rate Tax layout (DS) from/to caller - Century                            MD055446
+     C                   PARM                    ValidBrtCent                               MD055446
       *
       ** ACCESS BANK DETAILS
       *
@@ -1593,13 +1669,13 @@
       *                                                               *
       *****************************************************************
      C     ZDATE1        BEGSR
- 
+
      C                   CALLB     'ZDATE1'
      C                   PARM                    ZDATEA            6
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    BJDFIN
      C                   PARM                    ErrorFlag         1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1609,13 +1685,13 @@
       *                                                               *
       *****************************************************************
      C     ZDATE2        BEGSR
- 
+
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDAYNO
      C                   PARM                    BJDFIN
      C                   PARM                    ZDATEB            6 0
      C                   PARM                    ZADATE            7
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

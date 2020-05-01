@@ -307,8 +307,8 @@
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
 
       ** External DS for TI ICD                                                             MD055518
-     D SDTIIN        E DS                  EXTNAME(SDTIINPD)
-
+     D SDTIIN        E DS                  EXTNAME(SDTIINPD)                                MD055518
+                                                                                            MD055518
       ** External DS for Trading ICD
      D SDTRAD        E DS                  EXTNAME(SDTRADPD)
      D   QQACCD2     E                     EXTFLD(QQACCD)
@@ -584,7 +584,7 @@
       ** Switchable features                                                                  CRE072
      D CRE072          S              1A                                                      CRE072
      D CTI006          S              1A                                                    MD055518
-                                                                                                   CRE067
+                                                                                              CRE067
       ** Other variables                                                                    BUG28036
      D/COPY ZSRSRC,ZHOLILE                                                                  BUG28036
      D/COPY ZSRSRC,ZHOLELE                                                                  BUG28036
@@ -1200,7 +1200,7 @@
 
       ** Defaulting Process Of Profit Centre When Account Transfer                          MD055518
       ** is a TI posting.                                                                   MD055518
-                                                                                            MD055518    
+                                                                                            MD055518
      C                   CALL      'AOPRFMR0'                                               MD055518
      C                   PARM                    RTCD              1                        MD055518
      C                   PARM      *BLANK        BOOK              2                        MD055518

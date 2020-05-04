@@ -46,8 +46,9 @@
 /*                                                                   */
 /*********************************************************************/
              PGM
-             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra +
-                          International Limited 2001')
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2001')
              DCL        VAR(&ERRCOD) TYPE(*DEC) LEN(1)
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)                                 /*E28090*/
              DCL        VAR(&ZMUSER) TYPE(*CHAR) LEN(10)                                  /*CAP084*/
@@ -55,43 +56,43 @@
                                                                                        /*AR1072179*/
 /* Create the Midas Information Screen data area */                                    /*AR1072179*/
                                                                                        /*AR1072179*/
-             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) VALUE(' ')
-                          TEXT('Midas SC Midas information screen data')               /*AR1072179*/
-
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ') TEXT('Midas SC Midas +
+                          information screen data')                                    /*AR1072179*/
              MONMSG     MSGID(CPF1023)                                                 /*AR1072179*/
 /* */
 /*   CREATE AND SET UP USER DATA AREA    */
 /* */
-             CRTDTAARA  DTAARA(QTEMP/ZBRU) TYPE(*CHAR) LEN(304) TEXT('User valid +
-                          Booking Branches')
-             MONMSG     MSGID(CPF0000) /* Monitor here to prevent error during +
-                          re-routing of job */
+             CRTDTAARA  DTAARA(QTEMP/ZBRU) TYPE(*CHAR) LEN(304) +
+                          TEXT('User valid Booking Branches')
+             MONMSG     MSGID(CPF0000) /* Monitor here to prevent +
+                          error during re-routing of job */
                                                                                           /*197434*/
 /** Create more data area to contain the valid booking branches */                        /*197434*/
-             CRTDTAARA  DTAARA(QTEMP/ZBRU1) TYPE(*CHAR) LEN(1998) TEXT('User valid +
-                          Booking Branches 1')                                            /*197434*/
+             CRTDTAARA  DTAARA(QTEMP/ZBRU1) TYPE(*CHAR) LEN(1998) +
+                          TEXT('User valid Booking Branches 1')                           /*197434*/
              MONMSG     MSGID(CPF0000)                                                    /*197434*/
-             CRTDTAARA  DTAARA(QTEMP/ZBRU2) TYPE(*CHAR) LEN(402) TEXT('User valid +
-                          Booking Branches 2')                                            /*197434*/
+             CRTDTAARA  DTAARA(QTEMP/ZBRU2) TYPE(*CHAR) LEN(402) +
+                          TEXT('User valid Booking Branches 2')                           /*197434*/
              MONMSG     MSGID(CPF0000)                                                    /*197434*/
                                                                                           /*197434*/
-             CRTDTAARA  DTAARA(QTEMP/ZOBU) TYPE(*CHAR) LEN(304) TEXT('User valid +
-                          Originating Branches')
-             MONMSG     MSGID(CPF0000) /* Monitor here to prevent error during +
-                          re-routing of job */
+             CRTDTAARA  DTAARA(QTEMP/ZOBU) TYPE(*CHAR) LEN(304) +
+                          TEXT('User valid Originating Branches')
+             MONMSG     MSGID(CPF0000) /* Monitor here to prevent +
+                          error during re-routing of job */
                                                                                           /*197434*/
 /** Create more data area to contain the valid originating branches*/                     /*197434*/
-             CRTDTAARA  DTAARA(QTEMP/ZOBU1) TYPE(*CHAR) LEN(1998) TEXT('User valid +
-                          Originating Branches 1')                                        /*197434*/
+             CRTDTAARA  DTAARA(QTEMP/ZOBU1) TYPE(*CHAR) LEN(1998) +
+                          TEXT('User valid Originating Branches 1')                       /*197434*/
              MONMSG     MSGID(CPF0000)                                                    /*197434*/
-             CRTDTAARA  DTAARA(QTEMP/ZOBU2) TYPE(*CHAR) LEN(402) TEXT('User valid +
-                          Originating Branches 2')                                        /*197434*/
+             CRTDTAARA  DTAARA(QTEMP/ZOBU2) TYPE(*CHAR) LEN(402) +
+                          TEXT('User valid Originating Branches 2')                       /*197434*/
              MONMSG     MSGID(CPF0000)                                                    /*197434*/
                                                                                           /*197434*/
-             CRTDTAARA  DTAARA(QTEMP/ZCMP) TYPE(*CHAR) LEN(304) TEXT('User valid +
-                          Companies')
-             MONMSG     MSGID(CPF0000) /* Monitor here to prevent error during +
-                          re-routing of job */
+             CRTDTAARA  DTAARA(QTEMP/ZCMP) TYPE(*CHAR) LEN(304) +
+                          TEXT('User valid Companies')
+             MONMSG     MSGID(CPF0000) /* Monitor here to prevent +
+                          error during re-routing of job */
 /* */
 /*  THE DATA AREA ZMUSER NEED TO BE CREATED IN QTEMP */
 /* */
@@ -130,7 +131,7 @@
                                    during re-routing of job */
                    ENDDO
                 ENDDO
-             ENDDO      /*BUG1699*/
+             ENDDO                                                                       /*BUG1699*/
 
  JUMP:       CALL       PGM(SF0400)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International Limited')

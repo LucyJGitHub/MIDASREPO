@@ -96,6 +96,7 @@
       *---------------------------------------------------------------*
       *  AR1088819- Issue on job names during SSL enabling of JDBC    *
       *              calls (Child: AR1088820)                         *
+      *           - - Applied for MD055645.                           *
       *  MD020135 - Duplicate records in INPAYDQD. Write to INPAYDQD  *
       *             file only if not from Java screen.                *
       *           - Applied for MD055645.                             *

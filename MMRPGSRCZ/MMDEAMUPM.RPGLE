@@ -13,7 +13,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055030           Date 27Apr30               *
+      *  Last Amend No. AR1088819          Date 27Apr30               *
       *  Prev Amend No. CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -86,7 +86,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD055030 - Issue on job names during SSL enabling of JDBC    *
+      *  AR1088819- Issue on job names during SSL enabling of JDBC    *
       *              calls (Child: AR1088820)                         *
       *            - Applied for MD055645.                            *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -791,7 +791,7 @@
       *                                                                                       258907
      C     IGLACT        IFEQ      'I'                                                        258907
      C     PSJobName     ANDNE     'QZDASOINIT'                                               259421
-     C     PSJobName     ANDNE     'QZDASSINIT'                                             MD055030
+     C     PSJobName     ANDNE     'QZDASSINIT'                                            AR1088819
       *                                                                                       258907
      C                   MOVEL     IGBRCA        DHC_DIBRCA                                   258907
      C                   Z-ADD     IGDA38        DHC_DIDLNO                                   258907

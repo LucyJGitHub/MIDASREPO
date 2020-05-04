@@ -17,7 +17,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055030           Date 15Jan20               *
+      *  Last Amend No. AR1088819          Date 15Jan20               *
       *  Prev Amend No. CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR898162           Date 25Nov14               *
@@ -56,7 +56,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD055030 - Issue on job names during SSL enabling of JDBC    *
+      *  AR1088819 - Issue on job names during SSL enabling of JDBC   *
       *              calls (Child: AR1088820)                         *
       *            - Applied for MD055645.                            *
       *  CSD102 - Password Length Extension                           *
@@ -1670,7 +1670,7 @@
 
      C******             IF        PSJobName <> 'QZDASOINIT' OR                        CAP084 247277
      C                   IF        PSJobName <> 'QZDASOINIT' AND                              247277
-     C                             PSJobName <> 'QZDASSINIT' AND                            MD055030
+     C                             PSJobName <> 'QZDASSINIT' AND                           AR1088819
      C                             PSJobName <> 'QSQSRVR'    OR                               247277
      C                             DDVAT2 = *BLANKS                                           CAP084
      C                   IF        I2TXCD <> *BLANKS
@@ -1691,7 +1691,7 @@
 
      C******             IF        PSJobName <> 'QZDASOINIT' OR                        CAP084 247277
      C                   IF        PSJobName <> 'QZDASOINIT' AND                              247277
-     C                             PSJobName <> 'QZDASSINIT' AND                            MD055030
+     C                             PSJobName <> 'QZDASSINIT' AND                           AR1088819
      C                             PSJobName <> 'QSQSRVR'    OR                               247277
      C                             DDVAT3 = *BLANKS                                           CAP084
      C                   IF        I2CQCD <> *BLANKS
@@ -1712,7 +1712,7 @@
 
      C******             IF        PSJobName <> 'QZDASOINIT' OR                        CAP084 247277
      C                   IF        PSJobName <> 'QZDASOINIT' AND                              247277
-     C                             PSJobName <> 'QZDASSINIT' AND                            MD055030
+     C                             PSJobName <> 'QZDASSINIT' AND                           AR1088819
      C                             PSJobName <> 'QSQSRVR'    OR                               247277
      C                             DDVAT4 = *BLANKS                                           CAP084
      C                   IF        I2ADCD <> *BLANKS
@@ -1733,7 +1733,7 @@
 
      C******             IF        PSJobName <> 'QZDASOINIT' OR                        CAP084 247277
      C                   IF        PSJobName <> 'QZDASOINIT' AND                              247277
-     C                             PSJobName <> 'QZDASSINIT' AND                            MD055030
+     C                             PSJobName <> 'QZDASSINIT' AND                           AR1088819
      C                             PSJobName <> 'QSQSRVR'    OR                               247277
      C                             DDVAT5 = *BLANKS                                           CAP084
      C                   IF        I2TPCD <> *BLANKS
@@ -1754,7 +1754,7 @@
 
      C******             IF        PSJobName <> 'QZDASOINIT' OR                        CAP084 247277
      C                   IF        PSJobName <> 'QZDASOINIT' AND                              247277
-     C                             PSJobName <> 'QZDASSINIT' AND                            MD055030
+     C                             PSJobName <> 'QZDASSINIT' AND                           AR1088819
      C                             PSJobName <> 'QSQSRVR'    OR                               247277
      C                             DDVAT6 = *BLANKS                                           CAP084
      C                   IF        I2MSCD <> *BLANKS
@@ -1775,7 +1775,7 @@
 
      C******             IF        PSJobName <> 'QZDASOINIT' OR                        CAP084 247277
      C                   IF        PSJobName <> 'QZDASOINIT' AND                              247277
-     C                             PSJobName <> 'QZDASSINIT' AND                            MD055030
+     C                             PSJobName <> 'QZDASSINIT' AND                           AR1088819
      C                             PSJobName <> 'QSQSRVR'    OR                               247277
      C                             VAT9 = *BLANKS                                             CAP084
      C                   IF        I2M1CD <> *BLANKS
@@ -1796,7 +1796,7 @@
 
      C******             IF        PSJobName <> 'QZDASOINIT' OR                        CAP084 247277
      C                   IF        PSJobName <> 'QZDASOINIT' AND                              247277
-     C                             PSJobName <> 'QZDASSINIT' AND                            MD055030
+     C                             PSJobName <> 'QZDASSINIT' AND                           AR1088819
      C                             PSJobName <> 'QSQSRVR'    OR                               247277
      C                             VAT10 = *BLANKS                                            CAP084
      C                   IF        I2M2CD <> *BLANKS
@@ -1817,7 +1817,7 @@
 
      C******             IF        PSJobName <> 'QZDASOINIT' OR                        CAP084 247277
      C                   IF        PSJobName <> 'QZDASOINIT' AND                              247277
-     C                             PSJobName <> 'QZDASSINIT' AND                            MD055030
+     C                             PSJobName <> 'QZDASSINIT' AND                           AR1088819
      C                             PSJobName <> 'QSQSRVR'    OR                               247277
      C                             VAT11 = *BLANKS                                            CAP084
      C                   IF        I2M3CD <> *BLANKS
@@ -1838,7 +1838,7 @@
 
      C******             IF        PSJobName <> 'QZDASOINIT' OR                        CAP084 247277
      C                   IF        PSJobName <> 'QZDASOINIT' AND                              247277
-     C                             PSJobName <> 'QZDASSINIT' AND                            MD055030
+     C                             PSJobName <> 'QZDASSINIT' AND                           AR1088819
      C                             PSJobName <> 'QSQSRVR'    OR                               247277
      C                             VAT12 = *BLANKS                                            CAP084
      C                   IF        I2M4CD <> *BLANKS
@@ -1859,7 +1859,7 @@
 
      C******             IF        PSJobName <> 'QZDASOINIT' OR                        CAP084 247277
      C                   IF        PSJobName <> 'QZDASOINIT' AND                              247277
-     C                             PSJobName <> 'QZDASSINIT' AND                            MD055030
+     C                             PSJobName <> 'QZDASSINIT' AND                           AR1088819
      C                             PSJobName <> 'QSQSRVR'    OR                               247277
      C                             VAT13 = *BLANKS                                            CAP084
      C                   IF        I2M5CD <> *BLANKS
@@ -1880,7 +1880,7 @@
 
      C******             IF        PSJobName <> 'QZDASOINIT' OR                        CAP084 247277
      C                   IF        PSJobName <> 'QZDASOINIT' AND                              247277
-     C                             PSJobName <> 'QZDASSINIT' AND                            MD055030
+     C                             PSJobName <> 'QZDASSINIT' AND                           AR1088819
      C                             PSJobName <> 'QSQSRVR'    OR                               247277
      C                             DDVAT1 = *BLANKS                                           CAP084
      C                   IF        I2TFCD <> *BLANKS
@@ -1901,7 +1901,7 @@
 
      C******             IF        PSJobName <> 'QZDASOINIT' OR                        CAP084 247277
      C                   IF        PSJobName <> 'QZDASOINIT' AND                              247277
-     C                             PSJobName <> 'QZDASSINIT' AND                            MD055030
+     C                             PSJobName <> 'QZDASSINIT' AND                           AR1088819
      C                             PSJobName <> 'QSQSRVR'    OR                               247277
      C                             DDVAT7 = *BLANKS                                           CAP084
      C                   IF        I2FXCD <> *BLANKS
@@ -2073,7 +2073,7 @@
 
      C******             IF        PSJobName <> 'QZDASOINIT' OR                        CAP084 247277
      C                   IF        PSJobName <> 'QZDASOINIT' AND                              247277
-     C                             PSJobName <> 'QZDASSINIT' AND                            MD055030
+     C                             PSJobName <> 'QZDASSINIT' AND                           AR1088819
      C                             PSJobName <> 'QSQSRVR'    OR                               247277
      C                             M1CD = *BLANKS                                             CAP084
      C                   IF        I2MSC01 <> 0
@@ -2090,7 +2090,7 @@
 
      C******             IF        PSJobName <> 'QZDASOINIT' OR                        CAP084 247277
      C                   IF        PSJobName <> 'QZDASOINIT' AND                              247277
-     C                             PSJobName <> 'QZDASSINIT' AND                            MD055030
+     C                             PSJobName <> 'QZDASSINIT' AND                           AR1088819
      C                             PSJobName <> 'QSQSRVR'    OR                               247277
      C                             M2CD = *BLANKS                                             CAP084
      C                   IF        I2MSC02 <> 0
@@ -2107,7 +2107,7 @@
 
      C******             IF        PSJobName <> 'QZDASOINIT' OR                        CAP084 247277
      C                   IF        PSJobName <> 'QZDASOINIT' AND                              247277
-     C                             PSJobName <> 'QZDASSINIT' AND                            MD055030
+     C                             PSJobName <> 'QZDASSINIT' AND                           AR1088819
      C                             PSJobName <> 'QSQSRVR'    OR                               247277
      C                             M3CD = *BLANKS                                             CAP084
      C                   IF        I2MSC03 <> 0
@@ -2124,7 +2124,7 @@
 
      C******             IF        PSJobName <> 'QZDASOINIT' OR                        CAP084 247277
      C                   IF        PSJobName <> 'QZDASOINIT' AND                              247277
-     C                             PSJobName <> 'QZDASSINIT' AND                            MD055030
+     C                             PSJobName <> 'QZDASSINIT' AND                           AR1088819
      C                             PSJobName <> 'QSQSRVR'    OR                               247277
      C                             M4CD = *BLANKS                                             CAP084
      C                   IF        I2MSC04 <> 0
@@ -2141,7 +2141,7 @@
 
      C******             IF        PSJobName <> 'QZDASOINIT' OR                        CAP084 247277
      C                   IF        PSJobName <> 'QZDASOINIT' AND                              247277
-     C                             PSJobName <> 'QZDASSINIT' AND                            MD055030
+     C                             PSJobName <> 'QZDASSINIT' AND                           AR1088819
      C                             PSJobName <> 'QSQSRVR'    OR                               247277
      C                             M5CD = *BLANKS                                             CAP084
      C                   IF        I2MSC05 <> 0
@@ -2158,7 +2158,7 @@
 
      C******             IF        PSJobName <> 'QZDASOINIT' OR                        CAP084 247277
      C                   IF        PSJobName <> 'QZDASOINIT' AND                              247277
-     C                             PSJobName <> 'QZDASSINIT' AND                            MD055030
+     C                             PSJobName <> 'QZDASSINIT' AND                           AR1088819
      C                             PSJobName <> 'QSQSRVR'    OR                               247277
      C                             DDTRCD = *BLANKS                                           CAP084
      C                   IF        IPTRCM <> 0
@@ -2179,7 +2179,7 @@
 
      C******             IF        PSJobName <> 'QZDASOINIT' OR                        CAP084 247277
      C                   IF        PSJobName <> 'QZDASOINIT' AND                              247277
-     C                             PSJobName <> 'QZDASSINIT' AND                            MD055030
+     C                             PSJobName <> 'QZDASSINIT' AND                           AR1088819
      C                             PSJobName <> 'QSQSRVR'    OR                               247277
      C                             DDTXCD = *BLANKS                                           CAP084
      C                   IF        IPTXCH <> 0
@@ -2200,7 +2200,7 @@
 
      C******             IF        PSJobName <> 'QZDASOINIT' OR                        CAP084 247277
      C                   IF        PSJobName <> 'QZDASOINIT' AND                              247277
-     C                             PSJobName <> 'QZDASSINIT' AND                            MD055030
+     C                             PSJobName <> 'QZDASSINIT' AND                           AR1088819
      C                             PSJobName <> 'QSQSRVR'    OR                               247277
      C                             DDCQCD = *BLANKS                                           CAP084
      C                   IF        IPCQCH <> 0
@@ -2221,7 +2221,7 @@
 
      C******             IF        PSJobName <> 'QZDASOINIT' OR                        CAP084 247277
      C                   IF        PSJobName <> 'QZDASOINIT' AND                              247277
-     C                             PSJobName <> 'QZDASSINIT' AND                            MD055030
+     C                             PSJobName <> 'QZDASSINIT' AND                           AR1088819
      C                             PSJobName <> 'QSQSRVR'    OR                               247277
      C                             DDADCD = *BLANKS                                           CAP084
      C                   IF        IPADCH <> 0
@@ -2242,7 +2242,7 @@
 
      C******             IF        PSJobName <> 'QZDASOINIT' OR                        CAP084 247277
      C                   IF        PSJobName <> 'QZDASOINIT' AND                              247277
-     C                             PSJobName <> 'QZDASSINIT' AND                            MD055030
+     C                             PSJobName <> 'QZDASSINIT' AND                           AR1088819
      C                             PSJobName <> 'QSQSRVR'    OR                               247277
      C                             DDTLCD = *BLANKS                                           CAP084
      C                   IF        IPTLCH <> 0
@@ -2263,7 +2263,7 @@
 
      C******             IF        PSJobName <> 'QZDASOINIT' OR                        CAP084 247277
      C                   IF        PSJobName <> 'QZDASOINIT' AND                              247277
-     C                             PSJobName <> 'QZDASSINIT' AND                            MD055030
+     C                             PSJobName <> 'QZDASSINIT' AND                           AR1088819
      C                             PSJobName <> 'QSQSRVR'    OR                               247277
      C                             DDMSCD = *BLANKS                                           CAP084
      C                   IF        IPMSCH <> 0
@@ -2284,7 +2284,7 @@
 
      C******             IF        PSJobName <> 'QZDASOINIT' OR                        CAP084 247277
      C                   IF        PSJobName <> 'QZDASOINIT' AND                              247277
-     C                             PSJobName <> 'QZDASSINIT' AND                            MD055030
+     C                             PSJobName <> 'QZDASSINIT' AND                           AR1088819
      C                             PSJobName <> 'QSQSRVR'    OR                               247277
      C                             DDCHCD = *BLANKS                                           CAP084
      C                   IF        IPINCHCM <> 0

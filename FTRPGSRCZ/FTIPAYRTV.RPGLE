@@ -22,7 +22,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055030           Date 27Apr30               *
+      *  Last Amend No. AR1088819          Date 27Apr30               *
       *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 MD027200           Date 20Sep16               *
       *                 MD030957           Date 10Oct14               *
@@ -59,7 +59,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD055030 -  Issue on job names during SSL enabling of JDBC   *
+      *  AR1088819-  Issue on job names during SSL enabling of JDBC   *
       *              calls (Child: AR1088820)                         *
       *            - Applied for MD055645.
       *  MD046248 - Finastra Rebranding                               *
@@ -1127,8 +1127,8 @@
      C     PParmLevel    ANDEQ     '1'                                                        CAP084
      C     PSJobName     OREQ      'QSQSRVR'                                                  247277
      C     PParmLevel    ANDEQ     '1'                                                        247277
-     C     PSJobName     OREQ      'QZDASSINIT'                                             MD055030
-     C     PParmLevel    ANDEQ     '1'                                                      MD055030
+     C     PSJobName     OREQ      'QZDASSINIT'                                            AR1088819
+     C     PParmLevel    ANDEQ     '1'                                                     AR1088819
       *
       ***If*action*code*is*'I',*a*SWIFT*reference*has*been*entered*and*                       257673
       ***no*errors*so*far,*check*that*the*user*is*also*authorised*to***                       257673

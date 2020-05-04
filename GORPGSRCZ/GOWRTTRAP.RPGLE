@@ -11,7 +11,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD055030           Date 27Apr20               *
+      *  Last Amend No. AR1088819          Date 27Apr20               *
       *  Prev Amend No. MD033110           Date 02Mar19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD032884           Date 09Jun15               *
@@ -42,7 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD055030 - Use 'QUSRJOBI' in retrieving job name instead of  *
+      *  AR1088819- Use 'QUSRJOBI' in retrieving job name instead of  *
       *             PSDS data structure. Applied for MD055645         *
       *  MD033110 - GPPOSNPD records not updated during COB for GL.   *
       *             Ensure that cob generated GL records will be      *
@@ -379,7 +379,7 @@ O    C                   PARM                    D_COM             1
      C                   IF        JobName   = 'QZDASOINIT'                                 AR802337
      C                             OR JobName   = 'QSQSRVR'                                 AR802337
      C                             OR JobName   = 'GLC445'                                  AR802337
-     C                             OR JobName = 'QZDASSINIT'                                MD055030
+     C                             OR JobName = 'QZDASSINIT'                               AR1088819
      C                   MOVE      'Y'           APTRANVU          1            BUG2480
      C                   ELSE                                                   BUG2480
      C                   MOVE      *BLANKS       APTRANVU                       BUG2480

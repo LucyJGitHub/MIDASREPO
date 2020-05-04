@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055030           Date 27Apr20               *
-      *  Prev Amend No. MD054037           Date 23Sep19               *
+      *  Last Amend No. MD023298A          Date 27Apr20               *
+      *  Prev Amend No. MD020135           Date 27Apr20               *
+      *                 MD054037           Date 23Sep19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD044588           Date 09Mar17               *
@@ -123,12 +124,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD055030 - Front office ID already exists for OTPAYDQD.      *
+      *  MD023298A - Front office ID already exists for OTPAYDQD.     *
       *              Do not write to OTPAYDQD when jobname is         *
       *              QZDASSINIT.                                      *
-      *           - Duplicate records in OTPAYDQD. Write to OTPAYDQD  *
+      *            - Applied for MD055645.                            *
+      *  MD020135 - Duplicate records in OTPAYDQD. Write to OTPAYDQD  *
       *             file only if not from Java screen.                *
-      *           - Applied for MD055645.                             *
+      *            - Applied for MD055645.                            *
       *  MD054037 - Outward payment routing from incoming (OPIN = Y)  *
       *             via API                                           *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -1283,9 +1285,9 @@
       *                                                                                       257487
       ** Move valid file details to extension file details                                    257487
       *                                                                                       257487
-     C                   IF        PSJobName <> 'QZDASOINIT' AND                            MD055030
-     C                             PSJobName <> 'QZDASSINIT' AND                            MD055030
-     C                             PSJobName <> 'QSQSRVR'                                   MD055030
+     C                   IF        PSJobName <> 'QZDASOINIT' AND                            MD020135
+     C                             PSJobName <> 'QZDASSINIT' AND                           MD023298A
+     C                             PSJobName <> 'QSQSRVR'                                   MD020135
      C                   EVAL      OTFRID = OTFRNT                                            257487
      C                   Write     OTPAYQD0                             99                    257487
                                                                                               257487
@@ -1295,7 +1297,7 @@
      C                   Movel     OTPREF        DBKEY                                        257487
      C                   Exsr      *PSSR                                                      257487
      C                   End                                                                  257487
-     C                   ENDIF                                                              MD055030
+     C                   ENDIF                                                              MD020135
       **********                                                                    BUG4776 BUG4776R
       ****If*new*record*was*successfully*writen*to*OTPAYDD,*add*new*record*to***    BUG4776 BUG4776R
       ****FT*Payment*Reference*Control*file*-*FTPREFPD**************************    BUG4776 BUG4776R

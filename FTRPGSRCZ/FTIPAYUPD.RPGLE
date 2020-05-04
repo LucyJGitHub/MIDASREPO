@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055030           Date 27Apr20               *
-      *  Prev Amend No. MD054037           Date 23Sep19               *
+      *  Last Amend No. AR1088819          Date 27Apr20               *
+      *  Prev Amend No. MD020135           Date 27Apr20               *
+      *                 MD054037           Date 23Sep19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD037804           Date 25May16               *
@@ -93,9 +94,9 @@
       *                 CAP136  *CREATE    Date 15Nov99               *
       *                                                               *
       *---------------------------------------------------------------*
-      *  MD055030 - Issue on job names during SSL enabling of JDBC    *
+      *  AR1088819- Issue on job names during SSL enabling of JDBC    *
       *              calls (Child: AR1088820)                         *
-      *           - Duplicate records in INPAYDQD. Write to INPAYDQD  *
+      *  MD020135 - Duplicate records in INPAYDQD. Write to INPAYDQD  *
       *             file only if not from Java screen.                *
       *           - Applied for MD055645.                             *
       *  MD054037 - Outward payment routing from incoming (OPIN = Y)  *
@@ -848,7 +849,7 @@
      C     IPCHTP        IFEQ      'I'                                          193883
      C     PSJobName     ANDNE     'QZDASOINIT'                                               CAP084
      C     PSJobName     ANDNE     'QSQSRVR'                                                  247277
-     C     PSJobName     ANDNE     'QZDASSINIT'                                             MD055030
+     C     PSJobName     ANDNE     'QZDASSINIT'                                            AR1088819
      C                   MOVE      '*FRONT'      PModeX
      C                   ELSE
      C                   MOVE      *BLANKS       PModeX
@@ -1174,7 +1175,7 @@
       ** Move valid file details to extension file details                                    257487
       *                                                                                       257487
      C                   IF        PSJobName <> 'QZDASOINIT' AND                            MD020135
-     C                             PSJobName <> 'QZDASSINIT' AND                            MD055030
+     C                             PSJobName <> 'QZDASSINIT' AND                           AR1088819
      C                             PSJobName <> 'QSQSRVR'                                   MD020135
      C                   EVAL      IPFRID = IPFRNT                                            257487
      C                   WRITE     INPAYQD0                             99                    257487

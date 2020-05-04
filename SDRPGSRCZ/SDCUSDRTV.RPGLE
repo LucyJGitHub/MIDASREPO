@@ -30,7 +30,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055030           Date 27Apr20               *
+      *  Last Amend No. AR1088819          Date 27Apr20               *
       *  Prev Amend No. 260405             Date 04Apr20               *
       *                 MD048748           Date 16Dec19               *
       *                 MD052297           Date 14Nov19               *
@@ -152,6 +152,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1088819- Issue on job names during SSL enabling of JDBC    *
+      *              calls (Child: AR1088820)                         *
+      *            - Applied for MD055645.                            *
       *  260405 - BRT Participation Date of Birth field is missing.   *
       *           Upgrade fix 235425. Recompile over changed SDCBRTPD.*
       *         - Applied for MD055446.                               *
@@ -825,7 +828,7 @@
      D   WDS2048              48     48
      D   WDS2049              49     49
      D   WDS2050              50     50
-     D   WDS2051              51     51                                                     MD055030
+     D   WDS2051              51     51                                                    AR1088819
 
      D @WCDS3          DS           200
      D   WDS3000               1    200
@@ -2409,7 +2412,7 @@
                                                                                             BUG27866
      C                   IF        WJOBTP = 'I' AND                                         BUG27866
      C                             WWJOB <> 'QZDASOINIT'                                    BUG27866
-     C                             AND WWJOB <> 'QZDASSINIT'                                MD055030
+     C                             AND WWJOB <> 'QZDASSINIT'                               AR1088819
      C                   EVAL      @WQUTP = 'N'                                             BUG27866
      C                   ENDIF                                                              BUG27866
       *
@@ -3483,10 +3486,10 @@
      C     WDS1044       IFEQ      'F'                                                      MD052297
      C                   MOVEL     '5049334'     MsgIdArr(Ix)                               MD052297
      C                   GOTO      EVALAC                                                   MD052297
-      ** Any other error...                                                                 MD055030
-      *                                                                                     MD055030
-     C                   MOVEL     '5049335'     MsgIdArr(Ix)                               MD055030
-      *                                                                                     MD055030
+      ** Any other error...                                                                AR1088819
+      *                                                                                    AR1088819
+     C                   MOVEL     '5049335'     MsgIdArr(Ix)                              AR1088819
+      *                                                                                    AR1088819
      C                   ENDIF                                                              MD052297
 
       *                                                                                       CSD007

@@ -30,8 +30,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 260405             Date 04Apr20               *
-      *  Prev Amend No. MD048748           Date 16Dec19               *
+      *  Last Amend No. MD055030           Date 27Apr20               *
+      *  Prev Amend No. 260405             Date 04Apr20               *
+      *                 MD048748           Date 16Dec19               *
       *                 MD052297           Date 14Nov19               *
       *                 MD053634           Date 21Oct19               *
       *                 CER050             Date 16Jun19               *
@@ -824,6 +825,7 @@
      D   WDS2048              48     48
      D   WDS2049              49     49
      D   WDS2050              50     50
+     D   WDS2051              51     51                                                     MD055030
 
      D @WCDS3          DS           200
      D   WDS3000               1    200
@@ -2407,6 +2409,7 @@
                                                                                             BUG27866
      C                   IF        WJOBTP = 'I' AND                                         BUG27866
      C                             WWJOB <> 'QZDASOINIT'                                    BUG27866
+     C                             AND WWJOB <> 'QZDASSINIT'                                MD055030
      C                   EVAL      @WQUTP = 'N'                                             BUG27866
      C                   ENDIF                                                              BUG27866
       *
@@ -3480,7 +3483,12 @@
      C     WDS1044       IFEQ      'F'                                                      MD052297
      C                   MOVEL     '5049334'     MsgIdArr(Ix)                               MD052297
      C                   GOTO      EVALAC                                                   MD052297
+      ** Any other error...                                                                 MD055030
+      *                                                                                     MD055030
+     C                   MOVEL     '5049335'     MsgIdArr(Ix)                               MD055030
+      *                                                                                     MD055030
      C                   ENDIF                                                              MD052297
+
       *                                                                                       CSD007
       ** Issue Warning when a 'T'axable Customer is Closed                                  BUG23518
       *                                                                                     BUG23518

@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055030           Date 30Apr20               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD037742           Date 03Apr16               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -45,6 +46,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055030 - Issue on job names during SSL enabling of JDBC    *
+      *              calls (Child: AR1088820)                         *
+      *            - Applied for MD055645.                            *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037742 - Security diary events - pool factor reversal.     *
@@ -640,6 +644,7 @@
       *                                                                                       CAP084
      C                             PSJobName <> 'QZDASOINIT'
      C                             AND PSJobName <> 'QSQSRVR'                                 247277
+     C                             AND PSJobName <> 'QZDASSINIT'                            MD055030
      C                   MOVE      '*FRONT'      PMode
      C                   ELSE
      C                   MOVE      *BLANKS       PMode

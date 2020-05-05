@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR1072179          Date 13Feb13              */
+/*       Last Amend No. AR1088819          Date 27Apr20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      AR1072179          Date 13Feb13              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      247277             Date 24May07              */
@@ -28,6 +29,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       AR1088819 - Issue on job names during SSL enabling of JDBC  */
+/*                   calls.                                          */
+/*                 - Applied for MD055645.                           */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR1072179 - APISERVFL and APISERVMQ jobs on MSGW            */
 /*       247277 - Need to cater for native JDBC driver.              */
@@ -94,8 +98,11 @@
 /* */
              RTVJOBA    JOB(&JOBNAME)                                                    /*BUG1699*/
 /********    IF COND(&JOBNAME *NE 'QZDASOINIT') THEN(DO)                          /*BUG1699 247277*/
+/**********  IF         COND((&JOBNAME *NE 'QZDASOINIT') *AND +
+                          (&JOBNAME *NE 'QSQSRVR')) THEN(DO)                 */ /*247277 AR1088819*/
              IF         COND((&JOBNAME *NE 'QZDASOINIT') *AND +
-                          (&JOBNAME *NE 'QSQSRVR')) THEN(DO)                              /*247277*/
+                          (&JOBNAME *NE 'QSQSRVR') *AND +
+                          (&JOBNAME *NE 'QZDASSINIT')) THEN(DO)                        /*AR1088819*/
              DLTDTAARA  DTAARA(QTEMP/ZMUSER)                                              /*226108*/
              MONMSG     MSGID(CPF2105)                                                    /*226108*/
              CHKOBJ     OBJ(QTEMP/ZMUSER) OBJTYPE(*DTAARA)
@@ -130,9 +137,9 @@
                 ENDDO
              ENDDO
              ENDDO                                                                       /*BUG1699*/
- 
+
  JUMP:       CALL       PGM(SF0400)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
 ENDPGM:      ENDPGM

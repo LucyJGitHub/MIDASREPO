@@ -18,8 +18,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD034828           Date 01Jul15               *
+      *  Last Amend No. AR1088819          Date 27Apr20               *
+      *  Prev Amend No. MD055030           Date 27Apr20               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD034828           Date 01Jul15               *
       *                 CFT157             Date 29Aug14               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
@@ -60,6 +62,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1088819  - Issue on job names during SSL enabling of JDBC  *
+      *              calls (Child: AR1088820)                         *
+      *            - Applied for MD055645.                            *
+      *            - Added NoDft in QZDASSINIT. Applied for MD055645  *
+      *  MD055030 - Added NoDft in QZDASSINIT                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034828 - Commission & Charges details are lost after       *
       *             confirm complete                                  *
@@ -1013,6 +1020,8 @@
      C     PSJobName     ANDEQ     'QZDASOINIT'                                               CAP084
      C     DDDTCH        OREQ      *BLANKS                                                    247277
      C     PSJobName     ANDEQ     'QSQSRVR'                                                  247277
+     C     DDDTCH        OREQ      *BLANKS                                                 AR1088819
+     C     PSJobName     ANDEQ     'QZDASSINIT'                                            AR1088819
      C     DDDTCH        OREQ      *BLANKS                                                    260709
      C     PSJobName     ANDEQ     'APISERVER '                                               260709
       *                                                                                       247277
@@ -1099,6 +1108,8 @@
      C     PSJobName     ANDEQ     'QZDASOINIT'                                              BUG4141
      C     DDACTN        OREQ      'I'                                                        247277
      C     PSJobName     ANDEQ     'QSQSRVR'                                                  247277
+     C     DDACTN        OREQ      'I'                                                     AR1088819
+     C     PSJobName     ANDEQ     'QZDASSINIT'                                            AR1088819
      C     DDACTN        OREQ      'I'                                                        260709
      C     PSJobName     ANDEQ     'APISERVER '                                               260709
      C     DDACTN        OREQ      'A'                                                       BUG4329
@@ -1123,6 +1134,8 @@
      C     PMode         IFEQ      '*SIN  '
      C     PSJobName     OREQ      'QZDASOINIT'                                               CAP084
      C     NoDft         ANDNE     'Y'                                                      MD034828
+     C     PSJobName     OREQ      'QZDASSINIT'                                            AR1088819
+     C     NoDft         ANDNE     'Y'                                                      MD055030
      C     PSJobName     OREQ      'QSQSRVR'                                                  247277
      C     NoDft         ANDNE     'Y'                                                       BUG4141
      C     PSJobName     OREQ      'APISERVER '                                               260709
@@ -1379,6 +1392,8 @@
      C     PSJobName     ANDEQ     'QZDASOINIT'                                               CAP084
      C     DDACTN        ORNE      'E'                                                        247277
      C     PSJobName     ANDEQ     'QSQSRVR'                                                  247277
+     C     DDACTN        ORNE      'E'                                                     AR1088819
+     C     PSJobName     ANDEQ     'QZDASSINIT'                                            AR1088819
      C     DDACTN        ORNE      'E'                                                        260709
      C     PSJobName     ANDEQ     'APISERVER '                                               260709
       *

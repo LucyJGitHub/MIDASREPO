@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD049594           Date 15Feb18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR1088819          Date 27Apr20               *
+      *  Prev Amend No. MD049594           Date 15Feb18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD000091           Date 10May13               *
       *                 CSF011A            Date 28Nov11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -33,6 +34,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1088819- Issue on job names during SSL enabling of JDBC    *
+      *              calls (Child: AR1088820)                         *
+      *            - Applied for MD055645.                            *
       *  MD049594 - LEM0610 error message will only be thrown if      *
       *             DDPASD is changed to 'Y' from 'N'/'' or to 'N'/'' *
       *             from 'Y'.                                         *
@@ -262,6 +266,7 @@
      C     DDESEQ        IFNE      'LN '                                                     BUG4325
      C     PSJobName     ANDNE     'QZDASOINIT'                                              BUG4325
      C     PSJobName     ANDNE     'QSQSRVR'                                                  247277
+     C     PSJobName     ANDNE     'QZDASSINIT'                                            AR1088819
      C     DDESEQ        IFNE      @DDESEQ
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDESEQ'

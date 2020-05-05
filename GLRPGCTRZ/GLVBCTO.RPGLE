@@ -18,13 +18,14 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR1088819          Date 27Apr20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *  Prev Amend No. 247277             Date 24May07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *                 237512 (R          Date 22May06               *
+      *                 237512 (Reopen)    Date 22May06               *
       *                 240063             Date 06Jun06               *
       *                 BUG2605            Date 14Sep04               *
       * Midas Release 4 --------------- Base -------------------------*
@@ -33,6 +34,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1088819- Issue on job names during SSL enabling of JDBC    *
+      *              calls (Child: AR1088820)                         *
+      *           - Applied for MD055645.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  247277 - Allow for native JDBC driver as well as toolbox.    *
       *  237512 - Initialise DDFNAM to blank.                         *
@@ -203,6 +207,7 @@
       * Replace lower case values from MidasPlus with upper case values                      BUG2605
      C*******            If        PsJobName = 'QZDASOINIT'                           BUG2605 247277
      C                   If        PsJobName = 'QZDASOINIT' OR                                247277
+     C                             PsJobName = 'QZDASSINIT' OR                             AR1088819
      C                             PsJobName = 'QSQSRVR'                                      247277
       *                                                                                       247277
      C                   Eval      LowT = %scan('t':DDFMAM)                                  BUG2605

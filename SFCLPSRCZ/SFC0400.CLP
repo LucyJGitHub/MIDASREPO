@@ -1,4 +1,4 @@
- /*********************************************************************/
+/*********************************************************************/
 /*STD    CLPBASE                                                     */
 /*EXI    TEXT('Midas SF Set-up multibranching DTAARAs')              */
 /*********************************************************************/
@@ -9,7 +9,7 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR1088819          Date 15Jan20              */
+/*       Last Amend No. AR1088819          Date 27Apr20              */
 /*       Prev Amend No. MD046248           Date 27Oct17              */
 /*                      AR1072179          Date 13Feb13              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -46,99 +46,100 @@
 /*                                                                   */
 /*********************************************************************/
              PGM
-             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra +
-                          International Limited 2001')
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2001')
              DCL        VAR(&ERRCOD) TYPE(*DEC) LEN(1)
-             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50) /*E28090*/
-             DCL        VAR(&ZMUSER) TYPE(*CHAR) LEN(10) /*CAP084*/
-             DCL        VAR(&JOBNAME) TYPE(*CHAR) LEN(10) /*BUG1699*/
+             DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)             /*E28090*/
+             DCL        VAR(&ZMUSER) TYPE(*CHAR) LEN(10)                                  /*CAP084*/
+             DCL        VAR(&JOBNAME) TYPE(*CHAR) LEN(10)                                /*BUG1699*/
                                                                                        /*AR1072179*/
 /* Create the Midas Information Screen data area */                                    /*AR1072179*/
                                                                                        /*AR1072179*/
-             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) VALUE(' ') +
-                          TEXT('Midas SC Midas information screen data') +
-                          /*AR1072179*/
-             MONMSG     MSGID(CPF1023) /*AR1072179*/
+             CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
+                          VALUE(' ') TEXT('Midas SC Midas +
+                          information screen data')                                    /*AR1072179*/
+             MONMSG     MSGID(CPF1023)                                                 /*AR1072179*/
 /* */
 /*   CREATE AND SET UP USER DATA AREA    */
 /* */
-             CRTDTAARA  DTAARA(QTEMP/ZBRU) TYPE(*CHAR) LEN(304) TEXT('User valid +
-                          Booking Branches')
-             MONMSG     MSGID(CPF0000) /* Monitor here to prevent error during +
-                          re-routing of job */
+             CRTDTAARA  DTAARA(QTEMP/ZBRU) TYPE(*CHAR) LEN(304) +
+                          TEXT('User valid Booking Branches')
+             MONMSG     MSGID(CPF0000) /* Monitor here to prevent +
+                          error during re-routing of job */
                                                                                           /*197434*/
 /** Create more data area to contain the valid booking branches */                        /*197434*/
-             CRTDTAARA  DTAARA(QTEMP/ZBRU1) TYPE(*CHAR) LEN(1998) TEXT('User valid +
-                          Booking Branches 1') /*197434*/
-             MONMSG     MSGID(CPF0000) /*197434*/
-             CRTDTAARA  DTAARA(QTEMP/ZBRU2) TYPE(*CHAR) LEN(402) TEXT('User valid +
-                          Booking Branches 2') /*197434*/
-             MONMSG     MSGID(CPF0000) /*197434*/
+             CRTDTAARA  DTAARA(QTEMP/ZBRU1) TYPE(*CHAR) LEN(1998) +
+                          TEXT('User valid Booking Branches 1')                           /*197434*/
+             MONMSG     MSGID(CPF0000)                                                    /*197434*/
+             CRTDTAARA  DTAARA(QTEMP/ZBRU2) TYPE(*CHAR) LEN(402) +
+                          TEXT('User valid Booking Branches 2')                           /*197434*/
+             MONMSG     MSGID(CPF0000)                                                    /*197434*/
                                                                                           /*197434*/
-             CRTDTAARA  DTAARA(QTEMP/ZOBU) TYPE(*CHAR) LEN(304) TEXT('User valid +
-                          Originating Branches')
-             MONMSG     MSGID(CPF0000) /* Monitor here to prevent error during +
-                          re-routing of job */
+             CRTDTAARA  DTAARA(QTEMP/ZOBU) TYPE(*CHAR) LEN(304) +
+                          TEXT('User valid Originating Branches')
+             MONMSG     MSGID(CPF0000) /* Monitor here to prevent +
+                          error during re-routing of job */
                                                                                           /*197434*/
 /** Create more data area to contain the valid originating branches*/                     /*197434*/
-             CRTDTAARA  DTAARA(QTEMP/ZOBU1) TYPE(*CHAR) LEN(1998) TEXT('User valid +
-                          Originating Branches 1') /*197434*/
-             MONMSG     MSGID(CPF0000) /*197434*/
-             CRTDTAARA  DTAARA(QTEMP/ZOBU2) TYPE(*CHAR) LEN(402) TEXT('User valid +
-                          Originating Branches 2') /*197434*/
-             MONMSG     MSGID(CPF0000) /*197434*/
+             CRTDTAARA  DTAARA(QTEMP/ZOBU1) TYPE(*CHAR) LEN(1998) +
+                          TEXT('User valid Originating Branches 1')                       /*197434*/
+             MONMSG     MSGID(CPF0000)                                                    /*197434*/
+             CRTDTAARA  DTAARA(QTEMP/ZOBU2) TYPE(*CHAR) LEN(402) +
+                          TEXT('User valid Originating Branches 2')                       /*197434*/
+             MONMSG     MSGID(CPF0000)                                                    /*197434*/
                                                                                           /*197434*/
-             CRTDTAARA  DTAARA(QTEMP/ZCMP) TYPE(*CHAR) LEN(304) TEXT('User valid +
-                          Companies')
-             MONMSG     MSGID(CPF0000) /* Monitor here to prevent error during +
-                          re-routing of job */
+             CRTDTAARA  DTAARA(QTEMP/ZCMP) TYPE(*CHAR) LEN(304) +
+                          TEXT('User valid Companies')
+             MONMSG     MSGID(CPF0000) /* Monitor here to prevent +
+                          error during re-routing of job */
 /* */
 /*  THE DATA AREA ZMUSER NEED TO BE CREATED IN QTEMP */
 /* */
-             RTVJOBA    JOB(&JOBNAME) /*BUG1699*/
+             RTVJOBA    JOB(&JOBNAME)                                                    /*BUG1699*/
 /********    IF COND(&JOBNAME *NE 'QZDASOINIT') THEN(DO)                          /*BUG1699 247277*/
 /**********  IF         COND((&JOBNAME *NE 'QZDASOINIT') *AND +
                           (&JOBNAME *NE 'QSQSRVR')) THEN(DO)                 */ /*247277 AR1088819*/
-             IF         COND((&JOBNAME *NE 'QZDASOINIT') *AND (&JOBNAME *NE +
-                          'QSQSRVR') *AND (&JOBNAME *NE 'QZDASSINIT')) THEN(DO) +
-                          /*AR1088819*/
-                DLTDTAARA  DTAARA(QTEMP/ZMUSER) /*226108*/
-                MONMSG     MSGID(CPF2105) /*226108*/
-                CHKOBJ     OBJ(QTEMP/ZMUSER) OBJTYPE(*DTAARA)
-                MONMSG     MSGID(CPF9815 CPF9801) EXEC(DO)
+             IF         COND((&JOBNAME *NE 'QZDASOINIT') *AND +
+                          (&JOBNAME *NE 'QSQSRVR') *AND +
+                          (&JOBNAME *NE 'QZDASSINIT')) THEN(DO)                        /*AR1088819*/
+             DLTDTAARA  DTAARA(QTEMP/ZMUSER)                                              /*226108*/
+             MONMSG     MSGID(CPF2105)                                                    /*226108*/
+             CHKOBJ     OBJ(QTEMP/ZMUSER) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9815 CPF9801) EXEC(DO)
 /************   CALL       PGM(ZMUSER) PARM(&ERRCOD)                                      /*CAP084*/
-                   CALL       PGM(ZMUSER) PARM(&ERRCOD &ZMUSER) /*CAP084*/
-                   IF         COND(&ERRCOD *NE 0) THEN(DO)
+                CALL       PGM(ZMUSER) PARM(&ERRCOD &ZMUSER)                              /*CAP084*/
+                IF         COND(&ERRCOD *NE 0) THEN(DO)
 /************SNDPGMMSG  MSG('Default Branch or Department not +       /*RT0157*/
 /************             valid') TOPGMQ(*EXT) MSGTYPE(*INFO)         /*RT0157*/
 /************      CALL       PGM(SFC0700) PARM('SFC0400' +
 /************                   'DFTBRCNOGO' ' ')          /*RT0157*/ /*E28090*/
-                      RTVMSG     MSGID(SFM0007) MSGF(MIDASMSG) MSG(&MESSAGE) +
-                                   /*E28090*/
-                      MONMSG     MSGID(CPF0000 RPG0000 MCH0000) /*E28090*/
-                      CHGDTAARA  DTAARA(MIDASMSG (251 50)) VALUE(&MESSAGE) +
-                                   /*E28090*/
-                      MONMSG     MSGID(CPF0000 RPG0000 MCH0000) /*E28090*/
-                      RTVMSG     MSGID(SFM0008) MSGF(MIDASMSG) MSG(&MESSAGE) +
-                                   /*E28090*/
-                      MONMSG     MSGID(CPF0000 RPG0000 MCH0000) /*E28090*/
-                      CHGDTAARA  DTAARA(MIDASMSG (401 50)) VALUE(&MESSAGE) +
-                                   /*E28090*/
-                      MONMSG     MSGID(CPF0000 RPG0000 MCH0000) /*E28090*/
-                      CHGDTAARA  DTAARA(MIDASMSG (2 1)) VALUE('1') /*E28090*/
-                      MONMSG     MSGID(CPF0000 RPG0000 MCH0000) /*E28090*/
-                      CALL       PGM(SFC0700) PARM('SFC0400' 'ENTER' ' ') +
-                                   /*E28090*/
-                      MONMSG     MSGID(CPF0000 MCH0000 RPG0000) /*E28090*/
-                      SIGNOFF    LOG(*LIST)
-                      MONMSG     MSGID(CPF0000) /* Monitor here to prevent error +
-                                   during re-routing of job */
-                   ENDDO
+                   RTVMSG     MSGID(SFM0007) MSGF(MIDASMSG) +
+                                MSG(&MESSAGE)                         /*E28090*/
+                   MONMSG     MSGID(CPF0000 RPG0000 MCH0000)          /*E28090*/
+                   CHGDTAARA  DTAARA(MIDASMSG (251 50)) +
+                                VALUE(&MESSAGE)                       /*E28090*/
+                   MONMSG     MSGID(CPF0000 RPG0000 MCH0000)          /*E28090*/
+                   RTVMSG     MSGID(SFM0008) MSGF(MIDASMSG) +
+                                MSG(&MESSAGE)                         /*E28090*/
+                   MONMSG     MSGID(CPF0000 RPG0000 MCH0000)          /*E28090*/
+                   CHGDTAARA  DTAARA(MIDASMSG (401 50)) +
+                                VALUE(&MESSAGE)                       /*E28090*/
+                   MONMSG     MSGID(CPF0000 RPG0000 MCH0000)          /*E28090*/
+                   CHGDTAARA  DTAARA(MIDASMSG (2 1)) VALUE('1')       /*E28090*/
+                   MONMSG     MSGID(CPF0000 RPG0000 MCH0000)          /*E28090*/
+                   CALL      PGM(SFC0700) PARM('SFC0400' 'ENTER' ' ') /*E28090*/
+                   MONMSG     MSGID(CPF0000 MCH0000 RPG0000)          /*E28090*/
+                   SIGNOFF    LOG(*LIST)
+                   MONMSG     MSGID(CPF0000) /* Monitor here +
+                                to prevent error during re-routing +
+                                of job */
                 ENDDO
-             ENDDO      /*BUG1699*/
+             ENDDO
+             ENDDO                                                                       /*BUG1699*/
 
  JUMP:       CALL       PGM(SF0400)
-             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International Limited')
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited')
 
- ENDPGM:     ENDPGM
-
+ENDPGM:      ENDPGM

@@ -51,9 +51,11 @@
              DCL        VAR(&PIGDC) TYPE(*CHAR) LEN(1)
              DCL        VAR(&COBST) TYPE(*CHAR) LEN(4)                                    /*CCB020*/
 
-             COPYRIGHT  TEXT('(c) Finastra International Limited 2006')
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2006')
 
-             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO CMDLBL(ABNOR))
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
 
              CHGJOB     LOG(4 00 *SECLVL) LOGCLPGM(*YES) SWS(XXXXXX00)
 
@@ -63,8 +65,8 @@
 /**********  IF         COND(&MPHAS *NE 'A') THEN(DO)                                     /*CCB020*/
              CALL       PGM(CBC001001) PARM(&COBST)                                       /*CCB020*/
              IF         COND(&COBST = '*YES') THEN(DO)                                    /*CCB020*/
-                CHGVAR     VAR(&PRTCD) VALUE(' : : :Midas not in input cycle.  +
-                             Entry prohibited:')
+                CHGVAR     VAR(&PRTCD) VALUE(' : : :Midas not in input +
+                             cycle.  Entry prohibited:')
                 GOTO       CMDLBL(END)
              ENDDO
 
@@ -79,20 +81,21 @@
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
 
              CHGVAR     VAR(&PIGDC) VALUE('Y')
-             CHKOBJ     OBJ(AOCDTA) OBJTYPE(*DTAARA)
-             MONMSG     MSGID(CPF9801) EXEC(CHGVAR VAR(&PIGDC) VALUE(' '))
+             CHKOBJ OBJ(AOCDTA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(CHGVAR VAR(&PIGDC) +
+                          VALUE(' '))
 
 /** Check if CUSX or STOR, this field should have come from java. */
 
-             IF         COND((&TRANSTYPE = '    ') *AND (%SST(&PIDTA 83 2) = +
-                          'CE')) THEN(DO)
+             IF         COND((&TRANSTYPE = '    ') *AND +
+                             (%SST(&PIDTA 83 2) = 'CE')) THEN(DO)
                 CHGVAR     VAR(&TRANSTYPE) VALUE('CUSX')
              ENDDO
 
 /** Send status message to message queue */
 
-             SNDPGMMSG  MSG('AOC000014 - Shadow Post Wrapper for JAVA with action +
-                          = ' *CAT &PACTN)
+             SNDPGMMSG  MSG('AOC000014 - Shadow Post Wrapper for +
+                        JAVA with action = ' *CAT &PACTN)
 
              IF         COND(&PACTN = '*CLEAR') THEN(DO)
                 CHGVAR     VAR(&A11RTCD) VALUE('       ')
@@ -100,22 +103,23 @@
 
              RTVJOBA    NBR(&JOBNO) TYPE(&TYPE)
              CHGVAR     VAR(&TRANSID) VALUE(%SST(&PIDTA 83 6))
-             SNDMSG     MSG('AOC000014 called: Retail ' *BCAT &TRANSTYPE *BCAT +
-                          &TRANSID *BCAT &PACTN *TCAT '. Job number is ' *CAT +
-                          &JOBNO) TOMSGQ(MOPERQ)
+             SNDMSG     MSG('AOC000014 called: Retail ' *BCAT +
+                          &TRANSTYPE *BCAT &TRANSID *BCAT &PACTN +
+                          *TCAT '. Job number is ' *CAT &JOBNO) +
+                          TOMSGQ(MOPERQ)
 
 /** Call Trace program to dump parameter from JAVA to PF */
 
              CHGVAR     VAR(&BRTCD) VALUE(&A11RTCD)
              CHGVAR     VAR(&ZZDTA) VALUE(&PIDTA)
 
-             CALL       PGM(AO000011) PARM(&A11RTCD ' ' &TRANSTYPE &BRTCD &PACTN +
-                          &PIDTA &PRTCD &PIGDC)
+             CALL       PGM(AO000011) PARM(&A11RTCD ' ' &TRANSTYPE +
+                          &BRTCD &PACTN &PIDTA &PRTCD &PIGDC)
 
              IF         COND(&A11RTCD *NE '       ') THEN(DO)
-                SNDPGMMSG  MSG('AOC000014 - Program AO000011 ended in error(1st +
-                             batch).  AOSPOSU0 will still be called.') +
-                             TOMSGQ(MOPERQ) MSGTYPE(*INFO)
+                SNDPGMMSG  MSG('AOC000014 - Program AO000011 ended in +
+                                error(1st batch).  AOSPOSU0 will still be +
+                                called.') TOMSGQ(MOPERQ) MSGTYPE(*INFO)
                 CHGJOB     SWS(XXXXXX00)
              ENDDO
 
@@ -123,13 +127,13 @@
 
              CALL       PGM(AOSPOSU0) PARM(&PRTCD &PACTN &PIDTA)
 
-             IF         COND((&PRTCD *EQ '*ERROR*') *OR (%SWITCH(XXXXXX11))) +
-                          THEN(DO)
-                CHGVAR     VAR(&PRTCD) VALUE('AOC000014: Online update program +
-                             AOSPOSU0 ended in error. Please inform a Midas System +
-                             operator.')
+             IF         COND((&PRTCD *EQ '*ERROR*') +
+                            *OR (%SWITCH(XXXXXX11))) THEN(DO)
+                CHGVAR     VAR(&PRTCD) VALUE('AOC000014: Online update +
+                          program AOSPOSU0 ended in error. Please +
+                          inform a Midas System operator.')
                 SNDPGMMSG  MSG(&PRTCD)
-                GOTO       CMDLBL(ABNOR)
+                GOTO CMDLBL(ABNOR)
              ENDDO
 
 /** Call Trace program again if the parameter was changed by AOSPOSU0 */
@@ -137,16 +141,18 @@
 
              IF         COND(&PIDTA *NE &ZZDTA) THEN(DO)
                 CHGVAR     VAR(&BRTCD) VALUE(&A11RTCD)
-                CALL       PGM(AO000011) PARM(&A11RTCD 'Y' &TRANSTYPE &BRTCD +
-                             '**CHNG*' &PIDTA &PRTCD &PIGDC)
-                SNDPGMMSG  MSG('AOC000014 - Program AO000011 ended in error(2nd +
-                             batch.') TOMSGQ(MOPERQ) MSGTYPE(*INFO)
+                CALL       PGM(AO000011) PARM(&A11RTCD 'Y' &TRANSTYPE +
+                             &BRTCD '**CHNG*' &PIDTA &PRTCD &PIGDC)
+                SNDPGMMSG  MSG('AOC000014 - Program AO000011 ended in +
+                                error(2nd batch.') +
+                           TOMSGQ(MOPERQ) MSGTYPE(*INFO)
                 CHGJOB     SWS(XXXXXX00)
              ENDDO
 
              CHGVAR     VAR(&PRTCD) VALUE('       ')
              RTVJOBA    SWS(&SWS)
-             IF         COND(%SUBSTRING(&SWS 7 2) = '11') THEN(GOTO CMDLBL(ABNOR))
+             IF         COND(%SUBSTRING(&SWS 7 2) = '11') THEN(GOTO +
+                          CMDLBL(ABNOR))
 
              GOTO       CMDLBL(END)
 
@@ -155,23 +161,25 @@
              DMPCLPGM
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
 
-             CHGVAR     VAR(&PRTCD) VALUE('AOC000014: Database error has occurred +
-                          in Midas. Please inform a Midas System operator :')
+             CHGVAR     VAR(&PRTCD) VALUE('AOC000014: Database +
+                          error has occurred in Midas. Please +
+                          inform a Midas System operator :')
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
 
  /********** RTVJOBA    NBR(&JOBNO) TYPE(&TYPE)                                     */ /*AR1088819*/
-             RTVJOBA    JOB(&JOBNAME) USER(&JOBUSER) NBR(&JOBNO) TYPE(&TYPE) +
-                          /*AR1088819*/
+             RTVJOBA    JOB(&JOBNAME) USER(&JOBUSER) NBR(&JOBNO) +
+                          TYPE(&TYPE)                                                  /*AR1088819*/
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
 
  /********** SNDMSG     MSG('AOC000014 failed: Retail Input (CUSX or +              */ /*AR1088819*/
  /**********              STOR)' *BCAT &PACTN *TCAT '.  Please +                    */ /*AR1088819*/
  /**********              check the job log for ' *CAT &JOBNO *TCAT +               */ /*AR1088819*/
  /**********              '/QUSER/QZDASOINIT') TOMSGQ(MOPERQ)                       */ /*AR1088819*/
-             SNDMSG     MSG('AOC000014 failed: Retail Input (CUSX or STOR)' *BCAT +
-                          &PACTN *TCAT '.  Please check the job log for ' *CAT +
-                          &JOBNO *TCAT '/' *CAT &JOBUSER *TCAT '/' *CAT &JOBNAME) +
-                          TOMSGQ(MOPERQ)                                               /*AR1088819*/
+             SNDMSG     MSG('AOC000014 failed: Retail Input (CUSX or +
+                          STOR)' *BCAT &PACTN *TCAT '.  Please +
+                          check the job log for ' *CAT &JOBNO *TCAT +
+                          '/' *CAT &JOBUSER *TCAT '/' *CAT +
+                          &JOBNAME) TOMSGQ(MOPERQ)                                     /*AR1088819*/
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
  END:
-             ENDPGM
+ ENDPGM

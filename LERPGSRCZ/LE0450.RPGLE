@@ -12,9 +12,8 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055322           Date 26Feb20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
-      *                 MD054326           Date 18Sep19               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD054326           Date 18Sep19               *
       *                 MD054335           Date 11Sep19               *
       *                 MD054132           Date 16Aug19               *
       *                 MD054108           Date 14Aug19               *
@@ -413,8 +412,6 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD055322 - FB2.1 SP21 RECON - Discrepancy on CLOANCK field   *
-      *             ABLN on first COB                                 *
       *  CER050 - Annualised Percentage Rate                          *
       *  MD054326 - Repayment amount debited from settlement account  *
       *             showed discrepancy against balance check          *
@@ -17222,8 +17219,7 @@ C    C                   ENDIF                                                  
      C     MDAT          IFLT      DNWD                                          B3            13152
      C     MDAT          ANDNE     0                                                           13152
      C     MDAT          ANDGE     FIRY                                                     MD054008
-     C*****RECI          ANDEQ     'M'                                             MD054008 MD055322
-     C     RECIL         ANDEQ     'M'                                                      MD055322
+     C     RECI          ANDEQ     'M'                                                      MD054008
      C                   Z-ADD     MDAT          CDAT              5 0                         13152
      C                   ELSE                                                    X3            13152
      C                   Z-ADD     DNWD          CDAT                                          13152

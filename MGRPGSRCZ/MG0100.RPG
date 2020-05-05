@@ -10,9 +10,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD052130           Date 27Mar19               *
-      *  Prev Amend No. MD052280           Date 04Feb19               *      
-      *                 AR731878           Date 24Jun13               *      
+      *  Last Amend No. MD055760           Date 09Mar20               *
+      *  Prev Amend No. MD052130           Date 27Mar19               *
+      *                 MD052280           Date 04Feb19               *
+      *                 AR731878           Date 24Jun13               *
       *                 MD050842           Date 25May18               *
       *                 MD050972           Date 17May18               *
       *                 MD050936           Date 16May18               *
@@ -108,12 +109,14 @@
      F*                                                               *
      F*****************************************************************
       *                                                               *
+      *  MD055760 - Reversed a part of MD052280 that prevents tag 59F *
+      *             generation on SE module                           *
       *  MD052130 - Condition display of customer number in last line *
       *             of field 50K.                                     *
       *           - Reinstated fix 220913.
-      *  MD052280 - Added MGBENA as input parameter in SRFM59         *      
+      *  MD052280 - Added MGBENA as input parameter in SRFM59         *
       *  AR731878 - Customer number should not appear on tag 50K.     *
-      *             Reverse fix 220913. (Child: AR731879).            *      
+      *             Reverse fix 220913. (Child: AR731879).            *
       *  MD050842 - Condition fields 33B and 36 by System Value.      *
       *  MD050972 - Field tag 32A has a blank Value Date for LDNI     *
       *  MD050936 - Field tag 53B has a defaulted value of '/'        *
@@ -3373,8 +3376,8 @@
      C*****************************************************************              220913 AR731878
      C           PLL50K    IFEQ 'Y'                                                         MD052130
      C                     EXSR SRICAR                                                      MD052130
-     C                     ENDIF                                                            MD052130 
-      *                                                                                     MD052130    
+     C                     ENDIF                                                            MD052130
+      *                                                                                     MD052130
      C                     ENDIF                                                              204225
      C                     ENDIF                                                              204225
      C                     ENDIF                                                              204225
@@ -5640,8 +5643,15 @@
      C           SRFM59    BEGSR                                                              CSW215
       *                                                                                       CSW215
      C**********           MOVELMGBENN    PINP1     P                                CSW215 MD052280
-     C                     MOVELMGBENA    PINP1     P                                       MD052280
-     C                     MOVELMGBENN    PINP2     P                                       MD052280
+     C**********           MOVELMGBENA    PINP1     P                              MD052280 MD055760
+     C**********           MOVELMGBENN    PINP2     P                              MD052280 MD055760
+     C           MGMODI    IFEQ 'SE'                                                        MD055760
+     C                     MOVELMGBENN    PINP1     P                                       MD055760
+     C                     MOVEL*BLANKS   PINP2     P                                       MD055760
+     C                     ELSE                                                             MD055760
+     C                     MOVELMGBENA    PINP1     P                                       MD055760
+     C                     MOVELMGBENN    PINP2     P                                       MD055760
+     C                     ENDIF                                                            MD055760
       *                                                                                       CSW215
      C                     CALL 'MG001001'                                                    CSW215
      C                     PARM *BLANKS   PRTRN                                               CSW215

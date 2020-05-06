@@ -28483,7 +28483,7 @@
      C                   Z-ADD     SZEDAT        @@DAYN                                       CIR013
      C                   EXSR      ZDATE9                                                     CIR013
      C                   Z-ADD     @@VDT         ZZDATB                                       CIR013
-     C                   ENDIF                                                              MD051152     
+     C                   ENDIF                                                              MD051152
       *                                                                                       CIR013
       ** Check whether the period contains a 29th February                                  MD051152
       *                                                                                     MD051152

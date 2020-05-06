@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD053295           Date 13Apr19               *
+      *  Last Amend No. MD055501           Date 29Apr20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD053295           Date 13Apr19               *
       *                 MD047607           Date 29Nov17               *
       *                 MD046248           Date 27Oct17               *      
       *                 CDL099             Date 06Oct17               *
@@ -119,6 +120,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD055501 -  In Projected account movement Enquiry,           *
+      *              Withholding Tax amount round down for a TD Deal  *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD053295 - Lending loan with Interest Calculation Basis      *
       *             method 3 (30/360) has wrong interest payment      *
@@ -947,6 +950,8 @@
       *                                                                                    MD031062A
      I              'PostNetInterest   '  C         PSNET                                  MD031062A
      I              'LECalcBasis6LeapYear'C         WPARML                                  MD035545
+     I              'BasCcyTaxRoundDown'  C         C#BASE                                  MD055501
+     I              'NBasCcyTaxRoundDown' C         C#NBAS                                  MD055501
      C/SPACE 5
       *****************************************************************
       * Process     :  MAINLINE                                       *
@@ -4341,6 +4346,104 @@
      C**********           ENDIF                                                   MD035545 MD047993
      C                     ENDIF                                                            MD035545
       *                                                                                     MD035545
+      *
+      ** CHECK IF CDL081 IS INSTALLED                                                       MD055501
+      *                                                                                     MD055501
+     C                     MOVE 'N'       CDL081  1                                         MD055501
+     C                     MOVEL' '       W#NBSR  1                                         MD055501
+     C                     MOVEL' '       W#BSRD  1                                         MD055501
+     C                     CALL 'AOSARDR0'                                                  MD055501
+     C                     PARM *BLANKS   PRTCD   7                                         MD055501
+     C                     PARM '*VERIFY' POPTN   7                                         MD055501
+     C                     PARM 'CDL081'  PSARD   6                                         MD055501
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD055501
+      *                                                                                     MD055501
+     C           PRTCD     IFNE *BLANKS                                                     MD055501
+     C           PRTCD     ANDNE'*NRF   '                                                   MD055501
+     C           *LOCK     IN   LDA                                                         MD055501
+     C                     MOVEL'075'     DBASE                                             MD055501
+     C                     MOVEL'SCSARDPD'DBFILE                                            MD055501
+     C                     MOVEL'CDL081'  DBKEY                                             MD055501
+     C                     OUT  LDA                                                         MD055501
+     C                     EXSR SRERR                                                       MD055501
+     C                     END                                                              MD055501
+      *                                                                                     MD055501
+     C           PRTCD     IFEQ *BLANKS                                                     MD055501
+     C                     MOVE 'Y'       CDL081                                            MD055501
+     C                     ENDIF                                                            MD055501
+      *                                                                                     MD055501
+      ** Access withholding tax round down system values if CDL081 is on                    MD055501
+      *                                                                                     MD055501
+     C           CDL081    IFEQ 'Y'                                                         MD055501
+     C                     CALL 'AOSVALR0'                                                  MD055501
+     C                     PARM *BLANKS   PRTCD                                             MD055501
+     C                     PARM C#BASE    SVALK1 20                                         MD055501
+     C                     PARM           SVAL1 200                                         MD055501
+     C                     PARM *BLANK    SVALK2 20                                         MD055501
+     C                     PARM           SVAL2 200                                         MD055501
+     C                     PARM *BLANK    SVALK3 20                                         MD055501
+     C                     PARM           SVAL3 200                                         MD055501
+     C                     PARM *BLANK    SVALK4 20                                         MD055501
+     C                     PARM           SVAL4 200                                         MD055501
+     C                     PARM *BLANK    SVALK5 20                                         MD055501
+     C                     PARM           SVAL5 200                                         MD055501
+     C                     PARM *BLANK    SVALK6 20                                         MD055501
+     C                     PARM           SVAL6 200                                         MD055501
+     C                     PARM *BLANK    SVALK7 20                                         MD055501
+     C                     PARM           SVAL7 200                                         MD055501
+     C                     PARM *BLANK    SVALK8 20                                         MD055501
+     C                     PARM           SVAL8 200                                         MD055501
+     C                     PARM *BLANK    SVALK9 20                                         MD055501
+     C                     PARM           SVAL9 200                                         MD055501
+     C                     PARM *BLANK    SVALK0 20                                         MD055501
+     C                     PARM           SVAL10200                                         MD055501
+      *                                                                                     MD055501
+     C           PRTCD     IFNE *BLANKS                                                     MD055501
+     C           *LOCK     IN   LDA                                                         MD055501
+     C                     MOVEL'076'     DBASE                                             MD055501
+     C                     MOVEL'SDSVALPD'DBFILE                                            MD055501
+     C                     MOVELSVALK1    DBKEY                                             MD055501
+     C                     OUT  LDA                                                         MD055501
+     C                     EXSR SRERR                                                       MD055501
+     C                     ENDIF                                                            MD055501
+     C                     MOVELSVAL1     W#BSRD                                            MD055501
+      *                                                                                     MD055501
+     C                     CALL 'AOSVALR0'                                                  MD055501
+     C                     PARM *BLANKS   PRTCD                                             MD055501
+     C                     PARM C#NBAS    SVALK1 20                                         MD055501
+     C                     PARM           SVAL1 200                                         MD055501
+     C                     PARM *BLANK    SVALK2 20                                         MD055501
+     C                     PARM           SVAL2 200                                         MD055501
+     C                     PARM *BLANK    SVALK3 20                                         MD055501
+     C                     PARM           SVAL3 200                                         MD055501
+     C                     PARM *BLANK    SVALK4 20                                         MD055501
+     C                     PARM           SVAL4 200                                         MD055501
+     C                     PARM *BLANK    SVALK5 20                                         MD055501
+     C                     PARM           SVAL5 200                                         MD055501
+     C                     PARM *BLANK    SVALK6 20                                         MD055501
+     C                     PARM           SVAL6 200                                         MD055501
+     C                     PARM *BLANK    SVALK7 20                                         MD055501
+     C                     PARM           SVAL7 200                                         MD055501
+     C                     PARM *BLANK    SVALK8 20                                         MD055501
+     C                     PARM           SVAL8 200                                         MD055501
+     C                     PARM *BLANK    SVALK9 20                                         MD055501
+     C                     PARM           SVAL9 200                                         MD055501
+     C                     PARM *BLANK    SVALK0 20                                         MD055501
+     C                     PARM           SVAL10200                                         MD055501
+      *                                                                                     MD055501
+     C           PRTCD     IFNE *BLANKS                                                     MD055501
+     C           *LOCK     IN   LDA                                                         MD055501
+     C                     MOVEL'076'     DBASE                                             MD055501
+     C                     MOVEL'SDSVALPD'DBFILE                                            MD055501
+     C                     MOVELSVALK1    DBKEY                                             MD055501
+     C                     OUT  LDA                                                         MD055501
+     C                     EXSR SRERR                                                       MD055501
+     C                     ENDIF                                                            MD055501
+     C                     MOVELSVAL1     W#NBSR                                            MD055501
+      *                                                                                     MD055501
+      ** Setup tax amount rounding down indicators                                          MD055501
+      *                                                                                     MD055501
+     C                     ENDIF                                                            MD055501
      C/COPY WNCPYSRC,AOH00068
       *
      C                     ENDSR
@@ -5776,7 +5879,7 @@
       *                                                                                     MD023265
       ** If Deal Ccy is equal to Base Ccy round down Interest Amount.                       MD023265
       *                                                                                     MD023265
-     C           HKCCY     IFEQ BJCYCD                                                      MD023265
+     C********** HKCCY     IFEQ BJCYCD                                             MD023265 MD055501
       *                                                                                     MD023265
       ** Set work adjustment field according to decimal places.                             MD023265
       *                                                                                     MD023265
@@ -5793,6 +5896,10 @@
       *                                                                                     MD023265
       ** Calculate and then round down Tax Amount.                                          MD023265
       *                                                                                     MD023265
+     C           CDL081    IFEQ 'Y'                                                         MD055501
+     C           W#BSRD    ANDEQ'Y'                                                         MD055501
+     C           CDL081    OREQ 'Y'                                                         MD055501
+     C           W#NBSR    ANDEQ'Y'                                                         MD055501
      C           WINTD     DIV  ULWKAD    ULTINT 150                                        MD023265
      C                     MULT ULWKAD    ULTINT                                            MD023265
      C           ULTINT    MULT ULWHTR    TAXA                                              MD023265
@@ -5803,10 +5910,16 @@
       ** Otherwise (Deal Ccy NOT = Base Ccy) calculate Tax amount                           MD023265
       ** without rounding down.                                                             MD023265
       *                                                                                     MD023265
-     C                     ELSE                                                             MD023265
+     C**********           ELSE                                                    MD023265 MD055501
+     C                     END                                                              MD055501
+     C           W#BSRD    IFEQ 'N'                                                         MD055501
+     C           W#BSRD    OREQ *BLANKS                                                     MD055501
+     C           W#NBSR    OREQ 'N'                                                         MD055501
+     C           W#NBSR    OREQ *BLANKS                                                     MD055501
      C           WINTD     MULT ULWHTR    TAXA                                              MD023265
      C                     DIV  100       TAXA      H                                       MD023265
-     C                     ENDIF                                                            MD023265
+     C**********           ENDIF                                                   MD023265 MD055501
+     C                     ENDIF                                                            MD055501
      C                     ENDIF                                                            MD023265
      C                     ENDSR                                                            MD023265
       *****************************************************************                     MD023265

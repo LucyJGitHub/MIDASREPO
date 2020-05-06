@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD045952           Date 06Jul17               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055383           Date 30Apr20               *
+      *  Prev Amend No. MD045952           Date 06Jul17               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR549926           Date 19Aug14               *
       *                 MD026137           Date 04Apr14               *
       *                 MD025973           Date 25Mar14               *
@@ -53,6 +54,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055383 - The system is generating another set of MT942.    *
+      *             Amend to flag MT941 and MD942 MRPROC = 'Y'        *
       *  MD045952 - Ensure that COB MT940s only generated if          *
       *             calling pgm is GLC001430.                         *
       *           - Recompile due to changes to CGL146_043, CGL146_044*
@@ -1131,9 +1134,9 @@
      C     KeyPost       READE     GLPOSTD0                               28                AR549926
      C                   ENDDO                                                              AR549926
       *                                                                                     AR549926
-     C                   IF        *IN98                                                    AR549926
+     C**********         IF        *IN98                                           AR549926 MD055383
      C                   EXSR      $GLPOSTPD                                                AR549926
-     C                   ENDIF                                                              AR549926
+     C**********         ENDIF                                                     AR549926 MD055383
       *                                                                                     AR549926
      C                   ENDSR                                                              AR549926
       *****************************************************************                     AR549926

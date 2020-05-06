@@ -22,6 +22,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD055125 - Review the bank’s Auto-COB application            *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD038993 - Missing code functionality on CCB014.             *
       *             Define 10 jobs. COB will not run if one of the    *
       *             job is active.                                    *

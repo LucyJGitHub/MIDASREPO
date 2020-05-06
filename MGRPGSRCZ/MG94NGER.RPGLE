@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD050727           Date 21Jan17               *
-      *  Prev Amend No. CMG008             Date 19May10               *
+      *  Last Amend No. MD055642           Date 04May20               *
+      *  Prev Amend No. MD050727           Date 21Jan17               *
+      *                 CMG008             Date 19May10               *
       *                 MD046248           Date 27Oct17               *
       *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -46,6 +47,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055642 - FM 2.1 SP21 Duplicate MultiCash Narr 22 on        *
+      *             field 61 subfield 86                              *
       *  MD050727 - Emergency fix to enable alphanumeric batches      *
       *             to be processed. Please see SFDC 01793714         *
       *  CMG008 - Upgrade of EMP005 to BF2.1 SP21                     *
@@ -507,6 +510,8 @@
      D WChrLen         S              3S 0                                                    CMG008
       ** Work field for %SUBST operation                                                      CMG008
                                                                                               CMG008
+     D WkBAEX22        S                   LIKE(BAEX22)                                     MD055642
+      ** Work field for MultiCash Narrative 22 in file GLMNARPD                             MD055642
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2097,6 +2102,12 @@
      C                   EVAL      WIndx =1                                                 BUG24304
      C                   EVAL      WExt22 = *BLANKS                                         BUG24304
       *                                                                                     BUG24304
+     C
+     C                   EVAL      WkBAEX22  = BAEX22                                       MD055642
+     C                   IF        WkModuleID = 'BA' AND MG8632 <> *BLANKS                  MD055642
+     C                   EVAL      WkBAEX22  = *BLANKS                                      MD055642
+     C                   ENDIF                                                              MD055642
+     C
      C                   EVAL      WExt22 = %TRIM(BAEX1) + '  ' +                           BUG24304
      C                             %TRIM(BAEX2)+'  '+%TRIM(BAEX3)+'  '+                     BUG24304
      C                             %TRIM(BAEX4)+'  '+%TRIM(BAEX5)+'  '+                     BUG24304
@@ -2108,7 +2119,8 @@
      C                             %TRIM(BAEX16)+'  '+%TRIM(BAEX17)+ '  '+                  BUG24304
      C                             %TRIM(BAEX18)+'  '+%TRIM(BAEX19)+ '  '+                  BUG24304
      C                             %TRIM(BAEX20)+'  '+%TRIM(BAEX21)+ '  '+                  BUG24304
-     C                             %TRIM(BAEX22)                                            BUG24304
+     C**********                   %TRIM(BAEX22)                                   BUG24304 MD055642
+     C                             %TRIM(WkBAEX22)                                          MD055642
       *                                                                                     BUG24304
       ** Dividing extended narratives into 27 chars for Details of Payment                  BUG24304
       *                                                                                     BUG24304

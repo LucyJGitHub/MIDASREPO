@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD045515           Date 02Jul17               *
-      *  Prev Amend No. MD037555           Date 24Feb15               *
+      *  Last Amend No. 247630             Date 05May20               *
+      *  Prev Amend No. MD045515           Date 02Jul17               *
+      *                 MD037555           Date 24Feb15               *
       *                 MD048056           Date 16Jan18               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL184             Date 07Dec16               *
@@ -184,6 +185,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  247630 - TI Midas Interface error. Map A5ACKY to have the    *
+      *           correct value (for COB generated account).          *
+      *         - Applied for MD-55712                                *
       *  MD045515 - Real-time postings resulted in duplicate movements* 
       *             in Midas. Remove fix MD037555.                    * 
       *  MD037555 - Correction of MD028392.  This fix cause the loss  *
@@ -714,6 +718,12 @@
      D  WNOCC2                 1      9
      D  WACOD2                10     19  0
      D  WSEQ2                 20     21  0
+                                                                                              247630
+      ** Data Structure for A5ACKY mapping                                                    247630
+     D ACKY            DS                                                                     247630
+     D  ABRCA                  1      3                                                       247630
+     D  AACNK                  4     34                                                       247630
+                                                                                              247630
      D/COPY WNCPYSRC,GL0600I009
      D RUNDT           DS
 
@@ -1709,6 +1719,14 @@
      C                   Z-ADD     RUND          DACO
      C                   MOVE      BKDSFC        STFQ
      C                   Z-ADD     RUND          LSTD
+      *                                                                                       247630
+      ** Map Account Key field to have the correct Brch/Cust/Ccy/Acod/Seq                     247630
+     C                   MOVE      *BLANKS       ACKY                                         247630
+     C                   MOVE      *BLANKS       A5ACKY                                       247630
+                                                                                              247630
+     C                   MOVE      BRCA          ABRCA                                        247630
+     C                   MOVEL     ACNK          AACNK                                        247630
+     C                   MOVEL     ACKY          A5ACKY                                       247630
 
      C/COPY WNCPYSRC,GL0600CP17
 

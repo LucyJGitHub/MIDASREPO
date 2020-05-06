@@ -6,11 +6,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last amend No. LRI100  *CREATE    Date 17Mar20               *
-      *  Prev Amend No. XXXXXX             Date DDMMMYY               *
+      *  Last amend No. LRI100  *AMEND     Date 05May20               *
+      *  Prev amend No. LRI100  *CREATE    Date 17Mar20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LRI100 - Additional info. entries not statemented since      *
+      *           exist on history file.                              *
       *  LRI100 - Statement Format Changes                            *
       *         - Upgrade CARs LRI009/LRI010 to FB Midas.             *
       *                                                               *
@@ -33,6 +35,9 @@
      C                   MOVEL     SPOS          XSPOS                                        LRI100
      C*                                                                                       LRI100
      C     KEY           CHAIN     GLJENXL1                           24                      LRI100
+     C     *IN24         IFEQ      *ON                                                        LRI100
+     C     KEY           CHAIN     GLJEHXL2                           24                      LRI100
+     C                   ENDIF                                                                LRI100
      C*                                                                                       LRI100
      C** Only Print Non-Blank Narrative                                                       LRI100
      C     *IN24         IFEQ      *OFF                                                       LRI100

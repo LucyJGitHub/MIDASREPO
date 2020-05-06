@@ -6,11 +6,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last amend No. LRI100  *CREATE    Date 17Mar20               *
-      *  Prev Amend No. XXXXXX             Date DDMMMYY               *
+      *  Last amend No. LRI100  *AMEND     Date 05May20               *
+      *  Prev amend No. LRI100  *CREATE    Date 17Mar20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LRI100 - Additional info. entries not statemented since      *
+      *           exist on history file.                              *
       *  LRI100 - Statement Format Changes                            *
       *         - Upgrade CARs LRI009/LRI010 to FB Midas.             *
       *                                                               *
@@ -54,6 +56,7 @@
      D*                                                                                       LRI100
      D                 DS                                                                     LRI100
      D  BAADI1                 1     65                                                       LRI100
+     D  HAADI1                 1     65                                                       LRI100
      D  LNAR1                  1     25                                                       LRI100
      D  LNAR2                 26     50                                                       LRI100
      D  LNAR3                 51     65                                                       LRI100

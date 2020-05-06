@@ -11,13 +11,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD041010            Date 18Sep16              *
+      *  Last Amend No. MD054233            Date 11Apr20              *
+      *  Prev Amend No. MD046248            Date 27Oct17              *
+      *                 MD041010            Date 18Sep16              *
       *                 MD024652            Date 07May14              *
       *                 MD024006A *CREATE   Date 08Jan14              *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054233 - LEE06A 00010 on MSGW - Missing logical file       *
+      *             members after SQL error in CBC022001              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD041010 - Component CBC022001 00686 failed during COB       *
       *  MD024652 - Missing members of REHIS* files.                  *
@@ -443,6 +446,10 @@
      C+ close Write
      C/end-exec
 
+     C                   IF        SQLCODE <> 0 AND SQLCODE <> 100                          MD054233
+     C                   EXSR      *PSSR                                                    MD054233
+     C                   ENDIF                                                              MD054233
+
      C     WriteE        ENDSR
       ********************************************************************
       /EJECT
@@ -490,6 +497,10 @@
      C+ close WriteAll
      C/end-exec
 
+     C                   IF        SQLCODE <> 0 AND SQLCODE <> 100                          MD054233
+     C                   EXSR      *PSSR                                                    MD054233
+     C                   ENDIF                                                              MD054233
+
      C     WriteAllE     ENDSR
       ********************************************************************
       /EJECT
@@ -529,6 +540,10 @@
      C+ , 'N'
      C+ )
      C/end-exec
+
+     C                   IF        SQLCODE <> 0 AND SQLCODE <> 100                          MD054233
+     C                   EXSR      *PSSR                                                    MD054233
+     C                   ENDIF                                                              MD054233
 
      C     WriteRecE     ENDSR
       ********************************************************************
@@ -709,6 +724,7 @@
      C                   DUMP
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
+     C                   EVAL      *INLR = *ON                                              MD054233
      C                   RETURN
      C                   ENDIF
      C     PSSRE         ENDSR

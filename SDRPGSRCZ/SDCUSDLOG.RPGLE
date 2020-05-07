@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055446           Date 04Apr20               *
+      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CFT050             Date 03Jun13               *
       *                 CER059             Date 19Jul10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -37,6 +38,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055446 - There are parties and fields missing from the BRT *
+      *             details tab in Customer Input plus date of birth  *
+      *             issues.                                           *
+      *           - Recompile over changes in SDCBRTPD.               *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  MD046248 - Finastra Rebranding                               *
@@ -56,7 +61,7 @@
       *  CSC011 - 24x7 Midas Availability                             *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -67,66 +72,66 @@
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       **------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Customer Details file
      D CUSDFilFmt    E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** Midas BRT Customer details
      D BRTXFilFmt    E DS                  EXTNAME(SDCBRTPD)
- 
+
       ** Midas SD API Customer Private Banking details
      D PRIVFilFmt    E DS                  EXTNAME(SDPBDSPD)
      D                                     PREFIX(O)
                                                                                               CER059
      D TranInACU3    E DS                  EXTNAME (SDACU3DPD)                                CER059
      D TranInACU4    E DS                  EXTNAME (SDACU4DPD)                                CER059
- 
+
       ** Customer details in Screen Format - Primary Details
      D CUSDScnFmt    E DS                  EXTNAME(SDCUPRPD)
- 
+
       ** Customer details in Screen Format - Secondary Details
      D CUSEScnFmt    E DS                  EXTNAME(SDCUSEPD)
- 
+
       ** Customer details in Screen Format - Message Routing Details
      D MSGDScnFmt    E DS                  EXTNAME(SDCUMRPD)
- 
+
       ** Customer details in Screen Format - Base Rate Tax Details
      D BRTXScnFmt    E DS                  EXTNAME(SDCUBRPD)
- 
+
       ** Customer details in Screen Format - Private Banking Details
      D PRIVScnFmt    E DS                  EXTNAME(SDCUPBPD)
      D                                     PREFIX(O)
- 
+
       ** SD Customer details Extra Data - File (D/B) format
      D CUSDExtDta    E DS                  EXTNAME(SDCUEXPD)
                                                                                               213051
@@ -135,15 +140,15 @@
                                                                                               222373
       ** Global Customer X-Reference - File Format                                            222373
      D GCustFilFmt   E DS                  EXTNAME(GPCUSTXPD)                                 222373
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D TRANSDTL        S           5800A
      D DDAPRC          S              1A                                                    MD054028
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -158,15 +163,15 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
      C                   EXSR      SRProc
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -176,12 +181,12 @@
       * Called by: Main Processing                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SRProc        BEGSR
- 
+
      C                   EVAL      TRANSDTL = *Blanks
      C                   EVAL      DDACTN = BBTYLC
- 
+
      C                   CALLB     'SDCUSDCVT'
      C                   PARM                    RetCodeOut
      C                   PARM                    CUSDFilFmt
@@ -199,18 +204,18 @@
      C                   PARM                    MSGDScnFmt
      C                   PARM                    BRTXScnFmt
      C                   PARM                    PRIVScnFmt
- 
+
      C                   IF        RetCodeOut <> *Blanks
      C                   EVAL      RetCodeIn = '*Error'
      C                   ELSE
- 
+
      C                   EVAL      TRANSDTL = CUSDScnFmt + CUSEScnFmt
      C                                        + MSGDScnFmt + BRTXScnFmt
      C                                        + PRIVScnFmt + CUSDExtDta
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -222,23 +227,23 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    RetCodeIn
      C                   PARM                    CUSDFilFmt
      C                   PARM                    BRTXFilFmt
      C                   PARM                    PRIVFilFmt
      C                   PARM                    TRANSDTL
- 
+
       ** The following /COPY sets the program, module and procedure
       ** names for database error processing.
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

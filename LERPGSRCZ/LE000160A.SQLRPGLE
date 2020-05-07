@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2018')
+     H COPYRIGHT('(c) Finastra International Limited 2020')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas LE Facility Fee Amortization Load')
@@ -7,21 +7,21 @@
       *                                                               *
       *  Midas - Customer Lending Module                              *
       *                                                               *
-      *  LE000160 - Midas LE Fee Amortization Detail File Load        *
+      *  LE000160A - Midas LE Fee Amortization Detail File Load       *
       *                                                               *
       *  Function: Builds the detail file for each day in the life of *
       *            a fee from Fee Start Posting Date through Event    *
       *            Control Date. Daily Accrual Fee is recalculated    *
-      *            to be used in LER130.                              *
+      *            to be used in LER130. FBM 1.4.11.06 version of     *
+      *            LE000160.                                          *
+      *                                                               *
       *  (COB)                                                        *
       *                                                               *
       *  Called By: LEC000159 after the call to LE000159              *
       *                                                               *
-      *  (C) Finastra International Limited 2018                      *
+      *  (C) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD055472           Date 21Apr20               *
-      *  Prev Amend No. MD031156           Date 18Jul18               *
-      *                 CLE159  *Create    Date 18Jul18               *
+      *  Last Amend No. MD055472 *Create   Date 21Apr20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
@@ -30,9 +30,6 @@
       *             adjust and declaration of field. Use a system     *
       *             value to determine whether to use the FBM 11.06   *
       *             version or the FBM2.1 version of LE000160.        *
-      *  MD031156 - LEC000159 00001 Failed in COB due to decimal data *
-      *             error in LE000160                                 *
-      *  CLE159 - Lending Fee Amortization Enhancement                *
       *                                                               *
       *****************************************************************
       *                                                               *
@@ -89,20 +86,20 @@
       ** Second DS for access programs, long data structure
       *
      D @@FAMT          S                   Like(FEFAMT)
-     D REOFES          S             30S 9
-     D SVOFES          S             30S 9
-     D READJS          S             30S 9
-     D SVADJS          S             30S 9
+     D REOFES          S                   Like(FEFAMT)
+     D SVOFES          S                   Like(FEFAMT)
+     D READJS          S                   Like(FEFAMT)
+     D SVADJS          S                   Like(FEFAMT)
      D REMAIN          S                   Like(FEPEND)
      D SVDAYS          S                   Like(FEPEND)
-     D REDAFS          S             30S 9
-     D SVDAFS          S             30S 9
-     D RETOFS          S             30S 9
-     D SVTOFS          S             30S 9
+     D REDAFS          S                   Like(FEFAMT)
+     D SVDAFS          S                   Like(FEFAMT)
+     D RETOFS          S                   Like(FEFAMT)
+     D SVTOFS          S                   Like(FEFAMT)
      D @@PCNT          S                   Like(FHPCNT)
      D KEYDAT          S                   Like(FEPSTD)
      D DAYDIF          S                   Like(FEPSTD)
-     D WPrcss          S              1                                                     MD031156
+     D WPrcss          S              1
       *
       /EJECT
       *****************************************************************
@@ -197,7 +194,7 @@
      C                   z-add     *Zeros        REMAIN
      C                   z-add     *Zeros        REDAFS
      C                   z-add     *Zeros        RETOFS
-     C                   EVAL      WPrcss = 'Y'                                             MD031156
+     C                   EVAL      WPrcss = 'Y'
       *
      C                   Do
       *
@@ -256,7 +253,7 @@
       *
      C     BKALDI        Ifne      'Y'
      C     FELADT        andeq     *ZEROS
-     C                   EVAL      WPrcss = 'N'                                             MD031156
+     C                   EVAL      WPrcss = 'N'
      C                   Leave
      C                   Else
      C     SVDAYS        sub       1             REMAIN
@@ -279,12 +276,12 @@
      c+   FHFSEQ = :FEFSEQ and
      c+   FHDATE = :KEYDAT
      c/End-Exec
-      *                                                                                     MD031156
-      ** Initialize FHGNDT if no record is retrieved.                                       MD031156
-      *                                                                                     MD031156
-     C                   IF        SQLSTT = '02000'                                         MD031156
-     C                   EVAL      FHGNDT = 0                                               MD031156
-     C                   ENDIF                                                              MD031156
+      *
+      ** Initialize FHGNDT if no record is retrieved.
+      *
+     C                   IF        SQLSTT = '02000'
+     C                   EVAL      FHGNDT = 0
+     C                   ENDIF
       *
      C     KEYDAT        CASEQ     FEPSTD        SRYADJ                         First Time
      C     SQLSTT        CASEQ     '02000'       SRNADJ                         No Adjustmnt
@@ -356,11 +353,7 @@
       *
       * Recalculate Outstanding Fee Amount
       *
-     C     KEYDAT        Ifeq      FEPSTD                                                   MD055472
      C     @@FAMT        sub       SVDAFS        REOFES
-     C                   ELSE                                                               MD055472
-     C     SVOFES        sub       SVDAFS        REOFES                                     MD055472
-     C                   ENDIF                                                              MD055472
       *
      C     REOFES        Iflt      *Zeros
      C                   z-add     *Zeros        REOFES
@@ -413,7 +406,7 @@
       *
      C                   z-add     KEYDAT        F2DATE
       *
-     C                   z-add(H)  REOFES        F2OFEA
+     C                   z-add     REOFES        F2OFEA
       *
      C     F2OFEA        Iflt      *Zeros
      C                   z-add     *Zeros        F2OFEA
@@ -421,15 +414,15 @@
       *
      C                   z-add     @@PCNT        F2APCT
       *
-     C                   z-add(H)  READJS        F2ADJA
+     C                   z-add     READJS        F2ADJA
       *
      C     F2ADJA        Iflt      *Zeros
      C                   Z-ADD     *Zeros        F2ADJA
      C                   Endif
       *
      C                   z-add     REMAIN        F2DAYS
-      *                                                                                     MD031156
-     C                   IF        WPrcss = 'Y'                                             MD031156
+      *
+     C                   IF        WPrcss = 'Y'
       *
       * If posting an Event Control Date record:
       * Recalculate Daily Accrual Fee AGAIN based on difference between
@@ -442,10 +435,10 @@
      C     RETOFS        sub       FEADAT        REDAFS
      C                   Endif
       *
-     C                   ENDIF                                                              MD031156
+     C                   ENDIF
       *
-     C                   z-add(H)  REDAFS        F2DAFA
-     C                   z-add(H)  RETOFS        F2TOFA
+     C                   z-add     REDAFS        F2DAFA
+     C                   z-add     RETOFS        F2TOFA
       *
      C     F2TOFA        Iflt      *Zeros
      C                   z-add     *Zeros        F2TOFA

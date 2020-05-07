@@ -5033,7 +5033,7 @@
       *                                                                                       CSW220
      C                   CALL      'SWIFTACTV'                                                CSW220
      C                   PARM      'CSW220'      PSWIFT                                       CSW220
-     C                   PARM      *BLANKS       PRTCD                                        CSW220
+     C                   PARM      *BLANKS       PRTNCD                                       CSW220
       *                                                                                       CSW220
      C     PRTNCD        IFEQ      'CSWACTV'                                                  CSW220
      C                   MOVE      'Y'           CSW220                                       CSW220

@@ -57,7 +57,7 @@
      F                                     IGNORE(TABLET5F:TABTE10F)
 
       ** New Logical file that will filter MT199
-     FMEINFTL6  UF   E             DISK
+     FMEINFTL6  UF   E             DISK    COMMIT
 
       ** Outgoing Message Reference File
      FMGOREFPD  O    E           K DISK    COMMIT
@@ -864,6 +864,29 @@
      C     SrExtract     BEGSR
 
       *
+      ** Get tag 121
+      *
+     C                   EVAL      KFMtag = '121:'
+     C     KLIncMsg      CHAIN     MEINDTL0
+     C                   IF        %FOUND
+     C                   EVAL      WTag121Val = DTMFLD
+
+     C                   ADD       1             Q
+     C     Q             OCCUR     MULT
+     C                   MOVE      ':121:'       MTAG
+     C                   MOVEL     WTag121Val    MFLD
+
+     C                   ELSE
+     C     *LOCK         IN        LDA
+     C                   MOVE      '013'         DBASE
+     C                   MOVEL     'KLIncMsg'    DBKEY
+     C                   MOVEL     'MEINDTL0'    DBFILE
+     C                   OUT       LDA
+     C                   EXSR      *PSSR
+
+     C                   ENDIF
+
+      *
       ** Get tag 20
       ** found in internet. need to test
       *
@@ -934,28 +957,6 @@
 
      C                   ENDIF
 
-      *
-      ** Get tag 121
-      *
-     C                   EVAL      KFMtag = '121:'
-     C     KLIncMsg      CHAIN     MEINDTL0
-     C                   IF        %FOUND
-     C                   EVAL      WTag121Val = DTMFLD
-
-     C                   ADD       1             Q
-     C     Q             OCCUR     MULT
-     C                   MOVE      ':121:'       MTAG
-     C                   MOVEL     WTag121Val    MFLD
-
-     C                   ELSE
-     C     *LOCK         IN        LDA
-     C                   MOVE      '013'         DBASE
-     C                   MOVEL     'KLIncMsg'    DBKEY
-     C                   MOVEL     'MEINDTL0'    DBFILE
-     C                   OUT       LDA
-     C                   EXSR      *PSSR
-
-     C                   ENDIF
 
       *
       ** Get tag 79 Line 1
@@ -974,7 +975,6 @@
       *
      C                   ADD       1             Q
      C     Q             OCCUR     MULT
-     C                   MOVEL     ':79:'        MTAG
      C                   MOVEL     WTag79L2Val   MFLD
 
       *
@@ -989,7 +989,6 @@
 
      C                   ADD       1             Q
      C     Q             OCCUR     MULT
-     C                   MOVEL     ':79:'        MTAG
      C                   MOVEL     WTag79L3Val   MFLD
 
       *
@@ -1006,7 +1005,6 @@
 
      C                   ADD       1             Q
      C     Q             OCCUR     MULT
-     C                   MOVEL     ':79:'        MTAG
      C                   MOVEL     WTag79L4Val   MFLD
 
      C                   ENDSR

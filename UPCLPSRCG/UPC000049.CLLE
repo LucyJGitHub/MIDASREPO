@@ -9,12 +9,15 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2019                     */
 /*                                                                   */
-/*       Last Amend No. MD055759           Date 04May20              */
-/*       Prev Amend No. MD055280           Date 17Feb20              */
+/*       Last Amend No. MD055783           Date 06May20              */
+/*       Prev Amend No. MD055759           Date 04May20              */
+/*                      MD055280           Date 17Feb20              */
 /*                      MD054605 *CREATE   Date 17Oct19              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD055783 - Created data recovery for the old T_WIPCF        */
+/*                  when GDBU fails                                  */
 /*       MD055759 - MGSV values are cleared when GDBU fails          */
 /*       MD055280 - Data are not migrated after re-run of ZDBU       */
 /*                  since SDSVALPD does not exist anymore.           */
@@ -30,6 +33,7 @@
              DCL        VAR(&MLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&PLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&TALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBMOV) TYPE(*CHAR) LEN(10)                                /*MD055783*/
              DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
              DCL        VAR(&AUTL) TYPE(*CHAR) LEN(10)
              DCL        VAR(&RETURN) TYPE(*CHAR) LEN(1)
@@ -59,6 +63,20 @@
              CHGVAR     VAR(&VLIB) VALUE(&PRFX *TCAT 'GVLIB')
              CHGVAR     VAR(&OWNER) VALUE(&PRFX *TCAT 'OWNER')
              CHGVAR     VAR(&AUTL) VALUE(&PRFX *TCAT 'DATABASE')
+                                                                                        /*MD055783*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT &PRFX *TCAT +
+                             'GMLIB')                                                   /*MD055783*/
+             CHKOBJ     OBJ(&LIBMOV/T_WIPCF) OBJTYPE(*FILE)                             /*MD055783*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(GPSVAL))                        /*MD055783*/
+                                                                                        /*MD055783*/
+             CHKOBJ     OBJ(&TALIB/T_WIPCF) OBJTYPE(*FILE)                              /*MD055783*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD055783*/
+             CPYF       FROMFILE(&LIBMOV/T_WIPCF) +
+                          TOFILE(&TALIB/T_WIPCF) MBROPT(*REPLACE) +
+                          CRTFILE(*YES)                                                 /*MD055783*/
+             ENDDO                                                                      /*MD055783*/
+                                                                                        /*MD055783*/
+GPSVAL:                                                                                 /*MD055783*/
 
              CHKOBJ     OBJ(&TALIB/GPSVALPD) OBJTYPE(*FILE)                             /*MD055280*/
              MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD055280*/

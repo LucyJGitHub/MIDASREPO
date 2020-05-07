@@ -999,6 +999,9 @@
      C                   IF        WOAmnt = *BLANKS
      C                   EXSR      SrFAMT
      C                   ENDIF
+     C                   IF        WOCcy = *BLANKS
+     C                   EVAL      WOCcy = WICcy
+     C                   ENDIF
      C                   EVAL      WTag79L4Val = '//' + WOCcy + WOAmnt
 
      C                   ADD       1             Q

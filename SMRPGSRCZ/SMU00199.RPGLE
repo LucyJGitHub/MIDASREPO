@@ -302,10 +302,6 @@
       *
      C     *PSSR         BEGSR
       *
-     C                   IF        WRun = *BLANKS
-     C                   EVAL      WRun = 'Y'
-     C                   ENDIF
-
      C                   EVAL      *INLR = *ON
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON

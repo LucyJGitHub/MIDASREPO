@@ -21,7 +21,12 @@
       *                                                               *
       *  Use of indicators.                                           *
       *                                                               *
-      *    nn - <function of indicator>                               *
+      *    05 - Indicator for writing in MGOREFPD                     *
+      *    06 - Indicator for writing in MGOMSGPD                     *
+      *    10 - Indicator for chaining FT Standing Data               *
+      *    15 - Indicator for determining success of ZM0060           *
+      *    98 - Indicator for updating MEINFTPD                       *
+      *    99 - Indicator for reading MEINFTL6                        *
       *                                                               *
       *****************************************************************
       ** +--------------------------------------+

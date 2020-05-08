@@ -34,8 +34,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD055514           Date 06Apr20               *
-      *  Prev Amend No. MD055212           Date 14Feb20               *
+      *  Last Amend No. 260405             Date 04Apr20               *      
+      *  Prev Amend No. MD055514           Date 06Apr20               *
+      *                 MD055212           Date 14Feb20               *
       *                 MD054028           Date 05Sep19               *
       *                 MD041837           Date 16Jun19               *
       *                 CER050             Date 16Jun19               *
@@ -142,6 +143,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260405 - BRT Participation Date of Birth field is missing.   *
+      *           Upgrade fix 235425. Recompile over changed SDCBRTPD.*
+      *         - Applied for MD055446.                               *      
       *  MD055514 - Not able to open a new Retail Account. Amend to   *
       *             add check if account in REDEFD is valid.          *      
       *  MD055212 - Remove the defaulting of values for DDBAC, DDBAD, *

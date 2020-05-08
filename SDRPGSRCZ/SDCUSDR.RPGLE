@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD055446           Date 04Apr20               *
+      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *                 CER050             Date 16Jun19               *
       *                 MD050212           Date 02Apr18               *
       *                 MD051532           Date 13Jul18               *
       *                 MD051299           Date 19Jun18               *
@@ -65,6 +66,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055446 - There are parties and fields missing from the BRT *	
+      *             details tab in Customer Input plus date of birth  *	
+      *             issues.                                           *	
+      *           - Added BRT DOB century on FillerBufEx2, BufferEx2  *
+      *             and as output parameter in SDCUSDCVT.             *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -159,6 +165,12 @@
 
       * New Customer in Screen Format - Base Rate Tax Details
      D NewCuBrt      E DS                  EXTNAME(SDCUBRPD)
+     D NewCuBrtCent    DS                                                                   MD055446
+     D   F@@DD1DOB                    2S 0                                                  MD055446
+     D   F@@DD2DOB                    2S 0                                                  MD055446
+     D   F@@DD3DOB                    2S 0                                                  MD055446
+     D   F@@DD4DOB                    2S 0                                                  MD055446
+     D   F@@DD5DOB                    2S 0                                                  MD055446
 
       * New Customer in Screen Format - Private Banking Details
      D NewCuPriv     E DS                  EXTNAME(SDCUPBPD)
@@ -320,7 +332,8 @@
      D***FillerBufEx2    S           8951A                                             CSW213 CGL132
      D***FillerBufEx2    S           5980A                                           CGL132 MD044880
      D***FillerBufEx2    S           5915A                                         MD044880 MD054028
-     D FillerBufEx2    S           5914A                                                    MD054028
+     D***illerBufEx2    S           5914A                                          MD054028 MD055446
+     D FillerBufEx2    S           5904A                                                    MD055446
      D FillerBufEx3    S           9999A                                                      CSW213
      D***FillerBufEx4    S           6898A                                           CSW213 MD041996
      D***FillerBufEx4    S           5974A                                         MD041996 MD044880
@@ -454,6 +467,7 @@
      C                                       + ExtData                                      MD051532
      C                                       + CrsdDets                                     MD051299
      C                                       + DDAPRC                                       MD054028
+     C                                       + NewCuBrtCent                                 MD055446
      C                                       + FillerBufEx2                                   CSW213
                                                                                               CSW213
      C                   EVAL      BufferEx3 = FillerBufEx3                                   CSW213
@@ -910,6 +924,7 @@
      C                   PARM                    CrsdDets                                   MD051299
      C                   PARM                    CrsdCtry                                   MD051299
      C**********         PARM                    CuSW13                              CSW213 MD022463
+     C                   PARM                    NewCuBrtCent                               MD055446
       *
 
      C                   ENDSR

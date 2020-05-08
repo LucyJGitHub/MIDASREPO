@@ -30,8 +30,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD048748           Date 16Dec19               *
-      *  Prev Amend No. MD052297           Date 14Nov19               *
+      *  Last Amend No. 260405             Date 04Apr20               *
+      *  Prev Amend No. MD048748           Date 16Dec19               *
+      *                 MD052297           Date 14Nov19               *
       *                 MD053634           Date 21Oct19               *
       *                 CER050             Date 16Jun19               *
       *                 MD052425           Date 22Aug19               *
@@ -150,6 +151,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260405 - BRT Participation Date of Birth field is missing.   *
+      *           Upgrade fix 235425. Recompile over changed SDCBRTPD.*
+      *         - Applied for MD055446.                               *
       *  MD048748 - Error Authorising Release of a Closed Customer    *
       *             with Parent Defined                               *
       *  MD052297 - Meaningless error message displayed when closing  *

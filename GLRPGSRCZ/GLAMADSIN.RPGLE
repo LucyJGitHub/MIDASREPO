@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054997           Date 08Apr20               *
-      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *  Last Amend No. 260405             Date 04Apr20               *
+      *  Prev Amend No. MD054997           Date 08Apr20               *
+      *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 CSD101             Date 07Dec18               *
       *                 MD046248           Date 27Oct17               *
@@ -84,6 +85,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260405 - BRT Participation Date of Birth field is missing.   *
+      *           Upgrade fix 235425. Recompile over changed SDCBRTPD.*
+      *         - Applied for MD055446.                               *
       *  MD054997 - Charges Calculation Type/Subtype is missing       *
       *             in all RETAIL accounts. Removed                   *
       *             CARIFilFmt, CACOFilFmt and CAPWFilFmt             *

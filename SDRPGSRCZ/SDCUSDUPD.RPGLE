@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055210           Date 03Feb20               *
-      *  Prev Amend No. MD054883           Date 23Dec19               *
+      *  Last Amend No. MD055446           Date 04Apr20               *
+      *  Prev Amend No. 260405             Date 04Apr20               *
+      *                 MD055210           Date 03Feb20               *
+      *                 MD054883           Date 23Dec19               *
       *                 MD053436           Date 21Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
@@ -148,6 +150,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055446 - There are parties and fields missing from the BRT *	
+      *             details tab in Customer Input plus date of birth  *	
+      *             issues.                                           *	
+      *           - Added BRT DOB century as *ENTRY parameter.        *     
+      *  260405 - BRT Participation Date of Birth field is missing.   *
+      *           Upgrade fix 235425. Recompile over changed SDCBRTPD.*
+      *         - Applied for MD055446.                               *
       *  MD055210 - Serious midas error encountered in CUSD           *
       *  MD054883 - CUSD Reverse API had an increased runtime         *
       *  MD053436 - Unable to perform end to end testing for          *
@@ -1007,6 +1016,13 @@
       ** Valid Curency/Time of Netting Details File                                        AR1086546
      D CTNMF         E DS                  EXTNAME(SDCTNMPD)                               AR1086546
                                                                                            AR1086546
+      ** Valid Customer BRT (Century) details layout                                        MD055446
+     D SDVCUBRCENT     DS                                                                   MD055446
+     D  BR1DBC                        2S 0                                                  MD055446
+     D  BR2DBC                        2S 0                                                  MD055446
+     D  BR3DBC                        2S 0                                                  MD055446
+     D  BR4DBC                        2S 0                                                  MD055446
+     D  BR5DBC                        2S 0                                                  MD055446
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
@@ -6021,6 +6037,15 @@
 
      C                   EVAL      TAXIND=BRTXIN
      C                   EVAL      PSTR=BRPSTR                                                CRE007
+      *                                                                                     MD055446
+      ** Updating of century fields.                                                        MD055446
+      *                                                                                     MD055446
+     C                   MOVE      BR1DBC        H1DOBC                                     MD055446
+     C                   MOVE      BR2DBC        H2DOBC                                     MD055446
+     C                   MOVE      BR3DBC        H3DOBC                                     MD055446
+     C                   MOVE      BR4DBC        H4DOBC                                     MD055446
+     C                   MOVE      BR5DBC        H5DOBC                                     MD055446
+      *                                                                                     MD055446
      C                   EVAL      NXASQN=BRNASQ
      C                   EVAL      ACHCGD=BRAHCD
      C                   EVAL      XLCD=BRXLCD
@@ -6947,6 +6972,7 @@
      C                   PARM                    PTransType                                   CSD028
      C                   PARM                    DACTN             1                          CSD028
      C                   PARM                    CTI006            1                        MD030956
+     C                   PARM                    SDVCUBRCENT                                MD055446
       ** Acceptance Mode                                                                      CSD031
      C**********         PARM                    PAccMde                             CSD031 BUG13525
       ** Update (Y/N)                                                                         CSD031

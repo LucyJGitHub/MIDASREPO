@@ -16,12 +16,13 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSW220             Date 09Mar20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSC022             Date 24Feb04               *
+      *                 CSC022             Date 24Feb04               *
       *                 CGL029             Date 01Sep03               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
@@ -32,6 +33,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  CSW220 - SWIFT Changes 2020                                  *
       *  MD046248 - Finastra Rebranding                               *
       *  CSC022 - Commitment Control Changes for MidasPlus            *
       *  CGL029 - Increase Account Code to 10 digits                  *
@@ -111,6 +113,7 @@
      I              FTARDT                          F#ARDT
      I              FTAACT                          F#AACT
      I              FTRDNB                          F#RDNB
+     I              FTM199                          F#M199                                    CSW220
       *
      I/COPY WNCPYSRC,ME1050DIPG
       *
@@ -156,6 +159,11 @@
      ISCCMT       DS                            256                                           CSC022
      I                                        1   30CMTNUM                                    CSC022
      I                                        4 103 CMTARR                                    CSC022
+      *                                                                                       CSW220
+      ** DECLARE SWIFTACTV CONSTANT                                                           CSW220
+      *                                                                                       CSW220
+     I              'SWIFTACTV'           C         SWIFT                                     CSW220
+      *                                                                                       CSW220
      I/EJECT
       *****************************************************************
       *                 M A I N L I N E
@@ -173,7 +181,8 @@
      C                     PARM           W0CPGM 10
      C                     PARM           W0NWRK  6
      C                     PARM           W0LMSG  7
-     C           INFT      PARM           W0DATA129
+     C********** INFT      PARM           W0DATA129                                           CSW220
+     C           INFT      PARM           W0DATA178                                           CSW220
      C                     PARM           W0RTN   7
       *
       *  Set up primary reference
@@ -248,6 +257,13 @@
      C                     MOVELFTINFG    F#INFG           Processing Flag
      C                     MOVELFTIPRF    F#IPRF           Incoming Ref
      C                     MOVELFTBRCA    F#BRCA           Branch
+     C           CSW220    IFEQ 'Y'                                                           CSW220
+     C           *IN60     IFEQ *ON                                                           CSW220
+     C           FTM199    ORNE *BLANKS                                                       CSW220
+     C           *IN60     ANDEQ*OFF                                                          CSW220
+     C                     MOVELFTM199    F#M199                                              CSW220
+     C                     ENDIF                                                              CSW220
+     C                     ENDIF                                                              CSW220
       *
       *  Only update Funds if not blank
       *
@@ -326,6 +342,13 @@
      C                     MOVELFTOTFG    F#OTFG           Processing Flag
      C                     MOVELFTOPRF    F#OPRF           Outgoing Ref
      C                     MOVELFTBRCA    F#BRCA           Branch
+     C           CSW220    IFEQ 'Y'                                                           CSW220
+     C           *IN60     IFEQ *ON                                                           CSW220
+     C           FTM199    ORNE *BLANKS                                                       CSW220
+     C           *IN60     ANDEQ*OFF                                                          CSW220
+     C                     MOVELFTM199    F#M199                                              CSW220
+     C                     ENDIF                                                              CSW220
+     C                     ENDIF                                                              CSW220
       *
       *  Only update Funds to if not blank
       *
@@ -619,6 +642,18 @@
      C                     ELSE                                                               CSC022
      C                     MOVE 'N'       CSC022                                              CSC022
      C                     ENDIF                                                              CSC022
+      *                                                                                       CSW220
+      ** Determine if Swift 2020 is activated                                                 CSW220
+      *                                                                                       CSW220
+     C                     CALL SWIFT                                                         CSW220
+     C                     PARM 'CSW220'  PSWIFT  6                                           CSW220
+     C                     PARM *BLANKS   PRTCD   7                                           CSW220
+      *                                                                                       CSW220
+     C           PRTCD     IFEQ 'CSWACTV'                                                     CSW220
+     C                     MOVE 'Y'       CSW220  1                                           CSW220
+     C                     ELSE                                                               CSW220
+     C                     MOVE 'N'       CSW220                                              CSW220
+     C                     ENDIF                                                              CSW220
       *
       *  Define fields
       *

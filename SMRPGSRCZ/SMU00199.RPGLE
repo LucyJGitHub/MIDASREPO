@@ -304,7 +304,6 @@
       *
      C                   IF        WRun = *BLANKS
      C                   EVAL      WRun = 'Y'
-     C                   DUMP
      C                   ENDIF
 
      C                   EVAL      *INLR = *ON

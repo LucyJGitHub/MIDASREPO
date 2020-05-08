@@ -711,10 +711,12 @@
       *                                                                                       CFT151
      D CFT151          S              1A                                                      CFT151
       *                                                                                       CSW220
-      ** CSW220 Swift 2020 Changes                                                            CSW220
+      ** CSW220 switchable field                                                              CSW220
       *                                                                                       CSW220
      D CSW220          S              1A                                                      CSW220
- 
+     D PSWIFT          S              6A                                                      CSW220
+     D PRTNCD          S              7A                                                      CSW220
+
      D/COPY WNCPYSRC,FTH00165
       *
       ** +--------------------------------------+
@@ -2674,11 +2676,13 @@ e1   C                   ENDIF                                                  
       *
      C                   MOVEL     W0LMSG        PWLMSG
      C                   MOVEL     PNWRK         PWNWRK
-      *
-      ** Update MT199 Flag on reverse
-      *
-     C                   IF        CSW220 = 'Y' AND IPCHTP = 'D'                              CSW220
-     C                   EVAL      FTM199 = 'R'                                               CSW220
+      *                                                                                       CSW220
+      ** Update MT199 Flag on reverse                                                         CSW220
+      *                                                                                       CSW220
+     C                   IF        CSW220 = 'Y' AND                                           CSW220
+     C                             IPCHTP = 'D' AND                                           CSW220
+     C                             FTM199 <> 'Z'                                              CSW220
+     C                   EVAL      FTM199 = *BLANKS                                           CSW220
      C                   ENDIF                                                                CSW220
       *
       ** N.B. Audit Stamp details are determined in called program.
@@ -3648,28 +3652,17 @@ e1   C                   ENDIF                                                  
       *                                                                                       CFT151
      C                   ENDIF                                                                CFT151
       *                                                                                       CFT151
-      ** Check if CSW220 is switched on                                                       CSW220
+      ** Determine if Swift 2020 is activated                                                 CSW220
       *                                                                                       CSW220
-     C                   CALLB     'AOSARDR0'                                                 CSW220
-     C                   PARM      *BLANKS       PRtCd                                        CSW220
-     C                   PARM      '*VERIFY'     POptn                                        CSW220
-     C                   PARM      'CSW220'      PSard                                        CSW220
-     C     SCSARD        PARM      SCSARD        DSFDY                                        CSW220
+     C                   CALL      'SWIFTACTV'                                                CSW220
+     C                   PARM      'CSW220'      PSWIFT                                       CSW220
+     C                   PARM      *BLANKS       PRTNCD                                       CSW220
       *                                                                                       CSW220
-     C                   IF        PRtcd = *BLANKS                                            CSW220
-     C                   EVAL      CSW220 = 'Y'                                               CSW220
+     C     PRTNCD        IFEQ      'CSWACTV'                                                  CSW220
+     C                   MOVE      'Y'           CSW220                                       CSW220
      C                   ELSE                                                                 CSW220
-      *                                                                                       CSW220
-     C                   IF        PRtcd <> '*NRF'                                            CSW220
-     C                   EVAL      DBFILE = 'SCSARDPD'                                        CSW220
-     C                   EVAL      DBASE = 39                                                 CSW220
-     C                   EVAL      DBKEY = '*VERIFY'                                          CSW220
-     C                   ELSE                                                                 CSW220
-     C                   EVAL      CSW220 = 'N'                                               CSW220
+     C                   MOVE      'N'           CSW220                                       CSW220
      C                   ENDIF                                                                CSW220
-      *                                                                                       CSW220
-     C                   ENDIF                                                                CSW220
-      *                                                                                       CSW220
      C/COPY WNCPYSRC,FTH00108
                                                                                               223687
       ** Compliance Watch Hit List Key List                                                   CSD015
@@ -3679,7 +3672,7 @@ e1   C                   ENDIF                                                  
      C                   KFLD                    KIDEN                                        CSD015
      C                   KFLD                    BRCA                                         CSD015
                                                                                               CSD015
- 
+
       *
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================

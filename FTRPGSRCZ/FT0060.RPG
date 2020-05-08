@@ -584,6 +584,10 @@
      I              'PROCESSED'           C         WKPROC                                    CFT158
      I              'AOSVALR0'            C         PGMA                                      CFT158
       *                                                                                       CFT158
+      ** Declare SWIFTACTV constant                                                           CSW220
+      *                                                                                       CSW220
+     I              'SWIFTACTV'           C         SWIFT                                     CSW220
+      *                                                                                       CSW220
      I/COPY WNCPYSRC,FTH00425
       *                                                                                       CRE020
       *                                                                                       CFT120
@@ -2401,24 +2405,16 @@
       *                                                                                       CFT158
      C                     ENDIF                                                              CFT158
       *                                                                                       CFT158
-      ** Determine if SAR CSW220 is installed                                                 CSW220
+      ** Determine if Swift 2020 is activated                                                 CSW220
       *                                                                                       CSW220
-     C                     MOVEL'N'       CSW220  1                                           CSW220
-     C                     CALL 'AOSARDR0'                                                    CSW220
-     C                     PARM *BLANKS   @RTCD                                               CSW220
-     C                     PARM '*VERIFY' @OPTN                                               CSW220
-     C                     PARM 'CSW220'  @SARD                                               CSW220
-     C           SCSARD    PARM SCSARD    DSFDY                                               CSW220
+     C                     CALL SWIFT                                                         CSW220
+     C                     PARM 'CSW220'  PSWIFT  6                                           CSW220
+     C                     PARM *BLANKS   PRTCD   7                                           CSW220
       *                                                                                       CSW220
-     C           @RTCD     IFEQ *BLANKS                                                       CSW220
-     C                     MOVEL'Y'       CSW220                                              CSW220
+     C           PRTCD     IFEQ 'CSWACTV'                                                     CSW220
+     C                     MOVE 'Y'       CSW220  1                                           CSW220
      C                     ELSE                                                               CSW220
-     C           @RTCD     IFNE '*NRF   '                                                     CSW220
-     C                     Z-ADD107       W0ERNB                                              CSW220
-     C                     MOVEL'CSW220'  W0KEY                                               CSW220
-     C                     MOVEL'SCSARDPD'W0FILE                                              CSW220
-     C                     EXSR SRERR                                                         CSW220
-     C                     ENDIF                                                              CSW220
+     C                     MOVE 'N'       CSW220                                              CSW220
      C                     ENDIF                                                              CSW220
       *                                                                                       CSW220
      C                     ENDSR
@@ -9052,11 +9048,25 @@
       ** Update MT199 flag if Outgoing payment and Transaction not on FIN                     CSW220
       *                                                                                       CSW220
      C           CSW220    IFEQ 'Y'                                                           CSW220
-     C           OPMSGR    ANDNE*ZEROS                                                        CSW220
-     C           OPSETM    ANDNE'08'                                                          CSW220
+      *                                                                                       CSW220
+     C           OPMSGR    IFNE *ZEROS                                                        CSW220
+     C           AUIN      ANDEQ'Y'                                                           CSW220
+      *                                                                                       CSW220
+     C           OPSETM    IFNE '08'                                                          CSW220
      C           OPSETM    ANDNE'01'                                                          CSW220
+      *                                                                                       CSW220
      C                     MOVEL'T'       FTM199                                              CSW220
+      *                                                                                       CSW220
+      ** Else, update MT199 flat if transaction is on FIN                                     CSW220
+      *                                                                                       CSW220
+     C                     ELSE                                                               CSW220
+     C                     MOVEL'Z'       FTM199                                              CSW220
      C                     ENDIF                                                              CSW220
+      *                                                                                       CSW220
+     C                     ENDIF                                                              CSW220
+      *                                                                                       CSW220
+     C                     ENDIF                                                              CSW220
+      *                                                                                       CSW220
      C                     ELSE                                           S01435
      C           ##OPIN    IFEQ 'IN'                                      S01435
      C                     Z-ADDINMSGR    FTMSGR           Unique Ref.    S01435
@@ -9070,6 +9080,7 @@
      C           CSW220    IFEQ 'Y'                                                           CSW220
      C           INMTPY    ANDEQ'103'                                                         CSW220
      C           INMSGR    ANDNE*ZEROS                                                        CSW220
+     C           AUIN      ANDEQ'Y'                                                           CSW220
      C                     MOVEL'A'       FTM199                                              CSW220
      C                     ENDIF                                                              CSW220
      C                     END                                            S01435

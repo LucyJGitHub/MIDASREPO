@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. EML104             Date 06Feb20               *
-      *  Prev Amend No. CMG006             Date 15Oct19               *
+      *  Last Amend No. EML107             Date 08May20               *
+      *  Prev Amend No. EML104             Date 06Feb20               *
+      *                 CMG006             Date 15Oct19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD042357           Date 02Dec16               *
       *                 MD042041           Date 21Oct16               *
@@ -52,6 +53,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  EML107 - Output IBAN in Sender Account Number field          *
+      *           Use core hook MGH00094 and added EML107_001         *
       *  EML104 - Upgrade EML010 to FB Midas 2.1 SP21                 *
       *           Structured field :86:                               *
       *           Used hook MGH00092, MGH00094                        *
@@ -1301,6 +1304,7 @@
      C**********         When      MGIBAN <> *Blank                                         MD042357
      C**********         Movel     MGIBAN        SACN                                       MD042357
      C**********         Movel     *blanks       AORR                                       MD042357
+     C/COPY WNCPYSRC,EML107_001
      C                   When      MGACNO <> 0
      C                   Movel     MGACNO        SACN
      C                   Movel     'R'           AORR

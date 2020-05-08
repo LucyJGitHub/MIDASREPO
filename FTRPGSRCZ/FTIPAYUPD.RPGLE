@@ -2676,9 +2676,9 @@ e1   C                   ENDIF                                                  
       *
      C                   MOVEL     W0LMSG        PWLMSG
      C                   MOVEL     PNWRK         PWNWRK
-      *
-      ** Update MT199 Flag on reverse
-      *
+      *                                                                                       CSW220
+      ** Update MT199 Flag on reverse                                                         CSW220
+      *                                                                                       CSW220
      C                   IF        CSW220 = 'Y' AND                                           CSW220
      C                             IPCHTP = 'D' AND                                           CSW220
      C                             FTM199 <> 'Z'                                              CSW220

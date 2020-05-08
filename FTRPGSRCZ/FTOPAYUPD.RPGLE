@@ -2488,9 +2488,9 @@
      C                   MOVEL     W0LMSG        W2LMSG                         Log file Msg ID
      C                   MOVEL     PNWRK         W2NWRK                         Network
      C                   MOVEL     'FTOPAYUPD'   ##PGM            10
-      *
-      ** Update MT199 Flag on reverse
-      *
+      *                                                                                       CSW220
+      ** Update MT199 Flag on reverse                                                         CSW220
+      *                                                                                       CSW220
      C                   IF        CSW220 = 'Y' AND                                           CSW220
      C                             OTCHTP = 'D' AND                                           CSW220
      C                             FTM199 <> 'Z'                                              CSW220

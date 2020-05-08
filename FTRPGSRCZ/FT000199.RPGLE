@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2019')
+     H COPYRIGHT('(c) Finastra International Limited 2020')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas FT MT199 Message Extraction and Formatting')     *
@@ -12,7 +12,6 @@
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
       *  Last Amend No. CSW220  *CREATE    Date 09Mar20               *
-      *  Prev Amend No.                    Date ddMmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
@@ -31,42 +30,46 @@
       ** +--------------------------------------+
 
       ** Outgoing payments details
-     FOTPAY     IF   E           K DISK
+     FOTPAY     IF   E           K DISK    INFSR(*PSSR)
 
       ** Incoming payments details
-     FINPAY     IF   E           K DISK
+     FINPAY     IF   E           K DISK    INFSR(*PSSR)
 
       ** Incoming Message Control by Message Tag
-     FMEINDTL0  IF   E           K DISK
+     FMEINDTL0  IF   E           K DISK    INFSR(*PSSR)
 
       ** Incoming Message FT Data
-     FMEINFTPD  IF   E           K DISK
+     FMEINFTPD  IF   E           K DISK    INFSR(*PSSR)
 
       ** Joint File for retrieving records in FTMG
-     FMEINMPJ1  IF   E           K DISK
+     FMEINMPJ1  IF   E           K DISK    INFSR(*PSSR)
 
       ** Logical File for retrieving MT199 sender
-     FMEINCRL1  IF   E           K DISK
+     FMEINCRL1  IF   E           K DISK    INFSR(*PSSR)
 
       ** Logical File for retrieving Incoming Message Transaction Number
-     FMEINMPL1  IF   E           K DISK
+     FMEINMPL1  IF   E           K DISK    INFSR(*PSSR)
 
       ** Logical file for retrieving FT Standing Data
      FTABFP     IF   E           K DISK    IGNORE(TABTB20F:TABTG20F)
      F                                     IGNORE(TABLETHF:TABLETPF)
      F                                     IGNORE(TABLET5F:TABTE10F)
+     F                                     INFSR(*PSSR)
 
       ** New Logical file that will filter MT199
-     FMEINFTL6  UF   E             DISK    COMMIT
+     FMEINFTL6  UF   E             DISK    INFSR(*PSSR)
+     F                                     COMMIT
 
       ** Outgoing Message Reference File
-     FMGOREFPD  O    E           K DISK    COMMIT
+     FMGOREFPD  O    E           K DISK    INFSR(*PSSR)
+     F                                     COMMIT
 
       ** Outgoing Message File
-     FMGOMSGPD  O    E           K DISK    COMMIT
+     FMGOMSGPD  O    E           K DISK    INFSR(*PSSR)
+     F                                     COMMIT
 
       ** Midas MT199 Msg Extraction and Formatting Audit Rpt
-     FFT000199AUO    E             PRINTER USROPN
+     FFT000199AUO    E             PRINTER USROPN INFSR(*PSSR)
 
       *****************************************************************
       /EJECT
@@ -244,7 +247,7 @@
      D WSWIFT          S             11A
      D WCNum           S             10A
      D WKey            S              5A
-     D PACCD           S             10A                                                      244540
+     D PACCD           S             10A
      D @CUST           S              6A
      D @CYCD           S              3A
      D @ACSN           S              2A
@@ -420,7 +423,7 @@
 
      C     @RTCD         IFNE      *BLANKS
      C     *LOCK         IN        LDA
-     C                   MOVE      '006'         DBASE
+     C                   MOVE      '002'         DBASE
      C                   MOVEL     'FIRST'       DBKEY
      C                   MOVEL     'SDMGMEPD'    DBFILE
      C                   OUT       LDA
@@ -481,7 +484,7 @@
 
      C     *IN15         IFEQ      '1'
      C     *LOCK         IN        LDA
-     C                   MOVE      '008'         DBASE
+     C                   MOVE      '004'         DBASE
      C                   MOVEL     '       '     DBKEY
      C                   MOVEL     'ZM0060'      DBFILE
      C                   OUT       LDA
@@ -498,7 +501,7 @@
 
      C     *IN15         IFEQ      '1'
      C     *LOCK         IN        LDA
-     C                   MOVE      '009'         DBASE
+     C                   MOVE      '005'         DBASE
      C                   MOVEL     '       '     DBKEY
      C                   MOVEL     'ZM0060'      DBFILE
      C                   OUT       LDA
@@ -554,7 +557,7 @@
 
      C                   ELSE
      C     *LOCK         IN        LDA
-     C                   MOVE      '005'         DBASE
+     C                   MOVE      '006'         DBASE
      C                   MOVEL     'WIPref'      DBKEY
      C                   MOVEL     'INPAY'       DBFILE
      C                   OUT       LDA
@@ -585,7 +588,7 @@
 
      C                   ELSE
      C     *LOCK         IN        LDA
-     C                   MOVE      '006'         DBASE
+     C                   MOVE      '007'         DBASE
      C                   MOVEL     'WOPref'      DBKEY
      C                   MOVEL     'OTPAY'       DBFILE
      C                   OUT       LDA
@@ -800,7 +803,6 @@
 
       *
       ** Clear multiple occurrence data structure
-      ** http://www.go4as400.com/rpgle-opcodes/as400.aspx?cid=214
       *
      C                   CLEAR     *ALL          MULT
      C                   EVAL      Q = 0
@@ -878,7 +880,7 @@
 
      C                   ELSE
      C     *LOCK         IN        LDA
-     C                   MOVE      '013'         DBASE
+     C                   MOVE      '011'         DBASE
      C                   MOVEL     'KLIncMsg'    DBKEY
      C                   MOVEL     'MEINDTL0'    DBFILE
      C                   OUT       LDA
@@ -929,7 +931,7 @@
 
      C                   ELSE
      C     *LOCK         IN        LDA
-     C                   MOVE      '011'         DBASE
+     C                   MOVE      '012'         DBASE
      C                   MOVEL     'KLMsgDtl'    DBKEY
      C                   MOVEL     'MEINMPL1'    DBFILE
      C                   OUT       LDA
@@ -949,7 +951,7 @@
 
      C                   ELSE
      C     *LOCK         IN        LDA
-     C                   MOVE      '012'         DBASE
+     C                   MOVE      '013'         DBASE
      C                   MOVEL     'KFMsgR'      DBKEY
      C                   MOVEL     'MEINCRL1'    DBFILE
      C                   OUT       LDA
@@ -1058,7 +1060,7 @@
       *
      C                   IF        @RTCD <> *BLANKS
      C                   MOVEL     'SDNOSTPD'    DBFILE
-     C                   MOVEL     '081'         DBASE
+     C                   MOVEL     '014'         DBASE
      C                   MOVEL     @CYCD         WKey
      C                   MOVE      @NONB         WKey
      C                   MOVEL     WKey          DBKEY
@@ -1088,7 +1090,7 @@
      C                   ENDIF
      C                   ELSE
      C                   MOVEL     'SDCUSTPD'    DBFILE
-     C                   MOVEL     '082'         DBASE
+     C                   MOVEL     '015'         DBASE
      C                   MOVEL     WCNum         DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
@@ -1116,7 +1118,7 @@
 
      C     @RTCD         IFNE      *BLANKS
      C     *LOCK         IN        LDA
-     C                   MOVE      '014'         DBASE
+     C                   MOVE      '016'         DBASE
      C                   MOVEL     WBrCA         DBKEY
      C                   MOVEL     'SDBRCHPD'    DBFILE
      C                   OUT       LDA
@@ -1139,7 +1141,7 @@
 
      C     *IN15         IFEQ      '1'
      C     *LOCK         IN        LDA
-     C                   MOVE      '009'         DBASE
+     C                   MOVE      '017'         DBASE
      C                   MOVEL     '       '     DBKEY
      C                   MOVEL     'ZM0060'      DBFILE
      C                   OUT       LDA
@@ -1200,7 +1202,7 @@
 
      C     ZERR          IFEQ      '1'
      C     *LOCK         IN        LDA
-     C                   MOVE      '016'         DBASE
+     C                   MOVE      '018'         DBASE
      C                   MOVEL     '       '     DBKEY
      C                   MOVEL     'ZM0040  '    DBFILE
      C                   OUT       LDA
@@ -1230,8 +1232,6 @@
 
      C                   EXSR      SrWRef
 
-     C/COPY WNCPYSRC,MG0600CCP6
-
       ** Write multiple occurrence data structure to MGOMSGPD
 
      C                   Z-ADD     1             Q
@@ -1241,20 +1241,16 @@
      C     MULT          ANDNE     *BLANKS
      C                   WRITE     MGOMSGD0                             06
 
-     C/COPY WNCPYSRC,MG0600CCP7
-
       **  Error on write to PF/MGOMSGPD (message data file)
 
      C     *IN06         IFEQ      '1'
      C     *LOCK         IN        LDA
-     C                   MOVE      '017'         DBASE
+     C                   MOVE      '019'         DBASE
      C                   MOVEL     '        '    DBKEY
      C                   MOVEL     'MGOMSGPD'    DBFILE
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
-
-     C/COPY WNCPYSRC,MG0600C005
 
      C                   ADD       1             Q
      C     Q             OCCUR     MULT
@@ -1365,15 +1361,13 @@
      C                   MOVE      *BLANKS       TSKS
      C                   MOVE      *BLANKS       TSKY
 
-     C/COPY WNCPYSRC,MG0600C035
-
      C                   WRITE     MGOREFD0                             05
 
       ** Error on write to PF/MGOREFPD (message reference file)
 
      C     *IN05         IFEQ      '1'
      C     *LOCK         IN        LDA
-     C                   MOVE      '018'         DBASE
+     C                   MOVE      '020'         DBASE
      C                   MOVEL     '       '     DBKEY
      C                   MOVEL     'MGOREFPD'    DBFILE
      C                   OUT       LDA
@@ -1395,6 +1389,7 @@
      C                   OPEN      FT000199AU
      C                   WRITE     HEADER
      C                   WRITE     DBERROR
+     C                   CLOSE     FT000199AU
 
      C                   SETON                                        U7U8LR
      C                   DUMP

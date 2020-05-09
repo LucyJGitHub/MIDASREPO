@@ -112,7 +112,7 @@
       *                                                               *
       *  MD055656 - OPAY messages sent via JMS API end in error       *
       *             (ERZ248)                                          *
-      *             Amend Hooks FTH00402, FTOPAYVUCA, FTOPAYVUC7      *
+      *             Amend Hooks FTH00402, FTOPAYVUCA, FTOPAYVUC7.     *
       *  MD023379 - Default Details of Charges according to ICD for   *
       *             MT103                                             *
       *  MD021318 - OPAY allowed input of account with block debit    *

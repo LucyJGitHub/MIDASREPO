@@ -245,6 +245,9 @@
      D WTag79L3a       S             14A
      D WTag79L3b       S             13A
      D WGenFlg         S              1A
+     D CR              S              1A
+     D LF              S              1A
+     D CRLF            S              2A
 
       ** Variables for getting SWIFT BIC of destination
      D WDstT           S              1A
@@ -452,9 +455,21 @@
      C                   EXSR      *PSSR
      C                   ENDIF
 
-     C*
-     C*  Default the message status whith the ICD.
-     C*
+      **  Initialise constant fields
+
+     C                   MOVE      *LOVAL        CR
+     C                   BITON     '457'         CR
+     C                   MOVE      *LOVAL        LF
+     C                   BITON     '257'         LF
+     C                   MOVEL     CR            CRLF
+     C                   MOVE      LF            CRLF
+
+      ** CRLF Control Character for message data records
+
+     C                   MOVE      CRLF          CTRC
+
+      ** Default the message status whith the ICD.
+
      C                   IF        FTCS = 'R'
      C                   EVAL      MGST = 'RSND'
      C                   EVAL      MGSG = '2'

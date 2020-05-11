@@ -4318,10 +4318,8 @@ E004 C                   ENDIF
      C                   EVAL      WRKFLD1 = %trim(ZOUT20)                                  MD052515
      C     '-'           CAT       WRKFLD1       ZOUT20                                     MD052515
      C                   ENDIF                                                              MD052515
-     C**********         EVAL      BLen = %Len(%Trim(ZOUT20))                      MD000091 MD055128
-     C**********         EVAL      MsgDtaXAr(Idx) = LenStr +%TRIM(ZOUT20)          MD000091 MD055128
-     C                   EVAL      BLen = %Len(%Trim(ZOUT22))                               MD055128
-     C                   EVAL      MsgDtaXAr(Idx) = LenStr +%TRIM(ZOUT22)                   MD055128
+     C                   EVAL      BLen = %Len(%Trim(ZOUT20))                               MD000091
+     C                   EVAL      MsgDtaXAr(Idx) = LenStr +%TRIM(ZOUT20)                   MD000091
      C                   ENDIF
      C                   ENDIF
       *
@@ -4459,12 +4457,11 @@ E004 C                   ENDIF
      C     ZNEG          IFEQ      '-'                                                      AR988460
      C                   MOVE      *BLANKS       WRKFLD1          20                        AR988460
      C                   EVAL      WRKFLD1 = %trim(ZOUT20)                                  AR988460
-     C     '-'           CAT       WRKFLD1       MsgDtaXAr(Idx)                             AR988460
+     C*****'-'**         CAT       WRKFLD1       MsgDtaXAr(Idx)                    AR988460 MD055128
+     C     '-'           CAT       WRKFLD1       ZOUT20                                     MD055128
      C                   ENDIF                                                              AR988460
-     C**********         EVAL      BLen = %Len(%Trim(ZOUT20))                      MD000091 MD055128
-     C**********         EVAL      MsgDtaXAr(Idx) = LenStr +%TRIM(ZOUT20)          MD000091 MD055128
-     C                   EVAL      BLen = %Len(%Trim(ZOUT22))                               MD055128
-     C                   EVAL      MsgDtaXAr(Idx) = LenStr +%TRIM(ZOUT22)                   MD055128
+     C                   EVAL      BLen = %Len(%Trim(ZOUT20))                               MD000091
+     C                   EVAL      MsgDtaXAr(Idx) = LenStr +%TRIM(ZOUT20)                   MD000091
      C                   ENDIF                                                               BUG3721
                                                                                              BUG3721
      C                   ENDIF                                                               BUG3721

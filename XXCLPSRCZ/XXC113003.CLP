@@ -11,13 +11,16 @@
 /********(c)*Misys*International*Banking*Systems*Ltd.*2007************/                   /*JMI113*/
 /*       (c) Finastra International Limited 2018                     */                   /*JMI113*/
 /*                                                                   */
-/*       Last Amend No. JMI113             Date 21May18              */
-/*       Prev Amend No. JMI019             Date 21Feb07              */
+/*       Last Amend No. JMI113A            Date 03Apr20              */
+/*       Prev Amend No. JMI113             Date 21May18              */
+/*                      JMI019             Date 21Feb07              */
 /*                      JMI019B            Date 28Apr05              */
 /*                      JMI019  *CREATE    Date 11Jun03              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       JMI113A - Midas GCMS Interface. Upgrade to FBM 2.1          */
+/*                 Correct the value of variable &LENG               */
 /*       JMI113 - Midas GCMS Interface. Upgrade to FBM 2.1           */
 /*       JMI019 - Upgrade as is                                      */
 /*       JMI019B - GCMS. File Name and Confirmation File             */
@@ -42,7 +45,9 @@
 /**/
 /* I/O parameters for calling QUSRJOBI */
              DCL        VAR(&RTRN)   TYPE(*CHAR) LEN(200)
-             DCL        VAR(&LENG) TYPE(*CHAR) LEN(4) VALUE(X'0110')
+ /********** DCL        VAR(&LENG) TYPE(*CHAR) LEN(4) VALUE(X'0110')            *JMI113A*/
+             DCL        VAR(&LENG) TYPE(*CHAR) LEN(4) VALUE(X'000000C8') +
+                          /*JMI113A*/
              DCL        VAR(&INPT)   TYPE(*CHAR) LEN(8) +
                                                       VALUE('JOBI0200')
              DCL        VAR(&QUAL)   TYPE(*CHAR) LEN(26)

@@ -709,7 +709,7 @@
      D MQPMO           DS
      **D/COPY**QRPGLESRC,CMQPMOR*************                                                 211959
      D***/COPY*QMQM/QRPGLESRC,CMQPMOR                                                211959 MD041126
-     D/COPY QMQM/QRPGLESRC,CMQPMOG                                                          MD041226
+     D/COPY QMQM/QRPGLESRC,CMQPMOG                                                          MD041126
       *
       * Date formatting fields
      D W#EURDATE       S               D   DATFMT(*EUR)

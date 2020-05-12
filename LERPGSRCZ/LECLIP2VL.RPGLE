@@ -11,16 +11,18 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD055074           Date 21Jan20               *
-      *  Prev Amend No. MD053297           Date 06Sep19               *
+      *  Last Amend No. MD055220           Date 12May20               *
+      *  Prev Amend No. MD055128           Date 17Apr20               *
+      *                 MD055074           Date 21Jan20               *
+      *                 MD053297           Date 06Sep19               *
       *                 MD023254           Date 06Sep19               *
       *                 CLE170             Date 28Feb08               *
       *                 CER050             Date 16Jun19               *
       *                 MD052515           Date 24Jan19               *
       *                 MD036008           Date 24Jan19               *
       *                 MD034449           Date 24Jan19               *
-      *                 AR988460           Date 24Jan19               *      
-      *                 MD053143           Date 04Apr19               *      
+      *                 AR988460           Date 24Jan19               *
+      *                 MD053143           Date 04Apr19               *
       *                 MD052279           Date 14Nov18               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -124,6 +126,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055220 - Allow negative spread rate to be processed        *
+      *  MD055128 - Allow  negative total interest when negative      *
+      *             base rate code was used                           *
       *  MD055074 - Interest for processing type 80 is mandatory.     *
       *  MD053297 - Interest not posted correctly for Part sold       *
       *  MD023254 - LOAC does not show the correct interest schedule  *
@@ -144,7 +149,7 @@
       *           - Applied for MD034449                              *
       *           - Applied for MD052515                              *
       *  MD053143 - CLE141 Business Day Convention processing to be   *
-      *             applied for loan start date rate fixing.          *      
+      *             applied for loan start date rate fixing.          *
       *  MD052279 - Negative rate loan got unexpected error 45021183  *
       *             (Entry is not allowed for discounted loans or zero*
       *             interests) and 45021165 (Valid rate is req. if no *
@@ -533,7 +538,7 @@
                                                                                             MD053143
      D ClilFilFmt    E DS                  EXTNAME(CLOANCL) PREFIX(@@)
       * (Current) Loans record CL in file Format
- 
+
      D OKFlags1DS    E DS                  EXTNAME(LEECLI1PD)                                BUG3721
       ** Flags to indicate whether transaction fields are valid on 1st screen                BUG3721
       *
@@ -1564,9 +1569,17 @@
       * Convert the field in numeric                                                          249268
      C**********         MOVE      DDRTSP        #DDRTSP          11 7               249268 BUG21853
      C                   MOVE      DDRTSP        #DDRTSP          12 7                      BUG21853
+     C                   MOVEL     *BLANK        WRTSP1            1                        MD055220
+     C                   MOVEL     *BLANK        WRTSP3           11                        MD055220
+     C                   MOVEL     DDRTSP        WRTSP1                                     MD055220
+     C                   MOVE      DDRTSP        WRTSP3                                     MD055220
      C                   IF        DDRTSP <> *BLANKS                                        BUG20318
      C                   MOVE      *Blanks       PSCRF                                      MD040412
+     C     WRTSP1        IFEQ      '-'                                                      MD055220
+     C                   MOVE      WRTSP3        PSCRF                                      MD055220
+     C                   ELSE                                                               MD055220
      C                   MOVE      DDRTSP        PSCRF                                      MD040412
+     C                   ENDIF                                                              MD055220
      C                   Z-ADD     4             PNDIG                                      MD040412
      C                   Z-ADD     7             PNDEC                                      MD040412
      C                   CALL      'ZALIGN'      PPAR1                                      MD040412
@@ -1655,8 +1668,16 @@
                                                                                               CLE035
       ** Valid amount must be entered                                                         CLE035
                                                                                               CLE035
+     C                   MOVEL     *BLANK        WRTSP1                                     MD055220
+     C                   MOVEL     *BLANK        WRTSP3                                     MD055220
+     C                   MOVEL     DDRTSP        WRTSP1                                     MD055220
+     C                   MOVE      DDRTSP        WRTSP3                                     MD055220
      C                   MOVE      *Blanks       PSCRF                                        CLE035
+     C     WRTSP1        IFEQ      '-'                                                      MD055220
+     C                   MOVE      WRTSP3        PSCRF                                      MD055220
+     C                   ELSE                                                               MD055220
      C                   MOVE      DDRTSP        PSCRF                                        CLE035
+     C                   ENDIF                                                              MD055220
      C                   Z-ADD     4             PNDIG                                        CLE035
      C                   Z-ADD     7             PNDEC                                        CLE035
      C                   CALL      'ZALIGN'      PPAR1                                        CLE035
@@ -1668,6 +1689,9 @@
      C                   EVAL      FldNamXAr(Idx) = 'DDRTSP'                                  CLE035
      C                   EVAL      MsgIDXAr(Idx) = 'LEL0138'                                  CLE035
      C                   ENDIF                                                                CLE035
+     C     WRTSP1        IFEQ      '-'                                                      MD055220
+     C                   Z-SUB     WSVRS         WSVRS                                      MD055220
+     C                   ENDIF                                                              MD055220
                                                                                               CLE035
      C                   IF        DDRTSPOK <> 'N'                                            CLE035
      C                   EVAL      CCLRTSP = WSVRS                                            CLE035
@@ -3093,7 +3117,7 @@ E004 C                   ENDIF
       *  SRFCRA - Validate facility currency repayment amount         *
       *****************************************************************
      C     SRFCRA        BEGSR
- 
+
      C     *IN83         IFEQ      '0'
      C                   MOVE      FCCYF         @CYCD
      C                   ELSE
@@ -4233,7 +4257,7 @@ E004 C                   ENDIF
      C                   ELSE
      C                   Z-ADD     ZINTR         WCHKI
      C                   ENDIF
- 
+
      C*****WCHKI         IFLT      *ZEROS                                                   AR988460
      C**********         Z-SUB     WCHKI         WCHKI                                      AR988460
      C**********         MOVE      'Y'           WSUB              1                        AR988460
@@ -4412,7 +4436,13 @@ E004 C                   ENDIF
      C                   PARM      *BLANKS       ZOUT22                                      BUG3721
      C                   PARM      *BLANKS       ZOUT25           25                         BUG3721
                                                                                              BUG3721
+     C                   IF        WTOTI < 0                                                MD055128
+     C                             AND CLE028 = 'Y'                                         MD055128
+     C                             AND WLNPT = 80                                           MD055128
+     C                   MOVE      ZOUT22        DDIPRD                                     MD055128
+     C                   ELSE                                                               MD055128
      C                   MOVE      ZOUT20        DDIPRD                                      BUG3721
+     C                   ENDIF                                                              MD055128
                                                                                              BUG3721
      C                   ELSE                                                                BUG3721
                                                                                               CAP086
@@ -4448,7 +4478,8 @@ E004 C                   ENDIF
      C     ZNEG          IFEQ      '-'                                                      AR988460
      C                   MOVE      *BLANKS       WRKFLD1          20                        AR988460
      C                   EVAL      WRKFLD1 = %trim(ZOUT20)                                  AR988460
-     C     '-'           CAT       WRKFLD1       MsgDtaXAr(Idx)                             AR988460
+     C*****'-'**         CAT       WRKFLD1       MsgDtaXAr(Idx)                    AR988460 MD055128
+     C     '-'           CAT       WRKFLD1       ZOUT20                                     MD055128
      C                   ENDIF                                                              AR988460
      C                   EVAL      BLen = %Len(%Trim(ZOUT20))                               MD000091
      C                   EVAL      MsgDtaXAr(Idx) = LenStr +%TRIM(ZOUT20)                   MD000091

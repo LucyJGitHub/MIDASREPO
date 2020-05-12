@@ -14,9 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD054922           Date 04Feb20               *
-      *  Prev Amend No. MD055218           Date 11Mar20               *
-      *                 MD054662           Date 30Oct19               *
+      *  Last Amend No. MD054922           Date 12May20               *
+      *  Prev Amend No. MD055218           Date 12May20               *
+      *                 MD054662           Date 12May20               *
       *                 MD051746           Date 03May19               *
       *                 AR589183           Date 03May19               *
       *                 AR740400           Date 03May19               *
@@ -36,12 +36,15 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD054922 - MT942 messages are not generated.                 *
+      *           - Applied for MD-55813.                             *
       *  MD055218 - Dump generated in GLC001400 job with update or    *
       *             delete without prior input. Amended program to    *
       *             do update file once only                          *
+      *           - Applied for MD-55813.                             *
       *  MD054662 - Emergency fix for case 02186832                   *
       *             Messages requested for current date are not       *
       *             processed (job GLC001415 is not submitted)        *
+      *           - Applied for MD-55813.                             *
       *  MD051746 - Added COB Start Date in validating MT941/MT942    *
       *             requests                                          *
       *  AR589183 - Wrong status of scheduled MT941/MT942. Process    *

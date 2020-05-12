@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. MD034771           Date 23Jun15               *
+      *  Last Amend No. MD055714           Date 06May20               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 MD034771           Date 23Jun15               *
       *                 CGL165             Date 17Mar15               *
       *                 MD030621           Date 26Feb15               *
       *                 MD032052           Date 23Jan15               *
@@ -142,6 +143,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055714 - Missing rebate posting after changing maturity    *
+      *             date of discount loan. Restore original value of  *
+      *             OMDT field upon reject.                           *
       *  CLE141 - Currency and Location Business Day Convention for   *
       *           Lending Transactions                                *
       *  MD034771 - Transactions sent via SOAP and MQ are still in    *
@@ -3909,7 +3913,11 @@
       *
      C     S01465        IFEQ      'Y'
      C     L_CLMDAT      ANDNE     MDAT
+     C     @ACTRV        IFEQ      'Y'                                                      MD055714
+     C                   Z-ADD     L_CLOMDT      OMDT                                       MD055714
+     C                   ELSE                                                               MD055714
      C                   Z-ADD     MDAT          OMDT
+     C                   ENDIF                                                              MD055714
      C                   ENDIF
       *
       *----------------------------------------------------------------

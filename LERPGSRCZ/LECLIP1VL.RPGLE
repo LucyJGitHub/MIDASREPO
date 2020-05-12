@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. LUC123             Date 18Jun19               *
-      *  Prev Amend No. LUC109             Date 23Aug16               *
+      *  Last Amend No. MD055714           Date 06May20               *
+      *  Prev Amend No. LUC123             Date 18Jun19               *
+      *                 LUC109             Date 23Aug16               *
       *                 MD041342           Date 15Sep16               *
       *                 CLE141             Date 08Feb16               *
       *                 MD031089           Date 12Feb15               *
@@ -155,6 +156,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055714 - Missing rebate posting after changing maturity    *
+      *             date of discount loan. Restore original value of  *
+      *             OMDT field upon reject.                           *
       *  LUC123 - Extend Customer De-Activation (CSD025) to GL and LE *
       *           Amendment of core hook LECLIP1V27                   *
       *           Addition of hook LUC123_012                         *
@@ -8259,6 +8263,18 @@ B001 C     ZERR          IFNE      *BLANKS
      C                   MOVEL     WNUM7         WALF6                                      AR804863
      C                   Z-ADD     ZDAYNO        WSVMD                                      AR804863
      C                   Z-ADD     WSVMD         CCLMDAT                                    AR804863
+      *                                                                                     MD055714
+      ** Original Maturity Date                                                             MD055714
+      *                                                                                     MD055714
+     C                   MOVE      DDOMDT        ZDATE                                      MD055714
+     C                   MOVE      BJDFIN        ZDATFM                                     MD055714
+     C                   CALL      'ZDATE1'                                                 MD055714
+     C                   PARM      *BLANKS       ZERR                                       MD055714
+     C                   PARM                    ZDATE                                      MD055714
+     C                   PARM                    ZDATFM                                     MD055714
+     C                   PARM                    ZDAYNO                                     MD055714
+      *                                                                                     MD055714
+     C                   Z-ADD     ZDAYNO        CCLOMDT                                    MD055714
       *                                                                                     AR217961
       ** Customer number / short name                                                       AR217961
       *                                                                                     AR217961

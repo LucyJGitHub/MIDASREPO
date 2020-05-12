@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 226449             Date 24Jun15               *
+      *  Last Amend No. MD050604           Date 21Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 226449             Date 24Jun15               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -53,6 +54,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050604 - Average price of position changed incorrectly.    *
+      *           - Increased length of fields ZAPNC and ZCONS from   *
+      *             15,0 to 17,0 with changes in copy source ZCNSDZ1. *
       *  MD046248 - Finastra Rebranding                               *
       *  226449 - Recompiled over changes made in /COPY ZDYYRZ3.      *
       *         - Applied for MD034387.                               *
@@ -3177,7 +3181,8 @@
      C                     Z-ADDWWNOML    ZNOML
      C                     Z-ADDWWTPDY    ZAVPR
      C                     EXSR ZAPNUM
-     C                     Z-ADDZVALU     ZCONS  150       Consideration
+     C**********           Z-ADDZVALU     ZCONS  150       Consideration                    MD050604
+     C                     Z-ADDZVALU     ZCONS  170       Consideration                    MD050604
       *
       ***  Interest Amount
       *
@@ -4731,7 +4736,10 @@
      C*** Define fields
      C*
      C                     Z-ADDZPRC      ZPRC   169
-     C                     Z-ADDZAPNC     ZAPNC  150
+     C**********           Z-ADDZAPNC     ZAPNC  150                                        MD050604
+     C                     Z-ADDZAPNC     ZAPNC  170                                        MD050604
+     C                     Z-ADDZWK170    ZWK170 170                                        MD050604
+     C                     Z-ADDZDF174    ZDF174 174                                        MD050604
      C                     Z-ADDZWK150    ZWK150 150
      C                     Z-ADDZDF154    ZDF154 154
      C                     Z-ADDZNOML     ZNOML  150
@@ -4756,18 +4764,23 @@
      C*
      C*** Prevent High Order Truncation
      C*
-     C           ZPRC      MULT ZNOML     ZWK150    H
-     C           ZAPNC     SUB  ZWK150    ZWK150
-     C           ZWK150    DIV  ZNOML     ZDF154    H
+     C********** ZPRC      MULT ZNOML     ZWK150    H                                       MD050604
+     C********** ZAPNC     SUB  ZWK150    ZWK150                                            MD050604
+     C********** ZWK150    DIV  ZNOML     ZDF154    H                                       MD050604
+     C           ZPRC      MULT ZNOML     ZWK170    H                                       MD050604
+     C           ZAPNC     SUB  ZWK170    ZWK170                                            MD050604
+     C           ZWK170    DIV  ZNOML     ZDF174    H                                       MD050604
      C*
       *** Calculate price and adjust figures (if needed).
       *
      C           DC        IFGE 5
      C           ZPRC      DIV  POWER8,DC ZPRC      H
-     C           ZDF154    DIV  POWER8,DC ZDF154    H
+     C********** ZDF154    DIV  POWER8,DC ZDF154    H                                       MD050604
+     C           ZDF174    DIV  POWER8,DC ZDF174    H                                       MD050604
      C                     END
      C*
-     C                     ADD  ZDF154    ZPRC
+     C**********           ADD  ZDF154    ZPRC                                              MD050604
+     C                     ADD  ZDF174    ZPRC                                              MD050604
      C*
      C                     ENDSR                           *** ENDSR    ***
      C*

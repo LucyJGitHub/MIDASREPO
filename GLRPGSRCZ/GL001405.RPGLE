@@ -14,8 +14,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD051746           Date 03May19               *
-      *  Prev Amend No. AR589183           Date 03May19               *
+      *  Last Amend No. MD054922           Date 04Feb20               *
+      *  Prev Amend No. MD055218           Date 11Mar20               *
+      *                 MD054662           Date 30Oct19               *
+      *                 MD051746           Date 03May19               *
+      *                 AR589183           Date 03May19               *
       *                 AR740400           Date 03May19               *
       *                 MD051723           Date 17Sep18               *
       *                 MD046248           Date 27Oct17               *
@@ -32,6 +35,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054922 - MT942 messages are not generated.                 *
+      *  MD055218 - Dump generated in GLC001400 job with update or    *
+      *             delete without prior input. Amended program to    *
+      *             do update file once only                          *
+      *  MD054662 - Emergency fix for case 02186832                   *
+      *             Messages requested for current date are not       *
+      *             processed (job GLC001415 is not submitted)        *
       *  MD051746 - Added COB Start Date in validating MT941/MT942    *
       *             requests                                          *
       *  AR589183 - Wrong status of scheduled MT941/MT942. Process    *
@@ -183,6 +193,7 @@
      D PRetCode        S              7                                         Return code
      D PWaitTime       S              5  0                                      Wait Time
      D PSubmit         S              1                                         Submit Y/N
+     D WUpdate         S              1                                                     MD055218
 
      D P@RTCD          S              7A                                        Return Code
      D P@OPTN          S              7A                                        Option
@@ -198,6 +209,7 @@
      D WkNum6          S              6S 0                                      Working Time
      D WkNum8          S              8S 0                                      Working Time
      D Idx             S              5U 0 INZ(0)                               Index
+     D WkEOF           S              1A                                                    MD054922
 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -229,6 +241,7 @@
      C                   EVAL      PRetCode  = *BLANKS
      C                   EVAL      PWaitTime = 99999
      C                   EVAL      PSubmit   = 'N'
+     C                   EVAL      WkEOF = 'N'                                              MD054922
 
       ** Read PF/GLPRMOPD to get Period of Expiring Request value and
       **                         Minimum Running Periodicity.
@@ -307,9 +320,21 @@
       *
       ** Requests expired.
       *
-     C     MRRDTE        IFLT      WkStartDate                                              MD051746
+     C                   EVAL      Wupdate = 'N'                                            MD055218
+     C*****MRRDTE        IFLT      WkStartDate                                     MD051746 MD054922
+     C                   DOW       MRRDTE < WkStartDate                                     MD054922
      C                   EVAL      MRSTAT = 'EXPIRED'                                       MD051746
      C                   UPDATE    GLMR94D0                                                 MD051746
+     C                   EVAL      Wupdate = 'Y'                                            MD055218
+     C                   READ      GLMR94L5                                                 MD054922
+     C                   IF        %EOF(GLMR94L5)                                           MD054922
+     C                   EVAL      WkEOF = 'Y'                                              MD054922
+     C                   LEAVE                                                              MD054922
+     C                   ENDIF                                                              MD054922
+     C                   ENDDO                                                              MD054922
+                                                                                            MD054922
+     C                   IF        WkEOF = 'Y'                                              MD054922
+     C                   LEAVE                                                              MD054922
      C                   ENDIF                                                              MD051746
       *****
 
@@ -335,9 +360,10 @@
       ** Requests expired.
 
      C
-     C     MRRDTE        IFLE      WkStartDate                                              MD051746
+     C*****MRRDTE        IFLE      WkStartDate                                     MD051746 MD054662
      C                   IF        MRSRTIM <= WkExpTime                         Request Expired
      C                             AND MRSRTIM <> 'IMED'                        Not Immediate Req.
+     C                             AND MRRDTE <= WkStartDate                                MD054662
      C                   EVAL      MRSTAT = 'EXPIRED'
      C                   ELSE
 
@@ -390,11 +416,13 @@
      C                   ENDSL
 
      C                   ENDIF
-     C                   ENDIF                                                              MD051746
+     C**********         ENDIF                                                     MD051746 MD054662
 
      C                   ENDIF
 
+     C                   IF        Wupdate = 'N'                                            MD055218
      C                   UPDATE    GLMR94D0
+     C                   ENDIF                                                              MD055218
 
      C                   ENDIF                                                               217556
      C                   ENDIF                                                              AR589183

@@ -2102,12 +2102,11 @@
      C                   EVAL      WIndx =1                                                 BUG24304
      C                   EVAL      WExt22 = *BLANKS                                         BUG24304
       *                                                                                     BUG24304
-     C
      C                   EVAL      WkBAEX22  = BAEX22                                       MD055642
      C                   IF        WkModuleID = 'BA' AND MG8632 <> *BLANKS                  MD055642
      C                   EVAL      WkBAEX22  = *BLANKS                                      MD055642
      C                   ENDIF                                                              MD055642
-     C
+                                                                                            MD055642
      C                   EVAL      WExt22 = %TRIM(BAEX1) + '  ' +                           BUG24304
      C                             %TRIM(BAEX2)+'  '+%TRIM(BAEX3)+'  '+                     BUG24304
      C                             %TRIM(BAEX4)+'  '+%TRIM(BAEX5)+'  '+                     BUG24304

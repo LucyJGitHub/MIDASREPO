@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. FCM101             Date 04Mar19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CSD102             Date 08Jan19               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD034840           Date 10Feb17               *
@@ -67,6 +68,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  FCM101 - Floor Rates on LE module                            *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
@@ -796,6 +798,11 @@
      C                   EVAL      NDFD = L_CLRDFD                                            CRE073
      C                   ENDIF                                                                CRE073
       *
+     C                   IF        FCM101 = 'Y'                                               FCM101
+     C                   EVAL      NNSP = L_CLCNSP                                            FCM101
+     C                   EVAL      NNSG = L_CLCNSG                                            FCM101
+     C                   ENDIF                                                                FCM101
+      *                                                                                       FCM101
      C                   Z-ADD     BJRDNB        LCD
       *
      C                   EVAL      TNLU = PNATN
@@ -1984,6 +1991,19 @@
      C                   EVAL      CRE073 = 'Y'                                               CRE073
      C                   ENDIF                                                                CRE073
                                                                                               CRE073
+      ** Verify if FCM101 is switched ON
+                                                                                              FCM101
+     C                   Move      'N'           FCM101            1                          FCM101
+     C                   CALL      'AOSARDR0'                                                 FCM101
+     C                   PARM      *BLANKS       PRetCode                                     FCM101
+     C                   PARM      '*VERIFY'     POption                                      FCM101
+     C                   PARM      'FCM101'      PSARD                                        FCM101
+     C     SCSARD        PARM      *BLANKS       DSFDY                                        FCM101
+                                                                                              FCM101
+     C                   If        PRetCode = *BLANKS                                         FCM101
+     C                   EVAL      FCM101 = 'Y'                                               FCM101
+     C                   Endif                                                                FCM101
+                                                                                              FCM101
      C                   ENDSR
       ****************************************************************
       /EJECT

@@ -23,8 +23,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. FCM101             Date 20Feb19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD039547           Date 20Sep16               *
       *                 MD041649           Date 06Oct16               *
       *                 CLE168             Date 26Feb18               *
@@ -72,6 +73,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  FCM101 - Floor Rates on LE module                            *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD039547 - Referred account is not properly validated.       *
@@ -629,7 +631,10 @@
      C**********                            ##RECS + ##PAYS + ExtData                         CAP086
      C**********                            ##RECS + ##PAYS +                        CAP086 AR702532
      C                                      @ACTRV + ##RECS + ##PAYS +                      AR702532
-     C                                      InfData + ExtData                                 CAP086
+     C**********                            InfData + ExtData                          CAP086 FCM101
+     C                                      InfData +                                         FCM101
+     C                                      TransQLeri +                                      FCM101
+     C                                      ExtData                                           FCM101
      C                   EndIf                                                               BUG8145
 
      C                   MOVE      '1'           *INLR
@@ -972,6 +977,7 @@
      C                   PARM                    CLE011            1
      C                   PARM                    S01465            1
      C                   PARM      *blank        @@CTU             1
+     C                   PARM                    TransQLeri       12                          FCM101
 
      C     EValidTr      ENDSR
       *****************************************************************

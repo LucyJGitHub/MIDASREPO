@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD052819           Date 17Apr19               *
+      *  Last Amend No. FCM101E            Date 25Apr19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD052819           Date 17Apr19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE141             Date 08Feb16               *
       *                 MD031736           Date 02Mar15               *
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  FCM101E - Add Floor Rates checking on rate fixing            *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD052819 - Use correct datatype for rate fixing days.        *
       *  MD046248 - Finastra Rebranding                               *
@@ -98,6 +100,7 @@
 
       ** Live Loan details
      FLELOANL0  UF   E           K DISK    INFSR(*PSSR) PREFIX(L0)
+     FXXCLOQY0  IF   E           K DISK    INFSR(*PSSR)                                      FCM101E
 
       *****************************************************************
       /EJECT
@@ -333,6 +336,65 @@
       *                                                               *
       *****************************************************************
      C     SRRecalc      BEGSR
+      *                                                                                      FCM101E
+      ** Check Base Rate vs Floor Rates and recalculate Spread                               FCM101E
+      *                                                                                      FCM101E
+     C                   If        FCM101 = 'Y'                                              FCM101E
+      *                                                                                      FCM101E
+     C                   IF        L0PTYP = 61 or L0PTYP = 62                                FCM101E
+     C                             or L0PTYP = 64 or L0PTYP = 66                             FCM101E
+     C                             or L0PTYP = 64 or L0PTYP = 66                             FCM101E
+     C                             or L0PTYP = 68 or L0PTYP = 69                             FCM101E
+     C                             or L0PTYP = 70 or L0PTYP = 71                             FCM101E
+     C                             or L0PTYP = 72                                            FCM101E
+      *                                                                                      FCM101E
+     C                   Z-add     L0CNSP        WCNSP                                       FCM101E
+     C                   Move      L0CNSG        WCNSG                                       FCM101E
+      *                                                                                      FCM101E
+     C     L0LNRF        CHAIN     XXCLOQY0                                                  FCM101E
+      *                                                                                      FCM101E
+     C                   If        %found                                                    FCM101E
+     C                   Move      XQBRSG        BASFSG                                      FCM101E
+     C                   Z-add     XQBRTF        BASFLR                                      FCM101E
+     C     XQBRSG        Ifeq      '-'                                                       FCM101E
+     C     XQBRTF        MULT      -1            BASFLR                                      FCM101E
+     C                   Endif                                                               FCM101E
+                                                                                             FCM101E
+     C                   Move      XQAISG        AIRFSG                                      FCM101E
+     C                   Z-add     XQAIRF        AIRFLR                                      FCM101E
+     C     XQAISG        Ifeq      '-'                                                       FCM101E
+     C     XQAIRF        MULT      -1            AIRFLR                                      FCM101E
+     C                   Endif                                                               FCM101E
+                                                                                             FCM101E
+     C                   Else                                                                FCM101E
+     C                   Z-Add     *zero         BASFLR                                      FCM101E
+     C                   Move      *blank        BASFSG                                      FCM101E
+     C                   Z-Add     *zero         AIRFLR                                      FCM101E
+     C                   Move      *blank        AIRFSG                                      FCM101E
+     C                   Endif                                                               FCM101E
+      *                                                                                      FCM101E
+     C                   Call      'XXCALCSPRT'                                              FCM101E
+     C                   Parm      *BLANKS       PRTCD             7                         FCM101E
+     C                   Parm                    WBaseRate                                   FCM101E
+     C                   Parm                    BASFLR           11 7                       FCM101E
+     C                   Parm                    BASFSG            1                         FCM101E
+     C                   Parm                    AIRFLR           11 7                       FCM101E
+     C                   Parm                    AIRFSG            1                         FCM101E
+     C                   Parm                    WCNSP            11 7                       FCM101E
+     C                   Parm                    WCNSG             1                         FCM101E
+     C                   Parm      *ZERO         PNewSpread       11 7                       FCM101E
+     C                   Parm      *ZERO         PFinalRate       11 7                       FCM101E
+     C                   Parm      *Blank        PNewSpreadSign    1                         FCM101E
+      *                                                                                      FCM101E
+     C                   Z-add     PNewSpread    L0RTSP                                      FCM101E
+     C                   Move      WCNSG         L0SPIN                                      FCM101E
+      *                                                                                      FCM101E
+     C     PNewSpreadSignIfne      ' '                                                       FCM101E
+     C                   Move      PNewSpreadSignL0SPIN                                      FCM101E
+     C                   Endif                                                               FCM101E
+      *                                                                                      FCM101E
+     C                   Endif                                                               FCM101E
+     C                   Endif                                                               FCM101E
       *
       * Effective rate
       *
@@ -342,7 +404,8 @@
      C                   WHEN      L0SPIN = 'S'
      C                   EVAL      L0INTR = L0BRTE - L0RTSP
      C                   WHEN      L0SPIN = 'P'
-     C                   EVAL      L0INTR = L0BRTE * (L0RTSP/100)
+     C***********        EVAL      L0INTR = L0BRTE * (L0RTSP/100)                            FCM101E
+     C                   EVAL(H)   L0INTR = L0BRTE * (L0RTSP/100)                            FCM101E
      C                   ENDSL
       *
       * Total Interest
@@ -495,6 +558,19 @@
      C                   IF        PRtnCde = *Blanks                                          CLE141
      C                   EVAL      CLE141 = 'Y'                                               CLE141
      C                   ENDIF                                                                CLE141
+      *                                                                                      FCM101E
+      ** Determine if FCM101 is installed                                                    FCM101E
+      *                                                                                      FCM101E
+     C                   MOVE      'N'           FCM101            1                         FCM101E
+     C                   CALL      'AOSARDR0'                                                FCM101E
+     C                   PARM      *BLANK        PRtnCde                                     FCM101E
+     C                   PARM      '*VERIFY'     POption                                     FCM101E
+     C                   PARM      'FCM101'      PSard                                       FCM101E
+     C     SCSARD        PARM      SCSARD        DSFDY                                       FCM101E
+                                                                                             FCM101E
+     C     PRtnCde       IFEQ      *BLANK                                                    FCM101E
+     C                   MOVE      'Y'           FCM101                                      FCM101E
+     C                   ENDIF                                                               FCM101E
      C                   ENDSR
       *****************************************************************
       /EJECT

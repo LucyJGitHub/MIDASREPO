@@ -9,11 +9,16 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2019                     */
 /*                                                                   */
-/*       Last Amend No. MD055280           Date 17Feb20              */
-/*       Prev Amend No. MD054605 *CREATE   Date 17Oct19              */
+/*       Last Amend No. MD055783           Date 06May20              */
+/*       Prev Amend No. MD055759           Date 04May20              */
+/*                      MD055280           Date 17Feb20              */
+/*                      MD054605 *CREATE   Date 17Oct19              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD055783 - Created data recovery for the old T_WIPCF        */
+/*                  when GDBU fails                                  */
+/*       MD055759 - MGSV values are cleared when GDBU fails          */
 /*       MD055280 - Data are not migrated after re-run of ZDBU       */
 /*                  since SDSVALPD does not exist anymore.           */
 /*       MD054605 - Deliverable Data Split for SDSVALPD              */
@@ -28,6 +33,7 @@
              DCL        VAR(&MLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&PLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&TALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&LIBMOV) TYPE(*CHAR) LEN(10)                                /*MD055783*/
              DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
              DCL        VAR(&AUTL) TYPE(*CHAR) LEN(10)
              DCL        VAR(&RETURN) TYPE(*CHAR) LEN(1)
@@ -57,11 +63,82 @@
              CHGVAR     VAR(&VLIB) VALUE(&PRFX *TCAT 'GVLIB')
              CHGVAR     VAR(&OWNER) VALUE(&PRFX *TCAT 'OWNER')
              CHGVAR     VAR(&AUTL) VALUE(&PRFX *TCAT 'DATABASE')
+                                                                                        /*MD055783*/
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT &PRFX *TCAT +
+                             'GMLIB')                                                   /*MD055783*/
+             CHKOBJ     OBJ(&LIBMOV/T_WIPCF) OBJTYPE(*FILE)                             /*MD055783*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(GPSVAL))                        /*MD055783*/
+                                                                                        /*MD055783*/
+             CHKOBJ     OBJ(&TALIB/T_WIPCF) OBJTYPE(*FILE)                              /*MD055783*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD055783*/
+             CPYF       FROMFILE(&LIBMOV/T_WIPCF) +
+                          TOFILE(&TALIB/T_WIPCF) MBROPT(*REPLACE) +
+                          CRTFILE(*YES)                                                 /*MD055783*/
+             ENDDO                                                                      /*MD055783*/
+                                                                                        /*MD055783*/
+GPSVAL:                                                                                 /*MD055783*/
 
              CHKOBJ     OBJ(&TALIB/GPSVALPD) OBJTYPE(*FILE)                             /*MD055280*/
              MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD055280*/
              SNDUSRMSG  MSG('GPSVALPD does not exist. Program +
                              cannot proceed with data migration.') MSGTYPE(*INFO)       /*MD055280*/
+
+             CHKOBJ     OBJ(&VLIB/GPSVLUW0) OBJTYPE(*FILE)                              /*MD055759*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD055759*/
+             CALL       PGM(UPC000034) PARM('GPSVLUW0' 'GPSQLSRCGV' +
+                          &LIBUPG &VLIB ' ' ' ' &OWNER &AUTL  &RETURN)                  /*MD055759*/
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)                            /*MD055759*/
+             ENDDO                                                                      /*MD055759*/
+
+             CHKOBJ     OBJ(&VLIB/GPSVRUW0) OBJTYPE(*FILE)                              /*MD055759*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD055759*/
+             CALL       PGM(UPC000034) PARM('GPSVRUW0' 'GPSQLSRCGV' +
+                          &LIBUPG &VLIB ' ' ' ' &OWNER &AUTL  &RETURN)                  /*MD055759*/
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)                            /*MD055759*/
+             ENDDO                                                                      /*MD055759*/
+
+             CHKOBJ     OBJ(&VLIB/GPSVLJW0) OBJTYPE(*FILE)                              /*MD055759*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD055759*/
+             CALL       PGM(UPC000034) PARM('GPSVLJW0' 'GPSQLSRCGV' +
+                          &LIBUPG &VLIB ' ' ' ' &OWNER &AUTL  &RETURN)                  /*MD055759*/
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)                            /*MD055759*/
+             ENDDO                                                                      /*MD055759*/
+
+             CHKOBJ     OBJ(&VLIB/GPSVLJW1) OBJTYPE(*FILE)                              /*MD055759*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD055759*/
+             CALL       PGM(UPC000034) PARM('GPSVLJW1' 'GPSQLSRCGV' +
+                          &LIBUPG &VLIB ' ' ' ' &OWNER &AUTL  &RETURN)                  /*MD055759*/
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)                            /*MD055759*/
+             ENDDO                                                                      /*MD055759*/
+
+             CHKOBJ     OBJ(&VLIB/GPSVRJW0) OBJTYPE(*FILE)                              /*MD055759*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD055759*/
+             CALL       PGM(UPC000034) PARM('GPSVRJW0' 'GPSQLSRCGV' +
+                          &LIBUPG &VLIB ' ' ' ' &OWNER &AUTL  &RETURN)                  /*MD055759*/
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)                            /*MD055759*/
+             ENDDO                                                                      /*MD055759*/
+
+             CHKOBJ     OBJ(&VLIB/GPSVLJI0) OBJTYPE(*FILE)                              /*MD055759*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD055759*/
+             CALL       PGM(UPC000034) PARM('GPSVLJI0' 'GPSQLSRCGV' +
+                          &LIBUPG &VLIB ' ' ' ' &OWNER &AUTL  &RETURN)                  /*MD055759*/
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)                            /*MD055759*/
+             ENDDO                                                                      /*MD055759*/
+
+             CHKOBJ     OBJ(&VLIB/GPSVRJI0) OBJTYPE(*FILE)                              /*MD055759*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD055759*/
+             CALL       PGM(UPC000034) PARM('GPSVRJI0' 'GPSQLSRCGV' +
+                          &LIBUPG &VLIB ' ' ' ' &OWNER &AUTL  &RETURN)                  /*MD055759*/
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)                            /*MD055759*/
+             ENDDO                                                                      /*MD055759*/
+
+             CHKOBJ     OBJ(&VLIB/UPGSVALJ0) OBJTYPE(*FILE)                             /*MD055759*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD055759*/
+             CALL       PGM(UPC000034) PARM('UPGSVALJ0' 'UPSQLSRCGV' +
+                          &LIBUPG &VLIB ' ' ' ' &OWNER &AUTL  &RETURN)                  /*MD055759*/
+             IF         COND(&RETURN = 'E') THEN(GOTO ABNOR)                            /*MD055759*/
+             ENDDO                                                                      /*MD055759*/
+
                 GOTO       CMDLBL(ENDPGM)                                               /*MD055280*/
              ENDDO                                                                      /*MD055280*/
                                                                                         /*MD055280*/

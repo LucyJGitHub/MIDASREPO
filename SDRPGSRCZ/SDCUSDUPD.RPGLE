@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055210           Date 03Feb20               *
-      *  Prev Amend No. MD054883           Date 23Dec19               *
+      *  Last Amend No. MD052595           Date 08Feb19               *
+      *  Prev Amend No. MD055210           Date 03Feb20               *
+      *                 MD054883           Date 23Dec19               *
       *                 MD053436           Date 21Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
@@ -148,6 +149,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052595 - CRS Detail Authority Flag not updated.            *
       *  MD055210 - Serious midas error encountered in CUSD           *
       *  MD054883 - CUSD Reverse API had an increased runtime         *
       *  MD053436 - Unable to perform end to end testing for          *
@@ -3512,6 +3514,7 @@
      C                   EVAL      CDPHON = D_CVPHON                                          CGL157
      C                   EVAL      CDRPAY = D_CVRPAY                                          CGL157
      C                   EVAL      CDTINS = D_CVTINS                                          CGL177
+     C                   EVAL      CDAUHO = D_CVAUHO                                        MD052595
      C                   IF        %SUBST(PCrsdZ:207:3) = *Blanks                             CGL157
      C                   EVAL      CDEFFD = *Zero                                             CGL157
      C                   ELSE                                                                 CGL157
@@ -5018,6 +5021,7 @@
      C                   EVAL      CDPHON = D_CVPHON                                          CGL157
      C                   EVAL      CDRPAY = D_CVRPAY                                          CGL157
      C                   EVAL      CDTINS = D_CVTINS                                          CGL177
+     C                   EVAL      CDAUHO = D_CVAUHO                                        MD052595
      C                   IF        %SUBST(PCrsdZ:207:3) = *Blanks                             CGL157
      C                   EVAL      CDEFFD = *Zero                                             CGL157
      C                   ELSE                                                                 CGL157

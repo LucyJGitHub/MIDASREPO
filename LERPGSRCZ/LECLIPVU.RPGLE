@@ -33,8 +33,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD053956           Date 29Oct19               *
-      *  Prev Amend No. MD036838A          Date 29Oct19               *
+      *  Last Amend No. FCM101B            Date 18Oct19               *
+      *  Prev Amend No. FCM101A            Date 28Mar19               *
+      *                 FCM101             Date 04Mar19               *
+      *                 MD053956           Date 29Oct19               *
+      *                 MD036838A          Date 29Oct19               *
       *                 MD036838           Date 29Oct19               *
       *                 MD030274           Date 29Oct19               *
       *                 MD054028           Date 05Sep19               *
@@ -143,6 +146,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  FCM101B - All-in Interest Rate Floor lost after EDIT of loan *
+      *            from WIP.  Re-merge loan details and send back to  *
+      *            JAVA when FCM101 feature is ON.                    *
+      *  FCM101A - Floor Rates on LE module + applied MD052478        *
+      *  FCM101 - Floor Rates on LE module                            *
       *  MD053956 - Modified fix MD036838 by removing  checking of    *
       *             ##PPAY or ##PREC for warning message LEL0700/0701.*
       *  MD036838A - Move ZASETINVAL call to ensure that settlement   *
@@ -354,7 +362,8 @@
      F**********                           PREFIX(@@)                                AR314017 CLE164
      FLEFCLTLH  IF   E           K DISK    INFSR(*PSSR)                                       CLE168
      F                                     PREFIX(C_)                                         CLE168
-
+     ** Midas XX Loans A Extension File                                                      FCM101A
+     FXXCLOQY0  IF   E           K DISK    INFSR(*PSSR)                                      FCM101A
       *****************************************************************
       ** +--------------------------------------+
       ** Ê Automatically included D-specs       Ê
@@ -456,7 +465,8 @@
      D TranInSeven   E DS                  EXTNAME(LECLI7PD)                                  CLE141
      D TranInExt     E DS                  EXTNAME(LESTMP2PD)                                 CER049
      D                                     PREFIX(Q)                                          CER049
-
+     D TranInFloor   E DS                  EXTNAME(XXCLIQPD)                                  FCM101
+     D                                     PREFIX(Q)                                          FCM101
       * Valid Customer Loans CL layout
      D ValidClil     E DS                  EXTNAME(LEVCLILPD)
      D                                     PREFIX(VL_)
@@ -636,6 +646,13 @@
      D  DDAgdtOK                      1A   INZ('Y')
      D  DDAgvvOK                      1A   INZ('Y')
 
+     D  FlrScnFm2      DS            26                                                      FCM101A
+      * Current Floor rates in file                                                          FCM101A
+     D  @DDBRTF                1     12                                                      FCM101A
+     D  @DDBRSG               13     13                                                      FCM101A
+     D  @DDAIRF               14     25                                                      FCM101A
+     D  @DDAISG               26     26                                                      FCM101A
+                                                                                             FCM101A
      D  DataOldRcd     DS           500
       * Fields used in setting confirmation indicators (old record)
 
@@ -926,7 +943,8 @@
      D RegData500      S            500A                                                      CER001
       * Field (500A) to receive the incoming Extra Data
      D ExtData500      S            500A
-
+      * Field (500A) to receive the incoming Floor Rates Data                                 FCM101
+     D TransQLE        S            500A                                                      FCM101
       * Index for arrays of error message ids etc in Amend validation
      D AmIdx           S              3P 0
 
@@ -1065,7 +1083,10 @@
      C                   ADD       8             eBfp                                       MD054028
      C                   ENDIF                                                              MD054028
      C                   MOVEL     RegData500    RegData                                      CER001
-
+                                                                                              FCM101
+     C                   If        FCM101 = 'Y'                                               FCM101
+     C                   MOVEL     TransQLE      TranInFloor                                  FCM101
+     C                   Endif                                                                FCM101
       * Reset variables gradually updated
 
      C                   EXSR      RESETCYCLE
@@ -1563,6 +1584,7 @@
      C                   MOVEL     TranInPrim    Buffer                                      BUG4685
                                                                                             MD020605
      C                   IF        CLE134 = 'Y'                                             MD020605
+     C                             Or FCM101 = 'Y'                                           FCM101B
      C                   EVAL                 Buffer = TranInPrim + TranInSeco              MD020605
      C                                               + TranInThir + TranInFour              MD020605
      C                                               + TranInFive                           MD020605
@@ -1579,6 +1601,7 @@
      C                                               + DDAPRC                               MD054028
      C                                               + DDPREM                               MD054028
      C                                               + DDAPRR                               MD054028
+     C                                               + TranInFloor                            FCM101
      C                                               + RegData                              MD044880
      C                   ENDIF                                                              MD020605
                                                                                             MD020605
@@ -1607,6 +1630,7 @@
      C                                               + DDAPRC                               MD054028
      C                                               + DDPREM                               MD054028
      C                                               + DDAPRR                               MD054028
+     C                                               + TranInFloor                            FCM101
      C                                               + RegData                              MD044880
      C                   ENDIF                                                               BUG4685
 
@@ -2043,7 +2067,8 @@
       ** Customer Loans Primary Details OK inds                                              BUG3721
      C                   PARM                    ClilFilFmt                                  BUG3721
      C                   PARM                    TranInPrim                                  BUG3721
-     C                   PARM                    OKClPrim
+     C                   PARM                    TranInFloor                                 FCM101
+     C                   PARM                    OKClPrim                                           
       ** Business Day Convention Screen Detail                                              MD053143
      C                   PARM                    TranInSeven                                MD053143
 
@@ -3174,7 +3199,33 @@
      C                   Z-ADD     AmIdx         Idx
      C                   GOTO      EndAmend
      C                   ENDIF
-
+                                                                                             FCM101A
+     C                   If        FCM101 = 'Y'                                              FCM101A
+     C                   MOVEL     TransQLE      NewFlrScn2       26                         FCM101A
+     C     DDLNRF        Chain     XXCLOQY0                                                  FCM101A
+     C                   If        %FOUND                                                    FCM101A
+     C                   Eval      @DDBRSG =  XQBRSG                                         FCM101A
+     C                   Eval      @DDAISG =  XQAISG                                         FCM101A
+     C     XQAIRF        IFNE      *ZEROS                                                    FCM101A
+     C                   MOVEL     *BLANKS       ZFIELD                                      FCM101A
+     C                   MOVE      XQAIRF        ZFIELD           16                         FCM101A
+     C                   Z-ADD     7             ZDEC              1 0                       FCM101A
+     C                   CALL      'ZEDIT'                                                   FCM101A
+     C                   PARM                    ZFIELD                                      FCM101A
+     C                   PARM                    ZDEC                                        FCM101A
+     C                   MOVE      ZFIELD        @DDAIRF                                     FCM101A
+     C                   ENDIF                                                               FCM101A
+     C     XQBRTF        IFNE      *ZEROS                                                    FCM101A
+     C                   MOVEL     *BLANKS       ZFIELD                                      FCM101A
+     C                   MOVE      XQBRTF        ZFIELD                                      FCM101A
+     C                   Z-ADD     7             ZDEC                                        FCM101A
+     C                   CALL      'ZEDIT'                                                   FCM101A
+     C                   PARM                    ZFIELD                                      FCM101A
+     C                   PARM                    ZDEC                                        FCM101A
+     C                   MOVE      ZFIELD        @DDBRTF                                     FCM101A
+     C                   ENDIF                                                               FCM101A
+     C                   Endif                                                               FCM101A
+     C                   Endif                                                               FCM101A
       * Second Screen
      C                   CALLB     'LECLIP2AD'
 
@@ -3201,7 +3252,8 @@
       ** Action Code (Reject transaction)                                                   AR804863
       *                                                                                     AR804863
      C                   PARM                    @ACTRV                                     AR804863
-
+     C                   PARM                    FlrScnFm2                                   FCM101A
+     C                   PARM                    NewFlrSCn2                                  FCM101A
       * OUTPUTS
 
       * Error Indicators
@@ -4111,6 +4163,7 @@
      C                   PARM                    InfData500                                   CAP086
      C                   PARM                    RegData500                                   CER001
      C                   PARM                    ExtData500
+     C                   PARM                    TransQLE                                     FCM101
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
@@ -4196,6 +4249,19 @@
      C                   ELSE                                                                 CDE005
      C                   MOVEL     'N'           CDE005                                       CDE005
      C                   ENDIF                                                                CDE005
+                                                                                              FCM101
+      * Determine if FCM101 is switched on                                                    FCM101
+                                                                                              FCM101
+     C                   CALLB     'AOSARDR0'                                                 FCM101
+     C                   PARM      *BLANKS       @RTCD                                        FCM101
+     C                   PARM      '*VERIFY'     @OPTN                                        FCM101
+     C                   PARM      'FCM101'      @SARD                                        FCM101
+     C     SCSARD        PARM      SCSARD        DSFDY                                        FCM101
+     C                   IF        @RTCD = *BLANK                                             FCM101
+     C                   MOVEL     'Y'           FCM101            1                          FCM101
+     C                   ELSE                                                                 FCM101
+     C                   MOVEL     'N'           FCM101                                       FCM101
+     C                   ENDIF                                                                FCM101
                                                                                               CDE005
      C                   EVAL      @RTCD = *BLANKS
 

@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054696           Date 29Oct19               *
-      *  Prev Amend No. MD054538           Date 08Oct19               *
+      *  Last Amend No. FCM101             Date 22Mar19               *
+      *  Prev Amend No. MD054696           Date 29Oct19               *
+      *                 MD054538           Date 08Oct19               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD052075           Date 07Jun19               *
@@ -222,6 +223,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  FCM101 - Floor Rates on LE module                            *
       *  MD054696 - Journal Entries Avoid Shadow Postings Update.     *
       *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *
       *  MD054538 - Buffer issue on Rollover Maintenance              *
@@ -959,6 +961,8 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      D GLFullAcct      S             24A                                                    MD026979
      D TempData7       S              1A                                                      CLE164
      D InputUser       S             10A                                                    MD042042
+     D TransQLE        S            500                                                       FCM101
+     D TranSQLO        S            500                                                       FCM101
      D StopFTDta       S             10A                                                    MD050928
 
      D*WCFSC1OLn       S              4P 0                                                   BUG4646
@@ -987,6 +991,8 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      D PDtqLib         S             10A                                                      CRE020
      D PDtqLen         S              5  0                                                    CRE020
      D PDtqMsg         S             50A                                                      CRE020
+                                                                                              FCM101
+     D FCM101          S              1                                                       FCM101
                                                                                              BUG5988
      D AMADFLn         S              4  0                                                   BUG5988
      D AMADFiller      S            500A                                                     BUG5988
@@ -1246,6 +1252,10 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   CLEAR                   InputUser                                  MD042042
      C                   CLEAR                   InCDL099                                     CDL099
      C                   CLEAR                   AuthUsers                                    CFT163
+     C                   If        FCM101 = 'Y'                                               FCM101
+     C                   Clear                   TransQLE                                     FCM101
+     C                   Clear                   TransQLO                                     FCM101
+     C                   Endif                                                                FCM101
      C/COPY OFCPYSRCZ,CGL135_042                                                             CGL135A
      C/COPY OFCPYSRCZ,CRE101_002                                                              CRE101
      C/COPY OFCPYSRCZ,CGL158_002                                                              CGL158
@@ -2544,6 +2554,11 @@ RGC  D RPIF4LN         S              4  0                                      
 
      C     CLEXLn        SUBST     BUFFER:Bfp    ExtData                                    MD044880
      C                   ADD       CLEXLn        Bfp                                        MD044880
+                                                                                              FCM101
+     C                   If        FCM101 = 'Y'                                               FCM101
+     C     XXCLIQLn      SUBST     Buffer:Bfp    TransQLE                                     FCM101
+     C                   ADD       XXCLIQLn      Bfp                                          FCM101
+     C                   Endif                                                                FCM101
                                                                                             MD044880
       *** APR Fields for CLIP (CER050)                                                      MD054028
      C     CLCR50Ln      SUBST     BUFFER:Bfp    CLAPRDta         24                        MD054028
@@ -2575,6 +2590,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    InfData                                      CAP086
      C                   PARM                    RegData                                      CER001
      C                   PARM                    ExtData
+     C                   PARM                    TransQLE                                     FCM101
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
@@ -2650,6 +2666,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    Buffer
      C                   PARM                    APIRetc
      C                   PARM                    @ACTRV                                     AR702532
+     C                   PARM                    TransQLO                                     FCM101
 
       * Repayment schedule
 
@@ -6029,7 +6046,13 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'LECLI7PD'    FileName                                     CLE141
      C                   EXSR      GETRCDLN                                                   CLE141
      C                   Z-ADD     RecordLen     CLI7Ln            4 0                        CLE141
-
+                                                                                              FCM101
+     C                   If        FCM101 = 'Y'                                               FCM101
+     C                   MOVEL     *BLANKS       FileName                                     FCM101
+     C                   MOVEL     'XXCLIQPD'    FileName                                     FCM101
+     C                   EXSR      GETRCDLN                                                   FCM101
+     C                   Z-ADD     RecordLen     XXCLIQLn          4 0                        FCM101
+     C                   Endif                                                                FCM101
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -7475,6 +7498,19 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   IF        PRTCD = *BLANKS                                            CRE020
      C                   EVAL      CRE020 = 'Y'                                               CRE020
      C                   ENDIF                                                                CRE020
+                                                                                              FCM101
+      ** Check if Floor Rates on LE is on                                                     FCM101
+                                                                                              FCM101
+     C                   EVAL      FCM101 = 'N'                                               FCM101
+     C                   CALL      'AOSARDR0'                                                 FCM101
+     C                   PARM      *BLANKS       PRTCD                                        FCM101
+     C                   PARM      '*VERIFY'     POPTN                                        FCM101
+     C                   PARM      'FCM101'      PSARD                                        FCM101
+     C     SCSARD        PARM      SCSARD        DSFDY                                        FCM101
+                                                                                              FCM101
+     C                   IF        PRTCD = *BLANKS                                            FCM101
+     C                   EVAL      FCM101 = 'Y'                                               FCM101
+     C                   ENDIF                                                                FCM101
      C/COPY WNCPYSRC,APH00035
 
       ** Check if SWIFT2009 is installed                                                      CSW209

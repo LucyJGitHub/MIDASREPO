@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD055714           Date 06May20               *
-      *  Prev Amend No. 257533             Date 06May20               *
+      *  Last Amend No. MD055128           Date 17Apr20               *
+      *  Prev Amend No. MD055714           Date 06May20               *
+      *                 257533             Date 06May20               *
       *                 MD055074           Date 21Jan20               *
       *                 MD053297           Date 06Sep19               *
       *                 MD023254           Date 06Sep19               *
@@ -126,6 +127,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055128 - Allow  negative total interest when negative      *
+      *             base rate code was used                           *
       *  MD055714 - Missing rebate posting after changing maturity    *
       *             date of discount loan. Restore original values of *
       *             ORTI, ORMD and TOTI fields after amend-reject of  *
@@ -4425,7 +4428,13 @@ E004 C                   ENDIF
      C                   PARM      *BLANKS       ZOUT22                                      BUG3721
      C                   PARM      *BLANKS       ZOUT25           25                         BUG3721
                                                                                              BUG3721
+     C                   IF        WTOTI < 0                                                MD055128
+     C                             AND CLE028 = 'Y'                                         MD055128
+     C                             AND WLNPT = 80                                           MD055128
+     C                   MOVE      ZOUT22        DDIPRD                                     MD055128
+     C                   ELSE                                                               MD055128
      C                   MOVE      ZOUT20        DDIPRD                                      BUG3721
+     C                   ENDIF                                                              MD055128
                                                                                              BUG3721
      C                   ELSE                                                                BUG3721
                                                                                               CAP086
@@ -4461,7 +4470,8 @@ E004 C                   ENDIF
      C     ZNEG          IFEQ      '-'                                                      AR988460
      C                   MOVE      *BLANKS       WRKFLD1          20                        AR988460
      C                   EVAL      WRKFLD1 = %trim(ZOUT20)                                  AR988460
-     C     '-'           CAT       WRKFLD1       MsgDtaXAr(Idx)                             AR988460
+     C*****'-'**         CAT       WRKFLD1       MsgDtaXAr(Idx)                    AR988460 MD055128
+     C     '-'           CAT       WRKFLD1       ZOUT20                                     MD055128
      C                   ENDIF                                                              AR988460
      C                   EVAL      BLen = %Len(%Trim(ZOUT20))                               MD000091
      C                   EVAL      MsgDtaXAr(Idx) = LenStr +%TRIM(ZOUT20)                   MD000091

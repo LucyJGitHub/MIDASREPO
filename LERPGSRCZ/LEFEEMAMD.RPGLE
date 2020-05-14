@@ -555,7 +555,7 @@
      C                   ADD       1             WIdx                                       MD031692
      C                   EVAL      WFldNamArr(WIdx) = 'DDRTE2'                              MD031692
      C                   EVAL      WMsgIDArr(WIdx) = '5049999'                              MD031692
-     C                   EVAL      DDRTE1OK = 'W'                                           MD031692
+     C                   EVAL      DDRTE2OK = 'W'                                           MD031692
      C                   ENDIF                                                              MD031692
      C                   ENDIF                                                              MD031692
       *
@@ -604,7 +604,7 @@
      C                   ADD       1             WIdx                                       MD031692
      C                   EVAL      WFldNamArr(WIdx) = 'DDRTE3'                              MD031692
      C                   EVAL      WMsgIDArr(WIdx) = '5049999'                              MD031692
-     C                   EVAL      DDRTE1OK = 'W'                                           MD031692
+     C                   EVAL      DDRTE3OK = 'W'                                           MD031692
      C                   ENDIF                                                              MD031692
      C                   ENDIF                                                              MD031692
       *
@@ -653,7 +653,7 @@
      C                   ADD       1             WIdx                                       MD031692
      C                   EVAL      WFldNamArr(WIdx) = 'DDRTE4'                              MD031692
      C                   EVAL      WMsgIDArr(WIdx) = '5049999'                              MD031692
-     C                   EVAL      DDRTE1OK = 'W'                                           MD031692
+     C                   EVAL      DDRTE4OK = 'W'                                           MD031692
      C                   ENDIF                                                              MD031692
      C                   ENDIF                                                              MD031692
       *
@@ -702,7 +702,7 @@
      C                   ADD       1             WIdx                                       MD031692
      C                   EVAL      WFldNamArr(WIdx) = 'DDRTE5'                              MD031692
      C                   EVAL      WMsgIDArr(WIdx) = '5049999'                              MD031692
-     C                   EVAL      DDRTE1OK = 'W'                                           MD031692
+     C                   EVAL      DDRTE5OK = 'W'                                           MD031692
      C                   ENDIF                                                              MD031692
      C                   ENDIF                                                              MD031692
       *

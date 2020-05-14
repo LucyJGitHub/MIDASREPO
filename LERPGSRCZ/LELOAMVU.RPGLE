@@ -33,9 +33,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD049414           Date 15Mar18               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
-      *                 CSD102             Date 08Jan19               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
       *                 MD051890           Date 17Sep18               *
       *                 MD039547           Date 20Sep16               *
       *                 CLE071             Date 18Jul18               *
@@ -99,12 +98,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD049414 - Settlement currency rate and indicator is not     *
-      *             being saved to file after authorization. Copied   *
-      *             the values in another variable as backup and is   *
-      *             passed to corresponding variables to be saved to  *
-      *             the LOAMSDK file.                                 *
-      *           - Applied for MD020027.                             *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD051890 - Missing Principal Projection on Nostro Account    *
@@ -603,15 +596,6 @@
      D BlankSTYP       S              2A                                                      CSD095
      D BlankBRCA       S              3A                                                      CSD095
                                                                                               CSD095
-                                                                                            MD049414
-      ** Copies the value of Exchange rates and indicators                                  MD049414
-     D AURSCY          S                     LIKE(LASCCY)                                   MD049414
-     D AUREXR          S                     LIKE(LAREXR)                                   MD049414
-     D AUREXI          S                     LIKE(LAREXI)                                   MD049414
-     D AUPSCY          S                     LIKE(LAPSCY)                                   MD049414
-     D AUPEXR          S                     LIKE(LAPEXR)                                   MD049414
-     D AUPEXI          S                     LIKE(LAPEXI)                                   MD049414
-
       ** +--------------------------------------+
       ** Ê End of D-specs                       Ê
       ** Ê ==============                       Ê
@@ -1147,17 +1131,6 @@
      C                   EVAL      DDPSTM = '00'                                              CLE034
      C                   EVAL      DDRSTM = '00'                                              CLE034
      C                   ENDIF                                                                CLE034
-                                                                                            MD049414
-      ** Copies the values of settlement currency and details                               MD049414
-     C     CLE031        IFEQ      'Y'                                                      MD049414
-     C     DDACTN        ANDEQ     'X'                                                      MD049414
-     C                   MOVE      LAREXI        AUREXI                                     MD049414
-     C                   MOVE      LAPEXI        AUPEXI                                     MD049414
-     C                   MOVE      LASCCY        AURSCY                                     MD049414
-     C                   MOVE      LAPSCY        AUPSCY                                     MD049414
-     C                   Z-ADD     LAREXR        AUREXR                                     MD049414
-     C                   Z-ADD     LAPEXR        AUPEXR                                     MD049414
-     C                   ENDIF                                                              MD049414
                                                                                               CLE034
      C                   RESET                   ReturnCode
      C                   CALLB     'ZASETINVAL'
@@ -1267,16 +1240,6 @@
      C                   MOVE      FLRSCY        V_LASCCY                                     CLE031
      C                   MOVE      FLPSCY        V_LAPSCY                                     CLE031
      C                   ENDIF                                                               BUG9550
-      *                                                                                     MD049414
-     C     CLE031        IFEQ      'Y'                                                      MD049414
-     C     DDACTN        ANDEQ     'X'                                                      MD049414
-     C                   Z-ADD     AUREXR        V_LAREXR                                   MD049414
-     C                   Z-ADD     AUPEXR        V_LAPEXR                                   MD049414
-     C                   MOVE      AUREXI        V_LAREXI                                   MD049414
-     C                   MOVE      AUPEXI        V_LAPEXI                                   MD049414
-     C                   MOVE      AURSCY        V_LASCCY                                   MD049414
-     C                   MOVE      AUPSCY        V_LAPSCY                                   MD049414
-     C                   ENDIF                                                              MD049414
       *                                                                                       TCA091
      C                   IF        (PType <> 'PTSO')                                          TCA091
      C                   EVAL      V_LAOSBR = FLPOBR                                          TCA091

@@ -505,7 +505,8 @@
      C     BKANWD        ANDEQ     '2'                                                      MD031692
      C                   ADD       1             WIdx                                       MD031692
      C                   EVAL      WFldNamArr(WIdx) = 'DDRTE1'                              MD031692
-     C                   EVAL      WMsgIDArr(WIdx) = 'LER2029'                              MD031692
+     C                   EVAL      WMsgIDArr(WIdx) = '5049999'                              MD031692
+     C                   EVAL      DDRTE1OK = 'W'                                           MD031692
      C                   ENDIF                                                              MD031692
      C                   ENDIF                                                              MD031692
       *
@@ -553,7 +554,8 @@
      C     BKANWD        ANDEQ     '2'                                                      MD031692
      C                   ADD       1             WIdx                                       MD031692
      C                   EVAL      WFldNamArr(WIdx) = 'DDRTE2'                              MD031692
-     C                   EVAL      WMsgIDArr(WIdx) = 'LER2029'                              MD031692
+     C                   EVAL      WMsgIDArr(WIdx) = '5049999'                              MD031692
+     C                   EVAL      DDRTE1OK = 'W'                                           MD031692
      C                   ENDIF                                                              MD031692
      C                   ENDIF                                                              MD031692
       *
@@ -601,7 +603,8 @@
      C     BKANWD        ANDEQ     '2'                                                      MD031692
      C                   ADD       1             WIdx                                       MD031692
      C                   EVAL      WFldNamArr(WIdx) = 'DDRTE3'                              MD031692
-     C                   EVAL      WMsgIDArr(WIdx) = 'LER2029'                              MD031692
+     C                   EVAL      WMsgIDArr(WIdx) = '5049999'                              MD031692
+     C                   EVAL      DDRTE1OK = 'W'                                           MD031692
      C                   ENDIF                                                              MD031692
      C                   ENDIF                                                              MD031692
       *
@@ -649,7 +652,8 @@
      C     BKANWD        ANDEQ     '2'                                                      MD031692
      C                   ADD       1             WIdx                                       MD031692
      C                   EVAL      WFldNamArr(WIdx) = 'DDRTE4'                              MD031692
-     C                   EVAL      WMsgIDArr(WIdx) = 'LER2029'                              MD031692
+     C                   EVAL      WMsgIDArr(WIdx) = '5049999'                              MD031692
+     C                   EVAL      DDRTE1OK = 'W'                                           MD031692
      C                   ENDIF                                                              MD031692
      C                   ENDIF                                                              MD031692
       *
@@ -697,7 +701,8 @@
      C     BKANWD        ANDEQ     '2'                                                      MD031692
      C                   ADD       1             WIdx                                       MD031692
      C                   EVAL      WFldNamArr(WIdx) = 'DDRTE5'                              MD031692
-     C                   EVAL      WMsgIDArr(WIdx) = 'LER2029'                              MD031692
+     C                   EVAL      WMsgIDArr(WIdx) = '5049999'                              MD031692
+     C                   EVAL      DDRTE1OK = 'W'                                           MD031692
      C                   ENDIF                                                              MD031692
      C                   ENDIF                                                              MD031692
       *

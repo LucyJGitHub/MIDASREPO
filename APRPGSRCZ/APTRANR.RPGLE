@@ -13,10 +13,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD052550           Date 07Jan19               *
+      *  Last Amend No. MD039655           Date 11Feb20               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD052550           Date 07Jan19               *
       *                 MD044880           Date 15Jan18               *
-      *               . MD046248           Date 27Oct17               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD039986           Date 10Aug16               *
       *                 AR1090283          Date 10Aug16               *
       *                 AR701789           Date 26Sep16               *
@@ -80,6 +81,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039655 - Facility cannot be rejected.                      *
+      *             Pattern fix from MD-29208 and MD-34908.           *
       *  CSD102 - Password Length Extension                           *
       *  MD052550 - Missed out line of code during reversal of        *
       *             fix MD-51830.                                     *
@@ -597,6 +600,7 @@
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
      C                   PARM                    DDPATH          200                       BUG13297A
+     C                   PARM                    @ACTRV                                     MD039655
 
       * LE Loan Details
 

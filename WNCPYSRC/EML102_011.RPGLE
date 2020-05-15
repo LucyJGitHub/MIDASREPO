@@ -4,14 +4,24 @@
       *                                                               *                       EML102
       *  EML102_011 - Midas GL Retrieve Postings by Network Account   *                       EML102
       *                                                               *                       EML102
-      *  Last Amend No. EML102  *CREATE    Date 22Nov19               *                       EML102
+      *  Last Amend No. EML104             Date 04Feb20               *                       EML104
+      *  Prev Amend No. EML102  *CREATE    Date 22Nov19               *                       EML102
       *                                                               *                       EML102
       *---------------------------------------------------------------*                       EML102
       *                                                               *                       EML102
+      *  EML104 - Upgrade of EML010 to FB2.1 SP21                     *                       EML104
+      *      EML010 - Structured field :86:                           *                       EML104
       *  EML102 - Upgrade of UNL007 to FB21 SP21                      *                       EML102
       *      UNL007 - Extended Narratives                             *                       EML102
       *                                                               *                       EML102
       *****************************************************************                       EML102
+     D EML104          S              1                                         Feature       EML104
+     D Idx             S              5U 0                                      Index         EML104
+     D IdxNw           S              5U 0 INZ(1000)                            Index Network EML104
+     D PNwrk           S                   LIKE(EDNWRK)                         Network       EML104
+     D SpAddInfo       S                   LIKE(MGADI1to6)                      Sp Add Info   EML104
+     D SvMGADI1to6     S                   LIKE(MGADI1to6)                      Save Add. InfoEML104
+      *                                                                                       EML104
       *                                                                                       EML102
       ** Array for additional information                                                     EML102
      D Ar_AddInf       S             65    DIM(6)                                             EML102

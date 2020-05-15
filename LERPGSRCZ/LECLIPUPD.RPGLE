@@ -14,6 +14,7 @@
       *                                                               *
       *  Last Amend No. MD031292           Date 06Nov19               *
       *  Prev Amend No. MD025836           Date 06Nov19               *
+      *                 MD055714           Date 06May20               *
       *                 MD054877           Date 14Jan20               *
       *                 CER050             Date 16Jun19               *
       *                 MD054035           Date 03Sep19               *
@@ -167,6 +168,9 @@
       *  MD025836 - Loan principal increase causing excess. Remove    *
       *             DAYNO increase when maturity is amended to update *
       *             drawn amount on previous maturity date.           *
+      *  MD055714 - Missing rebate posting after changing maturity    *
+      *             date of discount loan. Restore original value of  *
+      *             OMDT field upon reject.                           *
       *  MD054877 - Interest shadow postings at maturity of guarantee *
       *             loan not produced. Allow shadow postings genera-  *
       *             tion at maturity if interest date is zero.        *
@@ -4029,7 +4033,11 @@
       *
      C     S01465        IFEQ      'Y'
      C     L_CLMDAT      ANDNE     MDAT
+     C     @ACTRV        IFEQ      'Y'                                                      MD055714
+     C                   Z-ADD     L_CLOMDT      OMDT                                       MD055714
+     C                   ELSE                                                               MD055714
      C                   Z-ADD     MDAT          OMDT
+     C                   ENDIF                                                              MD055714
      C                   ENDIF
       *
       *----------------------------------------------------------------

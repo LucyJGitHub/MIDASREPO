@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD022378           Date 12Sep13               *
+      *  Last Amend No. MD031692           Date 12Mar20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD022378           Date 12Sep13               *
       *                 253753             Date 16Nov12               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -49,6 +50,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031692 - Incorrect accrual when fee rate is changed on     *
+      *             payment date. Issue warning message if fee rate   *
+      *             change is done on payment day, which is stored in *
+      *             FELPDT as fee payment is processed one day ahead. *
       *  MD046248 - Finastra Rebranding                               *
       *  MD022378 - Impossible to amend Amount/Precent Indicator      *
       *  253753 - CAS019 - additional condition on LER1217            *
@@ -90,7 +95,7 @@
       **   F-specs                               
       **   =======                               
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       **   Automatically included D-specs        
@@ -109,60 +114,60 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       **   End of automatically included D-specs 
       **   ===================================== 
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       **   Manually included D-specs             
       **   =========================             
       ** +--------------------------------------+
      D CAS016          S              1    INZ('N')                                           CAS019
- 
+
       ** +--------------------------------------+
       **   Named constants                       
       **   ===============                       
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       **   Arrays and Data Structures            
       **   ==========================            
       ** +--------------------------------------+
- 
+
       * New Fee in Screen Format
      D NwFeScnFmt    E DS                  EXTNAME(LEFEEMPD)
- 
+
       * (Current) Fee in Screen Format
      D CrFeScnFmt    E DS                  EXTNAME(LEFEEMPD)
      D                                     PREFIX(@@)
       * Valid Fee layout
      D ValidFeem     E DS                  EXTNAME(LEVFEEMPD)
      D                                     PREFIX(V_)
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
       *
@@ -175,26 +180,32 @@
      D  SSF                   11     11
      D  DATF                  12     12
      D  MBIN                  13     13
- 
+      *                                                                                     MD031692
+     D JNSTAT          DS           200                                                     MD031692
+     D  PRUN                 103    105P 0                                                  MD031692
+      *                                                                                     MD031692
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
       ** +--------------------------------------+
       **   Declared variables                    
       **   ==================                    
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
      D CLE122          S              1                                                       CLE122
      D PSARD           S              6                                                       CLE122
- 
+
+      ** Index for arrays of of warning message ids etc                                     MD031692
+     D WIdx            S              3P 0                                                  MD031692
+                                                                                            MD031692
       ** Flags to indicate whether transaction fields are valid
      D OkFee         E DS                  EXTNAME(LEEFEEMPD)
       *                                                                                       CGL029
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
       *                                                                                       CGL029
- 
+
       ** +--------------------------------------+
       **   End of D-specs                        
       **   ==============                        
@@ -308,7 +319,7 @@
      C                   EVAL      MsgIDArr(Idx)   = 'LER2002'                                CAP084
      C                   EVAL      DDFACTOK        = 'N'
      C                   ENDIF
- 
+
      C     DDFCNO        IFNE      @@DDFCNO
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDFCNO'
@@ -479,6 +490,25 @@
      C**********         EVAL      MsgIDArr(Idx)   = 'LER2015'                        CAP084 BUG8762
      C**********         EVAL      DDRTE1OK        = 'N'                                     BUG8762
      C**********         ENDIF                                                               BUG8762
+      *                                                                                     MD031692
+     C                   CALLB     'ZCMPAMTS'                                               MD031692
+     C                   PARM      DDRTE1        ZCMPAMT1         25                        MD031692
+     C                   PARM      @@DDRTE1      ZCMPAMT2         25                        MD031692
+     C                   PARM      'N'           ZCMPAMTDif        1                        MD031692
+      *                                                                                     MD031692
+     C     ZCMPAMTDif    IFEQ      'Y'                                                      MD031692
+     C     V_VFLPDT      IFEQ      BJRDNB                                                   MD031692
+     C     V_VFORED      ANDLT     BJRDNB                                                   MD031692
+     C     V_VFLPDT      ORGT      PRUN                                                     MD031692
+     C     V_VFLPDT      ANDLT     BJDNWD                                                   MD031692
+     C     V_VFORED      ANDLT     BJRDNB                                                   MD031692
+     C     BKANWD        ANDEQ     '2'                                                      MD031692
+     C                   ADD       1             WIdx                                       MD031692
+     C                   EVAL      WFldNamArr(WIdx) = 'DDRTE1'                              MD031692
+     C                   EVAL      WMsgIDArr(WIdx) = '5049999'                              MD031692
+     C                   EVAL      DDRTE1OK = 'W'                                           MD031692
+     C                   ENDIF                                                              MD031692
+     C                   ENDIF                                                              MD031692
       *
       * Compare Amount 1
                                                                                               CAP084
@@ -509,6 +539,25 @@
      C**********         EVAL      MsgIDArr(Idx)   = 'LER2015'                        CAP084 BUG8762
      C**********         EVAL      DDRTE2OK        = 'N'                                     BUG8762
      C**********         ENDIF                                                               BUG8762
+      *                                                                                     MD031692
+     C                   CALLB     'ZCMPAMTS'                                               MD031692
+     C                   PARM      DDRTE2        ZCMPAMT1                                   MD031692
+     C                   PARM      @@DDRTE2      ZCMPAMT2                                   MD031692
+     C                   PARM      'N'           ZCMPAMTDif                                 MD031692
+      *                                                                                     MD031692
+     C     ZCMPAMTDif    IFEQ      'Y'                                                      MD031692
+     C     V_VFLPDT      IFEQ      BJRDNB                                                   MD031692
+     C     V_VFORED      ANDLT     BJRDNB                                                   MD031692
+     C     V_VFLPDT      ORGT      PRUN                                                     MD031692
+     C     V_VFLPDT      ANDLT     BJDNWD                                                   MD031692
+     C     V_VFORED      ANDLT     BJRDNB                                                   MD031692
+     C     BKANWD        ANDEQ     '2'                                                      MD031692
+     C                   ADD       1             WIdx                                       MD031692
+     C                   EVAL      WFldNamArr(WIdx) = 'DDRTE2'                              MD031692
+     C                   EVAL      WMsgIDArr(WIdx) = '5049999'                              MD031692
+     C                   EVAL      DDRTE2OK = 'W'                                           MD031692
+     C                   ENDIF                                                              MD031692
+     C                   ENDIF                                                              MD031692
       *
       * Compare Amount 2
                                                                                               CAP084
@@ -539,6 +588,25 @@
      C**********         EVAL      MsgIDArr(Idx)   = 'LER2015'                        CAP084 BUG8762
      C**********         EVAL      DDRTE3OK        = 'N'                                     BUG8762
      C**********         ENDIF                                                               BUG8762
+      *                                                                                     MD031692
+     C                   CALLB     'ZCMPAMTS'                                               MD031692
+     C                   PARM      DDRTE3        ZCMPAMT1                                   MD031692
+     C                   PARM      @@DDRTE3      ZCMPAMT2                                   MD031692
+     C                   PARM      'N'           ZCMPAMTDif                                 MD031692
+      *                                                                                     MD031692
+     C     ZCMPAMTDif    IFEQ      'Y'                                                      MD031692
+     C     V_VFLPDT      IFEQ      BJRDNB                                                   MD031692
+     C     V_VFORED      ANDLT     BJRDNB                                                   MD031692
+     C     V_VFLPDT      ORGT      PRUN                                                     MD031692
+     C     V_VFLPDT      ANDLT     BJDNWD                                                   MD031692
+     C     V_VFORED      ANDLT     BJRDNB                                                   MD031692
+     C     BKANWD        ANDEQ     '2'                                                      MD031692
+     C                   ADD       1             WIdx                                       MD031692
+     C                   EVAL      WFldNamArr(WIdx) = 'DDRTE3'                              MD031692
+     C                   EVAL      WMsgIDArr(WIdx) = '5049999'                              MD031692
+     C                   EVAL      DDRTE3OK = 'W'                                           MD031692
+     C                   ENDIF                                                              MD031692
+     C                   ENDIF                                                              MD031692
       *
       * Compare Amount 3
                                                                                               CAP084
@@ -569,6 +637,25 @@
      C**********         EVAL      MsgIDArr(Idx)   = 'LER2015'                        CAP084 BUG8762
      C**********         EVAL      DDRTE4OK        = 'N'                                     BUG8762
      C**********         ENDIF                                                               BUG8762
+      *                                                                                     MD031692
+     C                   CALLB     'ZCMPAMTS'                                               MD031692
+     C                   PARM      DDRTE4        ZCMPAMT1                                   MD031692
+     C                   PARM      @@DDRTE4      ZCMPAMT2                                   MD031692
+     C                   PARM      'N'           ZCMPAMTDif                                 MD031692
+      *                                                                                     MD031692
+     C     ZCMPAMTDif    IFEQ      'Y'                                                      MD031692
+     C     V_VFLPDT      IFEQ      BJRDNB                                                   MD031692
+     C     V_VFORED      ANDLT     BJRDNB                                                   MD031692
+     C     V_VFLPDT      ORGT      PRUN                                                     MD031692
+     C     V_VFLPDT      ANDLT     BJDNWD                                                   MD031692
+     C     V_VFORED      ANDLT     BJRDNB                                                   MD031692
+     C     BKANWD        ANDEQ     '2'                                                      MD031692
+     C                   ADD       1             WIdx                                       MD031692
+     C                   EVAL      WFldNamArr(WIdx) = 'DDRTE4'                              MD031692
+     C                   EVAL      WMsgIDArr(WIdx) = '5049999'                              MD031692
+     C                   EVAL      DDRTE4OK = 'W'                                           MD031692
+     C                   ENDIF                                                              MD031692
+     C                   ENDIF                                                              MD031692
       *
       * Compare Amount 4
                                                                                               CAP084
@@ -599,6 +686,25 @@
      C**********         EVAL      MsgIDArr(Idx)   = 'LER2015'                        CAP084 BUG8762
      C**********         EVAL      DDRTE5OK        = 'N'                                     BUG8762
      C**********         ENDIF                                                               BUG8762
+      *                                                                                     MD031692
+     C                   CALLB     'ZCMPAMTS'                                               MD031692
+     C                   PARM      DDRTE5        ZCMPAMT1                                   MD031692
+     C                   PARM      @@DDRTE5      ZCMPAMT2                                   MD031692
+     C                   PARM      'N'           ZCMPAMTDif                                 MD031692
+      *                                                                                     MD031692
+     C     ZCMPAMTDif    IFEQ      'Y'                                                      MD031692
+     C     V_VFLPDT      IFEQ      BJRDNB                                                   MD031692
+     C     V_VFORED      ANDLT     BJRDNB                                                   MD031692
+     C     V_VFLPDT      ORGT      PRUN                                                     MD031692
+     C     V_VFLPDT      ANDLT     BJDNWD                                                   MD031692
+     C     V_VFORED      ANDLT     BJRDNB                                                   MD031692
+     C     BKANWD        ANDEQ     '2'                                                      MD031692
+     C                   ADD       1             WIdx                                       MD031692
+     C                   EVAL      WFldNamArr(WIdx) = 'DDRTE5'                              MD031692
+     C                   EVAL      WMsgIDArr(WIdx) = '5049999'                              MD031692
+     C                   EVAL      DDRTE5OK = 'W'                                           MD031692
+     C                   ENDIF                                                              MD031692
+     C                   ENDIF                                                              MD031692
       *
       * Compare Amount 5
                                                                                               CAP084
@@ -772,151 +878,151 @@
      C     DDFACTOK      IFEQ      'N'
      C                   MOVEL     @@DDFACT      DDFACT
      C                   ENDIF
- 
+
      C     DDFCNOOK      IFEQ      'N'
      C                   MOVEL     @@DDFCNO      DDFCNO
      C                   ENDIF
- 
+
       * Loan number
      C     DDLNRFOK      IFEQ      'N'
      C                   MOVEL     @@DDLNRF      DDLNRF
      C                   ENDIF
- 
+
       * Fee Code
      C     DDECODOK      IFEQ      'N'
      C                   MOVEL     @@DDECOD      DDECOD
      C                   ENDIF
- 
+
       * Fee currency
      C     DDECUROK      IFEQ      'N'
      C                   MOVEL     @@DDECUR      DDECUR
      C                   ENDIF
- 
+
       * Fee amount
      C     DDEAMTOK      IFEQ      'N'
      C                   MOVEL     @@DDEAMT      DDEAMT
      C                   ENDIF
- 
+
       * Fee sign
      C     DDESGNOK      IFEQ      'N'
      C                   MOVEL     @@DDESGN      DDESGN
      C                   ENDIF
- 
+
       * Fee period start
      C     DDEPSDOK      IFEQ      'N'
      C                   MOVEL     @@DDEPSD      DDEPSD
      C                   ENDIF
- 
+
       * Fee period end
      C     DDEPEDOK      IFEQ      'N'
      C                   MOVEL     @@DDEPED      DDEPED
      C                   ENDIF
- 
+
       * Payment on
      C     DDEPONOK      IFEQ      'N'
      C                   MOVEL     @@DDEPON      DDEPON
      C                   ENDIF
- 
+
       * Advice confirmation indicator
      C     DDEADVOK      IFEQ      'N'
      C                   MOVEL     @@DDEADV      DDEADV
      C                   ENDIF
- 
+
       * Shared fee
      C     DDESHROK      IFEQ      'N'
      C                   MOVEL     @@DDESHR      DDESHR
      C                   ENDIF
- 
+
       * Calculation type
      C     DDCALTOK      IFEQ      'N'
      C                   MOVEL     @@DDCALT      DDCALT
      C                   ENDIF
- 
+
       * Rate 1
      C     DDRTE1OK      IFEQ      'N'
      C                   MOVEL     @@DDRTE1      DDRTE1
      C                   ENDIF
- 
+
       * Amount 1
      C     DDFAMT1OK     IFEQ      'N'
      C                   MOVEL     @@DDFAMT1     DDFAMT1
      C                   ENDIF
- 
+
       * Rate 2
      C     DDRTE2OK      IFEQ      'N'
      C                   MOVEL     @@DDRTE2      DDRTE2
      C                   ENDIF
- 
+
       * Amount 2
      C     DDFAMT2OK     IFEQ      'N'
      C                   MOVEL     @@DDFAMT2     DDFAMT2
      C                   ENDIF
- 
+
       * Rate 3
      C     DDRTE3OK      IFEQ      'N'
      C                   MOVEL     @@DDRTE3      DDRTE3
      C                   ENDIF
- 
+
       * Amount 3
      C     DDFAMT3OK     IFEQ      'N'
      C                   MOVEL     @@DDFAMT3     DDFAMT3
      C                   ENDIF
- 
+
       * Rate 4
      C     DDRTE4OK      IFEQ      'N'
      C                   MOVEL     @@DDRTE4      DDRTE4
      C                   ENDIF
- 
+
       * Amount 4
      C     DDFAMT4OK     IFEQ      'N'
      C                   MOVEL     @@DDFAMT4     DDFAMT4
      C                   ENDIF
- 
+
       * Rate 5
      C     DDRTE5OK      IFEQ      'N'
      C                   MOVEL     @@DDRTE5      DDRTE5
      C                   ENDIF
- 
+
       * Amount 5
      C     DDFAMT5OK     IFEQ      'N'
      C                   MOVEL     @@DDFAMT5     DDFAMT5
      C                   ENDIF
- 
+
       * Percentage indicator
      C     DDPINDOK      IFEQ      'N'
      C                   MOVEL     @@DDPIND      DDPIND
      C                   ENDIF
- 
+
       * Calculation basis
      C     DDCALCOK      IFEQ      'N'
      C                   MOVEL     @@DDCALC      DDCALC
      C                   ENDIF
- 
+
       * Exchange rate
      C     DDEXRTOK      IFEQ      'N'
      C                   MOVEL     @@DDEXRT      DDEXRT
      C                   ENDIF
- 
+
       * Mult/Div indicator
      C     DDMDINOK      IFEQ      'N'
      C                   MOVEL     @@DDMDIN      DDMDIN
      C                   ENDIF
- 
+
       * Next payment date
      C     DDNPYDOK      IFEQ      'N'
      C                   MOVEL     @@DDNPYD      DDNPYD
      C                   ENDIF
- 
+
       * Frequency
      C     DDFREQOK      IFEQ      'N'
      C                   MOVEL     @@DDFREQ      DDFREQ
      C                   ENDIF
- 
+
       * Day in month
      C     DDDYIMOK      IFEQ      'N'
      C                   MOVEL     @@DDDYIM      DDDYIM
      C                   ENDIF
- 
+
       * Profit centre
      C     DDPRFCOK      IFEQ      'N'
      C                   MOVEL     @@DDPRFC      DDPRFC
@@ -942,7 +1048,7 @@
      C                   ENDIF                                                                CAS019
                                                                                               CAS019
      C                   ENDIF                                                                CAS019
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -955,9 +1061,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -995,6 +1101,16 @@
      C                   PARM                    ResetErrs         1
                                                                                               245099
      C                   PARM                    CLE006            1                          245099
+      *                                                                                     MD031692
+      ** Warning fields/message IDs/message data (arrays) from/to caller                    MD031692
+      *                                                                                     MD031692
+     C                   PARM                    WFldNamArr                                 MD031692
+     C                   PARM                    WMsgIDArr                                  MD031692
+     C                   PARM                    WMsgDtaArr                                 MD031692
+      *                                                                                     MD031692
+      ** Array index (3P0) from/to caller                                                   MD031692
+      *                                                                                     MD031692
+     C                   PARM                    WIdx                                       MD031692
       *
       ** Initialize program name
       *
@@ -1085,7 +1201,12 @@
       *
       **  GET MBIN FROM DTAARA/RUNDAT
      C                   IN        RUNDAT
- 
+      *                                                                                     MD031692
+      ** Get PRUN from data area JNSTAT                                                     MD031692
+      *                                                                                     MD031692
+     C     *DTAARA       DEFINE                  JNSTAT                                     MD031692
+     C                   IN        JNSTAT                                                   MD031692
+
      C                   ENDSR
       *****************************************************************
       /EJECT

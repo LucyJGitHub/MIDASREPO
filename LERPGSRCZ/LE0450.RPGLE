@@ -12,15 +12,16 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055322           Date 26Feb20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD051347           Date 12Mar20               *
+      *  Prev Amend No. AR819229           Date 10Dec18               *
+      *                 CER050             Date 16Jun19               *
       *                 MD054326           Date 18Sep19               *
       *                 MD054335           Date 11Sep19               *
       *                 MD054132           Date 16Aug19               *
       *                 MD054108           Date 14Aug19               *
       *                 MD053947           Date 17Jul19               *
       *                 MD051883           Date 04Apr19               *
-      *                 MD054008           Date 20Aug19               *      
+      *                 MD054008           Date 20Aug19               *
       *                 MD053295           Date 13Apr19               *
       *                 AR1097303          Date 16May19               *
       *                 MD047693           Date 30Jan18               *
@@ -413,8 +414,13 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD055322 - FB2.1 SP21 RECON - Discrepancy on CLOANCK field   *
-      *             ABLN on first COB                                 *
+      *  MD051347 - Interest on a loan taken at the wrong date. Also  *
+      *             update value of IBDT to zero if NIPD is less than *
+      *             or equal to rundate. Additional fix to AR819229.  *
+      *  AR819229 - Interest on a loan taken at the wrong date.       *
+      *             Update value of IBDT with NIPD on SR/ROLLOV and   *
+      *             SR/MROLL. (Child: AR823033)                       *
+      *           - Applied for MD051347                              *
       *  CER050 - Annualised Percentage Rate                          *
       *  MD054326 - Repayment amount debited from settlement account  *
       *             showed discrepancy against balance check          *
@@ -432,7 +438,7 @@
       *             on principal and discount amount.                 *
       *  MD051883 - CLE031: Changes to Value Date Account Keys        *
       *  MD054008 - ABLN for past due loans should be up to the next  *
-      *             working date.                                     *      
+      *             working date.                                     *
       *  MD053295 - Lending loan with Interest Calculation Basis      *
       *             method 3 (30/360) has wrong interest payment      *
       *             amount for month of March (Recompile)             *
@@ -10004,9 +10010,11 @@ L118 I                             P   72   77 7RTSPL
      C     NIPD          IFNE      *ZEROS                                                      S0146
      C***********IPFR      ANDEQ' '                                 S01465159199
      C                   Z-ADD     NIPD          NIDT                                          S0146
+     C                   Z-ADD     NIPD          IBDT                                       AR819229
       *                                                                   174873
      C     NIPD          IFLE      RUND                                                        17487
      C                   Z-ADD     0             NIDT                                          17487
+     C                   Z-ADD     0             IBDT                                       MD051347
      C                   ENDIF                                                                 17487
       *                                                                   174873
      C                   END                                                                   S0146
@@ -11361,6 +11369,13 @@ L118 I                             P   72   77 7RTSPL
      C     NIPD          IFNE      *ZEROS                                                      CLE00
      C***********IPFR      ANDEQ' '                                 CLE004159199
      C                   Z-ADD     NIPD          NIDT                                          CLE00
+     C                   Z-ADD     NIPD          IBDT                                       AR819229
+      *                                                                                     MD051347
+     C     NIPD          IFLE      RUND                                                     MD051347
+     C                   Z-ADD     0             NIDT                                       MD051347
+     C                   Z-ADD     0             IBDT                                       MD051347
+     C                   ENDIF                                                              MD051347
+      *                                                                                     MD051347
      C                   END                                                                   CLE00
      C                   ENDIF                                                                 CLE00
      C                   Z-ADD     *ZEROS        NIPD                                          CLE00
@@ -17222,8 +17237,7 @@ C    C                   ENDIF                                                  
      C     MDAT          IFLT      DNWD                                          B3            13152
      C     MDAT          ANDNE     0                                                           13152
      C     MDAT          ANDGE     FIRY                                                     MD054008
-     C*****RECI          ANDEQ     'M'                                             MD054008 MD055322
-     C     RECIL         ANDEQ     'M'                                                      MD055322
+     C     RECI          ANDEQ     'M'                                                      MD054008
      C                   Z-ADD     MDAT          CDAT              5 0                         13152
      C                   ELSE                                                    X3            13152
      C                   Z-ADD     DNWD          CDAT                                          13152

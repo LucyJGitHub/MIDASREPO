@@ -13,9 +13,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD039655           Date 11Feb20               *
-      *  Prev Amend No. MD054538           Date 08Oct19               *
-      *                 MD054028           Date 05Sep19               *
+      *  Last Amend No. MD054538           Date 08Oct19               *
+      *  Prev Amend No. MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD052075           Date 07Jun19               *
       *                 CSD102             Date 08Jan19               *
@@ -222,8 +221,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD039655 - Facility cannot be rejected.                      *
-      *             Pattern fix from MD-29208 and MD-34908.           *
       *  MD054538 - Buffer issue on Rollover Maintenance              *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
@@ -2454,11 +2451,6 @@ RGC  D RPIF4LN         S              4  0                                      
      C     FCEXLn        SUBST     BUFFER:Bfp    ExtData                                    MD044880
      C                   ADD       FCEXLn        Bfp                                        MD044880
                                                                                             MD044880
-                                                                                            MD039655
-      ** Restore Authorise Reversal Action Code                                             MD039655
-     C     1             SUBST     BUFFER:Bfp    @ACTRV                                     MD039655
-     C                   ADD       1             Bfp                                        MD039655
-                                                                                            MD039655
      C     FCRXLn        SUBST     BUFFER:Bfp    RegData                                    BUG10093
      C                   ADD       FCRXLn        Bfp                                        BUG10093
                                                                                             BUG10093
@@ -2490,7 +2482,6 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    APIRetc
      C                   PARM                    DDPATH                                     BUG13174
      C                   PARM                    CADetails                                    CLE147
-     C                   PARM                    @ACTRV                                     MD039655
 
       * Loan Input
 

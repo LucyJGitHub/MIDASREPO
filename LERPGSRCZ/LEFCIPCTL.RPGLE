@@ -26,9 +26,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD039655           Date 11Feb20               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD102             Date 08Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 LLN022A            Date 03Jun15               *
       *                 LLN022             Date 03Jun15               *
       *                 CSF011A            Date 28Nov11               *
@@ -68,8 +67,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD039655 - Facility cannot be rejected.                      *
-      *             Pattern fix from MD-29208 and MD-34908.           *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *
@@ -901,10 +898,6 @@
      C                   PARM                    DDFACT
      C                   PARM                    DDFCNO
      C                   PARM                    DDBRCA
-                                                                                            MD039655
-      ** Reject action                                                                      MD039655
-                                                                                            MD039655
-     C                   PARM      *BLANK        @ACTRV            1                        MD039655
      C/COPY WNCPYSRC,LEH00354
       *
       * OUTPUTS
@@ -1066,7 +1059,6 @@
      C                   PARM                    F1AUSR           10
       * Customer Extra Data file data
      C                   PARM                    ExtData
-     C                   PARM      *BLANK        @ACTRV                                     MD039655
       * OUTPUTS
  
       *
@@ -1182,10 +1174,6 @@
      C                   PARM                    CSC011            1
       * CEU013
      C                   PARM                    CEU013            1
-                                                                                            MD039655
-      ** Reject Action Code                                                                 MD039655
-                                                                                            MD039655
-     C                   PARM      *BLANK        @ACTRV                                     MD039655
  
       * OUTPUTS
       *

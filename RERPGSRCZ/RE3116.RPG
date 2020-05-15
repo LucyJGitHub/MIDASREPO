@@ -10,8 +10,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. EMP102             Date 16Apr20               *
-      *  Prev Amend No. MD052310           Date 15Nov18               *
+      *  Last Amend No. MD035795           Date 12Mar20               *
+      *  Prev Amend No. 191241             Date 12Mar20               *
+      *                 EMP102             Date 16Apr20               *
+      *                 MD052310           Date 15Nov18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD028899           Date 09Dec16               *
       *                 MD034990           Date 25May16               *
@@ -81,10 +83,17 @@
      F*                                                               *
      F*****************************************************************
       *                                                               *
+      *  MD035795 - Account Closure does not generate a turnover stmt *
+      *             charge when indicated. Ensure that extra daily chg*
+      *             will be posted if account has non-charge posting  *
+      *  191241  - Turnover statement are charged despite no postings *
+      *            are available during the period. Reset the NOIS    *
+      *            field to zero.                                     *
+      *            Applied for AR1067967. (Child: AR1067968)          *
       *  EMP102 - Retail Account Number in Narrative                  *
       *           (Upgrade NADF12 to FM2.1 SP21)                      *
       *           Addition of hook EMP102_001                         *
-      *           Amendment of core hook RE3116C008                   *
+      *           Amendment of core hook RE3116C008                   *      
       *  MD052310 - Output fields ORAMT and XFRN to GEICPD            *
       *  MD046248 - Finastra Rebranding                               *
       *  MD028899 - Skip closed accounts.                             *
@@ -244,6 +253,9 @@
      F                                              KCOMIT                CCB003
      FREHISBL UF  E           K        DISK
      F                                              KCOMIT                CCB003
+     FREEODL1 IF  E           K        DISK                                                 MD035795
+     FGEICL4  IF  E           K        DISK                                                 MD035795
+     F            APOSTPDF                          KRENAMEAPOSTL4F                         MD035795
      F***GEICPD**O   F     279            DISK                            CGL007
      F***GEICPD**O   F     331            DISK                                         CGL007 CGL020
      F***GEICPD* O   F     589            DISK                                         CGL020 CGL029
@@ -468,6 +480,37 @@
      I              A6MDIN                          MDIN
      I              A6CYCD                          CCY
      I*
+     IAPOSTL4F                                                                              MD035795
+     I              RECI                            L4RECI                                  MD035795
+     I              CNUM                            L4CNUM                                  MD035795
+     I              CCY                             L4CCY                                   MD035795
+     I              ACOD                            L4ACOD                                  MD035795
+     I              ACSQ                            L4ACSQ                                  MD035795
+     I              ACNO                            L4ACNO                                  MD035795
+     I              PSTD                            L4PSTD                                  MD035795
+     I              VALD                            L4VALD                                  MD035795
+     I              TRAT                            L4TRAT                                  MD035795
+     I              PNAR                            L4PNAR                                  MD035795
+     I              PSTA                            L4PSTA                                  MD035795
+     I              DRCR                            L4DRCR                                  MD035795
+     I              SPOS                            L4SPOS                                  MD035795
+     I              BRCA                            L4BRCA                                  MD035795
+     IREEODPFF                                                                              MD035795
+     I              RECI                            L4RECI                                  MD035795
+     I              CNUM                            L4CNUM                                  MD035795
+     I              CCY                             L4CCY                                   MD035795
+     I              ACOD                            L4ACOD                                  MD035795
+     I              ACSQ                            L4ACSQ                                  MD035795
+     I              ACNO                            L4ACNO                                  MD035795
+     I              PSTD                            L4PSTD                                  MD035795
+     I              VALD                            L4VALD                                  MD035795
+     I              TRAT                            L4TRAT                                  MD035795
+     I              PNAR                            L4PNAR                                  MD035795
+     I              PSTA                            L4PSTA                                  MD035795
+     I              DRCR                            L4DRCR                                  MD035795
+     I              SPOS                            L4SPOS                                  MD035795
+     I              BRCA                            L4BRCA                                  MD035795
+      *                                                                                     MD035795
      ISDPCAC    E DSSDPCACPD                                              CAC001
      I**  SD Profit Centre Accounting ICD                                 CAC001
      I*                                                                   CAC001
@@ -846,6 +889,14 @@
      C                     KFLD           CACOD
      C                     KFLD           CACSQ
      C                     KFLD           CBRCA
+     C*                                                                                     MD035795
+     C           COMKY3    KLIST                                                            MD035795
+     C                     KFLD           CBRCA                                             MD035795
+     C                     KFLD           CCNUM                                             MD035795
+     C                     KFLD           CCCY                                              MD035795
+     C                     KFLD           CACOD                                             MD035795
+     C                     KFLD           CACSQ                                             MD035795
+     C                     KFLD           KPSTD                                             MD035795
      C*
      C           REAKEY    KLIST
      C                     KFLD           CUST
@@ -889,6 +940,7 @@
      C           *LIKE     DEFN CCNUM     CLCNUM
      C           *LIKE     DEFN CDRR      RATE
      C           *LIKE     DEFN HISB      WWCNDS
+     C           *LIKE     DEFN HISB      WWCND2                                            MD035795
      C           *LIKE     DEFN DACO      ALTNAD
      C                     MOVEL*BLANKS   MCOI    1
       *                                                                                     CRE083BD
@@ -1804,7 +1856,7 @@
       *                                                                   170507
      C  N99      RECI      COMP 'D'                  9999
      C           RECI      IFEQ 'C'                                                         MD028899
-     C           ACST      OREQ 'C'                                                         MD028899
+     C********** ACST      OREQ 'C'                                                MD028899 MD035795
      C                     GOTO NXTREC                                                      MD028899
      C                     ENDIF                                                            MD028899
      C*
@@ -2131,6 +2183,27 @@
      C                     Z-ADDNOIS      WWCNDS
      C                     ADD  1         LSTP
      C***********          END                             - E3           119348
+     C           ACST      IFEQ 'C'                        - B3                             MD035795
+     C                     EXSR CHPOST                                                      MD035795
+     C           POSTF     IFEQ 'Y'                                                         MD035795
+     C                     Z-ADD1         ALTNAD                                            MD035795
+      *                                                                                     MD035795
+      ** Process all addresses (up to 10) found in ADR                                      MD035795
+      *                                                                                     MD035795
+     C                     Z-ADD1         A                ADR index                        MD035795
+     C                     Z-ADD0         WWCND2                                            MD035795
+     C           ' '       LOKUPADR,A                    25                                 MD035795
+     C           *IN25     IFEQ '0'                                                         MD035795
+     C                     Z-ADD10        ALTNAD                                            MD035795
+     C                     ELSE                                                             MD035795
+     C           A         SUB  1         ALTNAD                                            MD035795
+     C                     SETOF                         25                                 MD035795
+     C                     END                                                              MD035795
+      *                                                                                     MD035795
+     C           NOCC      MULT ALTNAD    WWCND2                                            MD035795
+     C                     ADD  WWCND2    WWCNDS                                            MD035795
+     C                     END                             - E3                             MD035795
+     C                     END                             - E3                             MD035795
      C           CEXF      IFNE *BLANKS                    - B3
      C           WWCNDS    MULT NCEXF     WWCNDS
      C                     ELSE                            - X3
@@ -2164,10 +2237,11 @@
      C                     ENDIF                                                              CER049
      C                     END
      C                     END
+     C                     END                             - E2                               191241
      C                     Z-ADD*ZEROS    CCINST
      C                     Z-ADD*ZEROS    NOIS
      C                     Z-ADDLSTP      PESP
-     C                     END                             - E2
+     C**********           END                             - E2                               191241
      C                     ENDIF
      C**   ***************************************
      C**   ** COMMISSION ON MINIMUM BALANCE **
@@ -2933,6 +3007,25 @@
       *                                                                   CAC001
      C                     ENDSR                                          CAC001
       ********************************************************************CAC001
+      /EJECT                                                                                MD035795
+      ********************************************************************                  MD035795
+     C           CHPOST    BEGSR                                                            MD035795
+      *                                                                                     MD035795
+     C                     MOVE ' '       POSTF   1                                         MD035795
+     C                     Z-ADDRUND      KPSTD   50                                        MD035795
+     C           COMKY3    SETGTREEODL1                                                     MD035795
+     C           COMKEY    REDPEREEODL1             N    77                                 MD035795
+     C           *IN77     IFEQ *OFF                                                        MD035795
+     C                     MOVE 'Y'       POSTF                                             MD035795
+     C                     ELSE                                                             MD035795
+     C           COMKY3    SETGTGEICL4                                                      MD035795
+     C           COMKEY    REDPEGEICL4              N    77                                 MD035795
+     C           *IN77     IFEQ *OFF                                                        MD035795
+     C                     MOVE 'Y'       POSTF                                             MD035795
+     C                     ENDIF                                                            MD035795
+     C                     ENDIF                                                            MD035795
+      *                                                                                     MD035795
+     C                     ENDSR                                                            MD035795
      C/EJECT
      C*****************************************************************
      C**

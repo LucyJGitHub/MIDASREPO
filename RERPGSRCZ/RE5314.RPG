@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. 228902             Date 12Mar20               *
-      *  Prev Amend No. 187747             Date 12Mar20               *
+      *  Last Amend No. 218433             Date 11May20               *
+      *  Prev Amend No. 228902             Date 12Mar20               *
+      *                 187747             Date 12Mar20               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL184             Date 07Dec16               *
       *                 MD034990           Date 25May16               *
@@ -53,9 +54,12 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  218433 - Statement fees booked but no statements generated.  *
+      *           Applied for MD022996.                               *
       *  228902 - Generate statements for rate change only when Rate  *
       *           Change Print Indicator is 'Y' in SDRETLPD.          *
       *           Applied for MD-21523.                               *
+      *  218433 - Statement fees booked but no statements generated.  *
       *  187747 - If any of the suppression features S01534, S01377,  *
       *           or S01533 are/is *ON, and there are no movments for *
       *           the account, then don't generate statement fees.    *
@@ -268,6 +272,20 @@
      I                                        1  80 CPY@
      I                                        1  20 CPY@##
      I*
+     I            DS                                                                          218433
+     I**  DS to format full Account ID for ACCNT DB Error                                     218433
+     I                                        1  18 ACID                                      218433
+     I                                        1   6 CNUM                                      218433
+     I                                        7   9 CCY                                       218433
+     I                                       10  190ACOD                                      218433
+     I                                       20  210ACSQ                                      218433
+     I                                       22  24 BRCA                                      218433
+     I*                                                                                       218433
+     I              'STATEMENT '          C         CSTMT                                     218433
+     I              'NORMAL    '          C         CNORM                                     218433
+     I*                                                                                       218433
+     IUDCR      E DSCGUDCRPD                                                                  218433
+      **  External DS for UDC Reference Details                                               218433
      ISDBANK    E DSSDBANKPD
      I** Bank Details
      I*
@@ -491,6 +509,8 @@
       *===================================================================
      C           #P03      BEGSR                           **#P03  BEGSR *
       *
+     C                     MOVE 'N'       SUPP    1                                           218433
+      *
       **   Save the details of the main account
      C**********           Z-ADDCNUM      WMCNUM                                              CSD027
      C                     MOVE CNUM      WMCNUM                                              CSD027
@@ -625,7 +645,7 @@
       *                                                                                       187747
      C           *IN30     DOWEQ*OFF                                                          187747
      C           *IN41     ANDEQ*OFF                                                          187747
-     C           WMSTFQ    ANDNE'D'                                                           187747
+     C********** WMSTFQ    ANDNE'D'                                                    187747 218433
       *                                                                                       187747
      C           WKAPO2    READEAPOST                    41                                   187747
       *                                                                                       187747
@@ -660,6 +680,27 @@
      C                     ENDDO                                                              187747
      C                     ELSE                                           121058
      C                     MOVE *OFF      *IN30                           121058
+      ** Make sure statement is not set to SUPPRESS in UDC                                    218433
+     C                     MOVELBRCA      DRBRCA                                              218433
+     C                     MOVELCSTMT     DRPTYP                                              218433
+     C                     MOVELCNORM     DRPSTP                                              218433
+     C                     MOVELACID      DRMACT                                              218433
+     C                     MOVELCNUM      XXCUST                                              218433
+      *                                                                                       218433
+     C                     CALL 'CG9010'               91                                     218433
+     C                     PARM *BLANKS   ##RTCD  7                                           218433
+     C                     PARM '*REF    '##MODE 10                                           218433
+     C                     PARM 'NO '     ##CMT   3                                           218433
+     C                     PARM           XXCUST  6                                           218433
+     C                     PARM           UDCR                                                218433
+     C                     PARM *BLANKS   ##ITMA  8                                           218433
+      *                                                                                       218433
+      **  CGD1270 => no error, but suppress output for this transaction.                      218433
+      *                                                                                       218433
+      *                                                                                       218433
+     C           ##RTCD    IFEQ 'CGD1270'                                                     218433
+     C                     MOVE 'Y'       SUPP                                                218433
+     C                     ENDIF                                                              218433
      C                     ENDIF                                          121058
       *                                                                   121058
       **  Post charges only if one of the following conditions is met:    121058
@@ -677,6 +718,7 @@
       **                                                                  121058
       *                                                                   121058
      C           WACST     IFNE 'C'                                       167032
+     C           SUPP      IFEQ 'N'                                                           218433
      C           S01534    IFNE 'Y'                                       121058
      C           S01377    ANDNE'Y'                                       121058
      C           S01533    ANDNE'Y'                                                           187747
@@ -829,6 +871,7 @@
      C                     END                             *E3
      C                     END                             *E2
      C                     END                             *E1
+     C                     END                                                             218433
       *
      C                     ENDIF                                          121058
      C                     ENDIF                                          167032

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. EML102             Date 28Nov19               *
-      *  Prev Amend No. CMG009             Date 12Dec19               *
+      *  Last Amend No. EML104             Date 04Feb20               *
+      *  Prev Amend No. EML102             Date 28Nov19               *
+      *                 CMG009             Date 12Dec19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD039029           Date 13Jul16               *
       *                 MD036398           Date 02Nov15               *
@@ -46,6 +47,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  EML104 - Upgrade of EML010 to FBM2.1 SP21                    *
+      *           EML010 - Structured field :86:                      *
+      *           Add Hooks: EML104_035 EML104_036                    *
       *  EML102 - Upgrade of UNL007, EML004 to FB2.1 SP21             *
       *           EML004 - Extended Narrative                         *
       *           Add Hooks: EML102_015 EML102_016 EML102_017         *
@@ -213,6 +217,7 @@
                                                                                               CRE008
      D SCSARD        E DS                  EXTNAME(SCSARDPD) PREFIX(SS)                       CRE008
       **  Data Structure for Switchable features descriptions.                                CRE008
+     D/COPY WNCPYSRC,EML104_035                                                               EML104
 
      D DSSDY         E DS                  EXTNAME(DSSDY)
       **  First DS for access programs, long data structure.
@@ -868,6 +873,8 @@ e1   C                   Endsl                                                  
      C                   IF        P@RTCD = *BLANKS                                           CMG009
      C                   EVAL      CMG009 = 'Y'                                               CMG009
      C                   ENDIF                                                                CMG009
+     C/COPY WNCPYSRC,EML104_036                                                               EML104
+                                                                                              EML104
       ** Key List to access Movements LF/RSACMTL2
 
      C     KeyMvnt       KLIST

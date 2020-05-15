@@ -16,6 +16,7 @@
       *                                                               *
       *  Last Amend No. MD031848           Date 12Mar20               *
       *  Prev Amend No. AR401845           Date 12Mar20               *
+      *                 EML104             Date 04Feb20               *
       *                 MD045952           Date 06Jul17               *
       *                 MD046248           Date 27Oct17               *
       *                 AR549926           Date 19Aug14               *
@@ -61,6 +62,9 @@
       *             regional holidays (CHILD: AR401846)               *
       *           - Replace ZFREQB with ZFRQB2 which considers        *
       *             system location.                                  *
+      *  EML104 - Upgrade of EML010 to FBM2.1 SP21                    *      
+      *           EML010 - Structured field :86:                      *
+      *           Added EML104_004 EML104_005                         *      
       *  MD045952 - Ensure that COB MT940s only generated if          *
       *             calling pgm is GLC001430.                         *
       *           - Recompile due to changes to CGL146_043, CGL146_044*
@@ -547,6 +551,7 @@
      C**********                   (EDEXET <> *BLANKS AND                            CER030 BUG26608
      C                   IF        (EDEXET <> *BLANKS AND                                   BUG26608
      C                             EDEXET <> '*NONE')                                         CER030
+      /COPY WNCPYSRC,EML104_004                                                               EML104
      C                   EVAL      PMsgTyp = '940'                                            CER030
       *                                                                                       CER030
      C                   CALL      EDEXET                               99                    CER030
@@ -1191,6 +1196,7 @@
      C                   IF        P@RTCD = *BLANKS
      C                   EVAL      CSW022 = 'Y'
      C                   ENDIF
+     C/COPY WNCPYSRC,EML104_005                                                               EML104
                                                                                               CRE008
       ** Check if feature CRE008 (Cash Management feature) is installed                       CRE008
                                                                                               CRE008

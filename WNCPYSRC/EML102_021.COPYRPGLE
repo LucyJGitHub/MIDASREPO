@@ -4,11 +4,14 @@
       *                                                               *                       EML102
       *  EML102_021 - Midas GL Retrieve Postings by Network Account   *                       EML102
       *                                                               *                       EML102
-      *  Last Amend No. EML102  *CREATE    Date 28Nov19               *                       EML102
+      *  Last Amend No. EML104             Date 04Feb20               *                       EML104
+      *  Amend mend No. EML102  *CREATE    Date 28Nov19               *                       EML102
       * FBMidas 2.1 ---- Base ----------------------------------------*                       EML102
       *                                                               *                       EML102
       *---------------------------------------------------------------*                       EML102
       *                                                               *                       EML102
+      *  EML104 - Upgrade of EML010 to FB2.1 SP21                     *                       EML104
+      *           EML010 - Structured field :86:                      *                       EML104
       *  EML102 - Upgrade of EML004 to FB2.1 SP21                     *                       EML102
       *           EML004 - Extended Narrative                         *                       EML102
       *                                                               *                       EML102
@@ -68,6 +71,53 @@
                                                                                               EML102
      C     @LoadNarr     ENDSR                                                                EML102
       *    --------      -----                                                                EML102
+      *========================================================================*              EML104
+      * $LdExtNar : Load additional Information according the network                         EML104
+      *------------------------------------------------------------------------*              EML104
+      *                                                                                       EML104
+     C     $LdAddInf     BEGSR                                                                EML104
+      *    ---------     -----                                                                EML104
+      *                                                                                       EML104
+      ** Retrieve Network detail                                                              EML104
+      ** -----------------------                                                              EML104
+      *                                                                                       EML104
+     C                   EVAL      Idx = IdxNw                                                EML104
+      *                                                                                       EML104
+     C     NwAcNWRK      LOOKUP    ArNwrk(Idx)                            99                  EML104
+      *                                                                                       EML104
+      ** If Network not found i.e. more than 999 networks,                                    EML104
+      ** Load network detail in first element.                                                EML104
+      *                                                                                       EML104
+     C                   IF        NOT *IN99                                                  EML104
+      *                                                                                       EML104
+     C                   Z-ADD     1             Idx                                          EML104
+     C                   EVAL      ArNwrk(Idx)  = NwAcNWRK                                    EML104
+     C                   EVAL      ArMtFmt(Idx) = *Blank                                      EML104
+      *                                                                                       EML104
+     C                   CALLB     'AONWRKR1'                                                 EML104
+     C                   PARM      *BLANKS       PRtcd                          Return Code   EML104
+     C                   PARM      '*KEY'        POptn                          Option        EML104
+     C                   PARM      NwAcNWRK      PNwrk                          Network       EML104
+     C     SDNWRK        PARM      SDNWRK        DSLDY                                        EML104
+      *                                                                                       EML104
+     C                   IF        PRtcd = *Blanks                                            EML104
+     C                   EVAL      ArMtFmt(Idx) = EDMCNW                                      EML104
+     C                   ENDIF                                                                EML104
+      *                                                                                       EML104
+     C                   ENDIF                                                                EML104
+      *                                                                                       EML104
+      ** Load Additional Information according MultiCash Flag                                 EML104
+      ** ----------------------------------------------------                                 EML104
+      *                                                                                       EML104
+     C                   SELECT                                                               EML104
+     C                   WHEN      ArMtFmt(Idx) =  'F' AND                                    EML104
+     C                             SpAddInfo    <> *Blanks                                    EML104
+     C                   EVAL      MGADI1TO6 = SpAddInfo                                      EML104
+     C                   ENDSL                                                                EML104
+      *                                                                                       EML104
+     C     @LdAddInf     ENDSR                                                                EML104
+      *    ---------     -----                                                                EML104
+      *                                                                                       EML104
                                                                                               EML102
       *****************************************************************                       EML102
       * End of /COPY EML102_021                                       *                       EML102

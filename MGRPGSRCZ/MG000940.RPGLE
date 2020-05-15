@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CMG006             Date 14Jan20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. EML104             Date 04Feb20               *
+      *  Prev Amend No. CMG006             Date 14Jan20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD042371           Date 11Nov16               *
       *                 MD042041           Date 21Oct16               *
       *                 MD031691           Date 30Jul15               *
@@ -78,6 +79,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  EML104 - Upgrade of EML010 to FBM2.1 SP21                    *
+      *           EML010 - Structured field :86:                      *
+      *           Added EML104_006 EML104_007 EML104_008              *
+      *           EML104_033, EML104_034                              *
       *  CMG006 - Account identification of MT940 and MT942.          *
       *  MD046248 - Finastra Rebranding                               *
       *  MD042371 - MT940 not accepted by SWIFT because it is too long*
@@ -254,6 +259,7 @@
      F                                     COMMIT
      F                                     PREFIX(Y_)
      FSDNWRKL1  IF   E           K DISK    INFSR(*PSSR)
+     F/COPY WNCPYSRC,EML104_006                                                               EML104
      FSDCUSTL7  IF   E           K DISK    INFSR(*PSSR)
      FGLNW94L0  IF   E           K DISK    INFSR(*PSSR)
      F/COPY WNCPYSRC,MGH00088
@@ -1378,6 +1384,7 @@
 
       *    Now, count number of characters for fld 86
      C                   IF        CER030 <> 'Y'                                            MD042371
+     C/COPY WNCPYSRC,EML104_033                                                               EML104
 
      C                   Eval      WFld86Len = 4
 
@@ -1486,6 +1493,7 @@
       *                                                                                       CER030
      C**********         IF        CER030 <> 'Y' OR EDMCNW <> 'Y'                    CER030 BUG22853
      C                   IF        CER030 <> 'Y'                                            BUG22853
+     C/COPY WNCPYSRC,EML104_034                                                               EML104
      C                   If        X_MGADI1 <> *Blank
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
@@ -2042,6 +2050,7 @@
      C                   ENDIF                                                              BUG22687
      C/COPY OFCPYSRCZ,CGL146_057                                                              CGL146
 
+     C/COPY WNCPYSRC,EML104_007                                                               EML104
      C**********         Call      'AOBRCHR0'                                               BUG26075
      C**********         Parm      *blanks       P@RTCD            7                        BUG26075
      C**********         Parm      '*KEY   '     P@OPTN            7                        BUG26075
@@ -3146,6 +3155,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
+     C/COPY WNCPYSRC,EML104_008                                                              CGL146A
       *                                                                                       CMG006
       ** Check if CMG006 is switched on.                                                      CMG006
       *                                                                                       CMG006

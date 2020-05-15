@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. EML102             Date 22Nov19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. EML104             Date 04Feb20               *
+      *  Prev Amend No. EML102             Date 22Nov19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD026965           Date 16May14               *
       *                 CGL135A            Date 10Jul13               *
       *                 CER059             Date 19Jul10               *
@@ -33,6 +34,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  EML104 - Upgrade of EML010 to FBM2.1 SP21                    *
+      *       EML010 - Structured field :86:                          *
+      *             Use hook: GLH00520                                *
+      *             Amend hooks: EML102_019 EML102_011 EML102_021     *
+      *                          EML102_013                           *
+      *             Add hooks: EML104_002 EML104_003                  *
       *  EML102 - Upgrade of UNL007, EML004 to FB2.1 SP21             *
       *       EML004 - Extended Narrative                             *
       *             Add Hooks: EML102_019 EML102_020 EML102_021       *
@@ -414,6 +421,7 @@
      C                   Exsr      SRZSLOAD                                                   CRE008
      C                   Exsr      SRGALOAD                                                   216937
      C                   Endif                                                                CRE008
+     C/COPY WNCPYSRC,EML104_002                                                               EML104
 
       ** For each Network, Message Type, Destination of the Midas Account,
       ** duplicate the posting in PF/GLPOSTPD.
@@ -425,6 +433,7 @@
      C                   EVAL      MGDSTN = NwAcDSTN                            Destination
      C                   EVAL      MGMTPY = NwAcMTPY                            Message Type
      C                   EVAL      MGPROC = *BLANKS                             Not Processed
+     C/COPY WNCPYSRC,EML104_003                                                               EML104
      C                   WRITE     GLPOSTD0
      C                   ENDDO
 

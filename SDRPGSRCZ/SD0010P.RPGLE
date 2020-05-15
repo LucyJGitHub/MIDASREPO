@@ -16,8 +16,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER073D            Date 28Nov19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. EML103             Date 19Feb20               *
+      *  Prev Amend No. CER073D            Date 28Nov19               *
+      *                 CER050             Date 16Jun19               *
       *                 MD050212           Date 02Apr18               *
       *                 CGL177             Date 11Jan16               *
       *                 MD046248           Date 05Feb18               *
@@ -117,6 +118,13 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  EML103 - Upgrade EMP001 to FB Midas SP2.1                    *
+      *           Additional Fields on customer details.              *
+      *           Existing /COPY members used:                        *
+      *           SD0010PFP1                                          *
+      *           SD0010PC05                                          *
+      *           SD0010PC07                                          *
+      *           SD0010PC34                                          *
       *  CER073D - Upgrade of EML014 to FB2.1 SP21                    *
       *      EML014 - AnaCredit Reporting Enhancement                 *
       *  CER050 - Annualised Percentage Rate                          *

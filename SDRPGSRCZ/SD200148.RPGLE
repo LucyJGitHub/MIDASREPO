@@ -15,13 +15,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL152             Date 02Dec13               *
+      *  Last Amend No. EML104             Date 05Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL152             Date 02Dec13               *
       *                 CER059             Date 19Jul10               *
       *                 CER030  *CREATE    Date 09Jul08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  EML104 - Upgrade EML010 to FB Midas 2.1 SP21                 *
+      *           Structured field :86:                               *
+      *           Add EML104_029, EML104_030, EML104_031, EML104_032  *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL152 - Include Transaction Type Identification Code on     *
       *           MT940/MT950 (Recompile)                             *
@@ -225,13 +229,16 @@
       *
       ** Field Transaction Reference Number
       *
+     C/COPY WNCPYSRC,EML104_029                                                               EML104
      C                   IF        D8FTRN = *BLANKS
+     C/COPY WNCPYSRC,EML104_030                                                               EML104
      C                   EVAL      PZaMsId = 'USR3970'
      C                   EVAL      *IN44 = *ON
      C                   EXSR      SRZaSndMsg
      C                   EVAL      *IN40 = *ON
      C                   EVAL      PRetCodeOut = '*MSG'
      C                   ENDIF
+     C/COPY WNCPYSRC,EML104_031                                                               EML104
       *
       ** Exit from Module
       *
@@ -278,7 +285,7 @@
       ** Return the current values of the error indicators
       *
      C                   MOVEA     *IN(40)       IN40_TO_70
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
       *
@@ -343,6 +350,7 @@
      C                   KFLD                    KNwrk
      C                   KFLD                    KTrCd
       *
+     C/COPY WNCPYSRC,EML104_032                                                               EML104
      C                   ENDSR
       *
       *****************************************************************

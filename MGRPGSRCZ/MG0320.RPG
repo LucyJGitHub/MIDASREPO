@@ -11,7 +11,8 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. MD055600           Date 11Apr20               *
-      *  Prev Amend No. AR908919           Date 02Oct19               *
+      *  Prev Amend No. MD050459           Date 12Mar20               *
+      *                 AR908919           Date 02Oct19               *
       *                 MD053295           Date 13Apr19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD047993           Date 23Sep17               *
@@ -149,6 +150,9 @@
      F*                                                               *
       *  MD055600 - FM2.1 SP21 MT320 Field 32H not generated with     *
       *             CSW208 ON, CAS009 OFF and DLFSWIFTConf = Y        *
+      *  MD050459  - Produce correct 34E for 'BC' Deal Amendment      *
+      *            - Incomplete computation for 34E for 'PI' and 'PD' *
+      *              Deal Amendment                                   * 
       *  AR908919 - MT320 message not acknowleged by SWIFT alliance.  *
       *             Ensure that for Early Maturity deal amendments,   *
       *             tag 30X will be generated instead of 32H.         *
@@ -492,6 +496,7 @@
      I              DLNO                            FDDLNO                                  AR916823
      I              VDAT                            FDVDAT                                  AR916823
      I              MDAT                            FDMDAT                                  AR916823
+     I              PCPL                            FDPCPL                                  MD050459
      I              INTR                            FDINTR                                  AR916823
      I              NIDT                            FDNIDT                                  AR916823
      I              IACD                            FDIACD                                  AR916823
@@ -5020,6 +5025,7 @@
       *                                                                                     AR694628
      C           MGEVTP    IFEQ 'SC'                                                        AR694628
      C           MGEVTP    OREQ 'EM'                                                        AR598353
+     C           MGEVTP    OREQ 'BC'                                                        MD050459
      C                     MOVELMGTNUM    WDLNO   60                                        AR694628
      C           WDLNO     CHAINDEALSC               40                                     AR694628
      C           *IN40     IFEQ '0'                                                         AR694628
@@ -5067,12 +5073,31 @@
      C                     MOVELMGTNUM    WDLNO   60                                        MD034675
      C           WDLNO     CHAINDEALSC               40                                     MD034675
      C           *IN40     IFEQ '0'                                                         MD034675
-     C                     Z-ADDMGVDAT    ZIBEG                                             MD034675
-     C                     Z-ADDMGMDAT    ZIEND                                             MD034675
-     C                     Z-ADDMGPCPL    ZIAMT                                             MD034675
+     C**********           Z-ADDMGVDAT    ZIBEG                                    MD034675 MD050459
+     C**********           Z-ADDMGMDAT    ZIEND                                    MD034675 MD050459
+     C**********           Z-ADDMGPCPL    ZIAMT                                    MD034675 MD050459
+     C                     Z-ADDFDIACD    ZIBEG                                             MD050459
+     C                     Z-ADDMGVDAT    ZIEND                                             MD050459
+     C                     Z-ADDFDPCPL    ZIAMT                                             MD050459
      C                     Z-ADDMGINTR    ZIRATE                                            MD034675
      C                     EXSR GLINTC                                                      MD034675
-     C                     Z-ADDZINTR     INTAM  130                                        MD034675
+     C                     Z-ADDZINTR     ZAMNT                                             MD050459
+     C           FDNIDT    IFNE 0                                                           MD050459
+     C                     Z-ADDFDNIDT    ZIEND                                             MD050459
+     C                     ELSE                                                             MD050459
+     C                     Z-ADDFDMDAT    ZIEND                                             MD050459
+     C                     ENDIF                                                            MD050459
+     C                     Z-ADDMGPCPL    ZIAMT                                             MD050459
+     C                     Z-ADDMGVDAT    ZIBEG                                             MD050459
+     C                     Z-ADDMGINTR    ZIRATE                                            MD050459
+     C                     EXSR GLINTC                                                      MD050459
+     C           JRDFC     IFEQ 'Y'                                                         MD050459
+     C           ZINTR     ADD  ZAMNT     ZAMNT                                             MD050459
+     C                     ELSE                                                             MD050459
+     C           ZINTR     ADD  ZAMNT     ZAMNT     H                                       MD050459
+     C                     ENDIF                                                            MD050459
+     C**********           Z-ADDZINTR     INTAM  130                               MD034675 MD050459
+     C                     Z-ADDZAMNT     INTAM  130                                        MD050459
       *                                                                                     MD034675
      C           INTAM     ADD  FDAITC    INTAM                                             MD034675
      C           INTAM     ADD  FDAIAN    INTAM                                             MD034675

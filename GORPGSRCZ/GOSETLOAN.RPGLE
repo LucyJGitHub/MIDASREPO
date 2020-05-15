@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. EMP100             Date 16Apr20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CRE073             Date 06Dec10               *
@@ -38,6 +39,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  EMP100 - ML Date Adjustment (Upgrade NADF04 to FM2.1 SP21)   *
+      *           Addition of hooks EMP100_001 to EMP100_004          *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -68,6 +71,7 @@
      D/COPY ZACPYSRC,STD_D_SPEC
 
 
+     D/COPY WNCPYSRC,EMP100_001                                                          EMP100
      D LOANCL        E DS                  EXTNAME(CLOANCL) PREFIX(CL_)
 
 
@@ -77,6 +81,7 @@
 
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      D DSSDY         E DS                  EXTNAME(DSSDY)
+     D/COPY WNCPYSRC,EMP100_002                                                          EMP100
 
 
       * ENTRY PARAMETERS
@@ -241,6 +246,7 @@
      C                   Z-ADD     CL_VDAT       T_SDAT
       * End Date
      C                   Z-ADD     CL_MDAT       T_EDAT
+      /COPY WNCPYSRC,EMP100_004                                                          EMP100
       * Recourse ind
      C                   MOVEL     CL_RCSI       T_RCSI
       * Customer branch
@@ -309,6 +315,7 @@
      C                   KFLD                    T_MOD
      C                   KFLD                    T_SMOD
      C                   KFLD                    T_TREF
+      /COPY WNCPYSRC,EMP100_003                                                          EMP100
      C                   ENDSR
       *****************************************************************
       /SPACE 5

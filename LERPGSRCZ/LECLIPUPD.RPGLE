@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD054877           Date 14Jan20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD055714           Date 06May20               *
+      *  Prev Amend No. MD054877           Date 14Jan20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD054035           Date 03Sep19               *
       *                 MD054317           Date 09Sep19               *
       *                 CSD102             Date 08Jan19               *
@@ -160,6 +161,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055714 - Missing rebate posting after changing maturity    *
+      *             date of discount loan. Restore original value of  *
+      *             OMDT field upon reject.                           *
       *  MD054877 - Interest shadow postings at maturity of guarantee *
       *             loan not produced. Allow shadow postings genera-  *
       *             tion at maturity if interest date is zero.        *
@@ -4021,7 +4025,11 @@
       *
      C     S01465        IFEQ      'Y'
      C     L_CLMDAT      ANDNE     MDAT
+     C     @ACTRV        IFEQ      'Y'                                                      MD055714
+     C                   Z-ADD     L_CLOMDT      OMDT                                       MD055714
+     C                   ELSE                                                               MD055714
      C                   Z-ADD     MDAT          OMDT
+     C                   ENDIF                                                              MD055714
      C                   ENDIF
       *
       *----------------------------------------------------------------

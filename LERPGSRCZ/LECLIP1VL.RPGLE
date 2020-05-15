@@ -12,7 +12,8 @@
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *  Last Amend No. MD029863           Date 18Jan18               *
-      *  Prev Amend No. MD055380           Date 17Apr20               *
+      *  Prev Amend No. MD055714           Date 06May20               *
+      *                 MD055380           Date 17Apr20               *
       *                 MD055344           Date 28Feb20               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
@@ -172,6 +173,9 @@
       *  MD029863 - Loan input field Final Maturity date not reset    *
       *             after change to the date is rejected.             *
       *           - Applied for MD049247.                             *
+      *  MD055714 - Missing rebate posting after changing maturity    *
+      *             date of discount loan. Restore original value of  *
+      *             OMDT field upon reject.                           *
       *  MD055380 - Rollover can't be completed when main loan in WIP.*
       *             Reverse fix AR820729.                             *
       *  MD055344 - Event code not found error                        *
@@ -8543,6 +8547,18 @@ B001 C     ZERR          IFNE      *BLANKS
      C                   MOVEL     WNUM7         WALF6                                      MD029863
      C                   Z-ADD     ZDAYNO        WSVFM                                      MD029863
      C                   Z-ADD     WSVFM         CCLFMDT                                    MD029863     
+      *                                                                                     MD055714
+      ** Original Maturity Date                                                             MD055714
+      *                                                                                     MD055714
+     C                   MOVE      DDOMDT        ZDATE                                      MD055714
+     C                   MOVE      BJDFIN        ZDATFM                                     MD055714
+     C                   CALL      'ZDATE1'                                                 MD055714
+     C                   PARM      *BLANKS       ZERR                                       MD055714
+     C                   PARM                    ZDATE                                      MD055714
+     C                   PARM                    ZDATFM                                     MD055714
+     C                   PARM                    ZDAYNO                                     MD055714
+      *                                                                                     MD055714
+     C                   Z-ADD     ZDAYNO        CCLOMDT                                    MD055714
       *                                                                                     AR217961
       ** Customer number / short name                                                       AR217961
       *                                                                                     AR217961

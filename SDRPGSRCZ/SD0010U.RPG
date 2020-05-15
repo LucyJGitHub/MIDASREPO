@@ -14,8 +14,10 @@
       *        VOLUME 1 FOR THE USE OF DATA STRUCTURES PCDS2          *
       *        AND PCDS3.                                             *
       *                                                               *
-      *  Last Amend No. MD052297           Date 14Nov19               *
-      *  Prev Amend No. MD052425           Date 22Aug19               *
+      *  Last Amend No. MD025056           Date 06Nov19               *
+      *  Prev Amend No. MD027372           Date 06Nov19               *
+      *                 MD052297           Date 14Nov19               *
+      *                 MD052425           Date 22Aug19               *
       *                 MD050457           Date 06Mar19               *
       *                 MD046248           Date 05Feb18               *
       *                 CDL099             Date 06Oct17               *
@@ -69,6 +71,11 @@
       *                                                               *   S01117
       *****************************************************************   S01117
       *                                                               *   S01117
+      *  MD025056 - Prevent blank error message when closing a        *
+      *             Customer. Added specific error messages when      *
+      *             closing Customers. Patterned after AR856728.      *
+      *  MD027372 - Allow customer to be closed if the only remaining *
+      *             GTEES records are expired ones.                   *
       *  MD052297 - Meaningless error message displayed when closing  *
       *             customer.                                         *
       *  MD052425 - COB Failure re New Customer Closure feature CSD007*
@@ -1085,7 +1092,8 @@
       ** SD0340U is called.                                               143481
       *                                                                   077335
      C                     MOVE WUD201    SAVFLD  1                       077335
-     C                     MOVE WUD211    SVFLD2  1                                         MD052297
+     C                     MOVE WUD211    SVFLD2  1                                         MD025056
+     C                     MOVE WUD231    SVFLD3  1                                         MD025056
      C                     MOVELW0RTN     SAVRTN  7                       143481
       *                                                                   077335
       ** Check references in the securities files by calling SD0340U.     077335
@@ -1120,10 +1128,13 @@
      C                     END                                            077335
       *                                                                   077335
       ***Move*the*'saved*value'*of*WUD201*back*into*WUD201.******* 077335 143481
-      ** Move back the 'saved values' of WUD201 and W0RTN.                143481
+      ***Move*back*the*'saved*values'*of*WUD201*and*W0RTN.*************              143481 MD025056
+      ** Move back the 'saved values' of WUD201, WUD211, WUD231                             MD025056
+      ** and W0RTN.                                                                         MD025056
       *                                                                   077335
      C                     MOVE SAVFLD    WUD201                          077335
-     C                     MOVE SVFLD2    WUD211                                            MD052297
+     C                     MOVE SVFLD2    WUD211                                            MD025056
+     C                     MOVE SVFLD3    WUD231                                            MD025056
       *                                                                   143481
      C           SAVRTN    IFNE *BLANKS                                   143481
      C                     MOVELSAVRTN    W0RTN                           143481
@@ -1174,6 +1185,7 @@
      C                     END                                            077335
       *                                                                   077335
      C           RECI      IFEQ 'R'                                       077335
+     C           FSTS      ANDNE'A'                                                         MD025056
      C                     MOVEL'REJECT'  W0RTN                           077335
      C                     MOVE 'F'       WUD207                          077335
      C           QUIT      IFEQ 'Y'                                       077335
@@ -1359,6 +1371,7 @@
       *                                                                   077335
      C           RECI      IFEQ 'D'                                       077335
      C           RECI      OREQ 'E'                                       077335
+     C           PACTN     ANDNE'C'                                                         MD027372
      C                     MOVEL'REJECT'  W0RTN                           077335
      C                     MOVE 'F'       WUD205                          077335
      C           QUIT      IFEQ 'Y'                                       077335
@@ -1387,6 +1400,7 @@
       *                                                                   181864
      C           RECI      IFEQ 'D'                                       181864
      C           RECI      OREQ 'E'                                       181864
+     C           PACTN     ANDNE'C'                                                         MD027372
      C                     MOVEL'REJECT'  W0RTN                           181864
      C                     MOVE 'F'       WUD205                          181864
      C           QUIT      IFEQ 'Y'                                       181864
@@ -1435,6 +1449,8 @@
       *                                                                   099934
       * Also check issuer customer number on DEALSDC                      099934
       *                                                                   099934
+     C           PACTN     IFNE 'C'                                                         MD025056
+      *                                                                                     MD025056
      C           NCNUM     SETLLDEALDCL1             9393                 099934
      C  N93      NCNUM     READEDEALDCL1                 93               099934
       *                                                                   099934
@@ -1450,6 +1466,8 @@
       *                                                                   099934
      C                     ENDIF                                          099934
       *                                                                   099934
+     C                     ENDIF                                                            MD025056
+      *                                                                                     MD025056
      C           ESC93     TAG                                            077335
       *                                                                   077335
      C/COPY WNCPYSRC,SD0010UD02                                           077335

@@ -9,10 +9,12 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. AR1051497          Date 11Feb13             */
+/*       Prev Amend No. 201060             Date 18Dec01             */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. BG18886            Date 28May08              */
+/*                      BG18886            Date 28May08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
@@ -22,6 +24,9 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       AR1051497 - Problems with selection criteria screen        */
+/*                (Child 1051500)                                   */
+/*       201060 - CPF0817 received by MCC84. Applied fix 142748.    */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BG18886 - Amend non-standard codes.                        */
 /*       S01416 - Account Balances Report                           */
@@ -130,15 +135,31 @@ ERRMC:
              ENDDO
 /* RELATIVE PERIOD MUST EXIST FOR CONTROL GROUP SELECTED OR BE '0' */
              CHGVAR     VAR(&RPDN) VALUE(&SRPDN)
+/* RELATIVE PERIOD NUMBER MUST BE IN THE RANGE -999 TO 999                AR1051497*/
+             MONMSG     MSGID(CPF0817) EXEC(DO)                        /* AR1051497*/
+             CHGVAR     VAR(&IN18) VALUE('1')                          /* AR1051497*/
+             CHGVAR     VAR(&MSG2) VALUE('Relative Period must be +
+                        in the range -999 to 999')                     /* AR1051497*/
+             GOTO       CMDLBL(ERRMC)                                  /* AR1051497*/
+             ENDDO                                                     /* AR1051497*/
+                                                                       /* AR1051497*/
              MONMSG     MSGID(CPF0818) EXEC(DO)
              CHGVAR     VAR(&IN66) VALUE('1')
              GOTO       CMDLBL(SKIP)
              ENDDO
+             MONMSG     MSGID(CPF0817) EXEC(DO)                       /*201060*/
+             CHGVAR     VAR(&IN18) VALUE('1')                         /*201060*/
+             CHGVAR     VAR(&MSG2) VALUE('Relative Period must be in -
+                        the range -999 to 999')                       /*201060*/
+             GOTO       CMDLBL(ERRMC)                                 /*201060*/
+             ENDDO                                                    /*201060*/
              IF         COND(&SRPDN *NE '   ') THEN(DO)
              CHGVAR     VAR(&SRPDN) VALUE(&RPDN)
              CALL       PGM(AORPERR0) PARM(&RTCD '*KEY' &PERSET +
                           &RPDN &DSFDY)
-             IF         COND(&RTCD *NE '       ') THEN(DO)
+/******      IF         COND(&RTCD *NE '       ') THEN(DO)                 *****/      /*AR1051497*/
+             IF         COND((&RTCD *NE '       ') *AND (&RTCD *NE 'TERM1  ') +
+                        *AND (&RTCD *NE 'TERM2  ')) THEN(DO)                           /*AR1051497*/
              CHGVAR     VAR(&IN18) VALUE('1')
              CHGVAR     VAR(&MSG2) VALUE('Relative Period does not +
                           exist for this Control Group')

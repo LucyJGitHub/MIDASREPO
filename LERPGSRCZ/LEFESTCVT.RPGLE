@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD054354           Date 23Oct19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CLE073             Date 13May08               *
@@ -38,6 +39,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054354 - Settlement of fee accrual for prior period for    *
+      *             backdated notional change                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference                                *
@@ -283,6 +286,10 @@
      C                   Z-ADD     FecyNBDP      ZDECS
      C                   EXSR      ZSEDIT
      C                   MOVE      ZOUT21        S#SADE
+      *                                                                                     MD054354
+      ** Settlement amount sign                                                             MD054354
+      *                                                                                     MD054354
+     C                   MOVE      FASIGN        P_SIGN                                     MD054354
  
       ** Record Status
  
@@ -389,6 +396,8 @@
  
       * Record status
      C                   PARM                    S#STAT           10
+      * Fee Amount Sign                                                                     MD054354
+     C                   PARM                    P_SIGN            1                        MD054354
  
       *
       ** Access Bank Details

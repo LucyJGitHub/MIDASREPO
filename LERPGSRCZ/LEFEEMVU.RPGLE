@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD030856           Date 06Nov19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CSD102             Date 08Jan19               *
       *                 CLE071             Date 18Jul18               *
       *                 CLE168             Date 26Feb18               *
       *                 MD046248           Date 27Oct17               *
@@ -83,6 +84,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD030856 - Introduced reject processing to FEEM              *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
@@ -325,6 +327,8 @@
      D WTRCcy          S              3A                                                     CSF011A
      D WTPCcy          S              3A                                                     CSF011A
                                                                                              CSF011A
+      ** FEEM Reject Flag                                                                   MD030856
+     D DRejFlg         S              1A                                                    MD030856
      D ##RECF        E DS                  EXTNAME(SDESFRPD)
       ** File Receive Instructions
      D  FLREC                 21     75
@@ -656,7 +660,7 @@
      C                                      + TranInStamp                                     CER049
      C                                      + ##RECS + ##PAYS + InfData                       CAP086
      C                                      + ExtData                                         CAP086
-
+     C                                      + DRejFlg                                       MD030856
      C                   MOVE      '1'           *INLR
      C                   RETURN
 
@@ -1570,6 +1574,7 @@
 
      C                   PARM                    CLE006                                       245099
                                                                                               245099
+     C                   PARM                    DRejFlg           1                        MD030856
       ** If any errors overwrite previous error information
 
      C                   IF        AmIdx <> 0
@@ -1847,7 +1852,7 @@
 
      C                   PARM                    InfData500                                   CAP086
      C                   PARM                    ExtData500
-
+     C                   PARM                    DRejFlg                                    MD030856
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr

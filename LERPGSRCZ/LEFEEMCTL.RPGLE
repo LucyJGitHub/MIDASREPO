@@ -26,8 +26,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD053607           Date 19Jul19               *
+      *  Last Amend No. MD030856           Date 06Nov19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD053607           Date 19Jul19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL094             Date 11Jun14               *
@@ -66,6 +67,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD030856 - Introduced reject processing to FEEM              *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD053607 - Matured Fee did not appear on fees screen.        *
       *           - Recompile due to changes in LEFHSTL1.             *
@@ -1542,6 +1544,7 @@
      C                   PARM      'Y'           ResetErrs         1
                                                                                               245099
      C                   PARM                    CLE006                                       245099
+     C                   PARM                    DRejFlg           1                        MD030856
  
       ** If any errors overwrite previous error information
  

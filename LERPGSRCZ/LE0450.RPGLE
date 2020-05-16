@@ -12,8 +12,8 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD051347           Date 12Mar20               *
-      *  Prev Amend No. AR819229           Date 10Dec18               *
+      *  Last Amend No. MD055322           Date 15May20               *
+      *  Prev Amend No. MD051347           Date 12Mar20               *
       *                 CER050             Date 16Jun19               *
       *                 MD054326           Date 18Sep19               *
       *                 MD054335           Date 11Sep19               *
@@ -414,6 +414,8 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055322 - FB2.1 SP21 RECON - Discrepancy on CLOANCK field   *
+      *             ABLN on first COB                                 *
       *  MD051347 - Interest on a loan taken at the wrong date. Also  *
       *             update value of IBDT to zero if NIPD is less than *
       *             or equal to rundate. Additional fix to AR819229.  *
@@ -17237,7 +17239,8 @@ C    C                   ENDIF                                                  
      C     MDAT          IFLT      DNWD                                          B3            13152
      C     MDAT          ANDNE     0                                                           13152
      C     MDAT          ANDGE     FIRY                                                     MD054008
-     C     RECI          ANDEQ     'M'                                                      MD054008
+     C*****RECI          ANDEQ     'M'                                             MD054008 MD055322
+     C     RECIL         ANDEQ     'M'                                                      MD055322
      C                   Z-ADD     MDAT          CDAT              5 0                         13152
      C                   ELSE                                                    X3            13152
      C                   Z-ADD     DNWD          CDAT                                          13152

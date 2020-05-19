@@ -159,7 +159,7 @@
      D  BFAPRDATB                    26A                                                   MD053451A
 
      D***NullIndDs       S              5I 0 DIM(10)                                          CBF023
-     D*NullIndDs       S              5I 0 DIM(11)                                            CBF023
+     D*NullIndDs       S              5I 0 DIM(11)                                  CBF023 MD053451A
      D NullIndDs       S              5I 0 DIM(13)                                         MD053451A
 
       ** Input Parameter for ZDATEO
@@ -468,11 +468,11 @@
       ** Authorisation Date
 
      C**********         IF        NullIndDs(11) = 0                                       AR1029808
-     C                   IF        NullIndDs(8) = 0                                        AR1029808
-     C                   EVAL      RAUDT = BFAPRDAT
-     C                   ELSE                                                              MD053451A
      C                   IF        NullIndDs(13) = 0                                       MD053451A
      C                   EVAL      RAUDT = BFAPRDATB                                       MD053451A
+     C                   ELSE                                                              MD053451A
+     C                   IF        NullIndDs(8) = 0                                        AR1029808
+     C                   EVAL      RAUDT = BFAPRDAT
      C                   ENDIF                                                             MD053451A
      C                   ENDIF
 

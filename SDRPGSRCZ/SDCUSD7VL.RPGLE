@@ -13,8 +13,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055446           Date 04Apr20               *
-      *  Prev Amend No. MD040876           Date 13Sep16               *
+      *
+      *  Last Amend No. LLE100             Date 08May20               *
+      *  Prev Amend No. MD055446           Date 04Apr20               *
+      *                 MD040876           Date 13Sep16               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -38,6 +40,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      * LLE100   - Customer Details Field Changes                     *
+      *            Hooks: SDCUDTV013, LLE100_001, LLE100_002          *
+      *                   LLE100_003                                  *
       * MD055446 - There are parties and fields missing from the BRT  *	
       *            details tab in Customer Input plus date of birth   *	
       *            issues.                                            *	
@@ -156,6 +161,8 @@
 
      D BrtFilFmt     E DS                  EXTNAME(SDVCUBRPD)
       * Valid Customer Base Rate Tax File
+
+     D/COPY WNCPYSRC,LLE100_001                                                               LLE100
 
      D ChgNamArr       S              1    DIM(5)
       ** Changed Party Names Array
@@ -481,6 +488,7 @@
      C     DDAHLT        IFEQ      'I'
      C     DDAHLT        OREQ      'J'
      C     DDAHLT        OREQ      'R'                                                        CRE007
+     C/COPY WNCPYSRC,LLE100_002                                                               LLE100
      C                   MOVE      DETAI1        PP1DET
      C                   MOVE      DETAI2        PP2DET
      C                   MOVE      DETAI3        PP3DET
@@ -759,6 +767,7 @@
      C     DDAHLT        IFNE      'I'
      C     DDAHLT        ANDNE     'J'
      C     DDAHLT        ANDNE     'R'                                                        CRE007
+     C/COPY WNCPYSRC,LLE100_003                                                               LLE100
      C                   EVAL      DD1NAM=*BLANKS
      C                   EVAL      DD2NAM=*BLANKS
      C                   EVAL      DD3NAM=*BLANKS

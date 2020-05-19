@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054215           Date 06Sep19               *
-      *  Prev Amend No. MD052512           Date 12Feb19               *
+      *  Last Amend No. MD055650           Date 11May20               *
+      *  Prev Amend No. MD054215           Date 06Sep19               *
+      *                 MD052512           Date 12Feb19               *
       *                 MD051682           Date 07Aug18               *
       *                 MD051332           Date 28Jun18               *
       *                 MD051241           Date 11Jun18               *
@@ -96,6 +97,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055650 - Duplicated storno postings after net deletion.    *
+      *             Fix is to ensure that once the FXNETMDPD is       *
+      *             updated (by other job), do not re-update to avoid *
+      *             executing projection. Also, added error ind 84 for*
+      *             UPDATFXNETMD0.                                    *
+      *             Also, fix ensure that record still be available   *
+      *             prior to calling CNFTRM subroutine by removing    *
+      *             ROLBACK and moving SETON LR.                      *
       *  MD054215 - Pressing F6 will not skip settlement details      *
       *             processing.                                       *
       *  MD052512 - FX Netting causes extra projected movement on an  *
@@ -860,9 +869,9 @@
      C                     ENDDO
       *
      C                     EXSR SDTERM
-     C                     SETON                     LR
+     C**********           SETON                     LR                                     MD055650
       ** Rollback previous Updates
-     C                     ROLBK
+     C**********           ROLBK                                                            MD055650
      C           *INKC     IFEQ *ON
      C           NOPARM    ANDNE0
      C                     MOVEL'*INKC'   PLRTRN
@@ -870,6 +879,7 @@
       *  Clear screen message queue.
      C                     CALL 'ZA0250'
      C                     EXSR CNFTRM
+     C                     SETON                     LR                                     MD055650
      C                     RETRN
      C                     ENDIF
       *
@@ -1825,8 +1835,32 @@
      C                     EXSR *PSSR
      C                     ENDIF
       *
+      ** Skip file update if being or already updated by other job.                         MD055650
+      ** Send message 'Record has been updated by another workstation'                      MD055650
+      *                                                                                     MD055650
+     C           AMRECI    IFEQ 'E'                                                         MD055650
+     C           AMRECI    OREQ 'R'                                                         MD055650
+      *                                                                                     MD055650
+     C                     MOVEL'FXM1023' @MSGID                                            MD055650
+     C                     CALL 'ZA0240'                                                    MD055650
+     C                     PARM           @MSGID                                            MD055650
+      *                                                                                     MD055650
+     C                     ELSE                                                             MD055650
+      *                                                                                     MD055650
      C                     MOVE 'E'       AMRECI
-     C                     UPDATFXNETMD0
+     C**********           UPDATFXNETMD0                                                    MD055650
+     C                     UPDATFXNETMD0               84                                   MD055650
+      *                                                                                     MD055650
+     C           *IN84     IFEQ *ON                                                         MD055650
+      ** Data base error in file (FXNETMPD).                                                MD055650
+     C           *LOCK     IN   LDA                                                         MD055650
+     C                     SETON                       U7U8                                 MD055650
+     C                     Z-ADD21        DBASE            ***************                  MD055650
+     C                     MOVEL'FXNETMPD'DBFILE           *DB ERROR 21  *                  MD055650
+     C                     MOVELAMNETR    DBKEY            ***************                  MD055650
+     C                     OUT  LDA                                                         MD055650
+     C                     EXSR *PSSR                                                       MD055650
+     C                     ENDIF                                                            MD055650
       *
      C           AMNETR    SETLLDLDEALL1
      C           AMNETR    READEDLDEALL1                 82
@@ -1893,7 +1927,8 @@
      C                     MOVE SUSER     AMCHUS
      C                     MOVE SWSID     AMCHWS
      C                     MOVE 'E'       AMEXPF
-     C                     UPDATFXNETMD0
+     C**********           UPDATFXNETMD0                                                    MD055650
+     C                     UPDATFXNETMD0               84                                   MD055650
       *
      C           *IN84     IFEQ *ON
       ** Data base error in file (FXNETMPD).
@@ -1928,6 +1963,8 @@
      C                     MOVE SUSER     CMTUSR           User Id
      C                     TIME           CMTTIM           Time
      C           CMTTXT    COMIT                           Commit updates
+      *
+     C                     ENDIF                                                            MD055650
      C                     END
      C                     END
       *

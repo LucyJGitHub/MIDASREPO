@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD054605           Date 17Oct19              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD055265           Date 10Feb20              */
+/*       Prev Amend No. MD054605           Date 17Oct19              */
+/*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      CUP034             Date 24Jan07              */
@@ -23,6 +24,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD055265 - Deliverable Data Split for Report Control Facilit*/
 /*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CUP034 - Reduce size of implementation library.             */
@@ -145,10 +147,11 @@ VALIDATE:                                                                       
              ENDDO
 
 /* Override files before call to update 'new' FCREPTPD. */
-             OVRDBF     FILE(REPT1) TOFILE(&FCMPLIB/FCREPTL1)
-             OVRDBF     FILE(REPT2) TOFILE(&SCMPLIB/FCREPTL1)
+/**********  OVRDBF     FILE(REPT1) TOFILE(&FCMPLIB/FCREPTL1) */                        /*MD055265*/
+/**********  OVRDBF     FILE(REPT2) TOFILE(&SCMPLIB/FCREPTL1) */                        /*MD055265*/
 
-             CALL       PGM(SM0866)
+/**********  CALL       PGM(SM0866) */                                                  /*MD055265*/
+             CALL       PGM(SM0866) PARM(&FCMPLIB &SCMPLIB)                             /*MD055265*/
 
              DLTOVR     FILE(*ALL)
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)

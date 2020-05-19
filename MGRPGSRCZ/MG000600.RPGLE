@@ -364,6 +364,7 @@
      D  DSRI03                81    120                                                     MD055694
      D  DSRI04               121    160                                                     MD055694
      D  DSRI05               161    200                                                     MD055694
+                                                                                            MD055694
       **  Multiple occurrence data structure for reporting party                            MD022425
                                                                                             MD022425
      D/COPY WNCPYSRC,MG0600I001
@@ -1271,6 +1272,7 @@
      C                   MOVEL     *BLANKS       MGCREF           29
      C                   MOVEL     *BLANKS       MGCMSH           10
      C                   MOVEL     *BLANKS       MGCMUD           30
+     C                   MOVEL     *BLANKS       W87SEQA           1
 
      C                   Z-ADD     *ZERO         X
 
@@ -1684,7 +1686,9 @@
      C                   MOVE      *BLANKS       ACLINE
      C                   MOVE      ' '           TAG
      C                   MOVE      '87'          FLDNO
+     C                   MOVEL     'Y'           W87SEQA                                    MD055694
      C                   EXSR      FSWAD
+     C                   MOVEL     *BLANKS       W87SEQA                                    MD055694
 
      C                   ENDIF
 
@@ -3179,6 +3183,7 @@
      C                   IF        CSW221 = 'Y' AND FLDNO = '82'                            MD055694
      C                             OR CSW221 = 'Y' AND FLDNO = '83'                         MD055694
      C                             OR CSW221 = 'Y' AND FLDNO = '87'                         MD055694
+     C                              AND W87SEQA = 'Y'                                       MD055684
      C                             OR CSW221 = 'Y' AND FLDNO = '53'                         MD055694
      C                             OR CSW221 = 'Y' AND FLDNO = '56'                         MD055694
      C                             OR CSW221 = 'Y' AND FLDNO = '57'                         MD055694

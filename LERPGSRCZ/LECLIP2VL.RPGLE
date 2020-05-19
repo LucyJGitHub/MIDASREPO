@@ -128,7 +128,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD055219 - Prevent zero interest rate                        *
+      *  MD055219 - Prevent zero interest rate.                       *
       *  MD055128 - Allow  negative total interest when negative      *
       *             base rate code was used                           *
       *  MD055714 - Missing rebate posting after changing maturity    *

@@ -479,11 +479,11 @@
       ** Authorisation Timestamp
 
      C**********         IF        NullIndDs(11) = 0                             AR1028208 AR1029808
-     C                   IF        NullIndDs(8) = 0                              AR1028208 AR1029808
-     C                   EVAL      RATIM = BFAPRDAT
-     C                   ELSE                                                              MD053451A
      C                   IF        NullIndDs(13) = 0                                       MD053451A
      C                   EVAL      RATIM = BFAPRDATB                                       MD053451A
+     C                   ELSE                                                              MD053451A
+     C                   IF        NullIndDs(8) = 0                              AR1028208 AR1029808
+     C                   EVAL      RATIM = BFAPRDAT
      C                   ENDIF                                                             MD053451A
      C                   ENDIF                                                             AR1028208
 

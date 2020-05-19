@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD024507           Date 29Jan14               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD039009           Date 26May16               *
       *                 MD038714           Date 09May16               *
       *                 MD037915           Date 24Feb16               *
@@ -65,6 +66,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD024507 - Change warning message to error message.          *
+      *             Reverse fix 247626.                               *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039009 - Validation Changes on Auto-Settle indicator       *
@@ -1063,14 +1066,18 @@
       *
      C**********         ADD       1             Idx                                          247626
      C**********         EVAL      FldNameArr(Idx) = 'DDRINT'                                 247626
-     C                   ADD       1             Widx                                         247626
-     C                   EVAL      WFldNamArr(Widx) = 'DDRINT'                                247626
+     C**********         ADD       1             Widx                                247626 MD024507
+     C**********         EVAL      WFldNamArr(Widx) = 'DDRINT'                       247626 MD024507
+     C                   ADD       1             Idx                                        MD024507
+     C                   EVAL      FldNameArr(Idx) = 'DDRINT'                               MD024507
       *
       *****'Interest*Exceed*remaining*interest*'********************************              247626
-      ***  Warning - 'Interest Exceed remaining interest '                                    247626
+      *****Warning*-*'Interest*Exceed*remaining*interest*'*************              247626 MD024507
+      ** 'Interest Exceed remaining interest '                                              MD024507
       *
      C**********         EVAL      MsgIDArr(Idx) = 'LEM0204'                                  247626
-     C                   EVAL      WMsgIDArr(Widx) = 'LEM0204'                                247626
+     C**********         EVAL      WMsgIDArr(Widx) = 'LEM0204'                       247626 MD024507
+     C                   EVAL      MsgIDArr(Idx) = 'LEM0204'                                MD024507
      C                   EVAL      WRINT = 'Y'                                              AR850197
      C                   MOVE      'N'           DDRINTOK
      C                   Endif                                                                249766
@@ -1109,14 +1116,18 @@
       *                                                                                       249766
      C**********         ADD       1             Idx                                          247626
      C**********         EVAL      FldNameArr(Idx) = 'DDRINT'                                 247626
-     C                   ADD       1             Widx                                         247626
-     C                   EVAL      WFldNamArr(Widx) = 'DDRINT'                                247626
+     C**********         ADD       1             Widx                                247626 MD024507
+     C**********         EVAL      WFldNamArr(Widx) = 'DDRINT'                       247626 MD024507
+     C                   ADD       1             Idx                                        MD024507
+     C                   EVAL      FldNameArr(Idx) = 'DDRINT'                               MD024507
       *
       *****'Interest*Exceeds*limit*:*Maximum*=*Outstansting*int.*-*Gross*W/hold*Tax'          247626
-      *** Warning  'Interest Exceeds limit : Maximum = Outstansting int. - Gross W/hold Tax'  247626
+      ****Warning**'Interest*Exceeds*limit*:*Maximum*=*Outstansting*int.*-*Gross*W/hold*Tax'MD024507
+      ** 'Interest Exceeds limit : Maximum = Outstansting int. - Gross W/hold Tax'          MD024507
       *
      C**********         EVAL      MsgIDArr(Idx) = 'LEM0209'                                  247626
-     C                   EVAL      WMsgIDArr(Widx) = 'LEM0209'                                247626
+     C**********         EVAL      WMsgIDArr(Widx) = 'LEM0209'                       247626 MD024507
+     C                   EVAL      MsgIDArr(Idx) = 'LEM0209'                                MD024507
      C                   EVAL      WRINT = 'Y'                                              AR850197
      C                   MOVE      'N'           DDRINTOK
      C                   Endif                                                                249766

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD055128           Date 17Apr20               *
-      *  Prev Amend No. MD055714           Date 06May20               *
+      *  Last Amend No. MD055219           Date 14May20               *
+      *  Prev Amend No. MD055128           Date 17Apr20               *
+      *                 MD055714           Date 06May20               *
       *                 257533             Date 06May20               *
       *                 MD055074           Date 21Jan20               *
       *                 MD053297           Date 06Sep19               *
@@ -127,6 +128,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055219 - Prevent zero interest rate                        *
       *  MD055128 - Allow  negative total interest when negative      *
       *             base rate code was used                           *
       *  MD055714 - Missing rebate posting after changing maturity    *
@@ -1476,6 +1478,14 @@
      C                   MOVEL     'DDRTSP'      FldNamXAr(Idx)
      C                   MOVEL     'LEL0140'     MsgIDXAr(Idx)
      C                   ENDIF
+      *                                                                                     MD055219
+     C     BASER         IFEQ      *ZEROS                                                   MD055219
+     C     @@AMT         ANDEQ     *ZEROS                                                   MD055219
+     C                   MOVE      'N'           DDRTSPOK                                   MD055219
+     C                   ADD       1             Idx                                        MD055219
+     C                   MOVEL     'DDRTSP'      FldNamXAr(Idx)                             MD055219
+     C                   MOVEL     'LEL0191'     MsgIDXAr(Idx)                              MD055219
+     C                   ENDIF                                                              MD055219
       *
      C                   ENDIF                                                                CLE170
       *                                                                                       CLE170
@@ -1603,6 +1613,14 @@
      C                   MOVEL     'LEL0712'     MsgIDXAr(Idx)                                CLE035
      C                   ENDIF                                                                CLE035
      C                   EXSR      SRBRTT                                                     CLE035
+      *                                                                                     MD055219
+     C     BASER         IFEQ      *ZEROS                                                   MD055219
+     C     #DDRTSP       ANDEQ     *ZEROS                                                   MD055219
+     C                   MOVE      'N'           DDFXRTOK                                   MD055219
+     C                   ADD       1             Idx                                        MD055219
+     C                   MOVEL     'DDRTSP'      FldNamXAr(Idx)                             MD055219
+     C                   MOVEL     'LEL0191'     MsgIDXAr(Idx)                              MD055219
+     C                   ENDIF                                                              MD055219
       ** .. if base rate code is blank, validate base rate                                    CLE035
      C                   ELSE                                                                 CLE035
      C                   MOVE      *BLANKS       PSCRF                                        CLE035

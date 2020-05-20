@@ -9,13 +9,16 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2019                     */
 /*                                                                   */
-/*       Last Amend No. MD055783           Date 06May20              */
-/*       Prev Amend No. MD055759           Date 04May20              */
+/*       Last Amend No. MD055832           Date 16May20              */
+/*       Prev Amend No. MD055783           Date 06May20              */
+/*                      MD055759           Date 04May20              */
 /*                      MD055280           Date 17Feb20              */
 /*                      MD054605 *CREATE   Date 17Oct19              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD055783 - Created data recovery for the old GPSVALPD and   */
+/*                  GPSVRFPD when GDBU fails                         */
 /*       MD055783 - Created data recovery for the old T_WIPCF        */
 /*                  when GDBU fails                                  */
 /*       MD055759 - MGSV values are cleared when GDBU fails          */
@@ -77,7 +80,29 @@
              ENDDO                                                                      /*MD055783*/
                                                                                         /*MD055783*/
 GPSVAL:                                                                                 /*MD055783*/
-
+             CHKOBJ     OBJ(&LIBMOV/GPSVALPD) OBJTYPE(*FILE)                            /*MD055832*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(GPSVRF))                        /*MD055832*/
+                                                                                        /*MD055832*/
+             CHKOBJ     OBJ(&TALIB/GPSVALPD) OBJTYPE(*FILE)                             /*MD055832*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD055832*/
+             CPYF       FROMFILE(&LIBMOV/GPSVALPD) +
+                          TOFILE(&TALIB/GPSVALPD) MBROPT(*REPLACE) +
+                          CRTFILE(*YES)                                                 /*MD055832*/
+             ENDDO                                                                      /*MD055832*/
+                                                                                        /*MD055832*/
+GPSVRF:                                                                                 /*MD055832*/
+                                                                                        /*MD055832*/
+             CHKOBJ     OBJ(&LIBMOV/GPSVRFPD) OBJTYPE(*FILE)                            /*MD055832*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(START))                         /*MD055832*/
+                                                                                        /*MD055832*/
+             CHKOBJ     OBJ(&TALIB/GPSVRFPD) OBJTYPE(*FILE)                             /*MD055832*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD055832*/
+             CPYF       FROMFILE(&LIBMOV/GPSVRFPD) +
+                          TOFILE(&TALIB/GPSVRFPD) MBROPT(*REPLACE) +
+                          CRTFILE(*YES)                                                 /*MD055832*/
+             ENDDO                                                                      /*MD055832*/
+                                                                                        /*MD055832*/
+START:                                                                                  /*MD055832*/
              CHKOBJ     OBJ(&TALIB/GPSVALPD) OBJTYPE(*FILE)                             /*MD055280*/
              MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD055280*/
              SNDUSRMSG  MSG('GPSVALPD does not exist. Program +

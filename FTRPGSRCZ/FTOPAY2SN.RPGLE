@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD042042           Date 22Mar19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055656           Date 20Apr20               *
+      *  Prev Amend No. MD042042           Date 22Mar19               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR1090283          Date 10Aug16               *
       *                 CFT050             Date 03Jun13               *
       *                 258944             Date 23Jan13               *
@@ -89,6 +90,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055656 - OPAY messages sent via JMS API end in error       *
+      *             (ERZ248) (Recompile)                              *
       *  MD042042 - Input User Information is replaced by WIP         *
       *             Authoriser in Authorizing in "HATS"               *
       *  MD046248 - Finastra Rebranding                               *

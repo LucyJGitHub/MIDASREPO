@@ -1272,7 +1272,7 @@
      C                   MOVEL     *BLANKS       MGCREF           29
      C                   MOVEL     *BLANKS       MGCMSH           10
      C                   MOVEL     *BLANKS       MGCMUD           30
-     C                   MOVEL     *BLANKS       W87SEQA           1
+     C                   MOVEL     *BLANKS       W87SEQA           1                        MD055694
 
      C                   Z-ADD     *ZERO         X
 
@@ -1686,7 +1686,9 @@
      C                   MOVE      *BLANKS       ACLINE
      C                   MOVE      ' '           TAG
      C                   MOVE      '87'          FLDNO
+     C                   IF        CSW221 = 'Y'                                             MD055694
      C                   MOVEL     'Y'           W87SEQA                                    MD055694
+     C                   ENDIF                                                              MD055694
      C                   EXSR      FSWAD
      C                   MOVEL     *BLANKS       W87SEQA                                    MD055694
 
@@ -3103,7 +3105,7 @@
      C     CKNETI        IFEQ      'Y'
      C     FLDNO         ANDEQ     '87'
                                                                                             MD055694
-     C                   IF        CSW221 = 'Y'                                             MD055694
+     C                   IF        CSW221 = 'Y' AND W87SEQA = 'Y'                           MD055694
      C                   MOVEL     NOSTXN        MFLD                                       MD055694
      C                   MOVE      'J'           TAG                                        MD055694
      C                   ELSE                                                               MD055694
@@ -3180,13 +3182,13 @@
       ** If SWIFT 2021 is installed, tag D should be replaced by tag J.                     MD055694
       ** This is true for tags 82, 87, 83, 53, 56, 57                                       MD055694
                                                                                             MD055694
-     C                   IF        CSW221 = 'Y' AND FLDNO = '82'                            MD055694
-     C                             OR CSW221 = 'Y' AND FLDNO = '83'                         MD055694
-     C                             OR CSW221 = 'Y' AND FLDNO = '87'                         MD055694
-     C                              AND W87SEQA = 'Y'                                       MD055684
-     C                             OR CSW221 = 'Y' AND FLDNO = '53'                         MD055694
-     C                             OR CSW221 = 'Y' AND FLDNO = '56'                         MD055694
-     C                             OR CSW221 = 'Y' AND FLDNO = '57'                         MD055694
+     C                   IF        CSW221 = 'Y' AND                                         MD055694
+     C                             (FLDNO = '82'                                            MD055694
+     C                              OR FLDNO = '83'                                         MD055694
+     C                              OR FLDNO = '87' AND W87SEQA = 'Y'                       MD055694
+     C                              OR FLDNO = '53'                                         MD055694
+     C                              OR FLDNO = '56'                                         MD055694
+     C                              OR FLDNO = '57')                                        MD055694
                                                                                             MD055694
      C                   EXSR      SRFMTJ                                                   MD055694
                                                                                             MD055694

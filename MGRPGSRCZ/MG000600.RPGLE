@@ -3104,15 +3104,8 @@
 
      C     CKNETI        IFEQ      'Y'
      C     FLDNO         ANDEQ     '87'
-                                                                                            MD055694
-     C                   IF        CSW221 = 'Y' AND W87SEQA = 'Y'                           MD055694
-     C                   MOVEL     NOSTXN        MFLD                                       MD055694
-     C                   MOVE      'J'           TAG                                        MD055694
-     C                   ELSE                                                               MD055694
      C                   MOVEL     NETTXT        MFLD
      C                   MOVE      'D'           TAG
-     C                   ENDIF                                                              MD055694
-                                                                                            MD055694
      C                   MOVE      @MTAG         MTAG
      C                   ELSE
      C                   CALL      'ZM0050'                             15

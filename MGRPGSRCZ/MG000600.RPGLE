@@ -968,8 +968,6 @@
       *                                                                                     MD055694
      C                   IF        PRTCD = 'CSWACTV'                                        MD055694
      C                   MOVEL     'Y'           CSW221            1                        MD055694
-     C                   MOVEL     '/NOSI/'      NOSTXN           10                        MD055694
-     C                   MOVE      'NETS'        NOSTXN                                     MD055694
      C                   MOVEL     '/NOSI/'      NOSTXU           10                        MD055694
      C                   MOVE      'UKWN'        NOSTXU                                     MD055694
      C                   ELSE                                                               MD055694
@@ -2680,12 +2678,7 @@
                                                                                             MD055694
      C                   IF        CSW221 = 'Y'                                             MD055694
      C                   MOVE      ':57J:'       MTAG                                       MD055694
-     C                   IF        NETBY <> 'Y'                                             MD055694
      C                   MOVEL     NOSTXU        MFLD                                       MD055694
-     C                   ELSE                                                               MD055694
-     C                   MOVEL     NOSTXN        MFLD                                       MD055694
-     C                   ENDIF                                                              MD055694
-                                                                                            MD055694
      C                   ELSE                                                               MD055694
      C                   MOVE      ':57D:'       MTAG
      C                   MOVEL     'UNKNOWN'     MFLD
@@ -2886,12 +2879,7 @@
      C     X             OCCUR     MULT
      C                   IF        CSW221 = 'Y'                                             MD055694
      C                   MOVE      ':57J:'       MTAG                                       MD055694
-     C                   IF        NETSL <> 'Y'                                             MD055694
      C                   MOVEL     NOSTXU        MFLD                                       MD055694
-     C                   ELSE                                                               MD055694
-     C                   MOVEL     NOSTXN        MFLD                                       MD055694
-     C                   ENDIF                                                              MD055694
-                                                                                            MD055694
      C                   ELSE                                                               MD055694
      C                   MOVE      ':57D:'       MTAG
      C                   MOVEL     'UNKNOWN'     MFLD
@@ -3848,12 +3836,7 @@
      C     @TAGD         IFEQ      '57'
      C                   IF        CSW221 = 'Y'                                             MD055694
      C                   MOVE      ':57J:'       MTAG                                       MD055694
-                                                                                            MD055694
-     C                   IF        NETSL <> 'Y'                                             MD055694
      C                   MOVEL     NOSTXU        MFLD                                       MD055694
-     C                   ELSE                                                               MD055694
-     C                   MOVEL     NOSTXN        MFLD                                       MD055694
-     C                   ENDIF                                                              MD055694
      C                   ELSE                                                               MD055694
      C                   MOVE      ':57D:'       MTAG
      C                   MOVEL     'UNKNOWN'     MFLD                                       MD055694

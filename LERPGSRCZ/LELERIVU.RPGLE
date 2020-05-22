@@ -2714,6 +2714,19 @@
      C                   ELSE                                                                BUG2579
      C                   MOVE      'N'           CLE023                                      BUG2579
      C                   ENDIF                                                               BUG2579
+                                                                                              FCM101
+      * Determine if FCM101 is switched on                                                    FCM101
+                                                                                              FCM101
+     C                   CALLB     'AOSARDR0'                                                 FCM101
+     C                   PARM      *BLANKS       @RTCD                                        FCM101
+     C                   PARM      '*VERIFY'     @OPTN                                        FCM101
+     C                   PARM      'FCM101'      @SARD                                        FCM101
+     C     SCSARD        PARM      SCSARD        DSFDY                                        FCM101
+     C                   IF        @RTCD = *BLANK                                             FCM101
+     C                   MOVEL     'Y'           FCM101            1                          FCM101
+     C                   ELSE                                                                 FCM101
+     C                   MOVEL     'N'           FCM101                                       FCM101
+     C                   ENDIF                                                                FCM101
                                                                                               CLE106
       ** Determine if CLE106 is installed                                                     CLE106
                                                                                               CLE106

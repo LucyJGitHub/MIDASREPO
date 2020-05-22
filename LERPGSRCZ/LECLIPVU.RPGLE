@@ -2067,8 +2067,8 @@
       ** Customer Loans Primary Details OK inds                                              BUG3721
      C                   PARM                    ClilFilFmt                                  BUG3721
      C                   PARM                    TranInPrim                                  BUG3721
-     C                   PARM                    TranInFloor                                 FCM101
      C                   PARM                    OKClPrim                                           
+     C                   PARM                    TranInFloor                                 FCM101
       ** Business Day Convention Screen Detail                                              MD053143
      C                   PARM                    TranInSeven                                MD053143
 

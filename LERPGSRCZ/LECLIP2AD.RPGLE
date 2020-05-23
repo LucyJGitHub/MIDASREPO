@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. FCM101A            Date 25Mar19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE141             Date 08Feb16               *
       *                 MD025521           Date 19Aug14               *
       *                 MD000091           Date 09May13               *
@@ -48,6 +49,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  FCM101A - Floor Rates on LE Module                           *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention for   *
@@ -153,6 +155,12 @@
      D NewLoanScn2   E DS                  EXTNAME(LECLI2PD)
       ***  New Loan in Screen Format 2
       *
+     D FlrScnFm2     E DS                  EXTNAME(XXCLIQPD)                                 FCM101A
+      ***  (Current) Loan in Screen Format 2                                                 FCM101A
+     D                                     PREFIX(@)                                         FCM101A
+     D NewFlrScn2    E DS                  EXTNAME(XXCLIQPD)                                 FCM101A
+      ***  New Floor Rates in Screen Format                                                  FCM101A
+      *                                                                                      FCM101A
      D LnCLFilFmt    E DS                  EXTNAME(CLOANCL)
       ***  (Current) Loan CL in File Format
      D                                     PREFIX(CL_)
@@ -357,6 +365,99 @@
      C                   EVAL      MsgDtaArr(Idx) = LenStr +%TRIM(@DDCALC)                  MD000091
      C                   EVAL      DDCALCok        = 'N'
      C                   END
+                                                                                             FCM101A
+      *-----------------------------------------*                                            FCM101A
+      * Contractual Spread/Sign                 *                                            FCM101A
+      *-----------------------------------------*                                            FCM101A
+                                                                                             FCM101A
+     C     FCM101        IFEQ      'Y'                                                       FCM101A
+     C                   Move      'Y'           DDCNSGok                                    FCM101A
+     C                   Move      'Y'           DDCNSPok                                    FCM101A
+     C                   Move      'Y'           DDAISGok          1                         FCM101A
+     C                   Move      'Y'           DDAIRFok          1                         FCM101A
+     C                   Move      'Y'           DDBRSGok          1                         FCM101A
+     C                   Move      'Y'           DDBRTFok          1                         FCM101A
+                                                                                             FCM101A
+     C     DDCNSG        IFNE      @DDCNSG                                                   FCM101A
+     C                   ADD       1             Idx                                         FCM101A
+     C                   EVAL      FldNameArr(Idx) = 'DDCNSG'                                FCM101A
+     C                   EVAL      MsgIDArr(Idx)   = 'XXX0043'                               FCM101A
+     C                   EVAL      BLen = %Len(%Trim(@DDCNSG))                               FCM101A
+     C                   EVAL      MsgDtaArr(Idx) = LenStr +%TRIM(@DDCNSG)                   FCM101A
+     C                   EVAL      DDCNSGok        = 'N'                                     FCM101A
+     C                   END                                                                 FCM101A
+                                                                                             FCM101A
+     C                   CALLB     'ZCMPAMTS'                                                FCM101A
+     C                   PARM      DDCNSP        ZCMPAMT1                                    FCM101A
+     C                   PARM      @DDCNSP       ZCMPAMT2                                    FCM101A
+     C                   PARM      'N'           ZCMPAMTDif                                  FCM101A
+                                                                                             FCM101A
+     C     ZCMPAMTDif    IFEQ      'Y'                                                       FCM101A
+     C                   ADD       1             Idx                                         FCM101A
+     C                   EVAL      FldNameArr(Idx) = 'DDCNSP'                                FCM101A
+     C                   EVAL      MsgIDArr(Idx)   = 'XXX0044'                               FCM101A
+     C                   EVAL      BLen = %Len(%Trim(@DDCNSP))                               FCM101A
+     C                   EVAL      MsgDtaArr(Idx) = LenStr +%TRIM(@DDCNSP)                   FCM101A
+     C                   EVAL      DDCNSPok        = 'N'                                     FCM101A
+     C                   ENDIF                                                               FCM101A
+      *                                                                                      FCM101A
+     C     DDBRTF        IFEQ      '0           '                                            FCM101A
+     C     @DDBRTF       ANDEQ     *Blank                                                    FCM101A
+     C                   Move      *Blanks       DDBRTF                                      FCM101A
+     C                   ENDIF                                                               FCM101A
+      *                                                                                      FCM101A
+     C                   CALLB     'ZCMPAMTS'                                                FCM101A
+     C                   PARM      DDBRTF        ZCMPAMT1                                    FCM101A
+     C                   PARM      @DDBRTF       ZCMPAMT2                                    FCM101A
+     C                   PARM      'N'           ZCMPAMTDif                                  FCM101A
+                                                                                             FCM101A
+     C     ZCMPAMTDif    IFEQ      'Y'                                                       FCM101A
+     C                   ADD       1             Idx                                         FCM101A
+     C                   EVAL      FldNameArr(Idx) = 'DDBRTF'                                FCM101A
+     C                   EVAL      MsgIDArr(Idx)   = 'XXX0045'                               FCM101A
+     C                   EVAL      BLen = %Len(%Trim(@DDBRTF))                               FCM101A
+     C                   EVAL      MsgDtaArr(Idx) = LenStr +%TRIM(@DDBRTF)                   FCM101A
+     C                   EVAL      DDBRTFok        = 'N'                                     FCM101A
+     C                   END                                                                 FCM101A
+      *                                                                                      FCM101A
+     C     DDBRSG        IFNE      @DDBRSG                                                   FCM101A
+     C                   ADD       1             Idx                                         FCM101A
+     C                   EVAL      FldNameArr(Idx) = 'DDBRSG'                                FCM101A
+     C                   EVAL      MsgIDArr(Idx)   = 'XXX0046'                               FCM101A
+     C                   EVAL      BLen = %Len(%Trim(@DDBRSG))                               FCM101A
+     C                   EVAL      MsgDtaArr(Idx) = LenStr +%TRIM(@DDBRSG)                   FCM101A
+     C                   EVAL      DDBRSGok        = 'N'                                     FCM101A
+     C                   END                                                                 FCM101A
+      *                                                                                      FCM101A
+     C     DDAIRF        IFEQ      '0           '                                            FCM101A
+     C     @DDAIRF       ANDEQ     *Blank                                                    FCM101A
+     C                   Move      *Blanks       DDAIRF                                      FCM101A
+     C                   ENDIF                                                               FCM101A
+      *                                                                                      FCM101A
+     C                   CALLB     'ZCMPAMTS'                                                FCM101A
+     C                   PARM      DDAIRF        ZCMPAMT1                                    FCM101A
+     C                   PARM      @DDAIRF       ZCMPAMT2                                    FCM101A
+     C                   PARM      'N'           ZCMPAMTDif                                  FCM101A
+                                                                                             FCM101A
+     C     ZCMPAMTDif    IFEQ      'Y'                                                       FCM101A
+     C                   ADD       1             Idx                                         FCM101A
+     C                   EVAL      FldNameArr(Idx) = 'DDAIRF'                                FCM101A
+     C                   EVAL      MsgIDArr(Idx)   = 'XXX0047'                               FCM101A
+     C                   EVAL      BLen = %Len(%Trim(@DDAIRF))                               FCM101A
+     C                   EVAL      MsgDtaArr(Idx) = LenStr +%TRIM(@DDAIRF)                   FCM101A
+     C                   EVAL      DDAIRFok        = 'N'                                     FCM101A
+     C                   END                                                                 FCM101A
+      *                                                                                      FCM101A
+     C     DDAISG        IFNE      @DDAISG                                                   FCM101A
+     C                   ADD       1             Idx                                         FCM101A
+     C                   EVAL      FldNameArr(Idx) = 'DDAISG'                                FCM101A
+     C                   EVAL      MsgIDArr(Idx)   = 'XXX0048'                               FCM101A
+     C                   EVAL      BLen = %Len(%Trim(@DDAISG))                               FCM101A
+     C                   EVAL      MsgDtaArr(Idx) = LenStr +%TRIM(@DDAISG)                   FCM101A
+     C                   EVAL      DDAISGok        = 'N'                                     FCM101A
+     C                   END                                                                 FCM101A
+      *                                                                                      FCM101A
+     C                   ENDIF                                                               FCM101A
       *
       *-----------------------------------------*
       * Int. paid/recd to date                  *
@@ -718,6 +819,56 @@
      C                   MOVEL     @DDRTSP       DDRTSP
      C                   END
       *
+     C     FCM101        IFEQ      'Y'                                                       FCM101A
+      *-----------------------------------------*                                            FCM101A
+      * Contractual Spread Rate                 *                                            FCM101A
+      *-----------------------------------------*                                            FCM101A
+      *                                                                                      FCM101A
+     C     DDCNSPok      IFEQ      'N'                                                       FCM101A
+     C                   MOVEL     @DDCNSP       DDCNSP                                      FCM101A
+     C                   END                                                                 FCM101A
+      *                                                                                      FCM101A
+      *-----------------------------------------*                                            FCM101A
+      * Contractual Spread Sign                 *                                            FCM101A
+      *-----------------------------------------*                                            FCM101A
+      *                                                                                      FCM101A
+     C     DDCNSGok      IFEQ      'N'                                                       FCM101A
+     C                   MOVEL     @DDCNSG       DDCNSG                                      FCM101A
+     C                   END                                                                 FCM101A
+      *                                                                                      FCM101A
+      *-----------------------------------------*                                            FCM101A
+      * Base Rate Floor Sign                    *                                            FCM101A
+      *-----------------------------------------*                                            FCM101A
+      *                                                                                      FCM101A
+     C     DDBRSGok      IFEQ      'N'                                                       FCM101A
+     C                   MOVEL     @DDBRSG       DDBRSG                                      FCM101A
+     C                   END                                                                 FCM101A
+      *                                                                                      FCM101A
+      *-----------------------------------------*                                            FCM101A
+      * Base Rate Floor                         *                                            FCM101A
+      *-----------------------------------------*                                            FCM101A
+      *                                                                                      FCM101A
+     C     DDBRTFok      IFEQ      'N'                                                       FCM101A
+     C                   MOVEL     @DDBRTF       DDBRTF                                      FCM101A
+     C                   END                                                                 FCM101A
+      *                                                                                      FCM101A
+      *-----------------------------------------*                                            FCM101A
+      * All-in Interest Rate Floor Sign         *                                            FCM101A
+      *-----------------------------------------*                                            FCM101A
+      *                                                                                      FCM101A
+     C     DDAISGok      IFEQ      'N'                                                       FCM101A
+     C                   MOVEL     @DDAISG       DDAISG                                      FCM101A
+     C                   END                                                                 FCM101A
+      *                                                                                      FCM101A
+      *-----------------------------------------*                                            FCM101A
+      * All-in Interest Rate Floor              *                                            FCM101A
+      *-----------------------------------------*                                            FCM101A
+      *                                                                                      FCM101A
+     C     DDAIRFok      IFEQ      'N'                                                       FCM101A
+     C                   MOVEL     @DDAIRF       DDAIRF                                      FCM101A
+     C                   END                                                                 FCM101A
+      *                                                                                      FCM101A
+     C                   ENDIF                                                               FCM101A
       *-----------------------------------------*
       * Spread indicator                        *
       *-----------------------------------------*
@@ -924,6 +1075,8 @@
       ** Action Code (Reject transaction)                                                   AR804863
       *                                                                                     AR804863
      C                   PARM                    @ACTRV            1                        AR804863
+     C                   PARM                    FlrScnFm2                                   FCM101A
+     C                   PARM                    NewFlrScn2                                  FCM101A
       *
       ***  OUTPUTS
       *
@@ -1011,6 +1164,18 @@
      C     CLE007        ANDEQ     'Y'
      C                   MOVEL     'Y'           CLE5A7
      C                   END
+      *                                                                                      FCM101A
+      ** Verify if FCM101 feature is installed                                               FCM101A
+      *                                                                                      FCM101A
+     C                   MOVEL     'N'           FCM101            1                         FCM101A
+     C                   CALLB     'AOSARDR0'                                                FCM101A
+     C                   PARM      *BLANKS       @RTCD                                       FCM101A
+     C                   PARM      '*VERIFY'     @OPTN                                       FCM101A
+     C                   PARM      'FCM101'      @SARD                                       FCM101A
+      *                                                                                      FCM101A
+     C     @RTCD         IFEQ      *BLANK                                                    FCM101A
+     C                   MOVEL     'Y'           FCM101                                      FCM101A
+     C                   END                                                                 FCM101A
       *
      C                   ENDSR
       *****************************************************************

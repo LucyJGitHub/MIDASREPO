@@ -10,8 +10,10 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD053295           Date 13Apr19               *
-      *  Prev Amend No. 262161             Date 04Mar19               *
+      *  Last Amend No. FCM101A            Date 18Jun19               *
+      *  Prev Amend No. FCM101             Date 07Feb19               *
+      *                 MD053295           Date 13Apr19               *
+      *                 262161             Date 04Mar19               *
       *                 MD050577           Date 30May18               *
       *                 MD050139           Date 23Mar18               *
       *                 MD051970           Date 08Oct18               *
@@ -255,6 +257,10 @@
 0009 F*                                                               *
 0011 F*---------------------------------------------------------------*
       *                                                               *
+      *  FCM101A - Incorrect All-In Interest Rate computed for loan   *
+      *            during COB recalculation from Last Interest Payment*
+      *            Date                                               *
+      *  FCM101 - Floor Rates on LE module                            *
       *  MD053295 - Lending loan with Interest Calculation Basis      *
       *             method 3 (30/360) has wrong interest payment      *
       *             amount for month of March (Recompile)             *
@@ -840,6 +846,7 @@
      F            HISTSHQF                          KRENAMEHISTQ1F                          AR317587
      FLEACT3L2IF  E           K        DISK                                                 AR317587
      F            LOAMSDKF                          KRENAMEACTN3PF                          AR317587
+     FXXCLOQY0IF  E           K        DISK                                                   FCM101
 0015 F*TABLE***IF  F      96 12AI     2 DISK                              S01194
 0016 FHIUPDHH O   F     100            DISK
 0016 F***HIUPDHM*O   F     100            DISK                            CAC001
@@ -2710,6 +2717,34 @@
      C                     OUT  LDA                                                           206596
      C                     EXSR *PSSR                                                         206596
      C                     ENDIF                                                              206596
+      *                                                                                       FCM101
+      ** Add check here for to load Floor Rates from XXCLOQX0                                 FCM101
+      *                                                                                       FCM101
+     C           FCM101    IFEQ 'Y'                                                           FCM101
+      *                                                                                       FCM101
+     C           PTYP      IFEQ 61                                                            FCM101
+     C           PTYP      OREQ 62                                                            FCM101
+     C           PTYP      OREQ 64                                                            FCM101
+     C           PTYP      OREQ 66                                                            FCM101
+     C           PTYP      OREQ 68                                                            FCM101
+     C           PTYP      OREQ 69                                                            FCM101
+     C           PTYP      OREQ 70                                                            FCM101
+     C           PTYP      OREQ 71                                                            FCM101
+     C           PTYP      OREQ 72                                                            FCM101
+      *                                                                                       FCM101
+     C           LNRF      CHAINXXCLOQY0            N26                                       FCM101
+     C                     MOVE XQBRSG    BASFSG                                              FCM101
+     C                     Z-ADDXQBRTF    BASFLR                                              FCM101
+     C           XQBRSG    IFEQ '-'                                                           FCM101
+     C           XQBRTF    MULT -1        BASFLR                                              FCM101
+     C                     ENDIF                                                              FCM101
+     C                     MOVE XQAISG    AIRFSG                                              FCM101
+     C                     Z-ADDXQAIRF    AIRFLR                                              FCM101
+     C           XQAISG    IFEQ '-'                                                           FCM101
+     C           XQAIRF    MULT -1        AIRFLR                                              FCM101
+     C                     ENDIF                                                              FCM101
+     C                     ENDIF                                                              FCM101
+     C                     ENDIF                                                              FCM101
       *                                                                                     AR317587
       ** If loan amendments value date (VDAT) is later than maturity                        AR317587
       ** date (MDAT) but expected value date (XAVD) is earlier or                           AR317587
@@ -2894,6 +2929,27 @@
      C                     Z-ADDBRTE      BASERT                          115275
      C                     Z-ADDRTSP      SPREAD                          115275
      C                     MOVE SPIN      SPRIND                          115275
+      *                                                                                       FCM101
+     C           FCM101    IFEQ 'Y'                                                           FCM101
+      *                                                                                       FCM101
+     C           PTYP      IFEQ 61                                                            FCM101
+     C           PTYP      OREQ 62                                                            FCM101
+     C           PTYP      OREQ 64                                                            FCM101
+     C           PTYP      OREQ 66                                                            FCM101
+     C           PTYP      OREQ 68                                                            FCM101
+     C           PTYP      OREQ 69                                                            FCM101
+     C           PTYP      OREQ 70                                                            FCM101
+     C           PTYP      OREQ 71                                                            FCM101
+     C           PTYP      OREQ 72                                                            FCM101
+      *                                                                                       FCM101
+     C           AMTP      IFEQ 'ST'                                                          FCM101
+     C           AMTP      OREQ 'RO'                                                          FCM101
+     C                     Z-ADDCNSP      WCNSP                                               FCM101
+     C                     MOVE CNSG      WCNSG                                               FCM101
+     C                     ENDIF                                                              FCM101
+     C                     ENDIF                                                              FCM101
+      *                                                                                       FCM101
+     C                     ENDIF                                                              FCM101
       *                                                                   116675
      C           AMTP      IFEQ 'ST'                                      116675
      C                     MOVE *ON       *IN70                           117041
@@ -7987,7 +8043,34 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
      C           IRCF      ANDEQ'Y'                                       CAC001
      C           BGN0ST    OREQ 'N'                                       CAC001
 2180 C                     Z-ADDRTSP      SPREAD
+      *                                                                                       FCM101
+     C           FCM101    IFEQ 'Y'                                                           FCM101
+     C           *IN12     ANDEQ'1'                                                          FCM101A
+     C           FCM101    OREQ 'Y'                                                          FCM101A
+     C           *IN06     ANDEQ'1'                                                          FCM101A
+     C           CNSG      ANDNE*BLANK                                                       FCM101A
+      *                                                                                       FCM101
+      ** Use contractual Spread Rate from history on recalc                                   FCM101
+      *                                                                                       FCM101
+     C           *IN06     IFEQ '1'                                                           FCM101
+     C                     Z-ADDWCNSP     SWCNSP 117                                          FCM101
+     C                     Z-ADDCNSP      WCNSP                                               FCM101
+     C                     ENDIF                                                              FCM101
+      *                                                                                       FCM101
+     C                     EXSR XXNSRT                                                        FCM101
+      *                                                                                       FCM101
+     C           NSRTX     IFNE RTSP                                                          FCM101
+     C                     Z-ADDNSRTX     RTSP                                                FCM101
+     C                     ENDIF                                                              FCM101
+      *                                                                                       FCM101
+     C           *IN06     IFEQ '1'                                                           FCM101
+     C                     Z-ADDSWCNSP    WCNSP                                               FCM101
+     C                     ENDIF                                                              FCM101
+     C                     ELSE                                                               FCM101
+      *                                                                                       FCM101
      C                     EXSR SRNSRT                                                        CRE073
+     C                     ENDIF                                                              FCM101
+      *                                                                                       FCM101
 2181 C                     EXSR QNTRAT
      C                     ENDIF                                          CAC001
       *                                                                   CLE003
@@ -8332,7 +8415,17 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
 2294 C** RELOAD BASE RATE AND RE-CALC EFFECTIVE INTEREST RATE
 2295 C*
 2296 C                     Z-ADDBRTE      BASERT
+      *                                                                                       FCM101
+     C           FCM101    IFEQ 'Y'                                                           FCM101
+     C           *IN12     ANDEQ'1'                                                          FCM101A
+     C           FCM101    OREQ 'Y'                                                          FCM101A
+     C           *IN06     ANDEQ'1'                                                          FCM101A
+     C           CNSG      ANDNE*BLANK                                                       FCM101A
+     C                     EXSR XXNSRT                                                        FCM101
+     C                     ELSE                                                               FCM101
      C                     EXSR SRNSRT                                                        CRE073
+     C                     ENDIF                                                              FCM101
+      *                                                                                       FCM101
 2297 C                     EXSR QNTRAT
       *                                                                   CLE003
      C           CLE003    IFEQ 'Y'                                       CLE003
@@ -8387,6 +8480,13 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
 2301 C** OUTPUT RECS.TO S/HIUPD AND S/ACTN5
 2302 C*
 2303 C   06                SETON                     42
+      *                                                                                       FCM101
+     C           FCM101    IFEQ 'Y'                                                           FCM101
+     C           *IN06     ANDEQ'1'                                                           FCM101
+     C           SWLN      ANDEQLNRF                                                          FCM101
+     C           WCNSP     ANDNECNSP                                                          FCM101
+     C                     Z-ADDWCNSP     CNSP                                                FCM101
+     C                     ENDIF                                                              FCM101
 2304 C*
 2305 C** FOR ACTN4 PROCESSING,SETUP FIELDS FOR O/P TO HIUPD,INTST OR CUTX1
 2306 C*
@@ -8632,7 +8732,17 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
 2408 C*
 2409 C                     Z-ADDBRTT      BASECD
 2410 C                     Z-ADDBRTE      BASERT
+      *                                                                                       FCM101
+     C           FCM101    IFEQ 'Y'                                                           FCM101
+     C           *IN12     ANDEQ'1'                                                          FCM101A
+     C           FCM101    OREQ 'Y'                                                          FCM101A
+     C           *IN06     ANDEQ'1'                                                          FCM101A
+     C           CNSG      ANDNE*BLANK                                                       FCM101A
+     C                     EXSR XXNSRT                                                        FCM101
+     C                     ELSE                                                               FCM101
      C                     EXSR SRNSRT                                                        CRE073
+     C                     ENDIF                                                              FCM101
+      *                                                                                       FCM101
 2411 C                     EXSR QNTRAT
       *                                                                   CLE003
      C           CLE003    IFEQ 'Y'                                       CLE003
@@ -8689,6 +8799,12 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
 2415 C** OUTPUT RECS.TO S/HIUPD AND S/ACTN5
 2416 C*
 2417 C   06                SETON                     42
+     C           FCM101    IFEQ 'Y'                                                           FCM101
+     C           *IN06     ANDEQ'1'                                                           FCM101
+     C           SWLN      ANDEQLNRF                                                          FCM101
+     C           WCNSP     ANDNECNSP                                                          FCM101
+     C                     Z-ADDWCNSP     CNSP                                                FCM101
+     C                     ENDIF                                                              FCM101
 2418 C*
 2419 C** FOR ACTN4 PROCESSING,SETUP FIELDS FOR O/P TO HIUPD,INTST OR CUTX1
 2420 C*
@@ -8979,7 +9095,27 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
      C           *IN85     ANDEQ'1'                                       188115
      C           @RLOAD    OREQ 'Y'                                       188115
      C           *IN85     ANDEQ'1'                                       188115
+      *                                                                                       FCM101
+     C           FCM101    IFEQ 'Y'                                                           FCM101
+     C           CNSG      ANDNE*BLANK                                                       FCM101A
+      *                                                                                       FCM101
+      ** Use Contractual Spread from history on recalc of spread rate                         FCM101
+      *                                                                                       FCM101
+     C           *IN06     IFEQ '1'                                                           FCM101
+     C                     Z-ADDWCNSP     SWCNSP                                              FCM101
+     C                     Z-ADDCNSP      WCNSP                                               FCM101
+     C                     ENDIF                                                              FCM101
+      *                                                                                       FCM101
+     C                     EXSR XXNSRT                                                        FCM101
+      *                                                                                       FCM101
+     C           *IN06     IFEQ '1'                                                           FCM101
+     C                     Z-ADDSWCNSP    WCNSP                                               FCM101
+     C                     ENDIF                                                              FCM101
+      *                                                                                       FCM101
+     C                     ELSE                                                               FCM101
      C                     EXSR SRNSRT                                                        CRE073
+     C                     ENDIF                                                              FCM101
+      *                                                                                       FCM101
      C                     EXSR QNTRAT                                    188115
      C                     ENDIF                                          188115
       *                                                                                       205583
@@ -9014,7 +9150,27 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
      C           SPRIND    IFEQ *BLANK                                    128059
      C                     MOVE 'A'       SPRIND                          128059
      C                     ENDIF                                          128059
+      *                                                                                       FCM101
+     C           FCM101    IFEQ 'Y'                                                           FCM101
+     C           *IN12     ANDEQ'1'                                                          FCM101A
+     C           FCM101    OREQ 'Y'                                                          FCM101A
+     C           *IN06     ANDEQ'1'                                                          FCM101A
+     C           CNSG      ANDNE*BLANK                                                       FCM101A
+      *                                                                                       FCM101
+     C           *IN06     IFEQ '1'                                                           FCM101
+     C                     Z-ADDWCNSP     SWCNSP                                              FCM101
+     C                     Z-ADDCNSP      WCNSP                                               FCM101
+     C                     ENDIF                                                              FCM101
+      *                                                                                       FCM101
+     C                     EXSR XXNSRT                                                        FCM101
+     C           *IN06     IFEQ '1'                                                           FCM101
+     C                     Z-ADDSWCNSP    WCNSP                                               FCM101
+     C                     ENDIF                                                              FCM101
+      *                                                                                       FCM101
+     C                     ELSE                                                               FCM101
      C                     EXSR SRNSRT                                                        CRE073
+     C                     ENDIF                                                              FCM101
+      *                                                                                       FCM101
      C                     EXSR QNTRAT                                    114542
      C                     ENDIF                                          CLE003
       *                                                                   CLE003
@@ -9045,7 +9201,17 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
 2518 C                     MOVE SPIN      SPRIND
      C                     ENDIF                                                              205583
 2519 C                     Z-ADDCALC      ICALCB
+      *                                                                                       FCM101
+     C           FCM101    IFEQ 'Y'                                                           FCM101
+     C           *IN12     ANDEQ'1'                                                          FCM101A
+     C           FCM101    OREQ 'Y'                                                          FCM101A
+     C           *IN06     ANDEQ'1'                                                          FCM101A
+     C           CNSG      ANDNE*BLANK                                                       FCM101A
+     C                     EXSR XXNSRT                                                        FCM101
+     C                     ELSE                                                               FCM101
      C                     EXSR SRNSRT                                                        CRE073
+     C                     ENDIF                                                              FCM101
+      *                                                                                       FCM101
 2520 C                     EXSR QNTRAT
 2521 C*
 2522 C           OUTROR    TAG                             ** OUTROR TAG *
@@ -10442,7 +10608,11 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
 2864 C*
 2865 C                     EXSR OUTINH
       *                                                                                    AR1009681
+     C           FCM101    IFEQ 'Y'                                                           FCM101
+     C                     EXSR XXNSRT                                                        FCM101
+     C                     ELSE                                                               FCM101
      C                     EXSR SRNSRT                                                     AR1009681
+     C                     ENDIF                                                              FCM101
 2866 C*
 2867 C** PERFORM INTEREST CALCS. IF NECESSARY
 2868 C*
@@ -13371,6 +13541,99 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
      C                     ENDIF                                                              CRE073
      C                     ENDIF                                                              CRE073
      C                     ENDSR                                                              CRE073
+      *****************************************************************                       FCM101
+      *                                                               *                       FCM101
+      *  XXNSRT - Calculate new spread rate based on FCM101 FLOOR     *                       FCM101
+      *           Rates on LE module                                  *                       FCM101
+      *                                                               *                       FCM101
+      *****************************************************************                       FCM101
+      *                                                                                       FCM101
+     C           XXNSRT    BEGSR                                                              FCM101
+      *                                                                                       FCM101
+     C           PTYP      IFEQ 61                                                            FCM101
+     C           PTYP      OREQ 62                                                            FCM101
+     C           PTYP      OREQ 64                                                            FCM101
+     C           PTYP      OREQ 66                                                            FCM101
+     C           PTYP      OREQ 68                                                            FCM101
+     C           PTYP      OREQ 69                                                            FCM101
+     C           PTYP      OREQ 70                                                            FCM101
+     C           PTYP      OREQ 71                                                            FCM101
+     C           PTYP      OREQ 72                                                            FCM101
+      *                                                                                       FCM101
+     C           SWLN      IFNE LNRF                                                          FCM101
+     C                     Z-ADD*ZEROS    WCNSP  117                                          FCM101
+     C                     MOVEL*BLANKS   WCNSG   1                                           FCM101
+     C                     ENDIF                                                              FCM101
+      *                                                                                       FCM101
+     C           QKEY      CHAINCLOAMQL0             16                                       FCM101
+     C           *IN16     IFEQ '0'                                                           FCM101
+     C           AMCNSP    IFNE 0                                                             FCM101
+     C                     Z-ADDAMCNSP    WCNSP                                               FCM101
+     C                     MOVELAMCNSG    WCNSG                                               FCM101
+     C                     MOVELLNRF      SWLN                                                FCM101
+     C                     Z-ADDAMCNSP    CNSP                                                FCM101
+     C                     MOVELAMCNSG    CNSG                                                FCM101
+     C                     ENDIF                                                              FCM101
+     C                     ENDIF                                                              FCM101
+      *                                                                                       FCM101
+     C           WCNSP     IFEQ 0                                                             FCM101
+     C                     Z-ADDCNSP      WCNSP                                               FCM101
+     C                     MOVELCNSG      WCNSG                                               FCM101
+     C                     MOVELLNRF      SWLN                                                FCM101
+     C                     ENDIF                                                              FCM101
+      *                                                                                       FCM101
+      ** Override contractual spread for Rollover                                             FCM101
+      *                                                                                       FCM101
+     C           AMTP      IFEQ 'RO'                                                          FCM101
+     C           NNSP      IFNE *ZERO                                                         FCM101
+     C           NNSG      ANDNE*BLANK                                                        FCM101
+     C                     Z-ADDNNSP      WCNSP                                               FCM101
+     C                     MOVELNNSG      WCNSG                                               FCM101
+     C                     Z-ADDNNSP      CNSP                                                FCM101
+     C                     MOVELNNSG      CNSG                                                FCM101
+     C                     ELSE                                                               FCM101
+     C                     Z-ADDCNSP      WCNSP                                               FCM101
+     C                     MOVELCNSG      WCNSG                                               FCM101
+     C                     ENDIF                                                              FCM101
+     C                     ENDIF                                                              FCM101
+      *                                                                                       FCM101
+     C           BASERT    IFNE 0                                                             FCM101
+      *                                                                                       FCM101
+     C                     MOVEL'XXCALCSP'PROG   10                                           FCM101
+     C                     MOVE 'RT'      PROG                                                FCM101
+     C                     CALL PROG                                                          FCM101
+     C                     PARM *BLANKS   @RTCD                                               FCM101
+     C                     PARM           BASERT                                              FCM101
+     C                     PARM           BASFLR 117                                          FCM101
+     C                     PARM           BASFSG  1                                           FCM101
+     C                     PARM           AIRFLR 117                                          FCM101
+     C                     PARM           AIRFSG  1                                           FCM101
+     C                     PARM           WCNSP                                               FCM101
+     C                     PARM           WCNSG                                               FCM101
+     C                     PARM *ZERO     NSRTX  117                                          FCM101
+     C                     PARM *ZERO     FRATE  117                                          FCM101
+     C                     PARM *BLANKS   NSPRSG  1                                           FCM101
+      *                                                                                       FCM101
+     C                     Z-ADDNSRTX     SPREAD                                              FCM101
+     C                     MOVE WCNSG     SPRIND                                              FCM101
+      *                                                                                       FCM101
+     C           NSPRSG    IFNE ' '                                                           FCM101
+     C                     MOVE NSPRSG    SPRIND                                              FCM101
+     C                     ENDIF                                                              FCM101
+      *                                                                                       FCM101
+     C           SPREAD    IFLT 0                                                             FCM101
+     C                     MULT -1        SPREAD                                              FCM101
+     C           SPRIND    IFEQ 'A'                                                           FCM101
+     C                     MOVE 'S'       SPRIND                                              FCM101
+     C                     ELSE                                                               FCM101
+     C                     MOVE 'A'       SPRIND                                              FCM101
+     C                     ENDIF                                                              FCM101
+     C                     ENDIF                                                              FCM101
+      *                                                                                       FCM101
+     C                     ENDIF                                                              FCM101
+     C                     ENDIF                                                              FCM101
+      *                                                                                       FCM101
+     C                     ENDSR                                                              FCM101
      C********************************************************************                    CAS009
 3013 C*
 3014 C** INIT SUBROUTINE - FIRST CYCLE CALCS
@@ -13873,6 +14136,18 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
      C                     GOTO INITEN                                                        CRE073
      C                     ENDIF                                                              CRE073
      C                     ENDIF                                                              CRE073
+      *                                                                                       FCM101
+      **  Access SAR details file to see if FCM101 is installed                               FCM101
+      *                                                                                       FCM101
+     C                     MOVE 'N'       FCM101                                              FCM101
+     C                     CALL 'AOSARDR0'                                                    FCM101
+     C                     PARM '       ' @RTCD                                               FCM101
+     C                     PARM '*VERIFY' @OPTN                                               FCM101
+     C                     PARM 'FCM101'  @SARD                                               FCM101
+      *                                                                                       FCM101
+     C           @RTCD     IFEQ *BLANK                                                        FCM101
+     C                     MOVE 'Y'       FCM101  1                                           FCM101
+     C                     ENDIF                                                              FCM101
       *                                                                                       CLE134
       **  Access SAR details file to see if CLE134 is installed                               CLE134
       *                                                                                       CLE134

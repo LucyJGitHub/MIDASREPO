@@ -16,8 +16,9 @@
       *                                                               *
       *  (C) COPYRIGHT Finastra International Limited                 *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054978           Date 23Dec19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 MD031034           Date 25Nov14               *
       *                 CER070             Date 19Aug14               *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054978 - Add Start and End Date of Capitalisation Period   *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -59,6 +61,7 @@
       **Joinfile for alternative accounts
  
      FSDCSINL7  IF   E           K DISK    USROPN
+     FREHISLS   IF   E           K DISK    PREFIX(R)                                        MD054978
  
      F/COPY WNCPYSRC,CG7020FFP
  
@@ -67,8 +70,11 @@
  
       **  ##GRP = Group/RDE Number             ##RDEA = RDE + Attributes
       *
-     D ##GRP           S             10    DIM(94) CTDATA PERRCD(1)
-     D ##RDEA          S             22    DIM(94) ALT(##GRP)
+     D*##GRP****       S             10    DIM(94) CTDATA PERRCD(1)                         MD054978
+     D*##RDEA***       S             22    DIM(94) ALT(##GRP)                               MD054978
+      *                                                                                     MD054978
+     D ##GRP           S             10    DIM(98) CTDATA PERRCD(1)                         MD054978
+     D ##RDEA          S             22    DIM(98) ALT(##GRP)                               MD054978
       *
      D/COPY ZSRSRC,ZPOWERZ1IL
       *
@@ -102,8 +108,16 @@
      D Wx1             S              3P 0
      D Wx2             S              3P 0
      D Wx3             S              3P 0
+      ** Account details
+     D RBRCA           S              3A                                                    MD054978
+     D RCNUM           S              6A                                                    MD054978
+     D RCCY            S              3A                                                    MD054978
+     D RACOD           S             10P 0                                                  MD054978
+     D RACSQ           S              2P 0                                                  MD054978
+     D RDCPV           S              5P 0                                                  MD054978
  
       ** Parameter fields
+     D DATOPN          S              5A                                                    MD054978
      D PAction8        S              8A
      D PCustNumChr6    S              6A
      D PItmRef         S              8A
@@ -2586,6 +2600,37 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
+      *                                                                                     MD054978
+      **  Set up Start Date/Period From                                                     MD054978
+      *   Key list for Start of Debit Cap Date                                              MD054978
+      *                                                                                     MD054978
+     C                   MOVE      FBRCA         KBRCA                                      MD054978
+     C                   MOVE      FCNUM         KCNUM                                      MD054978
+     C                   MOVE      FCCY          KCCY                                       MD054978
+     C                   MOVE      FACOD         KACOD                                      MD054978
+     C                   MOVE      FACSQ         KACSQ                                      MD054978
+     C                   MOVE      DACO          DATOPN                                     MD054978
+     C                   IF        BMLDAI <> 'Y'                                            MD054978
+     C     LDID          ADD       1             KHISD                                      MD054978
+     C                   ELSE                                                               MD054978
+     C                   Z-ADD     LDID          KHISD                                      MD054978
+     C                   ENDIF                                                              MD054978
+      *                                                                                     MD054978
+      **  Search for the previous record in REHISPS and get HISD.                           MD054978
+      *  If no record exist, use Date Account Opened                                        MD054978
+     C     DATKEY        SETLL     REHISLS                                                  MD054978
+     C     DATACK        READPE    REHISLS                                98                MD054978
+     C                   IF        *IN98 = *ON                                              MD054978
+     C                   MOVEL     DATOPN        ##D(12)                                    MD054978
+     C                   ELSE                                                               MD054978
+     C     *IN98         DOWEQ     *OFF                                                     MD054978
+     C     RSDICI        ANDNE     'Y'                                                      MD054978
+     C     DATACK        READPE    REHISLS                                98                MD054978
+     C                   ENDDO                                                              MD054978
+     C                   MOVEL     RHISD         ##D(12)                                    MD054978
+     C                   ENDIF                                                              MD054978
+      ** Set up End Date/Period To                                                          MD054978
+     C                   MOVEL     LDID          ##D(13)                                    MD054978
       *
      C*-------------------------------------------------------
      C**  Accumulate RDE's and associated data and output to
@@ -2766,6 +2811,37 @@
       **  Set up CR Interest Amount
      C                   MOVEL     FCRIA         ##D(7)
      C                   MOVE      F6NBDP        ##D(7)
+      *                                                                                     MD054978
+      **  Set up Start Date/Period From                                                     MD054978
+      *   Key list for Start of Credit Cap Date                                             MD054978
+      *                                                                                     MD054978
+     C                   MOVE      FBRCA         KBRCA                                      MD054978
+     C                   MOVE      FCNUM         KCNUM                                      MD054978
+     C                   MOVE      FCCY          KCCY                                       MD054978
+     C                   MOVE      FACOD         KACOD                                      MD054978
+     C                   MOVE      FACSQ         KACSQ                                      MD054978
+     C                   MOVE      DACO          DATOPN                                     MD054978
+     C                   IF        BMLDAI <> 'Y'                                            MD054978
+     C     LCID          ADD       1             KHISD                                      MD054978
+     C                   ELSE                                                               MD054978
+     C                   Z-ADD     LCID          KHISD                                      MD054978
+     C                   ENDIF                                                              MD054978
+      *                                                                                     MD054978
+      **  Search for the previous record in REHISPS and get HISD.                           MD054978
+      *  If no record exist, use Date Account Opened                                        MD054978
+     C     DATKEY        SETLL     REHISLS                                                  MD054978
+     C     DATACK        READPE    REHISLS                                98                MD054978
+     C                   IF        *IN98 = *ON                                              MD054978
+     C                   MOVEL     DATOPN        ##D(8)                                     MD054978
+     C                   ELSE                                                               MD054978
+     C     *IN98         DOWEQ     *OFF                                                     MD054978
+     C     RSCICI        ANDNE     'Y'                                                      MD054978
+     C     DATACK        READPE    REHISLS                                98                MD054978
+     C                   ENDDO                                                              MD054978
+     C                   MOVEL     RHISD         ##D(8)                                     MD054978
+     C                   ENDIF                                                              MD054978
+      ** Set up End Date/Period To                                                          MD054978
+     C                   MOVEL     LCID          ##D(9)                                     MD054978
       *
       **  Accumulate RDE's and associated data and output to
       **  PF/CGUDTAPD.
@@ -4009,6 +4085,23 @@
      C                   EXSR      SRERR
      C                   ENDIF
      C*
+     C** Retail ICD                                                                         MD054978
+     C*                                                                                     MD054978
+     C                   CALL      'AORETLR0'                                               MD054978
+     C                   PARM      '*MSG   '     ##RTCD                                     MD054978
+     C                   PARM      '*FIRST '     ##OPTN                                     MD054978
+     C     SDRETL        PARM      SDRETL        DSFDY                                      MD054978
+      *                                                                                     MD054978
+      **  Database error                                                                    MD054978
+     C     ##RTCD        IFNE      *BLANK                                                   MD054978
+     C                   MOVEL     'AORETLR0'    W0FILE                                     MD054978
+     C                   MOVEL     '*CALL'       W0KEY                                      MD054978
+     C                   Z-ADD     35            W0ERNB                                     MD054978
+     C                   MOVEL     'MEM5003'     W0MSGD                                     MD054978
+     C                   MOVEL     'MIDAS  '     W0MSGF                                     MD054978
+     C                   EXSR      SRERR                                                    MD054978
+     C                   ENDIF                                                              MD054978
+      *                                                                                     MD054978
      C*===========================================================
      C* EURO - CHECK FOR SAR CEU013
      C*===========================================================
@@ -4195,6 +4288,26 @@
      C                   KFLD                    AFACSQ
      C                   KFLD                    AKEYS1
       *
+     C     *LIKE         DEFINE    RBRCA         KBRCA                                      MD054978
+     C     *LIKE         DEFINE    RCNUM         KCNUM                                      MD054978
+     C     *LIKE         DEFINE    RCCY          KCCY                                       MD054978
+     C     *LIKE         DEFINE    RACOD         KACOD                                      MD054978
+     C     *LIKE         DEFINE    RACSQ         KACSQ                                      MD054978
+     C     *LIKE         DEFINE    RHISD         KHISD                                      MD054978
+      *                                                                                     MD054978
+     C     DATKEY        KLIST                                                              MD054978
+     C                   KFLD                    KBRCA                                      MD054978
+     C                   KFLD                    KCNUM                                      MD054978
+     C                   KFLD                    KCCY                                       MD054978
+     C                   KFLD                    KACOD                                      MD054978
+     C                   KFLD                    KACSQ                                      MD054978
+     C                   KFLD                    KHISD                                      MD054978
+     C     DATACK        KLIST                                                              MD054978
+     C                   KFLD                    KBRCA                                      MD054978
+     C                   KFLD                    KCNUM                                      MD054978
+     C                   KFLD                    KCCY                                       MD054978
+     C                   KFLD                    KACOD                                      MD054978
+     C                   KFLD                    KACSQ                                      MD054978
       ** Initialise XML increment
       *
      C                   EXSR      INIXML
@@ -4274,6 +4387,8 @@ Z92DA30008 ZZEUR1     AmountL
 Z92DA30009 EQUIV_CCY
 Z92DA30010 EQUIV_CCYD
 Z92DA30011 ZZEQRAT    AmountL
+Z92DA30012 ZZFDCPD    Date
+Z92DA30013 ZZFDCPV    Date
 Z92DA40001 ZZFAODR    Rate  L7
 Z92DA40002 ZZFAODV    Date
 Z92DA40003 ZZFAOTD    Date
@@ -4286,6 +4401,8 @@ Z92DA50004 ZZFCRIV    Date
 Z92DA50005 ZZFCRTD    Date
 Z92DA50006 ZZFCRIN    AmountL0
 Z92DA50007 ZZFCRIA    AmountL
+Z92DA50008 ZZFCCPD    Date
+Z92DA50009 ZZFCCPV    Date
 Z92DA60001 ZZFTDRI    AmountL
 Z92DA60002 ZZFTCRI    AmountL
 Z92DA60003 ZZFTNTI    AmountL

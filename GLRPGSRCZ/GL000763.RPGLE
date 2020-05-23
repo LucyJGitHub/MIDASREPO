@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD054905           Date 04Dec19               *
-      *  Prev Amend No. MD051055           Date 31Aug16               *
+      *  Last Amend No. MD054940           Date 13Feb20               *
+      *  Prev Amend No. MD055078           Date 18Feb20               *
+      *                 MD054905           Date 04Dec19               *
+      *                 MD051055           Date 31Aug16               *
       *                 MD040953           Date 31Aug16               *
       *                 MD040841           Date 26Aug16               *
       *                 MD040832           Date 26Aug16               *
@@ -20,6 +22,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054940 - CRS Issue: Controlling Person Type                *
+      *  MD055078 - Information on non-account holders is missing     * 
       *  MD054905 - Change Message Ref Id format                      *
       *  MD051055 - Incorrect report when multiple account selected   *
       *  MD040953 - Same accounts excluded twice produced 2 same      *
@@ -60,6 +64,8 @@
      F                                     RENAME(GLCRMDD0:GLCRMD08)
      FGLCRMDLB  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(GLCRMDD0:GLCRMD0B)
+     FGLCRMDLD  IF   E           K DISK    INFSR(*PSSR)                                     MD054940
+     F                                     RENAME(GLCRMDD0:GLCRMD0D)                        MD054940
 
       ** Midas GL Excluded Account Records File
      FGLCRMIL1  IF   E           K DISK    INFSR(*PSSR)
@@ -161,6 +167,8 @@
      D KTopElm         S             40A
      D KTopElmName     S             40A
      D KMGSEQU         S              5  0
+     D KTopElmN4       S             40A                                                    MD054940
+     D WMGSEQU         S              5  0                                                  MD054940
 
      D OIx             S              2S 0 INZ(0)
      D AIx             S              2S 0 INZ(0)
@@ -975,6 +983,7 @@
      C                                  MGTPMT = 'Organisation')
      C                   EVAL      TxCNNH = MGDATA
      C                   EVAL      MxType = MGDAT2
+     C                   EVAL      WMGSEQU = MGSEQU                                         MD054940
 
      C                   WHEN      MGELMT = 'AccountNumber'
      C                             AND (MGTPMT = 'Individual' OR
@@ -987,6 +996,7 @@
      C                   EVAL      MxCUST = MGCUST
      C                   EVAL      AcnoEnd = %TRIM(MGDATA)
      C                   EVAL      MsgDtaKey = %TRIM(MGDATA)
+     C                   EVAL      WMGSEQU = MGSEQU                                         MD054940
 
      C                   WHEN      MGELMT = 'AccountBalance'
      C                             AND MGTPMT = 'AccountBalance'
@@ -1010,12 +1020,14 @@
      C                   ENDIF
 
      C                   WHEN      MGELMT = 'FirstName' AND
+     C                             WMGSEQU = MGSEQU AND                                     MD054940
      C                             MGTPMT = 'Individual' OR
      C                             MGELMT = 'FirstName' AND
      C                             MGTPMT = 'Name'
      C                   EVAL      D2FNME = MGDATA
 
      C                   WHEN      MGELMT = 'LastName' AND
+     C                             WMGSEQU = MGSEQU AND                                     MD054940
      C                             MGTPMT = 'Individual' OR
      C                             MGELMT = 'LastName' AND
      C                             MGTPMT = 'Name'
@@ -1030,6 +1042,7 @@
      C                             MGTPMT = 'Organisation' OR
      C                             MGELMT = 'AddressFree' AND
      C                             MGTPMT = 'Individual'
+     C                             AND WMGSEQU = MGSEQU                                     MD054940
      C                   EVAL      FinalAddress = %TRIM(MGDATA)
      C                   EVAL      WSlash = %SCAN('/':FinalAddress)
      C                   EVAL      WSlash = WSlash + 1
@@ -1049,6 +1062,7 @@
      C                             MGTPMT = 'Organisation' OR
      C                             MGELMT = 'ResCountryCode' AND
      C                             MGTPMT = 'Individual'
+     C                             AND WMGSEQU = MGSEQU                                     MD054940
      C                   IF        WxDCOT = *BLANKS
      C                   EVAL      WxDCOT = %TRIM(MGDATA) + WxDCOT
      C                   ELSE
@@ -1059,6 +1073,7 @@
      C                             MGTPMT = 'Organisation' OR
      C                             MGELMT = 'TIN' AND
      C                             MGTPMT = 'Individual'
+     C                             AND WMGSEQU = MGSEQU                                     MD054940
      C                   IF        WxDTIN = *BLANKS
      C                   EVAL      WTN = *ZEROS
      C                   EVAL      WTN = WTN + 200
@@ -1072,12 +1087,14 @@
 
      C                   WHEN      MGELMT = 'BirthDate' AND
      C                             MGTPMT = 'Individual'
+     C                             AND WMGSEQU = MGSEQU                                     MD054940
      C                   EVAL      D2BRTD = %SUBST(MGDATA:1:4)
      C                                      + '-' + %SUBST(MGDATA:5:2)
      C                                      + '-' + %SUBST(MGDATA:7:2)
 
      C                   WHEN      MGELMT = 'City' AND
      C                             MGTPMT = 'Individual'
+     C                             AND WMGSEQU = MGSEQU                                     MD054940
      C                   EVAL      D2CITY = MGDATA
 
      C                   WHEN      MGELMT = 'CountryCode' AND
@@ -1149,11 +1166,12 @@
      C                   EVAL      D2TINN = WsTINN
      C                   EVAL      D2TNIB = WsTNIB
 
-     C                   ELSE
+     C                   ENDIF                                                              MD054940
+     C**********         ELSE                                                               MD054940
      C                   EVAL      CtrNum2 = CtrNum2 + 2
      C                   EVAL      TINNum2 = TINNum2 + 25
      C
-     C                   ENDIF
+     C**********         ENDIF                                                              MD054940
 
      C                   ENDDO
 
@@ -1412,15 +1430,42 @@
      C                   EVAL      DsAcEnd = %TRIM(MGDATA)
      C                   EVAL      DsDataKey = %TRIM(MGDATA)
 
+     C                   WHEN      MGELMT = 'CtrlgPersonType'                               MD054940
+     C                   EVAL      D5CTYP = MGDATA                                          MD054940
+                                                                                            MD054940
      C                   WHEN      MGELMT = 'ControllingPerson'
      C                   EVAL      D5COPR = MGDATA
 
-     C                   WHEN      MGELMT = 'Name'
+     C                   WHEN      MGELMT = 'Individual'                                    MD054940
+     C                   EVAL      KTopElmN4 = 'Individual'                                 MD054940
+     C                   EVAL      KMGSEQU = MGSEQU                                         MD054940
+                                                                                            MD054940
+     C     KAcctN4       SETLL     GLCRMDLD                                                 MD054940
+     C     KAcctN4       READE     GLCRMDLD                                                 MD054940
+     C                   DOW       NOT %EOF(GLCRMDLD)                                       MD054940
+     C                   IF        MGELMT = 'AddressFree'                                   MD054940
+     C                   EVAL      FinalAddress = %TRIM(MGDATA)                             MD054940
+     C                   EVAL      D5ADD1 = FinalAddress                                    MD054940
+     C                   ENDIF                                                              MD054940
+     C                   IF        MGELMT = 'BirthDate'                                     MD054940
+     C                   EVAL      D5BRTD = %SUBST(MGDATA:1:4)                              MD054940
+     C                                      + '-' + %SUBST(MGDATA:5:2)                      MD054940
+     C                                      + '-' + %SUBST(MGDATA:7:2)                      MD054940
+     C                   ENDIF                                                              MD054940
+                                                                                            MD054940
+     C                   IF        MGELMT = 'City'                                          MD054940
+     C                   EVAL      D5CITY = MGDATA                                          MD054940
+     C                   ENDIF                                                              MD054940
+     C**********         WHEN      MGELMT = 'Name'                                          MD054940
+     C                   IF        MGELMT = 'Name'                                          MD054940
+     C                             AND MGSEQU = KMGSEQU                                     MD054940
+     C                   EVAL      D5FNME = *BLANKS                                         MD055078
+     C                   EVAL      D5LNME = *BLANKS                                         MD055078
      C                   EVAL      D5FNME = MGDATA
      C                   EVAL      KTopElmName = 'Name'
      C                   EVAL      KMGSEQU = MGSEQU
-     C                   EVAL      D5FNME = *BLANKS
-     C                   EVAL      D5LNME = *BLANKS
+     C**********         EVAL      D5FNME = *BLANKS                                         MD055078
+     C**********         EVAL      D5LNME = *BLANKS                                         MD055078
 
      C     KAcctN3       SETLL     GLCRMDLB
      C                   READ      GLCRMDLB
@@ -1439,21 +1484,21 @@
      C                   READ      GLCRMDLB
 
      C                   ENDDO
-
-
-     C                   WHEN      MGELMT = 'AddressFree'
-     C                   EVAL      FinalAddress = %TRIM(MGDATA)
-     C                   EVAL      D5ADD1 = FinalAddress
-
-     C                   WHEN      MGELMT = 'BirthDate'
-     C                   EVAL      D5BRTD = %SUBST(MGDATA:1:4)
-     C                                      + '-' + %SUBST(MGDATA:5:2)
-     C                                      + '-' + %SUBST(MGDATA:7:2)
-
-     C                   WHEN      MGELMT = 'City'
-     C                   EVAL      D5CITY = MGDATA
-
-     C                   WHEN      MGELMT = 'CountryCode'
+     C                   ENDIF                                                              MD054940
+     C**********         WHEN      MGELMT = 'AddressFree'                                   MD054940
+     C**********         EVAL      FinalAddress = %TRIM(MGDATA)                             MD054940
+     C**********         EVAL      D5ADD1 = FinalAddress                                    MD054940
+      **********                                                                            MD054940
+     C**********         WHEN      MGELMT = 'BirthDate'                                     MD054940
+     C**********         EVAL      D5BRTD = %SUBST(MGDATA:1:4)                              MD054940
+     C**********                            + '-' + %SUBST(MGDATA:5:2)                      MD054940
+     C**********                            + '-' + %SUBST(MGDATA:7:2)                      MD054940
+      **********                                                                            MD054940
+     C**********         WHEN      MGELMT = 'City'                                          MD054940
+     C**********         EVAL      D5CITY = MGDATA                                          MD054940
+                                                                                            MD054940
+     C**********         WHEN      MGELMT = 'CountryCode'                                   MD054940
+     C                   IF        MGELMT = 'CountryCode'                                   MD054940
      C                   EVAL      D5COCO = MGDATA
      C                   EVAL      KTopElmName = 'CountryInfo'
      C                   EVAL      KMGSEQU = MGSEQU
@@ -1470,6 +1515,9 @@
      C                   READ      GLCRMDLB
 
      C                   ENDDO
+     C                   ENDIF                                                              MD054940
+     C     KAcctN4       READE     GLCRMDLD                                                 MD054940
+     C                   ENDDO                                                              MD054940
 
      C                   ENDSL
 
@@ -1558,8 +1606,17 @@
 
      C                   WHEN      MGELMT = 'ControllingPerson'
      C                   EVAL      WxCOPR = MGDATA
+                                                                                            MD054940
+     C                   WHEN      MGELMT = 'Individual'                                    MD054940
+     C                             AND D5COPR = WxCOPR                                      MD054940
+     C                   EVAL      KMGSEQU = MGSEQU                                         MD054940
+     C                   EVAL      KTopElmN4 = 'Individual'                                 MD054940
 
-     C                   WHEN      MGELMT = 'ResCountryCode'
+     C     KAcctN4       SETLL     GLCRMDLD                                                 MD054940
+     C     KAcctN4       READE     GLCRMDLD                                                 MD054940
+     C                   DOW       NOT %EOF(GLCRMDLD)                                       MD054940
+     C**********         WHEN      MGELMT = 'ResCountryCode'                                MD054940
+     C                   IF        MGELMT = 'ResCountryCode'                                MD054940
      C                   IF        D5COPR = WxCOPR
      C                   IF        WcDCOT = *BLANKS
      C                   EVAL      WcDCOT = %TRIM(MGDATA) + WcDCOT
@@ -1567,8 +1624,10 @@
      C                   EVAL      WcDCOT = %TRIM(WcDCOT) + %TRIM(MGDATA)
      C                   ENDIF
      C                   ENDIF
+     C                   ENDIF                                                              MD054940
 
-     C                   WHEN      MGELMT = 'TIN'
+     C**********         WHEN      MGELMT = 'TIN'                                           MD054940
+     C                   IF        MGELMT = 'TIN'                                           MD054940
      C                             OR MGELMT = 'IN'
      C                   IF        D5COPR = WxCOPR
      C                   IF        WcDTIN = *BLANKS
@@ -1582,8 +1641,10 @@
      C                   EVAL      WTN = WTN + 200
      C                   ENDIF
      C                   ENDIF
+     C                   ENDIF                                                              MD054940
 
-     C                   WHEN      MGELMT = 'AddressFree'
+     C**********         WHEN      MGELMT = 'AddressFree'                                   MD054940
+     C                   IF        MGELMT = 'AddressFree'                                   MD054940
      C                   EVAL      FinalAddress = %TRIM(MGDATA)
      C                   EVAL      FinalAddress = %TRIM(MGDATA)
      C                   EVAL      WSlash = %SCAN('/':FinalAddress)
@@ -1594,12 +1655,17 @@
      C                   EVAL      WTrim = WTrim + 1
      C                   EVAL      D5ADC2 = %SUBST(FinalAddress:WTrim:60)
      C                   EVAL      D5ADC2 = %TRIM(D5ADC2)
+     C                   ENDIF                                                              MD054940
 
-     C                   WHEN      MGELMT = 'CountryInfo'
+     C**********         WHEN      MGELMT = 'CountryInfo'                                   MD054940
+     C                   IF        MGELMT = 'CountryInfo'                                   MD054940
      C                   IF        D5COPR = WxCOPR
      C                   GOTO      RGACPT
      C                   ENDIF
+     C                   ENDIF                                                              MD054940
 
+     C     KAcctN4       READE     GLCRMDLD                                                 MD054940
+     C                   ENDDO                                                              MD054940
      C                   ENDSL
 
      C                   READ      GLCRMDL8
@@ -1649,11 +1715,12 @@
      C                   EVAL      D6TINN = WsTINN
      C                   EVAL      D6TNIB = WsTNIB
 
-     C                   ELSE
+     C                   ENDIF                                                              MD054940
+     C**********         ELSE                                                               MD054940
      C                   EVAL      CtrNum2 = CtrNum2 + 2
      C                   EVAL      TINNum2 = TINNum2 + 25
      C
-     C                   ENDIF
+     C**********         ENDIF                                                              MD054940
 
      C                   ENDDO
 
@@ -1874,6 +1941,14 @@
      C                   KFLD                    WxMTYP
      C                   KFLD                    KTopElmName
      C
+     C     KAcctN4       KLIST                                                              MD054940
+     C                   KFLD                    KMsgRID                                    MD054940
+     C                   KFLD                    WxACNO                                     MD054940
+     C                   KFLD                    WxCNNH                                     MD054940
+     C                   KFLD                    WxMTYP                                     MD054940
+     C                   KFLD                    KTopElmN4                                  MD054940
+     C                   KFLD                    KMGSEQU                                    MD054940
+     C                                                                                      MD054940
      C     KAcctNo       KLIST
      C                   KFLD                    KMsgRID
      C                   KFLD                    WxACNO

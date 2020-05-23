@@ -12,8 +12,10 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055115           Date 23Jan20               *
-      *  Prev Amend No. MD055067           Date 17Jan20               *
+      *  Last Amend No. MD047693           Date 16Sep19               *
+      *  Prev Amend No. FCM101             Date 08Feb19               *
+      *                 MD055115           Date 23Jan20               *
+      *                 MD055067           Date 17Jan20               *
       *                 MD055009           Date 23Dec19               *
       *                 MD054960           Date 13Dec19               *
       *                 MD054869           Date 21Nov19               *
@@ -418,6 +420,11 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047693 - Rollover Dates are not 'modified' to be the       *
+      *             Previous Working Day, if the Month End falls on a *
+      *             holiday                                           *
+      *           - Applied for MD054162                              *
+      *  FCM101 - Floor Rates on LE Module                            *
       *  MD055115 - Scenario 1.30 Discrepancy on LE3180P1 and         *
       *             PDCL double entries                               *
       *  MD055067 - Adhoc - Narrative for Interest payment on         *
@@ -1279,6 +1286,7 @@
      F***LOUPDL1 IP AF    1782 10AI     2 DISK                                         CER020 CRE073
      F***LOUPDL1   IP  AF 1829    10AIDISK    KEYLOC(2)                                CRE073 CLE134
      F***LOUPDL1   IP  AF 1905    10AIDISK    KEYLOC(2)                                CLE134 CLE141
+     FXXCLOQY0  IF   E           K DISK                                                       FCM101
      F***LOUPDL1   IP  AF 2025    10AIDISK    KEYLOC(2)                                CLE141 CER050
      FLOUPDL1   IP  AF 2039    10AIDISK    KEYLOC(2)                                          CER050
      FLELOMKL1  IF   E           K DISK                                                       CLE134
@@ -1344,7 +1352,8 @@
      F***LEHISTL2IF  F     147  6AI    12 DISK                                         116330 CAS005
      F/COPY WNCPYSRC,LEH00565
      FLEHISTL0  IF   F  206     6AIDISK    KEYLOC(12)
-     FLEHISTL2  IF   F  206     6AIDISK    KEYLOC(12)
+     F***LEHISTL2  IF   F  206     6AIDISK    KEYLOC(12)                                      FCM101
+     FLEHISTL2  IF   F  224     6AIDISK    KEYLOC(12)                                         FCM101
      FLEHISTLK  IF   F  206     6AIDISK    KEYLOC(12)                                       MD031736
      F***LEPARTL1IF  E           K        DISK                                         138350 CLE106
      FLEFCLTLO  IF   E           K DISK
@@ -3872,6 +3881,8 @@ L118 I                             P   72   77 7RTSPL
      I                                109  109  FRCF#H                          116330
      I                                110  113  FPRC#H                          116330
      I                                 60   60  SPIN#H                                      MD019942
+     I                             P  218  223 7CNSP#H                                        FCM101
+     I                                224  224  CNSG#H                                        FCM101
      ILEHISTLK  NS                                                                          MD031736
      I                                 18   22 0VDAT#H                                      MD031736
      I                                 44   45  AMTP#H                                      MD031736
@@ -5517,6 +5528,16 @@ L118 I                             P   72   77 7RTSPL
      C                   GOTO      ENDDBE
      C                   ENDIF
      C                   ENDIF
+     C                   MOVE      'N'           FCM101            1                          FCM101
+     C                   CALL      'AOSARDR0'                                                 FCM101
+     C                   PARM      *BLANKS       @RTCD                                        FCM101
+     C                   PARM      '*VERIFY'     @OPTN                                        FCM101
+     C                   PARM      'FCM101'      @SARD                                        FCM101
+     C     SCSARD        PARM      SCSARD        DSFDY                                        FCM101
+                                                                                              FCM101
+     C     @RTCD         IFEQ      *BLANK                                                     FCM101
+     C                   MOVE      'Y'           FCM101                                       FCM101
+     C                   ENDIF                                                                FCM101
                                                                                               CLE141
       ** Determine if CLE141 is installed                                                     CLE141
                                                                                               CLE141
@@ -9689,7 +9710,12 @@ L118 I                             P   72   77 7RTSPL
      C     BGN0ST        OREQ      'Y'                                                         CAC00
      C     IRCF          ANDEQ     'Y'                                                         CAC00
 1416 C                   Z-ADD     RTSP          RTSPL
+      *                                                                                       FCM101
+     C                   If        FCM101 = 'Y'                                               FCM101
+     C                   exsr      XXNSRT                                                     FCM101
+     C                   Else                                                                 FCM101
      C                   EXSR      NEWSRT
+     C                   Endif                                                                FCM101
       *                                                                   116330
       **Get*latest*'sc'*'ro'*from*history.*************************116330 CLE004
       * Get latest 'sc' 'ro' 'mc' from history.                           CLE004
@@ -9702,6 +9728,12 @@ L118 I                             P   72   77 7RTSPL
      C     IRCF#H        ANDEQ     'Y'                                                         11633
      C                   Z-ADD     RTSP#H        RTSPL                                         11633
      C                   Z-ADD     VDAT#H        VDAT                                          11633
+      *                                                                                       FCM101
+     C     FCM101        Ifeq      'Y'                                                        FCM101
+     C                   z-add     CNSP#H        CNSP                                         FCM101
+     C                   Move      CNSG#H        CNSG                                         FCM101
+     C                   Endif                                                                FCM101
+      *                                                                                       FCM101
      C                   LEAVE                                                                 11633
      C                   ENDIF                                                                 11633
       *                                                                   116330
@@ -9763,7 +9795,11 @@ L118 I                             P   72   77 7RTSPL
 1432 C**   UPDATE WITH NEW BASE RATE AND CALC NEW EFF. RATE
 1433 C**
 1434 C                   Z-ADD     BRTE          BRTEL
+     C                   IF        FCM101 = 'Y'                                               FCM101
+     C                   exsr      XXNSRT                                                     FCM101
+     C                   Else                                                                 FCM101
      C                   EXSR      NEWSRT
+     C                   Endif                                                                FCM101
       *                                                                   116330
       **Get*latest*'br'*'bc'*'ro'*from*history.********************116330 CLE004
       * Get latest 'br' 'bc' 'ro' 'mc' from history.                      CLE004
@@ -9810,7 +9846,11 @@ L118 I                             P   72   77 7RTSPL
 1451 C**
 1452 C                   Z-ADD     BRTT          BRTTL
 1453 C                   Z-ADD     BRTE          BRTEL
+     C                   IF        FCM101 = 'Y'                                               FCM101
+     C                   exsr      XXNSRT                                                     FCM101
+     C                   Else                                                                 FCM101
      C                   EXSR      NEWSRT
+     C                   Endif                                                                FCM101
       *                                                                   116330
       **Get*latest*'br'*'bc'*'ro'*from*history.********************116330 CLE004
       * Get latest 'br' 'bc' 'ro' 'mc' from history.                      CLE004
@@ -9935,7 +9975,22 @@ L118 I                             P   72   77 7RTSPL
      C                   MOVEL     NDFD          RDFD
      C                   ENDIF
      C                   ENDIF
+      *                                                                                       FCM101
+     C                   If        FCM101 = 'Y'                                               FCM101
+      *                                                                                       FCM101
+      ** Override values of Contractual Spread from Rollover                                  FCM101
+      *                                                                                       FCM101
+     C                   If        NNSP >  0 And                                              FCM101
+     C                             NNSG <> *Blanks                                            FCM101
+     C                   Z-add     NNSP          CNSP                                         FCM101
+     C                   Movel     NNSG          CNSG                                         FCM101
+     C                   Endif                                                                FCM101
+      *                                                                                       FCM101
+     C                   exsr      XXNSRT                                                     FCM101
+      *                                                                                       FCM101
+     C                   Else                                                                 FCM101
      C                   EXSR      NEWSRT
+     C                   Endif                                                                FCM101
       *                                                                   116330
       **Get*latest*'br'*'bc'*'ro'*from*history.********************116330 CLE004
       * Get latest 'br' 'bc' 'ro' 'mc' from history.                      CLE004
@@ -9960,6 +10015,10 @@ L118 I                             P   72   77 7RTSPL
      C     VDAT#H        IFGT      VDAT                                                        11633
      C                   Z-ADD     VDAT#H        VDAT                                          11633
      C                   ENDIF                                                                 11633
+     C     FCM101        Ifeq      'Y'                                                        FCM101
+     C                   z-add     CNSP#H        CNSP                                         FCM101
+     C                   Move      CNSG#H        CNSG                                         FCM101
+     C                   Endif                                                                FCM101
      C                   ENDIF                                                                 11633
      C                   ENDIF                                                                 11633
       *                                                                                       CLE036
@@ -20100,6 +20159,102 @@ C    C                   ENDIF                                                  
      C                   ENDIF
      C                   ENDSR
       *****************************************************************                       CRE073
+     C/EJECT                                                                                  FCM101
+      *****************************************************************                       FCM101
+      *                                                               *                       FCM101
+      *  XXNSRT - Calculates New Spread Rate based on FCM101 Floor    *                       FCM101
+      *           Rates on LE module                                                          FCM101
+      *                                                               *                       FCM101
+      *****************************************************************                       FCM101
+     C     XXNSRT        BEGSR                                                                FCM101
+                                                                                              FCM101
+      *                                                                                       FCM101
+     C                   IF        PTYP = 61 or PTYP = 62                                     FCM101
+     C                             or PTYP = 64 or PTYP = 66                                  FCM101
+     C                             or PTYP = 68 or PTYP = 69                                  FCM101
+     C                             or PTYP = 70 or PTYP = 71                                  FCM101
+     C                             or PTYP =  72                                              FCM101
+     C     LNRF          CHAIN     XXCLOQY0                                                   FCM101
+      *                                                                                       FCM101
+     C                   If        %found                                                     FCM101
+     C                   Move      XQBRSG        BASFSG                                       FCM101
+     C                   Z-add     XQBRTF        BASFLR                                       FCM101
+     C     XQBRSG        Ifeq      '-'                                                        FCM101
+     C     XQBRTF        MULT      -1            BASFLR                                       FCM101
+     C                   Endif                                                                FCM101
+                                                                                              FCM101
+     C                   Move      XQAISG        AIRFSG                                       FCM101
+     C                   Z-add     XQAIRF        AIRFLR                                       FCM101
+     C     XQAISG        Ifeq      '-'                                                        FCM101
+     C     XQAIRF        MULT      -1            AIRFLR                                       FCM101
+     C                   Endif                                                                FCM101
+                                                                                              FCM101
+     C                   Endif                                                                FCM101
+     C                   Endif                                                                FCM101
+                                                                                              FCM101
+     C     SWLN          IFNE      LNRF                                                       FCM101
+     C                   Z-ADD     *ZEROS        WCNSP            11 7                        FCM101
+     C                   MOVEL     *BLANKS       WCNSG             1                          FCM101
+     C                   ENDIF                                                                FCM101
+      *                                                                                       FCM101
+     C     QKEY          CHAIN     CLOAMQL0                           16                      FCM101
+     C     *IN16         IFEQ      '0'                                                        FCM101
+     C     AMCNSP        IFNE      0                                                          FCM101
+     C                   Z-ADD     AMCNSP        WCNSP                                        FCM101
+     C                   MOVEL     AMCNSG        WCNSG                                        FCM101
+     C                   MOVEL     LNRF          SWLN              6                          FCM101
+     C                   Z-ADD     AMCNSP        CNSPO            11 7                        FCM101
+     C                   MOVEL     AMCNSG        CNSGO             1                          FCM101
+     C                   Z-ADD     AMCNSP        CNSP                                         FCM101
+     C                   MOVEL     AMCNSG        CNSG                                         FCM101
+     C                   MOVEL     AMCNSG        SPINL                                        FCM101
+     C                   ENDIF                                                                FCM101
+     C                   ENDIF                                                                FCM101
+      *                                                                                       FCM101
+     C     WCNSP         IFEQ      0                                                          FCM101
+     C                   Z-ADD     CNSP          WCNSP                                        FCM101
+     C                   MOVEL     CNSG          WCNSG                                        FCM101
+     C                   MOVEL     LNRF          SWLN                                         FCM101
+     C                   ELSE                                                                 FCM101
+     C                   Z-ADD     CNSPO         CNSP                                         FCM101
+     C                   MOVEL     CNSGO         CNSG                                         FCM101
+     C                   ENDIF                                                                FCM101
+      *                                                                                       FCM101
+     C     BRTEL         IFNE      0                                                          FCM101
+     C                   MOVEL     'XXCALCSP'    PROG             10                          FCM101
+     C                   MOVE      'RT'          PROG                                         FCM101
+     C                   CALL      PROG                                                       FCM101
+     C                   PARM      *BLANKS       @RTCD                                        FCM101
+     C                   PARM                    BRTEL                                        FCM101
+     C                   PARM                    BASFLR           11 7                        FCM101
+     C                   PARM                    BASFSG            1                          FCM101
+     C                   PARM                    AIRFLR           11 7                        FCM101
+     C                   PARM                    AIRFSG            1                          FCM101
+     C                   PARM                    WCNSP                                        FCM101
+     C                   PARM                    WCNSG                                        FCM101
+     C                   PARM      *ZERO         NSRTX            11 7                        FCM101
+     C                   PARM      *ZERO         FRATE            11 7                        FCM101
+     C                   PARM      *BLANKS       NSPRSG            1                          FCM101
+      *                                                                                       FCM101
+     C                   Z-ADD     NSRTX         RTSPL                                        FCM101
+     C                   MOVE      WCNSG         SPINL                                        FCM101
+      *                                                                                       FCM101
+     C     NSPRSG        Ifne      ' '                                                        FCM101
+     C                   Move      NSPRSG        SPINL                                        FCM101
+     C                   Endif                                                                FCM101
+      *                                                                                       FCM101
+     C     NSRTX         IFLT      0                                                          FCM101
+     C                   MULT      -1            RTSPL                                        FCM101
+     C     SPINL         IFEQ      'A'                                                        FCM101
+     C                   MOVE      'S'           SPINL                                        FCM101
+     C                   ELSE                                                                 FCM101
+     C                   MOVE      'A'           SPINL                                        FCM101
+     C                   ENDIF                                                                FCM101
+     C                   ENDIF                                                                FCM101
+      *                                                                                       FCM101
+     C                   ENDIF                                                                FCM101
+     C                   ENDSR                                                                FCM101
+      *****************************************************************                       FCM101
                                                                                               CLE164
       *****************************************************************                       CLE164
       *    SRRETRPKY - Retrieve LEPK1DPD Repayment Priorities         *                       CLE164

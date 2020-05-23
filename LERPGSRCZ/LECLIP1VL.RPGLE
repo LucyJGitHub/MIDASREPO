@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD055344           Date 28Feb20               *
-      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *  Last Amend No. MD052251           Date 12Apr19               *
+      *  Prev Amend No. MD055344           Date 28Feb20               *
+      *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD052327           Date 17Nov18               *
       *                 MD052214           Date 26Oct18               *
@@ -167,6 +168,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052251 - Reverse fix AR820729 as it prevents BECM workflow.*
       *  MD055344 - Event code not found error                        *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
@@ -8728,14 +8730,14 @@ B001 C     ZERR          IFNE      *BLANKS
       ** Do not allow amendment when there is a pending change on                           AR820729
       ** rollover details                                                                   AR820729
       *                                                                                     AR820729
-     C     DDACTN        IFEQ      'A'                                                      AR820729
-     C     CLRSTS        ANDEQ     'R'                                                      AR820729
-     C     DDACTN        OREQ      'R'                                                      AR820729
-     C     CLRSTS        ANDEQ     'R'                                                      AR820729
-     C                   ADD       1             Idx                                        AR820729
-     C                   MOVEL     '5046109'     MsgIDXAr(Idx)                              AR820729
-     C                   MOVEL     'DDLNRF'      FldNamXAr(Idx)                             AR820729
-     C                   ENDIF                                                              AR820729
+     C*****DDACTN        IFEQ      'A'                                             AR820729 MD052251
+     C*****CLRSTS        ANDEQ     'R'                                             AR820729 MD052251
+     C*****DDACTN        OREQ      'R'                                             AR820729 MD052251
+     C*****CLRSTS        ANDEQ     'R'                                             AR820729 MD052251
+     C**********         ADD       1             Idx                               AR820729 MD052251
+     C**********         MOVEL     '5046109'     MsgIDXAr(Idx)                     AR820729 MD052251
+     C**********         MOVEL     'DDLNRF'      FldNamXAr(Idx)                    AR820729 MD052251
+     C**********         ENDIF                                                     AR820729 MD052251
      C                   ENDSR                                                              AR820729
       /EJECT                                                                                AR820729
       *****************************************************************                       CER020
@@ -9992,7 +9994,7 @@ E004 C                   ENDIF
      C                   ELSE                                                                 CER050
      C                   MOVEL     P@VL01        SVALLE            1                          CER050
      C                   ENDIF                                                                CER050
-      *                                                                                       CER050
+      *                                                                                       CER050                                                                                        
       ** Check for auto allocation of loan numbers system value.                             BUG6108
      C                   CALLB     'AOSVALR0'                                                BUG6108
      C                   PARM      *BLANKS       PRtCd                                       BUG6108

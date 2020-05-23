@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055392           Date 04Mar20               *
-      *  Prev Amend No. MD053801           Date 04Mar20               *
+      *  Last Amend No. FCM101A            Date 31Mar19               *
+      *  Prev Amend No. FCM101             Date 08Feb19               *
+      *                 MD055392           Date 04Mar20               *
+      *                 MD053801           Date 04Mar20               *
       *                 MD051219           Date 12Dec19               *
       *                 MD055084           Date 17Jan20               *
       *                 MD049545A          Date 14Jan20               *
@@ -242,6 +244,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  FCM101A - Floor Rates on LE module                           *
+      *  FCM101 - Floor Rates on LE module                            *
       *  MD055392 - Use system location code for holidays checking    *
       *             of non nostro settlements.                       *
       *  MD053801 - LVENTEL shows wrong repayment date for principal  *
@@ -737,6 +741,10 @@
      F*                                                                   S01408
      F/COPY WNCPYSRC,LE0480FFP2                                           S01408
      F*                                                                   S01408
+     FXXCLOQY0IF  E           K        DISK                                                   FCM101
+     FCLOAMQL0IF  E           K        DISK         KINFSR *PSSR                             FCM101A
+      ** Midas LE Loan amendments extension file                                             FCM101A
+      *                                                                                      FCM101A
 0014 F***LOAMS***IF**F     320 14AI     2 DISK                            CLE004
      F***LOAMS***IF  F    1051 14AI     2 DISK                     CLE004 CEU004
      F***LOAMS***IF  F    1066 14AI     2 DISK                     CEU004 CEU020
@@ -1952,6 +1960,11 @@
      C           WLOAN     KLIST                                                            MD021605
      C                     KFLD           LNRF                                              MD021605
      C                     KFLD           RCDT                                              MD021605
+      *                                                                                      FCM101A
+     C           QKEY      KLIST                                                             FCM101A
+     C                     KFLD           LNRFLA                                             FCM101A
+     C                     KFLD           VDATLA                                             FCM101A
+     C                     KFLD           LASN                                               FCM101A
       *                                                                                     MD021605
 0607 C**   FIRST CYCLE PROCESSING
 0608 C   40                GOTO DETAIL
@@ -2811,6 +2824,21 @@
      C                     ENDIF                                                              CRE073
       *                                                                                       CRE073
      C                     ENDIF                                                              CRE073
+      *                                                                                       FCM101
+      ** Determine if FCM101 Floor Rates on LE module                                         FCM101
+      *                                                                                       FCM101
+     C                     MOVE 'N'       FCM101  1                                           FCM101
+     C                     CALL 'AOSARDR0'                                                    FCM101
+     C                     PARM *BLANKS   W0RTCD                                              FCM101
+     C                     PARM '*VERIFY' W0OPTN                                              FCM101
+     C                     PARM 'FCM101'  W0SARD                                              FCM101
+     C           SCSARD    PARM SCSARD    DSFDY                                               FCM101
+      *                                                                                       FCM101
+      ** If feature is on, set up SAR work flag                                               FCM101
+      *                                                                                       FCM101
+     C           W0RTCD    IFEQ *BLANKS                                                       FCM101
+     C                     MOVE 'Y'       FCM101                                              FCM101
+     C                     ENDIF                                                              FCM101
       *                                                                                       CER049
       ** Determine if CER049 enhancement is installed                                         CER049
       *                                                                                       CER049
@@ -5201,6 +5229,62 @@
      C                     ENDIF                                                              CRE073
      C                     ENDIF                                                              CRE073
      C                     ENDSR                                                              CRE073
+      ********************************************************************                    FCM101
+      *    Subroutine To Calculate New Spread Rate for FCM101 Floor Rates                     FCM101
+      *                                                                                       FCM101
+      *    Called By: AMEND                                                                   FCM101
+      *    Calls    : XXCALCSPRT                                                              FCM101
+      ********************************************************************                    FCM101
+      *                                                                                       FCM101
+     C           XXNSPR    BEGSR                           **XXNSPR**                         FCM101
+      *                                                                                       FCM101
+     C           PTYP      IFEQ 61                                                            FCM101
+     C           PTYP      OREQ 62                                                            FCM101
+     C           PTYP      OREQ 64                                                            FCM101
+     C           PTYP      OREQ 66                                                            FCM101
+     C           PTYP      OREQ 68                                                            FCM101
+     C           PTYP      OREQ 69                                                            FCM101
+     C           PTYP      OREQ 70                                                            FCM101
+     C           PTYP      OREQ 71                                                            FCM101
+     C           PTYP      OREQ 72                                                            FCM101
+      *                                                                                       FCM101
+      ** Retrieve FCM101 Floor Rates                                                          FCM101
+      *                                                                                       FCM101
+     C           LNRF      CHAINXXCLOQY0            N26                                       FCM101
+      *                                                                                       FCM101
+     C                     MOVE XQBRSG    BASFSG                                              FCM101
+     C                     Z-ADDXQBRTF    BASFLR                                              FCM101
+     C           XQBRSG    IFEQ '-'                                                           FCM101
+     C           XQBRTF    MULT -1        BASFLR                                              FCM101
+     C                     ENDIF                                                              FCM101
+     C                     MOVE XQAISG    AIRFSG                                              FCM101
+     C                     Z-ADDXQAIRF    AIRFLR                                              FCM101
+     C           XQAISG    IFEQ '-'                                                           FCM101
+     C           XQAIRF    MULT -1        AIRFLR                                              FCM101
+     C                     ENDIF                                                              FCM101
+      *                                                                                       FCM101
+     C                     MOVEL'XXCALCSP'PROG   10                                           FCM101
+     C                     MOVE 'RT'      PROG                                                FCM101
+     C                     CALL PROG                                                          FCM101
+     C                     PARM *BLANKS   W0RTCD                                              FCM101
+     C                     PARM           BRATE                                               FCM101
+     C                     PARM           BASFLR 117                                          FCM101
+     C                     PARM           BASFSG  1                                           FCM101
+     C                     PARM           AIRFLR 117                                          FCM101
+     C                     PARM           AIRFSG  1                                           FCM101
+     C                     PARM           CNSP                                                FCM101
+     C                     PARM           CNSG                                                FCM101
+     C                     PARM *ZERO     NSRTX  117                                          FCM101
+     C                     PARM *ZERO     FRATE  117                                          FCM101
+     C                     PARM *BLANKS   NSPRSG  1                                           FCM101
+      *                                                                                       FCM101
+     C           W0RTCD    IFEQ *BLANKS                                                       FCM101
+     C                     Z-ADDNSRTX     SPRATE                                              FCM101
+     C                     ENDIF                                                              FCM101
+      *                                                                                       FCM101
+     C                     ENDIF                                                              FCM101
+      *                                                                                       FCM101
+     C                     ENDSR                                                              FCM101
 1169 C********************************************************************
       /EJECT                                                                                  228806
       *****************************************************************                       228806
@@ -5525,7 +5609,11 @@
      C                     Z-ADDRTSPLA    BRATE                                               CLE036
      C                     ENDIF                                                              CLE036
       *                                                                                       CRE073
+     C           FCM101    IFEQ 'Y'                                                           FCM101
+     C                     EXSR XXNSPR                                                        FCM101
+     C                     ELSE                                                               FCM101
      C                     EXSR NEWSPR                                                        CRE073
+     C                     ENDIF                                                              FCM101
       *                                                                                       CLE036
 1311 C                     EXSR NEWINT
       *                                                                                       226261
@@ -5542,6 +5630,17 @@
 1314 C           SPREAD    TAG                             **SPREAD TAG**
 1315 C           AMTP      COMP 'SC'                     87
 1316 C   87                Z-ADDRTSPLA    SPRATE           SPREAD RATE
+      *                                                                                      FCM101A
+     C           FCM101    IFEQ 'Y'                                                          FCM101A
+     C           *IN87     ANDEQ'1'                                                          FCM101A
+     C           QKEY      CHAINCLOAMQL0             36                                      FCM101A
+     C           *IN36     IFEQ '0'                                                          FCM101A
+     C                     Z-ADDAMCNSP    CNSP                                               FCM101A
+     C                     MOVE AMCNSG    CNSG                                               FCM101A
+     C                     ENDIF                                                             FCM101A
+     C                     EXSR XXNSPR                                                       FCM101A
+     C                     ENDIF                                                             FCM101A
+      *                                                                                      FCM101A
 1317 C   87                EXSR NEWINT
 1318 C   87                GOTO FILERD
 1319 C**
@@ -7362,6 +7461,11 @@
 1574 C                     Z-ADDNRTS      SPRATE           SPREAD/RATE
 1575 C                     MOVE NSIN      SPRIND           SPREAD IND.
 1576 C                     MOVE NCAC      INTBAS           CALC. BASIS
+      *                                                                                      FCM101A
+     C           FCM101    IFEQ 'Y'                                                          FCM101A
+     C                     Z-ADDNNSP      CNSP             Contractual Spread                FCM101A
+     C                     MOVE NNSG      CNSG             Cont. Spread Sign                 FCM101A
+     C                     ENDIF                                                             FCM101A
 1577 C**
 1578 C           TAG2      TAG                             ** TAG2 TAG **
       *                                                                   CLE011
@@ -7387,6 +7491,10 @@
      C                     Z-ADDEFFINT    WEFINT 117                                          224321
      C                     ENDIF                                                              224321
       *                                                                                       224321
+     C           FCM101    IFEQ 'Y'                                                          FCM101A
+     C                     EXSR XXNSPR                                                       FCM101A
+     C                     ENDIF                                                             FCM101A
+      *                                                                                      FCM101A
 1579 C                     EXSR NEWINT
 1580 C**
 1581 C**   OUTPUT RECORD TO FILE

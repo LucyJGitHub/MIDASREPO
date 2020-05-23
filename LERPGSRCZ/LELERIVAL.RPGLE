@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD034449           Date 24Jan19               *
+      *  Last Amend No. MD052251           Date 12Apr19               *
+      *  Prev Amend No. FCM101             Date 15Feb19               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD034449           Date 24Jan19               *
       *                 AR988460           Date 24Jan19               *      
       *                 AR325915           Date 03Oct18               *      
       *                 CLE071             Date 18Jul18               *
@@ -114,6 +116,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052251 - Reverse fix AR820729 as it prevents BECM workflow.*
+      *  FCM101 - Floor Rates on LE module                            *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD034449 - Used ZA0841 instead of ZALIGN for negative spread *
       *           - Applied for MD052515                              *
@@ -300,6 +304,9 @@
      FCLOAN     UF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(CLOANHHF:CLOANZ1F)
      F                                     PREFIX(LO_)
+     ** Midas XX Loans A Extension File                                                       FCM101
+     FXXCLOQY0  IF   E           K DISK    INFSR(*PSSR)                                       FCM101
+                                                                                              FCM101
  
      FPSOLD     IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(CLOANCLF:PSOLDFF)
@@ -634,6 +641,8 @@
      D PFinalRate      S             11P 7                                                  AR847249
      D DDFRCOOK        S              1                                                     MD028338
      D RetCode         S              7                                                       CLE141
+     D PNewSpreadSign  S              1    INZ(*BLANKS)                                       FCM101
+     D FCM101          S              1                                                       FCM101
                                                                                               CRE073
      D PERCD           S              1P 0                                                  MD034449
      D PAMT            S             15P 0                                                  MD034449
@@ -843,6 +852,65 @@
       *
  
       /COPY WNCPYSRC,LELERIV019
+     C                   If        FCM101 = 'Y'                                               FCM101
+                                                                                              FCM101
+      ** Retrieve Floor Rates from CLONCLQD                                                   FCM101
+                                                                                              FCM101
+     C     LNRF          CHAIN (N) XXCLOQY0                           99                      FCM101
+     C                   IF        *IN99 = *Off                                               FCM101
+     C                   EVAL      SVBRSG = XQBRSG                                            FCM101
+                                                                                              FCM101
+     C     SVBRSG        Ifeq      '-'                                                        FCM101
+     C                   EVAL      SVBRTF = XQBRTF * -1                                       FCM101
+     C                   Else                                                                 FCM101
+     C                   Eval      SVBRTF = XQBRTF                                            FCM101
+     C                   Endif                                                                FCM101
+                                                                                              FCM101
+     C                   EVAL      SVAISG = XQAISG                                            FCM101
+                                                                                              FCM101
+     C     SVAISG        Ifeq      '-'                                                        FCM101
+     C                   EVAL      SVAIRF = XQAIRF * -1                                       FCM101
+     C                   Else                                                                 FCM101
+     C                   EVAL      SVAIRF = XQAIRF                                            FCM101
+     C                   Endif                                                                FCM101
+                                                                                              FCM101
+     C                   Endif                                                                FCM101
+                                                                                              FCM101
+     C                   IF        WCNS2 <> '*'                                               FCM101
+      ** Contractual Spread Rate/Sign                                                         FCM101
+                                                                                              FCM101
+     C                   EXSR      XXNCNSP                                                    FCM101
+                                                                                              FCM101
+      ** Calculate new Spread Rate if no errors                                               FCM101
+                                                                                              FCM101
+     C                   IF        DDNCNPOK <> 'N'                                            FCM101
+     C                   Z-ADD     TMCNSP        L_CLCNSP                                     FCM101
+     C                   MOVEL     DDCNG2B       L_CLCNSG                                     FCM101
+     C                   EXSR      XXNSPRT                                                    FCM101
+     C                   Endif                                                                FCM101
+                                                                                              FCM101
+     C                   ELSE                                                                 FCM101
+      **                                                                                      FCM101
+     C                   If        (XQBRSG <> *Blank                                          FCM101
+     C                             OR XQAISG <> *Blank)                                       FCM101
+     C                             AND *IN99 = *Off                                           FCM101
+     C                   Eval      DDNCNPOK = 'N'                                             FCM101
+     C                   Eval      Idx = Idx + 1                                              FCM101
+     C                   Eval      MsgIDArr(Idx) = 'DDCNS2B'                                  FCM101
+     C                   Eval      MsgDtaArr(Idx) = 'XXX0041'                                 FCM101
+     C                   Else                                                                 FCM101
+     C                                                                                        FCM101
+     C                   EVAL      WNRTS1 = '*'                                               FCM101
+     C                   EVAL      WNSIN1 = '*'                                               FCM101
+     C                   EVAL      DDNRTSB = '*'                                              FCM101
+     C                   EVAL      DDNSINB = '*'                                              FCM101
+     C                   EVAL      VNRTS = *ZEROS                                             FCM101
+     C                   EVAL      VNSIN = *BLANKS                                            FCM101
+     C                   Endif                                                                FCM101
+                                                                                              FCM101
+     C                   ENDIF                                                                FCM101
+     C                   Endif                                                                FCM101
+      *                                                                                       FCM101
  
      C                   EXSR      SRNRTS
      C                   ENDIF                                                                CLE035
@@ -3044,6 +3112,19 @@
      C                   ENDIF                                                                CRE073
      C                   ENDIF                                                                CRE073
                                                                                               CRE073
+     C                   IF        FCM101 = 'Y'                                               FCM101
+     C                   IF        WNBRA1 <> '*'  AND                                         FCM101
+     C                             WCNS2  <> '*'  AND                                         FCM101
+     C                             WCNG2  <> '*'                                              FCM101
+     C                   ELSE                                                                 FCM101
+     C                   ADD       1             Idx                                          FCM101
+     C                   EVAL      FldNameArr(Idx) = 'DDNBRAB'                                FCM101
+     C                   EVAL      MsgIDArr(Idx) = 'XXX0042'                                  FCM101
+     C                   MOVE      'N'           DDNBRAOK                                     FCM101
+     C                   MOVE      'N'           DDNCNPOK                                     FCM101
+     C                   MOVE      'N'           DDNCNGOK                                     FCM101
+     C                   ENDIF                                                                FCM101
+     C                   ENDIF                                                                FCM101
      C                   ENDIF
                                                                                              BUG3352
       **  New Forward Yield Curve must also be deleted                                       BUG3352
@@ -6937,10 +7018,13 @@
      C                   ENDIF
                                                                                               CRE073
      C                   IF        CRE073 = 'Y'                                               CRE073
+     C                             OR FCM101 = 'Y'                                            FCM101
      C                   MOVEL     DDCNS2B       WCNS2             1                          CRE073
      C                   MOVEL     DDCNG2B       WCNG2             1                          CRE073
+     C                   IF        CRE073 = 'Y'                                               FCM101
      C                   MOVEL     DDRDM2B       WRDM2             1                          CRE073
      C                   MOVEL     DDRDF2B       WRDF2             1                          CRE073
+     C                   ENDIF                                                                FCM101
      C                   ENDIF                                                                CRE073
  
       /COPY WNCPYSRC,LELERIV064
@@ -8810,11 +8894,11 @@
       ** Do not allow amendment when there is a pending change on                           AR820729
       ** loan details                                                                       AR820729
       *                                                                                     AR820729
-     C                   If        L_CLLSTS = 'R'                                           AR820729
-     C                   ADD       1             Idx                                        AR820729
-     C                   EVAL      FldNameArr(Idx) = 'DDLNRF'                               AR820729
-     C                   EVAL      MsgIDArr(Idx) = '5046110'                                AR820729
-     C                   Endif                                                              AR820729
+     C**********         If        L_CLLSTS = 'R'                                  AR820729 MD052251
+     C**********         ADD       1             Idx                               AR820729 MD052251
+     C**********         EVAL      FldNameArr(Idx) = 'DDLNRF'                      AR820729 MD052251
+     C**********         EVAL      MsgIDArr(Idx) = '5046110'                       AR820729 MD052251
+     C**********         Endif                                                     AR820729 MD052251
       *                                                                                     AR820729
      C                   ENDSR                                                              AR820729
       *****************************************************************
@@ -8861,6 +8945,30 @@
                                                                                               CRE073
      C                   ENDSR                                                                CRE073
       *****************************************************************                       CRE073
+      /EJECT                                                                                  FCM101
+      *****************************************************************                       FCM101
+      *  XXNCNSP - Validate New Contractual Spread/Sign               *                       FCM101
+      *****************************************************************                       FCM101
+     C     XXNCNSP       BEGSR                                                                FCM101
+                                                                                              FCM101
+     C                   CALL      'XXVCSPSG'                                                 FCM101
+     C                   PARM      *BLANKS       PRTCD                                        FCM101
+     C                   PARM                    PTYP                                         FCM101
+     C                   PARM                    DDNBRTB                                      FCM101
+     C                   PARM                    DDNBRAB                                      FCM101
+     C                   PARM                    DDCNS2B                                      FCM101
+     C                   PARM                    DDCNG2B                                      FCM101
+     C                   PARM      *ZERO         TMCNSP                                       FCM101
+     C                   PARM      'LERI  '      PModule                                      FCM101
+     C                   PARM                    FldNameArr                                   FCM101
+     C                   PARM                    MsgIDArr                                     FCM101
+     C                   PARM                    MsgDtaArr                                    FCM101
+     C                   PARM                    Idx                                          FCM101
+     C                   PARM                    DDNCNPOK                                     FCM101
+     C                   PARM                    DDNCNGOK                                     FCM101
+                                                                                              FCM101
+     C                   ENDSR                                                                FCM101
+      *****************************************************************                       FCM101
       /EJECT                                                                                  CRE073
       *****************************************************************                       CRE073
       *  SRNRDMT - Validate New Rounding Method                       *                       CRE073
@@ -8974,6 +9082,102 @@
      C                   ENDIF                                                                CRE073
                                                                                               CRE073
      C                   ENDSR                                                                CRE073
+      /EJECT                                                                                  FCM101
+      *****************************************************************                       FCM101
+      *  XXNSPRT - Compute for the new spread rate based on the       *                       FCM101
+      *            FCM101 Floor Rates on LE Module                    *                       FCM101
+      *****************************************************************                       FCM101
+     C     XXNSPRT       BEGSR                                                                FCM101
+                                                                                              FCM101
+     C     *LIKE         DEFINE    TMBSRT        SVBRTF                                       FCM101
+     C     *LIKE         DEFINE    TMBSRT        SVAIRF                                       FCM101
+     C     *LIKE         DEFINE    DDCNG2B       SVBRSG                                       FCM101
+     C     *LIKE         DEFINE    DDCNG2B       SVAISG                                       FCM101
+                                                                                              FCM101
+      ** Retrieve Floor Rates from CLONCLQD                                                   FCM101
+                                                                                              FCM101
+     C     LNRF          CHAIN (N) XXCLOQY0                           99                      FCM101
+     C                   IF        *IN99 = *Off                                               FCM101
+     C                   EVAL      SVBRSG = XQBRSG                                            FCM101
+                                                                                              FCM101
+     C     SVBRSG        Ifeq      '-'                                                        FCM101
+     C                   EVAL      SVBRTF = XQBRTF * -1                                       FCM101
+     C                   Else                                                                 FCM101
+     C                   Eval      SVBRTF = XQBRTF                                            FCM101
+     C                   Endif                                                                FCM101
+                                                                                              FCM101
+     C                   EVAL      SVAISG = XQAISG                                            FCM101
+                                                                                              FCM101
+     C     SVAISG        Ifeq      '-'                                                        FCM101
+     C                   EVAL      SVAIRF = XQAIRF * -1                                       FCM101
+     C                   Else                                                                 FCM101
+     C                   EVAL      SVAIRF = XQAIRF                                            FCM101
+     C                   Endif                                                                FCM101
+                                                                                              FCM101
+     C                   Endif                                                                FCM101
+     C     DDNBRAB       Ifeq      ' '                                                        FCM101
+     C                   z-add     *Zero         TMBSRT                                       FCM101
+     C                   Endif                                                                FCM101
+                                                                                              FCM101
+     C                   CALL      'XXCALCSPRT'                                               FCM101
+     C                   PARM      *BLANKS       PRTCD                                        FCM101
+     C                   PARM                    TMBSRT                                       FCM101
+     C                   PARM                    SVBRTF                                       FCM101
+     C                   PARM                    SVBRSG                                       FCM101
+     C                   PARM                    SVAIRF                                       FCM101
+     C                   PARM                    SVAISG                                       FCM101
+     C                   PARM                    TMCNSP                                       FCM101
+     C                   PARM                    DDCNG2B                                      FCM101
+     C                   PARM      *ZERO         PNewSpread                                   FCM101
+     C                   PARM      *ZERO         PFinalRate                                   FCM101
+     C                   PARM      *Blank        PNewSpreadSign                               FCM101
+      *                                                                                       FCM101
+     C                   IF        PRTCD = *BLANKS                                            FCM101
+     C                   IF        PNewSpread = *ZERO                                         FCM101
+     C                   EVAL      DDNRTSB = *BLANKS                                          FCM101
+     C                   EVAL      DDNSINB = DDCNG2B                                          FCM101
+     C                   ELSEIF    PNewSpread < *ZERO                                         FCM101
+     C                             AND DDCNG2B <> 'P'                                         FCM101
+                                                                                              FCM101
+     C                   EVAL      DDNSINOK = 'W'                                             FCM101
+     C                   EVAL      WIdx = WIdx + 1                                            FCM101
+     C                   EVAL      WFldNamArr(WIdx) = 'DDNSINB'                               FCM101
+     C                   EVAL      WMsgIDArr(WIdx)  = 'USS0016'                               FCM101
+     C                   EVAL      MsgDtaTmp = %EDITC(PNewSpread:'J')                         FCM101
+     C                   EVAL      BLen = %Len(%Trim(MsgDtaTmp))                              FCM101
+     C                   EVAL      MsgDtaArr(Idx) = LenStr +%TRIM(MsgDtaTmp)                  FCM101
+                                                                                              FCM101
+     C                   EVAL      PNewSpread = %ABS(PNewSpread)                              FCM101
+     C                   EVAL      DDNRTSB = %CHAR(PNewSpread)                                FCM101
+                                                                                              FCM101
+     C                   IF        DDCNG2B = 'A'                                              FCM101
+     C                   EVAL      DDNSINB = 'S'                                              FCM101
+     C                   ELSEIF    DDCNG2B = 'S'                                              FCM101
+     C                   EVAL      DDNSINB = 'A'                                              FCM101
+     C                   ELSE                                                                 FCM101
+     C                   EVAL      DDNSINB = DDCNG2B                                          FCM101
+     C                   ENDIF                                                                FCM101
+                                                                                              FCM101
+     C                   ELSE                                                                 FCM101
+     C                   EVAL      DDNRTSB = %CHAR(PNewSpread)                                FCM101
+     C                   EVAL      DDNSINB = DDCNG2B                                          FCM101
+     C                   If        PNewSpreadSign <> ' '                                      FCM101
+     C                   EVAL      DDNSINB = PNewSpreadSign                                   FCM101
+     C                   Endif                                                                FCM101
+                                                                                              FCM101
+     C                   ENDIF                                                                FCM101
+                                                                                              FCM101
+     C                   IF        WxRTF = *BLANKS                                            FCM101
+                                                                                              FCM101
+     C                   Z-ADD     PNewSpread    VNRTS                                        FCM101
+     C                   Eval      TransQLO = %CHAR(PFinalRate)                               FCM101
+                                                                                              FCM101
+     C                   ENDIF                                                                FCM101
+     C                   ELSE                                                                 FCM101
+     C                   EXSR      *PSSR                                                      FCM101
+     C                   ENDIF                                                                FCM101
+                                                                                              FCM101
+     C                   ENDSR                                                                FCM101
       *****************************************************************                     MD028338
       /EJECT                                                                                MD028338
       *****************************************************************                     MD028338
@@ -9193,6 +9397,7 @@
      C                   PARM                    S01465            1
       ***  Called from CTU
      C                   PARM                    @@CTU             1
+     C                   PARM                    TransQLO         12                          FCM101
       *
       **  GET ZMUSER to access default branch.
       *
@@ -9513,6 +9718,19 @@
      C                   ELSE                                                                 CRE073
      C                   MOVE      'N'           CRE073                                       CRE073
      C                   ENDIF                                                                CRE073
+                                                                                              FCM101
+     C                   EVAL      FCM101 = 'N'                                               FCM101
+                                                                                              FCM101
+      ** Determine if SAR FCM101 is installed                                                 FCM101
+     C                   CALL      'AOSARDR0'                                                 FCM101
+     C                   PARM      *BLANKS       PRTCD                                        FCM101
+     C                   PARM      '*VERIFY '    POPTN                                        FCM101
+     C                   PARM      'FCM101'      PSARD                                        FCM101
+     C     SCSARD        PARM      SCSARD        DSFDY                                        FCM101
+                                                                                              FCM101
+     C                   IF        PRTCD = *BLANKS                                            FCM101
+     C                   EVAL      FCM101 = 'Y'                                               FCM101
+     C                   ENDIF                                                                FCM101
                                                                                               CLE141
       ** Determine if CLE141 is installed                                                     CLE141
                                                                                               CLE141

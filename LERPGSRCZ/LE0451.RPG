@@ -9,8 +9,9 @@
      F*                                                                  *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. FCM101             Date 23Feb19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE154             Date 10Aug12               *
       *                 CLE141             Date 08Feb16               *
@@ -58,6 +59,7 @@
      F*                                                                  *
      F********************************************************************
       *                                                               *
+      *  FCM101 - Floor Rates on LE module                            *
       *  CER050 - Annualised Percentage Rate                             *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
@@ -118,6 +120,8 @@
      FMLOAN   UF  E           K        DISK
      F            CLOANHHF                          KIGNORE
      F            CLOANZ1F                          KIGNORE
+     FXXCLOQY0UF  E           K        DISK                                                   FCM101
+      *                                                                                       FCM101
      FMHISR   UF  E           K        DISK
      FPMMFHLL1UF  E           K        DISK                           UC  S01486
      F/COPY WNCPYSRC,LEH00569
@@ -467,6 +471,10 @@
      C                     EXSR DELNEW                                                        CAS009
      C                     ENDIF                                                              CAS009
       *                                                                                       CAS009
+     C           FCM101    IFEQ 'Y'                                                           FCM101
+     C                     EXSR XXCLOQ                                                        FCM101
+     C                     ENDIF                                                              FCM101
+      *                                                                                       CAS009
       ** Delete PDCLs records linked to the original loan                                     CLE134
       *                                                                                       CLE134
      C           CLE134    IFEQ 'Y'                                                           CLE134
@@ -689,6 +697,24 @@
       *                                                                                       CAS009
      C                     ENDSR                                                              CAS009
       *****************************************************************                       CAS016
+     C/EJECT                                                                                  FCM101
+      *****************************************************************                       FCM101
+      *                                                                                       FCM101
+      *  XXCLOQ - Delete From FCM101 XXCLOQX0                                                 FCM101
+      *  Called BY: Main Processing                                                           FCM101
+      *                                                                                       FCM101
+      *****************************************************************                       FCM101
+     C           XXCLOQ    BEGSR                                                              FCM101
+      *                                                                                       FCM101
+      ** Delete records from XXCLOQX0                                                         FCM101
+      *                                                                                       FCM101
+     C           LNRFL     CHAINXXCLOQY0             80                                       FCM101
+      *                                                                                       FCM101
+     C           *IN80     IFEQ *OFF                                                          FCM101
+     C                     DELETXXCLOND0                                                      FCM101
+     C                     ENDIF                                                              FCM101
+      *                                                                                       FCM101
+     C                     ENDSR                                                              FCM101
      C/EJECT                                                                                  CAS016
       *****************************************************************                       CAS016
       *                                                                                       CAS016
@@ -910,6 +936,19 @@
      C**********           MOVE 'N'       CLE134                                     CLE134 AR546409
      C                     MOVE 'Y'       CLE134                                            AR546409
      C                     ENDIF                                                              CLE134
+      *                                                                                       FCM101
+      ** Check if FCM101 is switched ON                                                       FCM101
+      *                                                                                       FCM101
+     C                     MOVE 'N'       FCM101  1                                           FCM101
+     C                     CALL 'AOSARDR0'                                                    FCM101
+     C                     PARM *BLANKS   WRTCD                                               FCM101
+     C                     PARM '*VERIFY 'WOPTN                                               FCM101
+     C                     PARM 'FCM101'  PSARD                                               FCM101
+     C           SCSARD    PARM SCSARD    DSSDY                                               FCM101
+      *                                                                                       FCM101
+     C           WRTCD     IFEQ *BLANKS                                                       FCM101
+     C                     MOVE 'Y'       FCM101                                              FCM101
+     C                     ENDIF                                                              FCM101
       *                                                                                       CAS002
       ** Determine if switchable feature CAS002 is installed                                  CAS002
       *                                                                                       CAS002

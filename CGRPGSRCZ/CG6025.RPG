@@ -15,8 +15,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD054660           Date 19Nov19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. FCM101             Date 14Feb19               *
+      *  Prev Amend No. MD054660           Date 19Nov19               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE154             Date 06Aug12               *
       *                 CLE134             Date 01Aug12               *
@@ -69,6 +70,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  FCM101 - Floor Rates on LE Module                            *
       *  MD054660 - Incorrect Next Interest Repayment Date for loans  *
       *             with repayment type 1 or 3.                       *
       *  CER050 - Annualised Percentage Rate                          *
@@ -135,6 +137,10 @@
       ** Stamp Tax file                                                                       CER049
       *                                                                                       CER049
      FCLONCLL1IF  E           K        DISK                                                   CER049
+      *                                                                                       FCM101
+      ** FCM101 Floor Rates                                                                   FCM101
+      *                                                                                       FCM101
+     FXXCLOQY0IF  E           K        DISK                                                   FCM101
       *                                                                                       CER049
      FLEAPRHI0IF  E           K        DISK                                                   CER050
       *                                                                                       CER050
@@ -374,7 +380,7 @@
      I* Settlement Currency                                               CEU014
      I                                      725 727 P0STCY                CEU014
      I                                      728 730 P0PSCY                                    CLE031
-     I                                      730 748 P0RONS                                    CGL029
+     I                                      731 748 P0RONS                                    CGL029
      I                                      749 766 P0PONS                                    CGL029
      I*
      I**  UDC Details for call to CG6001
@@ -1320,6 +1326,10 @@
       *                                                                                       CRE073
      C                     ENDIF                                                              CRE073
       *                                                                                       CRE073
+     C           FCM101    IFEQ 'Y'                                                           FCM101
+     C                     EXSR SRFLOR                                                        FCM101
+     C                     ENDIF                                                              FCM101
+      *                                                                                       FCM101
      C                     EXSR SRADTA
      C                     EXSR SRODTA
      C*
@@ -1340,6 +1350,138 @@
      C*                                                                   S01408
      C/COPY WNCPYSRC,CG6025CCP2                                           S01408
      C*                                                                   S01408
+      /EJECT                                                                                  FCM101
+      *****************************************************************                       FCM101
+      *                                                               *                       FCM101
+      *  Subroutine  :  SRFLOR                                        *                       FCM101
+      *  Function    :  Process Floor Rates                           *                       FCM101
+      *                                                               *                       FCM101
+      *  Called by   :  LOANRO - Process Loan Rollover Details        *                       FCM101
+      *                                                               *                       FCM101
+      *****************************************************************                       FCM101
+      *                                                                                       FCM101
+     C           SRFLOR    BEGSR                           ** SRFLOR **                       FCM101
+      *                                                                                       FCM101
+     C                     EXSR SRADTA                                                        FCM101
+     C                     Z-ADD0         R1                                                  FCM101
+      *                                                                                       FCM101
+     C                     ADD  1         R1                                                  FCM101
+     C                     CLEARR#DATA                                                        FCM101
+     C                     CLEARR#DEFN                                                        FCM101
+     C                     CLEAR#@RDE                                                         FCM101
+     C                     MOVEL'CONTSPR' #@RDE                                               FCM101
+     C           ##RDE     CAT  #@RDE:1   ##RDE                                               FCM101
+     C           ##CNSP    IFNE 0                                                             FCM101
+     C                     MOVEL##CNSP    ##DATA                                              FCM101
+     C                     ELSE                                                               FCM101
+     C                     MOVEL##NNSP    ##DATA                                              FCM101
+     C                     ENDIF                                                              FCM101
+     C                     MOVEL'Rate  '  ##RDEC                                              FCM101
+     C                     MOVEL'L'       ##RDET                                              FCM101
+     C                     MOVEL'7'       ##DCPA                                              FCM101
+     C                     MOVELR#DATA    ##D,R1                                              FCM101
+     C                     MOVELR#DEFN    ##R,R1                                              FCM101
+      *                                                                                       FCM101
+      ** Contractual Spread Sign                                                              FCM101
+      *                                                                                       FCM101
+     C                     ADD  1         R1                                                  FCM101
+     C                     CLEARR#DATA                                                        FCM101
+     C                     CLEARR#DEFN                                                        FCM101
+     C                     CLEAR#@RDE                                                         FCM101
+     C                     MOVEL'CONTSSG' #@RDE                                               FCM101
+     C           ##RDE     CAT  #@RDE:1   ##RDE                                               FCM101
+     C           ##CNSG    IFNE *BLANKS                                                       FCM101
+     C                     MOVEL##CNSG    ##DATA                                              FCM101
+     C                     ELSE                                                               FCM101
+     C                     MOVEL##NNSG    ##DATA                                              FCM101
+     C                     ENDIF                                                              FCM101
+     C                     MOVELR#DATA    ##D,R1                                              FCM101
+     C                     MOVELR#DEFN    ##R,R1                                              FCM101
+      *                                                                                       FCM101
+     C                     MOVELLNRF      K1LNRF                                              FCM101
+      *                                                                                       FCM101
+      ** Retrieve FLoor Rates Details for the loan                                            FCM101
+      *                                                                                       FCM101
+     C           K1LNRF    CHAINXXCLOQY0             98                                       FCM101
+      *                                                                                       FCM101
+      ** If record found, extract stamp tax data                                              FCM101
+      *                                                                                       FCM101
+     C           *IN98     IFEQ *OFF                                                          FCM101
+      *                                                                                       FCM101
+      ** Base Rate Floor                                                                      FCM101
+      *                                                                                       FCM101
+     C                     ADD  1         R1                                                  FCM101
+     C                     CLEARR#DATA                                                        FCM101
+     C                     CLEARR#DEFN                                                        FCM101
+     C                     CLEAR#@RDE                                                         FCM101
+     C                     MOVEL'ZBASEFLR'#@RDE                                               FCM101
+     C           ##RDE     CAT  #@RDE:1   ##RDE                                               FCM101
+     C                     MOVELXQBRTF    R#DATA                                              FCM101
+     C                     MOVEL'Rate  '  ##RDEC                                              FCM101
+     C                     MOVEL'L'       ##RDET                                              FCM101
+     C                     MOVEL'7'       ##DCPA                                              FCM101
+     C                     MOVELR#DATA    ##D,R1                                              FCM101
+     C                     MOVELR#DEFN    ##R,R1                                              FCM101
+      *                                                                                       FCM101
+      ** Base Rate Floor Sign                                                                 FCM101
+      *                                                                                       FCM101
+     C                     ADD  1         R1                                                  FCM101
+     C                     CLEARR#DATA                                                        FCM101
+     C                     CLEARR#DEFN                                                        FCM101
+     C                     CLEAR#@RDE                                                         FCM101
+     C                     MOVEL'ZBASEFLR'#@RDE                                               FCM101
+     C                     MOVE 'SG'      #@RDE                                               FCM101
+     C           ##RDE     CAT  #@RDE:1   ##RDE                                               FCM101
+     C                     MOVELXQBRSG    R#DATA                                              FCM101
+     C                     MOVELR#DATA    ##D,R1                                              FCM101
+     C                     MOVELR#DEFN    ##R,R1                                              FCM101
+      *                                                                                       FCM101
+      ** All-in Interest Rate Floor                                                           FCM101
+      *                                                                                       FCM101
+     C                     ADD  1         R1                                                  FCM101
+     C                     CLEARR#DATA                                                        FCM101
+     C                     CLEARR#DEFN                                                        FCM101
+     C                     CLEAR#@RDE                                                         FCM101
+     C                     MOVEL'ZALLINFL'#@RDE                                               FCM101
+     C                     MOVE 'R '      #@RDE                                               FCM101
+     C           ##RDE     CAT  #@RDE:1   ##RDE                                               FCM101
+     C                     MOVELXQAIRF    R#DATA                                              FCM101
+     C                     MOVEL'Rate  '  ##RDEC                                              FCM101
+     C                     MOVEL'L'       ##RDET                                              FCM101
+     C                     MOVEL'7'       ##DCPA                                              FCM101
+     C                     MOVELR#DATA    ##D,R1                                              FCM101
+     C                     MOVELR#DEFN    ##R,R1                                              FCM101
+      *                                                                                       FCM101
+      ** All-in Interest Rate Floor Sign                                                      FCM101
+      *                                                                                       FCM101
+     C                     ADD  1         R1                                                  FCM101
+     C                     CLEARR#DATA                                                        FCM101
+     C                     CLEARR#DEFN                                                        FCM101
+     C                     CLEAR#@RDE                                                         FCM101
+     C                     MOVEL'ZALLINFL'#@RDE                                               FCM101
+     C                     MOVE 'SG'      #@RDE                                               FCM101
+     C           ##RDE     CAT  #@RDE:1   ##RDE                                               FCM101
+     C                     MOVELXQAISG    R#DATA                                              FCM101
+     C                     MOVELR#DATA    ##D,R1                                              FCM101
+     C                     MOVELR#DEFN    ##R,R1                                              FCM101
+      *                                                                                       FCM101
+      ** FCM101 Switchable Feature                                                            FCM101
+      *                                                                                       FCM101
+     C                     ADD  1         R1                                                  FCM101
+     C                     CLEARR#DATA                                                        FCM101
+     C                     CLEARR#DEFN                                                        FCM101
+     C                     CLEAR#@RDE                                                         FCM101
+     C                     MOVEL'FCM101F' #@RDE                                               FCM101
+     C           ##RDE     CAT  #@RDE:1   ##RDE                                               FCM101
+     C                     MOVELFCM101    ##DATA                                              FCM101
+     C                     MOVELR#DATA    ##D,R1                                              FCM101
+     C                     MOVELR#DEFN    ##R,R1                                              FCM101
+      *                                                                                       FCM101
+     C                     ENDIF                                                              FCM101
+      *                                                                                       FCM101
+     C                     ENDSR                           ** SRFLOR **                       FCM101
+      *                                                                                       FCM101
+      *****************************************************************                       FCM101
      C/EJECT
      C*****************************************************************
      C*  Subroutine  :  LOANA                                         *
@@ -2033,6 +2175,20 @@
      C                     ELSE                                                               CRE073
      C                     MOVE 'N'       CRE073                                              CRE073
      C                     ENDIF                                                              CRE073
+      *                                                                                       FCM101
+      ** Check if FCM101 is ON                                                                FCM101
+      *                                                                                       FCM101
+     C                     CALL 'AOSARDR0'                                                    FCM101
+     C                     PARM *BLANKS   ##RTCD                                              FCM101
+     C                     PARM '*VERIFY '##OPTN                                              FCM101
+     C                     PARM 'FCM101'  PSARD                                               FCM101
+     C           SCSARD    PARM SCSARD    DSFDY                                               FCM101
+      *                                                                                       FCM101
+     C           ##RTCD    IFEQ *BLANKS                                                       FCM101
+     C                     MOVE 'Y'       FCM101  1                                           FCM101
+     C                     ELSE                                                               FCM101
+     C                     MOVE 'N'       FCM101                                              FCM101
+     C                     ENDIF                                                              FCM101
       *                                                                                       CER049
       ** Check if CER049 is ON                                                                CER049
       *                                                                                       CER049

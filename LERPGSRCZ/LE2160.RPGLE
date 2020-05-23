@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. FCM101E            Date 25Apr19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 260183             Date 29Oct15               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  FCM101E - Add Floor Rates checking on rate fixing            *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  260183 - LEC2460 failed because LF/LELOANL2 can't find       *
@@ -127,6 +129,7 @@
      F                                     RENAME(CLOANCKF: LELOANF)                          260183
       ** Loans to be reactivated Rollover details                                             260183
       *                                                                                       260183
+     FXXCLOQY0  IF   E           K DISK    INFSR(*PSSR)                                      FCM101E
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -147,6 +150,9 @@
       **                                    181 1830DBASE
       **                                    184 193 DBMOD
       **                                    194 203 DBPROC
+                                                                                             FCM101E
+      ** Externally described DS for Switchable Feature Details                              FCM101E
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                 FCM101E
       *
       ** Program Status Data Structure
       ** =============================
@@ -879,6 +885,70 @@
      C                   EVAL      WSpreadInd = L0SPIN
      C                   EVAL      WSpread = L0RTSP
      C                   ENDIF
+      *                                                                                      FCM101E
+      ** Check Base Rate vs Floor Rates and recalculate Spread                               FCM101E
+      *                                                                                      FCM101E
+     C                   If        FCM101 = 'Y'                                              FCM101E
+      *                                                                                      FCM101E
+     C                   IF        L0PTYP = 61 or L0PTYP = 62                                FCM101E
+     C                             or L0PTYP = 64 or L0PTYP = 66                             FCM101E
+     C                             or L0PTYP = 64 or L0PTYP = 66                             FCM101E
+     C                             or L0PTYP = 68 or L0PTYP = 69                             FCM101E
+     C                             or L0PTYP = 70 or L0PTYP = 71                             FCM101E
+     C                             or L0PTYP = 72                                            FCM101E
+      *                                                                                      FCM101E
+     C     L0NNSG        Ifne      *Blank                                                    FCM101E
+     C                   Z-add     L0NNSP        WCNSP                                       FCM101E
+     C                   Move      L0NNSG        WCNSG                                       FCM101E
+     C                   Else                                                                FCM101E
+     C                   Z-add     L0CNSP        WCNSP                                       FCM101E
+     C                   Move      L0CNSG        WCNSG                                       FCM101E
+     C                   Endif                                                               FCM101E
+      *                                                                                      FCM101E
+     C     L0LNRF        CHAIN     XXCLOQY0                                                  FCM101E
+      *                                                                                      FCM101E
+     C                   If        %found                                                    FCM101E
+     C                   Move      XQBRSG        BASFSG                                      FCM101E
+     C                   Z-add     XQBRTF        BASFLR                                      FCM101E
+     C     XQBRSG        Ifeq      '-'                                                       FCM101E
+     C     XQBRTF        MULT      -1            BASFLR                                      FCM101E
+     C                   Endif                                                               FCM101E
+                                                                                             FCM101E
+     C                   Move      XQAISG        AIRFSG                                      FCM101E
+     C                   Z-add     XQAIRF        AIRFLR                                      FCM101E
+     C     XQAISG        Ifeq      '-'                                                       FCM101E
+     C     XQAIRF        MULT      -1            AIRFLR                                      FCM101E
+     C                   Endif                                                               FCM101E
+                                                                                             FCM101E
+     C                   Else                                                                FCM101E
+     C                   Z-Add     *zero         BASFLR                                      FCM101E
+     C                   Move      *blank        BASFSG                                      FCM101E
+     C                   Z-Add     *zero         AIRFLR                                      FCM101E
+     C                   Move      *blank        AIRFSG                                      FCM101E
+     C                   Endif                                                               FCM101E
+      *                                                                                      FCM101E
+     C                   Call      'XXCALCSPRT'                                              FCM101E
+     C                   Parm      *BLANKS       PRTCD             7                         FCM101E
+     C                   Parm                    WBaseRate                                   FCM101E
+     C                   Parm                    BASFLR           11 7                       FCM101E
+     C                   Parm                    BASFSG            1                         FCM101E
+     C                   Parm                    AIRFLR           11 7                       FCM101E
+     C                   Parm                    AIRFSG            1                         FCM101E
+     C                   Parm                    WCNSP            11 7                       FCM101E
+     C                   Parm                    WCNSG             1                         FCM101E
+     C                   Parm      *ZERO         PNewSpread       11 7                       FCM101E
+     C                   Parm      *ZERO         PFinalRate       11 7                       FCM101E
+     C                   Parm      *Blank        PNewSpreadSign    1                         FCM101E
+      *                                                                                      FCM101E
+     C                   Z-add     PNewSpread    WSpread                                     FCM101E
+     C                   Move      WCNSG         WSpreadInd                                  FCM101E
+      *                                                                                      FCM101E
+     C     PNewSpreadSignIfne      ' '                                                       FCM101E
+     C                   Move      PNewSpreadSignWSpreadInd                                  FCM101E
+     C                   Endif                                                               FCM101E
+      *                                                                                      FCM101E
+     C                   Endif                                                               FCM101E
+     C                   Endif                                                               FCM101E
       *
       ****************
       ** Fixed Rate **
@@ -983,6 +1053,18 @@
      C                   EVAL      WZMsgMod = PSProcMod
      C                   EVAL      WZMsgProc = PSProcName
       *
+      ** Determine if FCM101 is installed                                                    FCM101E
+      *                                                                                      FCM101E
+     C                   MOVE      'N'           FCM101            1                         FCM101E
+     C                   CALL      'AOSARDR0'                                                FCM101E
+     C                   PARM      *BLANK        PRtnCde                                     FCM101E
+     C                   PARM      '*VERIFY'     POption                                     FCM101E
+     C                   PARM      'FCM101'      PSard             6                         FCM101E
+     C     SCSARD        PARM      SCSARD        DSFDY                                       FCM101E
+                                                                                             FCM101E
+     C     PRtnCde       IFEQ      *BLANK                                                    FCM101E
+     C                   MOVE      'Y'           FCM101                                      FCM101E
+     C                   ENDIF                                                               FCM101E
       *                                                                                       CER001
       ** Parameter list for calling AOSVALR0                                                  CLE148
       *                                                                                       CLE148

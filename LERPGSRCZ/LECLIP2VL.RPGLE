@@ -13,6 +13,8 @@
       *                                                               *
       *  Last Amend No. MD055220           Date 12May20               *
       *  Prev Amend No. MD055128           Date 17Apr20               *
+      *                 MD055714           Date 06May20               *
+      *                 257533             Date 06May20               *
       *                 MD055074           Date 21Jan20               *
       *                 MD053297           Date 06Sep19               *
       *                 MD023254           Date 06Sep19               *
@@ -129,6 +131,15 @@
       *  MD055220 - Allow negative spread rate to be processed        *
       *  MD055128 - Allow  negative total interest when negative      *
       *             base rate code was used                           *
+      *  MD055714 - Missing rebate posting after changing maturity    *
+      *             date of discount loan. Restore original values of *
+      *             ORTI, ORMD and TOTI fields after amend-reject of  *
+      *             discount loan.                                    *
+      *  257533 - ORMD and ORTI of a discount loan which was amended  *
+      *           to have a new maturity date stored the new values   *
+      *           instead of the original values. Amended program     *
+      *           to ensure correct values will be stored.            *
+      *         - Applied for MD055714  Z                             *
       *  MD055074 - Interest for processing type 80 is mandatory.     *
       *  MD053297 - Interest not posted correctly for Part sold       *
       *  MD023254 - LOAC does not show the correct interest schedule  *
@@ -2332,8 +2343,10 @@
      C     CCLORMD       ANDEQ     *ZEROS
      C     CCLORED       ANDLT     BJRDNB
      C     CCLVDAT       ANDLT     BJRDNB
-     C                   Z-ADD     CCLTOTI       CCLORTI
-     C                   MOVE      CCLMDAT       CCLORMD
+     C**********         Z-ADD     CCLTOTI       CCLORTI                                      257533
+     C**********         MOVE      CCLMDAT       CCLORMD                                      257533
+     C                   Z-ADD     @@TOTI        CCLORTI                                      257533
+     C                   MOVE      @@MDAT        CCLORMD                                      257533
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
@@ -5775,18 +5788,32 @@ E004 C                   ENDIF
      C     WLNPT         OREQ      67                                                       AR804863
      C     WLNPT         OREQ      72                                                       AR804863
      C     W72TP         ANDEQ     '67'                                                     AR804863
-     C     WSVMD         IFLT      CCLMDAT                                                  AR804863
-     C     WLNPT         OREQ      63                                                       AR804863
-     C                   EXSR      SRCINT                                                   AR804863
-     C                   Z-ADD     WTOTI         CCLTOTI                                    AR804863
-     C     CCLORTI       IFEQ      *ZEROS                                                   AR804863
-     C     CCLORMD       ANDEQ     *ZEROS                                                   AR804863
-     C     CCLORED       ANDLT     BJRDNB                                                   AR804863
-     C     CCLVDAT       ANDLT     BJRDNB                                                   AR804863
-     C                   Z-ADD     CCLTOTI       CCLORTI                                    AR804863
-     C                   MOVE      CCLMDAT       CCLORMD                                    AR804863
-     C                   ENDIF                                                              AR804863
-     C                   ENDIF                                                              AR804863
+     C*****WSVMD         IFLT      CCLMDAT                                         AR804863 MD055714
+     C*****WLNPT         OREQ      63                                              AR804863 MD055714
+     C**********         EXSR      SRCINT                                          AR804863 MD055714
+     C**********         Z-ADD     WTOTI         CCLTOTI                           AR804863 MD055714
+     C*****CCLORTI       IFEQ      *ZEROS                                          AR804863 MD055714
+     C*****CCLORMD       ANDEQ     *ZEROS                                          AR804863 MD055714
+     C*****CCLORED       ANDLT     BJRDNB                                          AR804863 MD055714
+     C*****CCLVDAT       ANDLT     BJRDNB                                          AR804863 MD055714
+     C**********         Z-ADD     CCLTOTI       CCLORTI                           AR804863 MD055714
+     C**********         MOVE      CCLMDAT       CCLORMD                           AR804863 MD055714
+     C**********         ENDIF                                                     AR804863 MD055714
+     C**********         ENDIF                                                     AR804863 MD055714
+      *                                                                                     MD055714
+     C                   MOVE      *BLANKS       PSCRF                                      MD055714
+     C                   MOVE      DDIPRD        PSCRF                                      MD055714
+     C                   Z-ADD     WCDPL         PNDEC                                      MD055714
+     C     13            SUB       WCDPL         PNDIG                                      MD055714
+     C                   CALL      'ZALIGN'      PPAR1                                      MD055714
+     C                   MOVE      PRVAL         WTOTI                                      MD055714
+     C                   Z-ADD     WTOTI         CCLTOTI                                    MD055714
+      *                                                                                     MD055714
+     C     DDOMDT        IFEQ      *BLANKS                                                  MD055714
+     C                   Z-ADD     *ZEROS        CCLORTI                                    MD055714
+     C                   Z-ADD     *ZEROS        CCLORMD                                    MD055714
+     C                   ENDIF                                                              MD055714
+      *                                                                                     MD055714
      C                   ENDIF                                                              AR804863
      C                   ENDIF                                                              AR804863
       *                                                                                     AR804863

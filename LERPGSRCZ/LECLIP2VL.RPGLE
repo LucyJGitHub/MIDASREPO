@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD055128           Date 17Apr20               *
-      *  Prev Amend No. MD055714           Date 06May20               *
+      *  Last Amend No. MD055220           Date 12May20               *
+      *  Prev Amend No. MD055128           Date 17Apr20               *
+      *                 MD055714           Date 06May20               *
       *                 257533             Date 06May20               *
       *                 MD055074           Date 21Jan20               *
       *                 MD053297           Date 06Sep19               *
@@ -127,6 +128,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055220 - Allow negative spread rate to be processed        *
       *  MD055128 - Allow  negative total interest when negative      *
       *             base rate code was used                           *
       *  MD055714 - Missing rebate posting after changing maturity    *
@@ -1578,9 +1580,17 @@
       * Convert the field in numeric                                                          249268
      C**********         MOVE      DDRTSP        #DDRTSP          11 7               249268 BUG21853
      C                   MOVE      DDRTSP        #DDRTSP          12 7                      BUG21853
+     C                   MOVEL     *BLANK        WRTSP1            1                        MD055220
+     C                   MOVEL     *BLANK        WRTSP3           11                        MD055220
+     C                   MOVEL     DDRTSP        WRTSP1                                     MD055220
+     C                   MOVE      DDRTSP        WRTSP3                                     MD055220
      C                   IF        DDRTSP <> *BLANKS                                        BUG20318
      C                   MOVE      *Blanks       PSCRF                                      MD040412
+     C     WRTSP1        IFEQ      '-'                                                      MD055220
+     C                   MOVE      WRTSP3        PSCRF                                      MD055220
+     C                   ELSE                                                               MD055220
      C                   MOVE      DDRTSP        PSCRF                                      MD040412
+     C                   ENDIF                                                              MD055220
      C                   Z-ADD     4             PNDIG                                      MD040412
      C                   Z-ADD     7             PNDEC                                      MD040412
      C                   CALL      'ZALIGN'      PPAR1                                      MD040412
@@ -1669,8 +1679,16 @@
                                                                                               CLE035
       ** Valid amount must be entered                                                         CLE035
                                                                                               CLE035
+     C                   MOVEL     *BLANK        WRTSP1                                     MD055220
+     C                   MOVEL     *BLANK        WRTSP3                                     MD055220
+     C                   MOVEL     DDRTSP        WRTSP1                                     MD055220
+     C                   MOVE      DDRTSP        WRTSP3                                     MD055220
      C                   MOVE      *Blanks       PSCRF                                        CLE035
+     C     WRTSP1        IFEQ      '-'                                                      MD055220
+     C                   MOVE      WRTSP3        PSCRF                                      MD055220
+     C                   ELSE                                                               MD055220
      C                   MOVE      DDRTSP        PSCRF                                        CLE035
+     C                   ENDIF                                                              MD055220
      C                   Z-ADD     4             PNDIG                                        CLE035
      C                   Z-ADD     7             PNDEC                                        CLE035
      C                   CALL      'ZALIGN'      PPAR1                                        CLE035
@@ -1682,6 +1700,9 @@
      C                   EVAL      FldNamXAr(Idx) = 'DDRTSP'                                  CLE035
      C                   EVAL      MsgIDXAr(Idx) = 'LEL0138'                                  CLE035
      C                   ENDIF                                                                CLE035
+     C     WRTSP1        IFEQ      '-'                                                      MD055220
+     C                   Z-SUB     WSVRS         WSVRS                                      MD055220
+     C                   ENDIF                                                              MD055220
                                                                                               CLE035
      C                   IF        DDRTSPOK <> 'N'                                            CLE035
      C                   EVAL      CCLRTSP = WSVRS                                            CLE035

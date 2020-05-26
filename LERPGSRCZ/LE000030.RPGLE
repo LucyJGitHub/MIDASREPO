@@ -17,8 +17,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR674226           Date 04Dec19               *
-      *  Prev Amend No. MD050457           Date 06Mar19               *
+      *  Last Amend No. MD055874           Date 22May20               *
+      *  Prev Amend No. MD055685           Date 24Apr20               *
+      *                 MD052994           Date 25Nov19               *
+      *                 AR674226           Date 04Dec19               *
+      *                 MD050457           Date 06Mar19               *
       *                 CGL148             Date 13Jul18               *
       *                 MD045032           Date 07Apr18               *
       *                 CLE169             Date 07Apr18               *
@@ -72,6 +75,17 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055874 - Reversal entries generated for retail account     *
+      *             which is still attached to the facility. When the *
+      *             facility of a retail account is changed, ensure   *
+      *             that only the history of the retail account       *
+      *             linked to the previous facility will be tagged    *
+      *             for reversal.                                     *
+      *  MD055685 - Double posting of Retail Account Debit Balance    *
+      *             on FCLTYFN and FACHISA. Do not process RSACMTPD   *
+      *             records on ANWD run.                              *
+      *  MD052994 - CL Facility Event not Generated for Retail        *
+      *             Account Debit Capitalised Interests               *
       *  AR674226 - Manual transaction reached 999. Increase the size *
       *             of utilisation sequence no. and transaction       *
       *             sequence. Recompile. (Child: AR674227)            *
@@ -187,7 +201,7 @@
      F                                     PREFIX(DC_)                                      MD023117
      FACCNTJ2   IF   E           K DISK    INFSR(*PSSR)                                       CLE169
      F                                     RENAME(ACCNTJD0:ACCNTJD2)                          CLE169
-     FGLJEHHL0  IF   E           K DISK    INFSR(*PSSR)                                       CLE169
+     F***GLJEHHL0  IF   E           K DISK    INFSR(*PSSR)                           CLE169 MD052994
      FGLJENHL0  IF   E           K DISK    INFSR(*PSSR)                                       CLE169
 
       *****************************************************************
@@ -335,7 +349,7 @@
 
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA
      D LERSTS        E DS                  EXTNAME(LERSTS) DTAARA                            BUG8222
-     D JNSTAT        E DS                  EXTNAME(JNSTAT) DTAARA                             CLE169
+     D***JNSTAT*       E DS                  EXTNAME(JNSTAT) DTAARA                  CLE169 MD052994
 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for bank details
@@ -463,9 +477,9 @@
      D KFFACT          S                   LIKE(FHFTYP)
      D KFFCNO          S                   LIKE(FHFSEQ)
      D KDLNO           S              6
-     D KBEDT           S              5  0                                                    CLE169
-     D KBTNB           S              3                                                       CLE169
-     D BTCHK           S              1  0                                                    CLE169
+     D***KBEDT**         S              5  0                                         CLE169 MD052994
+     D***KBTNB**         S              3                                            CLE169 MD052994
+     D***BTCHK**         S              1  0                                         CLE169 MD052994
      D KNDLNO          S                   LIKE(DC_DLNO)                                    MD023117
      D WKFUID          S                   LIKE(DC_FUID)                                    MD023117
      D                                     INZ('N')                                         MD023117
@@ -502,9 +516,10 @@
      D WTEOC           S             15  0
      D WACCRUE         S              5  0
      D WNMVMT          S              1                                                      BUG3035
-     D WPRUN           S              5  0                                                    CLE169
+     D***WPRUN           S              5  0                                         CLE169 MD052994
      D WPROC           S              1                                                       CLE169
      D WBTCH           S              3                                                       CLE169
+     D WPrcRSAC        S              1                                                     MD055685
 
      D GIVEN           S              1
      D WUPDAT          S              1
@@ -718,10 +733,20 @@
      C                   ELSE                                                                 CLE169
      C                   EXSR      SRACCTUPD
      C                   ENDIF                                                                CLE169
+                                                                                            MD055685
+      ** Do not process RSACMTPD if ANWD run                                                MD055685
+      ** Note: U4 is set to ON in LEC000030 if ANWD run                                     MD055685
+                                                                                            MD055685
+     C                   EVAL      WPrcRSAC = 'Y'                                           MD055685
+     C                   IF        *INU4 = *ON                                              MD055685
+     C                   EVAL      WPrcRSAC = 'N'                                           MD055685
+     C                   ENDIF                                                              MD055685
                                                                                           AR1023928A
       ** Access RSACMTPD                                                                  AR1023928A
                                                                                           AR1023928A
+     C                   IF        WPrcRSAC = 'Y'                                           MD055685
      C                   EXSR      SRRSACUPD                                              AR1023928A
+     C                   ENDIF                                                              MD055685
 
       ***Access*RSACMTPD***********************************************                      BUG3035
 
@@ -2200,7 +2225,8 @@
      C                   EVAL      RWRKDAT = FADATE
 
      C     KFACHIS1      SETLL     FACHSAL5
-     C                   READ      FACHSAL5
+     C**********         READ      FACHSAL5                                                 MD055874
+     C     KFACHIS1      READE     FACHSAL5                                                 MD055874
 
       ** Update record in FACHISA
 
@@ -2220,7 +2246,8 @@
 
       ** Read next record
 
-     C                   READ      FACHSAL5
+     C**********         READ      FACHSAL5                                                 MD055874
+     C     KFACHIS1      READE     FACHSAL5                                                 MD055874
      C                   ENDDO
 
       ** Check if Previous Facility in FACACT
@@ -2312,7 +2339,8 @@
      C                   EVAL      RWRKDAT = FADATE
 
      C     KFACHIS1      SETLL     FACHSAL5
-     C                   READ      FACHSAL5
+     C**********         READ      FACHSAL5                                                 MD055874
+     C     KFACHIS1      READE     FACHSAL5                                                 MD055874
 
       ** Update record in FACHISA
 
@@ -2332,7 +2360,8 @@
 
       ** Read next record
 
-     C                   READ      FACHSAL5
+     C**********         READ      FACHSAL5                                                 MD055874
+     C     KFACHIS1      READE     FACHSAL5                                                 MD055874
      C                   ENDDO
 
       ** Check if Previous Facility in FACACT
@@ -3168,7 +3197,8 @@
      C                   EVAL      RWRKDAT = FADATE                                           CLE169
                                                                                               CLE169
      C     KFACHIS1      SETLL     FACHSAL5                                                   CLE169
-     C                   READ      FACHSAL5                                                   CLE169
+     C**********         READ      FACHSAL5                                          CLE169 MD055874
+     C     KFACHIS1      READE     FACHSAL5                                                 MD055874
                                                                                               CLE169
       ** Update record in FACHISA                                                             CLE169
                                                                                               CLE169
@@ -3188,7 +3218,8 @@
                                                                                               CLE169
       ** Read next record                                                                     CLE169
                                                                                               CLE169
-     C                   READ      FACHSAL5                                                   CLE169
+     C**********         READ      FACHSAL5                                          CLE169 MD055874
+     C     KFACHIS1      READE     FACHSAL5                                                 MD055874
      C                   ENDDO                                                                CLE169
                                                                                               CLE169
       ** Check if Previous Facility in FACACT                                                 CLE169
@@ -3277,7 +3308,8 @@
      C                   EVAL      RWRKDAT = FADATE                                           CLE169
                                                                                               CLE169
      C     KFACHIS1      SETLL     FACHSAL5                                                   CLE169
-     C                   READ      FACHSAL5                                                   CLE169
+     C**********         READ      FACHSAL5                                          CLE169 MD055874
+     C     KFACHIS1      READE     FACHSAL5                                                 MD055874
                                                                                               CLE169
       ** Update record in FACHISA                                                             CLE169
                                                                                               CLE169
@@ -3297,7 +3329,8 @@
                                                                                               CLE169
       ** Read next record                                                                     CLE169
                                                                                               CLE169
-     C                   READ      FACHSAL5                                                   CLE169
+     C**********         READ      FACHSAL5                                          CLE169 MD055874
+     C     KFACHIS1      READE     FACHSAL5                                                 MD055874
      C                   ENDDO                                                                CLE169
                                                                                               CLE169
       ** Check if Previous Facility in FACACT                                                 CLE169
@@ -3765,6 +3798,7 @@
                                                                                               CLE169
      C                   ENDIF                                                                CLE169
       *                                                                                       CLE169
+      ** Generate Account Movement event for Real Time Posting                              MD052994
       ** Initialise field                                                                     CLE169
       *                                                                                       CLE169
      C                   EVAL      WACTBAL = F1ACBL                                           CLE169
@@ -3779,7 +3813,8 @@
      C                   EVAL      KAACOD = A2ACOD                                            CLE169
      C                   EVAL      KAACSQ = A2ACSQ                                            CLE169
      C                   EVAL      KABRCA = A2BRCA                                            CLE169
-     C                   EVAL      KAPSTD = WPRUN                                             CLE169
+     C**********         EVAL      KAPSTD = WPRUN                                    CLE169 MD052994
+     C                   EVAL      KAPSTD = BJRDNB                                          MD052994
      C                   EVAL      WCOMAC1 = A2CNUM                                           CLE169
      C                   EVAL      WCOMAC2 = A2CCY                                            CLE169
      C                   EVAL      WCOMAC3 = A2ACOD                                           CLE169
@@ -3806,33 +3841,38 @@
      C                   IF        WCOMPACC1 = WCOMPACC2                                      CLE169
       *                                                                                       CLE169
      C                   EVAL      WPROC = 'N'                                                CLE169
-      *                                                                                       CLE169
-     C                   IF        PSTD = WPRUN AND VALD <= BJRDNB                            CLE169
-     C                             AND DLREF = *BLANKS                                        CLE169
-      *                                                                                       CLE169
-     C                   IF        VALD < PRUN                                                CLE169
-     C                   EVAL      WACTDAT = BJRDNB                                           CLE169
-     C                   ELSEIF    VALD > PRUN                                                CLE169
-     C                   EVAL      WACTDAT = VALD                                             CLE169
-     C                   ENDIF                                                                CLE169
-      *                                                                                       CLE169
-      ** Check if batch posting                                                               CLE169
-      *                                                                                       CLE169
-     C                   EVAL      KBEDT = PSTD                                               CLE169
-     C                   EVAL      KBTNB = %SUBST(SPOS:1:3)                                   CLE169
-     C                   EVAL      BTCHK = %CHECK('0123456789':KBTNB)                         CLE169
-     C                   IF        BTCHK = 0                                                  CLE169
-     C                             OR %SUBST(SPOS:3:5) = 'GE-IC'                              CLE169
-     C                             AND PSTD = WPRUN AND VALD <= BJRDNB                        CLE169
-     C                             AND DLREF = *BLANKS                                        CLE169
-     C     KJOENT        CHAIN     GLJEHHL0                                                   CLE169
-      *                                                                                       CLE169
-     C                   IF        NOT %FOUND(GLJEHHL0)                                       CLE169
-     C                   EVAL      WPROC = 'Y'                                                CLE169
-     C                   ENDIF                                                                CLE169
-     C                   ENDIF                                                                CLE169
-      *                                                                                       CLE169
-     C                   ELSEIF    PSTD = BJRDNB                                              CLE169
+      *                                                                                     MD052994
+      ** Generation of Account Movement event for GE-IC entries                             MD052994
+      ** were moved to PGM/LE000030A                                                        MD052994
+      *****************************************************************              CLE169 MD052994
+     C**********         IF        PSTD = WPRUN AND VALD <= BJRDNB                   CLE169 MD052994
+     C**********                   AND DLREF = *BLANKS                               CLE169 MD052994
+      *****************************************************************              CLE169 MD052994
+     C**********         IF        VALD < PRUN                                       CLE169 MD052994
+     C**********         EVAL      WACTDAT = BJRDNB                                  CLE169 MD052994
+     C**********         ELSEIF    VALD > PRUN                                       CLE169 MD052994
+     C**********         EVAL      WACTDAT = VALD                                    CLE169 MD052994
+     C**********         ENDIF                                                       CLE169 MD052994
+      *****************************************************************              CLE169 MD052994
+      ***Check*if*batch*posting****************************************              CLE169 MD052994
+      *****************************************************************              CLE169 MD052994
+     C**********         EVAL      KBEDT = PSTD                                      CLE169 MD052994
+     C**********         EVAL      KBTNB = %SUBST(SPOS:1:3)                          CLE169 MD052994
+     C**********         EVAL      BTCHK = %CHECK('0123456789':KBTNB)                CLE169 MD052994
+     C**********         IF        BTCHK = 0                                         CLE169 MD052994
+     C**********                   OR %SUBST(SPOS:3:5) = 'GE-IC'                     CLE169 MD052994
+     C**********                   AND PSTD = WPRUN AND VALD <= BJRDNB               CLE169 MD052994
+     C**********                   AND DLREF = *BLANKS                               CLE169 MD052994
+     C*****KJOENT        CHAIN     GLJEHHL0                                          CLE169 MD052994
+      *****************************************************************              CLE169 MD052994
+     C**********         IF        NOT %FOUND(GLJEHHL0)                              CLE169 MD052994
+     C**********         EVAL      WPROC = 'Y'                                       CLE169 MD052994
+     C**********         ENDIF                                                       CLE169 MD052994
+     C**********         ENDIF                                                       CLE169 MD052994
+      *****************************************************************              CLE169 MD052994
+     C**********         ELSEIF    PSTD = BJRDNB                                     CLE169 MD052994
+      *                                                                                     MD052994
+     C                   IF        PSTD = BJRDNB                                            MD052994
      C                   EVAL      WACTDAT = PSTD                                             CLE169
       *                                                                                       CLE169
       ** Check if real time posting                                                           CLE169
@@ -5449,10 +5489,10 @@
      C                   KFLD                    KAACSQ
      C                   KFLD                    KABRCA
      C                   KFLD                    KAPSTD
-      *                                                                                       CLE169
-     C     KJOENT        KLIST                                                                CLE169
-     C                   KFLD                    KBEDT                                        CLE169
-     C                   KFLD                    KBTNB                                        CLE169
+      **********                                                                     CLE169 MD052994
+     C*****KJOENT        KLIST                                                       CLE169 MD052994
+     C**********         KFLD                    KBEDT                               CLE169 MD052994
+     C**********         KFLD                    KBTNB                               CLE169 MD052994
 
       ** Access Bank Details
 
@@ -5559,11 +5599,11 @@
       ** Create/Instantiate "CalcClass" java object (one time only)
 
      C                   EVAL      CalcClassObj = crtCalcClass(Parm8)
-      *                                                                                       CLE169
-      ** Retrieve previous rundate                                                            CLE169
-      *                                                                                       CLE169
-     C                   IN        JNSTAT                                                     CLE169
-     C                   EVAL      WPRUN = PRUN                                               CLE169
+      *****************************************************************              CLE169 MD052994
+      ***Retrieve*previous*rundate*************************************              CLE169 MD052994
+      *****************************************************************              CLE169 MD052994
+     C**********         IN        JNSTAT                                            CLE169 MD052994
+     C**********         EVAL      WPRUN = PRUN                                      CLE169 MD052994
 
      C                   ENDSR
 

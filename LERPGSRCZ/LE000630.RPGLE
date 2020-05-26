@@ -25,13 +25,19 @@
       *                                                               *
       *  (c) Finastra International Limited 2018                      *
       *                                                               *
-      *  Last Amend No. MD027418           Date 18Jul18               *
-      *  Prev Amend No. MD026971           Date 18Jul18               *
+      *  Last Amend No. MD055657           Date 14May20               *
+      *  Prev Amend No. MD027418           Date 18Jul18               *
+      *                 MD026971           Date 18Jul18               *
       *                 MD025837A          Date 18Jul18               *
       *                 CLE158  *CREATE    Date 18Jul18               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055657 - Manual transaction from FFC TI Interface went to  *
+      *             repair queue because the facility exchange rate is*
+      *             longer than the defined facility exchange rate in *
+      *             Midas. Increase the field definition of the Midas *
+      *             facility exchange rate. (Recompile)               *
       *  MD027418 - Exclude loan if it is not yet authorised and      *
       *             last action was insert.                           *
       *  MD026971 - Issue either overridable error or warning         *

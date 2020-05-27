@@ -47,7 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CMG008 - MT940, MT941, MT942, MT950 Translation Table.       *
+      *  CMG008 - SWIFT Character Translation Table                   *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL146 - MT940/MT950 Production in Input Cycle               *
       *           Added hooks: CGL146_001, CGL146_059, CGL146_060     *

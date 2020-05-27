@@ -45,7 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CMG008 - MT940, MT941, MT942, MT950 Translation Table.       *
+      *  CMG008 - SWIFT Character Translation Table                   *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  CER059 - German Feature Upgrade to Delhi                     *

@@ -43,8 +43,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CMG008 - MT940, MT941, MT942, MT950 Translation Table.       *
-      *           (Recompile)                                         *
+      *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD045952 - Ensure that COB MT940s only generated if          *
       *             calling pgm is GLC001430.                         *
       *           - Recompile due to changes to CGL146_043, CGL146_044*

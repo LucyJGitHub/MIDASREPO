@@ -43,8 +43,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CMG008 - MT940, MT941, MT942, MT950 Translation Table.       *
-      *           (Recompile)                                         *
+      *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD046248 - Finastra Rebranding                               *
       *  AR787620 - Hooks Incorporation                               *
       *             WNCPYSRC,GLH00170                                 *

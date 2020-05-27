@@ -23,8 +23,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CMG008 - MT940, MT941, MT942, MT950 Translation Table.       *
-      *           (Recompile)                                         *
+      *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG23654 - No. of lines validation error for UNSD3           *

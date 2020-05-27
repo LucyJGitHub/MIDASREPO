@@ -19,7 +19,7 @@
       *                                                               *
       *  MD055780 - No modules found for the specified value of       *
       *             GPSDCONVPD.                                       *
-      *  CMG008 - MT940, MT941, MT942, MT950 Translation Table.       *
+      *  CMG008 - SWIFT Character Translation Table                   *
       *                                                               *
       *****************************************************************
 

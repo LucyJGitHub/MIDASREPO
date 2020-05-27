@@ -83,7 +83,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CMG008 - MT940, MT941, MT942, MT950 Translation Table.       *
+      *  CMG008 - SWIFT Character Translation Table                   *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD053583 - Inserted record in CUSD does not appear in the    *
       *             Main List View.                                   *

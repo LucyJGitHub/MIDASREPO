@@ -52,7 +52,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CMG008 - MT940, MT941, MT942, MT950 Translation Table.       *
+      *  CMG008 - SWIFT Character Translation Table                   *
       *  MD050696 - Multicash extended narratives from BuN interface  *
       *            postings not merged in field 86                    *
       *  MD046248 - Finastra Rebranding                               *

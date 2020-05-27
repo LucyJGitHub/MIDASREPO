@@ -31,8 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CMG008 - MT940, MT941, MT942, MT950 Translation Table.       *
-      *           (Recompile)                                         *
+      *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD023885 - Technical drop of deleted accounting rules        *
       *             Added hooks: CGL146_135, CGL146_136, CGL146_137,  *

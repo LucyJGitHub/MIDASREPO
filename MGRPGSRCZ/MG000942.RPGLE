@@ -79,8 +79,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CMG008 - MT940, MT941, MT942, MT950 Translation Table.       *
-      *           (Recompile)                                         *
+      *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD042041 - Tag 61 is not sorted by DRCR and PSTA. Added a    *
       *             system value that when is set to 'Y', program     *

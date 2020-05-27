@@ -1,7 +1,8 @@
      H DEBUG
      H COPYRIGHT('(c) Finastra International Limited 2020')
       *****************************************************************
-/*STD *  RPGBASEBNC                                                   *
+/********RPGBASEBNC                                                   *                     MD055780
+/*STD *  RPGBASEMOD                                                   *                     MD055780
 /*EXI *  TEXT('Generated Code')                                       *
       *****************************************************************
       *                                                               *
@@ -11,11 +12,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CMG008  *CREATE    Date 20Feb20               *
+      *  Last Amend No. MD055780           Date 11May20               *
+      *  Prev Amend No. CMG008  *CREATE    Date 20Feb20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CMG008 - MT940, MT941, MT942, MT950 Translation Table.       *
+      *  MD055780 - No modules found for the specified value of       *
+      *             GPSDCONVPD.                                       *
+      *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *                                                               *
       *****************************************************************
 

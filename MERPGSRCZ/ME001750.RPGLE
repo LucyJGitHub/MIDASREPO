@@ -36,8 +36,7 @@
       *                                                               *
       *-------------------------------------------------------------- *
       *                                                               *
-      *  CMG008 - MT940, MT941, MT942, MT950 Translation Table.       *
-      *           (Recompile)                                         *
+      *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034562 - ACOUNTLINE and ACOUNTIBAN must be accepted for    *
       *             59F even if CSW215 is OFF                         *

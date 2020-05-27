@@ -107,8 +107,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CMG008 - MT940, MT941, MT942, MT950 Translation Table.       *
-      *           (Recompile)                                         *
+      *  CMG008 - SWIFT Character Translation Table                   *
       *  CSD101 - Password Encryption (Recompile)                     *
       *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *

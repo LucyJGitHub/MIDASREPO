@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD055220           Date 12May20               *
-      *  Prev Amend No. MD055128           Date 17Apr20               *
+      *  Last Amend No. MD055059           Date 21May20               *
+      *  Prev Amend No. MD055220           Date 12May20               *
+      *                 MD055128           Date 17Apr20               *
       *                 MD055714           Date 06May20               *
       *                 257533             Date 06May20               *
       *                 MD055074           Date 21Jan20               *
@@ -128,6 +129,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055059 - Allow negative fixed rate                         *
       *  MD055220 - Allow negative spread rate to be processed        *
       *  MD055128 - Allow  negative total interest when negative      *
       *             base rate code was used                           *
@@ -1534,11 +1536,22 @@
      C                   MOVEL     'LEL0715'     MsgIDXAr(Idx)                              BUG11329
      C                   ENDIF                                                                CLE035
      C                   MOVE      *BLANKS       PSCRF                                        CLE035
+     C                   MOVEL     *BLANK        WFXRT1            1                        MD055059
+     C                   MOVEL     *BLANK        WFXRT3           11                        MD055059
+     C                   MOVEL     DDFXRT        WFXRT1                                     MD055059
+     C                   MOVE      DDFXRT        WFXRT3                                     MD055059
+     C     WFXRT1        IFEQ      '-'                                                      MD055059
+     C                   MOVE      WFXRT3        PSCRF                                      MD055059
+     C                   ELSE                                                               MD055059
      C                   MOVE      DDFXRT        PSCRF                                        CLE035
+     C                   ENDIF                                                              MD055059
      C                   Z-ADD     4             PNDIG                                        CLE035
      C                   Z-ADD     7             PNDEC                                        CLE035
      C                   CALL      'ZALIGN'      PPAR1                                        CLE035
      C                   MOVE      PRVAL         WFXRT                                        CLE035
+     C     WFXRT1        IFEQ      '-'                                                      MD055059
+     C                   Z-SUB     WFXRT         WFXRT                                      MD055059
+     C                   ENDIF                                                              MD055059
       *                                                                                       CLE170
       ** If CLE170 is on, and Loan passes the criteria, suppress the error message            CLE170
       *                                                                                       CLE170
@@ -1571,6 +1584,9 @@
      C     DDFXRTOK      IFNE      'N'                                                        CLE035
      C                   Z-ADD     WFXRT         CCLRTSP                                      CLE035
      C                   MOVE      PRVAL         WSVRS                                        CLE035
+     C     WFXRT1        IFEQ      '-'                                                      MD055059
+     C                   Z-SUB     WSVRS         WSVRS                                      MD055059
+     C                   ENDIF                                                              MD055059
      C                   ENDIF                                                                CLE035
                                                                                               CLE035
       ** .. if fixed rate is blank validate the rest of the rates                             CLE035

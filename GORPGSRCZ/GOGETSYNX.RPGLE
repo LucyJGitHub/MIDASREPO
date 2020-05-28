@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD055146           Date 04Feb20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055751           Date 22May20               *
+      *  Prev Amend No. MD055146           Date 04Feb20               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR1079991          Date 29Jan13               *
       *                 AR1064845          Date 05Dec12               *
       *                 262126             Date 12Oct09               *
@@ -29,6 +30,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055751 - Global Sync Issue for GOC0100 during COB          *
+      *             Include zone in the creation of SQL view.         *
       *  MD055146 - Failed MXC004802 seq. 00001 and others            *
       *             Increase Branch count to 900.                     *
       *  MD046248 - Finastra Rebranding                               *
@@ -67,6 +70,8 @@
      D SUBZ            S             38    DIM(1) CTDATA PERRCD(1)
      D SUBB            S             35    DIM(3) CTDATA PERRCD(1)
 
+     D OPNQRY2         S             20    DIM(5) CTDATA PERRCD(1)                          MD055751
+                                                                                            MD055751
      D                 DS
      D*QRYSLT***               1   2000                                                       242731
      D*QS*******               1   2000                                                       242731
@@ -101,6 +106,26 @@
      C                                        + %trim(qrysltx)                                262126
      C                                        + QRYKEY                                        262126
      C                                        + OPNQRY(3)                                     262126
+      *                                                                                     MD055751
+      ** OPNQRYF for SQL View                                                               MD055751
+      *                                                                                     MD055751
+     C                   MOVE      *BLANKS       F_FORMAT         10                        MD055751
+      *                                                                                     MD055751
+     C                   IF        GFGLFF = *BLANKS                                         MD055751
+     C                   EVAL      F_FORMAT = GFZLFF                                        MD055751
+     C                   ELSE                                                               MD055751
+     C                   EVAL      F_FORMAT = GFGLFF                                        MD055751
+     C                   ENDIF                                                              MD055751
+      *                                                                                     MD055751
+     C                   EVAL      O_OPNQRY2 =  OPNQRY2(1) + FSQLVIEW                       MD055751
+     C                                        + OPNQRY2(2)                                  MD055751
+     C                                        + OPNQRY2(3)                                  MD055751
+     C                                        + GFGLF + ' '                                 MD055751
+     C                                        + F_FORMAT                                    MD055751
+     C                                        + OPNQRY2(4)                                  MD055751
+     C                                        + QRYKEY                                      MD055751
+     C                                        + OPNQRY2(5)                                  MD055751
+      *                                                                                     MD055751
      C                   ENDIF                                                                262126
 
      C                   SETON                                        LR
@@ -194,12 +219,15 @@
      C                   PARM                    O_GFGPF          10                        MD055146
      C                   PARM                    O_GFGBRC         10                        MD055146
      C                   PARM                    O_GFGLF          10                        MD055146
+     C                   PARM                    FSQLVIEW         10                        MD055751
+     C                   PARM                    O_OPNQRY2      1000                        MD055751
 
      C                   MOVE      *BLANK        I#RTCD            7
      C                   MOVE      *BLANK        I#ERMS           50
      C                   MOVE      *BLANKS       O_GFGPF                                    MD055146
      C                   MOVE      *BLANKS       O_GFGBRC                                   MD055146
      C                   MOVE      *BLANKS       O_GFGLF                                    MD055146
+     C                   MOVE      *BLANKS       O_OPNQRY2                                  MD055751
                                                                                             MD055146
      C     I_GPF         CHAIN     GPGLOBFD0                          99
 
@@ -290,3 +318,9 @@ QRYSLT('           *EQ "          "')
 QRYSLT('           *EQ "   "
    *OR             *EQ "   "
 ')
+** OPNQRY2                                                                                  MD055751
+OPNQRYF FILE(                                                                               MD055751
+) OPTION(*ALL)                                                                              MD055751
+ FORMAT(                                                                                    MD055751
+)                                                                                           MD055751
+ OPNSCOPE(*JOB)                                                                             MD055751

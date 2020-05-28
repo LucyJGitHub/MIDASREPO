@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD055059           Date 21May20               *
-      *  Prev Amend No. MD055220           Date 12May20               *
+      *  Last Amend No. MD055219           Date 27May20               *
+      *  Prev Amend No. MD055059           Date 21May20               *
+      *                 MD055220           Date 12May20               *
       *                 MD055128           Date 17Apr20               *
       *                 MD055714           Date 06May20               *
       *                 257533             Date 06May20               *
@@ -129,6 +130,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055219 - Interest rate must not be zero for discount and   *
+      *             flat loan                                         *
       *  MD055059 - Allow negative fixed rate                         *
       *  MD055220 - Allow negative spread rate to be processed        *
       *  MD055128 - Allow  negative total interest when negative      *
@@ -1480,6 +1483,19 @@
      C                   MOVEL     'DDRTSP'      FldNamXAr(Idx)
      C                   MOVEL     'LEL0140'     MsgIDXAr(Idx)
      C                   ENDIF
+      *                                                                                     MD055219
+     C     BASER         IFEQ      *ZEROS                                                   MD055219
+     C     @@AMT         ANDEQ     *ZEROS                                                   MD055219
+     C     WLNPT         IFEQ      63                                                       MD055219
+     C     WLNPT         OREQ      65                                                       MD055219
+     C     WLNPT         OREQ      67                                                       MD055219
+     C     WLNPT         OREQ      80                                                       MD055219
+     C                   MOVE      'N'           DDRTSPOK                                   MD055219
+     C                   ADD       1             Idx                                        MD055219
+     C                   MOVEL     'DDRTSP'      FldNamXAr(Idx)                             MD055219
+     C                   MOVEL     'LEL0140'     MsgIDXAr(Idx)                              MD055219
+     C                   ENDIF                                                              MD055219
+     C                   ENDIF                                                              MD055219
       *
      C                   ENDIF                                                                CLE170
       *                                                                                       CLE170
@@ -1629,6 +1645,19 @@
      C                   MOVEL     'LEL0712'     MsgIDXAr(Idx)                                CLE035
      C                   ENDIF                                                                CLE035
      C                   EXSR      SRBRTT                                                     CLE035
+      *                                                                                     MD055219
+     C     BASER         IFEQ      *ZEROS                                                   MD055219
+     C     #DDRTSP       ANDEQ     *ZEROS                                                   MD055219
+     C     WLNPT         IFEQ      63                                                       MD055219
+     C     WLNPT         OREQ      65                                                       MD055219
+     C     WLNPT         OREQ      67                                                       MD055219
+     C     WLNPT         OREQ      80                                                       MD055219
+     C                   MOVE      'N'           DDFXRTOK                                   MD055219
+     C                   ADD       1             Idx                                        MD055219
+     C                   MOVEL     'DDFXRT'      FldNamXAr(Idx)                             MD055219
+     C                   MOVEL     'LEL0140'     MsgIDXAr(Idx)                              MD055219
+     C                   ENDIF                                                              MD055219
+     C                   ENDIF                                                              MD055219
       ** .. if base rate code is blank, validate base rate                                    CLE035
      C                   ELSE                                                                 CLE035
      C                   MOVE      *BLANKS       PSCRF                                        CLE035

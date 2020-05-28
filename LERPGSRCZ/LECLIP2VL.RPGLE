@@ -1477,25 +1477,24 @@
      C     WPTFC         ANDEQ     *Blanks                                                   CSD027A
      C     WPTFT         ANDEQ     *ZEROS                                                   BUG10225
      C     WPTFN         ANDEQ     *ZEROS                                                   BUG10225
+     C     BASER         OREQ      *ZEROS                                                   MD055219
+     C     @@AMT         ANDEQ     *ZEROS                                                   MD055219
+     C     WLNPT         ANDEQ     63                                                       MD055219
+     C     BASER         OREQ      *ZEROS                                                   MD055219
+     C     @@AMT         ANDEQ     *ZEROS                                                   MD055219
+     C     WLNPT         ANDEQ     65                                                       MD055219
+     C     BASER         OREQ      *ZEROS                                                   MD055219
+     C     @@AMT         ANDEQ     *ZEROS                                                   MD055219
+     C     WLNPT         ANDEQ     63                                                       MD055219
+     C     BASER         OREQ      *ZEROS                                                   MD055219
+     C     @@AMT         ANDEQ     *ZEROS                                                   MD055219
+     C     WLNPT         ANDEQ     80                                                       MD055219
                                                                                             BUG10225
      C                   MOVE      'N'           DDRTSPOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDRTSP'      FldNamXAr(Idx)
      C                   MOVEL     'LEL0140'     MsgIDXAr(Idx)
      C                   ENDIF
-      *                                                                                     MD055219
-     C     BASER         IFEQ      *ZEROS                                                   MD055219
-     C     @@AMT         ANDEQ     *ZEROS                                                   MD055219
-     C     WLNPT         IFEQ      63                                                       MD055219
-     C     WLNPT         OREQ      65                                                       MD055219
-     C     WLNPT         OREQ      67                                                       MD055219
-     C     WLNPT         OREQ      80                                                       MD055219
-     C                   MOVE      'N'           DDRTSPOK                                   MD055219
-     C                   ADD       1             Idx                                        MD055219
-     C                   MOVEL     'DDRTSP'      FldNamXAr(Idx)                             MD055219
-     C                   MOVEL     'LEL0140'     MsgIDXAr(Idx)                              MD055219
-     C                   ENDIF                                                              MD055219
-     C                   ENDIF                                                              MD055219
       *
      C                   ENDIF                                                                CLE170
       *                                                                                       CLE170

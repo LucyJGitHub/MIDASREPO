@@ -14,9 +14,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD026384           Date 25Jan18               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 AR878735           Date 13Dec11               *
       *                 CDL094             Date 11Jun14               *
       *                 CLE134             Date 01Aug12               *
@@ -52,9 +51,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD026384 - Added generation by assignment processing.        *
-      *             Recompiled due to changes in LELOA2PD.            *
-      *           - Applied for MD049367.                             *      
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  AR878735 - Field CVMR not properly inserted/updated in       *

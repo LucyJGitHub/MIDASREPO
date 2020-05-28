@@ -32,9 +32,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD026384           Date 25Jan18               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
-      *                 CSD102             Date 08Jan19               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL094             Date 11Jun14               *
       *                 CSD095             Date 08Apr14               *
@@ -67,8 +66,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD026384 - Added generation of assignment processing.        *
-      *           - Applied for MD049367.                             *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
@@ -208,9 +205,6 @@
  
       * Incoming amendment in screen format
      D TranInLOAM    E DS                  EXTNAME(LELOAMPD)
-      * Incoming Transaction 2                                                              MD026384
-     D TranInLOA2    E DS                  EXTNAME(LELOA2PD)                                MD026384
-     D                                     PREFIX(D_)                                       MD026384
  
       * File receive instructions
      D F_REC         E DS                  EXTNAME(SDESFRPD)
@@ -789,10 +783,6 @@
  
       ** Transaction information (DS) from source system (screen format)
      C                   PARM                    LoamScnFmt
-      *                                                                                     MD026384
-      ** Secondary transaction information                                                  MD026384
-      *                                                                                     MD026384
-     C                   PARM                    TranInLOA2                                 MD026384
  
       ** Current Loan Amendment in file format from caller
      C                   PARM                    CurFilLoam

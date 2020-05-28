@@ -12,9 +12,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD026384           Date 25Jan18               *
-      *  Prev Amend No. MD054317           Date 09Sep19               *      
-      *                 CER050             Date 16Jun19               *
+      *  Last Amend No. MD054317           Date 09Sep19               *      
+      *  Prev Amend No. CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD050018           Date 05Nov18               *
       *                 MD047554           Date 11Oct17               *
@@ -104,8 +103,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD026384 - Added generation by assignment processing.        *
-      *           - Applied for MD049367.                             * 
       *  MD054317 - PDCL X not generated for freq based repayment     *      
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -3741,13 +3738,6 @@
       *
       ** Only process if assignment flag is set
      C     LAGASS        IFEQ      'A'
-      *                                                                                     MD026384
-      ** Below codes (if GASS = 'A') is not done in LEMAPYUPD                               MD026384
-      ** For assignments, MR/PI will just cancel out update in PSAM                         MD026384
-      *                                                                                     MD026384
-     C     LAAMTP        IFEQ      'PI'                                                     MD026384
-     C                   LEAVEsr                                                            MD026384
-     C                   ENDIF                                                              MD026384
       *
       ** Access Loans file using loan number
       *

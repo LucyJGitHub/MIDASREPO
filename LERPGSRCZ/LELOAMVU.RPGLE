@@ -33,9 +33,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD026384           Date 25Jan18               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
-      *                 CSD102             Date 08Jan19               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
       *                 MD051890           Date 17Sep18               *
       *                 MD039547           Date 20Sep16               *
       *                 CLE071             Date 18Jul18               *
@@ -99,8 +98,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD026384 - Added generation by assignment processing.        *
-      *           - Applied for MD049367.                             *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD051890 - Missing Principal Projection on Nostro Account    *
@@ -1360,10 +1357,6 @@
 
       ** Transaction information (DS) from source system (screen format)
      C                   PARM                    TranInLOAM
-      *                                                                                     MD026384
-      ** Secondary transaction information                                                  MD026384
-      *                                                                                     MD026384
-     C                   PARM                    TranInLOA2                                 MD026384
 
       ** Current Loan Amendment in file format from caller
      C                   PARM                    CurFilLoam

@@ -926,6 +926,7 @@
       ** before trying to default from loan. Placed another call for ZASETINDFT             MD029046
       ** for Principal increase insert.                                                     MD029046
       *                                                                                     MD029046
+     C                   IF        (CLE134 = 'N'  AND COBMode = 'N')                        MD029046
      C                   IF        DDACTN = 'I'                                             MD029046
      C                             AND DDATYP = 'PI'                                        MD029046
      C                   MOVEL     LO_CNUM       ##CSNM                                     MD029046
@@ -977,6 +978,7 @@
       ***  FRA/IRS instructions                                                             MD029046
      C                   PARM                    F_FRI                                      MD029046
      C                   ENDIF                                                              MD029046
+     C                   ENDIF                                                              MD029046      
       *
       ** Set up payment instructions from loan
       ***(on*insertions,*these*fields*will*be*zero/blank)**************                       TDA066

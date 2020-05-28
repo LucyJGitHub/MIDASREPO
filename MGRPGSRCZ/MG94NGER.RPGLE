@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD055642           Date 04May20               *
-      *  Prev Amend No. MD050727           Date 21Jan17               *
+      *  Last Amend No. MD055642A          Date 27May20               *
+      *  Prev Amend No. MD055642           Date 04May20               *
+      *                 MD050727           Date 21Jan17               *
       *                 CMG008             Date 19May10               *
       *                 MD046248           Date 27Oct17               *
       *                 CRE075             Date 06Dec10               *
@@ -47,6 +48,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055642A - FM 2.1 SP21 Duplicate MultiCash Narr 22 on       *
+      *             field 61 subfield 86 ; reverse MD-55642 fix       *
+      *            - Fix is now applied in GL001432 to avoid          *
+      *              duplicate Narrative 22                           *
       *  MD055642 - FM 2.1 SP21 Duplicate MultiCash Narr 22 on        *
       *             field 61 subfield 86                              *
       *  MD050727 - Emergency fix to enable alphanumeric batches      *
@@ -510,8 +515,8 @@
      D WChrLen         S              3S 0                                                    CMG008
       ** Work field for %SUBST operation                                                      CMG008
                                                                                               CMG008
-     D WkBAEX22        S                   LIKE(BAEX22)                                     MD055642
-      ** Work field for MultiCash Narrative 22 in file GLMNARPD                             MD055642
+     D***WkBAEX22        S                   LIKE(BAEX22)                         MD055642 MD055642A
+      ***Work*field*for*MultiCash*Narrative*22*in*file*GLMNARPD*********          MD055642 MD055642A
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2102,10 +2107,10 @@
      C                   EVAL      WIndx =1                                                 BUG24304
      C                   EVAL      WExt22 = *BLANKS                                         BUG24304
       *                                                                                     BUG24304
-     C                   EVAL      WkBAEX22  = BAEX22                                       MD055642
-     C                   IF        WkModuleID = 'BA' AND MG8632 <> *BLANKS                  MD055642
-     C                   EVAL      WkBAEX22  = *BLANKS                                      MD055642
-     C                   ENDIF                                                              MD055642
+     C**********         EVAL      WkBAEX22  = BAEX22                             MD055642 MD055642A
+     C**********         IF        WkModuleID = 'BA' AND MG8632 <> *BLANKS        MD055642 MD055642A
+     C**********         EVAL      WkBAEX22  = *BLANKS                            MD055642 MD055642A
+     C**********         ENDIF                                                    MD055642 MD055642A
                                                                                             MD055642
      C                   EVAL      WExt22 = %TRIM(BAEX1) + '  ' +                           BUG24304
      C                             %TRIM(BAEX2)+'  '+%TRIM(BAEX3)+'  '+                     BUG24304

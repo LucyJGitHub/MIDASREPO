@@ -926,7 +926,6 @@
       ** before trying to default from loan. Placed another call for ZASETINDFT             MD029046
       ** for Principal increase insert.                                                     MD029046
       *                                                                                     MD029046
-     C                   IF        (CLE134 = 'N'  AND COBMode = 'N')                        MD029046
      C                   IF        DDACTN = 'I'                                             MD029046
      C                             AND DDATYP = 'PI'                                        MD029046
      C                   MOVEL     LO_CNUM       ##CSNM                                     MD029046
@@ -978,14 +977,16 @@
       ***  FRA/IRS instructions                                                             MD029046
      C                   PARM                    F_FRI                                      MD029046
      C                   ENDIF                                                              MD029046
-     C                   ENDIF                                                              MD029046      
       *
       ** Set up payment instructions from loan
       ***(on*insertions,*these*fields*will*be*zero/blank)**************                       TDA066
      C                   IF        (DDACTN = 'I')                                             TDA066
      C     PType         IFNE      'PTSO'                                                     TDA066
+     C     CLE134        ANDEQ     'Y'                                                      MD029046
+     C     PType         ORNE      'PTSO'                                                   MD029046
      C     FLPSTM        ANDEQ     *ZERO                                                    MD029046
      C     ##PPAY        ANDNE     'Y'                                                      MD029046
+     C     CLE134        ANDEQ     'N'                                                      MD029046
      C                   CLEAR                   FLREC                          BUG1373
      C                   Z-ADD     0             FLRSTM                         BUG1373
      C                   MOVE      *BLANKS       FLRONS                         BUG1373
@@ -1008,8 +1009,11 @@
       *
       ** If part sold, receive branch is our start date branch
      C     PType         IFEQ      'PTSO'
+     C     CLE134        ANDEQ     'Y'                                                      MD029046
+     C     PType         OREQ      'PTSO'                                                   MD029046
      C     FLRSTM        ANDEQ     *ZERO                                                    MD029046
      C     ##PREC        ANDNE     'Y'                                                      MD029046
+     C     CLE134        ANDEQ     'N'                                                      MD029046
      C                   CLEAR                   FLPAY                          BUG1373
      C                   Z-ADD     0             FLPSTM                         BUG1373
      C                   MOVE      *BLANKS       FLPONS                         BUG1373

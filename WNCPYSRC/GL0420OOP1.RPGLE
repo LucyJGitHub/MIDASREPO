@@ -6,12 +6,21 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2016            *
       *                                                               *
-      *  Last Amend No. MD054505           Date 30Sept19              *
-      *  Prev Amend No. LUC133             Date 01Aug19               *
+      *  Last Amend No. MD055823           Date 27May20               *
+      *  Prev Amend No. MD054505           Date 30Sept19              *
+      *                 LUC133             Date 01Aug19               *
       *                 LUC108   *CREATE   Date 19Apr16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055823 - Spa NY Monthly statement issue                    *
+      *           - Amend position of 'Balance Forward'               *
+      *           - Amend position of 'BF Balance amt'                *
+      *           - Amend position of 'DR/CR' indicator               *
+      *           - Remove 'AVAILABLE AMOUNT'                         *
+      *           - Remove 'CURRENT PRIME RATE AS AT'                 *
+      *           - Amend position of closing balance                 *
+      *           - Amend position of 'CARRIED FORWARD'               *
       *  MD054505 - Running Balance not shown in GL0420P2 (LUC133)    *
       *  LUC133 - Amendments to Statement of Account feature SpA      *
       *  LUC108 - Statement of Accounts                               *
@@ -3387,12 +3396,18 @@
      O                       LSTDA               14
      O****************************************   41 'BALANCE B/F'               LUC133
      O              NKP                          41 'BALANCE B/F'               LUC133
-     O               KP                          41 'BALANCE FORWARD'           LUC133
-     O                     70PSTBF              119 '   ,   ,   ,   , 0 CR'
-     O                     71PSTBF              119 '  ,   ,   ,   , 0 . CR'
-     O                     72PSTBF              119 ' ,   ,   ,   , 0 .  CR'
-     O                     73PSTBF              119 '   ,   ,   , 0 .   CR'
-     O                  83                      119 'DR'
+     O**********     KP                          41 'BALANCE FORWARD'                LUC133 MD055823
+     O               KP                          45 'BALANCE FORWARD'                       MD055823
+     O                     70PSTBF              118 '   ,   ,   ,   , 0 CR'                 MD055823
+     O                     71PSTBF              118 '  ,   ,   ,   , 0 . CR'                MD055823
+     O                     72PSTBF              118 ' ,   ,   ,   , 0 .  CR'                MD055823
+     O                     73PSTBF              118 '   ,   ,   , 0 .   CR'                 MD055823
+     O                  83                      118 'DR'                                    MD055823
+     O**********           70PSTBF              119 '   ,   ,   ,   , 0 CR'                 MD055823
+     O**********           71PSTBF              119 '  ,   ,   ,   , 0 . CR'                MD055823
+     O**********           72PSTBF              119 ' ,   ,   ,   , 0 .  CR'                MD055823
+     O**********           73PSTBF              119 '   ,   ,   , 0 .   CR'                 MD055823
+     O**********        83                      119 'DR'                                    MD055823
       *
      O          E    64 84 10            1
      O         AND   79                                                         LUC108
@@ -3482,20 +3497,24 @@
      O*************************************      45 'CARRIED FORWARD'           LUC133
      O              NKP                          45 'CARRIED FORWARD'           LUC133
      O               KP                          90 'CARRIED FORWARD'           LUC133
-     O                     71PSTBAL             119 '  ,   ,   ,   , 0 . CR'
-     O                     72PSTBAL             119 ' ,   ,   ,   , 0 .  CR'
-     O                     73PSTBAL             119 '   ,   ,   , 0 .   CR'
-     O                     47                   119 'DR'
+     O                     71PSTBAL             118 '  ,   ,   ,   , 0 . CR'                MD055823
+     O                     72PSTBAL             118 ' ,   ,   ,   , 0 .  CR'                MD055823
+     O                     73PSTBAL             118 '   ,   ,   , 0 .   CR'                 MD055823
+     O                     47                   118 'DR'                                    MD055823
+     O**********           71PSTBAL             119 '  ,   ,   ,   , 0 . CR'                MD055823
+     O**********           72PSTBAL             119 ' ,   ,   ,   , 0 .  CR'                MD055823
+     O**********           73PSTBAL             119 '   ,   ,   , 0 .   CR'                 MD055823
+     O**********           47                   119 'DR'                                    MD055823
       *
-     O          E    43 52   TOT              54
-     O         AND  N33 84
-     O         AND   79                                                         LUC108
-     O                                           67 'AVAILABLE AMOUNT'
-     O                     70CLBL1              119 '   ,   ,   ,   , 0 CR'
-     O                     71CLBL1              119 '  ,   ,   ,   , 0 . CR'
-     O                     72CLBL1              119 ' ,   ,   ,   , 0 .  CR'
-     O                     73CLBL1              119 '   ,   ,   , 0 .   CR'
-     O                     24                   119 'DR'
+     O**********E    43 52   TOT              54                                            MD055823
+     O*********AND  N33 84                                                                  MD055823
+     O*********AND   79                                                              LUC108 MD055823
+     O**********                                 67 'AVAILABLE AMOUNT'                      MD055823
+     O**********           70CLBL1              119 '   ,   ,   ,   , 0 CR'                 MD055823
+     O**********           71CLBL1              119 '  ,   ,   ,   , 0 . CR'                MD055823
+     O**********           72CLBL1              119 ' ,   ,   ,   , 0 .  CR'                MD055823
+     O**********           73CLBL1              119 '   ,   ,   , 0 .   CR'                 MD055823
+     O**********           24                   119 'DR'                                    MD055823
       *
      O          E    43 45   ENDPG       1
      O         AND      84
@@ -3512,11 +3531,16 @@
      O          E    84 43 52TOT              55
      O         AND     N33
      O         AND   79                                                         LUC108
-     O                     70PSTBAL             119 '   ,   ,   ,   , 0 CR'
-     O                     71PSTBAL             119 '  ,   ,   ,   , 0 . CR'
-     O                     72PSTBAL             119 ' ,   ,   ,   , 0 .  CR'
-     O                     73PSTBAL             119 '   ,   ,   , 0 .   CR'
-     O                     47                   119 'DR'
+     O                     70PSTBAL             118 '   ,   ,   ,   , 0 CR'                 MD055823
+     O                     71PSTBAL             118 '  ,   ,   ,   , 0 . CR'                MD055823
+     O                     72PSTBAL             118 ' ,   ,   ,   , 0 .  CR'                MD055823
+     O                     73PSTBAL             118 '   ,   ,   , 0 .   CR'                 MD055823
+     O                     47                   118 'DR'                                    MD055823
+     O**********           70PSTBAL             119 '   ,   ,   ,   , 0 CR'                 MD055823
+     O**********           71PSTBAL             119 '  ,   ,   ,   , 0 . CR'                MD055823
+     O**********           72PSTBAL             119 ' ,   ,   ,   , 0 .  CR'                MD055823
+     O**********           73PSTBAL             119 '   ,   ,   , 0 .   CR'                 MD055823
+     O**********           47                   119 'DR'                                    MD055823
       *
      O          E    84 43 52TOT         1
      O         AND     N33 10
@@ -3550,13 +3574,14 @@
      O                     72PSCR               118 '  ,   ,   , 0 .  '          LUC133
      O                     73PSCR               118 ' ,   ,   , 0 .   '          LUC133
       *
-     O          E    84 43 52TOT              58
-     O         AND  N33N16
-     O         AND   79                                                         LUC108
-     O                                           29 'CURRENT PRIME RATE AS AT'
-     O                       RUNA                37
-     O                                           39 ':'
-     O                       G@BRTE              53 ' , 0 .       '
+     O**********                                                                            MD055823
+     O**********E    84 43 52TOT              58                                            MD055823
+     O*********AND  N33N16                                                                  MD055823
+     O*********AND   79                                                              LUC108 MD055823
+     O**********                                 29 'CURRENT PRIME RATE AS AT'              MD055823
+     O**********             RUNA                37                                         MD055823
+     O**********                                 39 ':'                                     MD055823
+     O**********             G@BRTE              53 ' , 0 .       '                         MD055823
       *
      O          E            ERPT4       1    03
      O         AND     N33

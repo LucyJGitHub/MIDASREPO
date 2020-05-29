@@ -14,8 +14,10 @@
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
       *                                                               *
-      *  Last Amend No. MD054505           Date 30Sep19               *
-      *  Prev Amend No. LUC133             Date 30Jul19               *
+      *  Last Amend No. MD055823           Date 27May20               *
+      *  Prev Amend No. MD054505           Date 30Sep19               *
+      *                 LUC132 *Amend      Date 29Aug19               *
+      *                 LUC133             Date 30Jul19               *
       *                 LUC110             Date 23Jan19               *
       *                 LUC108             DATE 19Apr16               *
       *                 LUC107             Date 21Dec15               *
@@ -160,8 +162,15 @@
 0008 F*                                                               *
 0013 F*---------------------------------------------------------------*
       *                                                               *
+      *  MD055823 - Spa NY Monthly statement issue.                   *
+      *             Amend GL0420OOP1 to Remove FICHEK from DS -       *
+      *             intrusive.                                        *
       *  MD054505 - Running Balance not shown in GL0420P2 (LUC133)    *
       *             /Copy amended: GL0420OOP1                         *
+      *  LUC132 - GLC43 GL0420 MSGW - Undefined record type           *
+      *         - WNCPYSRC/GL0420FFPG                                 *
+      *         - WNCPYSRC/GL0420IP11                                 *
+      *         - WNCPYSRC/GL0420IIP8                                 *
       *  LUC133 - Amendments to Statement of Account feature SpA      *
       *           /copies used:                                       *
       *           GL04204C45, GL0420C078, GL0420C085, GL0420CP86,     *
@@ -817,7 +826,7 @@
      D                 DS                                                       S01146
      D  FICHE                  1     16                                         S01146
      D  MFFQ                   1      1                                         S01146
-     D  FICHEK                 2     16                                         S01146
+     D**FICHEK*****************2     16                                              S01146 MD055823
      D**   GLAPSTGA fields                                                216937
      D                 DS                                                       216937
      D**********                              1  18 SRCGL                              216937 CGL029

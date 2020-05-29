@@ -7,7 +7,7 @@
 000106200526      *                                                               *
 000107200527      *  Midas - Implementation module                                *
 000108200526      *                                                               *
-000109200527      *  SMU01004 - Upgrade Utility for EACC field Update of ACKEYAL  *
+000109200529      *  SMU01010 - Upgrade Utility for EACC field Update of ACKEYAL  *
 000110200526      *                                                               *
 000112200527      *  Function: This program will set EACC value of ACKEYAL from   *
 000113200527      *            invalid data to zero.                              *

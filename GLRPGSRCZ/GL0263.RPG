@@ -14,8 +14,9 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. MD055146           Date 04Feb20               *
-      *  Prev Amend No. MD050138           Date 12Apr18               *
+      *  Last Amend No. MD055739           Date 22May20               *
+      *  Prev Amend No. MD055146           Date 04Feb20               *
+      *                 MD050138           Date 12Apr18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD037270           Date 26Apr16               *
       *                 AR1097467          Date 19Apr13               *
@@ -40,12 +41,17 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055739 - CoB GLC0263 fails with no indication of reason    *
+      *             Change printer file record type to E to generate  *
+      *             report. Comment out condition *IN50 IFEQ '0' to   *
+      *             proceed processing of report details. Set ON U8   *
+      *             when discrepancy occurs for error processing.     *
       *  MD055146 - Failed MXC004802 seq. 00001 and others            *
       *             Increase Branches to 900.                         *
       *  MD050138 - Component GLC0263 00001 runs for many hours       *
       *           - Need to initialise ACDIDX to 9000                 *
       *           - Wrong indicator being checked when determining if *
-      *             ACOD details already on #ACK array                *      
+      *             ACOD details already on #ACK array                *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037270 - Component GLC0263 00001 looping. System unable to *
       *             load all narratives correctly. Increase array for *
@@ -114,9 +120,10 @@
       *     76 - POSTING BRANCH *NE MAIN BRANCH
       *     77 - GENERATED ENTRY IS DEBIT
       *
-      *  U7+U8 - DATABASE ERROR
-      *     U8 - ONE OR MORE BATCHES HAVE DISCREPANCY.
-      *
+      ***U7+U8*-*DATABASE ERROR                                                             MD055739
+      ******U8*-*ONE OR MORE BATCHES HAVE DISCREPANCY.                                      MD055739
+      *  U7+U8 - DATABASE ERROR AND/OR                                                      MD055739
+      *          ONE OR MORE BATCHES HAVE DISCREPANCY
       *****************************************************************
       *
      E                    DELT    1   1 17
@@ -494,7 +501,8 @@
      C                     SETOF                     46
      C           BTCH      IFNE NII
      C           NII       ANDNE0
-     C                     SETON                     46U8
+     C**********           SETON                     46U8                                   MD055739
+     C                     SETON                     46U8U7                                 MD055739
      C                     ENDIF
       *
      C                     ENDIF
@@ -1174,6 +1182,8 @@
       *
      C                     SETON                     U7U8LR
      C                     DUMP
+     C                     EXCPT                                                            MD055739
+     C                     EXCPTDBERR                                                       MD055739
      C                     RETRN
       *
      C                     ENDSR
@@ -1197,15 +1207,15 @@
      C                     RETRN
      C                     ENDIF
       *
-      ** IF NOT INITIALISED OUTPUT HEADER RECORD
-     C           *IN50     IFEQ '0'
+      ***IF*NOT*INITIALISED*OUTPUT*HEADER*RECORD***********************                     MD055739
+     C********** *IN50     IFEQ '0'                                                         MD055739
       *
      C                     EXSR BANKD
       *
       ** WRITE HEADING FOR REPORT
      C                     SETON                     51
       *
-     C                     ENDIF
+     C**********           ENDIF                                                            MD055739
       *
       ** WRITE CCY TOTALS IF APPLICABLE TO GL0263P1
      C                     SETON                     10
@@ -1575,6 +1585,7 @@
      C           END       BEGSR
       *
      C                     SETON                         LR
+     C                     EXCPT                                                            MD055739
      C                     RETRN
       *
      C                     ENDSR
@@ -1652,7 +1663,8 @@
      C                     ENDSR                                                          AR1097467B
       *****************************************************************                   AR1097467B
       *
-     OGL0263AUD  203   51
+     O*****GL0263AUD  203   51                                                              MD055739
+     OGL0263AUE  203   51                                                                   MD055739
      O       OR        OF
      O                                   24 'REFERENCE GL0263AU'
      O                         BJURPT    89
@@ -1660,15 +1672,18 @@
      O                         BJMRDT   113
      O                                  122 'PAGE'
      O                         PAGE  Z  127
-     O        D  1     51
+     O********D* 1     51                                                                   MD055739
+     O        E  1     51                                                                   MD055739
      O       OR        OF
      O                                   70 'BATCH TRANSACTIONS FILE'
      O                                   76 'SPLIT'
-     O        D  2     51
+     O********D* 1     51                                                                   MD055739
+     O        E  2     51                                                                   MD055739
      O       OR        OF
      O                                   70 '-----------------------'
-     O                                   76 '------'
-     O        D  2     08 64
+     O                                   76 '------'                                        MD055739
+     O********D* 2     08 64                                                                MD055739
+     O        E  2     08 64
      O                                   19 'BATCH NO.-'
      O                         BNUM      23
      O                                   34 'ACTUAL -'
@@ -1678,48 +1693,60 @@
      O                 46                75 '*** NO OF ITEMS'
      O                 46                92 'DISCREPANCY ***'
       *
-     O        T  203   LR U7 U8
-     O       OR        LRN50
+     O********T* 203   LR U7 U8                                                             MD055739
+     O        E  203   LR U7 U8                                                             MD055739
+     O*******OR*       LRN50                                                                MD055739
+     O       AND       LRN46                                                                MD055739
      O                                   24 'REFERENCE GL0263AU'
      O                         BJURPT    89
      O                                  104 'DATE'
      O                         BJMRDT   113
      O                                  122 'PAGE'
      O                         PAGE  Z  127
-     O        T  1     LR U7 U8
-     O       OR        LRN50
+     O********T* 1     LR U7 U8                                                             MD055739
+     O        E  1     LR U7 U8                                                             MD055739
+     O*******OR*       LRN50                                                                MD055739
+     O       AND       LRN46                                                                MD055739
      O                                   70 'BATCH TRANSACTIONS FILE'
      O                                   76 'SPLIT'
-     O        T  2     LR U7 U8
-     O       OR        LRN50
+     O********T* 2     LR U7 U8                                                             MD055739
+     O        E  2     LR U7 U8                                                             MD055739
+     O*******OR*       LRN50                                                                MD055739
+     O       AND       LRN46                                                                MD055739
      O                                   70 '-----------------------'
      O                                   76 '------'
-     O        T  2     LRNU7
+     O********T* 2     LRNU7                                                                MD055739
+     O        E  2     LRNU7                                                                MD055739
      O                                   26 'NUMBER OF BATCHES'
      O                                   36 'PROCESSED'
      O                         COUNT 1   67
-     O        T  2     LRNU7
+     O********T* 2     LRNU7                                                                MD055739
+     O        E  2     LRNU7                                                                MD055739
      O                                   26 'NUMBER OF ACCOUNT'
      O                                   43 'POSTINGS WRITTEN'
      O                         ACTOT 1   67
-     O        T  2     LRNU7
+     O********T* 2     LRNU7                                                                MD055739
+     O        E  2     LRNU7                                                                MD055739
      O                                   26 'VALUE OF ACCOUNT '
      O                                   43 'POSTINGS WRITTEN'
      O                         ZZTOTIZ   64
      O                         TOTD      68
      O                                   68 ' '
      O                 47                68 '-'
-     O        T 3      LR U7 U8
+     O********T*3      LR U7 U8                                                             MD055739
+     O        E 3      LR U7 U8DBERR                                                        MD055739
      O                                   44 '*** REFERENCE'
      O                         DBPGM     53
      O                                   71 '-DATABASE ERROR AT'
      O                         DBASE     75
-     O        T 1      LR U7 U8
+     O********T*1      LR U7 U8                                                             MD055739
+     O        E 1      LR U7 U8DBERR                                                        MD055739
      O                                   37 'FILE NAME'
      O                         DBFILE    48
      O                                   52 'KEY'
      O                         DBKEY     82
-     O        T 3      LR
+     O********T*3      LR                                                                   MD055739
+     O        E 3      LR                                                                   MD055739
       *****************************************************************
 ** DELT
 NARRATIVE DELETED

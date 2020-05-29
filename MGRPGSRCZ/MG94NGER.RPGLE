@@ -2124,7 +2124,8 @@
      C                             %TRIM(BAEX18)+'  '+%TRIM(BAEX19)+ '  '+                  BUG24304
      C                             %TRIM(BAEX20)+'  '+%TRIM(BAEX21)+ '  '+                  BUG24304
      C**********                   %TRIM(BAEX22)                                   BUG24304 MD055642
-     C                             %TRIM(WkBAEX22)                                          MD055642
+     C**********                   %TRIM(WkBAEX22)                                MD055642 MD055642A
+     C                             %TRIM(BAEX22)                                           MD055642A
       *                                                                                     BUG24304
       ** Dividing extended narratives into 27 chars for Details of Payment                  BUG24304
       *                                                                                     BUG24304

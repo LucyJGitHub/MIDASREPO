@@ -13,8 +13,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD035795           Date 12Mar20              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD055870           Date 27May20              */
+/*       Prev Amend No. MD035795           Date 12Mar20              */
+/*                      MD046248           Date 27Oct17              */
 /*                      CRE083BD           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -33,6 +34,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD055870 - FM2.1 SP21 RETAIL-1 Reverse previously upgraded  */
+/*                  MD035795 and rework MD-28899                     */
 /*       MD035795 - Account Closure does not generate a turnover stmt*/
 /*                  charge when indicated. Ensure that extra daily   */
 /*                  chg will be posted if a/c has non-charge posting */
@@ -263,7 +266,7 @@ LOOP:                                                                 /*CCB003*/
                                                                       /*CCB003*/
 RESTART:     OVRDBF     FILE(GEICPD) TOFILE(GEIC2PD)                  /*CCB003*/
              OVRDBF     FILE(GEICZZ) TOFILE(GEIC2ZZ)                  /*CCB003*/
-             OVRDBF     FILE(GEICL4) TOFILE(GEIC2L4)                                    /*MD035795*/
+/**********  OVRDBF     FILE(GEICL4) TOFILE(GEIC2L4) */                        /*MD035795 MD055870*/
 /*/COPY WNCPYSRC,REC116D002                                          */
              CALL       PGM(RE3116) PARM(&RESTART)                    /*CCB003*/
 /*/COPY WNCPYSRC,REC116D003                                          */

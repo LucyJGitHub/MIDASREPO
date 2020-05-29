@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CMG009             Date 18Dec19               *
-      *  Prev Amend No. CMG008             Date 25Nov19               *
+      *  Last Amend No. MD055642A          Date 27May20               *
+      *  Prev Amend No. CMG009             Date 18Dec19               *
+      *                 CMG008             Date 25Nov19               *
       *                 MD050696           Date 15May18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -53,6 +54,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055642A - FM 2.1 SP21 Duplicate MultiCash Narr 22 on       *
+      *             field 61 subfield 86                              *
       *  CMG009 - Upgrade of UMA001 to FB21 SP21                      *
       *           MT942 without Forward Value Postings                *
       *  CMG008 - Upgrade of EMP005 to FB21 SP21                      *
@@ -891,7 +894,7 @@
      C                   EVAL      MG8663 = BAEX19                                          BUG25147
      C                   EVAL      MG8664 = BAEX20                                          BUG25147
      C                   EVAL      MG8665 = BAEX21                                          BUG25147
-     C                   EVAL      MG8632 = BAEX22                                          BUG25147
+     C**********         EVAL      MG8632 = BAEX22                                BUG25147 MD055642A
      C                   EVAL      MG8635 = 'Y'                                             BUG25311
      C                   ELSE                                                               BUG25147
 

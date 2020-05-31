@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD031692           Date 12Mar20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CSD102             Date 08Jan19               *
       *                 CLE071             Date 18Jul18               *
       *                 CLE168             Date 26Feb18               *
       *                 MD046248           Date 27Oct17               *
@@ -83,6 +84,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031692 - Incorrect accrual when fee rate is changed on     *
+      *             payment date. Add warning message parameters in   *
+      *             LEFEEMAMD.                                        *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
@@ -1570,6 +1574,16 @@
 
      C                   PARM                    CLE006                                       245099
                                                                                               245099
+      ** Warning fields/message IDs/message data (arrays) from/to caller                    MD031692
+                                                                                            MD031692
+     C                   PARM                    WFldNamArr                                 MD031692
+     C                   PARM                    WMsgIDArr                                  MD031692
+     C                   PARM                    WMsgDtaArr                                 MD031692
+                                                                                            MD031692
+      ** Array index (3P0) from/to caller                                                   MD031692
+                                                                                            MD031692
+     C                   PARM                    WIdx                                       MD031692
+                                                                                            MD031692
       ** If any errors overwrite previous error information
 
      C                   IF        AmIdx <> 0

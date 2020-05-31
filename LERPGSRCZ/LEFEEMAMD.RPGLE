@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD022378           Date 12Sep13               *
+      *  Last Amend No. MD031692           Date 12Mar20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD022378           Date 12Sep13               *
       *                 253753             Date 16Nov12               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -49,6 +50,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031692 - Incorrect accrual when fee rate is changed on     *
+      *             payment date. Issue warning message if fee rate   *
+      *             change is done on payment day, which is stored in *
+      *             FELPDT as fee payment is processed one day ahead. *
       *  MD046248 - Finastra Rebranding                               *
       *  MD022378 - Impossible to amend Amount/Precent Indicator      *
       *  253753 - CAS019 - additional condition on LER1217            *
@@ -175,7 +180,10 @@
      D  SSF                   11     11
      D  DATF                  12     12
      D  MBIN                  13     13
- 
+      *                                                                                     MD031692
+     D JNSTAT          DS           200                                                     MD031692
+     D  PRUN                 103    105P 0                                                  MD031692
+      *                                                                                     MD031692
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
  
@@ -189,6 +197,9 @@
      D CLE122          S              1                                                       CLE122
      D PSARD           S              6                                                       CLE122
  
+      ** Index for arrays of of warning message ids etc                                     MD031692
+     D WIdx            S              3P 0                                                  MD031692
+                                                                                            MD031692
       ** Flags to indicate whether transaction fields are valid
      D OkFee         E DS                  EXTNAME(LEEFEEMPD)
       *                                                                                       CGL029
@@ -479,6 +490,25 @@
      C**********         EVAL      MsgIDArr(Idx)   = 'LER2015'                        CAP084 BUG8762
      C**********         EVAL      DDRTE1OK        = 'N'                                     BUG8762
      C**********         ENDIF                                                               BUG8762
+      *                                                                                     MD031692
+     C                   CALLB     'ZCMPAMTS'                                               MD031692
+     C                   PARM      DDRTE1        ZCMPAMT1         25                        MD031692
+     C                   PARM      @@DDRTE1      ZCMPAMT2         25                        MD031692
+     C                   PARM      'N'           ZCMPAMTDif        1                        MD031692
+      *                                                                                     MD031692
+     C     ZCMPAMTDif    IFEQ      'Y'                                                      MD031692
+     C     V_VFLPDT      IFEQ      BJRDNB                                                   MD031692
+     C     V_VFORED      ANDLT     BJRDNB                                                   MD031692
+     C     V_VFLPDT      ORGT      PRUN                                                     MD031692
+     C     V_VFLPDT      ANDLT     BJDNWD                                                   MD031692
+     C     V_VFORED      ANDLT     BJRDNB                                                   MD031692
+     C     BKANWD        ANDEQ     '2'                                                      MD031692
+     C                   ADD       1             WIdx                                       MD031692
+     C                   EVAL      WFldNamArr(WIdx) = 'DDRTE1'                              MD031692
+     C                   EVAL      WMsgIDArr(WIdx) = '5049999'                              MD031692
+     C                   EVAL      DDRTE1OK = 'W'                                           MD031692
+     C                   ENDIF                                                              MD031692
+     C                   ENDIF                                                              MD031692
       *
       * Compare Amount 1
                                                                                               CAP084
@@ -509,6 +539,25 @@
      C**********         EVAL      MsgIDArr(Idx)   = 'LER2015'                        CAP084 BUG8762
      C**********         EVAL      DDRTE2OK        = 'N'                                     BUG8762
      C**********         ENDIF                                                               BUG8762
+      *                                                                                     MD031692
+     C                   CALLB     'ZCMPAMTS'                                               MD031692
+     C                   PARM      DDRTE2        ZCMPAMT1                                   MD031692
+     C                   PARM      @@DDRTE2      ZCMPAMT2                                   MD031692
+     C                   PARM      'N'           ZCMPAMTDif                                 MD031692
+      *                                                                                     MD031692
+     C     ZCMPAMTDif    IFEQ      'Y'                                                      MD031692
+     C     V_VFLPDT      IFEQ      BJRDNB                                                   MD031692
+     C     V_VFORED      ANDLT     BJRDNB                                                   MD031692
+     C     V_VFLPDT      ORGT      PRUN                                                     MD031692
+     C     V_VFLPDT      ANDLT     BJDNWD                                                   MD031692
+     C     V_VFORED      ANDLT     BJRDNB                                                   MD031692
+     C     BKANWD        ANDEQ     '2'                                                      MD031692
+     C                   ADD       1             WIdx                                       MD031692
+     C                   EVAL      WFldNamArr(WIdx) = 'DDRTE2'                              MD031692
+     C                   EVAL      WMsgIDArr(WIdx) = '5049999'                              MD031692
+     C                   EVAL      DDRTE2OK = 'W'                                           MD031692
+     C                   ENDIF                                                              MD031692
+     C                   ENDIF                                                              MD031692
       *
       * Compare Amount 2
                                                                                               CAP084
@@ -539,6 +588,25 @@
      C**********         EVAL      MsgIDArr(Idx)   = 'LER2015'                        CAP084 BUG8762
      C**********         EVAL      DDRTE3OK        = 'N'                                     BUG8762
      C**********         ENDIF                                                               BUG8762
+      *                                                                                     MD031692
+     C                   CALLB     'ZCMPAMTS'                                               MD031692
+     C                   PARM      DDRTE3        ZCMPAMT1                                   MD031692
+     C                   PARM      @@DDRTE3      ZCMPAMT2                                   MD031692
+     C                   PARM      'N'           ZCMPAMTDif                                 MD031692
+      *                                                                                     MD031692
+     C     ZCMPAMTDif    IFEQ      'Y'                                                      MD031692
+     C     V_VFLPDT      IFEQ      BJRDNB                                                   MD031692
+     C     V_VFORED      ANDLT     BJRDNB                                                   MD031692
+     C     V_VFLPDT      ORGT      PRUN                                                     MD031692
+     C     V_VFLPDT      ANDLT     BJDNWD                                                   MD031692
+     C     V_VFORED      ANDLT     BJRDNB                                                   MD031692
+     C     BKANWD        ANDEQ     '2'                                                      MD031692
+     C                   ADD       1             WIdx                                       MD031692
+     C                   EVAL      WFldNamArr(WIdx) = 'DDRTE3'                              MD031692
+     C                   EVAL      WMsgIDArr(WIdx) = '5049999'                              MD031692
+     C                   EVAL      DDRTE3OK = 'W'                                           MD031692
+     C                   ENDIF                                                              MD031692
+     C                   ENDIF                                                              MD031692
       *
       * Compare Amount 3
                                                                                               CAP084
@@ -569,6 +637,25 @@
      C**********         EVAL      MsgIDArr(Idx)   = 'LER2015'                        CAP084 BUG8762
      C**********         EVAL      DDRTE4OK        = 'N'                                     BUG8762
      C**********         ENDIF                                                               BUG8762
+      *                                                                                     MD031692
+     C                   CALLB     'ZCMPAMTS'                                               MD031692
+     C                   PARM      DDRTE4        ZCMPAMT1                                   MD031692
+     C                   PARM      @@DDRTE4      ZCMPAMT2                                   MD031692
+     C                   PARM      'N'           ZCMPAMTDif                                 MD031692
+      *                                                                                     MD031692
+     C     ZCMPAMTDif    IFEQ      'Y'                                                      MD031692
+     C     V_VFLPDT      IFEQ      BJRDNB                                                   MD031692
+     C     V_VFORED      ANDLT     BJRDNB                                                   MD031692
+     C     V_VFLPDT      ORGT      PRUN                                                     MD031692
+     C     V_VFLPDT      ANDLT     BJDNWD                                                   MD031692
+     C     V_VFORED      ANDLT     BJRDNB                                                   MD031692
+     C     BKANWD        ANDEQ     '2'                                                      MD031692
+     C                   ADD       1             WIdx                                       MD031692
+     C                   EVAL      WFldNamArr(WIdx) = 'DDRTE4'                              MD031692
+     C                   EVAL      WMsgIDArr(WIdx) = '5049999'                              MD031692
+     C                   EVAL      DDRTE4OK = 'W'                                           MD031692
+     C                   ENDIF                                                              MD031692
+     C                   ENDIF                                                              MD031692
       *
       * Compare Amount 4
                                                                                               CAP084
@@ -599,6 +686,25 @@
      C**********         EVAL      MsgIDArr(Idx)   = 'LER2015'                        CAP084 BUG8762
      C**********         EVAL      DDRTE5OK        = 'N'                                     BUG8762
      C**********         ENDIF                                                               BUG8762
+      *                                                                                     MD031692
+     C                   CALLB     'ZCMPAMTS'                                               MD031692
+     C                   PARM      DDRTE5        ZCMPAMT1                                   MD031692
+     C                   PARM      @@DDRTE5      ZCMPAMT2                                   MD031692
+     C                   PARM      'N'           ZCMPAMTDif                                 MD031692
+      *                                                                                     MD031692
+     C     ZCMPAMTDif    IFEQ      'Y'                                                      MD031692
+     C     V_VFLPDT      IFEQ      BJRDNB                                                   MD031692
+     C     V_VFORED      ANDLT     BJRDNB                                                   MD031692
+     C     V_VFLPDT      ORGT      PRUN                                                     MD031692
+     C     V_VFLPDT      ANDLT     BJDNWD                                                   MD031692
+     C     V_VFORED      ANDLT     BJRDNB                                                   MD031692
+     C     BKANWD        ANDEQ     '2'                                                      MD031692
+     C                   ADD       1             WIdx                                       MD031692
+     C                   EVAL      WFldNamArr(WIdx) = 'DDRTE5'                              MD031692
+     C                   EVAL      WMsgIDArr(WIdx) = '5049999'                              MD031692
+     C                   EVAL      DDRTE5OK = 'W'                                           MD031692
+     C                   ENDIF                                                              MD031692
+     C                   ENDIF                                                              MD031692
       *
       * Compare Amount 5
                                                                                               CAP084
@@ -995,6 +1101,16 @@
      C                   PARM                    ResetErrs         1
                                                                                               245099
      C                   PARM                    CLE006            1                          245099
+      *                                                                                     MD031692
+      ** Warning fields/message IDs/message data (arrays) from/to caller                    MD031692
+      *                                                                                     MD031692
+     C                   PARM                    WFldNamArr                                 MD031692
+     C                   PARM                    WMsgIDArr                                  MD031692
+     C                   PARM                    WMsgDtaArr                                 MD031692
+      *                                                                                     MD031692
+      ** Array index (3P0) from/to caller                                                   MD031692
+      *                                                                                     MD031692
+     C                   PARM                    WIdx                                       MD031692
       *
       ** Initialize program name
       *
@@ -1085,6 +1201,11 @@
       *
       **  GET MBIN FROM DTAARA/RUNDAT
      C                   IN        RUNDAT
+      *                                                                                     MD031692
+      ** Get PRUN from data area JNSTAT                                                     MD031692
+      *                                                                                     MD031692
+     C     *DTAARA       DEFINE                  JNSTAT                                     MD031692
+     C                   IN        JNSTAT                                                   MD031692
  
      C                   ENDSR
       *****************************************************************

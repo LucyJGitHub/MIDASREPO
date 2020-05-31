@@ -12,8 +12,10 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055115           Date 23Jan20               *
-      *  Prev Amend No. MD055067           Date 17Jan20               *
+      *  Last Amend No. MD051347           Date 12Mar20               *
+      *  Prev Amend No. AR819229           Date 10Dec18               *      
+      *                 MD055115           Date 23Jan20               *
+      *                 MD055067           Date 17Jan20               *
       *                 MD055009           Date 23Dec19               *
       *                 MD054960           Date 13Dec19               *
       *                 MD054869           Date 21Nov19               *
@@ -418,6 +420,13 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051347 - Interest on a loan taken at the wrong date. Also  *
+      *             update value of IBDT to zero if NIPD is less than *
+      *             or equal to rundate. Additional fix to AR819229.  *
+      *  AR819229 - Interest on a loan taken at the wrong date.       *
+      *             Update value of IBDT with NIPD on SR/ROLLOV and   *
+      *             SR/MROLL. (Child: AR823033)                       *
+      *           - Applied for MD051347                              *      
       *  MD055115 - Scenario 1.30 Discrepancy on LE3180P1 and         *
       *             PDCL double entries                               *
       *  MD055067 - Adhoc - Narrative for Interest payment on         *
@@ -10102,9 +10111,11 @@ L118 I                             P   72   77 7RTSPL
      C     NIPD          IFNE      *ZEROS                                                      S0146
      C***********IPFR      ANDEQ' '                                 S01465159199
      C                   Z-ADD     NIPD          NIDT                                          S0146
+     C                   Z-ADD     NIPD          IBDT                                       AR819229
       *                                                                   174873
      C     NIPD          IFLE      RUND                                                        17487
      C                   Z-ADD     0             NIDT                                          17487
+     C                   Z-ADD     0             IBDT                                       MD051347
      C                   ENDIF                                                                 17487
       *                                                                   174873
      C                   END                                                                   S0146
@@ -11494,6 +11505,13 @@ L118 I                             P   72   77 7RTSPL
      C     NIPD          IFNE      *ZEROS                                                      CLE00
      C***********IPFR      ANDEQ' '                                 CLE004159199
      C                   Z-ADD     NIPD          NIDT                                          CLE00
+     C                   Z-ADD     NIPD          IBDT                                       AR819229
+      *                                                                                     MD051347
+     C     NIPD          IFLE      RUND                                                     MD051347
+     C                   Z-ADD     0             NIDT                                       MD051347
+     C                   Z-ADD     0             IBDT                                       MD051347
+     C                   ENDIF                                                              MD051347
+      *                                                                                     MD051347
      C                   END                                                                   CLE00
      C                   ENDIF                                                                 CLE00
      C                   Z-ADD     *ZEROS        NIPD                                          CLE00

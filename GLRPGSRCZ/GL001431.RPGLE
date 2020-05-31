@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD045952           Date 06Jul17               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR401845           Date 12Mar20               *
+      *  Prev Amend No. MD045952           Date 06Jul17               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL178             Date 04Aug16               *
       *                 AR549926           Date 19Aug14               *
       *                 CGL146A            Date 10Jun13               *
@@ -42,6 +43,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR401845 - MT940 generation does not take into account       *
+      *             regional holidays (CHILD: AR401846)               *
+      *           - Replace ZFREQB with ZFRQB2 which considers        *
+      *             system location.                                  *
       *  MD045952 - Ensure that COB MT940s only generated if          *
       *             calling pgm is GLC001430.                         *
       *           - Recompile due to changes to CGL146_043, CGL146_044*
@@ -555,13 +560,15 @@
      C                   EVAL      ZFREQ = NA5SFQ                               Frequence     216935
      C                   ENDIF                                                                216935
  
-     C                   CALLB     'ZFREQB'
+     C**********         CALLB     'ZFREQB'                                                 AR401845
+     C                   CALLB     'ZFRQB2'                                                 AR401845
      C                   PARM      *BLANKS       RetCodeIn                      Return Code
      C***********        PARM      NA5SFQ        ZFREQ                          Frequence     216935
      C                   PARM                    ZFREQ                          Frequence     216935
      C                   PARM      BJRDNB        ZDAYNO                         Start Date
      C                   PARM      BJLCCY        ZCCY                           Local Currency
-     C                   PARM      *BLANKS       ZLOC                                       AR702741
+     C**********         PARM      *BLANKS       ZLOC                              AR702741 AR401845
+     C                   PARM      BJSLCD        ZLOC                                       AR401845
      C                   PARM      NA5SDY        ZMDAY                          Day in Month
      C                   PARM      BJDFIN        ZDFIN                          Date Format Indicato
      C     SDGELR        PARM      SDGELR        DSFDY                          General ledger ICD

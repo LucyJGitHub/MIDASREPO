@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD055383           Date 30Apr20               *
-      *  Prev Amend No. MD045952           Date 06Jul17               *
+      *  Last Amend No. MD031848           Date 12Mar20               *
+      *  Prev Amend No. AR401845           Date 12Mar20               *
+      *                 MD055383           Date 30Apr20               *
+      *                 MD045952           Date 06Jul17               *
       *                 MD046248           Date 27Oct17               *
       *                 AR549926           Date 19Aug14               *
       *                 MD026137           Date 04Apr14               *
@@ -54,6 +56,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031848 - Recently Closed account not generating MT940      *
+      *             Amend to include closed today.                    *
+      *  AR401845 - MT940 generation does not take into account       *
+      *             regional holidays (CHILD: AR401846)               *
+      *           - Replace ZFREQB with ZFRQB2 which considers        *
+      *             system location.                                  *      
       *  MD055383 - The system is generating another set of MT942.    *
       *             Amend to flag MT941 and MD942 MRPROC = 'Y'        *
       *  MD045952 - Ensure that COB MT940s only generated if          *
@@ -121,7 +129,8 @@
       *                                                               *
       *****************************************************************
  
-     FGLNW94L5  IF   E           K DISK                   INFSR(*PSSR)
+     F******GLNW94L5  IF   E           K DISK                   INFSR(*PSSR)                MD031848
+     FGLNW94L1  IF   E           K DISK                   INFSR(*PSSR)                      MD031848
       ** Midas GL Network Accounts - MT94x - Live/Accnt+Dst.- Retrieve
  
      FGLPOSTL0  UF   E           K DISK    COMMIT         INFSR(*PSSR)
@@ -345,8 +354,10 @@
  
       /COPY OFCPYSRCZ,CGL146_044                                                             CGL146A
                                                                                              CGL146A
-     C     *LOVAL        SETLL     GLNW94L5
-     C                   READ      GLNW94L5                               27
+     C******LOVAL        SETLL     GLNW94L5                                                 MD031848
+     C**********         READ      GLNW94L5                               27                MD031848
+     C     *LOVAL        SETLL     GLNW94L1                                                 MD031848
+     C                   READ      GLNW94L1                               27                MD031848
                                                                                              CGL146A
       /COPY OFCPYSRCZ,CGL146_045                                                             CGL146A
  
@@ -365,6 +376,8 @@
  
      C                   IF        N4G940 <> 'Y'
      C                             OR N40NSD >= BJDNWD AND N40DSI <> 'Y'
+     C                             OR N4RECI = '*' AND N4CHTP = 'D'                         MD031848
+     C                             AND N4LCDT < BJDNWD                                      MD031848
       /COPY OFCPYSRCZ,CGL146_047                                                             CGL146A
      C                   LEAVE
      C                   ENDIF
@@ -438,7 +451,8 @@
       ** Read next Live Network Account.
  
       /COPY OFCPYSRCZ,CGL146_068                                                             CGL146A
-     C                   READ      GLNW94L5                               27
+     C**********         READ      GLNW94L5                               27                MD031848
+     C                   READ      GLNW94L1                               27                MD031848
       /COPY OFCPYSRCZ,CGL146_069                                                             CGL146A
  
      C                   ENDDO
@@ -536,6 +550,7 @@
      C**********                   (EDEXET <> *BLANKS AND                            CER030 BUG26608
      C                   IF        (EDEXET <> *BLANKS AND                                   BUG26608
      C                             EDEXET <> '*NONE')                                         CER030
+      /COPY WNCPYSRC,EML104_004                                                               EML104
      C                   EVAL      PMsgTyp = '940'                                            CER030
       *                                                                                       CER030
      C                   CALL      EDEXET                               99                    CER030
@@ -734,7 +749,8 @@
      C                   EVAL      ZFREQ = N40SFR                               Frequence     216935
      C                   ENDIF                                                                216935
  
-     C                   CALLB     'ZFREQB'
+     C**********         CALLB     'ZFREQB'                                                 AR401845
+     C                   CALLB     'ZFRQB2'                                                 AR401845
      C                   PARM      *BLANKS       RetCodeIn                      Return Code
      C**********         PARM      N40SFR        ZFREQ                          Frequence     216935
      C                   PARM                    ZFREQ                          Frequence     216935

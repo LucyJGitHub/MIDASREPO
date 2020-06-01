@@ -20,7 +20,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD055890 - Duplicate key value errpr                         *
+      *  MD055890 - Duplicate key value error                         *
       *  MD054233 - LEE06A 00010 on MSGW - Missing logical file       *
       *             members after SQL error in CBC022001              *
       *  MD046248 - Finastra Rebranding                               *

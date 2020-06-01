@@ -11,14 +11,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD054233            Date 11Apr20              *
-      *  Prev Amend No. MD046248            Date 27Oct17              *
+      *  Last Amend No. MD055890            Date 29May20              *
+      *  Prev Amend No. MD054233            Date 11Apr20              *
+      *                 MD046248            Date 27Oct17              *
       *                 MD041010            Date 18Sep16              *
       *                 MD024652            Date 07May14              *
       *                 MD024006A *CREATE   Date 08Jan14              *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055890 - Duplicate key value errpr                         *
       *  MD054233 - LEE06A 00010 on MSGW - Missing logical file       *
       *             members after SQL error in CBC022001              *
       *  MD046248 - Finastra Rebranding                               *
@@ -447,6 +449,7 @@
      C/end-exec
 
      C                   IF        SQLCODE <> 0 AND SQLCODE <> 100                          MD054233
+     C                             AND SQLCODE <> -803                                      MD055890
      C                   EXSR      *PSSR                                                    MD054233
      C                   ENDIF                                                              MD054233
 
@@ -498,6 +501,7 @@
      C/end-exec
 
      C                   IF        SQLCODE <> 0 AND SQLCODE <> 100                          MD054233
+     C                             AND SQLCODE <> -803                                      MD055890
      C                   EXSR      *PSSR                                                    MD054233
      C                   ENDIF                                                              MD054233
 
@@ -542,6 +546,7 @@
      C/end-exec
 
      C                   IF        SQLCODE <> 0 AND SQLCODE <> 100                          MD054233
+     C                             AND SQLCODE <> -803                                      MD055890
      C                   EXSR      *PSSR                                                    MD054233
      C                   ENDIF                                                              MD054233
 

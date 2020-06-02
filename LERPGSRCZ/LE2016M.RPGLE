@@ -25,8 +25,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD041126           Date 11May20               *
+      *  Last Amend No. MD041126           Date 06Mar20               *
       *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD054605           Date 17Oct19               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE164             Date 18Aug14               *
@@ -150,6 +151,8 @@
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
       *           - Applied for MD055868.                             *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
+      *           Applied for MD-55510.                               *
+      *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
@@ -481,7 +484,8 @@
      D MUSER         E DS                  EXTNAME(MUSERDD)
      D                                     PREFIX(F#U)
       *                                                                         CLE031
-     D SDSVAL        E DS                  EXTNAME(SDSVALPD)                    CLE031
+     D*SDSVAL***     E DS                  EXTNAME(SDSVALPD)                    CLE031      MD054605
+     D SDSVAL        E DS                  EXTNAME(SDSVLXTD)                                MD054605
       *
       **  Facility Amendments Message Format
      D DWL4MF        E DS                  EXTNAME(LEL4MFPD)
@@ -1023,7 +1027,8 @@
       *
       *                                                                         CLE031
       * Put System Values message                                               CLE031
-     C     JFILE         WHENEQ    'SDSVALPD'                                   CLE031
+     C*****JFILE         WHENEQ    'SDSVALPD'                                   CLE031      MD054605
+     C     JFILE         WHENEQ    'SDSVLXTD'                                               MD054605
      C                   MOVE      'SVAL'        X1MSGT                         CLE031
      C                   EXSR      P#SVAL                                       CLE031
       *

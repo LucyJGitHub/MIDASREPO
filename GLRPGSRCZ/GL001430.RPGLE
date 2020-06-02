@@ -550,7 +550,6 @@
      C**********                   (EDEXET <> *BLANKS AND                            CER030 BUG26608
      C                   IF        (EDEXET <> *BLANKS AND                                   BUG26608
      C                             EDEXET <> '*NONE')                                         CER030
-      /COPY WNCPYSRC,EML104_004                                                               EML104
      C                   EVAL      PMsgTyp = '940'                                            CER030
       *                                                                                       CER030
      C                   CALL      EDEXET                               99                    CER030

@@ -11,10 +11,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CSW220  *CREATE    Date 09Mar20               *
+      *  Last Amend No. MD055900           Date 28May20               *
+      *  Prev Amend No. MD055883           Date 22May20               *
+      *                 CSW220  *CREATE    Date 09Mar20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055900 - Revert changes of MD055883                        *
+      *  MD055883 - Field 79 Line 3 is not displaying "/" when        *
+      *             Destination do not have a BIC defined             *
       *  CSW220 - SWIFT Changes 2020                                  *
       *                                                               *
       *****************************************************************
@@ -600,6 +605,7 @@
      C                   EVAL      WTag79L2Val = StsACSPT
      C                   EVAL      WDstT = DSTT
      C                   EVAL      WDst1 = DST1
+     C**********         EVAL      WTag79L3b = '/'                                 MD055883 MD055900
      C                   EXSR      SrSvPyFld
      C                   EXSR      SRExtract
      C                   EVAL      WGenFlg = 'Y'

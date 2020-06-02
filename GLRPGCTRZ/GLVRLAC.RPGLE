@@ -14,8 +14,7 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. MD055857           Date 26May20               *
-      *  Prev Amend No. MD053818           Date 26May20               *
-      *                 CRE114             Date 19Feb18               *
+      *  Prev Amend No. CRE114             Date 19Feb18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD042377           Date 01Dec16               *
       *                 MD034451C          Date 02Mar16               *
@@ -65,10 +64,6 @@
       *  MD055857 - Amend MSG ID RE72035 for the sweep validation and *
       *             change it to RE72015.                             *
       *           - Added a new event code for RE72015.               *
-      *  MD053818 - Amend Narrative of Message ID RE72035 from        *
-      *             “Unable to close account as sweep is scheduled    *
-      *             for this account” to “Account cannot be closed,   *
-      *             flag TI Account to ‘N’ first.”                    *
       *  CRE114   - Modulus 10 for Retail Account Number (FOB006)     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD042377 - Error RE71053 should only be validated against a  *

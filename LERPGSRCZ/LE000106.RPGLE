@@ -49,8 +49,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. AR674226           Date 04Dec19               *
-      *  Prev Amend No. CLE168             Date 26Feb18               *
+      *  Last Amend No. MD055657           Date 14May20               *
+      *  Prev Amend No. AR674226           Date 04Dec19               *
+      *                 CLE168             Date 26Feb18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD040963           Date 06Sep16               *
       *                 CLE141             Date 08Feb16               *
@@ -75,6 +76,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055657 - Manual transaction from FFC TI Interface went to  *
+      *             repair queue because the facility exchange rate is*
+      *             longer than the defined facility exchange rate in *
+      *             Midas. Increase the field definition of the Midas *
+      *             facility exchange rate. (Recompile)               *
       *  AR674226 - Manual transaction reached 999. Increase the size *
       *             of utilisation sequence no. and transaction       *
       *             sequence. Recompile. (Child: AR674227)            *

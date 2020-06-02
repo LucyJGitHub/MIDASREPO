@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. AR674226           Date 04Dec19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055657           Date 14May20               *
+      *  Prev Amend No. AR674226           Date 04Dec19               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -24,6 +25,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055657 - Manual transaction from FFC TI Interface went to  *
+      *             repair queue because the facility exchange rate is*
+      *             longer than the defined facility exchange rate in *
+      *             Midas. Increase the field definition of the Midas *
+      *             facility exchange rate.                           *
       *  AR674226 - Manual transaction reached 999. Increase the size *
       *             of utilisation sequence no. and transaction       *
       *             sequence. Recompile. (Child: AR674227)            *
@@ -135,12 +141,17 @@
      C                   EVAL      WkRate2 = A6SPRT
      C                   ENDIF
  
-      ** Since length of Utilisation Exchange Rate field in the file allows
-      ** only 4 digit for whole numbers, so once it exceeds this, invert rate
-      ** and set multiply/divide indicator to 'D'
- 
+      ***Since*length*of*Utilisation*Exchange*Rate*field*in*the*file*allows**               MD055657
+      ***only*4*digit*for*whole*numbers,*so*once*it*exceeds*this,*invert*rate               MD055657
+      ***and*set*multiply/divide*indicator*to*'D'****************************               MD055657
+      *                                                                                     MD055657
+      ** Since length of Utilisation Exchange Rate field in the file allows                 MD055657
+      ** only 5 digit for whole numbers, so once it exceeds this, invert rate               MD055657
+      ** and set multiply/divide indicator to 'D'                                           MD055657
+      *                                                                                     MD055657
      C                   EVAL      WkUXRT = WkRate1/WkRate2
-     C                   EVAL      WkIntg = WkUXRT/10000
+     C**********         EVAL      WkIntg = WkUXRT/10000                                    MD055657
+     C                   EVAL      WkIntg = WkUXRT/100000                                   MD055657
  
      C                   IF        WkIntg >= 1
      C                   EVAL      F1UXRT = 1/WkUXRT

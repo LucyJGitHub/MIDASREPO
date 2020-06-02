@@ -37,7 +37,7 @@
       *             repair queue because the facility exchange rate is*
       *             longer than the defined facility exchange rate in *
       *             Midas. Increase the field definition of the Midas *
-      *             facility exchange rate. (Recompile)               *
+      *             facility exchange rate.                           *
       *  MD027418 - Exclude loan if it is not yet authorised and      *
       *             last action was insert.                           *
       *  MD026971 - Issue either overridable error or warning         *
@@ -173,6 +173,12 @@
      D NDayFwd         S              2S 0
       *
      I/COPY ZSRSRC,ZHOLILE
+      ** Rename fields                                                                      MD055657
+      *                                                                                     MD055657
+     ILEFCAMPF                                                                              MD055657
+     I              SQNO                        SQNOFA                                      MD055657
+     ILEFCAMF3                                                                              MD055657
+     I              SQNO                        SQNOFA                                      MD055657
 
       *****************************************************************
       /EJECT

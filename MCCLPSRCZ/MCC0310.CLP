@@ -9,10 +9,11 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD049512           Date 10Aug18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. 244853             Date 08Mar07              */
+/*                      244853             Date 08Mar07              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /*                      BUG12454           Date 06Nov06              */
@@ -31,6 +32,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD049512 - All real time postings are reprocessed everytime */
+/*                  GLC450 runs causing imbalance in GLHIBL. Ensure  */
+/*                  RTPJ are only processed once.                    */
 /*       MD046248 - Finastra Rebranding                              */
 /*       244853 - FCIE transfer incorrect following non-working day. */
 /*                Applied fix 205165.                                */
@@ -211,15 +215,17 @@
 /**  less than or equal to the last posting date and time stored */                       /*244853*/
 /**  in PF/GLHBCGPD. */                                                                   /*244853*/
 /**/                                                                                      /*244853*/
-             IF         COND(&FILE *EQ 'ACJND1') THEN(DO)                                 /*244853*/
+/**********  IF         COND(&FILE *EQ 'ACJND1') THEN(DO)              */        /*244853 MD049512*/
+/**********  CHGVAR     VAR(&OPNQRYF) VALUE(&OPNQRYF *BCAT 'QRYSLT(' + */               /*MD049512*/
+/**********               *CAT '''RECI *EQ  "P"')                      */        /*157088 MD049512*/
+/**********  CHGVAR     VAR(&OPNQRYF) VALUE(&OPNQRYF *BCAT '*AND WTIME *GT' +  */       /*MD049512*/
+/**********               *BCAT &SDYTA *CAT ''')')                     */        /*157088 MD049512*/
+/**********  ENDDO                                                     */        /*244853 MD049512*/
+/**********  ELSE       CMD(CHGVAR VAR(&OPNQRYF) VALUE(&OPNQRYF +      */               /*MD049512*/
+/**********               *BCAT 'QRYSLT(' *CAT '''RECI *EQ  +          */               /*MD049512*/
+/**********               ''''P''''' *CAT ''')'))                      */        /*244853 MD049512*/
              CHGVAR     VAR(&OPNQRYF) VALUE(&OPNQRYF *BCAT 'QRYSLT(' +
-                          *CAT '''RECI *EQ  "P"')                     /*157088*/
-             CHGVAR     VAR(&OPNQRYF) VALUE(&OPNQRYF *BCAT '*AND WTIME *GT' +
-                          *BCAT &SDYTA *CAT ''')')                    /*157088*/
-             ENDDO                                                                        /*244853*/
-             ELSE       CMD(CHGVAR VAR(&OPNQRYF) VALUE(&OPNQRYF +
-                          *BCAT 'QRYSLT(' *CAT '''RECI *EQ  +
-                          ''''P''''' *CAT ''')'))                                         /*244853*/
+                          *CAT '''RECI *EQ  ''''P''''' *CAT ''')')                      /*MD049512*/
 /* End of 244853*/
 /**/
 /**  Set up sort fields */

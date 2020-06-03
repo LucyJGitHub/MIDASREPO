@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD055380           Date 17Apr20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD024812A          Date 06Nov19               *
+      *  Prev Amend No. MD024812           Date 06Nov19               *
+      *                 MD055380           Date 17Apr20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD034449           Date 24Jan19               *
       *                 AR988460           Date 24Jan19               *      
       *                 AR325915           Date 03Oct18               *      
@@ -115,6 +117,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD024812A - Consider new maturity date if non-blanks and     *
+      *              rollover date = current maturity date.           *
+      *  MD024812 - Use system value to determine if interest payment *
+      *             date should be defaulted to rollover date.        *
       *  MD055380 - Rollover can't be completed when main loan in WIP.*
       *             Reverse fix AR820729.                             *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -638,6 +644,27 @@
      D DDFRCOOK        S              1                                                     MD028338
      D RetCode         S              7                                                       CLE141
                                                                                               CRE073
+     D PSysVal01       S             20A   INZ('DefaultIntDateIfBlnk')                      MD024812
+     D PCurSet01       S            200A                                                    MD024812
+     D PSysVal02       S             20A                                                    MD024812
+     D PCurSet02       S            200A                                                    MD024812
+     D PSysVal03       S             20A                                                    MD024812
+     D PCurSet03       S            200A                                                    MD024812
+     D PSysVal04       S             20A                                                    MD024812
+     D PCurSet04       S            200A                                                    MD024812
+     D PSysVal05       S             20A                                                    MD024812
+     D PCurSet05       S            200A                                                    MD024812
+     D PSysVal06       S             20A                                                    MD024812
+     D PCurSet06       S            200A                                                    MD024812
+     D PSysVal07       S             20A                                                    MD024812
+     D PCurSet07       S            200A                                                    MD024812
+     D PSysVal08       S             20A                                                    MD024812
+     D PCurSet08       S            200A                                                    MD024812
+     D PSysVal09       S             20A                                                    MD024812
+     D PCurSet09       S            200A                                                    MD024812
+     D PSysVal10       S             20A                                                    MD024812
+     D PCurSet10       S            200A                                                    MD024812
+     D WDefIntDt       S              1A                                                    MD024812
      D PERCD           S              1P 0                                                  MD034449
      D PAMT            S             15P 0                                                  MD034449
       ** Alpha field for numeric validation                                                 MD034449
@@ -1550,6 +1577,12 @@
      C     VNIDT         IFNE      *ZEROS
      C                   Z-ADD     VNIDT         L_CLNIDT
      C                   ENDIF
+      *                                                                                     MD024812
+     C     VNIDT         IFNE      *ZEROS                                                   MD024812
+     C     IPFR          ANDEQ     ' '                                                      MD024812
+     C     WDefIntDt     ANDEQ     'Y'                                                      MD024812
+     C                   Z-ADD     VNIDT         L_CLIBDT                                   MD024812
+     C                   ENDIF                                                              MD024812
       *
       ** Overwrite Interest date with rollover date if interest
       ** frequency is 'R'
@@ -4283,6 +4316,26 @@
      C     NIDT          IFEQ      *ZEROS
      C     VRLDT         ANDGE     WRNDAY
      C     IPFR          ANDEQ     'R'                                                      AR648838
+      *                                                                                     MD024812
+     C     WDefIntDt     ANDEQ     'N'                                                      MD024812
+     C     NIDT          OREQ      *ZEROS                                                   MD024812
+     C     VRLDT         ANDGE     WRNDAY                                                   MD024812
+     C     IPFR          ANDEQ     ' '                                                      MD024812
+     C     VRLDT         ANDLT     MDAT                                                     MD024812
+     C     MDAT          ANDGT     0                                                        MD024812
+     C     WDefIntDt     ANDEQ     'Y'                                                      MD024812
+     C     NIDT          OREQ      *ZEROS                                                   MD024812
+     C     VRLDT         ANDGE     WRNDAY                                                   MD024812
+     C     IPFR          ANDEQ     ' '                                                      MD024812
+     C     MDAT          ANDEQ     0                                                        MD024812
+     C     WDefIntDt     ANDEQ     'Y'                                                      MD024812
+     C     NIDT          OREQ      *ZEROS                                                  MD024812A
+     C     VRLDT         ANDGE     WRNDAY                                                  MD024812A
+     C     IPFR          ANDEQ     ' '                                                     MD024812A
+     C     MDAT          ANDGT     0                                                       MD024812A
+     C     WDefIntDt     ANDEQ     'Y'                                                     MD024812A
+     C     MDAT          ANDEQ     VRLDT                                                   MD024812A
+     C     WNMDT         ANDGT     MDAT                                                    MD024812A
      C                   Z-ADD     VRLDT         VNIDT
      C                   ELSE
      C     VRLDT         IFGT      NIDT
@@ -9516,6 +9569,48 @@
      C                   ELSE                                                                 CRE073
      C                   MOVE      'N'           CRE073                                       CRE073
      C                   ENDIF                                                                CRE073
+      ** Check System Value setting:                                                        MD024812
+      *                                                                                     MD024812
+     C                   CALLB     'AOSVALR0'                                               MD024812
+     C                   PARM      *BLANKS       PRtCd                                      MD024812
+     C                   PARM                    PSysVal01                                  MD024812
+     C                   PARM                    PCurSet01                                  MD024812
+     C                   PARM                    PSysVal02                                  MD024812
+     C                   PARM                    PCurSet02                                  MD024812
+     C                   PARM                    PSysVal03                                  MD024812
+     C                   PARM                    PCurSet03                                  MD024812
+     C                   PARM                    PSysVal04                                  MD024812
+     C                   PARM                    PCurSet04                                  MD024812
+     C                   PARM                    PSysVal05                                  MD024812
+     C                   PARM                    PCurSet05                                  MD024812
+     C                   PARM                    PSysVal06                                  MD024812
+     C                   PARM                    PCurSet06                                  MD024812
+     C                   PARM                    PSysVal07                                  MD024812
+     C                   PARM                    PCurSet07                                  MD024812
+     C                   PARM                    PSysVal08                                  MD024812
+     C                   PARM                    PCurSet08                                  MD024812
+     C                   PARM                    PSysVal09                                  MD024812
+     C                   PARM                    PCurSet09                                  MD024812
+     C                   PARM                    PSysVal10                                  MD024812
+     C                   PARM                    PCurSet10                                  MD024812
+                                                                                            MD024812
+     C                   EVAL      WDefIntDt = 'N'                                          MD024812
+                                                                                            MD024812
+     C                   IF        PRtCd = *BLANKS                                          MD024812
+     C                   MOVEL     PCurSet01     WDefIntDt                                  MD024812
+     C                   ELSE                                                               MD024812
+                                                                                            MD024812
+     C                   IF        PRtCd <> '*NRF'                                          MD024812
+     C     *LOCK         IN        LDA                                                      MD024812
+     C                   EVAL      DBFile = 'SDSVALPD'                                      MD024812
+     C                   EVAL      DBase = 102                                              MD024812
+     C                   EVAL      DBKey = PSysVal01                                        MD024812
+     C                   OUT       LDA                                                      MD024812
+     C                   EXSR      *PSSR                                                    MD024812
+     C                   ENDIF                                                              MD024812
+                                                                                            MD024812
+     C                   ENDIF                                                              MD024812
+      *                                                                                     MD024812
                                                                                               CLE141
       ** Determine if CLE141 is installed                                                     CLE141
                                                                                               CLE141

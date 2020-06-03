@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 224411             Date 05Feb20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 199811             Date 08Jan01               *
+      *  Prev Amend No. 224411             Date 05Feb20               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER047             Date 19May08               *
@@ -49,6 +50,8 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  199811 - Do not allow Customer Numbers equal to 000000 or    *
+      *           Sequence Numbers equal to 00.                       *
       *  224411 - The FCCY transfer posting reference was GE-PC       *
       *           instead of GE-XF.                                   *
       *         - Apply for MD-54700.                                 *
@@ -368,6 +371,19 @@
      C                     EXSR ACODD
      C                     END
       *
+      **  If Customer Number is equal to 000000 execute Customer Number   199811
+      **  sub routine.                                                    199811
+      *                                                                   199811
+     C           CNUM      IFEQ *ZEROS                                    199811
+     C                     EXSR SRCNUM                                    199811
+     C                     ENDIF                                          199811
+      *                                                                   199811
+      **  If Sequence Number is equal to 00 then change to 01.            199811
+      *                                                                   199811
+     C           ACSQ      IFEQ *ZEROS                                    199811
+     C                     MOVE '01'      ACSQ                            199811
+     C                     ENDIF                                          199811
+      *                                                                   199811
       **  FRMAT - Process to format the Generated Posting Entries
       *
      C                     EXSR FRMAT
@@ -644,6 +660,41 @@
      C                     Z-ADD99        PRTLN4
       *
      C                     ENDSR
+      *****************************************************************   199811
+      /EJECT                                                              199811
+      *****************************************************************   199811
+      *                                                                   199811
+      *  SRCNUM -- Subroutine to that Customer Number Field has a valid   199811
+      *            value in it.                                           199811
+      *                                                                   199811
+      *  CALLED FROM: Main Processing                                     199811
+      *                                                                   199811
+      *****************************************************************   199811
+      *                                                                   199811
+     C           SRCNUM    BEGSR                                          199811
+      *                                                                   199811
+     C                     CALL 'AOBRCHR0'                                199811
+     C                     PARM '*MSG   ' @RTCD   7                       199811
+     C                     PARM '*KEY   ' @OPTN   7                       199811
+     C                     PARM BRCA      @BRCH   3                       199811
+     C           SDBRCH    PARM SDBRCH    DSFDY                           199811
+      *                                                                   199811
+     C           @RTCD     IFNE *BLANK                                    199811
+     C           *LOCK     IN   LDA                                       199811
+     C                     Z-ADD8         DBASE            ************** 199811
+     C                     MOVE 'SDBRCHPD'DBFILE           * DBERROR 08 * 199811
+     C                     MOVEL@BRCH     DBKEY            ************** 199811
+     C                     OUT  LDA                                       199811
+     C                     EXSR DBERR                                     199811
+     C                     ELSE                                           199811
+      *                                                                   199811
+      ** Use Branch Internal Customer if Customer Number is 000000.       199811
+      *                                                                   199811
+     C                     MOVE A8BICN    CNUM                            199811
+     C                     ENDIF                                          199811
+      *                                                                   199811
+     C                     ENDSR                                          199811
+      *                                                                   199811
       *****************************************************************
       /EJECT
       *****************************************************************

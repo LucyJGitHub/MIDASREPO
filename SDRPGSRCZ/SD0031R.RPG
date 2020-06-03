@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055821           Date 12May20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD039031           Date 22May20               *
+      *  Prev Amend No. MD055821           Date 12May20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD037807           Date 25Mar16               *
       *                 CGL165             Date 23Feb15               *
       *                 MD030956           Date 09Oct14               *
@@ -108,6 +109,12 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD039031 - A5TOIN and A5ACTY fields used by CGL010 contain   *
+      *             different values due to incorrect DS used.        *
+      *             AOACODR0 should use SDACODPD format for parameter.*
+      *             Also, restrict entry of nostro and retail account *
+      *             codes in Transitory account codes.                *
+      *             Applied fix for MD055359.                         *
       *  MD055821 - Protect tax fields when CGL165 is ON (Recompile)  *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037807 - Default Vostro and Lostro fields (CFT002) to 'N'. *
@@ -1133,6 +1140,10 @@
       * Message data for 'Account Code Name and Narrative Req'            CSD005
       * Account Code Narrative                                            CSD005
      I                                        1  50 ZA0135                CSD005
+      ** Account Code Details                                                               MD039031
+     ISDACOD      DS                            417                                         MD039031
+     I                                       33  33 #2ACTY                                  MD039031
+     I                                       65  65 #2TOIN                                  MD039031
      I/COPY WNCPYSRC,SD0031RI03
       *                                                                                       CGP001
      I              'GOGETZONE'           C         GOPGM                                     CGP001
@@ -3155,7 +3166,8 @@
      C                     PARM '*KEY   ' P@OPTN                          CGL010
      C********** DDTRDA    PARM DDTRDA    P@ACOD  4                                    CGL010 CGL029
      C           DDTRDA    PARM DDTRDA    P@ACOD 10                                           CGL029
-     C           @1DBRC    PARM *BLANKS   UUSDY                           CGL010
+     C********** @1DBRC    PARM *BLANKS   UUSDY                                      CGL010 MD039031
+     C           SDACOD    PARM *BLANKS   UUSDY                                             MD039031
       *                                                                   CGL010
       ** Record not found                                                 CGL010
       *                                                                   CGL010
@@ -3169,7 +3181,8 @@
       *                                                                   CGL010
       ** Cannot be a title only account code                              CGL010
       *                                                                   CGL010
-     C           A5TOIN    IFEQ 'Y'                                       CGL010
+     C********** A5TOIN    IFEQ 'Y'                                                  CGL010 MD039031
+     C           #2TOIN    IFEQ 'Y'                                                         MD039031
      C                     MOVEL'USR0221' ZAMSID                          CGL010
      C                     EXSR ZASNMS                                    CGL010
      C                     MOVE *ON       *IN99                           CGL010
@@ -3177,9 +3190,16 @@
      C                     ENDIF                                          CGL010
       *                                                                   CGL010
       ** Cannot be a retail account code                                  CGL010
+      ** or cannot be a nostro account code                                                 MD039031
       *                                                                   CGL010
-     C           A5ACTY    IFEQ 'R'                                       CGL010
+     C********** A5ACTY    IFEQ 'R'                                                  CGL010 MD039031
+     C           #2ACTY    IFEQ 'R'                                                         MD039031
+     C           #2ACTY    OREQ 'N'                                                         MD039031
+     C           #2ACTY    IFEQ 'R'                                                         MD039031
      C                     MOVEL'USR0176' ZAMSID                          CGL010
+     C                     ELSE                                                             MD039031
+     C                     MOVEL'USR8445' ZAMSID                                            MD039031
+     C                     ENDIF                                                            MD039031
      C                     EXSR ZASNMS                                    CGL010
      C                     MOVE *ON       *IN99                           CGL010
      C                     MOVE *ON       *IN63                           CGL010
@@ -3204,6 +3224,8 @@
      C                     PARM '*KEY   ' P@OPTN                          CGL010
      C           DDTRCA    PARM DDTRCA    P@ACOD                          CGL010
      C           @1DBRC    PARM *BLANKS   UUSDY                           CGL010
+     C********** @1DBRC    PARM *BLANKS   UUSDY                                      CGL010 MD039031
+     C           SDACOD    PARM *BLANKS   UUSDY                                             MD039031
       *                                                                   CGL010
       ** Record not found                                                 CGL010
       *                                                                   CGL010
@@ -3217,7 +3239,8 @@
       *                                                                   CGL010
       ** Cannot be a title only account code                              CGL010
       *                                                                   CGL010
-     C           A5TOIN    IFEQ 'Y'                                       CGL010
+     C********** A5TOIN    IFEQ 'Y'                                                  CGL010 MD039031
+     C           #2TOIN    IFEQ 'Y'                                                         MD039031
      C                     MOVEL'USR0221' ZAMSID                          CGL010
      C                     EXSR ZASNMS                                    CGL010
      C                     MOVE *ON       *IN99                           CGL010
@@ -3225,9 +3248,16 @@
      C                     ENDIF                                          CGL010
       *                                                                   CGL010
       ** Cannot be a retail account code                                  CGL010
+      ** or cannot be a nostro account code                                                 MD039031
       *                                                                   CGL010
-     C           A5ACTY    IFEQ 'R'                                       CGL010
+     C********** A5ACTY    IFEQ 'R'                                                  CGL010 MD039031
+     C           #2ACTY    IFEQ 'R'                                                         MD039031
+     C           #2ACTY    OREQ 'N'                                                         MD039031
+     C           #2ACTY    IFEQ 'R'                                                         MD039031
      C                     MOVEL'USR0176' ZAMSID                          CGL010
+     C                     ELSE                                                             MD039031
+     C                     MOVEL'USR8445' ZAMSID                                            MD039031
+     C                     ENDIF                                                            MD039031
      C                     EXSR ZASNMS                                    CGL010
      C                     MOVE *ON       *IN99                           CGL010
      C                     MOVE *ON       *IN64                           CGL010

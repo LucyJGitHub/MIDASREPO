@@ -79,7 +79,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD055570 - Payment with account blocked (CR/DR) can be       *
-      *             inserted.                                         *
+      *             inserted                                          *
       *  MD034521A - Error handling of Blocked account is not the     *
       *              same across the modules                          *
       *  MD039547 - Referred account is not properly validated.       *

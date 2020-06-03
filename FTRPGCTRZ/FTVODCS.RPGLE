@@ -117,7 +117,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD055570 - Payment with account blocked (CR/DR) can be       *
-      *             inserted.                                         *
+      *             inserted                                          *
       *  MD039547 - Referred account is not properly validated.       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037223 - Retrieve DACO for all types of account to be used *

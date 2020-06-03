@@ -155,7 +155,7 @@
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
       *           - Applied for MD055868.                             *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
-      *           Applied for MD-55510.                               *
+      *           Applied for MD055510.                               *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *

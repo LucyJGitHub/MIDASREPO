@@ -158,7 +158,7 @@
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *           (Recompile)                                         *
       *  CSD095 - Allow Deal Sub-Type and Branch for MM and FX SSIs   *
-      *           (Recompile)                                         *
+      *           (Recompiled)                                        *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference                                *
       *  CCB020 - COB Restructure - Secondary COB Infrastructure      *

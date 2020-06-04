@@ -11,12 +11,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD055900           Date 28May20               *
-      *  Prev Amend No. MD055883           Date 22May20               *
+      *  Last Amend No. MD055939           Date 03Jun20               *
+      *  Prev Amend No. MD055900           Date 28May20               *
+      *                 MD055883           Date 22May20               *
       *                 CSW220  *CREATE    Date 09Mar20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055939 - MT199 ACCC & ACSP Field 79 Line 4 Currency should *
+      *             get its value from Transaction                    *
+      *           - Amount for MT199 Transferred should Include       *
+      *             deduction from charges                            *
       *  MD055900 - Revert changes of MD055883                        *
       *  MD055883 - Field 79 Line 3 is not displaying "/" when        *
       *             Destination do not have a BIC defined             *
@@ -41,6 +46,9 @@
 
       ** Outgoing payments details
      FOTPAY     IF   E           K DISK    INFSR(*PSSR)
+                                                                                            MD055939
+      ** Outgoing Payments Details Extension File                                           MD055939
+     FOTPAYXL0  IF   E           K DISK    INFSR(*PSSR)                                     MD055939
 
       ** Incoming payments details
      FINPAY     IF   E           K DISK    INFSR(*PSSR)
@@ -161,6 +169,9 @@
       ** External data structure for bank file
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
 
+      **  Data structure for SAR - Switchable features file                                 MD055939
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                MD055939
+
       ** External data structure for nostro details
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
 
@@ -250,6 +261,7 @@
      D WTag79L3a       S             14A
      D WTag79L3b       S             13A
      D WGenFlg         S              1A
+     D WOTFlg          S              1A                                                    MD055939
      D CR              S              1A
      D LF              S              1A
      D CRLF            S              2A
@@ -290,6 +302,11 @@
      D WIAmnt          S             13P 0
      D WOCcy           S              3A
      D WOAmnt          S             17A
+     D WIMCcy          S              3A                                                    MD055939
+     D WChgs           S             13P 0                                                  MD055939
+     D WMChgs          S             13P 0                                                  MD055939
+     D WNChgs          S             13P 0                                                  MD055939
+     D WRChgs          S             13P 0                                                  MD055939
 
       ** Result fields of Swift Format Currency
      D ZAMNT           S             13P 0
@@ -312,6 +329,13 @@
      D @BRCD           S              3A
      D @RTCD           S              7A
      D @OPTN           S              7A
+     D @SARD           S              6A                                                    MD055939
+                                                                                            MD055939
+      ** Variables for Switchable Features                                                  MD055939
+     D S01494          S              1A                                                    MD055939
+     D S01499          S              1A                                                    MD055939
+     D CFT009          S              1A                                                    MD055939
+     D CFT014          S              1A                                                    MD055939
 
       ** Variable for accessing TABFP
      D ZTABKY          S             12A
@@ -427,6 +451,7 @@
      C                   EVAL      WReceiver = PSVal1
      C                   ENDIF
 
+
       ** Access SDMGMEPD for message management data.
 
      C                   CALL      'AOMGMER0'
@@ -534,6 +559,106 @@
      C                   ENDIF
      C                   MOVE      ZMDATE        @HRDT
 
+      *                                                                                     MD055939
+      ** Access Switchable Features file for S01494                                         MD055939
+      *                                                                                     MD055939
+     C                   CALL      'AOSARDR0'                                               MD055939
+     C                   PARM      *BLANKS       @RTCD                                      MD055939
+     C                   PARM      '*VERIFY'     @OPTN                                      MD055939
+     C                   PARM      'S01494'      @SARD                                      MD055939
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD055939
+                                                                                            MD055939
+     C     @RTCD         IFNE      *BLANKS                                                  MD055939
+     C     @RTCD         ANDNE     '*NRF   '                                                MD055939
+     C     *LOCK         IN        LDA                                                      MD055939
+     C                   MOVE      '021'         DBASE                                      MD055939
+     C                   MOVEL     @SARD         DBKEY                                      MD055939
+     C                   MOVEL     'SCSARDPD'    DBFILE                                     MD055939
+     C                   OUT       LDA                                                      MD055939
+     C                   EXSR      *PSSR                                                    MD055939
+     C                   ENDIF                                                              MD055939
+                                                                                            MD055939
+     C     @RTCD         IFEQ      *BLANKS                                                  MD055939
+     C                   MOVEL     'Y'           S01494                                     MD055939
+     C                   ELSE                                                               MD055939
+     C                   MOVEL     'N'           S01494                                     MD055939
+     C                   ENDIF                                                              MD055939
+                                                                                            MD055939
+      *                                                                                     MD055939
+      ** Access Switchable Features file for S01499                                         MD055939
+      *                                                                                     MD055939
+     C                   CALL      'AOSARDR0'                                               MD055939
+     C                   PARM      *BLANKS       @RTCD                                      MD055939
+     C                   PARM      '*VERIFY'     @OPTN                                      MD055939
+     C                   PARM      'S01499'      @SARD                                      MD055939
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD055939
+                                                                                            MD055939
+     C     @RTCD         IFNE      *BLANKS                                                  MD055939
+     C     @RTCD         ANDNE     '*NRF   '                                                MD055939
+     C     *LOCK         IN        LDA                                                      MD055939
+     C                   MOVE      '022'         DBASE                                      MD055939
+     C                   MOVEL     @SARD         DBKEY                                      MD055939
+     C                   MOVEL     'SCSARDPD'    DBFILE                                     MD055939
+     C                   OUT       LDA                                                      MD055939
+     C                   EXSR      *PSSR                                                    MD055939
+     C                   ENDIF                                                              MD055939
+                                                                                            MD055939
+     C     @RTCD         IFEQ      *BLANKS                                                  MD055939
+     C                   MOVEL     'Y'           S01499                                     MD055939
+     C                   ELSE                                                               MD055939
+     C                   MOVEL     'N'           S01499                                     MD055939
+     C                   ENDIF                                                              MD055939
+                                                                                            MD055939
+      *                                                                                     MD055939
+      ** Access Switchable Features file for CFT009                                         MD055939
+      *                                                                                     MD055939
+     C                   CALL      'AOSARDR0'                                               MD055939
+     C                   PARM      *BLANKS       @RTCD                                      MD055939
+     C                   PARM      '*VERIFY'     @OPTN                                      MD055939
+     C                   PARM      'CFT009'      @SARD                                      MD055939
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD055939
+                                                                                            MD055939
+     C     @RTCD         IFNE      *BLANKS                                                  MD055939
+     C     @RTCD         ANDNE     '*NRF   '                                                MD055939
+     C     *LOCK         IN        LDA                                                      MD055939
+     C                   MOVE      '023'         DBASE                                      MD055939
+     C                   MOVEL     @SARD         DBKEY                                      MD055939
+     C                   MOVEL     'SCSARDPD'    DBFILE                                     MD055939
+     C                   OUT       LDA                                                      MD055939
+     C                   EXSR      *PSSR                                                    MD055939
+     C                   ENDIF                                                              MD055939
+                                                                                            MD055939
+     C     @RTCD         IFEQ      *BLANKS                                                  MD055939
+     C                   MOVEL     'Y'           CFT009                                     MD055939
+     C                   ELSE                                                               MD055939
+     C                   MOVEL     'N'           CFT009                                     MD055939
+     C                   ENDIF                                                              MD055939
+                                                                                            MD055939
+      *                                                                                     MD055939
+      ** Access Switchable Features file for CFT014                                         MD055939
+      *                                                                                     MD055939
+     C                   CALL      'AOSARDR0'                                               MD055939
+     C                   PARM      *BLANKS       @RTCD                                      MD055939
+     C                   PARM      '*VERIFY'     @OPTN                                      MD055939
+     C                   PARM      'CFT014'      @SARD                                      MD055939
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD055939
+                                                                                            MD055939
+     C     @RTCD         IFNE      *BLANKS                                                  MD055939
+     C     @RTCD         ANDNE     '*NRF   '                                                MD055939
+     C     *LOCK         IN        LDA                                                      MD055939
+     C                   MOVE      '024'         DBASE                                      MD055939
+     C                   MOVEL     @SARD         DBKEY                                      MD055939
+     C                   MOVEL     'SCSARDPD'    DBFILE                                     MD055939
+     C                   OUT       LDA                                                      MD055939
+     C                   EXSR      *PSSR                                                    MD055939
+     C                   ENDIF                                                              MD055939
+                                                                                            MD055939
+     C     @RTCD         IFEQ      *BLANKS                                                  MD055939
+     C                   MOVEL     'Y'           CFT014                                     MD055939
+     C                   ELSE                                                               MD055939
+     C                   MOVEL     'N'           CFT014                                     MD055939
+     C                   ENDIF                                                              MD055939
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -605,6 +730,7 @@
      C                   EVAL      WTag79L2Val = StsACSPT
      C                   EVAL      WDstT = DSTT
      C                   EVAL      WDst1 = DST1
+     C                   EVAL      WOTFlg = 'Y'                                             MD055939
      C**********         EVAL      WTag79L3b = '/'                                 MD055883 MD055900
      C                   EXSR      SrSvPyFld
      C                   EXSR      SRExtract
@@ -646,6 +772,7 @@
 
      C                   IF        %FOUND
 
+     C                   EVAL      WOTFlg = 'Y'                                             MD055939
      C                   EXSR      SrSvPyFld
      C                   EXSR      SRExtract
      C                   EVAL      WGenFlg = 'Y'
@@ -782,6 +909,7 @@
      C                   EVAL      WTag79L3a = *BLANKS
      C                   EVAL      WTag79L3b = *BLANKS
      C                   EVAL      WGenFlg = *BLANKS
+     C                   EVAL      WOTFlg = *BLANKS                                         MD055939
 
       *
       ** Reset variables for getting SWIFT BIC of destination
@@ -807,8 +935,13 @@
       *
      C                   EVAL      WICcy = *BLANKS
      C                   EVAL      WIAmnt = *ZEROS
-     C                   EVAL      WOCcy  = *BLANKS
+     C                   EVAL      WOCcy = *BLANKS
      C                   EVAL      WOAmnt = *BLANKS
+     C                   EVAL      WIMCcy = *BLANKS                                         MD055939
+     C                   EVAL      WChgs = *ZEROS                                           MD055939
+     C                   EVAL      WMChgs = *ZEROS                                          MD055939
+     C                   EVAL      WNChgs = *ZEROS                                          MD055939
+     C                   EVAL      WRChgs = *ZEROS                                          MD055939
       *
       ** Clear arrays for formatting Swift Amount
       *
@@ -842,7 +975,8 @@
       *                                                               *
       * Called by: SrRdIncMsg                                         *
       *                                                               *
-      * Calls: None                                                   *
+      **Calls:*None****************************************************                     MD055939
+      * Calls: SrCalcChg                                              *                     MD055939
       *                                                               *
       *****************************************************************
      C     SrSvPyFld     BEGSR
@@ -853,6 +987,13 @@
      C                   EVAL      WPyTp = PYTP
      C                   EVAL      WPySt = PYST
      C                   EVAL      WIAmnt = PYAM
+     C                   EVAL      WICcy = PCCY                                             MD055939
+                                                                                            MD055939
+     C                   IF        WOTFlg = 'Y' AND CDRO = *BLANKS                          MD055939
+     C                             AND ADDC = 'D'                                           MD055939
+     C                   EXSR      SrCalcChgs                                               MD055939
+     C                   EVAL      WIAmnt = WIAmnt - WChgs + WRChgs                         MD055939
+     C                   ENDIF                                                              MD055939
 
      C                   ENDSR
       *****************************************************************
@@ -877,6 +1018,86 @@
      C                   ENDIF
 
      C                   ENDSR
+      *****************************************************************                     MD055939
+      /EJECT                                                                                MD055939
+      *****************************************************************                     MD055939
+      *                                                               *                     MD055939
+      * SrCalcChgs  - Calculate Charges to be deducted from pay amount*                     MD055939
+      *             - Used for setting value of Tag 79 Line 4         *                     MD055939
+      *                                                               *                     MD055939
+      * Called by: SrSvPyFld                                          *                     MD055939
+      *                                                               *                     MD055939
+      * Calls: SrNewChgs                                              *                     MD055939
+      *                                                               *                     MD055939
+      *****************************************************************                     MD055939
+     C     SrCalcChgs    BEGSR                                                              MD055939
+                                                                                            MD055939
+      *                                                                                     MD055939
+      ** Sum up the charges into work field                                                 MD055939
+      *                                                                                     MD055939
+     C     TXCH          ADD       CQCH          WChgs                                      MD055939
+     C                   ADD       CSTA          WChgs                                      MD055939
+     C                   ADD       SPCH          WChgs                                      MD055939
+     C                   ADD       MSCH          WChgs                                      MD055939
+     C                   ADD       TRCM          WChgs                                      MD055939
+     C     S01494        IFEQ      'Y'                                                      MD055939
+     C                   ADD       OPCHCM        WChgs                                      MD055939
+     C                   ENDIF                                                              MD055939
+     C     S01499        IFEQ      'Y'                                                      MD055939
+     C                   ADD       OPVATT        WChgs                                      MD055939
+     C                   ENDIF                                                              MD055939
+      *                                                                                     MD055939
+      ** If CFT009 is on, new charges are added                                             MD055939
+      *                                                                                     MD055939
+     C     CFT009        IFEQ      'Y'                                                      MD055939
+     C                   EXSR      SrNewChgs                                                MD055939
+     C                   ADD       WNChgs        WChgs                                      MD055939
+     C                   ENDIF                                                              MD055939
+     C                                                                                      MD055939
+                                                                                            MD055939
+     C                   ENDSR                                                              MD055939
+      *****************************************************************                     MD055939
+      /EJECT                                                                                MD055939
+      *****************************************************************                     MD055939
+      *                                                               *                     MD055939
+      * SrNewChgs   - Calculate New Charges                           *                     MD055939
+      *                                                               *                     MD055939
+      * Called by: SrCalcChgs                                         *                     MD055939
+      *                                                               *                     MD055939
+      * Calls: None                                                   *                     MD055939
+      *                                                               *                     MD055939
+      *****************************************************************                     MD055939
+     C     SrNewChgs     BEGSR                                                              MD055939
+                                                                                            MD055939
+     C     PREF          CHAIN     OTPAYXL0                                                 MD055939
+      *                                                                                     MD055939
+     C                   IF        %FOUND                                                   MD055939
+      *                                                                                     MD055939
+      ** Totals                                                                             MD055939
+      *                                                                                     MD055939
+     C     SWSCHG        ADD       MISC01        WMChgs                                     MD055939
+     C                   ADD       MISC02        WMChgs                                     MD055939
+     C                   ADD       MISC03        WMChgs                                     MD055939
+     C                   ADD       MISC04        WMChgs                                     MD055939
+     C                   ADD       MISC05        WMChgs                                     MD055939
+      *                                                                                     MD055939
+     C                   Z-ADD     WMChgs        WNChgs                                     MD055939
+      *                                                                                     MD055939
+      ** Add Receiver's Charges Remitted from the extension file.                           MD055939
+      *                                                                                     MD055939
+     C     CFT014        IFEQ      'Y'                                                      MD055939
+     C                   ADD       OPRCRM        WRChgs                                     MD055939
+     C                   ENDIF                                                              MD055939
+                                                                                            MD055939
+     C                   ELSE                                                               MD055939
+     C     *LOCK         IN        LDA                                                      MD055939
+     C                   MOVE      '025'         DBASE                                      MD055939
+     C                   MOVEL     'PREF'        DBKEY                                      MD055939
+     C                   MOVEL     'OTPAYXL0'    DBFILE                                     MD055939
+     C                   OUT       LDA                                                      MD055939
+     C                   ENDIF                                                              MD055939
+                                                                                            MD055939
+     C                   ENDSR                                                              MD055939
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -973,7 +1194,7 @@
 
      C                   EVAL      WSender = %SUBST(CRMOR:7:12)
       ** Save the value of Incoming Message Currency
-     C                   EVAL      WICcy = CRCYCD
+     C                   EVAL      WIMCcy = CRCYCD
 
      C                   ELSE
      C     *LOCK         IN        LDA
@@ -1027,7 +1248,7 @@
      C                   EXSR      SrFAMT
      C                   ENDIF
      C                   IF        WOCcy = *BLANKS
-     C                   EVAL      WOCcy = WICcy
+     C                   EVAL      WOCcy = WIMCcy                                           MD055939
      C                   ENDIF
      C                   EVAL      WTag79L4Val = '//' + WOCcy + WOAmnt
 

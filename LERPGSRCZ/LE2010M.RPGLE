@@ -1,4 +1,4 @@
- nb  H DEBUG FIXNBR(*INPUTPACKED)
+     H DEBUG FIXNBR(*INPUTPACKED)
      H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *

@@ -701,7 +701,7 @@
 
      C                   EVAL      WTag79L2Val = StsACCC
      C                   EVAL      WCurDTFlg = 'N'
-     C                   EVAL      WIOFlg = 'I'
+     C                   EVAL      WIOFlg = 'I'                                             MD055939
      C                   EXSR      SrSvPyFld
      C                   EXSR      SRExtract
      C                   EVAL      WGenFlg = 'Y'
@@ -733,7 +733,7 @@
      C                   EVAL      WTag79L2Val = StsACSPT
      C                   EVAL      WDstT = DSTT
      C                   EVAL      WDst1 = DST1
-     C                   EVAL      WIOFlg = 'O'
+     C                   EVAL      WIOFlg = 'O'                                             MD055939
      C**********         EVAL      WTag79L3b = '/'                                 MD055883 MD055900
      C                   EXSR      SrSvPyFld
      C                   EXSR      SRExtract
@@ -775,7 +775,7 @@
 
      C                   IF        %FOUND
 
-     C                   EVAL      WIOFlg = 'O'
+     C                   EVAL      WIOFlg = 'O'                                             MD055939
      C                   EXSR      SrSvPyFld
      C                   EXSR      SRExtract
      C                   EVAL      WGenFlg = 'Y'
@@ -796,7 +796,7 @@
 
      C                   IF        %FOUND
 
-     C                   EVAL      WIOFlg = 'I'
+     C                   EVAL      WIOFlg = 'I'                                             MD055939
      C                   EXSR      SrSvPyFld
      C                   EXSR      SRExtract
      C                   EVAL      WGenFlg = 'Y'
@@ -913,7 +913,7 @@
      C                   EVAL      WTag79L3a = *BLANKS
      C                   EVAL      WTag79L3b = *BLANKS
      C                   EVAL      WGenFlg = *BLANKS
-     C                   EVAL      WIOFlg = *BLANKS
+     C                   EVAL      WIOFlg = *BLANKS                                         MD055939
 
       *
       ** Reset variables for getting SWIFT BIC of destination

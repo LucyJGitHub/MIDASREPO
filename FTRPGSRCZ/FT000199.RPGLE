@@ -52,6 +52,9 @@
 
       ** Incoming payments details
      FINPAY     IF   E           K DISK    INFSR(*PSSR)
+                                                                                            MD055939
+      ** Incoming Payments Details Extension File                                           MD055939
+     FINPAYXL0  IF   E           K DISK    INFSR(*PSSR)                                     MD055939
 
       ** Incoming Message Control by Message Tag
      FMEINDTL0  IF   E           K DISK    INFSR(*PSSR)
@@ -261,7 +264,7 @@
      D WTag79L3a       S             14A
      D WTag79L3b       S             13A
      D WGenFlg         S              1A
-     D WOTFlg          S              1A                                                    MD055939
+     D WIOFlg          S              1A                                                    MD055939
      D CR              S              1A
      D LF              S              1A
      D CRLF            S              2A
@@ -698,6 +701,7 @@
 
      C                   EVAL      WTag79L2Val = StsACCC
      C                   EVAL      WCurDTFlg = 'N'
+     C                   EVAL      WIOFlg = 'I'
      C                   EXSR      SrSvPyFld
      C                   EXSR      SRExtract
      C                   EVAL      WGenFlg = 'Y'
@@ -729,7 +733,7 @@
      C                   EVAL      WTag79L2Val = StsACSPT
      C                   EVAL      WDstT = DSTT
      C                   EVAL      WDst1 = DST1
-     C                   EVAL      WOTFlg = 'Y'                                             MD055939
+     C                   EVAL      WIOFlg = 'O'
      C**********         EVAL      WTag79L3b = '/'                                 MD055883 MD055900
      C                   EXSR      SrSvPyFld
      C                   EXSR      SRExtract
@@ -771,7 +775,7 @@
 
      C                   IF        %FOUND
 
-     C                   EVAL      WOTFlg = 'Y'                                             MD055939
+     C                   EVAL      WIOFlg = 'O'
      C                   EXSR      SrSvPyFld
      C                   EXSR      SRExtract
      C                   EVAL      WGenFlg = 'Y'
@@ -792,6 +796,7 @@
 
      C                   IF        %FOUND
 
+     C                   EVAL      WIOFlg = 'I'
      C                   EXSR      SrSvPyFld
      C                   EXSR      SRExtract
      C                   EVAL      WGenFlg = 'Y'
@@ -908,7 +913,7 @@
      C                   EVAL      WTag79L3a = *BLANKS
      C                   EVAL      WTag79L3b = *BLANKS
      C                   EVAL      WGenFlg = *BLANKS
-     C                   EVAL      WOTFlg = *BLANKS                                         MD055939
+     C                   EVAL      WIOFlg = *BLANKS
 
       *
       ** Reset variables for getting SWIFT BIC of destination
@@ -988,8 +993,7 @@
      C                   EVAL      WIAmnt = PYAM
      C                   EVAL      WICcy = PCCY                                             MD055939
                                                                                             MD055939
-     C                   IF        WOTFlg = 'Y' AND CDRO = *BLANKS                          MD055939
-     C                             AND ADDC = 'D'                                           MD055939
+     C                   IF        ADDC = 'D' AND CDRO = *BLANKS                            MD055939
      C                   EXSR      SrCalcChgs                                               MD055939
      C                   EVAL      WIAmnt = WIAmnt - WChgs + WRChgs                         MD055939
      C                   ENDIF                                                              MD055939
@@ -1032,18 +1036,40 @@
      C     SrCalcChgs    BEGSR                                                              MD055939
                                                                                             MD055939
       *                                                                                     MD055939
-      ** Sum up the charges into work field                                                 MD055939
+      ** Charges for both IPAY and OPAY                                                     MD055939
       *                                                                                     MD055939
-     C     TXCH          ADD       CQCH          WChgs                                      MD055939
+     C     TRCM          ADD       TXCH          WChgs                                      MD055939
+     C                   ADD       CQCH          WChgs                                      MD055939
+     C                   ADD       MSCH          WChgs                                      MD055939
+      *                                                                                     MD055939
+      ** Charges only for OPAY                                                              MD055939
+      *                                                                                     MD055939
+     C                   IF        WIOFlg = 'O'                                             MD055939
      C                   ADD       CSTA          WChgs                                      MD055939
      C                   ADD       SPCH          WChgs                                      MD055939
-     C                   ADD       MSCH          WChgs                                      MD055939
-     C                   ADD       TRCM          WChgs                                      MD055939
+      *                                                                                     MD055939
      C     S01494        IFEQ      'Y'                                                      MD055939
      C                   ADD       OPCHCM        WChgs                                      MD055939
      C                   ENDIF                                                              MD055939
+      *                                                                                     MD055939
      C     S01499        IFEQ      'Y'                                                      MD055939
      C                   ADD       OPVATT        WChgs                                      MD055939
+     C                   ENDIF                                                              MD055939
+      *                                                                                     MD055939
+      ** Charges only for IPAY                                                              MD055939
+      *                                                                                     MD055939
+     C                   ELSE                                                               MD055939
+     C                   ADD       ADCH          WChgs                                      MD055939
+     C                   ADD       TLCH          WChgs                                      MD055939
+      *                                                                                     MD055939
+     C     S01494        IFEQ      'Y'                                                      MD055939
+     C                   ADD       INCHCM        WChgs                                      MD055939
+     C                   ENDIF                                                              MD055939
+      *                                                                                     MD055939
+     C     S01499        IFEQ      'Y'                                                      MD055939
+     C                   ADD       INVATT        WChgs                                      MD055939
+     C                   ENDIF                                                              MD055939
+      *                                                                                     MD055939
      C                   ENDIF                                                              MD055939
       *                                                                                     MD055939
       ** If CFT009 is on, new charges are added                                             MD055939
@@ -1068,12 +1094,11 @@
       *****************************************************************                     MD055939
      C     SrNewChgs     BEGSR                                                              MD055939
                                                                                             MD055939
+     C                   SELECT                                                             MD055939
+     C                   WHEN      WIOFlg = 'O'                                             MD055939
      C     PREF          CHAIN     OTPAYXL0                                                 MD055939
       *                                                                                     MD055939
      C                   IF        %FOUND                                                   MD055939
-      *                                                                                     MD055939
-      ** Totals                                                                             MD055939
-      *                                                                                     MD055939
      C     SWSCHG        ADD       MISC01        WMChgs                                     MD055939
      C                   ADD       MISC02        WMChgs                                     MD055939
      C                   ADD       MISC03        WMChgs                                     MD055939
@@ -1087,7 +1112,7 @@
      C     CFT014        IFEQ      'Y'                                                      MD055939
      C                   ADD       OPRCRM        WRChgs                                     MD055939
      C                   ENDIF                                                              MD055939
-                                                                                            MD055939
+      *                                                                                     MD055939
      C                   ELSE                                                               MD055939
      C     *LOCK         IN        LDA                                                      MD055939
      C                   MOVE      '025'         DBASE                                      MD055939
@@ -1095,6 +1120,33 @@
      C                   MOVEL     'OTPAYXL0'    DBFILE                                     MD055939
      C                   OUT       LDA                                                      MD055939
      C                   ENDIF                                                              MD055939
+      *                                                                                     MD055939
+     C                   WHEN      WIOFlg = 'I'                                             MD055939
+     C     PREF          CHAIN     INPAYXL0                                                 MD055939
+      *                                                                                     MD055939
+     C                   IF        %FOUND                                                   MD055939
+     C     MSC01         ADD       MSC02         WMChgs                                     MD055939
+     C                   ADD       MSC03         WMChgs                                     MD055939
+     C                   ADD       MSC04         WMChgs                                     MD055939
+     C                   ADD       MSC05         WMChgs                                     MD055939
+      *                                                                                     MD055939
+     C                   Z-ADD     WMChgs        WNChgs                                     MD055939
+      *                                                                                     MD055939
+      ** Add Receiver's Charges Remitted from the extension file.                           MD055939
+      *                                                                                     MD055939
+     C     CFT014        IFEQ      'Y'                                                      MD055939
+     C                   ADD       INRCRM        WRChgs                                     MD055939
+     C                   ENDIF                                                              MD055939
+                                                                                            MD055939
+     C                   ELSE                                                               MD055939
+     C     *LOCK         IN        LDA                                                      MD055939
+     C                   MOVE      '026'         DBASE                                      MD055939
+     C                   MOVEL     'PREF'        DBKEY                                      MD055939
+     C                   MOVEL     'INPAYXL0'    DBFILE                                     MD055939
+     C                   OUT       LDA                                                      MD055939
+     C                   ENDIF                                                              MD055939
+                                                                                            MD055939
+     C                   ENDSL                                                              MD055939
                                                                                             MD055939
      C                   ENDSR                                                              MD055939
       *****************************************************************

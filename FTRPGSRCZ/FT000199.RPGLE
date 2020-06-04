@@ -451,7 +451,6 @@
      C                   EVAL      WReceiver = PSVal1
      C                   ENDIF
 
-
       ** Access SDMGMEPD for message management data.
 
      C                   CALL      'AOMGMER0'
@@ -976,7 +975,7 @@
       * Called by: SrRdIncMsg                                         *
       *                                                               *
       **Calls:*None****************************************************                     MD055939
-      * Calls: SrCalcChg                                              *                     MD055939
+      * Calls: SrCalcChgs                                             *                     MD055939
       *                                                               *
       *****************************************************************
      C     SrSvPyFld     BEGSR
@@ -1194,7 +1193,8 @@
 
      C                   EVAL      WSender = %SUBST(CRMOR:7:12)
       ** Save the value of Incoming Message Currency
-     C                   EVAL      WIMCcy = CRCYCD
+     C**********         EVAL      WICcy = CRCYCD                                           MD055939
+     C                   EVAL      WIMCcy = CRCYCD                                          MD055939
 
      C                   ELSE
      C     *LOCK         IN        LDA
@@ -1248,6 +1248,7 @@
      C                   EXSR      SrFAMT
      C                   ENDIF
      C                   IF        WOCcy = *BLANKS
+     C**********         EVAL      WOCcy = WICcy                                           MD055939
      C                   EVAL      WOCcy = WIMCcy                                           MD055939
      C                   ENDIF
      C                   EVAL      WTag79L4Val = '//' + WOCcy + WOAmnt

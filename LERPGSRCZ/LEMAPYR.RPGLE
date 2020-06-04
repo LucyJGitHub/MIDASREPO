@@ -13,8 +13,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 243329             Date 06May20               *
+      *  Prev Amend No. MD020027           Date 12Mar20               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE164             Date 18Aug14               *
       *                 CDL094             Date 11Jun14               *
       *                 MD021202           Date 11Jul13               *
@@ -53,6 +55,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  243329 - If no defined settlement details entered, default   *
+      *           payment settlement details of the loan if PTYP is   *
+      *           66, 67, 69, or 72. Pattern fix 242348.              *
+      *         - Applied for MD049414.                               *
+      *         - Applied for MD020027.                               *
+      *  MD020027 - Pay Settlement details are not defaulted from     *
+      *             original part sold transactions.  Added defaulting*
+      *             of pay/receipt settlement during insert.          *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
@@ -260,6 +270,9 @@
       ** Parameter for LERPSCRTV                                                              244636
      D***PRcvParm        S             92                                             244636 CSF011A
      D PRcvParm        S            335                                                      CSF011A
+      ** Parameter for LEMAPYRTV                                                            MD020027
+     D***PPayParm        S            335                                            MD020027 243329
+     D PPayParm        S           1045                                                       243329
  
       ** LEMAPYCVT parameters
      D WrkProcTypLoan  S              2  0
@@ -700,6 +713,7 @@
      C                   PARM      *ZERO         Idx
      C                   PARM      *ZERO         Wx
      C                   PARM                    PRcvParm                                     244636
+     C                   PARM                    PPayParm                                   MD020027
      C**********         PARM      *BLANKS       UpSRFlg           1                 CLE134 MD020445
      C                   PARM      *BLANKS       UpSRFlg           1                        MD021202
      C                   PARM      *BLANKS       DDAuto            1                          CLE164

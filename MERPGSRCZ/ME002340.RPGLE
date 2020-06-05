@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD050698           Date 17Jul18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CMG008             Date 20Feb20               *
+      *  Prev Amend No. MD050698           Date 17Jul18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD040941           Date 05Sep16               *
       *                 BUG22523           Date 03Feb09               *
       *                 BUG22481           Date 02Feb09               *
@@ -42,6 +43,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD050698 - Send an error message if the SWIFT ID to be used  *
       *             as Destination is being used by more than one     *
       *             live customer.                                    *

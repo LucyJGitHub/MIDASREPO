@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL178             Date 04Aug16               *
+      *  Last Amend No. CMG008             Date 20Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL178             Date 04Aug16               *
       *                 MD023441           Date 15Nov13               *
       *                 CGL146             Date 10Jul13               *
       *                 CER059             Date 19Jul10               *
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CMG008 - SWIFT Character Translation Table                   *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL178 - Generate MT942 based on MT950.                      *
       *  MD023441 - Spurious error message is shown when CGL146       *
@@ -169,6 +171,7 @@
      D WNum            S              2S 0                                                    CER030
      D WTrTp           S              2S 0                                                    CER030
      D CGL178          S              1A                                                      CGL178
+     D CMG008          S              1A                                                      CMG008
       *                                                                                       CER030
       ** External DS for SAR Details                                                          CER030
       *                                                                                       CER030
@@ -775,6 +778,39 @@
      C                   EVAL      RetCodeOut = '*MSG'                                        CER030
       *                                                                                       CER030
      C                   ENDIF                                                                CER030
+      *                                                                                       CMG008
+      ** Validate Allow Non-SWIFT Character Conversion flag                                   CMG008
+      *                                                                                       CMG008
+     C                   IF        CMG008 = 'Y'                                               CMG008
+      *                                                                                       CMG008
+     C                   IF        D1CONV = *BLANKS                                           CMG008
+      *                                                                                       CMG008
+     C                   EVAL      ZAMSID = 'USR3970'                                         CMG008
+     C                   EVAL      *IN56 = *ON                                                CMG008
+      *                                                                                       CMG008
+     C                   ELSEIF    D1CONV <> 'Y' AND D1CONV <> 'N'                            CMG008
+      *                                                                                       CMG008
+     C                   EVAL      ZAMSID = 'USR3973'                                         CMG008
+     C                   EVAL      *IN56 = *ON                                                CMG008
+      *                                                                                       CMG008
+     C                   ENDIF                                                                CMG008
+      *                                                                                       CMG008
+     C                   IF        D1CONV = 'Y' AND D1MCNW = 'Y'                              CMG008
+     C                   EVAL      ZAMSID = 'USR4015'                                         CMG008
+     C                   EVAL      *IN56 = *ON                                                CMG008
+     C                   ENDIF                                                                CMG008
+      *                                                                                       CMG008
+      ** If an error found                                                                    CMG008
+      *                                                                                       CMG008
+     C                   IF        *IN56 = *ON                                                CMG008
+      *                                                                                       CMG008
+     C                   EXSR      $ZaSndMsg                                                  CMG008
+     C                   EVAL      *IN40 = *ON                                                CMG008
+     C                   EVAL      RetCodeOut = '*MSG'                                        CMG008
+      *                                                                                       CMG008
+     C                   ENDIF                                                                CMG008
+      *                                                                                       CMG008
+     C                   ENDIF                                                                CMG008
       ** End of the module
       *
      C                   EXSR      $ExitMod
@@ -932,6 +968,20 @@
      C                   EVAL      CGL178 = 'Y'                                               CGL178
      C                   ENDIF                                                                CGL178
       *                                                                                       CGL178
+                                                                                              CMG008
+      ** Check if feature CMG008 is installed                                                 CMG008
+                                                                                              CMG008
+     C                   EVAL      CMG008 = 'N'                                               CMG008
+                                                                                              CMG008
+     C                   CALL      'AOSARDR0'                                                 CMG008
+     C                   PARM      *BLANKS       PRtcd                          Return Code   CMG008
+     C                   PARM      '*VERIFY'     POptn                          Option        CMG008
+     C                   PARM      'CMG008 '     PSard                          Feature Ref   CMG008
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CMG008
+                                                                                              CMG008
+     C                   IF        PRtcd = *BLANKS                                            CMG008
+     C                   MoveL     'Y'           CMG008                                       CMG008
+     C                   ENDIF                                                                CMG008
      C/COPY OFCPYSRCZ,CGL146_002                                                              CGL146
       *    ----------    ------
      C     @INZSR        ENDSR

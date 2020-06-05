@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD045952           Date 06Jul17               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CMG008             Date 20Feb20               *
+      *  Prev Amend No. MD045952           Date 06Jul17               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL178             Date 04Aug16               *
       *                 AR549926           Date 19Aug14               *
       *                 CGL146A            Date 10Jun13               *
@@ -42,6 +43,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD045952 - Ensure that COB MT940s only generated if          *
       *             calling pgm is GLC001430.                         *
       *           - Recompile due to changes to CGL146_043, CGL146_044*

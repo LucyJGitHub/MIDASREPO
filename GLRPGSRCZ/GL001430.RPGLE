@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD055383           Date 30Apr20               *
-      *  Prev Amend No. MD045952           Date 06Jul17               *
+      *  Last Amend No. CMG008             Date 20Feb20               *
+      *  Prev Amend No. MD055383           Date 30Apr20               *
+      *                 MD045952           Date 06Jul17               *
       *                 MD046248           Date 27Oct17               *
       *                 AR549926           Date 19Aug14               *
       *                 MD026137           Date 04Apr14               *
@@ -54,6 +55,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD055383 - The system is generating another set of MT942.    *
       *             Amend to flag MT941 and MD942 MRPROC = 'Y'        *
       *  MD045952 - Ensure that COB MT940s only generated if          *

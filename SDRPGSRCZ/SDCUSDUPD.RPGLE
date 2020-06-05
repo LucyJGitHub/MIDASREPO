@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055446           Date 04Apr20               *
-      *  Prev Amend No. 260405             Date 04Apr20               *
+      *  Last Amend No. MD026746           Date 05Feb20               *
+      *  Prev Amend No. MD025022           Date 05Feb20               *
+      *                 MD055446           Date 04Apr20               *
+      *                 260405             Date 04Apr20               *
       *                 MD055210           Date 03Feb20               *
       *                 MD054883           Date 23Dec19               *
       *                 MD053436           Date 21Sep19               *
@@ -150,6 +152,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD026746 - File control out of balance due to customer       *
+      *             closure. Extend fix MD025022 to cover scenario    *
+      *             where customer has been closed or released.       *
+      *  MD025022 - File Control Out of Balance. Ensure that AHNOAM is*
+      *             not incremented if changes done on the same day.  *
       *  MD055446 - There are parties and fields missing from the BRT *	
       *             details tab in Customer Input plus date of birth  *	
       *             issues.                                           *	
@@ -4286,6 +4293,8 @@
      C                   EXSR      UPDTID                                                    BUG3362
       *                                                                                      BUG3362
       * USER: Processing after Data update
+     C     B_BBTYLC      IFNE      'A'                                                      MD025022
+     C     B_BBLCD       ORNE      BJRDNB                                                   MD025022
      C                   Z-ADD     *ZERO         WUNORC                         No of records
      C                   Z-ADD     1             WUNOAM                         No of Amend
      C                   Z-ADD     *ZERO         WUNOIN                         No of delete
@@ -4293,6 +4302,7 @@
       * Change Standing Data Cont - Standing Data Controls  *
      C                   MOVEL     'SDCUSTPD'    WFLNAME           8            No of delete
      C                   EXSR      SNCHRC
+     C                   ENDIF                                                              MD025022
       * Pass parameters for marketing groups to SDCLINT to update CLINTCB
       * Customer marketing groups - Customer Marketing Groups  *
      C                   EXSR      SORVGN
@@ -5636,6 +5646,8 @@
      C                   ENDIF                                                                CSW207
      C                   ENDIF                                                                CSW207
                                                                                               CSD007
+     C     B_BBTYLC      IFNE      'A'                                                      MD026746
+     C     B_BBLCD       ORNE      BJRDNB                                                   MD026746
      C                   Z-ADD     *ZERO         WUNORC                         No of records CSD007
      C                   Z-ADD     1             WUNOAM                         No of Amend   CSD007
      C                   Z-ADD     *ZERO         WUNOIN                         No of Inserts CSD007
@@ -5643,6 +5655,7 @@
       * Change Standing Data Cont - Standing Data Controls  *                                 CSD007
      C                   MOVEL     'SDCUSTPD'    WFLNAME           8            No of delete  CSD007
      C                   EXSR      SNCHRC                                                     CSD007
+     C                   ENDIF                                                              MD026746
                                                                                               CSD007
      C                   ENDSR                                                                CSD007
      C****************************************************************                        CSD007
@@ -5719,6 +5732,8 @@
      C                   ENDIF                                                                CSW207
      C                   ENDIF                                                                CSW207
                                                                                               CSD007
+     C     B_BBTYLC      IFNE      'A'                                                      MD026746
+     C     B_BBLCD       ORNE      BJRDNB                                                   MD026746
      C                   Z-ADD     *ZERO         WUNORC                         No of records CSD007
      C                   Z-ADD     1             WUNOAM                         No of Amend   CSD007
      C                   Z-ADD     *ZERO         WUNOIN                         No of Inserts CSD007
@@ -5726,6 +5741,7 @@
       * Change Standing Data Cont - Standing Data Controls  *                                 CSD007
      C                   MOVEL     'SDCUSTPD'    WFLNAME           8            No of delete  CSD007
      C                   EXSR      SNCHRC                                                     CSD007
+     C                   ENDIF                                                              MD026746
                                                                                               CSD007
      C                   ENDSR                                                                CSD007
      C****************************************************************                        CSD007
@@ -8512,8 +8528,11 @@
                                                                                               CSD079
       ** Change Standing Data Cont - Standing Data Controls                                   CSD079
                                                                                               CSD079
+     C     B_BBTYLC      IFNE      'A'                                                      MD025022
+     C     B_BBLCD       ORNE      BJRDNB                                                   MD025022
      C                   MOVEL     'SDCMRKPD'    WFLNAME                                      CSD079
      C                   EXSR      SNCHRC                                                     CSD079
+     C                   ENDIF                                                              MD025022
       *                                                                                       CSD079
      C                   ENDSR                                                                CSD079
       *                                                                                       CSD079
@@ -9261,8 +9280,11 @@
                                                                                               CSD079
       ** Change Standing Data Cont - Standing Data Controls                                   CSD079
                                                                                               CSD079
+     C     B_BBTYLC      IFNE      'A'                                                      MD025022
+     C     B_BBLCD       ORNE      BJRDNB                                                   MD025022
      C                   MOVEL     'SDCHEQPD'    WFLNAME                                      CSD079
      C                   EXSR      SNCHRC                                                     CSD079
+     C                   ENDIF                                                              MD025022
                                                                                               CSD079
      C                   ENDSR                                                                CSD079
                                                                                               CSD079
@@ -9380,8 +9402,11 @@
                                                                                               CSD079
       ** Change Standing Data Cont - Standing Data Controls                                   CSD079
                                                                                               CSD079
+     C     B_BBTYLC      IFNE      'A'                                                      MD025022
+     C     B_BBLCD       ORNE      BJRDNB                                                   MD025022
      C                   MOVEL     'SDSAFEPD'    WFLNAME                                      CSD079
      C                   EXSR      SNCHRC                                                     CSD079
+     C                   ENDIF                                                              MD025022
                                                                                               CSD079
      C                   ENDSR                                                                CSD079
                                                                                               CSD079

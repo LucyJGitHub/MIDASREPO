@@ -10,8 +10,10 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0009 F*                                                               *
-      *  Last Amend No. MD054324           Date 12Sep19               *
-      *  Prev Amend No. MD053850           Date 05Jul19               *
+      *  Last Amend No. AR932611           Date 06Aug13               *
+      *  Prev Amend No. AR927395           Date 06Nov19               *
+      *                 MD054324           Date 12Sep19               *
+      *                 MD053850           Date 05Jul19               *
       *                 MD036156           Date 14Aug19               *
       *                 MD052868           Date 17Apr19               *
       *                 MG000484           Date 20Mar18               *
@@ -159,6 +161,15 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  AR932611 - COF does not settle the amount that was accrued as*
+      *             of interest payment date after MR of outstanding  *
+      *             interest. Add withholding tax amount to INTA if   *
+      *             gross or receivable tax for correct COF repayment.*
+      *             (Child: AR932613)                                 *
+      *  AR927395 - Wrong COF repayment when loan had rate changes.   *
+      *             Populate COFA from LOAMSDK when PD interest is    *
+      *             paid off. (Child: AR927398)                       *
+      *           - Applied for MD024808                              *
       *  MD054324 - LEC000496 processed a forward valued MAPY         *
       *  MD053850 -RPSC with Auto Settle Y was processed as past due  *
       *            after COB                                          *
@@ -3196,6 +3207,12 @@
       *                                                                   136244
      C           *IN40     IFEQ '0'                                       136244
      C           INTA      DIV  100       WINTA  132                      136244
+     C           WTXA      DIV  100       WWTXA  132                                        AR932611
+      *                                                                                     AR932611
+     C           WTIN      IFEQ 'G'                                                         AR932611
+     C           WTIN      OREQ 'R'                                                         AR932611
+     C                     ADD  WWTXA     WINTA                                             AR932611
+     C                     ENDIF                                                            AR932611
       *                                                                   136244
       ** Compute COFA of interest amount repaid manually which is         136244
       ** linked to a past due interest using rates as of generation       136244
@@ -3203,23 +3220,29 @@
       *                                                                   136244
      C           COFA      IFNE *ZEROS                                    136244
      C           XASQ      ANDNE*ZEROS                                    136244
-     C                     MOVE SPIN      WSPIN   1                       136244
-     C                     Z-ADDBRTE      WBRTE  117                      136244
-     C                     Z-ADDRTSP      WRTSP  117                      136244
-     C                     Z-ADDFSRP      WFSRP  117                      136244
-     C                     MOVE FSGN      WFSGN   1                       136244
-     C                     ENDIF                                          136244
+     C**********           MOVE SPIN      WSPIN   1                                  136244 AR927395
+     C**********           Z-ADDBRTE      WBRTE  117                                 136244 AR927395
+     C**********           Z-ADDRTSP      WRTSP  117                                 136244 AR927395
+     C**********           Z-ADDFSRP      WFSRP  117                                 136244 AR927395
+     C**********           MOVE FSGN      WFSGN   1                                  136244 AR927395
+     C**********           ENDIF                                                     136244 AR927395
+     C                     ELSE                                                             AR927395
       *                                                                   136244
       ** For manual repayments not attached to a past due record          136244
       *                                                                   136244
-     C           COFA      IFEQ *ZEROS                                    136244
-     C           XASQ      ANDEQ*ZEROS                                    136244
-     C                     MOVE SPINC     WSPIN                           136244
-     C                     Z-ADDBRTEC     WBRTE                           136244
-     C                     Z-ADDRTSPC     WRTSP                           136244
-     C                     Z-ADDFSRPC     WFSRP                           136244
-     C                     MOVE FSGNC     WFSGN                           136244
-     C                     ENDIF                                          136244
+     C********** COFA      IFEQ *ZEROS                                               136244 AR927395
+     C********** XASQ      ANDEQ*ZEROS                                               136244 AR927395
+     C**********           MOVE SPINC     WSPIN                                      136244 AR927395
+     C**********           Z-ADDBRTEC     WBRTE                                      136244 AR927395
+     C**********           Z-ADDRTSPC     WRTSP                                      136244 AR927395
+     C**********           Z-ADDFSRPC     WFSRP                                      136244 AR927395
+     C**********           MOVE FSGNC     WFSGN                                      136244 AR927395
+     C                     MOVE SPINC     WSPIN   1                                         AR927395
+     C                     Z-ADDBRTEC     WBRTE  117                                        AR927395
+     C                     Z-ADDRTSPC     WRTSP  117                                        AR927395
+     C                     Z-ADDFSRPC     WFSRP  117                                        AR927395
+     C                     MOVE FSGNC     WFSGN   1                                         AR927395
+     C**********           ENDIF                                                     136244 AR927395
       *                                                                   136244
      C                     EXSR QNTRAT                                    136244
      C                     EXSR QCFRAT                                    136244
@@ -3232,6 +3255,8 @@
      C                     Z-ADD*ZEROS    COFA                            136244
      C                     ENDIF                                          136244
       *                                                                   136244
+     C                     ENDIF                                                            AR927395
+      *                                                                                     AR927395
      C                     ENDIF                                          136244
       *                                                                   136244
      C                     ENDIF                                          136244

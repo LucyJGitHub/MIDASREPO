@@ -10,8 +10,10 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD053295           Date 13Apr19               *
-      *  Prev Amend No. 262161             Date 04Mar19               *
+      *  Last Amend No. 234384             Date 06Aug13               *
+      *  Prev Amend No. MD025526           Date 06Nov19               *
+      *                 MD053295           Date 13Apr19               *
+      *                 262161             Date 04Mar19               *
       *                 MD050577           Date 30May18               *
       *                 MD050139           Date 23Mar18               *
       *                 MD051970           Date 08Oct18               *
@@ -255,6 +257,16 @@
 0009 F*                                                               *
 0011 F*---------------------------------------------------------------*
       *                                                               *
+      *  234384 - COF generates incorrect reversal of scheduled       *
+      *           interest payment & does not adjust accrued interest *
+      *           for backvalued principal payment. Initialise IN73   *
+      *           in order that correct accruals are computed when    *
+      *           there is also a loan subtype change.                *
+      *         - Applied for AR932611 (Child: AR932613)              *
+      *  MD025526 - Incorrect Spread Rate & Funding Spread Rate used  *
+      *             during update of CLOANCL.  Update the IRCF and/or *
+      *             FRCF of RO record in HIUPDHQ based on ACTN3DK     *
+      *             record.  Patterned after SC processing.           *
       *  MD053295 - Lending loan with Interest Calculation Basis      *
       *             method 3 (30/360) has wrong interest payment      *
       *             amount for month of March (Recompile)             *
@@ -2845,11 +2857,17 @@
       *                                                                                       212318
      C           AMTP      IFEQ 'LS'                                                          212318
      C                     Z-ADDL#AITC    AITC                                                212318
+     C           BGN0ST    IFEQ 'Y'                                                           234384
+     C                     Z-ADDL#ACDA    ACDA                                                234384
+     C                     ENDIF                                                              234384
      C                     ELSE                                                               212318
       *                                                                                       212318
       ** Else, save the current AITC                                                          212318
       *                                                                                       212318
      C                     Z-ADDAITC      L#AITC 130                                          212318
+     C           BGN0ST    IFEQ 'Y'                                                           234384
+     C                     Z-ADDACDA      L#ACDA 130                                          234384
+     C                     ENDIF                                                              234384
      C                     ENDIF                                                              212318
       *                                                                                       CAS005
      C           CAS005    IFEQ 'Y'                                                           CAS005
@@ -3294,6 +3312,9 @@
       *                                                                                       212318
      C           AMTP      IFEQ 'LS'                                                          212318
      C                     Z-ADDL#AITC    AITC                                                212318
+     C           BGN0ST    IFEQ 'Y'                                                           234384
+     C                     Z-ADDL#ACDA    ACDA                                                234384
+     C                     ENDIF                                                              234384
      C                     ENDIF                                                              212318
       *                                                                   CLE003
       *  If No actions today, the program will run as a conversion        CLE003
@@ -5517,6 +5538,11 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
       ** calculation for AMTP = 'MI'                                      192014
      C           *IN12     IFEQ '0'                                       192014
      C                     MOVE '1'       *IN73                           192014
+     C           BGN0ST    IFEQ 'Y'                                                           234384
+     C                     MOVE '1'       IN73                                                234384
+     C                     ELSE                                                               234384
+     C                     MOVE '0'       IN73                                                234384
+     C                     ENDIF                                                              234384
      C                     ENDIF                                          192014
      C                     ENDIF                                          114482
       *                                                                                       CAS005
@@ -9114,8 +9140,10 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
      C                     Z-ADDFUNDRT    FUNDSP                          CAC001
      C                     MOVE FUNDSN    FUNDSG                          CAC001
      C                     MOVE FUNPRF    FUNDPC                          CAC001
-     C                     MOVE ' '       INTFLG                          CAC001
-     C                     MOVE ' '       COFFLG                          CAC001
+     C**********           MOVE ' '       INTFLG                                     CAC001 MD025526
+     C**********           MOVE ' '       COFFLG                                     CAC001 MD025526
+     C                     MOVE IRCF      INTFLG                                            MD025526
+     C                     MOVE FRCF      COFFLG                                            MD025526
      C                     ENDIF                                          CAC001
      C*                                                                   S01392
      C**   UPDATE PRINC. ON S/HISTS HDR                                   S01392
@@ -9415,8 +9443,14 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
       *                                                                   CLE003
      C           CLE003    IFEQ 'Y'                                       CLE003
      C                     MOVE '1'       *IN73                                               212318
+     C           BGN0ST    IFEQ 'Y'                                                           234384
+     C                     MOVE '1'       IN73                                                234384
+     C                     ELSE                                                               234384
+     C                     MOVE '0'       IN73                                                234384
+     C                     ENDIF                                                              234384
      C   23                EXSR INTCAL                                    CLE003
      C                     MOVE '0'       *IN73                                               212318
+     C                     MOVE '0'       IN73                                                234384
      C                     MOVE LTYP      LONTYP                                              227657
      C                     MOVE SUTP      SUBTYP                                              227657
      C                     EXSR QNTRAT                                    CLE003

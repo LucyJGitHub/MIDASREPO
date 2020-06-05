@@ -36,8 +36,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD052530           Date 18Mar19               *
-      *  Prev Amend No. MD050139           Date 23Mar18               *
+      *  Last Amend No. MD025528           Date 06Nov19               *
+      *  Prev Amend No. MD055685           Date 24Apr20               *
+      *                 MD052530           Date 18Mar19               *
+      *                 MD050139           Date 23Mar18               *
       *                 MD044153           Date 07Apr18               *
       *                 CLE169             Date 07Apr18               *
       *                 CLE168             Date 26Feb18               *
@@ -189,6 +191,13 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD025528 - CA Review date is blanked out when Facility       *
+      *             reaches expiry date. Added validation if BUG8707  *
+      *             is to be done depending on SystemValue settings.  *
+      *                                                               *
+      *  MD055685 - Double posting of Retail Account Debit Balance    *
+      *             on FCLTYFN and FACHISA. Do not process RSACMTPD   *
+      *             records on ANWD run.                              *
       *  MD052530 - Only open APOSTL4 if CLE169 is switched on.       *
       *  MD050139- AOSARDR0 called every time causing performance     *
       *            issue. Recompile due to changes in /COPY           *
@@ -1090,6 +1099,8 @@
      I                                        1 130 PEXPA                                     CLE025
      I                                      131 260 POFFS                                     CLE025
       *                                                                                       CLE025
+     I              'BlnkOutRvwDetOnExpry'C         PSVAL                                   MD025528
+      *                                                                                     MD025528
      I/COPY ZSRSRC,ZHASHZ2
      I/COPY ZSRSRC,ZHOLI
       *
@@ -1620,6 +1631,46 @@
      C                     MOVE 'N'       CAP205                                            CLE075AF
      C                     ENDIF                                                            CLE075AF
       *                                                                                     CLE075AF
+      ** Check System Value: BlankOutReviewDetailsOnExpiry                                  MD025528
+      ** Set up AOSVALR0 parameter with GISVAL "BlnkOutRvwDetOnExpry"                       MD025528
+      *                                                                                     MD025528
+     C                     CALL 'AOSVALR0'                                                  MD025528
+     C                     PARM *BLANKS   @RTCD                                             MD025528
+     C                     PARM PSVAL     SVALK1 20                                         MD025528
+     C                     PARM           SVAL1 200                                         MD025528
+     C                     PARM           SVALK2 20                                         MD025528
+     C                     PARM           SVAL2 200                                         MD025528
+     C                     PARM           SVALK3 20                                         MD025528
+     C                     PARM           SVAL3 200                                         MD025528
+     C                     PARM           SVALK4 20                                         MD025528
+     C                     PARM           SVAL4 200                                         MD025528
+     C                     PARM           SVALK5 20                                         MD025528
+     C                     PARM           SVAL5 200                                         MD025528
+     C                     PARM           SVALK6 20                                         MD025528
+     C                     PARM           SVAL6 200                                         MD025528
+     C                     PARM           SVALK7 20                                         MD025528
+     C                     PARM           SVAL7 200                                         MD025528
+     C                     PARM           SVALK8 20                                         MD025528
+     C                     PARM           SVAL8 200                                         MD025528
+     C                     PARM           SVALK9 20                                         MD025528
+     C                     PARM           SVAL9 200                                         MD025528
+     C                     PARM           SVALK0 20                                         MD025528
+     C                     PARM           SVAL10200                                         MD025528
+      *                                                                                     MD025528
+      ** If the system value is not found then issue a database error                       MD025528
+      *                                                                                     MD025528
+     C           @RTCD     IFNE *BLANKS                                                     MD025528
+     C                     MOVEL'SDSVALPD'DBFILE                                            MD025528
+     C                     Z-ADD45        DBASE                                             MD025528
+     C                     MOVELSVALK1    DBKEY                                             MD025528
+     C                     SETON                     U7U8LR                                 MD025528
+     C                     SETON                     99                                     MD025528
+     C                     EXSR *PSSR                                                       MD025528
+     C                     ELSE                                                             MD025528
+     C                     MOVELSVAL1     REVDET  1                                         MD025528
+     C                     ENDIF                                                            MD025528
+      *                                                                                     MD025528
+      *
       ** CHECK IF CLE169 IS INSTALLED                                                         CLE169
       *                                                                                       CLE169
      C                     CALL 'AOSARDR0'                                                    CLE169
@@ -1637,6 +1688,13 @@
      C                     MOVE 'N'       CLE169                                              CLE169
      C                     ENDIF                                                              CLE169
       *                                                                                       CLE169
+      ** Set work variable to Y if ANWD run                                                 MD055685
+      ** Note: U4 is set to ON in LEC0609A if ANWD run                                      MD055685
+      *                                                                                     MD055685
+     C           *INU4     IFEQ *ON                                                         MD055685
+     C                     MOVE 'Y'       ANWDRN  1                                         MD055685
+     C                     ENDIF                                                            MD055685
+      *                                                                                     MD055685
      C/COPY WNCPYSRC,LE0491C024
       *                                                                   CLE005
      C           *LIKE     DEFN PCRF      WAPCRF                          157887
@@ -1934,11 +1992,13 @@
      C           DTEX      IFGT ZDAYNO                                    109148
      C                     Z-ADDZDAYNO    RVDT                            109148
      C                     END                                            109148
+     C           REVDET    IFEQ 'Y'                                                         MD025528
      C           ZDAYNO    IFGT DTEX                                                         BUG8707
      C                     Z-ADD0         RVDT                                               BUG8707
      C                     MOVE *BLANKS   RVFR                                               BUG8707
      C                     Z-ADD*ZEROS    RVDY                                               BUG8707
      C                     ENDIF                                                             BUG8707
+     C                     ENDIF                                                            MD025528
      C                     ENDIF                                          157597
      C                     END                                            109148
      C*                                                                   109148
@@ -5758,6 +5818,10 @@
      C           KACCT     SETLLRSACMTL7                                                      CLE025
      C           KACCT     READERSACMTL7                 81                                   CLE025
      C                     ENDIF                                                            CLE075AF
+      *                                                                                     MD055685
+     C           ANWDRN    IFEQ 'Y'                                                         MD055685
+     C                     MOVEL*ON       *IN81                                             MD055685
+     C                     ENDIF                                                            MD055685
       *                                                                                       CLE025
      C           *IN81     DOWEQ*OFF                                                          CLE025
      C           CAP205    ANDNE'Y'                                                         MD021155

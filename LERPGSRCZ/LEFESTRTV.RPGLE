@@ -11,8 +11,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. MD054354           Date 23Oct19               *
+      *  Prev Amend No. MD026969A          Date 23Oct19               *
+      *                 MD026969           Date 23Oct19               *
+      *                 CER050             Date 16Jun19               *
+      *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL094             Date 01Sep14               *
       *                 MD027384           Date 10Jun14               *
@@ -58,6 +61,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054354 - Settlement of fee accrual for prior period for    *
+      *             backdated notional change                         *
+      *  MD026969A - Further modifications.                           *
+      *           - Applied for MD054354                              *
+      *  MD026969 - New Processing for Fee Settlement.                *
+      *           - Applied for MD054354                              *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
@@ -146,6 +155,7 @@
      FSDEXSTL1  IF   E           K DISK                                                       258669
  
      FCLOAN     IF   E           K DISK    INCLUDE(CLOANCLF)                                  CLE073
+     FLEFZASL2  IF   E           K DISK    INFSR(*PSSR)                                     MD026969
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -197,6 +207,7 @@
  
      D CLAuthORED      C                   Const('CLAuthORED')                                240968
      D CLAuthSMDT      C                   Const('CLAuthSameORED')                            244314
+     D PDFeeSttmt      C                   Const('ZeroPDFeeSettlements')                    MD054354
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -978,6 +989,13 @@
      C                   Z-ADD     FE_FENPYD     W#SADD
      C                   ENDSL
      C                   ENDIF
+      *                                                                                     MD026969
+     C     FE_FEAMTP     IFEQ      0                                                        MD026969
+     C     FE_FELOAN     ANDEQ     *BLANK                                                   MD054354
+     C     FE_FEPYON     ANDEQ     'N'                                                      MD026969
+     C     PDFeeSet      ANDEQ     'Y'                                                      MD054354
+     C                   Z-ADD     FE_FELPDT     W#SADD                                     MD026969
+     C                   ENDIF                                                              MD026969
  
       * Participant Fee Indicator and fee type
  
@@ -1247,11 +1265,21 @@
       * Read all settlements for the fee                                                      223947
  
      C                   Z-ADD     FE_FEAMTP     W#CPAM
+     C     PDFeeSet      IFEQ      'Y'                                                      MD054354
+      *                                                                                     MD026969
+      ** If W#CPAM is zero check new file if                                                MD026969
+      ** settlement will be allowed                                                         MD026969
+      *                                                                                     MD026969
+     C*****WKFZAS        CHAIN(E)  LEFZASL2                           80          MD026969 MD026969A
+     C     WKFZAS        CHAIN(N)  LEFZASL2                           81                   MD026969A
+     C                   ENDIF                                                              MD054354
       *                                                                                     MD022368
       ** Do not allow insert of fee settlement if past due is zero.                         MD022368
       *                                                                                     MD022368
      C     S#ACTN        IFEQ      'I'                                                      MD022368
      C     W#CPAM        ANDEQ     0                                                        MD022368
+     C******IN80         ANDEQ     '1'                                            MD026969 MD026969A
+     C     *IN81         ANDEQ     '1'                                                     MD026969A
      C                   MOVE      'N'           S#CSSNok                                   MD022368
      C                   MOVE      'N'           S#FACTok                                   MD022368
      C                   MOVE      'N'           S#FCNOok                                   MD022368
@@ -1375,6 +1403,11 @@
      C     S#ACTN        OREQ      'A'
      C     S#ACTN        OREQ      'X'
      C     W#CPAM        IFLT      *ZEROS
+     C     PDFeeSet      ANDNE     'Y'                                                      MD054354
+     C******IN80         ANDEQ     '1'                                            MD026969 MD026969A
+     C     W#CPAM        ORLT      *ZEROS                                                   MD054354
+     C     *IN81         ANDEQ     '1'                                                     MD026969A
+     C     PDFeeSet      ANDEQ     'Y'                                                      MD054354
      C                   MOVE      'N'           S#CSSNok
      C                   MOVE      'N'           S#FACTok
      C                   MOVE      'N'           S#FCNOok
@@ -1392,6 +1425,16 @@
  
      C                   ENDSL                                                  BUG1644
                                                                                 BUG1644
+      *                                                                                     MD026969
+      ** If FEAMTP = 0 and record exist in LEFZASPD,                                        MD026969
+      ** reset W#CPAM to FEAMTP.                                                            MD026969
+      *                                                                                     MD026969
+     C**********         IF        *IN80 = '0' and FE_FEAMTP = 0                  MD026969 MD026969A
+     C                   IF        *IN81 = '0' and FE_FEAMTP = 0                           MD026969A
+     C                             AND PDFeeSet = 'Y'                                       MD054354
+     C                   Z-ADD     FE_FEAMTP     W#CPAM                                     MD026969
+     C                   ENDIF                                                              MD026969
+                                                                                            MD026969
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -1818,7 +1861,8 @@
      C**********         PARM      *BLANKS       PSysVal02                             240968 244314
      C                   PARM      CLAuthSMDT    PSysVal02                                    244314
      C                   PARM      *BLANKS       PCurSet02                                    240968
-     C                   PARM      *BLANKS       PSysVal03                                    240968
+     C**********         PARM      *BLANKS       PSysVal03                           240968 MD054354
+     C                   PARM      PDFeeSttmt    PSysVal03                                  MD054354
      C                   PARM      *BLANKS       PCurSet03                                    240968
      C                   PARM      *BLANKS       PSysVal04                                    240968
      C                   PARM      *BLANKS       PCurSet04                                    240968
@@ -1843,6 +1887,7 @@
      C                   EndIf                                                                240968
      C                   MOVEL     PCurSet01     ATHRATH           1                          240968
      C                   MOVEL     PCurSet02     ATHSMDT           1                          244314
+     C                   MOVEL     PCurSet03     PDFeeSet          1                        MD054354
  
       ** Check if CLE002 - Lending Authorisations - is Installed
  
@@ -2087,6 +2132,11 @@
      C     LOANKK        KLIST                                                                CLE073
      C                   KFLD                    K#LOAN                                       CLE073
      C                   KFLD                    K#RCDT                                       CLE073
+      *                                                                                     MD026969
+     C     WKFZAS        KLIST                                                              MD026969
+     C                   KFLD                    FE_FECNUM                                  MD026969
+     C                   KFLD                    FE_FEFACL                                  MD026969
+     C                   KFLD                    FE_FEFSEQ                                  MD026969
       *
       *
       ** Program, module and procedure names for database error processing.

@@ -12,8 +12,11 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055115           Date 23Jan20               *
-      *  Prev Amend No. MD055067           Date 17Jan20               *
+      *  Last Amend No. AR932652           Date 06Aug13               *
+      *  Prev Amend No. AR927395           Date 05Aug13               *
+      *                 252101             Date 06Nov19               *
+      *                 MD055115           Date 23Jan20               *
+      *                 MD055067           Date 17Jan20               *
       *                 MD055009           Date 23Dec19               *
       *                 MD054960           Date 13Dec19               *
       *                 MD054869           Date 21Nov19               *
@@ -418,6 +421,16 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR932652 - Error on withholding tax accrual when past due    *
+      *             interest is manually repaid. Reverse fix BUG12852.*
+      *             (Child: AR932655)                                 *
+      *  AR927395 - Negative interest accruals generated on backvalued*
+      *             MR of past due interest. Suppress posting when    *
+      *             PD interest is paid off and reduce PDCF as well.  *
+      *             (Child: AR927398)                                 *
+      *  252101 - The spread rate value was incorrect. the previous   *
+      *           value from LEHISTL2 was retrieved.                  *
+      *         - Applied for MD025526.                               *
       *  MD055115 - Scenario 1.30 Discrepancy on LE3180P1 and         *
       *             PDCL double entries                               *
       *  MD055067 - Adhoc - Narrative for Interest payment on         *
@@ -8449,6 +8462,13 @@ L118 I                             P   72   77 7RTSPL
      C                   ENDIF                                                              AR628773
      C                   ENDIF                                                                 18004
       *                                                                   180044
+     C     BGN0ST        IFEQ      'Y'                                                      AR927395
+     C     FPRCL         ANDNE     *BLANKS                                                  AR927395
+     C     *IN15         ANDEQ     '1'                                                      AR927395
+     C     COFA          ANDNE     *ZEROS                                                   AR927395
+     C     PDCF          SUB       COFA          PDCF                                       AR927395
+     C                   ENDIF                                                              AR927395
+      *                                                                                     AR927395
      C     CAS005        IFEQ      'Y'
      C     *IN15         ANDEQ     '1'
      C     INTN          ANDNE     *ZEROS
@@ -9953,6 +9973,9 @@ L118 I                             P   72   77 7RTSPL
      C     LNRF          SETGT     LEHISTL2                                                    11633
      C     LNRF          READPE    LEHISTL2                               69                   11633
      C     *IN69         IFEQ      *OFF                                                        11633
+     C     BGN0ST        IFEQ      'N'                                                        252101
+     C     BGN0ST        OREQ      'Y'                                                        252101
+     C     IRCF#H        ANDEQ     'Y'                                                        252101
      C                   Z-ADD     RTSP#H        RTSPL                                         11633
      C     SPINL         IFNE      SPIN#H                                                   MD019942
      C                   MOVEL     SPIN#H        SPINL                                      MD019942
@@ -9960,6 +9983,7 @@ L118 I                             P   72   77 7RTSPL
      C     VDAT#H        IFGT      VDAT                                                        11633
      C                   Z-ADD     VDAT#H        VDAT                                          11633
      C                   ENDIF                                                                 11633
+     C                   ENDIF                                                                252101
      C                   ENDIF                                                                 11633
      C                   ENDIF                                                                 11633
       *                                                                                       CLE036
@@ -13846,6 +13870,13 @@ L118 I                             P   72   77 7RTSPL
 1774 C**
 1777 C     WRK13         SUB       AIPD          WRK13
      C*
+      *                                                                                   AR927395
+     C     WRK13         IFLT      0                                                      AR927395
+     C     AMTP          ANDEQ     'MR'                                                   AR927395
+     C     VDAT          ANDLT     RUND                                                   AR927395
+     C     VDAT          ANDNE     MDAT                                                   AR927395
+     C                   Z-ADD     0             WRK13                                    AR927395
+     C                   ENDIF                                                            AR927395
 1775 C                   Z-ADD     WRK13         AMOUNT
 1778 C**
 1779 C**   GENERATE AN ACCRUAL A/C KEY
@@ -14054,13 +14085,20 @@ L118 I                             P   72   77 7RTSPL
 1827 C     WTWD          ADD       WTRD          WRK13
 1828 C**
 1829 C     WRK13         SUB       AWTP          WRK13
+      *                                                                                     AR927395
+     C     WRK13         IFLT      0                                                        AR927395
+     C     AMTP          ANDEQ     'MR'                                                     AR927395
+     C     VDAT          ANDLT     RUND                                                     AR927395
+     C     VDAT          ANDNE     MDAT                                                     AR927395
+     C                   Z-ADD     0             WRK13                                      AR927395
+     C                   ENDIF                                                              AR927395
 1830 C**
 1831 C**   GENERATE ACCRUAL A/C KEY
 1832 C**
 1833 C**
 1834 C**   USE AMOUNT OF INTEREST ACCRUAL KEY TO CALC. W/TAX AMOUNT
 1835 C**
-12852C     WRK13         ADD       AMOUNT        AMOUNT
+12852C********** WRK13     ADD  AMOUNT    AMOUNT                                            AR932652
 1836 C                   EXSR      WTAX
 1837 C                   Z-ADD     AMOUNT        ACAMNT                   89
      C   88              Z-ADD     IACD          ACDATE
@@ -18160,6 +18198,13 @@ C    C                   ENDIF                                                  
      C                   ENDIF                                                                 CAC00
      C     WK13N         SUB       ACPD          WK13N                                         CAC00
       *                                                                   CAC001
+      *                                                                                     AR927395
+     C     WK13N         IFLT      0                                                        AR927395
+     C     AMTP          ANDEQ     'MR'                                                     AR927395
+     C     VDAT          ANDLT     RUND                                                     AR927395
+     C     VDAT          ANDNE     MDAT                                                     AR927395
+     C                   Z-ADD     0             WK13N                                      AR927395
+     C                   ENDIF                                                              AR927395
      C                   Z-ADD     WK13N         ACAMNT                   89                   CAC00
       *                                                                   CAC001
      C     SRCPA9        ENDSR                                                  ** SRCPA9 **   CAC00

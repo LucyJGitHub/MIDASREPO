@@ -1,0 +1,199 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas SC Switch from NIGHT to DAY mode')              */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC000354 - Midas SC Switch from NIGHT to DAY mode          */
+/*                                                                   */
+/*       (c) Finastra International Limited 2020                     */
+/*                                                                   */
+/*       Last Amend No. CAP702  *CREATE    Date 12May20              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CAP702 - 24x7 APIs - Common Processing                      */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra +
+                          International Limited 2020')
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&POPTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PSARD) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&CAP702) TYPE(*CHAR) LEN(1)
+
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
+/*           DCL        VAR(&NGTLB) TYPE(*CHAR) LEN(8)  */
+             DCL        VAR(&NDBLB) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&XLIB) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&NBRRCD) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&NBRRCDI) TYPE(*DEC) LEN(4 0)
+             DCL        VAR(&NBRRCDP) TYPE(*DEC) LEN(4 0)
+             DCL        VAR(&NBRRCDR) TYPE(*DEC) LEN(4 0)
+             DCL        VAR(&NBRFLG) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&ALLPRC) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&JOBNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOBNO) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&JOBNAME) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&JOBUSER) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TYPE ) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10) VALUE('SCC000354 ')
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5) VALUE(00001)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&JOB1) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&USER1) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NBR1) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&DANAM) TYPE(*CHAR) LEN(8)
+
+/**/
+/*    Global monitor message                                         */
+/**/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             SNDPGMMSG  MSG('SCC000354 - Switch from NIGHT to DAY Mode') +
+                          TOMSGQ(MRUNQ)
+
+/**/
+             CHGJOB     SWS(00000000)
+/**/
+
+/* Retrieve Zone prefix                                                            */
+             RTVDTAARA  DTAARA(SDSTAT *ALL) RTNVAR(&SDSTAT)
+/**/
+             CHGVAR     VAR(&PRE) VALUE(%SST(&SDSTAT 6 2))
+/*           CHGVAR     VAR(&NGTLB) VALUE(&PRE *TCAT 'BFMNGT')  */
+             CHGVAR     VAR(&NDBLB) VALUE(&PRE *TCAT 'X24LIB')
+             CHGVAR     VAR(&XLIB) VALUE(&PRE *TCAT 'XLIB')
+
+             CHGVAR     VAR(&PRTCD) VALUE('       ')
+             CHGVAR     VAR(&POPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&PSARD) VALUE('CAP702')
+             CHGVAR     VAR(&CAP702) VALUE('N')
+
+             CALL       PGM(AOSARDR0) PARM(&PRTCD &POPTN &PSARD &SCSARD)
+
+             IF         COND(&PRTCD *EQ '       ') THEN(DO)
+                CHGVAR     VAR(&CAP702) VALUE('Y')
+             ENDDO
+
+
+             RTVJOBA    JOB(&JOBNAME) USER(&JOBUSER) NBR(&JOBNO) +
+                          TYPE(&TYPE)
+
+             IF         COND(&CAP702 *EQ 'Y') THEN(DO)
+
+/**/
+/*    Call program CB0160 to get value of restart indicator.         */
+/**/
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+/**/
+
+/**/
+/*    If it is a restart .                                           */
+/**/
+             IF         COND(&STAT *EQ 'Y') THEN(DO)
+/* Check job for SCC000356    */
+
+             ENDDO
+/**/
+             CHGVAR     VAR(&STAT) VALUE('Y')
+/**/
+/** Call CB0150 to update restart indicator                          */
+/**/
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+
+/* Submit background job to monitor API log in zone layer */
+/**********  SBMJOB     CMD(CALL PGM(SCC000356)) JOB(&JOBNAME) +
+                        JOBD(&XLIB/MIDASIC) JOBQ(&XLIB/INTERFACE) +
+                        USER(*JOBD) RTGDTA(MULTILANGUAGE) INLLIBL(*JOBD) +
+                        OUTQ(*JOBD)   *****/
+
+             SBMJOB     CMD(CALL PGM(SCC000356)) JOB(SCC000356) +
+                        JOBD(&XLIB/MIDASIC) JOBQ(&XLIB/INTERFACE) +
+                        USER(*JOBD) RTGDTA(MULTILANGUAGE) INLLIBL(*JOBD) +
+                        OUTQ(*JOBD)
+
+/* Retrieve number of records in PF/API24X7SPD    */
+             RTVMBRD (API24X7SPD) NBRCURRCD(&NBRRCD)
+
+PROCESS:
+/* Call RPGLE/SC000354 to send details from PF/API24X7SPD to MQ Queue */
+/* Details of parameters: */
+/* &NBRRCD (for number of records on file) */
+/* &NBRRCDI (for number of records processed intermediary) */
+/* &NBRRCDP (for number of records processed) */
+/* &NBRRCDR (for number of records remaining) */
+/* &NBRFLG (flag to set lock or not) */
+/* &ALLPRC (flag for all records processed) */
+
+             CALL       SC000354 PARM(&NBRRCD &NBRRCDI &NBRRCDP &NBRRCDR +
+             &NBRFLG &ALLPRC)
+
+             IF         COND(&ALLPRC *EQ 'N') THEN(DO)
+                IF         COND(&NBRFLG *EQ 'Y') THEN(DO)
+/* Allocate DTAARA to process last records in PF/API24X7SPD and not get any +
+                more records coming to API24X7SPD */
+                ALCOBJ     OBJ((SCND24X7 *DTAARA *EXCL))
+                GOTO CMDLBL(PROCESS)
+                ENDDO
+
+                IF         COND(&NBRFLG *EQ 'N') THEN(DO)
+                GOTO CMDLBL(PROCESS)
+                ENDDO
+             ENDDO
+
+             IF         COND(&ALLPRC *EQ 'Y') THEN(DO)
+             DLCOBJ     OBJ((SCND24X7 *DTAARA *EXCL))
+             GOTO END
+             ENDDO
+
+             ENDDO
+
+/**/
+/*    If no error occured in the program                             */
+/**/
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+/**/
+/** Call CB0150 to update restart indicator */
+/**/
+               CHGVAR     VAR(&STAT) VALUE('N')
+               CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+               GOTO END
+             ENDDO
+/**/
+/*    Database error processing                                      */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+             GOTO ABNOR
+             ENDDO
+
+END:
+/* Retrieve sbmjob to end it    */
+             RTVDTAARA  DTAARA(&DANAM (31 10)) RTNVAR(&JOB1)
+             RTVDTAARA  DTAARA(&DANAM (41 10)) RTNVAR(&USER1)
+             RTVDTAARA  DTAARA(&DANAM (51 6)) RTNVAR(&NBR1)
+             ENDJOB JOB(&NBR1/&USER1/&JOB1) OPTION(*IMMED)
+
+/* Update 24x7 DTAARA/SCND24X7 to Day Mode    */
+             CHGDTAARA  DTAARA(SCND24X7 (1 5)) VALUE('DAY  ')
+             MONMSG     MSGID(CPF0000 MCH0000)
+             GOTO ENDPGM
+
+ ABNOR:
+
+             CHGJOB     SWS(XXXXXX11)
+
+/* Abnormal termination */
+
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
+                          SCC000354 ended abnormally - see job log') +
+                          TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+ ENDPGM:     ENDPGM

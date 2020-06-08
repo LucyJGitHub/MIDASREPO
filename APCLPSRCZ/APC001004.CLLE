@@ -1,0 +1,114 @@
+/****************************************************************** */
+/*STD    CLPBASEMOD                                                 */
+/*EXI    TEXT('Midas AP Trigger program for T_APIMSG')              */
+/****************************************************************** */
+/*                                                                  */
+/*        Midas - Application Programming Interfaces module         */
+/*                                                                  */
+/*       APC001004 -  Midas AP Trigger program for T_APIMSG         */
+/*                                                                  */
+/*       (c) Finastra International Limited 2020                    */
+/*                                                                  */
+/*       Last Amend No. CAP702  *CREATE    Date 12May20             */
+/*                                                                  */
+/********************************************************************/
+/*                                                                  */
+/*       CAP702 - 24x7 APIs - Common Processing                     */
+/*                                                                  */
+/********************************************************************/
+             PGM        PARM(&QPARM1 &QPARM2)
+
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra +
+                          International Limited 2020')
+             DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&QPARM1) TYPE(*CHAR) LEN(8000)
+             DCL        VAR(&QPARM2) TYPE(*CHAR) LEN(4)
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE(' ')
+             DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&CAP702) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
+/*           DCL        VAR(&NGTLB) TYPE(*CHAR) LEN(8)    */
+             DCL        VAR(&NDBLB) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&ALCDTA) TYPE(*CHAR) LEN(8) VALUE('        ')
+
+/**   GLOBAL MONITOR MESSAGE                                    */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/* Retrieve Zone prefix                                                            */
+             RTVDTAARA  DTAARA(SDSTAT *ALL) RTNVAR(&SDSTAT)
+
+/**/
+             CHGVAR     VAR(&PRE) VALUE(%SST(&SDSTAT 6 2))
+             CHGVAR     VAR(&NDBLB) VALUE(&PRE *TCAT 'X24LIB')
+
+/**   CHECK FOR SWITCHABLE FEATURE CAP702 AND CONDITION ALL     */
+/**   SUBSEQUENT PROCESSING ON IT                               */
+
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&SARD) VALUE('CAP702')
+
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &FMT)
+
+             IF         COND(&RTCD = '       ') THEN(CHGVAR +
+                          VAR(&CAP702) VALUE('Y'))
+/**/
+             IF         COND(&CAP702 = 'Y') THEN(DO)
+
+             SNDPGMMSG  MSG('APC001004 - TRIGGER PROGRAM FOR   +
+                          T_APIMSG') TOMSGQ(MRUNQ)
+
+/** CREATE DATA AREA LDA                                       */
+
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+
+             STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)
+             MONMSG     MSGID(CPF8351)
+
+             ALCOBJ     OBJ((SCND24X7 *DTAARA *EXCL)) WAIT(5)
+             MONMSG     MSGID(CPF1002) EXEC(CHGVAR VAR(&ALCDTA) +
+                          VALUE('ALLOCATE'))
+
+             IF         COND(&ALCDTA = '        ') THEN(DO)
+
+/** SUBMIT THE TRIGGER PROGRAM TO BATCH                        */
+
+             SBMJOB     CMD(CALL SD000845 PARM(&QPARM1 &QPARM2)) +
+                        JOB(APC001004) JOBD(&NDBLB/MIDAS24X7) +
+                        USER(*CURRENT) RTGDTA(*JOBD) +
+                        INLLIBL(*JOBD) MSGQ(MOPERQ) +
+                        OUTQ(*JOBD)
+
+/**   DATABASE ERROR PROCESSING                                */
+
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)
+                CHGVAR VAR(&MEM) VALUE(%SST(&LDA 134 50))
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                           TOMSGQ(MOPERQ MRUNQ)
+             ENDDO
+
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+/** ABNORMAL TERMINATION - BATCH JOB                          */
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSG('TRIGGER PROGRAM FOR T_APIMSG ENDED +
+                          ABNORMALLY') TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International Limited +
+                          2020')
+
+             ENDDO
+
+END:
+                  ENDPGM

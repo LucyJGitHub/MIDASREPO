@@ -1,0 +1,162 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas SC Extract File Update Control')                */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC000355 - Midas SC Extract File Update Control            */
+/*                                                                   */
+/*                                                                   */
+/*       (c) Finastra INternational Limited 2020                     */
+/*                                                                   */
+/*       Last Amend No. CAP702  *CREATE    Date 12May20              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CAP702 - 24x7 APIs - Common Processing                      */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ)
+/**/
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&POPTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PSARD) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&CAP702) TYPE(*CHAR) LEN(1)
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10) VALUE('SCC000355 ')
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5) VALUE(00001)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')
+             DCL        VAR(&XLIB) TYPE(*CHAR) LEN(6) VALUE('  XLIB')
+             DCL        VAR(&JLIB) TYPE(*CHAR) LEN(6) VALUE('  JLIB')
+             DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&JSEQNO) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&NXTJRC) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NGTLB) TYPE(*CHAR) LEN(8) VALUE('  BFMNGT')
+             DCL        VAR(&NDBLB) TYPE(*CHAR) LEN(8) VALUE('  X24LIB')
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2020')
+/**/
+/*    Global monitor message                                         */
+/**/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+/**/
+             SNDPGMMSG  MSG('SCC000355 - Midas SC Extract File Update') +
+                          TOMSGQ(MRUNQ)
+/**/
+             CHGJOB     SWS(00000000)
+
+             CHGVAR     VAR(&PRTCD) VALUE('       ')
+             CHGVAR     VAR(&POPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&PSARD) VALUE('CAP702')
+             CHGVAR     VAR(&CAP702) VALUE('N')
+
+             CALL       PGM(AOSARDR0) PARM(&PRTCD &POPTN &PSARD &SCSARD)
+
+             IF         COND(&PRTCD *EQ '       ') THEN(DO)
+                CHGVAR     VAR(&CAP702) VALUE('Y')
+             ENDDO
+
+             IF         COND(&CAP702 *EQ 'Y') THEN(DO)
+
+/**/
+/*    Setup system prefix variable from SDSTAT data area.            */
+/**/
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&DPLIB 1 2)) VALUE(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&XLIB 1 2)) VALUE(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&JLIB 1 2)) VALUE(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&NGTLB 1 2)) VALUE(&SYSID)
+             CHGVAR     VAR(%SUBSTRING(&NDBLB 1 2)) VALUE(&SYSID)
+/**/
+/*    Call program CB0160 to get value of restart indicator.         */
+/**/
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+/**/
+
+/**/
+/*    If it is NOT a restart.                                        */
+/**/
+             IF         COND(&STAT *EQ 'N') THEN(DO)
+               DLTF       FILE(XSCCDJNPD)
+               MONMSG     MSGID(CPF2105)
+
+/**/
+               CPYF       FROMFILE(SCCDJNPD) TOFILE(&DPLIB/XSCCDJNPD) +
+                            MBROPT(*REPLACE) CRTFILE(*YES)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
+             ENDDO
+/**/
+/*    If it is a restart .                                           */
+/**/
+             IF         COND(&STAT *EQ 'Y') THEN(DO)
+               CPYF       FROMFILE(XSCCDJNPD) TOFILE(SCCDJNPD) +
+                            MBROPT(*REPLACE)
+               MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) +
+                            EXEC(CLRPFM FILE(SCCDJNPD))
+             ENDDO
+/**/
+             CHGVAR     VAR(&STAT) VALUE('Y')
+/**/
+/** Call CB0150 to update restart indicator                          */
+/**/
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+/**/
+/** Retrieve Journal Entry.                                          */
+/**/
+/*          RTVJRNE    JRN(&NGTLB/ICJRN) FROMENT(*LAST) TOENT(*LAST) +
+                          SEARCH(*DESCEND) RTNSEQNBR(&JSEQNO) +
+                          RTNRCV(&NXTJRC) */
+/*          RTVJRNE    JRN(&NDBLB/ICJRN24X7) FROMENT(*LAST) TOENT(*LAST) +
+                          SEARCH(*DESCEND) RTNSEQNBR(&JSEQNO) +
+                          RTNRCV(&NXTJRC) */
+            RTVJRNE    JRN(&JLIB/ICJRN) FROMENT(*LAST) TOENT(*LAST) +
+                          SEARCH(*DESCEND) RTNSEQNBR(&JSEQNO) +
+                          RTNRCV(&NXTJRC)
+/**/
+/*    Call SC Extract File Update program.              */
+/**/
+             CALL       PGM(SC000355) PARM(&NXTJRC &JSEQNO)
+/**/
+/*    If no error occured in the program                             */
+/**/
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+/**/
+/** Call CB0150 to update restart indicator */
+/**/
+               CHGVAR     VAR(&STAT) VALUE('N')
+               CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+               DLTF       FILE(XSCCDJNPD)
+               MONMSG     MSGID(CPF2105)
+             ENDDO
+/**/
+/*    Database error processing                                      */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)
+                CHGVAR VAR(&MEM) VALUE(%SST(&LDA 134 50))
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                           TOMSGQ(MOPERQ MRUNQ)
+             ENDDO
+/**/
+             ENDDO
+
+             GOTO       CMDLBL(END)
+/**/
+/*   Abnormal termination - batch job                                */
+/**/
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSG('Midas SC Extract File +
+                          Update ENDED ABNORMALLY') TOMSGQ(MOPERQ +
+                          MRUNQ)
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
+/**/
+END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited 2020')
+             ENDPGM

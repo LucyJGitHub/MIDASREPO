@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD040876           Date 13Sep16               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. HUT113             Date 01Apr20               *
+      *  Prev Amend No. MD040876           Date 13Sep16               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -29,7 +30,9 @@
       *                                    Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
-      *                                                               *
+      *  HUT113 - Full PB Functionality in FM                         *
+      *           (Upgrade HUT026 to FM2.1 SP22)                      *
+      *           Addition of hook HUT113_113                         *
       *  MD040876 - CRS MQ (Recompile)                                *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -476,6 +479,8 @@
       *
       ** Private Banking Start Date - alpha
      C                   PARM                    DDPBST
+      *
+      /COPY WNCPYSRC,HUT113_113                                                          HUT113
       *
       ** MIDAS date format indicator
      C                   PARM                    BJDFIN

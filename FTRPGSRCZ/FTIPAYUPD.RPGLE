@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054037           Date 23Sep19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. HUT101             Date 12May20               *
+      *  Prev Amend No. MD054037           Date 23Sep19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD037804           Date 25May16               *
       *                 AR924677           Date 03Nov14               *
@@ -93,6 +94,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HUT101 - Upgrade CFT129 to FBM 2.1 SP22                      *
+      *           Payment Authorisation for Funds Transfer            *
+      *           Upgraded with CAP211 functionality.                 *
+      *           Used hook: FTH00392, FTH00556                       *
+      *           Added hooks: HUT101_008 to HUT101_12                *
       *  MD054037 - Outward payment routing from incoming (OPIN = Y)  *
       *             via API                                           *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -708,7 +714,7 @@
       ** CFT151 switchable field                                                              CFT151
       *                                                                                       CFT151
      D CFT151          S              1A                                                      CFT151
- 
+
      D/COPY WNCPYSRC,FTH00165
       *
       ** +--------------------------------------+
@@ -1139,6 +1145,7 @@
       ** Move valid file details to update file details.
       *
      C                   IF        CAP211 = 'Y' And PAuth = 'Y'                               CAP211
+     C/COPY WNCPYSRC,HUT101_008                                                               HUT101
       *                                                                                       CAP211
       ** Set the value of Authorised flag ('Y') and the Authorising profile                   CAP211
       ** if CAP211 is ON and PAuth is 'Y'.                                                    CAP211
@@ -1280,6 +1287,7 @@
       *
      C                   IF        CAP211 = 'Y' AND PAuth = 'Y' AND                           CAP211
      C                             SVGOP = 'Y' AND OPIN = 'Y'                                 CAP211
+     C/COPY WNCPYSRC,HUT101_009                                                               HUT101
       *                                                                                       CAP211
       ** Generate Outgoing Payment if CAP211 is ON, PAuth is 'Y', CAP211GenerateOP system     CAP211
       ** value is 'Y' and OPIN (Outgoing payment generated from incoming payemnt) flag is 'Y' CAP211
@@ -1528,6 +1536,7 @@
      C                   ENDIF                                                                CSD015
                                                                                               CSD015
      C                   IF        CAP211 = 'Y' And PAuth = 'Y'                               CAP211
+     C/COPY WNCPYSRC,HUT101_010                                                               HUT101
       *                                                                                       CAP211
       ** Set the value of Authorised flag ('Y') and the Authorising profile                   CAP211
       ** if CAP211 is ON and PAuth is 'Y'.                                                    CAP211
@@ -1747,6 +1756,7 @@
      C                   MOVEL     NwIpFilFmt    InPayUpdF
       *
      C                   IF        CAP211 = 'Y' And PAuth = 'Y'                               CAP211
+     C/COPY WNCPYSRC,HUT101_011                                                               HUT101
       *                                                                                       CAP211
       ** Set the value of Authorised flag ('Y') and the Authorising profile                   CAP211
       ** if CAP211 is ON and PAuth is 'Y'.                                                    CAP211
@@ -1889,6 +1899,7 @@
      C                   Z-ADD     BJRDNB        DATE                                         CFT157
       *                                                                                       CFT157
      C                   IF        CAP211 = 'Y' And PAuth = 'Y'                               CFT157
+     C/COPY WNCPYSRC,HUT101_012                                                               HUT101
       *                                                                                       CFT157
       ** Set the value of Authorised flag ('Y') and the Authorising profile                   CFT157
       ** if CAP211 is ON and PAuth is 'Y'.                                                    CFT157
@@ -3645,7 +3656,7 @@ e1   C                   ENDIF                                                  
      C                   KFLD                    KIDEN                                        CSD015
      C                   KFLD                    BRCA                                         CSD015
                                                                                               CSD015
- 
+
       *
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================

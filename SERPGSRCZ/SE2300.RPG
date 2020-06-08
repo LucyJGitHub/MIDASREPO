@@ -17,8 +17,9 @@
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
      F*                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD054041           Date 20Aug19               *      
+      *  Last Amend No. HUT105             Date 07Apr20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD054041           Date 20Aug19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD037742A          Date 09Jun16               *
       *                 215959             Date 21Mar16               *
@@ -127,12 +128,16 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  HUT105 - Bulk Position Settlement Authorisation              *
+      *           (Upgrade AR324886 to FM2.1 SP22 - intrusively)      *
+      *  AR324886 - Implement 4-eyes processing in Position           *
+      *             Settlement Maintenance.                           *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD054041 - Component SEC0601 seq. 00007 failed due to trailer*
       *             imbalance in file POSETA.                         *
       *           - Ensure number of live records (field NLRB) should *
       *             be updated by passing field NORE where matured    *
-      *             records are deducted.                             *      
+      *             records are deducted.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037742A - Security diary events - pool factor reversal.    *
       *              Postings are not generated after COB. Allow      *
@@ -313,6 +318,9 @@
      F***POSET   UF  E           K        DISK         KINFDS POSDS E14884E16776
      FPOSET1  UF  E           K        DISK         KINFDS POSDS          E16776
      F                                              KINFSR POSSR          E14884
+     FPSAUT   UF  E           K        DISK                                                 AR324886
+      ** SE Position Settlement Authorisation detail                                        AR324886
+      *                                                                                     AR324886
      FPOSETDY2IF  E           K        DISK                                                   CGL020
      FCLINT   IF  E           K        DISK
      F            CLINTCAF                          KIGNORE
@@ -570,6 +578,18 @@
      C*
      C           CLIKEY    KLIST
      C                     KFLD           PCPY
+      *                                                                                     AR324886
+     C           PSAUTH    KLIST                                                            AR324886
+     C                     KFLD           PBCA                                              AR324886
+     C                     KFLD           PSSH                                              AR324886
+     C                     KFLD           PCPY                                              AR324886
+     C                     KFLD           PDUD                                              AR324886
+     C                     KFLD           PEVT                                              AR324886
+     C                     KFLD           RNPTFR                                            AR324886
+     C                     KFLD           PTNLU                                             AR324886
+     C                     KFLD           TXBS                                              AR324886
+     C                     KFLD           BNFO                                              AR324886
+     C                     KFLD           EXCD                                              AR324886
      C*                                                                                       CGL020
      C*     POSETDY2                                                                          CGL020
      C*                                                                                       CGL020
@@ -998,6 +1018,11 @@ AW   C                     Z-ADD1         Z
      C                     MOVE 'M'       PRECI                                               228045
      C                     ENDIF                                          S01496
      C                     UPDATPOSETDF                                   E14884
+     C           PSAUTH    CHAINPSAUT                88                                     AR324886
+     C           *IN88     IFEQ *OFF                                                        AR324886
+     C                     MOVE PRECI     PARECI                                            AR324886
+     C                     UPDATPSAUTDF                                                     AR324886
+     C                     ENDIF                                                            AR324886
      C/COPY WNCPYSRC,SE2300C046
      C*                                                                   S01496
      C** For Reversal, RECI is changed from 'M' to 'R', and for trailer   S01496

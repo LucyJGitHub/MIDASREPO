@@ -9,8 +9,10 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD031644           Date 08Jan15              */
+/*       Last Amend No. HUT104             Date 27APR20              */
+/*       PREV AMEND NO. HUT113             DATE 01APR20              */
+/*                      MD046248           Date 27Oct17              */
+/*                      MD031644           Date 08Jan15              */
 /*                      CGL155             Date 21Mar14              */
 /*                      MD022112           Date 05Sep13              */
 /*                      CSC048             Date 06Aug12              */
@@ -49,6 +51,13 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       HUT104 - Call In-House Program on Input Cycle Re-open       */
+/*                (Upgrade HUT010 to FM2.1 SP22)                     */
+/*                  Amendment of core hook SCC0700002                */
+/*                  Addition of hooks HUT104_003 and HUT104_004      */
+/*       HUT113 - Full Private Banking Functionality in FM           */
+/*                (Upgrade HUT026 to FM2.1 SP22)                     */
+/*                Addition of hooks HUT113_045 and HUT113_046        */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD031644 - SP7 Build issue (Rework of CFT158 Return         */
 /*                  Status of Interfaced FT Payments). Unable        */
@@ -95,13 +104,13 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&ERROR)
- 
+
 /*/COPY WNCPYSRC,SCC0700INT                                          */
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
- 
+
              DCL        VAR(&MMOD) TYPE(*CHAR) LEN(256)
              DCL        VAR(&CFSTAT) TYPE(*CHAR) LEN(256)
              DCL        VAR(&JRNSTS) TYPE(*CHAR) LEN(1)
@@ -121,7 +130,7 @@
              DCL        VAR(&NBR) TYPE(*CHAR) LEN(6)
              DCL        VAR(&MESG) TYPE(*CHAR) LEN(40)
              DCL        VAR(&ERROR) TYPE(*LGL) LEN(1)
- 
+
              DCL        VAR(&RTN) TYPE(*CHAR) LEN(7)                  /*092729*/
              DCL        VAR(&OPN) TYPE(*CHAR) LEN(7)                  /*092729*/
              DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                 /*092729*/
@@ -168,15 +177,16 @@
 /*/COPY WNCPYSRC,SCC0700002                                          */
                                                                       /*092729*/
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
+/*/COPY WNCPYSRC,HUT104_003                                          */   /*HUT104*/
 /*******************************************************************/              /*CCB009 CCB022*/
 /***Check*for*Switchable*feature*CCB009.****************************/              /*CCB009 CCB022*/
 /*******************************************************************/              /*CCB009 CCB022*/
 /**********  CALL       PGM(AOSARDR0) PARM(&CCB009 '*VERIFY' +     */                     /*CCB022*/
 /**********               'CCB009' &AOFMT)                         */              /*CCB009 CCB022*/
- 
+
 /*/COPY WNCPYSRC,SCC0700MPS                                          */
 /*********************************************************************/            /*092729 CSC048*/
 /**********  CHGVAR     VAR(&OPN) VALUE('*VERIFY')                   */            /*092729 CSC048*/
@@ -185,7 +195,7 @@
 /**********  IF         COND(&RTN *EQ '       ') THEN(DO)            */            /*092729 CSC048*/
 /**********  CHGVAR     VAR(&S01420) VALUE('Y')                      */            /*092729 CSC048*/
 /**********  ENDDO                                                   */            /*092729 CSC048*/
- 
+
 /*  Check if the API Switchable Feature is on                         /*CAP002*/
              CHGVAR     VAR(&SARD) VALUE('CAP002')                    /*CAP002*/
              CHGVAR     VAR(&OPN) VALUE('*VERIFY')                    /*139764*/
@@ -236,41 +246,41 @@
 /**********  IF         COND(&S01420 *EQ 'Y') THEN(DO)               */            /*092729 CSC048*/
              DLCOBJ     OBJ((CBLOCK *DTAARA *EXCL))
              MONMSG     MSGID(CPF0000)
- 
+
              ALCOBJ     OBJ((CBLOCK *DTAARA *EXCL)) WAIT(5)
              MONMSG     MSGID(CPF1002) EXEC(DO)
                 SNDPGMMSG  MSG('Re-open ended abnormally')
                 GOTO       CMDLBL(ABNOR)
              ENDDO
- 
+
              RTVJOBA    JOB(&JOB) USER(&USR) NBR(&NBR)
              RTVMSG     MSGID(CBM0133) MSGF(CBUSRMSG) MSGDTA(&USR) +
                           MSG(&MESG) SEV(&SEV)
- 
+
              CHGVAR     VAR(%SST(&PARM 1 7)) VALUE(&PRC)
              CHGVAR     VAR(%SST(&PARM 8 10)) VALUE(&USR)
              CHGVAR     VAR(%SST(&PARM 18 10)) VALUE(&JOB)
              CHGVAR     VAR(%SST(&PARM 28 6)) VALUE(&NBR)
              CHGVAR     VAR(%SST(&PARM 38 2)) VALUE(&SEV)
              CHGVAR     VAR(%SST(&PARM 217 40)) VALUE(&MESG)
- 
+
              CALL       PGM(CBC0525) PARM(&ALL &PARM)
 /**********  ENDDO                                                   */            /*092729 CSC048*/
- 
+
              CHGVAR     VAR(&MSG) VALUE('INPUT CYCLE IS BEING +
                           RE-OPENED ')
- 
+
              SNDPGMMSG  MSG(&MSG) TOMSGQ(MRUNQ)
- 
+
 /* Call SCC0010 to send i/c being reopened screen */
- 
+
              RTVMSG     MSGID(SCM0025) MSGF(MIDASMSG) MSG(&MESSAGE)
              CHGDTAARA  DTAARA(MIDASMSG (301 50)) VALUE(&MESSAGE)
              CHGDTAARA  DTAARA(MIDASMSG (1 1)) VALUE('1')
              CALL       PGM(SCC0010) PARM('SCC0700' 'BLANK' &NOREPLY)
- 
+
              CHGJOB     SWS(XXXXXX00)
- 
+
              RTVDTAARA  DTAARA(MMOD) RTNVAR(&MMOD)
                                                                       /*CTI001*/
 /*  Access PF/SDMMODPD to determine which modules are live  */        /*CTI001*/
@@ -280,10 +290,10 @@
              CHGVAR     VAR(&FMT) VALUE(' ')                          /*CTI001*/
              CALL       PGM(AOMMODR0) PARM(&RTCD &OPTN &FMT)          /*CTI001*/
 /* */                                                                 /*CTI001*/
- 
+
 /* Submit RRAUTOBKP if save interval not 0 and if SWIFT direct */
 /* link present start up compression and communication program */
- 
+
              RTVDTAARA  DTAARA(JNSTAT) RTNVAR(&JNSTAT)
              IF         COND(%SUBSTRING(&JNSTAT 106 5) *NE '00000') +
                           THEN(DO)
@@ -295,15 +305,15 @@
                    GOTO       CMDLBL(END)
                  ENDDO
              ENDDO
- 
+
              IF         COND(&SWDR *EQ 'Y') THEN(CALL PGM(MSC0203))
- 
+
              ALCOBJ     OBJ((FC0100 *DTAARA *EXCL)) WAIT(5)
              MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(BYPASS))
- 
+
              DLCOBJ     OBJ((FC0100 *DTAARA *EXCL))
              MONMSG     MSGID(CPF0000)
- 
+
 /************SBMJOB     CMD(CALL PGM(FCC0401) PARM(I)) +                                  /*CPK014*/
 /************             JOB(RCFMONITOR) JOBD(FCJOBD) JOBQ(FCJOBQ) +                     /*CPK014*/
 /************             OUTQ(*JOBD) RTGDTA(MBATCH) INLLIBL(*JOBD)                       /*CPK014*/
@@ -414,7 +424,7 @@ BYPASS:
 /* If confirmation matching is present, re-submit the control */
 /* program (if the I/C run is not still on job queue) before  */
 /* returning to input cycle                                   */
- 
+
              IF         COND(%SST(&MMOD 60 1) *EQ 'Y') THEN(DO)
                 RTVDTAARA  DTAARA(CFSTAT) RTNVAR(&CFSTAT)
 /*************  IF         COND(%SST(&CFSTAT 49 6) *EQ '      ') +    /*110242*/
@@ -434,9 +444,9 @@ BYPASS:
                 ENDDO                                                 /*110242*/
              ENDDO
 /*/COPY WNCPYSRC,SCC0700001                                          */
- 
+
              RTVDTAARA  DTAARA(SDSTAT (33 1)) RTNVAR(&JRNSTS)
- 
+
 /* Set journal caching off irrespective of */                                             /*CSC048*/
 /* 'UseIBMJournalCache?' System Value. */                                                 /*CSC048*/
                                                                                           /*CSC048*/
@@ -453,11 +463,11 @@ BYPASS:
 /**********     CALL       PGM(SCJRN)                              */                     /*CSC048*/
 /**********  ENDDO                                                 */                     /*CSC048*/
 /**********  ENDDO                                                                 /*CCB009 CCB022*/
- 
+
 /* Reset ICT reopen flag */
- 
+
              CHGDTAARA  DTAARA(CBPROMPT (256 1)) VALUE(' ')
- 
+
 /*/COPY WNCPYSRC,SCC0700MPE                                          */
 /*********************************************************************/          /*AR544188 CCB022*/
 /***Call*CBCFMGR005*to*shut*down*background*jobs*if*active************/          /*AR544188 CCB022*/
@@ -496,9 +506,11 @@ BYPASS:
              IF         COND(&RTN *EQ '       ') THEN(DO)             /*CPB002*/
                                                                       /*CPB002*/
 /**  Start System Replication  **/                                    /*CPB002*/
+/*/COPY WNCPYSRC,HUT113_045                                          */   /*HUT113*/
                CALL       PGM(RPC0010)                                /*CPB002*/
+/*/COPY WNCPYSRC,HUT113_046                                          */   /*HUT113*/
              ENDDO                                                    /*CPB002*/
- 
+
 /* Start SWIFT jobs (process includes MS_ENABLED data area check)                         /*245533*/
              CALL       PGM(MSC0203)                                                      /*245533*/
                                                                                           /*245533*/
@@ -550,26 +562,27 @@ BYPASS:
                                                                                           /*CSC054*/
               ENDDO                                                                       /*CSC054*/
                                                                                           /*CSC054*/
+/*/COPY WNCPYSRC,HUT104_004                                          */   /*HUT104*/
              GOTO       CMDLBL(END)
- 
+
  ABNOR:
 /*/COPY WNCPYSRC,SCC0700ERR                                          */
- 
+
              SNDPGMMSG  MSG('SCC0700 ended abnormally') TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              CHGVAR     VAR(&ERROR) VALUE('1')
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
  END:
 /*/COPY WNCPYSRC,SCC0700END                                          */
- 
+
 /**********  IF         COND(&S01420 *EQ 'Y') THEN(DO)               */            /*092729 CSC048*/
              DLCOBJ     OBJ((CBLOCK *DTAARA *EXCL))
              MONMSG     MSGID(CPF0000 MCH0000)
 /**********  ENDDO                                                   */            /*092729 CSC048*/
- 
+
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
              ENDPGM

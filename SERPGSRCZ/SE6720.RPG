@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 215959             Date 21Mar16               *
+      *  Last Amend No. HUT105             Date 08Apr20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 215959             Date 21Mar16               *
       *                 CGL165             Date 17Feb15               *
       *                 CSW210             Date 04May10               *
       *                 BUG26839           Date 05Jan10               *
@@ -75,6 +76,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  HUT105 - Bulk Position Settlement Authorisation              *
+      *           (Upgrade AR324886 to FM2.1 SP22 - intrusively)      *
+      *  AR324886 - Implement 4-eyes processing in Position           *
+      *             Settlement Maintenance.                           *
       *  MD046248 - Finastra Rebranding                               *
       *  215959 - Truncation error on event amount in SE2450P3.       *
       *           Recompiled due to changes in PF/SEKEYD.             *
@@ -286,6 +291,9 @@
      FPOSETA  O   E                    DISK         KINFSR *PSSR
      FPOSETD  O   E           K        DISK         KINFSR *PSSR
      F***POSETDX0O***E           K        DISK         KINFSR *PSSR       S01496
+     FPSAUTD  O   E           K        DISK                                                 AR324886
+      ** SE Position Settlement Authorisation detail                                        AR324886
+      *                                                                                     AR324886
      FSEKEYA  O   E                    DISK         KINFSR *PSSR
      FSEKEYD  O   E           K        DISK         KINFSR *PSSR
      FSE6720AUO   E                    PRINTER
@@ -562,6 +570,9 @@
      I            DS                                                                          219566
      I I            'UseDefaultSettAccnt '    1  20 SVALK1                                    219566
       *                                                                                       219566
+     ISDSTAT    E DSSDSTAT                                                                  AR324886
+      ** SD Data area                                                                       AR324886
+      *                                                                                     AR324886
      I********************************************************************
       /EJECT
      C********************************************************************
@@ -620,6 +631,8 @@
      C** Fields for SR/ZEVCD (Event Control Date)
      C************LIKE     DEFN BKAPDT    APDA                            S01496
      C************LIKE     DEFN BJDNWD    DNWD                            S01496
+     C           *NAMVAR   DEFN           SDSTAT                                            AR324886
+     C                     IN   SDSTAT                                                      AR324886
      C*
      C** EXECUTE INITIAL PROCESSING
      C                     EXSR FIRST
@@ -2555,6 +2568,28 @@
      C*
      C                     ENDSR
       *
+     C********************************************************************                  AR324886
+     C/EJECT                                                                                AR324886
+     C********************************************************************                  AR324886
+     C           PSAUDT    BEGSR                                                            AR324886
+      *                                                                                     AR324886
+     C                     MOVE RECI      PARECI                                            AR324886
+     C                     MOVE PBCA      PAPBCA                                            AR324886
+     C                     MOVE PSSH      PAPSSH                                            AR324886
+     C                     MOVE PCPY      PAPCPY                                            AR324886
+     C                     MOVE PDUD      PAPDUD                                            AR324886
+     C                     MOVE PEVT      PAPEVT                                            AR324886
+     C                     MOVE PTFR      PAPTFR                                            AR324886
+     C                     MOVE TNLU      PATNLU                                            AR324886
+     C                     MOVE TXBS      PATXBS                                            AR324886
+     C                     MOVE BNFO      PABNFO                                            AR324886
+     C                     MOVE EXCD      PAEXCD                                            AR324886
+     C           LIBR      CAT  'OWNER'   PALUSR                                            AR324886
+     C                     MOVE LCD       PALCD                                             AR324886
+     C                     MOVE CHTP      PALCTP                                            AR324886
+     C                     WRITEPSAUTDF                                                     AR324886
+      *                                                                                     AR324886
+     C                     ENDSR                                                            AR324886
       *****************************************************************
      C/EJECT
      ******************************************************************
@@ -2941,6 +2976,7 @@
      C*                                                                   189109
      C** WRITE POSITION SETTLEMENT RECORD
      C                     WRITEPOSETDF
+     C                     EXSR PSAUDT                                                      AR324886
      C*
      C           W102E     ENDSR
      C*
@@ -3342,6 +3378,7 @@
      C*
      C** Write Position Settlement Record
      C                     WRITEPOSETDF
+     C                     EXSR PSAUDT                                                      AR324886
      C*
      C           W202E     ENDSR                           ** ENDW02 **
      C*

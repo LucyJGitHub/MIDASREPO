@@ -19,10 +19,11 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. HUT105             Date 08Apr20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. 095907             Date 26Jan07               *
+      *                 095907             Date 26Jan07               *
      F*                 243026             Date 26Jan07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
@@ -60,6 +61,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  HUT105 - Bulk Position Settlement Authorisation              *
+      *           (Upgrade AR324886 to FM2.1 SP22 - intrusively)      *
+      *  AR324886 - Implement 4-eyes processing in Position           *
+      *             Settlement Maintenance.                           *
       *  MD046248 - Finastra Rebranding                               *
      F*  095907 - TRAILERS POSETA MUST BE UPDATED                     *
      F*         - MODIFICATIONS CALCULATIONS FOR OUTPUT TRAILER       *
@@ -126,6 +131,9 @@
      F*
      F*POSET***UP**E***********K        DISK                              E20114
      FPOSET1  UP  E           K        DISK                               E20114
+     FPSAUT   UF  E           K        DISK                                                 AR324886
+      ** SE Position Settlement Authorisation detail                                        AR324886
+      *                                                                                     AR324886
      FSECTY   IF  E           K        DISK
      FPOSETA  UF  E                    DISK
      FTABSE   IF  E           K        DISK
@@ -216,6 +224,8 @@
      I                                              PSSH  L2
      I                                              PCPY  L1
      I              RECI                            RECIX
+     I              TNLU                            TNLUX                                   AR324886
+     I              EXCD                            EXCDX                                   AR324886
      I/COPY WNCPYSRC,SE2560I001
      I*LDA******* UDS                            256
      I***********                           134 177 DBLOT                 S01117
@@ -322,6 +332,18 @@
      C                     KFLD           K3PDUD  50                                          CRE020
      C                     KFLD           K3PEVT  2                                           CRE020
       *                                                                                       CRE020
+     C           PSAUTH    KLIST                                                            AR324886
+     C                     KFLD           PBCA                                              AR324886
+     C                     KFLD           PSSH                                              AR324886
+     C                     KFLD           PCPY                                              AR324886
+     C                     KFLD           PDUD                                              AR324886
+     C                     KFLD           PEVT                                              AR324886
+     C                     KFLD           PTFR                                              AR324886
+     C                     KFLD           TNLUX                                             AR324886
+     C                     KFLD           TXBS                                              AR324886
+     C                     KFLD           BNFO                                              AR324886
+     C                     KFLD           EXCDX                                             AR324886
+      *                                                                                     AR324886
      C/COPY WNCPYSRC,SE2560C001
       *
       * Define keylist for chaining to tabletl file
@@ -686,6 +708,11 @@
      C                     END
      C*                                                                                       095907
      C                     ELSE                                                               095907
+      *                                                                                     AR324886
+     C           PSAUTH    CHAINPSAUT                80                                     AR324886
+     C           *IN80     IFEQ *OFF                                                        AR324886
+     C                     DELETPSAUT                                                       AR324886
+     C                     ENDIF                                                            AR324886
      C*                                                                                       095907
      C* Get dec places tabtg10                                                                095907
      C*                                                                                       095907
@@ -907,6 +934,11 @@
      C           KPOST3    READEPOSETDD3                 78                                   CRE020
      C                     ENDDO                                                              CRE020
      C                     ENDIF                                                              CRE020
+      *                                                                                     AR324886
+     C           PSAUTH    CHAINPSAUT                80                                     AR324886
+     C           *IN80     IFEQ *OFF                                                        AR324886
+     C                     DELETPSAUT                                                       AR324886
+     C                     ENDIF                                                            AR324886
      C*
      C* Increment deleted not authorised count if neccessary
      C*

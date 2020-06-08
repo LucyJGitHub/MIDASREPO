@@ -1,0 +1,367 @@
+      *****************************************************************
+      *  Start of /COPY GLH00352                                      *
+      *****************************************************************
+      *                                                               *
+      *  GL0720 - GL Balance Report                                   *
+      *                                                               *
+      *  Last Amend No. HUT107    *Create  Date 01Apr20               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  HUT107 - Additional 3rd Party Trust Indicator                *
+      *           (Upgrade HUT016 to FM2.1 SP22)                      *
+      *                                                               *
+      *****************************************************************
+      *
+      *****************************************************************
+      **   *INZSR - Default Initialisation Routine                    *
+      *****************************************************************
+     C           *INZSR    BEGSR
+      *
+      * Obtain switchable feature HUT107 status.
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C                     PARM 'HUT107'  @SARD
+     C           SCSARD    PARM SCSARD    DSFDY
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       HUT107  1
+     C                     ELSE
+     C                     MOVE 'N'       HUT107
+     C                     ENDIF
+      *
+      ** Override HUT107 files
+      *
+     C           HUT107    IFEQ 'Y'
+     C                     CALL 'QCMDEXC'
+     C                     PARM           CMD,1
+     C                     PARM 80        CMDLEN 155
+      *
+     C                     CALL 'QCMDEXC'
+     C                     PARM           CMD,2
+     C                     PARM 80        CMDLEN 155
+      *
+     C                     OPEN UTRACCTD
+     C                     OPEN UGL0720P
+     C                     ENDIF
+      *
+     C                     ENDSR
+      **
+      *****************************************************************
+      **    SRCHKX - Check if Extended Narrative is to be applied     *
+      **             for this account code                            *
+      *****************************************************************
+     C           SRCHKX    BEGSR
+      *
+     C                     MOVE *BLANKS   WXNAR  59
+     C                     MOVE *BLANKS   WTHNAR100
+     C**********           MOVE *BLANKS   WTXNAR 59                       HUT107
+     C                     MOVE *BLANKS   WTXNAR 47                       HUT107
+     C                     MOVE *BLANKS   WRTNAR 59
+     C                     MOVE 'N'       WRTAC   1
+     C**********           Z-ADD59        NARMAX  20                      HUT107
+     C                     Z-ADD47        NARMAX  20                      HUT107
+      *
+     C           CRKYL     KLIST
+     C                     KFLD           CKBRN
+     C                     KFLD           CKCCY
+     C                     KFLD           CKACC
+      *
+     C                     MOVELBRCHNO    KBRN    3
+     C                     MOVELCCYCOD    KCCY    3
+     C                     MOVELACCCOD    KACC   10
+      *
+     C           KBRN      CAT  KCCY      PR1     6
+     C           KBRN      CAT  'ALL'     PR2     6
+     C           'ALL'     CAT  KCCY      PR3     6
+     C           'ALL'     CAT  'ALL'     PR4     6
+      *
+     C           PR1       CAT  KACC      KEY,1
+     C           PR1       CAT  WKALL     KEY,2
+     C           PR2       CAT  KACC      KEY,3
+     C           PR2       CAT  WKALL     KEY,4
+     C           PR3       CAT  KACC      KEY,5
+     C           PR3       CAT  WKALL     KEY,6
+     C           PR4       CAT  KACC      KEY,7
+     C           PR4       CAT  WKALL     KEY,8
+      *
+     C                     MOVE *OFF      *IN52
+     C                     DO   8         KX      10
+     C                     MOVE KEY,KX    CURKEY
+     C           CRKYL     CHAINUGL0720P             58
+     C           *IN58     IFEQ *OFF
+     C                     MOVE *ON       *IN52
+     C                     LEAVE
+     C                     ENDIF
+     C                     ENDDO
+      *
+      ** Construct Narrative
+      *
+     C           *IN52     IFEQ *ON
+     C*
+     C* Initialize HUT107 Set 1 Header Printed  flag
+     C*
+     C                     MOVEL'N'       S1HDPR  1
+      *
+      ** Set flag if a retail acount was detected
+      *
+     C                     MOVE 'N'       WRTAC   1
+     C           RETIND    IFEQ 1
+     C                     MOVE 'Y'       WRTAC
+     C                     MOVELACCCOD    WACOD
+     C                     ENDIF
+      *
+     C                     SELEC
+     C           *IN73     WHEQ *ON
+     C           ACCNAR    CAT  ANARR:1   WXNAR
+     C           ACCNAR    CAT  ANARR:1   WTHNAR
+     C           *IN73     WHEQ *OFF
+     C           ACCNAM    CAT  ANARR:1   WXNAR
+     C           ACCNAM    CAT  ANARR:1   WTHNAR
+     C                     ENDSL
+      *
+      ** Right Justify Subtotal Narrative
+      *
+     C           ' '       CHEKRWXNAR     LEN     20
+     C           NARMAX    SUB  LEN       BUMP    20
+     C           ' '       CAT  WXNAR:BUMPWTXNAR
+      *
+      ** If subgrouping is applicable, only print non-3rd party
+      ** account headings when there is non-3rd party record
+      ** (initially set flag to not print the heading)
+      *
+     C                     MOVE *ON       *IN51
+      *
+     C                     ENDIF
+      *
+     C           ENCHKX    ENDSR
+     C*****************************************************************
+     C**    SRP3P  - Print Pending HUT107 lines                       *
+     C*****************************************************************
+     C*
+     C           SRP3P     BEGSR
+      *
+      *  If there were set 1 records, print set 1 subtotal lines
+     C           S1HREC    IFEQ 'Y'
+      *
+      * Print Set 1 Total Line
+     C           WRTAC     IFEQ 'Y'
+     C           RETBCR    ADD  RETBDR    RETBAL 180
+     C                     EXCPTS1RTO
+     C                     MOVE 'S1'      WOVSET  2
+     C                     EXSR SROVF
+     C                     ENDIF
+      *
+     C           ACCBCR    ADD  ACCBDR    ACCBAL
+      * Title code balances
+     C           TITBCR    ADD  ACCBCR    TITBCR
+     C           TITBDR    ADD  ACCBDR    TITBDR
+     C                     EXCPTS1TOT
+     C                     MOVE 'NO'      WOVSET
+     C                     EXSR SROVF
+     C                     MOVE 'N'       S1HREC  1
+      *
+     C                     ENDIF
+      *
+      ** Disable non-3rd Party printing
+      *
+     C                     MOVE *ON       *IN78
+      *
+      ** If Retail Account, print 3rd Party subtotal line
+      *
+     C           WRTAC     IFEQ 'Y'
+     C           S2RCUS    ANDEQ'Y'
+     C                     Z-ADDS2ARDR    S2ABDR
+     C                     Z-ADDS2ARCR    S2ABCR
+     C                     Z-ADDS2ARBL    S2ABAL       65
+     C                     ADD  S2ABCR    TITBCR
+     C                     ADD  S2ABDR    TITBDR
+      *
+     C                     EXCPTS2HDR
+     C                     MOVE 'S2'      WOVSET
+     C                     EXSR SROVF
+      *
+     C                     EXCPTS2RTO
+     C                     MOVE 'S2'      WOVSET
+     C                     EXSR SROVF
+      *
+     C                     EXCPTS2TOT
+     C                     MOVE 'NO'      WOVSET
+     C                     EXSR SROVF
+      *
+     C                     MOVE 'N'       S2RCUS
+     C                     GOTO ENDP3P
+     C                     ENDIF
+      *
+      ** Process set 2 (3rd Party Customer) records
+      *
+     C                     MOVE 'N'       S2HREC  1
+     C           *LOVAL    SETLLXXSGLYTD
+     C                     READ XXSGLYTD                 58
+     C           *IN58     IFEQ *OFF
+      *
+      ** Print Set 2 Headers
+      *
+     C                     EXCPTS2HDR
+      *
+     C                     MOVE 'Y'       S2HREC  1
+     C                     ENDIF
+      *
+     C           *IN58     DOWEQ*OFF
+      *
+      ** Print  Set 2 Detail Line
+      *
+     C**********           Z-ADDWLDBL     NEWB2  150                                 HUT107
+     C                     Z-ADDWLDBL     NEWB2  180   59                            HUT107
+      *
+     C                     MOVE 'S2'      WOVSET
+     C                     EXSR SROVF
+      *
+     C                     EXCPTS2DET
+      *
+      ** Accumulate Set 2 Totals
+      *
+      * Negative = Credit; Positive = Debit
+     C           WLDBL     IFLT *ZERO
+     C**********           ADD  WLDBL     S2ABCR 150                                 HUT107
+     C                     ADD  WLDBL     S2ABCR 180                                 HUT107
+     C                     ELSE
+     C**********           ADD  WLDBL     S2ABDR 150                                 HUT107
+     C                     ADD  WLDBL     S2ABDR 180                                 HUT107
+     C                     ENDIF
+      *
+     C                     DELETXXSGLYTD
+      *
+     C                     READ XXSGLYTD                 58
+     C                     ENDDO
+      *
+      ** Add 3rd Party subtotals to Title Code Totals
+      *
+     C           S2HREC    IFEQ 'Y'
+      *
+     C                     MOVE 'S2'      WOVSET
+     C                     EXSR SROVF
+      *
+     C                     ADD  S2ABCR    TITBCR
+     C                     ADD  S2ABDR    TITBDR
+      *
+      ** Print Set 2 Totals
+      *
+     C********** S2ABCR    ADD  S2ABDR    S2ABAL 150
+     C           S2ABCR    ADD  S2ABDR    S2ABAL 180   65                             HUT107
+     C                     EXCPTS2TOT
+     C                     MOVE 'NO'      WOVSET
+     C                     EXSR SROVF
+     C                     ENDIF
+      *
+      ** Set 2 records already printed
+      *
+     C           ENDP3P    TAG
+     C                     CLEARWACOD
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C**    SRSG3P - Sort out records for 3rd Party Customer          *
+     C**             subgrouping                                      *
+     C*****************************************************************
+     C           SRSG3P    BEGSR
+      *
+     C                     MOVELCUSTNO    WCUSTA  6
+     C           WCUSTA    CHAINUTRACCTD             58
+     C           *IN58     IFEQ *OFF
+      *
+     C                     MOVE *ON       *IN78
+      *
+      ** First record in account group is 3rd Party
+      *
+     C           *INL1     IFEQ *ON
+     C                     MOVE 'Y'       W1R3P   1
+     C                     ENDIF
+      *
+      ** If Retail Account, sum up 3rd party subtotals
+      *
+     C           RETIND    IFEQ 1
+      *
+      ** A 3rd party retail customer is found
+     C                     MOVE 'Y'       S2RCUS  1
+      *
+     C           BALANC    IFLT *ZERO
+     C**********           ADD  BALANC    S2ARCR 150                                   HUT107
+     C**********           ADD  BALANC    S2ARBL 150                                   HUT107
+     C                     ADD  BALANC    S2ARCR 180                                   HUT107
+     C                     ADD  BALANC    S2ARBL 180   66                              HUT107
+     C                     ELSE
+     C**********           ADD  BALANC    S2ARDR 150                                   HUT107
+     C                     ADD  BALANC    S2ARDR 180                                   HUT107
+     C**********           ADD  BALANC    S2ARBL                                       HUT107
+     C                     ADD  BALANC    S2ARBL       66                              HUT107
+     C                     ENDIF
+      *
+     C                     ELSE
+      *
+      ** Write Set 2 record to Workfile
+      *
+     C                     MOVELACCCOD    WACOD
+     C                     MOVELBRCHNO    WBRCA
+     C                     MOVELCUSTNO    WCNUM
+     C                     MOVELACCSEQ    WACSQ
+     C                     MOVELNAME      WCNAM
+     C                     MOVELTOWN      WCTOW
+     C                     Z-ADDBALANC    WLDBL
+     C                     WRITESGLEY0
+      *
+     C                     ENDIF
+     C*
+     C                     ELSE
+      *
+      ** Print on non-3rd party format :
+      *
+      ** Enable printing of Set 1 account heading for this
+      ** account code
+      *
+      ** If first record in account is 3rd Party, set on
+      ** L1 again for the non-3rd Party heading
+     C           W1R3P     IFEQ 'Y'
+     C                     MOVE *ON       *INL1
+     C                     MOVE 'N'       W1R3P
+     C                     ENDIF
+      *
+     C                     MOVE *OFF      *IN51
+     C                     MOVE *OFF      *IN78
+      *
+      ** Print Set 1 details
+      *
+     C           RETIND    IFNE 1
+     C                     EXCPTS1DET
+     C                     ENDIF
+      *
+     C                     MOVE 'Y'       S1HREC  1
+      *
+     C                     ENDIF
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C*****************************************************************
+     C**    SROVF  - Print heading lines on overflow                  *
+     C*****************************************************************
+     C           SROVF     BEGSR
+      *
+     C           *INOF     IFEQ *ON
+     C                     EXCPTOVFHD
+      *
+     C                     SELEC
+     C           WOVSET    WHEQ 'S1'
+     C                     EXCPTOVFS1
+     C           WOVSET    WHEQ 'S2'
+     C                     EXCPTS2HDR
+     C           WOVSET    WHEQ 'NO'
+     C                     ENDSL
+      *
+     C                     MOVE *OFF      *INOF
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************
+      * End of /COPY GLH00352                                         *
+      *****************************************************************

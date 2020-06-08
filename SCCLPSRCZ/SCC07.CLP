@@ -9,8 +9,10 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD054045           Date 27Aug19              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. HUT104             Date 27APR20              */
+/*       PREV AMEND NO. HUT113             DATE 01APR20              */
+/*                      MD054045           Date 27Aug19              */
+/*                      MD046248           Date 27Oct17              */
 /*                      MD037757           Date 26Apr16              */
 /*                      MD031644           Date 12Jan15              */
 /*                      MD023896           Date 06May14              */
@@ -129,6 +131,14 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       HUT104   - UPGRADE HUT010 TO FBM 2.1 SP 22                  */
+/*                  Call In-House Program on Input Cycle Re-open     */
+/*                  Use of core hook SCH00005                        */
+/*                  Addition of hooks HUT104_001 and HUT104_002      */
+/*       HUT113 - Full Private Banking Functionality in FM           */
+/*                (Upgrade HUT026 to FM2.1 SP22)                     */
+/*                Addition of hooks HUT113_043, HUT113_044.          */
+/*                  ADD /COPY SCC07017 SCC07018                      */
 /*       MD054045 - Not able to reopen i/c after the 1st attempt     */
 /*                  to reopen failed.                                */
 /*       MD046248 - Finastra Rebranding                              */
@@ -496,6 +506,7 @@
                                                                       /*S01408*/
 /**/
              MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO ABNOR)
+/*/COPY WNCPYSRC,HUT104_001                                          */          /*HUT104*/
              CHGJOB     SWS(XXXXXX0X)
 /*/COPY WNCPYSRC,SCH00006                                            */
                                                                                           /*CAS005*/
@@ -1765,7 +1776,9 @@ CHKCMPLFL:                                                                      
                 MONMSG     MSGID(CPF0000 MCH0000)                                         /*210581*/
                                                                       /*CPB002*/
 /**  Start System Replication  **/                                    /*CPB002*/
+/*/COPY WNCPYSRC,HUT113_043                                          */          /*HUT113*/
                CALL       PGM(RPC0010)                                /*CPB002*/
+/*/COPY WNCPYSRC,HUT113_044                                          */          /*HUT113*/
              ENDDO                                                    /*CPB002*/
 
 /* Start SWIFT jobs (process includes MS_ENABLED data area check)                         /*218851*/
@@ -1781,6 +1794,7 @@ CHKCMPLFL:                                                                      
                CALL       PGM(MEC0720)                                                    /*218851*/
              ENDDO                                                                        /*218851*/
                                                                                           /*218851*/
+/*/COPY WNCPYSRC,HUT104_002                                          */          /*HUT104*/
 /***Check*if*the*CAP203*Feature*is*on******************************/           /*BUG27914 MD022112*/
 /**********  CHGVAR     VAR(&RTN) VALUE('       ')                */           /*BUG27914 MD022112*/
 /**********  CHGVAR     VAR(&SARD) VALUE('CAP203')                */           /*BUG27914 MD022112*/

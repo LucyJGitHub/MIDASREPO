@@ -32,8 +32,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 260331             Date 31Mar16               *
+      *  Last Amend No. HUT105             Date 07Apr20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 260331             Date 31Mar16               *
       *                 215959             Date 21Mar16               *
       *                 AR1067108          Date 11Dec12               *
       *                 AR1001183A         Date 20Nov12               *
@@ -184,6 +185,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  HUT105 - Bulk Position Settlement Authorisation              *
+      *           (Upgrade AR324886 to FM2.1 SP22 - intrusively)      *
+      *  AR324886 - Implement 4-eyes processing in Position           *
+      *             Settlement Maintenance.                           *
       *  MD046248 - Finastra Rebranding                               *
       *  260331 - Incorrect posting created due to a deleted diary    *
       *           event. Applied fix 255857.                          *
@@ -526,6 +531,9 @@
      F                                              KINFSR SEKDSR
      FPOSETD  O   E           K        DISK         KINFDS POSDDS
      F                                              KINFSR POSDSR
+     FPSAUTD  O   E           K        DISK                                                 AR324886
+      ** SE Position Settlement Authorisation detail                                        AR324886
+      *                                                                                     AR324886
      FSDCUSQL0IF  E           K        DISK                                                 AR853119
       **  Midas SD Stamp Tax Customer Extension file                                        AR853119
      FPOSETDX3O   E           K        DISK         KINFSR *PSSR                            AR853119
@@ -988,6 +996,9 @@
       *                                                                                      BUG7985
      I              QQDFAC                          AQDFAC                                   BUG7985
       *                                                                                      BUG7985
+     ISDSTAT    E DSSDSTAT                                                                  AR324886
+      ** SD data area                                                                       AR324886
+      *                                                                                     AR324886
      I/COPY WNCPYSRC,SE2370I001
      C/EJECT
       *================================================================
@@ -1137,6 +1148,8 @@
      C                     Z-ADD0         DBASE
      C                     MOVE 'SE2370  'DBPGM
      C                     OUT  LDA                                       S01117
+     C           *NAMVAR   DEFN           SDSTAT                                            AR324886
+     C                     IN   SDSTAT                                                      AR324886
      C*
      C                     EXSR FIRST
      C*
@@ -6012,6 +6025,7 @@
      C*                                                                   CSE023
      C                     ADD  1         W02CNT  50                      CSE023
      C                     WRITEPOSETDF
+     C                     EXSR PSAUDT                                                      AR324886
      C                     MOVE 'D'       RECI                            081366
       *                                                                                     AR853119
       ***  Write extension file                                                             AR853119
@@ -6958,6 +6972,28 @@ AW   C                     Z-ADDDEC,1     WHASHD
      C                     WRITEPOSETDD3                                                    AR853119
       *                                                                                     AR853119
      C                     ENDSR                                                            AR853119
+      *****************************************************************                     AR324886
+      /EJECT                                                                                AR324886
+      *****************************************************************                     AR324886
+     C           PSAUDT    BEGSR                                                            AR324886
+      *                                                                                     AR324886
+     C                     MOVE RECI      PARECI                                            AR324886
+     C                     MOVE PBCA      PAPBCA                                            AR324886
+     C                     MOVE PSSH      PAPSSH                                            AR324886
+     C                     MOVE PCPY      PAPCPY                                            AR324886
+     C                     MOVE PDUD      PAPDUD                                            AR324886
+     C                     MOVE PEVT      PAPEVT                                            AR324886
+     C                     MOVE PTFR      PAPTFR                                            AR324886
+     C                     MOVE TNLU      PATNLU                                            AR324886
+     C                     MOVE TXBS      PATXBS                                            AR324886
+     C                     MOVE BNFO      PABNFO                                            AR324886
+     C                     MOVE EXCD      PAEXCD                                            AR324886
+     C           LIBR      CAT  'OWNER'   PALUSR                                            AR324886
+     C                     MOVE LCD       PALCD                                             AR324886
+     C                     MOVE CHTP      PALCTP                                            AR324886
+     C                     WRITEPSAUTDF                                                     AR324886
+      *                                                                                     AR324886
+     C                     ENDSR                                                            AR324886
       *
       *****************************************************************
       /EJECT                                                              S01117

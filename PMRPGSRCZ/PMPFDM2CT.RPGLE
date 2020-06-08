@@ -16,12 +16,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. HUT113             Date 01Apr20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
       *                 CPB002             Date 13Dec99               *
@@ -30,6 +31,17 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HUT113 - Full Private Banking Functionality in FM            *
+      *           Applies fixes MD-54548 and MD-54322                 *
+      *           Addition of hooks HUT113_004 to HUT113_008          *
+      *    MD054548 - Error is found in Portfolio Definition Maint.   *
+      *               (Inconsistency on screen).                      *
+      *             - Display the new PB screen for cust either PM    *
+      *               or PB when HUT113 feature is ON.                *
+      *    MD054322 - PM - SE - Incorrect holdings for                *
+      *               custody fee calculation report.                 *
+      *               Allow portfolio definition for PB customer.     *
+      *               Addition of hooks HUT113_004 to HUT113_008      *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CPB002 - New Private Banking Customer Processing.            *
@@ -106,6 +118,8 @@
       ** - converted to screen format
      D PMPFDM        E DS                  EXTNAME(PMPFDMPD)
       *
+     D/COPY WNCPYSRC,HUT113_004                                                            HUT113
+      *
       ** Investment Policy Indicators retrieved from file
       ** - converted to screen format
       ** - (DDIPIN) Instrument Investment Policy Indicator
@@ -118,6 +132,8 @@
      D   DDCYIN                2      2
      D   DDYPIN                3      3
      D   DDNPIN                4      4
+      *
+     D/COPY WNCPYSRC,HUT113_005                                                            HUT113
       *
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -261,6 +277,8 @@
       *
      C     PMCUST        IFEQ      'Y'
       *
+     C/COPY WNCPYSRC,HUT113_006                                                            HUT113
+      *
       ** Investment details
       *
      C                   EVAL      DDIPIN = P1PNIPIN
@@ -389,6 +407,8 @@
       *
      C                   EVAL      DDPOLC = P1PNPOLC
       *
+     C/COPY WNCPYSRC,HUT113_007                                                            HUT113
+      *
      C                   ENDIF
       *                                                                         CPB002
       ** Management Type                                                        CPB002
@@ -499,6 +519,8 @@
       ** The following /COPY sets these values.
       *
       /COPY ZACPYSRC,DBFIELDS
+      *
+     C/COPY WNCPYSRC,HUT113_008                                                            HUT113
       *
      C                   ENDSR
       *

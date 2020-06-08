@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 226449             Date 24Jun15               *
+      *  Last Amend No. HUT105             Date 08Apr20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 226449             Date 24Jun15               *
       *                 MD034776           Date 09Jul15               *
       *                 AR1067108          Date 11Dec12               *
       *                 AR1001183A         Date 20Nov12               *
@@ -123,6 +124,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HUT105 - Bulk Position Settlement Authorisation              *
+      *           (Upgrade AR324886 to FM2.1 SP22 - intrusively)      *
+      *  AR324886 - Implement 4-eyes processing in Position           *
+      *             Settlement Maintenance.                           *
       *  MD046248 - Finastra Rebranding                               *
       *  226449 - Recompiled over changes made in /COPY ZDYYRZ3.      *
       *         - Applied for MD034387.                               *
@@ -428,6 +433,8 @@
       *
      FPOSET1  UF  E           K        DISK         KINFSR *PSSR
       ***  SE Position Settlements - Details
+     FPSAUT   UF  E           K        DISK         KINFSR *PSSR                            AR324886
+      ** SE Position Settlement Authorisation detail                                        AR324886
       *
      FTRADS   UF  E           K        DISK         KINFSR *PSSR A
       ***  SE Trades details
@@ -747,6 +754,10 @@
      I              'SEETCPUPD'           C         SEETCP                                    234829
      I              'SEVOPUINT'           C         SEVOPI                                    234829
      I              'SEETCPRTV'           C         SEETRT                                    234829
+     ISDSTAT    E DSSDSTAT                                                                  AR324886
+      ** SD Data area                                                                       AR324886
+      *                                                                                     AR324886
+     I              PHASE                           PHASEX                                  AR324886
       *
      C/EJECT
       *****************************************************************
@@ -5290,6 +5301,7 @@
      C                     MOVE 'D'       CHTP
      C                     Z-ADDBJRDNB    LCD
      C                     UPDATPOSETDF                89
+     C                     EXSR PSAUDT                                                      AR324886
       *
       ***  Record not found
       *
@@ -5314,6 +5326,7 @@
      C                     MOVE 'R'       CHTP
      C                     Z-ADDBJRDNB    LCD
      C                     UPDATPOSETDF                89
+     C                     EXSR PSAUDT                                                      AR324886
       *
       ***  Record not found
       *
@@ -7912,6 +7925,8 @@
      C                     Z-ADD*ZEROS    DBASE
      C                     MOVE 'SE7560'  DBPGM     P
      C                     OUT  LDA
+     C           *NAMVAR   DEFN           SDSTAT                                            AR324886
+     C                     IN   SDSTAT                                                      AR324886
       *
       ***  Call ZSFILE for Audit printer file SE7560AU
       *
@@ -8298,6 +8313,18 @@
      C                     KFLD           WKEVTY
      C                     KFLD           WKPTFR
      C                     KFLD           WKTNLU
+      *                                                                                     AR324886
+     C           PSAUTH    KLIST                                                            AR324886
+     C                     KFLD           PBCA                                              AR324886
+     C                     KFLD           PSSH                                              AR324886
+     C                     KFLD           PCPY                                              AR324886
+     C                     KFLD           PDUD                                              AR324886
+     C                     KFLD           PEVT                                              AR324886
+     C                     KFLD           PTFR                                              AR324886
+     C                     KFLD           TNLU                                              AR324886
+     C                     KFLD           TXBS                                              AR324886
+     C                     KFLD           BNFO                                              AR324886
+     C                     KFLD           EXCD                                              AR324886
       *
       ***  Access to LF/DPTMVDY1
       *
@@ -8623,6 +8650,24 @@
       *                                                                                       234829
      C                     ENDSR                                                              234829
       *****************************************************************                       234829
+      /EJECT                                                                                AR324886
+      *****************************************************************                     AR324886
+     C           PSAUDT    BEGSR                                                            AR324886
+      *                                                                                     AR324886
+     C           PSAUTH    CHAINPSAUT                80                                     AR324886
+     C           *IN80     IFEQ *OFF                                                        AR324886
+     C                     MOVE RECI      PARECI                                            AR324886
+     C                     MOVE PALUSR    PAPUSR                                            AR324886
+     C                     MOVE PALCD     PAPCD                                             AR324886
+     C                     MOVE PALCTP    PAPCTP                                            AR324886
+     C           LIBR      CAT  'OWNER'   PALUSR                                            AR324886
+     C                     MOVE LCD       PALCD                                             AR324886
+     C                     MOVE CHTP      PALCTP                                            AR324886
+     C                     UPDATPSAUTDF                                                     AR324886
+     C                     ENDIF                                                            AR324886
+      *                                                                                     AR324886
+     C                     ENDSR                                                            AR324886
+      *****************************************************************                     AR324886
       *
       ***  Compile with 2 Levels /COPY
      C/COPY WNCPYSRC,SE7560C008

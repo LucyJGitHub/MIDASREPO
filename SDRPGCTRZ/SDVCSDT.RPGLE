@@ -17,25 +17,29 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. HUT113             Date 01Apr20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.02 -----------------------------------------------*
-      *  Prev Amend No. CAP034  *CREATE    Date 03Sep99               *
+      *                 CAP034  *CREATE    Date 03Sep99               *
       *                                    Date DDMmmYY               *
       * Midas DBA 3.00 ---------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HUT113 - Full PB Functionality in FM                         *
+      *           (Upgrade HUT026 to FM2.1 SP22)                      *
+      *           Addition of hooks HUT13_065 to HUT113_071           *
       *  MD046248 - Finastra Rebranding                               *
       *  CAP034 - Conversion of SD inputs to modular structure        *
       *           to use as APIs                                      *
       *****************************************************************
- 
- 
+
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -47,58 +51,60 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+     D/COPY WNCPYSRC,HUT113_065
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+     D/COPY WNCPYSRC,HUT113_066
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -113,16 +119,16 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   MOVE      *BLANK        RetCodeIn
- 
+
      C                   MOVE      *BLANK        FldNamXAr
      C                   MOVE      *BLANK        MsgIDXAr
      C                   MOVE      *BLANK        MsgDtaXAr
      C                   Z-ADD     0             Idx
- 
+
       *
       ** VALIDATION
       *
@@ -143,17 +149,19 @@
       ** VALIDATION
       *****************************************************************
      C     VPBST         BEGSR
- 
+
      C     DDPBST        IFEQ      *BLANKS
+     C/COPY WNCPYSRC,HUT113_067
      C                   Z-ADD     0             PBPBST
      C                   GOTO      EndVAL
      C                   ENDIF
- 
+     C/COPY WNCPYSRC,HUT113_068
+
       * Start date must be a valid date
      C                   EVAL      ZDATEA = DDPBST
- 
+
      C                   EXSR      ZDATE1
- 
+
      C     ErrorFlag     IFEQ      'Y'
      C                   EVAL      DDPBSTOK = 'N'
      C                   ADD       1             Idx
@@ -161,9 +169,9 @@
      C                   EVAL      MsgIdXAr(Idx) = 'USR3862'
      C                   GOTO      ENDVAL
      C                   ENDIF
- 
+
      C                   Z-ADD     ZDAYNO        PBPBST
- 
+
      C     ENDVAL        ENDSR
       *****************************************************************
       /EJECT
@@ -173,19 +181,19 @@
       *                                                               *
       *****************************************************************
      C     ZDATE1        BEGSR
- 
+
      C                   CALLB     'ZDATE1'
      C                   PARM                    ZDATEA            6
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    DFIN
      C                   PARM                    ErrorFlag         1
- 
+
      C                   ENDSR
       *****************************************************************
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -197,6 +205,8 @@
       *
       ** Private Banking Start Date - alpha
      C                   PARM                    DDPBST            6
+      *
+     C/COPY WNCPYSRC,HUT113_069
       *
       ** MIDAS date format
      C                   PARM                    DFIN              1
@@ -218,11 +228,16 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
+     C/COPY WNCPYSRC,HUT113_070
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
+      /EJECT
+
+     C/COPY WNCPYSRC,HUT113_071
       /EJECT
       ********************************************************************
       /COPY ZACPYSRC,PSSR_ILE

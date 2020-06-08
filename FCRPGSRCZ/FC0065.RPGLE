@@ -10,10 +10,11 @@
       *                                                                  *
       *  (c) Finastra International Limited 2001                         *
       *                                                                  *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055265           Date 10Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. CRE026             Date 24May06               *
+      *                 CRE026             Date 24May06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 TDA035             Date 02Apr04               *
       *                 CAAA02             Date 02Dec03               *
@@ -36,6 +37,7 @@
       *                                                                  *
       ********************************************************************
       *                                                                  *
+      *  MD055265 - Deliverable Data Split for Report Control Facility*
       *  MD046248 - Finastra Rebranding                               *
       *  CRE026 - Consumer Banking (Recompile)                        *
       *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
@@ -164,7 +166,8 @@
      D P@USER        E DS                  EXTNAME(MUSER)
       * LF/MUSER ACCESS PROGRAM RECORD FORMAT DATA STRUCTURE
       *
-     D P@RSFX        E DS                  EXTNAME(FCRSFXPD)
+     D*P@RSFX***     E DS                  EXTNAME(FCRSFXPD)                                MD055265
+     D P@RSFX        E DS                  EXTNAME(FCRSFCTD)                                MD055265
       * LF/FCRSFXL1 ACCESS PROGRAM RECORD FORMAT DATA STRUCTURE
       *
      D P@RCF         E DS                  EXTNAME(SDRCFPD)

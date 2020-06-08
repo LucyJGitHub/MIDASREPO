@@ -15,10 +15,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. 243329             Date 06MaY20               *
-      *  Prev Amend No. MD020027           Date 12Mar20               *      
-      *                 AR927395           Date 05Aug13               *
-      *                 CER050             Date 16Jun19               *
+      *  Last Amend No. AR927395           Date 05Aug13               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
       *                 MD054035           Date 03Sep19               *
       *                 MD054317           Date 09Sep19               *
       *                 CSD102             Date 08Jan19               *
@@ -121,14 +119,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  243329 - If no defined settlement details entered, default   *
-      *           payment settlement details of the loan if PTYP is   *
-      *           66, 67, 69, or 72. Pattern fix 242348.              *
-      *         - Applied for MD049414.                               *
-      *         - Applied for MD020027.                               *
-      *  MD020027 - Pay Settlement details are not defaulted from     *
-      *             original part sold transactions.  Added defaulting*
-      *             of pay/receipt settlement during insert.          *      
       *  AR927395 - Wrong COF repayment when loan had rate changes.   *
       *             Compute corresponding COFA when PD interest is    *
       *             paid off. (Child: AR927398)                       *
@@ -651,9 +641,6 @@
       ** Parameter for LERPSCRTV to retrive Extended settlement intruction                    244636
      D***PRcvParm        S             92                                             244636 CSF011A
      D PRcvParm        S            335                                                      CSF011A
-      ** Parameter for LEMAPYRTV to retrive Extended settlement intruction                  MD020027
-     D***PPayParm        S            335                                            MD020027 243329
-     D PPayParm        S           1045                                                       243329
                                                                                               244636
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
@@ -1428,7 +1415,6 @@
      C                   PARM      *ZERO         Ix                3 0
      C                   PARM      *ZERO         WIdx              3 0
      C                   PARM                    PRcvParm                                     244636
-     C                   PARM                    PPayParm                                   MD020027
      C**********         PARM                    UpSRFlg                             CLE134 MD020445
      C                   PARM                    UpSRFlg           1                          CLE164
      C                   PARM                    DDauto            1                          CLE164

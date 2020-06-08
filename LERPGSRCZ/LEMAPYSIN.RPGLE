@@ -14,10 +14,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. 243329             Date 06May20               *
-      *  Prev Amend No. MD020027           Date 12Mar20               *
-      *                 CER050             Date 16Jun19               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 MD036070           Date 19Oct15               *
       *                 CDL094             Date 11Jun14               *
       *                 CSD095             Date 08Apr14               *
@@ -49,14 +47,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  243329 - If no defined settlement details entered, default   *
-      *           payment settlement details of the loan if PTYP is   *
-      *           66, 67, 69, or 72. Pattern fix 242348.              *
-      *         - Applied for MD-49414.                               *
-      *         - Applied for MD020027.                               *
-      *  MD020027 - Pay Settlement details are not defaulted from     *
-      *             original part sold transactions.  Added defaulting*
-      *             of pay/receipt settlement during insert.          *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD036070 - No way to go back to main deal details screen     *
@@ -399,9 +389,6 @@
      D PRcvParm        S            335                                                      CSF011A
      D #TRCCY          S              3A                                                     CSF011A
      D #TPCCY          S              3A                                                     CSF011A
-      ** Parameter for LEMAPYRTV to retrive Extended settlement intruction                  MD020027
-     D***PPayParm        S            335                                            MD020027 243329
-     D PPayParm        S           1045                                                       243329
       *                                                                                       244636
       ** Parameters for calling AOSVALR0 (System Value Access Object)                         CLE148
       *                                                                                       CLE148
@@ -1461,7 +1448,6 @@
      C                   PARM      *ZERO         Idx
      C                   PARM      *ZERO         WIdx
      C                   PARM                    PRcvParm                                     244636
-     C                   PARM                    PPayParm                                   MD020027
       *
       ***  Save the settlement details for update (OLDSettlDS)
       *
@@ -1825,8 +1811,7 @@
       *
       ***  input Screen Fmt
       *
-     C**********         PARM                    ##PAYS                Payment Instructions MD020027
-     C                   PARM      PPayParm      ##PAYS                                     MD020027
+     C                   PARM                    ##PAYS                         Payment Instructions
      C**********         PARM                    ##RECS                        Receipt Instru 244636
      C                   PARM      PRcvParm      ##RECS                                       244636
      C                   PARM                    ##FRIS                         FRA/IRS Instructions

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD055081             Date 17Jan20             *
-      *  Prev Amend No. MD054605             Date 17Oct19             *
+      *  Last Amend No. MD055264             Date 31Mar20             *
+      *  Prev Amend No. MD055081             Date 17Jan20             *
+      *                 MD054605             Date 17Oct19             *
       *                 MD034724             Date 11Jun15             *
       *                 CUP042 *REWRITE    Date 04May15               *
       *                 CUP040             Date 09Aug13               *
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055264 - Deliverable Data Split for Help Text              *
       *  MD055081 - New files added for Deliverable Data Split do     *
       *             not exist yet, hence layer cannot be found.       *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
@@ -908,6 +910,7 @@
      C                             or ChkFile = 'GPSVRXTD'                                  MD054605
      C                             or ChkFile = 'SDSVLXTD'                                  MD054605
      C                             or ChkFile = 'SDSVRXTD'                                  MD054605
+     C                             or ChkFile = 'SCHLPXTD'                                  MD055264
      C                   EVAL      AUMBNM = Member
      C                   EVAL      AUMBTX = ObjectText
      C                   EVAL      AUDTYP = 'I'
@@ -982,11 +985,15 @@
      C                   IF        Member = 'GPWIPCTD'                                      MD055081
      C                   EVAL      AUDTLB = '*GLOBAL'                                       MD055081
      C                   Else                                                               MD055081
+     C                   IF        Member = 'SCHLPCTD'                                      MD055264
+     C                   EVAL      AUDTLB = '*ZONE'                                         MD055264
+     C                   Else                                                               MD055264
      C                   EVAL      AUDTLB = '*UNKNOWN'
      C                   EVAL      Char100 = 'Deliverable data - +
      C                             Unknown layer                           : ' +
      C                             Member + ObjectType
      C                   EXSR      InsertErrMsg
+     C                   Endif                                                              MD055264
      C                   Endif                                                              MD055081
      C                   ENDIF
       *

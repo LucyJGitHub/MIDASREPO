@@ -16,10 +16,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2019                      *
       *                                                               *
-      *  Last Amend No. CSW219  *CREATE    Date 04Mar19               *
+      *  Last Amend No. MD055736           Date 30Apr20               *
+      *  Prev Amend No. CSW219  *CREATE    Date 04Mar19               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055736 - CSW220 changes are still enabled even when the    *
+      *             feature was manually switched OFF                 *
       *  CSW219 - SWIFT Changes 2019                                  *
       *                                                               *
       *****************************************************************
@@ -129,7 +132,8 @@
       ** equal to activation date, set work return code to 'CSWACTV'
 
      C                   IF        PRtCd = *BLANKS
-     C                             OR WRunDNo >= WActDte
+     C**********                   OR WRunDNo >= WActDte                                    MD055736
+     C                             OR (WRunDNo >= WActDte AND *IN51 = '0')                  MD055736
      C                   EVAL      WRtCd = 'CSWACTV'
      C                   ELSE
      C                   EVAL      WRtCd = *BLANKS

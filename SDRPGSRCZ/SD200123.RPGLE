@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL178             Date 04Aug16               *
+      *  Last Amend No. CMG008             Date 20Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL178             Date 04Aug16               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL178 - Generate MT942 based on MT950.                      *
       *  CSD027 - Conversion Of Customer Number to Alpha              *

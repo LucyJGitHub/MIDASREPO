@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD101             Date 07Dec18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CMG008             Date 20Feb20               *
+      *  Prev Amend No. CSD101             Date 07Dec18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *

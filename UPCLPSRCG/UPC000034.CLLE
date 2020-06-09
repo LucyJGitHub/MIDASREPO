@@ -9,17 +9,19 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2013                     */
 /*                                                                   */
+/*       Last Amend No. MD055908A          Date 03Jun20              */
 /*       Last Amend No. CUP041   *CREATE   Date 23Aug13              */
 /*       Prev Amend No. xxxxxxxx           Date ddMmmyy              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD055908A - ZDBU failed during installation                 */
 /*       CUP041 - New Bridge methodology to combine menu options     */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&FILE &SRCF &BRGSRCLIB &OBJLIB &LIBMOV +
                           &COPYOPT &OWNER &AUTL &RTNFLAG)
- 
+
              DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
              DCL        VAR(&SRCF) TYPE(*CHAR) LEN(10)
              DCL        VAR(&BRGSRCLIB) TYPE(*CHAR) LEN(10)
@@ -29,32 +31,32 @@
              DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
              DCL        VAR(&AUTL) TYPE(*CHAR) LEN(10)
              DCL        VAR(&RTNFLAG) TYPE(*CHAR) LEN(1)
- 
+
              DCL        VAR(&RTNLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&NEWNAME) TYPE(*CHAR) LEN(10)
              DCL        VAR(&EXIST) TYPE(*CHAR) LEN(1) VALUE('N')
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2013')
- 
+
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
 /* If object is not found then just create. */
              RTVOBJD    OBJ(&FILE) OBJTYPE(*FILE) RTNLIB(&RTNLIB)
              MONMSG     MSGID(CPF9812) EXEC(DO)
                 GOTO       CMDLBL(CRTOBJ)
              ENDDO
- 
+
 /* Otherwise move the file to the temporary holding library. */
              CHGVAR     VAR(&EXIST) VALUE('Y')
- 
+
              ENDJRNPF   FILE(&RTNLIB/&FILE)
              MONMSG     MSGID(CPF7032)
              RMVPFTRG   FILE(&RTNLIB/&FILE)
              MONMSG     MSGID(CPF32C6)
- 
+
              MOVOBJ     OBJ(&RTNLIB/&FILE) OBJTYPE(*FILE) +
                           TOLIB(&LIBMOV)
 /* If the object already exists then try to rename it and move again. */
@@ -69,19 +71,19 @@
                 MOVOBJ     OBJ(&RTNLIB/&FILE) OBJTYPE(*FILE) +
                              TOLIB(&LIBMOV)
              ENDDO
- 
+
 CRTOBJ:
              CRTOBJ     OBJ(&OBJLIB/&FILE) SRCFILE(&BRGSRCLIB/&SRCF) +
                           SRCMBR(*OBJ) OWNER(&OWNER) AUTL(&AUTL)
              MONMSG     MSGID(SYS9898 SYS0011 SYS0017) EXEC(DO)
                 GOTO       CMDLBL(ERROR)
              ENDDO
- 
+
 /* If the object did not originally exist then there is no copy needed. */
              IF         COND(&EXIST *EQ 'N') THEN(DO)
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
 /* Check for special processing before attempting standard copies. */
              IF         COND(%SST(&COPYOPT 1 1) *EQ 'S') THEN(DO)
                 IF         COND(%SST(&COPYOPT 2 4) *EQ '*MAP') THEN(DO)
@@ -94,7 +96,7 @@ CRTOBJ:
                    GOTO       CMDLBL(ENDPGM)
                 ENDDO
              ENDDO
- 
+
 NONE:
              CPYF       FROMFILE(&LIBMOV/&FILE) +
                           TOFILE(&OBJLIB/&FILE) FROMMBR(*ALL) +
@@ -166,10 +168,10 @@ NONE:
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2962) EXEC(DO)
                 GOTO       CMDLBL(MAPDROP)
              ENDDO
- 
+
 /* If the CPYF worked then end the program. */
              GOTO       CMDLBL(ENDPGM)
- 
+
 MAPDROP:
              CPYF       FROMFILE(&LIBMOV/&FILE) +
                           TOFILE(&OBJLIB/&FILE) FROMMBR(*ALL) +
@@ -207,6 +209,9 @@ MAPDROP:
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2870) EXEC(DO)
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
+             MONMSG     MSGID(CPF2817 CPF4011 CPF3213) EXEC(DO)                        /*MD055908A*/
+                GOTO       CMDLBL(ENDPGM)                                              /*MD055908A*/
+             ENDDO                                                                     /*MD055908A*/
 /*********************************************************************/
 /*     Message monitoring for CPYF FMTOPT(*MAP *DROP) - Category 3   */
 /*                                                                   */
@@ -217,10 +222,10 @@ MAPDROP:
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2963) EXEC(DO)
                 GOTO       CMDLBL(ERROR)
              ENDDO
- 
+
 /* If the CPYF worked then end the program. */
              GOTO       CMDLBL(ENDPGM)
- 
+
 NOCHK:
              CPYF       FROMFILE(&LIBMOV/&FILE) +
                           TOFILE(&OBJLIB/&FILE) FROMMBR(*ALL) +
@@ -258,10 +263,10 @@ NOCHK:
              MONMSG     MSGID(CPF2817) CMPDTA(CPF2870) EXEC(DO)
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
              GOTO       CMDLBL(ENDPGM)
 ERROR:
              CHGVAR     VAR(&RTNFLAG) VALUE('E')
- 
+
 ENDPGM:
              ENDPGM

@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD055571           Date 21May20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 MD008008           Date 24Apr14               *
       *                 MD000091           Date 07May13               *
       *                 207288             Date 10Jun03               *
@@ -42,6 +43,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055571 - Check new System Value when Validating OptnToDTE  *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date                                    *
       *  MD008008 - Deal Date validation does not take into account   *
@@ -227,7 +229,30 @@
      D   BLen                  1      2B 0                                                  MD000091
      D   LenStr                1      2                                                     MD000091
      D   MsgDtaTmp                   99                                                     MD000091
- 
+
+     D PSYSVAL1        C                   CONST('AlwOptDteEqValDte')                       MD055571
+     D PRETURN         S              7A                                                    MD055571
+     D POP01           S             20A                                                    MD055571
+     D PVL01           S            200A                                                    MD055571
+     D POP02           S             20A                                                    MD055571
+     D PVL02           S            200A                                                    MD055571
+     D POP03           S             20A                                                    MD055571
+     D PVL03           S            200A                                                    MD055571
+     D POP04           S             20A                                                    MD055571
+     D PVL04           S            200A                                                    MD055571
+     D POP05           S             20A                                                    MD055571
+     D PVL05           S            200A                                                    MD055571
+     D POP06           S             20A                                                    MD055571
+     D PVL06           S            200A                                                    MD055571
+     D POP07           S             20A                                                    MD055571
+     D PVL07           S            200A                                                    MD055571
+     D POP08           S             20A                                                    MD055571
+     D PVL08           S            200A                                                    MD055571
+     D POP09           S             20A                                                    MD055571
+     D PVL09           S            200A                                                    MD055571
+     D POP10           S             20A                                                    MD055571
+     D PVL10           S            200A                                                    MD055571
+     D AODEVD          S              1A                                                    MD055571
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -849,7 +874,10 @@
       *
       * Option to date can't be less than or equal to the value date
       *
-     C     OptoDtDN      IFLE      ValuDtDN
+     C*****OptoDtDN***** IFLE      ValuDtDN                                                 MD055571
+     C     OptoDtDN      IFLT      ValuDtDN                                                 MD055571
+     C     OptoDtDN      OREQ      ValuDtDN                                                 MD055571
+     C     AODEVD        ANDEQ     'N'                                                      MD055571
      C                   MOVE      'N'           DDOdatOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDODAT'      FldNamXAr(Idx)
@@ -1199,6 +1227,40 @@
      C                   ELSE                                                                 CDL099
      C                   MOVE      'N'           CDL099                                       CDL099
      C                   ENDIF                                                                CDL099
+
+     C                   CALL      'AOSVALR0'                                               MD055571
+     C                   PARM      *BLANKS       PRETURN                                    MD055571
+     C                   PARM      PSYSVAL1      POP01                                      MD055571
+     C                   PARM      *BLANKS       PVL01                                      MD055571
+     C                   PARM      *BLANKS       POP02                                      MD055571
+     C                   PARM      *BLANKS       PVL02                                      MD055571
+     C                   PARM      *BLANKS       POP03                                      MD055571
+     C                   PARM      *BLANKS       PVL03                                      MD055571
+     C                   PARM      *BLANKS       POP04                                      MD055571
+     C                   PARM      *BLANKS       PVL04                                      MD055571
+     C                   PARM      *BLANKS       POP05                                      MD055571
+     C                   PARM      *BLANKS       PVL05                                      MD055571
+     C                   PARM      *BLANKS       POP06                                      MD055571
+     C                   PARM      *BLANKS       PVL06                                      MD055571
+     C                   PARM      *BLANKS       POP07                                      MD055571
+     C                   PARM      *BLANKS       PVL07                                      MD055571
+     C                   PARM      *BLANKS       POP08                                      MD055571
+     C                   PARM      *BLANKS       PVL08                                      MD055571
+     C                   PARM      *BLANKS       POP09                                      MD055571
+     C                   PARM      *BLANKS       PVL09                                      MD055571
+     C                   PARM      *BLANKS       POP10                                      MD055571
+     C                   PARM      *BLANKS       PVL10                                      MD055571
+      *                                                                                     MD055571
+     C                   EVAL      AODEVD = 'N'                                             MD055571
+     C                   IF        PRETURN <> *BLANKS                                       MD055571
+     C                   EVAL      DBFILE = 'SDSVALPD'                                      MD055571
+     C                   EVAL      DBKEY = PSYSVAL1                                         MD055571
+     C                   EVAL      DBASE = 918                                              MD055571
+     C                   OUT       LDA                                                      MD055571
+     C                   EXSR      *PSSR                                                    MD055571
+     C                   ENDIF                                                              MD055571
+      *                                                                                     MD055571
+     C                   MOVEL     PVL01         AODEVD                                     MD055571
      C/COPY ZACPYSRC,DBFIELDS
  
      C                   ENDSR                                                  *** InzEnd ***

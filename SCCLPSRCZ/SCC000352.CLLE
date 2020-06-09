@@ -34,9 +34,32 @@
              DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
              DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
              DCL        VAR(&ND24X7) TYPE(*CHAR) LEN(5)
-             DCL        VAR(&NGTLB) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&DZLIB) TYPE(*CHAR) LEN(8)
              DCL        VAR(&XLIB) TYPE(*CHAR) LEN(8)
              DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(8)
+
+             DCL        VAR(&SVALK1) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK2) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK3) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL3) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK4) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL4) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK5) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL5) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK6) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL6) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK7) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL7) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK8) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL8) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK9) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL9) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK0) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL10) TYPE(*CHAR) LEN(200)
+
+             DCLF       FILE(SDBANKPD)
 
 /**/
 /*    Global monitor message                                         */
@@ -72,12 +95,24 @@
 
              IF         COND(&CAP702 *EQ 'Y') THEN(DO)
 
+/* Get values for following system values */
+/* '24x7StopIntraDayRep' */
+/* '24x7ExitProgramNIGHT' */
+
+                   CALL       PGM(AOSVALR0) PARM(&PRTCD +
+                                '24x7StopIntraDayRep' &SVAL1 +
+                                '24x7ExitProgramNIGHT' +
+                                &SVAL2 &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                                &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                                &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                                &SVALK0 &SVAL10)
+
 /* Retrieve value for DTAARA/SCND24X7                                                */
              RTVDTAARA  DTAARA(SCND24X7 *ALL) RTNVAR(&ND24X7)
 
 /**/
              CHGVAR     VAR(&PRE) VALUE(%SST(&SDSTAT 6 2))
-             CHGVAR     VAR(&NGTLB) VALUE(&PRE *TCAT 'BFMNGT')
+             CHGVAR     VAR(&DZLIB) VALUE(&PRE *TCAT 'DZLIB')
              CHGVAR     VAR(&XLIB) VALUE(&PRE *TCAT 'XLIB')
              CHGVAR     VAR(&DPLIB) VALUE(&PRE *TCAT 'DPLIB')
 
@@ -93,27 +128,30 @@
                  ((&STAT *EQ 'Y') *AND (&ND24X7 *EQ 'DAY'))) THEN(DO)
 
 /* Clear API Log files in 24x7 layer   */
-                CLRPFM     FILE(&NGTLB/ZATRNLOGPD)
+                CLRPFM     FILE(&DZLIB/ZATRNLOGPD)
                 MONMSG     MSGID(CPF0000)
-                CLRPFM     FILE(&NGTLB/ZATRNERRPD)
+                CLRPFM     FILE(&DZLIB/ZATRNERRPD)
                 MONMSG     MSGID(CPF0000)
-                CLRPFM     FILE(&NGTLB/APOUTPUTPD)
+                CLRPFM     FILE(&DZLIB/APOUTPUTPD)
                 MONMSG     MSGID(CPF0000)
-                CLRPFM     FILE(&NGTLB/T_APIMSG)
+                CLRPFM     FILE(&DZLIB/T_APIMSG)
                 MONMSG     MSGID(CPF0000)
-                CLRPFM     FILE(&NGTLB/GPAUUIPD)
+                CLRPFM     FILE(&DZLIB/GPAUUIPD)
                 MONMSG     MSGID(CPF0000)
 
 /* Clear Queued Night Data file in 24x7 layer and zone layer */
-                CLRPFM     FILE(&NGTLB/API24X7SPD)
+                CLRPFM     FILE(&DZLIB/API24X7SPD)
                 MONMSG     MSGID(CPF0000)
 
                 CLRPFM     FILE(&DPLIB/API24X7SPD)
                 MONMSG     MSGID(CPF0000)
 
-/* Call the MIMIX processing to perform audit check   */
+/* If the '24x7StopIntraDayRep' system value is not *NONE then call program */
 
+                   IF         COND(&SVAL1 *NE '*NONE') THEN(DO)
+                   CALL       PGM(&SVAL1)
 
+                   ENDDO
 /**/
 /*    If no error occured in the program                             */
 /**/
@@ -139,11 +177,23 @@
                 CHGDTAARA  DTAARA(SCND24X7 (1 5)) VALUE('NIGHT')
                 MONMSG     MSGID(CPF0000 MCH0000)
 
+/* Call SD1030 to update SDBANKPD dates */
+                OVRDBF     FILE(TABLE) TOFILE(TABSDU)
+                CALL       PGM(SD1030)
+                DLTOVR     (*ALL)
+
+                RCVF
+                CHGDTAARA  DTAARA(&DZLIB/RUNDAT (1 7)) VALUE(&BJMRDT)
+
 /*              RTVJOBA    JOB(&JOBNAME) USER(&JOBUSER) NBR(&JOBNO) +
                           TYPE(&TYPE)                          */
 
-/* Call in house "Exit Program */
+/* If the '24x7ExitProgramNIGHT' system value is not *NONE then call program */
 
+                   IF         COND(&SVAL2 *NE '*NONE') THEN(DO)
+                   CALL       PGM(&SVAL2)
+
+                   ENDDO
 
 /**/
 /*    If no error occured in the program                             */

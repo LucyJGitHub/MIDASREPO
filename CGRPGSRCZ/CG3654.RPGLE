@@ -14,25 +14,27 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CCG016  *CREATE    Date 13Sep16               *
+      *  Last Amend No. MD054955           Date 16Dec19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CCG016  *CREATE    Date 13Sep16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
       *  MD046248 - Finastra Rebranding                               *
       *  CCG016 - Correspondence Manager for Retail Teller System.    *
       *                                                               *
       *****************************************************************
       /EJECT
      FCGUXMGPD  O    E           K DISK    USROPN
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA layout
@@ -40,28 +42,29 @@
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
      D/COPY CGCPYSRC,CGNWARD
- 
+
       ** Data structures
-     DRDEcvt         E DS                  EXTNAME(CGRDECPD)
- 
+     D*RDEcvt***      E DS                  EXTNAME(CGRDECPD)                               MD054955
+     DRDEcvt         E DS                  EXTNAME(CGRDECTD)                                MD054955
+
       ** Named constants
      DPATH             C                   CONST('PATH')
      DREFERENCE        C                   CONST('REFR')
- 
+
       ** Working variables
      DSchemaName       S                   LIKE(DGSHNM)
      DReferName        S             21
      DOldRefer         S                   LIKE(ReferName)
      DElementName      S                   LIKE(DGNWGS)
- 
+
       ** Procedures interfaces
      DNewName          PR                  LIKE(CGNWFD)
      D p1                                  VALUE LIKE(CGTYPE)
      D p2                                  VALUE LIKE(CGARGT)
- 
+
      C                   OPEN      CGUXMGPD
      C                   EVAL      ReturnCode = *BLANK
- 
+
      C                   EXSR      ChkParam
       ** If the Schema Name has been already retrieved for the
       ** Reference do not convert the Reference again.
@@ -79,7 +82,7 @@
      C                   ENDIF
      C                   EVAL      OldRefer = ReferName
      C                   ENDIF
- 
+
      C                   SELECT
       ** If no conversion has been defined we assume it is deliberate
       ** therefore no XML line will be written.
@@ -100,7 +103,7 @@
      C                   EVAL      DGINCR = increment
      C                   EXSR      WriteXMG
      C                   ENDIF
- 
+
      C                   WHEN      ActCode = '*GRSPSH'
       ** Converts path structure into an tag value
      C                   EVAL      ElementName = NewName(PATH:PathName)
@@ -116,7 +119,7 @@
      C                   EVAL      DGINCR = increment
      C                   EXSR      WriteXMG
      C                   ENDIF
- 
+
      C                   WHEN      ActCode = '*WRAP'
      C                   EVAL      DGNWGS = SchemaName
      C                   EVAL      DGINCR = increment
@@ -124,9 +127,9 @@
      C                   EVAL      DGNWGS = '/' + SchemaName
      C                   EVAL      DGINCR = *HIVAL
      C                   EXSR      WriteXMG
- 
+
      C                   ENDSL
- 
+
      C                   CLOSE     CGUXMGPD
      C                   RETURN
       **********************************************************************
@@ -135,7 +138,7 @@
      C     *INZSR        BEGSR
      C     *LIKE         DEFINE    DGINCR        Increment
      C     *LIKE         DEFINE    CGARGT        PathName
- 
+
      C     *ENTRY        PLIST
       ** Extraction identification number
      C                   PARM                    Item              8 0
@@ -157,13 +160,13 @@
       ** Commitment (not used)
       ** YES : commitment control
      C                   PARM                    W0CMT             3
- 
+
      C                   ENDSR
       **********************************************************************
       * Parameters checkings
       **********************************************************************
      C     ChkParam      BEGSR
- 
+
       ** Ensure that action code is correct
      C                   IF        ActCode <> '*GRSPSH'
      C                             AND ActCode <> '*GRSPOP'
@@ -174,7 +177,7 @@
      C                   EVAL      DBKEY = ActCode
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** When wrapping a new extraction the extraction
       ** line must be 1.
      C                   IF        ActCode = '*WRAP'
@@ -184,7 +187,7 @@
      C                   EVAL      DBASE = 2
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       **********************************************************************
       * Write a record in the explored Group Set
@@ -192,7 +195,7 @@
      C     WriteXMG      BEGSR
      C                   EVAL      DGSHNM = SchemaName
      C                   EVAL      DGITEM = Item
- 
+
      C                   WRITE(E)  CGUXMGD0
      C                   IF        %ERROR
      C                   EVAL      ReturnCode = '*ERROR'
@@ -217,9 +220,9 @@
      DNewName          PI                  LIKE(CGNWFD)
      D  TypeOfCnv                          VALUE LIKE(CGTYPE)
      D  Argument                           VALUE LIKE(CGARGT)
- 
+
      DNewFld           S                   LIKE(CGNWFD)
- 
+
      C                   IF        Argument <> *BLANK
      C                             AND TypeOfCnv <> *BLANK
      C                   CALLB     'CG3602'
@@ -230,6 +233,6 @@
      C                   ELSE
      C                   EVAL      NewFld = '*ERROR'
      C                   ENDIF
- 
+
      C                   RETURN    NewFld
      P                 E

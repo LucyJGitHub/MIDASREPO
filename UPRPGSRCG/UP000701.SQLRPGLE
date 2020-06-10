@@ -13,14 +13,16 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD055832             Date 14May20             *
-      *  Prev Amend No. MD055829             Date 12May20             *
+      *  Last Amend No. MD054955             Date 16Dec19             *
+      *  Prev Amend No. MD055832             Date 14May20             *
+      *                 MD055829             Date 12May20             *
       *                 MD055469             Date 13Mar20             *
       *                 MD054605             Date 17Oct19             *
       *                 MD054209   *CREATE   Date 07Sep19             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
       *  MD055832 - Avoid deletion of bespoke records in extension    *
       *             table                                             *
       *  MD055829 - GPWIPBTD field WC_BOACAU should not be updated as *
@@ -44,10 +46,14 @@
      D KeyArr          S             10A   DIM(12)
      D WIdx            S              3P 0
      D KeyFld          S            200A
-     D WHERE           S            300A
-     D WHEREX          S            300A                                                    MD055832
-     D PINSERT         S            300A
-     D PSELECT         S            300A
+     D*WHERE****       S            300A                                                    MD054955
+     D WHERE           S            600A                                                    MD054955
+     D*WHEREX***       S            300A                                           MD055832 MD054955
+     D WHEREX          S            600A                                                    MD054955
+     D*PINSERT**       S            300A                                                    MD054955
+     D PINSERT         S            600A                                                    MD054955
+     D*PSELECT**       S            300A                                                    MD054955
+     D PSELECT         S            600A                                                    MD054955
      D SQLDynStmt      S           5000A
      D Outfile         S             10A
      D OFMbr           S             10A

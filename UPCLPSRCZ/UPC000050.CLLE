@@ -9,12 +9,15 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2019                     */
 /*                                                                   */
-/*       Last Amend No. MD055450           Date 06Mar20              */
-/*       Prev Amend No. MD055280           Date 17Feb20              */
+/*       Last Amend No. MD055832           Date 12May20              */
+/*       Prev Amend No. MD055450           Date 06Mar20              */
+/*                      MD055280           Date 17Feb20              */
 /*                      MD054605 *CREATE   Date 17Oct19              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD055832 - Created data recovery for the old SDSVALPD and   */
+/*                  SDSVRFPD when ZDBU fails                         */
 /*       MD055450 - MZSV values are cleared when ZDBU fails          */
 /*       MD055280 - Data are not migrated after re-run of ZDBU       */
 /*                  since SDSVALPD does not exist anymore.           */
@@ -34,6 +37,7 @@
              DCL        VAR(&AUTL) TYPE(*CHAR) LEN(10)
              DCL        VAR(&RETURN) TYPE(*CHAR) LEN(1)
              DCL        VAR(&SQLSTM) TYPE(*CHAR) LEN(80)
+             DCL        VAR(&LIBMOV) TYPE(*CHAR) LEN(10)                                /*MD055832*/
 
              DCL        VAR(&SDSBSID) TYPE(*CHAR) LEN(2)
              DCL        VAR(&BLANKSVAL) TYPE(*CHAR) LEN(1) VALUE('N')
@@ -73,6 +77,31 @@
              CHGVAR     VAR(&OWNER) VALUE(&PRFX *TCAT 'OWNER')
              CHGVAR     VAR(&AUTL) VALUE(&PRFX *TCAT 'DATABASE')
 
+             CHGVAR     VAR(&LIBMOV) VALUE('#.' *TCAT &PRFX *TCAT +
+                             'DMLIB')                                                   /*MD055832*/
+             CHKOBJ     OBJ(&LIBMOV/SDSVALPD) OBJTYPE(*FILE)                            /*MD055832*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(SDSVRF))                        /*MD055832*/
+                                                                                        /*MD055832*/
+             CHKOBJ     OBJ(&TALIB/SDSVALPD) OBJTYPE(*FILE)                             /*MD055832*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD055832*/
+             CPYF       FROMFILE(&LIBMOV/SDSVALPD) +
+                          TOFILE(&TALIB/SDSVALPD) MBROPT(*REPLACE) +
+                          CRTFILE(*YES)                                                 /*MD055832*/
+             ENDDO                                                                      /*MD055832*/
+                                                                                        /*MD055832*/
+SDSVRF:                                                                                 /*MD055832*/
+                                                                                        /*MD055832*/
+             CHKOBJ     OBJ(&LIBMOV/SDSVRFPD) OBJTYPE(*FILE)                            /*MD055832*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO CMDLBL(START))                         /*MD055832*/
+                                                                                        /*MD055832*/
+             CHKOBJ     OBJ(&TALIB/SDSVRFPD) OBJTYPE(*FILE)                             /*MD055832*/
+             MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD055832*/
+             CPYF       FROMFILE(&LIBMOV/SDSVRFPD) +
+                          TOFILE(&TALIB/SDSVRFPD) MBROPT(*REPLACE) +
+                          CRTFILE(*YES)                                                 /*MD055832*/
+             ENDDO                                                                      /*MD055832*/
+                                                                                        /*MD055832*/
+START:                                                                                  /*MD055832*/
              CHKOBJ     OBJ(&TALIB/SDSVALPD) OBJTYPE(*FILE)                             /*MD055280*/
              MONMSG     MSGID(CPF9801) EXEC(DO)                                         /*MD055280*/
              SNDUSRMSG  MSG('SDSVALPD does not exist. Program +

@@ -13,12 +13,15 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD055469             Date 13Mar20             *
-      *  Prev Amend No. MD054605             Date 17Oct19             *
+      *  Last Amend No. MD055829             Date 12May20             *
+      *  Prev Amend No. MD055469             Date 13Mar20             *
+      *                 MD054605             Date 17Oct19             *
       *                 MD054209   *CREATE   Date 07Sep19             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055829 - GPWIPBTD field WC_BOACAU should not be updated as *
+      *             it is linked to LE ICD configuration.             *
       *  MD055469 - Global APIs have WC_ZONE set to blank.            *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD054209 - Deliverable Data Split for T_WIPCF                *
@@ -373,12 +376,14 @@
      C+ update GPWIPBTD b
      C+ set
      C+ (b.WC_CAT, b.WC_BOAC, b.WC_BOACNE,
-     C+ b.WC_BOACAM, b.WC_BOACAU, b.WC_BOACCL, b.WC_BOACDE, b.WC_BOACRE,
+     C**b.WC_BOACAM,*b.WC_BOACAU,*b.WC_BOACCL,*b.WC_BOACDE,*b.WC_BOACRE,                    MD055829
+     C+ b.WC_BOACAM, b.WC_BOACCL, b.WC_BOACDE, b.WC_BOACRE,                                 MD055829
      C+ b.WC_BOACCH, b.WC_AUTOA,
      C+ b.WC_SYSTEM, b.WC_BOFLD1, b.WC_BOFLD2, b.WC_BOFLD3, b.WC_BOFLD4,
      C+ b.WC_BOFLD5) =
      C+ (select c.WC_CAT, c.WC_BOAC, c.WC_BOACNE,
-     C+ c.WC_BOACAM, c.WC_BOACAU, c.WC_BOACCL, c.WC_BOACDE, c.WC_BOACRE,
+     C**c.WC_BOACAM,*c.WC_BOACAU,*c.WC_BOACCL,*c.WC_BOACDE,*c.WC_BOACRE,                    MD055829
+     C+ c.WC_BOACAM, c.WC_BOACCL, c.WC_BOACDE, c.WC_BOACRE,                                 MD055829
      C+ c.WC_BOACCH, c.WC_AUTOA,
      C+ c.WC_SYSTEM, c.WC_BOFLD1, c.WC_BOFLD2, c.WC_BOFLD3, c.WC_BOFLD4,
      C+ c.WC_BOFLD5 from GPWIPCTD c where c.WC_API = b.WC_API

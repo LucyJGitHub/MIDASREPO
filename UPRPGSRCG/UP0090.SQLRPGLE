@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD055265             Date 10Feb20             *
-      *  Prev Amend No. MD055264             Date 31Mar20             *
+      *  Last Amend No. MD055242             Date 10Feb20             *
+      *  Prev Amend No. MD055265             Date 10Feb20             *
+      *                 MD055264             Date 31Mar20             *
       *                 MD054955             Date 16Dec19             *
       *                 MD055081             Date 17Jan20             *
       *                 MD054605             Date 17Oct19             *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055242 - Standardization of Deliverable Data Split         *
       *  MD055265 - Deliverable Data Split for Report Control Facility*
       *  MD055264 - Deliverable Data Split for Help Text              *
       *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
@@ -899,6 +901,16 @@
       *********************************************************************
      C     ProcOther     BEGSR
       *
+      ** Check if file is not '*XTD'                                                        MD055242
+     C                   If        %SUBST(Member:6:3) = 'XTD'                               MD055242
+     C                   EVAL      Char100 = '*XTD file cannot be +                         MD055242
+     C                             delivered, *CTD file must be delivered  : ' +            MD055242
+     C                             Member                                                   MD055242
+     C                   EXSR      InsertErrMsg                                             MD055242
+     C                   EVAL      NoWrite = 'N'                                            MD055242
+     C                   LEAVESR                                                            MD055242
+     C                   Endif                                                              MD055242
+                                                                                            MD055242
       ** Check if the file has an '*XTD' equivalent; this means it is using
       **  the new Deliverable Data Split.
      C                   EVAL      ChkFile = %SUBST(Member:1:5) + 'XTD'

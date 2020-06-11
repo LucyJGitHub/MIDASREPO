@@ -386,6 +386,7 @@
       *                                                                         CAP734
      C     APMAPI        IFEQ      '1CUSD'                                      CAP734
      C     CAP734        ANDEQ     'Y'                                          CAP734
+     C     APSTAT        ANDEQ     ' '                                          CAP734
       *                                                                         CAP734
       ** Customer details                                                       CAP734
      C                   EXSR      callCUSD                                     CAP734
@@ -406,6 +407,7 @@
       *                                                                         CAP735
      C     APMAPI        IFEQ      '2AMAD'                                      CAP735
      C     CAP735        ANDEQ     'Y'                                          CAP735
+     C     APSTAT        ANDEQ     ' '                                          CAP734
       *                                                                         CAP735
       ** Account details                                                        CAP735
      C                   EXSR      callAMAD                                     CAP735

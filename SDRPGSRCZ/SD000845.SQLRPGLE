@@ -45,6 +45,8 @@
       *
      FAPI24X7SL0UF A E           K DISK
       *
+     FZATRNLOGL7IF A E           K DISK
+      *
      D ARR@            S             80    DIM(1) CTDATA PERRCD(1)
       ** Array containing Copyright statement
       *
@@ -147,17 +149,24 @@
       ** If a record is added to T_APIMSG
       ** Write a record to API24X7SPD
       *
-     C     QEVENT        IFEQ      '1'
+b1   C     QEVENT        IFEQ      '1'
       *
       ** Access API24X7SPD using MQMSID
       *
      C                   MOVEL     MQMSIA        KMQSID           19 0
       *
      C     KMQSID        CHAIN     API24X7SL0                         71
-     C                   IF        *IN71 = *on
+b2   C                   IF        *IN71 = *on
       *
       ** If record not found, then write record
      C                   EXSR      #PWRIT
+yb   C                   ELSE
+yb   C     MQMSID        CHAIN     ZATRNLOGL7                         72
+yb   C                   IF        *IN72 = *OFF
+yb   C                   MOVEL     'E'           APSTAT
+yb   C*************      ELSE
+yb   C*************      MOVEL     'P'           APSTAT
+yb   C                   ENDIF
      C                   ENDIF
      C                   ENDIF
       *

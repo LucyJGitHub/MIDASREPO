@@ -1,0 +1,685 @@
+     H
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('MIDAS SD SYSTEM DATES UPDATE IN 24X7 LAYER')           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  SD000564 - SD System dates update in 24x7 layer              *
+      *                                                               *
+      *  Function:  This program will be called by SCC000352 during   *
+      *             COB.                                              *
+      *                                                               *
+      *  Called By: SCC000352 - Midas SC Switch from DAY to NIGHT mode*
+      *                                                               *
+      *  (c) Finastra International Limited 2020                      *
+      *                                                               *
+      *  Last Amend No. CAP702  *CREATE    Date 12May20               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CAP702 - 24x7 APIs - Common Processing                       *
+      *                                                               *
+     F*****************************************************************
+     F*                                                               *
+     F*  C R E A T I O N     P A R A M E T E R S                      *
+     F*                                                               *
+     F*                                                               *
+     F*****************************************************************
+     FTABLE   UF  F      96 12AI     2 DISK
+     FSDBANKL0UF  E           K        DISK
+     FSDGELRL0UF  E           K        DISK
+     FSDMMODL1IF  E           K        DISK
+     FCBAICDL1IF  E           K        DISK
+     F*
+     F*  ID F  C  H  L    FUNCTION OF INDICATORS
+     F* 01            TABLE - INSTALLATION CONTROL DATA RECORD 1.
+     F* 02                  - INSTALLATION CONTROL DATA RECORD 2.
+     F* 06            CATCHALL
+     F**
+     F*               EXCEPTION OUTPUT/UPDATE INDICATORS ARE-
+     F*       71      UPDATE TABLE DETAIL RECORD.
+     F**
+     F*       76      CHAIN TO TABLE FILE FAILED IF ON.
+     F**
+     F*       90-97   Z SUBROUTINE INDICATORS.
+     F*       98      ZSYSTM, DATE FORMAT MMDDYY IF ON.
+     F*       99      ZSYSTM, INSTALLATION CONTROL DATA RECORD NOT FOUND.
+     F**
+     F*          U8   DATABASE ERROR, REQUIRED RECORDS NOT FOUND.
+     F*               N.B. U8 ENDS THE PROGRAM AND CONDITIONS
+     F*                    FOLLOWING OCL EXECUTION.
+     F**
+     F*       LR      SETON IN CALCULATIONS TO END PROGRAM.
+     F**
+     E                    ZYDY    4   4  4 0             ZDATE1/2 SR.ARRAY
+     E                    ZMDY   13  13  3 0             ZDATE1/2 SR.ARRAY
+     E                    ZMNM   12  12  3               ZDATE2 SR. ARRAY
+     E                    HCCY       25  3               HOLIDAY CURRENC'S
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZHOLE
+     E**
+     I**
+     I**
+     I**   TABLE FILE - INSTALLATION CONTROL DATA RECORD 1.
+     I**
+     ITABLE   NS  01   1 CD   2 C0   3 C1
+     I       AND      12 C1  13 C0
+     I                                        1   1 RECI
+     I                                        2   30RECT
+     I                                       12  130RCDE
+     I                                       14  66 TITL
+     I                                       67  67 DATF
+     I                                       68  700DFBR
+     I                                       74  74 MODI1
+     I                                       75  75 MODI2
+     I                                       76  76 MODI3
+     I                                    P  77  790RUND
+     I                                       80  86 RUNA
+     I                                       87  870SFLG
+     I                                    P  90  920LCD
+     I                                       93  93 CHTP
+     I                                    P  94  960TNLU
+     I                                        1  96 LOT
+     I**
+     I**   TABLE FILE - INSTALLATION CONTROL DATA RECORD 2.
+     I**
+     I        NS  02   1 CD   2 C0   3 C1
+     I       AND      12 C1  13 C1
+     I                                        1   1 RECI
+     I                                        2   30RECT
+     I                                       12  130RCDE
+     I                                       14  16 BCCY
+     I                                       17  19 BCYL
+     I                                       20  22 HOCY
+     I                                       23  28 HEAD
+     I                                    P  29  310APDA
+     I                                       35  35 APFQ
+     I                                    P  36  380LOGS
+     I                                       39  40 CUZR
+     I                                    P  41  430DNWD
+     I                                       44  460BVLP
+     I                                       47  49 LOCY
+     I                                       50  510FDAY
+     I                                       86  86 ISAV
+     I                                       88  88 ANWI
+     I                                       89  89 AKSI
+     I                                    P  90  920LCD
+     I                                       93  93 CHTP
+     I                                    P  94  960TNLU
+     I                                        1  96 LOT
+     I**   CATCHALL FOR DELETED RECORDS.
+     I        NS  06
+     I                                        1   1 RECI
+     I                                        2   30RECT
+     I**   LOCAL DATA AREA CONTAINING RUN DATE AND WORK STATION ID.
+     I**
+     ILDA        UDS                            256
+     I                                        1   50NEWRUN
+     I                                       11  12 WSID
+     I**
+     I**   JNSTAT DATA AREA
+     IJNSTAT     UDS                            200
+     I                                    P 103 1050PRUN
+     I**   GLTEMP DATA AREA
+     IGLTEMP     UDS                            256
+     I                                       74  78 EVCD0
+     I                                       79  83 EVCD1
+     I                                       84  88 EVCD2
+     I**
+     IRUNDAT     UDS
+     I**
+     I**  MIDAS SD SYNON DATA AREA
+     I                                        1   7 MRDT
+     I                                    P   8  100RDNB
+     I                                       11  11 SUC
+     I                                       12  12 DFF
+     I                                       13  13 MBIN
+     I**    RETRIEVE WSID FROM PROG STATUS DATA STRUCTURE
+     I**
+     IPSDS       SDS
+     I                                      244 246 WSID1
+     I                                      245 246 WSID2
+     I*
+     ISDBANK    E DSSDBANKPD
+     I* BANK DETAILS ACCESSED VIA ACCESS PROGRAM
+     I*
+     ISDGELR    E DSSDGELRPD
+     I* GENERAL LEDGER DETAILS ACCESSED VIA ACCESS PROGRAM
+     I*
+     IDSFDY     E DSDSFDY
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
+     I*
+     IDSSDY     E DSDSSDY
+     I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
+     I*
+     I/COPY ZSRSRC,ZHOLI
+     C                     MOVEACPY@      BIS@   80
+     C**   DEFN JNSTAT
+     C           *NAMVAR   DEFN           JNSTAT
+     C**
+     C**   DEFN GLTEMP
+      *
+     C                     EXSR FREEAO
+     C           *NAMVAR   DEFN           GLTEMP
+     C**
+     C**   SET LR TO END PROGRAM.
+     C                     SETON                     LR
+     C**
+     C**   ALL FURTHER CALCULATIONS ARE AT LR LEVEL.
+     C**
+     C**
+     C**   OBTAIN REQUIRED DATA FROM INSTALLATION CONTROL DATA RECORDS.
+     C**
+     C**   CODE 10, DATABASE ERROR IF NOT FOUND.
+     CLR                   EXSR ZSYSTM
+     CLR 99                SETON                     U8
+     CLR 99                DUMP
+     CLR U8                GOTO ENDT
+     C**
+     C**   CODE 11, DATABASE ERROR IF NOT FOUND.
+     CLR                   MOVEL'01'      TABKEY 12
+     CLR                   MOVE '11'      TABKEY
+     CLR                   EXSR TABCHN
+     CLRN02                SETON                     U8
+     CLRN02                DUMP
+     CLR U8                GOTO ENDT
+     C**
+     C*
+     C** Retrieve run date from CBAICDPD
+     C*
+     CLR                   MOVEL'A.COB '  ABACOB
+     CLR         ABACOB    CHAIN@AICDF1              99
+     CLR 99                SETON                     U8
+     CLR 99                DUMP
+     CLR U8                GOTO ENDT
+     C**
+     C**   CALCULATIONS TO UPDATE TABLE FILE.
+     C**
+     C**   SET UP FIELDS FOR OUTPUT.
+     C**
+     C**   CREATE ALPHA RUN DATE.
+     CLR                   Z-ADDABDBRN    ZDAYNO
+     CLR                   EXSR ZDATE2
+     CLR                   MOVE ZADATE    ALFDAT  7
+     C**
+     C**   CALCULATE DATE OF NEXT WORKING DAY.
+     CLR                   Z-ADDABDBRN    ZDAYNO
+     CLR                   Z-ADD1         ZNRDYS
+     CLR                   MOVE LOCY      ZCCY
+     CLR                   MOVELBJSLCD    ZLOC
+     CLR                   EXSR ZFWDT
+     CLR                   Z-ADDZDYNBR    DNXTWD  50
+     C**
+     C**   FOR DAILY ACCRUALS ALL RUN DAYS ARE ACCRUAL DAYS
+     C**
+     CLR         APFQ      COMP 'D'                      80
+     C**
+     C**   UPDATE ACCRUAL DATE WITH LESSER OF
+     C**   DNWD - 1 OR MONTH END DATE
+     C**
+     CLRN80                Z-ADDAPDA      APDAT
+     CLRN80                GOTO NOTDLA
+     C*
+     CLR         DNWD      CABEQ*ZEROS    NOTDLA
+     C*
+     CLR         DNXTWD    SUB  1         NWDS1   50
+     CLR                   Z-ADDDNWD      ZDAYNO
+     CLR                   EXSR ZDATE2
+     CLR                   MOVELZDATE     DDMM    4
+     CLR                   Z-ADD31        DD      20
+     C*
+     CLR         EOMCAL    TAG
+     C*
+     CLRN98                MOVELDD        DDMM
+     CLR 98                MOVE DD        DDMM
+     CLR                   MOVELDDMM      ZDATE
+     CLR                   EXSR ZDATE1
+     CLR 99                SUB  1         DD
+     CLR 99                GOTO EOMCAL
+     C*
+     CLR                   Z-ADDZDAYNO    EOMDAT  50
+     C*
+     C**   DETERMINE ACCRUAL DATE.
+     C*
+     CLR                   EXSR ACCRUL
+     C*
+     C*
+     CLR         NOTDLA    TAG
+     C*
+     C**
+     C**   GET TABLE RECORD TO BE UPDATED, I.C.D.R. CODE 10.
+     CLR                   MOVE '10'      TABKEY
+     CLR                   EXSR TABCHN
+     C**
+     C**   ZEROISE FIELD
+     CLR                   Z-ADD0         FIV0    50
+     C**   UPDATE TABLE FILE DETAIL RECORD.
+     CLR                   SETON                     71
+     CLR                   EXSR TIMES
+     CLR                   EXSR EXCPTN
+     C**
+     C**   GET TABLE RECORD TO BE UPDATED, I.C.D.R. CODE 11.
+     CLR                   MOVE '11'      TABKEY
+     CLR                   EXSR TABCHN
+     C**
+     C**   UPDATE TABLE FILE DETAIL RECORD.
+     CLR                   SETON                     71
+     CLR                   EXSR TIMES
+     CLR                   EXSR EXCPTN
+     C**
+     C**
+     C**   UPDATE 'PRUN' ON JNSTAT
+     CLR                   MOVE RUND      PRUN
+     CLR                   OUT  JNSTAT
+     C**
+     C**   UPDATE EVENT CONTROL DATES ON GLTEMP
+     C**
+     CLR                   IN   GLTEMP
+     CLR                   MOVE EVCD1     EVCD2
+     CLR                   MOVE EVCD0     EVCD1
+     CLR         DNXTWD    SUB  1         NXWDS1  50
+     CLR         APDAT     IFLT NXWDS1
+     CLR                   MOVE APDAT     EVCD0
+     CLR                   ELSE
+     CLR                   MOVE NXWDS1    EVCD0
+     CLR                   END
+     CLR                   OUT  GLTEMP
+     C**
+     CLR                   EXSR NEWDAT
+      *
+     CLR         ENDT      TAG                             ** ENDT TAG **
+     C**
+     C****************************************************************
+     C/EJECT
+     C****************************************************************
+     C*                                                              *
+     C*                                                              *
+     C*         DAILY ACCRUALS PROCESSING........                    *
+     C*           MODE 0 - ACCRUAL/PROFIT DATE EQUALS RUNDATE OR     *
+     C*                    EOM (IF EOM < DNWD - 1).                  *
+     C*                                                              *
+     C*           MODE 1 - ACCRUAL/PROFIT DATE EQUALS DNWD - 1 OR    *
+     C*                    EOM (IF EOM < DNWD).                      *
+     C*                                                              *
+     C*           MODE 2 - ACCRUAL/PROFIT DATE EQUALS RUNDATE OR     *
+     C*                    EOM (IF EOM < DNWD).                      *
+     C*                                                              *
+     C****************************************************************
+     C*
+     C           ACCRUL    BEGSR
+     C*
+     C***        CALCUALTE DATE FOR ACCRUALS PROCESSING TYPE 0.
+     C*
+     C           ANWI      IFEQ '0'                         NORMAL PRCSS.
+     C           DNXTWD    SUB  1         WKDNWD  50
+     C           EOMDAT    IFLE WKDNWD                      IF EOM<DNWD-1
+     C                     Z-ADDEOMDAT    APDAT   50          END OF MNTH
+     C                     ELSE                             ELSE
+     C                     Z-ADDABDBRN    APDAT               RUN DATE
+     C                     END                              END IF..
+     C                     END                              END IF....
+     C*
+     C***        CALCULATE DATE FOR ACCRUALS PROCESSING TYPE 1.
+     C*
+     C           ANWI      IFEQ '1'                         IN ADVANCE
+     C           EOMDAT    IFLT DNXTWD                      IF EOM<NXT DY
+     C                     Z-ADDEOMDAT    APDAT               END OF MTH
+     C                     ELSE                             ELSE
+     C           DNXTWD    SUB  1         APDAT               NXT DAY -1
+     C                     END                              END IF..
+     C                     END                              END IF....
+     C***        CALCUALTE DATE FOR ACCRUALS PROCESSING TYPE 2.
+     C*
+     C           ANWI      IFEQ '2'                         IN ARREARS
+     C           EOMDAT    IFLT DNXTWD                      IF EOM<NXT WK
+     C                     Z-ADDEOMDAT    APDAT               END OF MTH
+     C                     ELSE                             ELSE
+     C                     Z-ADDABDBRN    APDAT               RUN DATE
+     C                     END                              END IF..
+     C                     END                              END IF....
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C*
+     C** NEWDAT S/R TO UPDATE NEW TABLE FILES/DATAAREA
+     C*
+     C********************************************************************
+     C           NEWDAT    BEGSR
+     C*
+     C** ACCESS BANK DATA
+     C*
+     C                     MOVEL'BANK'    ICDFLG 10
+     C           ICDFLG    CHAINSDBANKL0             99
+     C*
+     C** UPDATE RUN DATE & DATE OF NEXT WORKING DAY
+     C*
+     C                     MOVE ALFDAT    BJMRDT
+     C                     Z-ADDABDBRN    BJRDNB
+     C                     Z-ADDDNXTWD    BJDNWD
+     C                     UPDAT@BJREEE
+     C*
+     C** Read SDMMODPD for the value of the Multi-branch Indicator
+     C*
+     C                     MOVEL'MMOD'    MMOD   10
+     C           MMOD      CHAINSDMMODL1             99
+     C*
+     C** UPDATE DATA AREA FOR DATE ETC. IN SYNON
+     C*
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+     C                     MOVE BJMRDT    MRDT
+     C                     MOVE BJRDNB    RDNB
+     C                     MOVE BJSUC     SUC
+     C                     MOVE BJDFIN    DFF
+     C                     MOVE BGMBIN    MBIN
+     C                     OUT  RUNDAT
+     C*
+     C** UPDATE ACCRUAL PROFIT DATE IF REQUIRED
+     C*
+     C           *IN80     IFEQ '1'
+     C                     MOVEL'GELR'    ICDFLG
+     C           ICDFLG    CHAINSDGELRL0             99
+     C                     Z-ADDAPDAT     BKAPDT
+     C                     UPDAT@BKREEB
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C**
+     C********************************************************************
+     C**
+     C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.
+     C**
+     C           ZSYSTM    BEGSR                           *** ZSYSTM ***
+     C**
+     C**   SET UP KEY FOR INSTALLATION CONTROL RECORD.
+     C                     MOVEL'01      'ZTABKY 12
+     C                     MOVE '  10'    ZTABKY
+     C**
+     C           ZTABKY    CHAINTABLE                99    ON NOT THERE
+     C  N99      RECI      COMP 'D'                  9999  ON, IS DELETED
+     C**
+     C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     C           DATF      COMP 'M'                      98MMDDYY, 98 ON
+     C**
+     C                     ENDSR
+     C**
+     C**
+     C********************************************************************
+     C**
+     C**   ZDATE2 SR. TO CONVERT A DAY NUMBER TO DATE FORMATS.
+     C**
+     C           ZDATE2    BEGSR                           *** ZDATE2 ***
+     C**
+     C**   CLEAR DATE FIELDS.
+     C                     Z-ADD0         ZDATE   60
+     C                     MOVEL'       ' ZADATE  7
+     C**
+     C**   CALCULATION TO DEFINE INPUT DAY NUMBER.
+     C                     Z-ADDZDAYNO    ZDAYNO  50
+     C**
+     C**   DETERMINE YEAR NUMBER.
+     C**
+     C**   ADJUST DAY NUMBER IN CASE LAST DAY OF YEAR.
+     C           ZDAYNO    SUB  1         ZDAYN1  50   99
+     C   99                GOTO ZDEND2
+     C**
+     C**   CALCULATE NUMBER OF 4 YEAR SPANS SINCE 31/12/1971.
+     C           ZDAYN1    DIV  1461      ZLYR    20
+     C                     MVR            ZDAYN1           SAVE REMAINING
+     C**                                                   DAYS
+     C**   CALCULATE NUMBER OF REMAINING YEARS.
+     C                     Z-ADD1         ZWRK2   20
+     C           ZDTAG1    TAG                             ** ZDTAG1 TAG *
+     C           ZDAYN1    COMP ZYDY,ZWRK2             90
+     C  N90      ZWRK2     ADD  1         ZWRK2
+     C  N90                GOTO ZDTAG1
+     C           ZWRK2     SUB  1         ZWRK2          91LEAP YR, 91 ON
+     C**
+     C**   DECREMENT DAY NO. BY DAYS IN REMAINING YEARS.
+     C  N91      ZDAYN1    SUB  ZYDY,ZWRK2ZDAYN1
+     C**
+     C**   CALCULATE ACTUAL YEAR NUMBER.
+     C           ZLYR      MULT 4         ZWRK3   30
+     C           ZWRK3     ADD  72        ZWRK3            BASE IS 1972
+     C                     Z-ADDZWRK3     ZYEAR   20
+     C           ZYEAR     ADD  ZWRK2     ZYEAR            YEAR
+     C**
+     C**   DETERMINE MONTH NUMBER.
+     C**
+     C**   ADJUST DAY NO. IN CASE LAST DAY OF LEAP YEAR FEBRUARY.
+     C                     SETOF                     9293
+     C   91      ZDAYN1    COMP 59                     9293
+     C   91N92   ZDAYN1    SUB  1         ZDAYN1
+     C**
+     C**   CALCULATE MONTH NUMBER.
+     C                     Z-ADD2         ZWRK2
+     C           ZDTAG2    TAG                             ** ZDTAG2 TAG *
+     C           ZDAYN1    COMP ZMDY,ZWRK2             94
+     C  N94      ZWRK2     ADD  1         ZWRK2
+     C  N94                GOTO ZDTAG2
+     C           ZWRK2     SUB  1         ZWRK2
+     C**
+     C                     Z-ADDZWRK2     ZMTH    20       MONTH
+     C**
+     C**   DETERMINE DAY OF MONTH.
+     C**
+     C**   ADD BACK LAST DAY OF YEAR ADJUSTMENT.
+     C           ZDAYN1    ADD  1         ZDAYN1
+     C**
+     C**   CALCULATE DAY OF MONTH.
+     C           ZDAYN1    SUB  ZMDY,ZWRK2ZDAY    20       DAY
+     C**
+     C**   ADD BACK LEAP YEAR 29TH FEBUARY ADJUSTMENT, IF REQUIRED.
+     C   93      ZDAY      ADD  1         ZDAY
+     C**
+     C**   FORMAT DATE, DDMMYY OR MMDDYY.
+     C  N98                MOVELZDAY      ZWRK4   40
+     C   98                MOVE ZDAY      ZWRK4
+     C  N98                MOVE ZMTH      ZWRK4
+     C   98                MOVELZMTH      ZWRK4
+     C                     MOVELZWRK4     ZDATE
+     C                     MOVE ZYEAR     ZDATE
+     C**
+     C**   FORMAT ALPHA DATE, DDMMMYY.
+     C           ZDAY      COMP 10                     95
+     C                     MOVELZDAY      ZWRK5   5
+     C   95                MOVEL' '       ZWRK5
+     C                     MOVE ZMNM,ZMTH ZWRK5
+     C                     MOVELZWRK5     ZADATE
+     C                     MOVE ZYEAR     ZADATE
+     C**
+     C           ZDEND2    ENDSR                           * ZDEND2 ENDSR*
+     C**
+     C**
+     C*
+     C* ZACCH  --- SUBROUTINE TO ACCESS A HOLIDAY RECORD FOR A
+     C*            PARTICULAR CURRENCY (AND LOCATION IF DESIRED)
+     C*
+     C********************************************************************
+     C/COPY ZSRSRC,ZACCH
+     C/EJECT
+     C********************************************************************
+     C*
+     C* ZFWDT  --- SUBROUTINE TO CALCULATE THE NTH WORKING DAY
+     C*            FORWARD FROM A GIVEN START DATE FOR ANY
+     C*            PARTICULAR CURRENCY AND (OPTIONAL) LOCATION.
+     C*
+     C*
+     C* CALLS: ZACCH
+     C*
+     C********************************************************************
+     C/COPY ZSRSRC,ZFWDT
+     C/EJECT
+     C********************************************************************
+     C**
+     C**
+     C**   TABCHN SR. TO RANDOM ACCESS TABLE FILE.
+     C**
+     C           TABCHN    BEGSR                           *** TABCHN ***
+     C**
+     C**   RESET INDICATORS.
+     C                     SETOF                     0102
+     C**
+     C**   RANDOM ACCESS TABLE FILE BY KEY.
+     C           TABKEY    CHAINTABLE                76    ON NOT THERE
+     C**
+     C                     ENDSR
+     C**
+     C**
+     C********************************************************************
+     C**
+     C**   EXCPTN SR. TO PERFORM EXCEPTION TIME OUTPUT
+     C**              AND RESET EXCPTION CONTROL INDICATORS.
+     C**
+     C           EXCPTN    BEGSR                           *** EXCPTN ***
+     C**
+     C**   EXCEPTION OUTPUT.
+     C                     EXCPT
+     C**
+     C**   RESET INDICATORS.
+     C                     SETOF                     71
+     C**
+     C                     ENDSR
+     C**
+     C**
+     C********************************************************************
+     C**
+     C**   TIME SR. TO OBTAIN TIME.
+     C**
+     C           TIMES     BEGSR                           *** TIME ***
+     C**
+     C                     TIME           TIM     60
+     C**
+     C                     ENDSR
+     C**
+     C**
+     C********************************************************************
+     C**
+     C**   ZDATE1 SR. TO VALIDATE DATES SUBMITTED AND
+     C**              CONVERT TO A NUMBER OF DAYS.
+     C**
+     C**   THE YEAR 2000, BEING DIVISIBLE BY 400, IS A LEAP YEAR.
+     C**
+     C           ZDATE1    BEGSR                           *** ZDATE1 ***
+     C**
+     C**   CLEAR DAY NUMBER.
+     C                     Z-ADD0         ZDAYNO  50
+     C**
+     C**   CALCULATION TO DEFINE INPUT DATE FIELD.
+     C                     Z-ADDZDATE     ZDATE   60
+     C**
+     C**   GET INDIVIDUAL DAY, MONTH AND YEAR FIELDS.
+     C                     MOVE ZDATE     ZYEAR   20
+     C  N98                MOVELZDATE     ZDAY    20
+     C   98                MOVELZDATE     ZMTH    20
+     C                     MOVE ZDATE     ZWRK4   40
+     C  N98                MOVELZWRK4     ZMTH
+     C   98                MOVELZWRK4     ZDAY
+     C**
+     C**   ENSURE MONTH IS VALID.
+     C           ZMTH      COMP 0                      9999
+     C  N99      ZMTH      COMP 12                   99
+     C   99                GOTO ZDEND1                     BYPASS IF ERROR
+     C**
+     C**   CHECK FOR 30 DAY MONTHS.
+     C           ZMTH      COMP 4                        90IF 90 ON, 30
+     C  N90      ZMTH      COMP 6                        90DAY MONTH.
+     C  N90      ZMTH      COMP 9                        90
+     C  N90      ZMTH      COMP 11                       90
+     C**
+     C**   ENSURE DAY IS VALID.
+     C           ZDAY      COMP 0                      9999
+     C   90N99   ZDAY      COMP 30                   99
+     C  N90N99   ZDAY      COMP 31                   99
+     C   99                GOTO ZDEND1                     BYPASS IF ERROR
+     C**
+     C**   CHECK FOR LEAP YEAR AND FEBRUARY.
+     C           ZYEAR     ADD  28        ZYEAR
+     C           ZYEAR     DIV  4         ZLYR    20
+     C                     MVR            ZLY     10     91LEAP YR, 91 ON
+     C           ZMTH      COMP 2                    93  92FEB., 92 ON
+     C**                                                   PAST FEB, 93 ON
+     C**   IF FEBUARY FURTHER VALIDATE DAY.
+     C  N91 92   ZDAY      COMP 28                   99
+     C   91 92   ZDAY      COMP 29                   99
+     C   99                GOTO ZDEND1                     BYPASS IF ERROR
+     C**
+     C**   DETERMINE NUMBER OF DAYS FROM 31/12/1971.     NO.OF 4 YR. SPANS
+     C           ZLYR      MULT 1461      ZDAYNO           X DAYS IN SPAN.
+     C  N91      ZDAYNO    ADD  ZYDY,ZLY  ZDAYNO           SINCE LAST L.YR
+     C   91 93   ZDAYNO    ADD  1         ZDAYNO           L.YR.,PAST FEB.
+     C           ZDAYNO    ADD  ZMDY,ZMTH ZDAYNO           DAYS THIS YEAR
+     C           ZDAYNO    ADD  ZDAY      ZDAYNO           DAYS THIS MONTH
+     C**
+     C           ZDEND1    ENDSR                           * ZDEND1 ENDSR*
+     C**
+     C**
+     C****************************************************************
+      *                                                              *
+      *  FREEAO - Subroutine to call Access objects AOBANKR0 and     *
+      *           AOGELRR0 to free files SDBANKPD & SDGELRPD which   *
+      *           have just been updated in SD1020.                  *
+      *                                                              *
+      ****************************************************************
+      *
+     C           FREEAO    BEGSR
+      *
+      ** CALL AOBANKR0 WITH *FREE TO SETON LR & FREE PAG.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*FREE  ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** Call AOBANKR0 with *FIRST to retrieve the location code
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ** CALL AOGELRR0 WITH *FREE TO SETON LR & FREE PAG.
+      *
+     C                     CALL 'AOGELRR1'
+     C                     PARM '       ' @RTCD   7
+     C                     PARM '*FREE  ' @OPTN   7
+     C           SDGELR    PARM SDGELR    DSSDY
+      *
+     C                     ENDSR
+     C********************************************************************
+     O**
+     O**   UPDATE TABLE FILE.
+     O**
+     O**   AMENDMENT, INSTALLATION CONTROL DATA RECORD 1.
+     OTABLE   E        71 01
+     O                         LOT       96
+     O                         ABDBRN    79P
+     O                         ALFDAT    86
+     O                         ABDBRN    92P
+     O                                   93 'A'
+     O                         FIV0      96P
+     O**
+     O**   AMENDMENT, INSTALLATION CONTROL DATA RECORD 2.
+     O        E        71 02
+     O                         LOT       96
+     O                       80APDAT     31P
+     O                         DNXTWD    43P
+     O                         ABDBRN    92P
+     O                                   93 'A'
+     O                         FIV0      96P
+     O**
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** CPY@   OBJECT COPYRIGHT
+(c) Finastra International Limited 2020

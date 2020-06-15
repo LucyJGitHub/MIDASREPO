@@ -2,13 +2,13 @@
 /*                                                                   */
 /*       MIDAS - /COPY Member SCC07                                  */
 /*                                                                   */
-/*       SCH00005 - MIDAS SD Declare HUT010 Variable                 */
+/*       SCH00005 - Midas SD Declare HUT010 Variable                 */
 /*                                                                   */
-/*       Last Ament No. HUT104  *CREATE    DATE 27APR20              */
+/*       Last Ament No. HUT104  *Create    Date 27Apr20              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
-/*       HUT104   - UPGRADE HUT010 TO FBM 2.1 SP 22                  */
+/*       HUT104   - Upgrade HUT010 to FBM 2.1 SP 22                  */
 /*                - Call In-House Program on Input Cycle Re-open     */
 /*                                                                   */
 /*********************************************************************/

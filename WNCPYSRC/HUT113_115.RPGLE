@@ -4,8 +4,8 @@
       *                                                               *
       *  SDCUSDSIN                                                    *
       *                                                               *
-      *  LAST AMEND NO. HUT113B            DATE 08MAY20               *
-      *  Last Amend No. HUT113    *CREATE  Date 01Apr20               *
+      *  Last Amend No. HUT113B            Date 08May20               *
+      *  Last Amend No. HUT113   *Create   Date 01Apr20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *

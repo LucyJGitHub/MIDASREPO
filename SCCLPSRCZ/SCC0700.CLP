@@ -9,8 +9,8 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. HUT104             Date 27APR20              */
-/*       PREV AMEND NO. HUT113             DATE 01APR20              */
+/*       Last Amend No. HUT104             Date 27Apr20              */
+/*       Prev Amend No. HUT113             Date 01Apr20              */
 /*                      MD046248           Date 27Oct17              */
 /*                      MD031644           Date 08Jan15              */
 /*                      CGL155             Date 21Mar14              */

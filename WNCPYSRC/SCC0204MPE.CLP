@@ -2,13 +2,13 @@
 /*                                                                   */
 /*       MIDAS - /COPY Member SCC0204                                */
 /*                                                                   */
-/*       SCC0204MPE - MIDAS SD call UBSSUBMIT                        */
+/*       SCC0204MPE - Midas SD call UBSSUBMIT                        */
 /*                                                                   */
-/*       Last Ament No. HUT104  *CREATE    DATE 27APR20              */
+/*       Last Ament No. HUT104  *Create    Date 27Apr20              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
-/*       HUT104   - UPGRADE HUT104 TO FBM 2.1 SP 22                  */
+/*       HUT104   - Upgrade HUT104 to FBM 2.1 SP 22                  */
 /*                - Call In-House Program on Input Cycle Re-open     */
 /*                                                                   */
 /*********************************************************************/

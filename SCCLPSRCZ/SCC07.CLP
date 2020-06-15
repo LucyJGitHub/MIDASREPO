@@ -9,8 +9,8 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. HUT104             Date 27APR20              */
-/*       PREV AMEND NO. HUT113             DATE 01APR20              */
+/*       Last Amend No. HUT104             Date 27Apr20              */
+/*       Prev Amend No. HUT113             Date 01Apr20              */
 /*                      MD054045           Date 27Aug19              */
 /*                      MD046248           Date 27Oct17              */
 /*                      MD037757           Date 26Apr16              */
@@ -131,7 +131,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
-/*       HUT104   - UPGRADE HUT010 TO FBM 2.1 SP 22                  */
+/*       HUT104   - Upgrade HUT010 to FBM 2.1 SP 22                  */
 /*                  Call In-House Program on Input Cycle Re-open     */
 /*                  Use of core hook SCH00005                        */
 /*                  Addition of hooks HUT104_001 and HUT104_002      */

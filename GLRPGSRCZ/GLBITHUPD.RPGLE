@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD033630A          Date 25May16               *
-      *  Prev Amend No. MD036967           Date 25May16               *
+      *  Last Amend No. MD055854           Date 15Jun20               *
+      *  Prev Amend No. MD033630A          Date 25May16               *
+      *                 MD036967           Date 25May16               *
       *                 MD035554           Date 25May16               *
       *                 AR922022A          Date 26Apr16               *
       *                 AR922022           Date 26Apr16               *
@@ -72,6 +73,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055854 - When deleting a batch or batch item from frontend *
+      *             the narratives in XXJENPX0 file is not deleted    *
+      *             Amend to delete corresponding rec in XXJENPX0     *
       *  MD033630A - Corrected discrepancy in MD033630 codes.         *
       *  MD036967 - Conflict betwen CAP207 and CRE023. Update files   *
       *             for Credit after accept when both feat are ON.    *
@@ -239,6 +243,8 @@
       *                                                                                     AR992022
       ** MIDAS RE Settled Transaction Index file                                            AR992022
       *                                                                                     AR992022
+     F/COPY WNCPYSRC,LUC110_104                                                             MD055854
+      *                                                                                     MD055854
      F/COPY WNCPYSRC,GLH00301
       *****************************************************************
       /EJECT
@@ -696,6 +702,7 @@
      C                   ENDDO                                                               BUG3500
      C                   ENDIF                                                               BUG3500
      C                   SETOFF                                       9899                   BUG3500
+     C/COPY WNCPYSRC,LUC110_105                                                             MD055854
      C/COPY WNCPYSRC,GLBITHDC03
      C                   DELETE    @BRREAG                                                    CAP084
       *                                                                                       CER001
@@ -1602,6 +1609,8 @@
      C                   EVAL      CAP209 = 'Y'                                            AR1092517
      C                   ENDIF                                                             AR1092517
       *                                                                                    AR1092517
+     C/COPY WNCPYSRC,LUC110_106                                                             MD055854
+      *                                                                                     MD055854
      C/COPY WNCPYSRC,GLH00709
       *
      C/COPY OFCPYSRCZ,CGL135_015                                                             CGL135A

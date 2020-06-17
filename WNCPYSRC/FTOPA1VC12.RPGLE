@@ -4,7 +4,7 @@
       *                                                               *
       *  FTOPA1VC12 - Midas FT CALL FTVDNDN1                          *
       *                                                               *
-      *  Last Amend No. HUT106  *CREATE    Date 11Sep08               *
+      *  Last Amend No. HUT106  *CREATE    Date 06Apr20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *

@@ -932,7 +932,7 @@
       *                                                                                       CFT049
      C                   Endif                                                                CFT049
       *                                                                                       CFT049
-     C/COPY WNCPYSRC,HUT110_074
+     C/COPY WNCPYSRC,HUT110_074                                                               HUT110
 
      C                   ENDSR
      C*****************************************************************
@@ -947,7 +947,7 @@
 
       * Subroutine SWSET
      E/COPY FTCPYSRC,SFTADDRSC1
-     C/COPY WNCPYSRC,HUT110_075
+     C/COPY WNCPYSRC,HUT110_075                                                              HUT110
 
       *****************************************************************
       * *INZSR - Program Initialisation routine                       *
@@ -1016,7 +1016,7 @@
      C                   MOVE      'Y'           CFT049                                       CFT049
      C                   ENDIF                                                                CFT049
 						*												                                                                     				  CFT049
-     C/COPY WNCPYSRC,HUT110_076
+     C/COPY WNCPYSRC,HUT110_076                                                               HUT110
      C/COPY WNCPYSRC,FTH00494
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************

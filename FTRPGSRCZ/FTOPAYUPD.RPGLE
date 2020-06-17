@@ -126,8 +126,8 @@
       *  HUT101 - Upgrade CFT129 to FBM 2.1 SP22                      *
       *           Payment Authorisation for Funds Transfer            *
       *           Upgraded with CAP211 functionality.                 *
-      *           Used hook: FTH00109, FTH00405                       *
-      *           Added hooks: HUT101_026, HUT101_027, HUT101_28      *
+      *           Used hook: FTH00109                                 *
+      *           Added hooks: HUT101_013, HUT101_014, HUT101_015     *
       *  MD054037 - Outward payment routing from incoming (OPIN = Y)  *
       *             via API                                           *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -1243,7 +1243,7 @@
      C                   ENDIF                                                                CSC011
                                                                                               CSC011
      C                   IF        CAP211 = 'Y' And PAuth = 'Y'                               CAP211
-     C/COPY WNCPYSRC,HUT101_026                                                               HUT101
+     C/COPY WNCPYSRC,HUT101_013                                                               HUT101
       *                                                                                       CAP211
      C                   IF        PUser = *Blanks                                            CAP211
      C                   EVAL      AUP1 = INUSR1                                              CAP211
@@ -1905,7 +1905,7 @@
      C                   Eval      OTTMESTMP = TimeStamp                                    BUG18500
 
      C                   IF        CAP211 = 'Y' And PAuth = 'Y'                               CAP211
-     C/COPY WNCPYSRC,HUT101_027                                                               HUT101
+     C/COPY WNCPYSRC,HUT101_014                                                               HUT101
       *                                                                                       CAP211
      C                   IF        PUser = *Blanks                                            CAP211
      C                   EVAL      AUP1 = INUSR1                                              CAP211
@@ -5405,7 +5405,7 @@
      C                   Z-ADD     BJRDNB        DATE                                         CFT157
       *                                                                                       CFT157
      C                   IF        CAP211 = 'Y' And PAuth = 'Y'                               CFT157
-     C/COPY WNCPYSRC,HUT101_028                                                               HUT101
+     C/COPY WNCPYSRC,HUT101_015                                                               HUT101
       *                                                                                       CFT157
      C                   IF        PUser = *Blanks                                            CFT157
      C                   EVAL      SAUS = SUSR                                                CFT157

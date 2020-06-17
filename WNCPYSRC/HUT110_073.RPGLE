@@ -10,6 +10,7 @@
       *                                                               *                       HUT110
       *  HUT110 - Upgraded HUT022 to FBM 2.1 SP22                     *                       HUT110
       *           RTGS via SWIFT.                                     *                       HUT110
+      *           (Include MD-30805)                                  *                       HUT110
       *                                                               *                       HUT110
       *****************************************************************                       HUT110
       *                                                                                       HUT110

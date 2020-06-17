@@ -1,7 +1,7 @@
       *****************************************************************                       HUT108
       *  Midas - Copy member for FTVIPYDT                             *                       HUT108
       *                                                               *                       HUT108
-      *  HUT108_002 - Pay Value Date Validation and defaulting        *                       HUT108
+      *  HUT108_001 - Pay Value Date Validation and defaulting        *                       HUT108
       *                                                               *                       HUT108
       *  Last Amend No. HUT108 *CREATE     Date 26Mar20               *                       HUT108
       * FBMidas 2.1 ---- Base ----------------------------------------*                       HUT108
@@ -36,5 +36,5 @@
      C                   ELSE                                                                 HUT108
                                                                                               HUT108
       *****************************************************************                       HUT108
-      * End of /COPY HUT108_002                                       *                       HUT108
+      * End of /COPY HUT108_001                                       *                       HUT108
       *****************************************************************                       HUT108

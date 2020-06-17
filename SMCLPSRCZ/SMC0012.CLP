@@ -9,10 +9,11 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD055749           Date 09Jun20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. CUP034             Date 24Jan07              */
+/*                      CUP034             Date 24Jan07              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /*                      CUP033             Date 06Jul06              */
@@ -22,6 +23,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD055749 - Bridge menu CHDT ends in error                   */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CUP034 - Reduce size of implementation library.             */
 /*       CUP033 - Removal of System Value /COPYs.                    */
@@ -32,10 +34,10 @@
 /*********************************************************************/
 /**********  PGM                                                                       */ /*CUP033*/
              PGM        PARM(&PFXSVAL &OPFXSVAL)                                          /*CUP033*/
- 
+
              DCL        VAR(&PFXSVAL) TYPE(*CHAR) LEN(20)                                 /*CUP033*/
              DCL        VAR(&OPFXSVAL) TYPE(*CHAR) LEN(20)                                /*CUP033*/
- 
+
 /**COPY*UPCPYSRC,UPSVALDCL*                                          */ /*             */ /*CUP033*/
 /**********  DCL        VAR(&TOSBSID) TYPE(*CHAR) LEN(2)                               */ /*CSM003*/
              DCL        VAR(&SBSID) TYPE(*CHAR) LEN(2)                                    /*CUP033*/
@@ -48,27 +50,27 @@
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2003')
- 
+
              DCLF       FILE(UPSVALJ0)                                                    /*CUP033*/
- 
+
 /* Global monitor message */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /**COPY*UPCPYSRC,UPSVALCAL1*                                         */ /*             */ /*CUP033*/
 /**COPY*UPCPYSRC,UPSVALCAL3*                                         */ /*  */ /*CSM003*/ /*CUP033*/
- 
+
 /**********  IF         COND(&PTFUPG *EQ ' ' *OR &SBSID *EQ ' ') +                     */ /*CSM003*/
 /**********               THEN(DO)                                                     */ /*CSM003*/
 /**********  IF         COND(&PTFUPG**EQ''''**OR&&SBSID *EQ ' ' *OR +                  */ /*CUP033*/
 /**********               &OLDSBSID *EQ ' ') THEN(DO)                       */ /*CSM003*/ /*CUP033*/
- 
+
 VALIDATE:                                                                                 /*CUP033*/
              RCVF                                                                         /*CUP033*/
              MONMSG     MSGID(CPF0864) EXEC(DO)                                           /*CUP033*/
                 GOTO       CMDLBL(CHECK)                                                  /*CUP033*/
              ENDDO                                                                        /*CUP033*/
- 
+
              IF         COND(&GISVAL *EQ &PFXSVAL) THEN(DO)                               /*CUP033*/
                 IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CUP033*/
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP033*/
@@ -77,7 +79,7 @@ VALIDATE:                                                                       
                    CHGVAR     VAR(&SBSID) VALUE(&GIVAL)                                   /*CUP033*/
                 ENDDO                                                                     /*CUP033*/
              ENDDO                                                                        /*CUP033*/
- 
+
              IF         COND(&GISVAL *EQ &OPFXSVAL) THEN(DO)                              /*CUP033*/
                 IF         COND(&GIVAL *EQ ' ') THEN(DO)                                  /*CUP033*/
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')                                  /*CUP033*/
@@ -86,9 +88,9 @@ VALIDATE:                                                                       
                    CHGVAR     VAR(&OLDSBSID) VALUE(&GIVAL)                                /*CUP033*/
                 ENDDO                                                                     /*CUP033*/
              ENDDO                                                                        /*CUP033*/
- 
+
              GOTO       CMDLBL(VALIDATE)                                                  /*CUP033*/
- 
+
  CHECK:                                                                                   /*CUP033*/
              IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)                                 /*CUP033*/
 /* Set up messages for Midas Information Screen  */
@@ -99,10 +101,10 @@ VALIDATE:                                                                       
                 CALL       PGM(SCC0010) PARM('SMC0012' 'ENTER' ' ')
                 GOTO       CMDLBL(END)
              ENDDO
- 
+
 /* Set up library list. */                                                                /*CUP034*/
              CALL       PGM(UPC0014) PARM(&SBSID)                                         /*CUP034*/
- 
+
 /* Set up library names */
 /**********  CHGVAR     VAR(&FROMDTALIB) VALUE(&SBSID *TCAT 'DTALIB')                  */ /*CSM003*/
 /**Retrieve*to*library*prefix*from*data*area*UPSTAT**/ /*                              */ /*CSM003*/
@@ -116,24 +118,35 @@ VALIDATE:                                                                       
 /**********  CHGVAR     VAR(&TODTALIB) VALUE(&TOSBSID *TCAT 'DTALIB')                  */ /*CSM003*/
              CHGVAR     VAR(&FROMDTALIB) VALUE(&OLDSBSID *TCAT 'DTALIB')                  /*CSM003*/
              CHGVAR     VAR(&TODTALIB) VALUE(&SBSID *TCAT 'DTALIB')                       /*CSM003*/
- 
+
 /* Delete outfiles if they already exist */
              DLTF       FILE(QTEMP/FROMDTALIB)
              MONMSG     MSGID(CPF0000)
- 
+             DLTF       FILE(QTEMP/UPDTLBOF)                                            /*MD055749*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD055749*/
+             DLTF       FILE(QTEMP/SMDTNFQF)                                            /*MD055749*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD055749*/
+
 /* Produce outfile of files in "from" DTALIB */
              DSPOBJD    OBJ(&FROMDTALIB/*ALL) OBJTYPE(*ALL) +
                           OUTPUT(*OUTFILE) OUTFILE(QTEMP/FROMDTALIB)
- 
+
 /* Produce query to identify files not in "to" library that          */
 /*  exist in "from" library                                          */
+/** Start of change for MD055749 **/
+             DSPFD      FILE(&TODTALIB/*ALL) TYPE(*BASATR) +
+                          OUTPUT(*OUTFILE) OUTFILE(QTEMP/UPDTLBOF)
+
+/**********  OPNQRYF    FILE((QTEMP/FROMDTALIB) (UPDTLBOF)) +        */
+/**********               FORMAT(QADSPOBJ) JFLD((1/ODOBNM 2/UPDTLBOF + */
              OPNQRYF    FILE((QTEMP/FROMDTALIB) (UPDTLBOF)) +
-                          FORMAT(QADSPOBJ) JFLD((1/ODOBNM 2/UPDTLBOF +
+                          FORMAT(QADSPOBJ) JFLD((1/ODOBNM 2/ATFILE +
                           *EQ)) JDFTVAL(*ONLYDFT)
+/** End of change for MD055749 **/
              CPYFRMQRYF FROMOPNID(FROMDTALIB) TOFILE(QTEMP/SMDTNFQF) +
                           MBROPT(*REPLACE) CRTFILE(*YES)
              CLOF       OPNID(FROMDTALIB)
- 
+
 /* Call program to produce report of files not in "to" library       */
              CLRPFM     FILE(UPNOTFPD) MBR(UPDTNFQF)
              MONMSG     MSGID(CPF3141)
@@ -146,13 +159,13 @@ VALIDATE:                                                                       
 /* Call program to produce display file for file selection */
              CALL       PGM(UP0261) PARM(&TODTALIB)
              DLTOVR     FILE(UPNOTFPD)
- 
+
              GOTO       CMDLBL(END)
 ABNOR:
              CHGJOB     SWS(XXXXXX11)
- 
+
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
              ENDPGM

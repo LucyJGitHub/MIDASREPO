@@ -1485,7 +1485,7 @@
      C     WLNPT         ANDEQ     65                                                       MD055219
      C     BASER         OREQ      *ZEROS                                                   MD055219
      C     @@AMT         ANDEQ     *ZEROS                                                   MD055219
-     C     WLNPT         ANDEQ     63                                                       MD055219
+     C     WLNPT         ANDEQ     67                                                       MD055219
      C     BASER         OREQ      *ZEROS                                                   MD055219
      C     @@AMT         ANDEQ     *ZEROS                                                   MD055219
      C     WLNPT         ANDEQ     80                                                       MD055219

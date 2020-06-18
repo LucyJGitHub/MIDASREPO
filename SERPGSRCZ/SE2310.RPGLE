@@ -17,7 +17,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. HUT105             Date 07Apr20               *
+      *  Last Amend No. AR324886           Date 07Apr20               *
       *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 233071             Date 28Mar12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -64,10 +64,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  HUT105 - Bulk Position Settlement Authorisation              *
-      *           (Upgrade AR324886 to FM2.1 SP22 - intrusively)      *
       *  AR324886 - Implement 4-eyes processing in Position           *
       *             Settlement Maintenance.                           *
+      *             (Upgrade as required by HUT105)                   *
       *  MD046248 - Finastra Rebranding                               *
       *  233071 - Database error 106 in program AOTXBSR0 due to blank *
       *           tax basket.  Default tax basket with WK_TXBS only   *

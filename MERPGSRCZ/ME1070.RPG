@@ -1,641 +1,647 @@
-     H        1
-      *****************************************************************
-/*STD *  RPGBASE                                                      *
-/*EXI *  TEXT('Midas ME Reserved network messages update')
-     F*****************************************************************
-     F*                                                               *
-     F*  Midas - Message Management Module
-     F*                                                               *
-     F*  ME1070 - Reserved Network Messages Update                    *
-     F*                                                               *
-     F*  Function:  This program reserves a selected network message  *
-     F*  for a job. No other job may access a reserved message.       *
-     F*                                                               *
-     F*  Called By: FT0040  - Outgoing Payments Maintenance           *
-     F*             FT0050  - Incoming Payments Maintenance           *
-     F*                                                               *
-      *  (c) Finastra International Limited 2001                      *
-     F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      * Bank Fusion Midas 1.4 Base -----------------------------------*
-      * Midas Plus 1.4 Base 04 ---------------------------------------*
-      * Midas Plus 1.4 Base ------------------------------------------*
-      * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
-      *                 BUG3279            Date 11Nov04               *
-      *                 CSC022             Date 24Feb04               *
-      * Midas Release 4 --------------- Base -------------------------*
-      * Midas DBA 3.00 ---------------- Base -------------------------*
-      *                 145199             Date 16Oct98               *
-      *                 069250             Date 03May94               *
-     F*                 S01435             DATE 23JUL93               *
-     F*                                                               *
-     F*---------------------------------------------------------------*
-     F*                                                               *
-      *  MD046248 - Finastra Rebranding                               *
-      *  CSD027 - Conversion Of Customer Number to Alpha              *
-     F*  BUG3279- Update MEINMRPD with correct user for MidasPlus     *
-      *  CSC022 - Commitment Control Changes for MidasPlus            *
-     F*  145199 - Recompile for changes to MEINCRPD and MEINMPPD made *
-     F*           in Year 2000 fix 124673.                            *
-     F*  069250 - Remove dummy OVRDBF command from creation parms.    *
-     F*  S01435 - Incoming Message Management                         *
-     F*                                                               *
-     F*****************************************************************
-     F*                                                               *
-     F*  Indicator usage                                              *
-     F*  ~~~~~~~~~~~~~~~                                              *
-     F*                                                               *
-     F*  50    First cycle                                            *
-     F*  90    Chain fail                                             *
-     F*  99    EOF on Read                                            *
-     F*                                                               *
-     F*  U7/U8 Error Ocurred                                          *
-     F*  LR    End program                                            *
-     F*                                                               *
-     F*****************************************************************
-     FMEINMRL0UF  E           K        DISK         KINFSR SRFILEA    UC
-     F                                              KCOMIT
-      *
-      *  Reserved Incoming Electronic Messages - Update by MSG REF/PART
-      *
-     FMEINMRL1IF  E           K        DISK         KINFSR SRFILE     UC
-      *
-      *  Reserved Incoming Electronic Messages - Retrv by  MSG REF/PART
-      *
-     FMEINMRL2IF  E           K        DISK         KINFSR SRFILE     UC
-      *
-      *  Reserved Incoming Electronic Messages - Retrieval by JOB/USER/JOB NO.
-      *
-     FMEINMPJ1IF  E           K        DISK         KINFSR SRFILE     UC
-      *
-      *  Join of MEINCRPD/MEINMPPD/MEINFTPD/MEINMRPD - MSG REF/PART
-      *
-     F/COPY WNCPYSRC,ME1070DFPG
-      *
-      *  /Copy point for File Definition
-      *
-     F/EJECT
-     E                    CPY@    1   1 80
-      **                                                                                      CSC022
-      ** Array to hold commitment jobs name                                                   CSC022
-      **                                                                                      CSC022
-     E                    WCMT       10 10                                                    CSC022
-      *
-      *  Copyright table
-      *
-     E/COPY WNCPYSRC,ME1070DEPG
-      *
-      *  /Copy point for Arrays
-      *
-     E/COPY MECPYSRC,SRERRE
-      *
-      *  end of Copysource for error processing
-      *
-     E/EJECT
-     I/COPY WNCPYSRC,ME1070DIPG
-      *
-      *  /Copy point for Input specifications
-      *
-     ICPYR@#      DS
-      *
-      *  Data structure for compilation  - Copyright insertion
-      *
-     I                                        1  80 CPY@
-     I                                        1  20 CPY@##
-     I/COPY MECPYSRC,SRERRI
-      *
-      *  End of Program Error Processing copysource member
-      *
-     IRUNDTA    E DSRUNDAT
-      *
-      *  Define rundat data area
-      *
-      **                                                                                      CSC022
-     ISCSARD    E DSSCSARDPD                                                                  CSC022
-      ** Switchable Features File                                                             CSC022
-     IDSFDY     E DSDSFDY                                                                     CSC022
-      ** First DS for Access Programs, short data structure                                   CSC022
-     ISCCMT       DS                            256                                           CSC022
-     I                                        1   30WCMTNO                                    CSC022
-     I                                        4 103 WCJOBS                                    CSC022
-      ** Commitment Control dataarea                                                          CSC022
-      **                                                                                      CSC022
-     IDBKMR       DS
-      *
-      *  Data structure to define MEINMRL1 key for error reporting
-      *
-     I                                        1   80W#MSGR
-     I                                        9  110W#KPRT
-     IDBKMR2      DS
-      *
-      *  Data structure to define MEINMRL2 key for error reporting
-      *
-     I                                        1  10 W#JOB
-     I                                       11  20 W#USR
-     I                                       21  260W#JNO
-      ** Java user information                                                               BUG3279
-     IZMUSER    E DSZMUSER                                                                   BUG3279
-     I/EJECT
-      *****************************************************************
-      *                 M A I N L I N E
-      *****************************************************************
-      *
-      *  Set up subroutine stack name
-      *
-     C                     ADD  1         Q
-     C                     MOVEL'MAIN'    @STK,Q
-      *
-      *  Define entry parameters
-      *
-     C           *ENTRY    PLIST
-     C                     PARM           W0ACT   7
-     C                     PARM           W0MSGR
-     C                     PARM           W0KPRT
-     C                     PARM           W0MOR  28
-     C                     PARM           W0MIR  28
-     C                     PARM           W0RTN   7
-      *
-      *  Set up primary reference
-      *
-     C                     MOVELW0MSGR    W0PREF
-      *
-      * Initialise program
-      *
-     C           *IN50     IFEQ '0'
-     C                     EXSR SRINIT
-     C                     END
-      *
-      *  Determine the mode of processing and execute subroutine :-
-      *
-      *
-      *  Action Code : *DEL
-      *  ------------------
-      *
-      *  Called from Incoming Payments Maintenance to remove the
-      *  reservation of the current message reference that has just
-      *  been processed and updated.
-      *
-      *  Called from Electronic Message Selection (FT0051) if the
-      *  user no longer wishes to reserve a message reference that was
-      *  previously reserved.
-      *
-      *
-      *  Action Code : *END
-      *  ------------------
-      *
-      *  Called from Incoming Payments Maintenance to remove all
-      *  remaining reservations if F3 to end job or F12 for initial
-      *  screen was taken.
-      *
-      *  Called from CL program if a database or file error ocurred
-      *  and the calling function was ended.
-      *
-      *  Called from Close Of Business within the clearing process
-      *
-      *
-      *  Action Code : *RESERV
-      *  ---------------------
-      *
-      *  Called from Incoming Payments Maintenance to reserve an
-      *  individual message reference that was entered on the initial
-      *  screen.
-      *
-      *  Called from Electronic Message Selection (FT0051) to reserve
-      *  all Swift References that are selected for processing.
-      *
-      *
-      *  Action Code : INVALID
-      *  ---------------------
-      *
-      *  If invalid Action Code passed then report as an error.
-      *
-     C           W0ACT     CASEQ'*DEL   ' SRDEL
-     C           W0ACT     CASEQ'*END   ' SREND
-     C           W0ACT     CASEQ'*RESERV' SRRSRV
-     C                     CAS            SRACT
-     C                     END
-      *
-      *  Unwind subroutine stack name
-      *
-     C                     MOVEA*BLANKS   @STK,Q
-     C                     SUB  1         Q
-      *
-      *  Return to calling program
-      *
-     C                     RETRN
-     C/EJECT
-      *****************************************************************
-      *                                                               *
-      *  SRDEL    : Processing finished for current reserved message, *
-      *             remove reference from file.                       *
-      *                                                               *
-      *  CALLED BY: Main processing section                           *
-      *                                                               *
-      *  CALLS    : SRERR   - report error and close down program     *
-      *                                                               *
-      *****************************************************************
-     CSR         SRDEL     BEGSR
-      *
-      *  Set up subroutine stack name
-      *
-     C                     ADD  1         Q
-     C                     MOVEL'SRDEL '  @STK,Q
-      *
-      *  /Copy point for Deletion of Reservation
-      *
-     C/COPY WNCPYSRC,ME1070DDEL
-      *
-      *  Delete the message reference from the Reserved Message file
-      *  for the current job after setting up the key
-      *
-     C                     Z-ADDW0MSGR    KFMSGR
-     C                     Z-ADDW0KPRT    KFKPRT
-      *
-     C           KYINMR    CHAINMEINMRL0             90
-      *
-     C           *IN90     IFEQ '0'
-     C                     DELET@INMRL0
-     C                     ELSE
-      *
-      *  Report database error - set up file key using data structure
-      *
-     C                     Z-ADDKFMSGR    W#MSGR
-     C                     Z-ADDKFKPRT    W#KPRT
-      *
-     C                     MOVEL'MEINMRL0'W0FILE
-     C                     MOVELDBKMR     W0KEY
-     C                     Z-ADD1         W0ERNB           ***************
-     C                     MOVEL'MEM5004' W0MSGD           * DB ERROR 01 *
-     C                     MOVEL'MIDAS  ' W0MSGF           ***************
-     C                     EXSR SRERR
-     C                     END
-      *
-      *  Set Return Code - Reservation For Message Removed
-      *
-     C                     MOVEL'MIN0110' W0RTN
-      *
-      *  Unwind subroutine stack name
-      *
-     C           EXDEL     TAG
-     C                     MOVEA*BLANKS   @STK,Q
-     C                     SUB  1         Q
-      *
-     CSR                   ENDSR
-     C/EJECT
-      *****************************************************************
-      *                                                               *
-      *  SREND    : No more messages to be processed - remove any     *
-      *             remaining reserved messages.                      *
-      *                                                               *
-      *  CALLED BY: Main processing section                           *
-      *                                                               *
-      *  CALLS    : SRERR   - report error and close down program     *
-      *                                                               *
-      *****************************************************************
-     CSR         SREND     BEGSR
-      *
-      *  Set up subroutine stack name
-      *
-     C                     ADD  1         Q
-     C                     MOVEL'SREND '  @STK,Q
-      *
-      *  /Copy point for Deletion of All Reservations
-      *
-     C/COPY WNCPYSRC,ME1070DDAL
-      *
-      *  Read and delete all records on the Reserved Message file
-      *  fo the current job
-      *
-     C           KYMRL2    SETLLMEINMRL2
-      *
-     C           KYMRL2    READEMEINMRL2                 99
-      *
-     C           *IN99     DOWEQ'0'
-      *
-     C                     Z-ADDMRMSGR    KFMSGR
-     C                     Z-ADDMRKPRT    KFKPRT
-     C           KYINMR    CHAINMEINMRL0             90
-      *
-     C           *IN90     IFEQ '0'
-     C                     DELET@INMRL0
-     C                     ELSE
-      *
-      *  Report database error - set up file key using data structure
-      *
-     C                     Z-ADDKFMSGR    W#MSGR
-     C                     Z-ADDKFKPRT    W#KPRT
-      *
-     C                     MOVELDBKMR     W0KEY
-     C                     MOVEL'MEINMRL0'W0FILE
-     C                     Z-ADD2         W0ERNB           ***************
-     C                     MOVEL'MEM5004' W0MSGD           * DB ERROR 02 *
-     C                     MOVEL'MIDAS  ' W0MSGF           ***************
-     C                     EXSR SRERR
-     C                     END
-      *
-     C           KYMRL2    READEMEINMRL2                 99
-     C                     END
-      *
-      *  Set Return Code - Reservation Processing Cancelled For Job
-      *
-     C                     MOVEL'MIN0111' W0RTN
-      *
-      *  Unwind subroutine stack name
-      *
-     C           EXEND     TAG
-     C                     MOVEA*BLANKS   @STK,Q
-     C                     SUB  1         Q
-      *
-     CSR                   ENDSR
-     C/EJECT
-      *****************************************************************
-      *                                                               *
-      *  SRRSRV   : Reserve selected messages                         *
-      *                                                               *
-      *  CALLED BY: Main processing section                           *
-      *                                                               *
-      *  CALLS    :         -                                         *
-      *                                                               *
-      *****************************************************************
-     CSR         SRRSRV    BEGSR
-      *
-      *  Set up subroutine stack name
-      *
-     C                     ADD  1         Q
-     C                     MOVEL'SRRSRV'  @STK,Q
-      *
-      *  /Copy point for Reservation
-      *
-     C/COPY WNCPYSRC,ME1070DRES
-      *
-      *  Check for existence of this message on the Reserved Msgs file
-      *
-     C                     Z-ADDW0MSGR    KFMSGR
-     C                     Z-ADDW0KPRT    KFKPRT
-      *
-     C           KYINMR    CHAINMEINMRL1             90
-      *
-      *  If a record found for this unique ref/part no.
-      *
-     C           *IN90     IFEQ '0'
-      *
-      *  If record is for this job, no updates required.
-      *  Set Return Code - Record Previously Allocated To THIS Job
-      *
-     C           MRJOB     IFEQ ##JOB
-     C           MRUSR     ANDEQ##USR
-     C           MRJNO     ANDEQ##JNO
-     C                     MOVEL'MIN0107' W0RTN
-      *
-      *  If record is NOT for this job, no updates required.
-      *  Set Return Code - Message Already Reserved For Another Job
-      *
-     C                     ELSE
-     C                     MOVEL'MIN0108' W0RTN
-     C                     END
-      *
-      *  If record is not found then write a record to reserve the
-      *  message reference for processing within this job.
-      *
-     C                     ELSE
-     C                     Z-ADDW0MSGR    MRMSGR
-     C                     Z-ADDW0KPRT    MRKPRT
-     C                     MOVEL##JOB     MRJOB
-     C                     MOVEL##USR     MRUSR
-     C                     Z-ADD##JNO     MRJNO
-     C                     WRITE@INMRL0                90
-      *
-      *  If a successful write then
-      *  Set Return Code - Message Is Now Reserved For This Job
-      *
-      *  If the write fails it implies that another workstation has
-      *  just reserved the message reference so
-      *  Set Return Code - Message Already Reserved For Another Job
-      *
-     C           *IN90     IFEQ '0'
-      *
-      * Re-Check that message not already processed
-      *
-     C                     Z-ADDW0MSGR    MPMSGR
-     C                     Z-ADDW0KPRT    MPKPRT
-      *
-      * Define key list for MEINMPJ1
-      *
-     C           KYMPJ1    KLIST
-     C                     KFLD           MPMSGR
-     C                     KFLD           MPKPRT
-      *
-     C           KYMPJ1    CHAINMEINMPJ1             90
-      *
-      *  If a record is not found then means that
-      *  the message part has already been processed by FT
-      *
-      *  Set retn code - Message Reference Not Available For Processing
-      *
-     C           *IN90     IFEQ '1'
-     C                     MOVEL'MIN0108' W0RTN
-      **                                                                                      CSC022
-      ** Execute rollback if SAR CSC022 is not enrolled or                                    CSC022
-      **   job is not currently running in batch mode                                         CSC022
-      **                                                                                      CSC022
-     C           CSC022    IFEQ 'N'                                                           CSC022
-     C                     ROLBK
-     C                     ELSE                                                               CSC022
-     C           WCRSKP    IFEQ 'N'                                                           CSC022
-     C                     ROLBK                                                              CSC022
-     C                     ELSE                                                               CSC022
-     C                     SETON                     U7U8                                     CSC022
-     C                     ENDIF                                                              CSC022
-     C                     ENDIF                                                              CSC022
-     C                     ELSE
-     C                     MOVEL'MIN0109' W0RTN
-     C                     END
-      *
-     C                     ELSE
-     C                     MOVEL'MIN0108' W0RTN
-     C                     END
-      *
-     C                     END
-      *
-      *  Unwind subroutine stack name
-      *
-     C           EXRSRV    TAG
-     C                     MOVEA*BLANKS   @STK,Q
-     C                     SUB  1         Q
-      *
-     CSR                   ENDSR
-     C/EJECT
-      *****************************************************************
-      *                                                               *
-      *  SRACT    : Undefined action - error                          *
-      *                                                               *
-      *  CALLED BY: Main Processing                                   *
-      *                                                               *
-      *  CALLS    : SRERR   - report error and close down program     *
-      *                                                               *
-      *****************************************************************
-     CSR         SRACT     BEGSR
-      *
-      *  Set up subroutine stack name
-      *
-     C                     ADD  1         Q
-     C                     MOVEL'SRACT '  @STK,Q
-      *
-      *  Database error undefined action
-      *
-     C                     MOVEL'*ACTION 'W0FILE
-     C                     MOVELW0ACT     W0KEY
-     C                     Z-ADD3         W0ERNB           ***************
-     C                     MOVEL'MEM5006' W0MSGD           * DB ERROR 03 *
-     C                     MOVEL'MIDAS  ' W0MSGF           ***************
-     C                     EXSR SRERR
-      *
-      *  Unwind subroutine stack name
-      *
-     C           EXACT     TAG
-     C                     MOVEA*BLANKS   @STK,Q
-     C                     SUB  1         Q
-      *
-     CSR                   ENDSR
-     C/EJECT
-      *****************************************************************
-      *                                                               *
-      *  SRINIT   : Initialise and define fields                      *
-      *                                                               *
-      *  CALLED BY: Main processing                                   *
-      *                                                               *
-      *  CALLS    * SRACCS - valid access                             *
-      *                                                               *
-      *****************************************************************
-     CSR         SRINIT    BEGSR
-      *
-      *  Set up copyright statement
-      *
-     C                     MOVEACPY@      BIS@   80
-      *
-      *  Set up subroutine stack name
-      *
-     C                     ADD  1         Q       50
-     C                     MOVEL'SRINIT'  @STK,Q
-      *
-      *  Define fields
-      *
-     C           *LIKE     DEFN MRMSGR    W0MSGR
-     C           *LIKE     DEFN MRKPRT    W0KPRT
-      *
-     C           *LIKE     DEFN MRMSGR    KFMSGR
-     C           *LIKE     DEFN MRKPRT    KFKPRT
-      *
-      * Define key list for MEINMRL0/L1
-      *
-     C           KYINMR    KLIST
-     C                     KFLD           KFMSGR
-     C                     KFLD           KFKPRT
-      *
-      * Define key list for MEINMRL2
-      *
-     C           KYMRL2    KLIST
-     C                     KFLD           ##JOB
-     C                     KFLD           ##USR
-     C                     KFLD           ##JNO
-      *
-      * Open Files
-      *
-     C                     OPEN MEINMRL0
-     C                     OPEN MEINMRL1
-     C                     OPEN MEINMRL2
-     C                     OPEN MEINMPJ1
-      *
-      *  Get Rundate information
-      *
-     C           *NAMVAR   DEFN RUNDAT    RUNDTA
-     C                     IN   RUNDTA
-     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
-     C                     MOVE AGRDNB    WURDNB  50       Run day number
-     C                     MOVE AGSUC     WUSUC   1        Set up complete
-     C                     MOVE AGDFF     WUDFF   1        Date Format
-     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
-      **                                                                                      CSC022
-      ** Initialize CSC022 and Skip Commit/Rollback flags                                     CSC022
-      **                                                                                      CSC022
-     C                     MOVE 'N'       CSC022  1                                           CSC022
-     C                     MOVE 'N'       WCRSKP  1                                           CSC022
-      **                                                                                      CSC022
-      ** Access SAR details file to determine if CSC022 switchable feature                    CSC022
-      ** is switched on                                                                       CSC022
-      **                                                                                      CSC022
-     C                     CALL 'AOSARDR0'                                                    CSC022
-     C                     PARM *BLANKS   @RTCD   7                                           CSC022
-     C                     PARM '*VERIFY' @OPTN   7                                           CSC022
-     C                     PARM 'CSC022'  @SARD   7                                           CSC022
-     C           SCSARD    PARM SCSARD    DSFDY                                               CSC022
-      **                                                                                      CSC022
-     C           @RTCD     IFEQ *BLANKS                                                       CSC022
-     C                     MOVE 'Y'       CSC022                                              CSC022
-      **                                                                                      CSC022
-      ** Get Jobs currently running i batch mode using SCCMRJOB dataarea                      CSC022
-      **                                                                                      CSC022
-     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
-     C                     IN   SCCMT                                                         CSC022
-      **                                                                                      CSC022
-     C           WCMTNO    IFGT 0                                                             CSC022
-      ** Move committed jobs to arrary for checking                                           CSC022
-     C                     MOVEAWCJOBS    WCMT                                                CSC022
-      ** Verify if job running exists in array                                                CSC022
-     C           ##JOB     LOKUPWCMT                     50                                   CSC022
-     C           *IN50     IFEQ *ON                                                           CSC022
-     C                     MOVE 'Y'       WCRSKP                                              CSC022
-     C                     ENDIF                                                              CSC022
-     C                     ENDIF                                                              CSC022
-      **                                                                                      CSC022
-     C                     ELSE                                                               CSC022
-      ** Execute *PSSR if CSC022 is not found or Database error                               CSC022
-     C           @RTCD     IFNE '*NRF'                                                        CSC022
-     C                     MOVEL'CSC022'  W0KEY                                               CSC022
-     C                     MOVEL'SCSARDPD'W0FILE                                              CSC022
-     C                     Z-ADD4         W0ERNB                                              CSC022
-     C                     EXSR SRERR                                                         CSC022
-     C                     ENDIF                                                              CSC022
-      **                                                                                      CSC022
-     C                     ENDIF                                                              CSC022
-     C                     MOVE WCRSKP    WCMTSK                                              CSC022
-      **                                                                                      CSC022
-      *                                                                                      BUG3279
-      *  Get ZMUSER information                                                              BUG3279
-      *                                                                                      BUG3279
-     C           *NAMVAR   DEFN           ZMUSER                                             BUG3279
-     C                     IN   ZMUSER                                                       BUG3279
-     C           USRID     IFNE *BLANKS                                                      BUG3279
-     C           USRID     ANDNE##USR                                                        BUG3279
-     C                     MOVELUSRID     ##USR                                              BUG3279
-     C                     ENDIF                                                             BUG3279
-      *
-      *  Indicate that set up is complete
-      *
-     C                     SETON                     50
-      *
-      *  Unwind subroutine stack name
-      *
-     C           EXINIT    TAG
-     C                     MOVEA*BLANKS   @STK,Q
-     C                     SUB  1         Q
-      *
-     CSR                   ENDSR
-     C/EJECT
-     C/COPY WNCPYSRC,ME1070DCPG
-      *
-      *  /Copy point for Calculations
-      *
-     C/EJECT
-      *
-      *  File and Program Error Processing
-      *
-     C/COPY MECPYSRC,SRERRC
-     C/EJECT
-     C/COPY WNCPYSRC,ME1070DOPG
-      *
-      *  /Copy point for Outputs
-      *
-**  CPY@ table
-(c) Finastra International Limited 2001
+000100200528     H        1
+000200200528      *****************************************************************
+000300200528/*STD *  RPGBASE                                                      *
+000400200528/*EXI *  TEXT('Midas ME Reserved network messages update')
+000500200528     F*****************************************************************
+000600200528     F*                                                               *
+000700200528     F*  Midas - Message Management Module
+000800200528     F*                                                               *
+000900200528     F*  ME1070 - Reserved Network Messages Update                    *
+001000200528     F*                                                               *
+001100200528     F*  Function:  This program reserves a selected network message  *
+001200200528     F*  for a job. No other job may access a reserved message.       *
+001300200528     F*                                                               *
+001400200528     F*  Called By: FT0040  - Outgoing Payments Maintenance           *
+001500200528     F*             FT0050  - Incoming Payments Maintenance           *
+001600200528     F*                                                               *
+001700200528      *  (c) Finastra International Limited 2001                      *
+001800200528     F*                                                               *
+001900200604     F*  Last Amend No. 255262             Date 22May20               *
+002000200528      *  Prev Amend No. MD046248           Date 27Oct17               *
+002100200528      * Bank Fusion Midas 1.4 Base -----------------------------------*
+002200200528      * Midas Plus 1.4 Base 04 ---------------------------------------*
+002300200528      * Midas Plus 1.4 Base ------------------------------------------*
+002400200528      * Midas Plus 1.3 ----------- Base ------------------------------*
+002500200528      *                 CSD027             Date 09Dec05               *
+002600200528      *                 BUG3279            Date 11Nov04               *
+002700200528      *                 CSC022             Date 24Feb04               *
+002800200528      * Midas Release 4 --------------- Base -------------------------*
+002900200528      * Midas DBA 3.00 ---------------- Base -------------------------*
+003000200528      *                 145199             Date 16Oct98               *
+003100200528      *                 069250             Date 03May94               *
+003200200528     F*                 S01435             DATE 23JUL93               *
+003300200528     F*                                                               *
+003400200528     F*---------------------------------------------------------------*
+003500200528     F*                                                               *
+003600200528     F*
+003700200528      *  255262 - A Serious midas Error has occurred encountered while*
+003800200528      *           authorising incoming payments. Ignore database error*
+003900200528      *           1 MEINMRL0. Applied fix 231418.                     *
+004000200528      *  MD046248 - Finastra Rebranding                               *
+004100200528      *  CSD027 - Conversion Of Customer Number to Alpha              *
+004200200528     F*  BUG3279- Update MEINMRPD with correct user for MidasPlus     *
+004300200528      *  CSC022 - Commitment Control Changes for MidasPlus            *
+004400200528     F*  145199 - Recompile for changes to MEINCRPD and MEINMPPD made *
+004500200528     F*           in Year 2000 fix 124673.                            *
+004600200528     F*  069250 - Remove dummy OVRDBF command from creation parms.    *
+004700200528     F*  S01435 - Incoming Message Management                         *
+004800200528     F*                                                               *
+004900200528     F*****************************************************************
+005000200528     F*                                                               *
+005100200528     F*  Indicator usage                                              *
+005200200528     F*  ~~~~~~~~~~~~~~~                                              *
+005300200528     F*                                                               *
+005400200528     F*  50    First cycle                                            *
+005500200528     F*  90    Chain fail                                             *
+005600200528     F*  99    EOF on Read                                            *
+005700200528     F*                                                               *
+005800200528     F*  U7/U8 Error Ocurred                                          *
+005900200528     F*  LR    End program                                            *
+006000200528     F*                                                               *
+006100200528     F*****************************************************************
+006200200528     FMEINMRL0UF  E           K        DISK         KINFSR SRFILEA    UC
+006300200528     F                                              KCOMIT
+006400200528      *
+006500200528      *  Reserved Incoming Electronic Messages - Update by MSG REF/PART
+006600200528      *
+006700200528     FMEINMRL1IF  E           K        DISK         KINFSR SRFILE     UC
+006800200528      *
+006900200528      *  Reserved Incoming Electronic Messages - Retrv by  MSG REF/PART
+007000200528      *
+007100200528     FMEINMRL2IF  E           K        DISK         KINFSR SRFILE     UC
+007200200528      *
+007300200528      *  Reserved Incoming Electronic Messages - Retrieval by JOB/USER/JOB NO.
+007400200528      *
+007500200528     FMEINMPJ1IF  E           K        DISK         KINFSR SRFILE     UC
+007600200528      *
+007700200528      *  Join of MEINCRPD/MEINMPPD/MEINFTPD/MEINMRPD - MSG REF/PART
+007800200528      *
+007900200528     F/COPY WNCPYSRC,ME1070DFPG
+008000200528      *
+008100200528      *  /Copy point for File Definition
+008200200528      *
+008300200528     F/EJECT
+008400200528     E                    CPY@    1   1 80
+008500200528      **                                                                                      CSC022
+008600200528      ** Array to hold commitment jobs name                                                   CSC022
+008700200528      **                                                                                      CSC022
+008800200528     E                    WCMT       10 10                                                    CSC022
+008900200528      *
+009000200528      *  Copyright table
+009100200528      *
+009200200528     E/COPY WNCPYSRC,ME1070DEPG
+009300200528      *
+009400200528      *  /Copy point for Arrays
+009500200528      *
+009600200528     E/COPY MECPYSRC,SRERRE
+009700200528      *
+009800200528      *  end of Copysource for error processing
+009900200528      *
+010000200528     E/EJECT
+010100200528     I/COPY WNCPYSRC,ME1070DIPG
+010200200528      *
+010300200528      *  /Copy point for Input specifications
+010400200528      *
+010500200528     ICPYR@#      DS
+010600200528      *
+010700200528      *  Data structure for compilation  - Copyright insertion
+010800200528      *
+010900200528     I                                        1  80 CPY@
+011000200528     I                                        1  20 CPY@##
+011100200528     I/COPY MECPYSRC,SRERRI
+011200200528      *
+011300200528      *  End of Program Error Processing copysource member
+011400200528      *
+011500200528     IRUNDTA    E DSRUNDAT
+011600200528      *
+011700200528      *  Define rundat data area
+011800200528      *
+011900200528      **                                                                                      CSC022
+012000200528     ISCSARD    E DSSCSARDPD                                                                  CSC022
+012100200528      ** Switchable Features File                                                             CSC022
+012200200528     IDSFDY     E DSDSFDY                                                                     CSC022
+012300200528      ** First DS for Access Programs, short data structure                                   CSC022
+012400200528     ISCCMT       DS                            256                                           CSC022
+012500200528     I                                        1   30WCMTNO                                    CSC022
+012600200528     I                                        4 103 WCJOBS                                    CSC022
+012700200528      ** Commitment Control dataarea                                                          CSC022
+012800200528      **                                                                                      CSC022
+012900200528     IDBKMR       DS
+013000200528      *
+013100200528      *  Data structure to define MEINMRL1 key for error reporting
+013200200528      *
+013300200528     I                                        1   80W#MSGR
+013400200528     I                                        9  110W#KPRT
+013500200528     IDBKMR2      DS
+013600200528      *
+013700200528      *  Data structure to define MEINMRL2 key for error reporting
+013800200528      *
+013900200528     I                                        1  10 W#JOB
+014000200528     I                                       11  20 W#USR
+014100200528     I                                       21  260W#JNO
+014200200528      ** Java user information                                                               BUG3279
+014300200528     IZMUSER    E DSZMUSER                                                                   BUG3279
+014400200528     I/EJECT
+014500200528      *****************************************************************
+014600200528      *                 M A I N L I N E
+014700200528      *****************************************************************
+014800200528      *
+014900200528      *  Set up subroutine stack name
+015000200528      *
+015100200528     C                     ADD  1         Q
+015200200528     C                     MOVEL'MAIN'    @STK,Q
+015300200528      *
+015400200528      *  Define entry parameters
+015500200528      *
+015600200528     C           *ENTRY    PLIST
+015700200528     C                     PARM           W0ACT   7
+015800200528     C                     PARM           W0MSGR
+015900200528     C                     PARM           W0KPRT
+016000200528     C                     PARM           W0MOR  28
+016100200528     C                     PARM           W0MIR  28
+016200200528     C                     PARM           W0RTN   7
+016300200528      *
+016400200528      *  Set up primary reference
+016500200528      *
+016600200528     C                     MOVELW0MSGR    W0PREF
+016700200528      *
+016800200528      * Initialise program
+016900200528      *
+017000200528     C           *IN50     IFEQ '0'
+017100200528     C                     EXSR SRINIT
+017200200528     C                     END
+017300200528      *
+017400200528      *  Determine the mode of processing and execute subroutine :-
+017500200528      *
+017600200528      *
+017700200528      *  Action Code : *DEL
+017800200528      *  ------------------
+017900200528      *
+018000200528      *  Called from Incoming Payments Maintenance to remove the
+018100200528      *  reservation of the current message reference that has just
+018200200528      *  been processed and updated.
+018300200528      *
+018400200528      *  Called from Electronic Message Selection (FT0051) if the
+018500200528      *  user no longer wishes to reserve a message reference that was
+018600200528      *  previously reserved.
+018700200528      *
+018800200528      *
+018900200528      *  Action Code : *END
+019000200528      *  ------------------
+019100200528      *
+019200200528      *  Called from Incoming Payments Maintenance to remove all
+019300200528      *  remaining reservations if F3 to end job or F12 for initial
+019400200528      *  screen was taken.
+019500200528      *
+019600200528      *  Called from CL program if a database or file error ocurred
+019700200528      *  and the calling function was ended.
+019800200528      *
+019900200528      *  Called from Close Of Business within the clearing process
+020000200528      *
+020100200528      *
+020200200528      *  Action Code : *RESERV
+020300200528      *  ---------------------
+020400200528      *
+020500200528      *  Called from Incoming Payments Maintenance to reserve an
+020600200528      *  individual message reference that was entered on the initial
+020700200528      *  screen.
+020800200528      *
+020900200528      *  Called from Electronic Message Selection (FT0051) to reserve
+021000200528      *  all Swift References that are selected for processing.
+021100200528      *
+021200200528      *
+021300200528      *  Action Code : INVALID
+021400200528      *  ---------------------
+021500200528      *
+021600200528      *  If invalid Action Code passed then report as an error.
+021700200528      *
+021800200528     C           W0ACT     CASEQ'*DEL   ' SRDEL
+021900200528     C           W0ACT     CASEQ'*END   ' SREND
+022000200528     C           W0ACT     CASEQ'*RESERV' SRRSRV
+022100200528     C                     CAS            SRACT
+022200200528     C                     END
+022300200528      *
+022400200528      *  Unwind subroutine stack name
+022500200528      *
+022600200528     C                     MOVEA*BLANKS   @STK,Q
+022700200528     C                     SUB  1         Q
+022800200528      *
+022900200528      *  Return to calling program
+023000200528      *
+023100200528     C                     RETRN
+023200200528     C/EJECT
+023300200528      *****************************************************************
+023400200528      *                                                               *
+023500200528      *  SRDEL    : Processing finished for current reserved message, *
+023600200528      *             remove reference from file.                       *
+023700200528      *                                                               *
+023800200528      *  CALLED BY: Main processing section                           *
+023900200528      *                                                               *
+024000200528      *  CALLS    : SRERR   - report error and close down program     *
+024100200528      *                                                               *
+024200200528      *****************************************************************
+024300200528     CSR         SRDEL     BEGSR
+024400200528      *
+024500200528      *  Set up subroutine stack name
+024600200528      *
+024700200528     C                     ADD  1         Q
+024800200528     C                     MOVEL'SRDEL '  @STK,Q
+024900200528      *
+025000200528      *  /Copy point for Deletion of Reservation
+025100200528      *
+025200200528     C/COPY WNCPYSRC,ME1070DDEL
+025300200528      *
+025400200528      *  Delete the message reference from the Reserved Message file
+025500200528      *  for the current job after setting up the key
+025600200528      *
+025700200528     C                     Z-ADDW0MSGR    KFMSGR
+025800200528     C                     Z-ADDW0KPRT    KFKPRT
+025900200528      *
+026000200528     C           KYINMR    CHAINMEINMRL0             90
+026100200528      *
+026200200528     C           *IN90     IFEQ '0'
+026300200528     C                     DELET@INMRL0
+026400200528     C                     ELSE
+026500200528      *
+026600200528      *****************************************************************                       255262
+026700200528      ***Report*database*error*-*set*up*file*key*using*data*structure**                       255262
+026800200528      *****************************************************************                       255262
+026900200528     C**********           Z-ADDKFMSGR    W#MSGR                                              255262
+027000200528     C**********           Z-ADDKFKPRT    W#KPRT                                              255262
+027100200528      *****************************************************************                       255262
+027200200528     C**********           MOVEL'MEINMRL0'W0FILE                                              255262
+027300200528     C**********           MOVELDBKMR     W0KEY                                               255262
+027400200528     C**********           Z-ADD1         W0ERNB           ***************                    255262
+027500200528     C**********           MOVEL'MEM5004' W0MSGD           * DB ERROR 01 *                    255262
+027600200528     C**********           MOVEL'MIDAS  ' W0MSGF           ***************                    255262
+027700200528     C**********           EXSR SRERR                                                         255262
+027800200528     C                     END
+027900200528      *
+028000200528      *  Set Return Code - Reservation For Message Removed
+028100200528      *
+028200200528     C                     MOVEL'MIN0110' W0RTN
+028300200528      *
+028400200528      *  Unwind subroutine stack name
+028500200528      *
+028600200528     C           EXDEL     TAG
+028700200528     C                     MOVEA*BLANKS   @STK,Q
+028800200528     C                     SUB  1         Q
+028900200528      *
+029000200528     CSR                   ENDSR
+029100200528     C/EJECT
+029200200528      *****************************************************************
+029300200528      *                                                               *
+029400200528      *  SREND    : No more messages to be processed - remove any     *
+029500200528      *             remaining reserved messages.                      *
+029600200528      *                                                               *
+029700200528      *  CALLED BY: Main processing section                           *
+029800200528      *                                                               *
+029900200528      *  CALLS    : SRERR   - report error and close down program     *
+030000200528      *                                                               *
+030100200528      *****************************************************************
+030200200528     CSR         SREND     BEGSR
+030300200528      *
+030400200528      *  Set up subroutine stack name
+030500200528      *
+030600200528     C                     ADD  1         Q
+030700200528     C                     MOVEL'SREND '  @STK,Q
+030800200528      *
+030900200528      *  /Copy point for Deletion of All Reservations
+031000200528      *
+031100200528     C/COPY WNCPYSRC,ME1070DDAL
+031200200528      *
+031300200528      *  Read and delete all records on the Reserved Message file
+031400200528      *  fo the current job
+031500200528      *
+031600200528     C           KYMRL2    SETLLMEINMRL2
+031700200528      *
+031800200528     C           KYMRL2    READEMEINMRL2                 99
+031900200528      *
+032000200528     C           *IN99     DOWEQ'0'
+032100200528      *
+032200200528     C                     Z-ADDMRMSGR    KFMSGR
+032300200528     C                     Z-ADDMRKPRT    KFKPRT
+032400200528     C           KYINMR    CHAINMEINMRL0             90
+032500200528      *
+032600200528     C           *IN90     IFEQ '0'
+032700200528     C                     DELET@INMRL0
+032800200528     C                     ELSE
+032900200528      *
+033000200528      *  Report database error - set up file key using data structure
+033100200528      *
+033200200528     C                     Z-ADDKFMSGR    W#MSGR
+033300200528     C                     Z-ADDKFKPRT    W#KPRT
+033400200528      *
+033500200528     C                     MOVELDBKMR     W0KEY
+033600200528     C                     MOVEL'MEINMRL0'W0FILE
+033700200528     C                     Z-ADD2         W0ERNB           ***************
+033800200528     C                     MOVEL'MEM5004' W0MSGD           * DB ERROR 02 *
+033900200528     C                     MOVEL'MIDAS  ' W0MSGF           ***************
+034000200528     C                     EXSR SRERR
+034100200528     C                     END
+034200200528      *
+034300200528     C           KYMRL2    READEMEINMRL2                 99
+034400200528     C                     END
+034500200528      *
+034600200528      *  Set Return Code - Reservation Processing Cancelled For Job
+034700200528      *
+034800200528     C                     MOVEL'MIN0111' W0RTN
+034900200528      *
+035000200528      *  Unwind subroutine stack name
+035100200528      *
+035200200528     C           EXEND     TAG
+035300200528     C                     MOVEA*BLANKS   @STK,Q
+035400200528     C                     SUB  1         Q
+035500200528      *
+035600200528     CSR                   ENDSR
+035700200528     C/EJECT
+035800200528      *****************************************************************
+035900200528      *                                                               *
+036000200528      *  SRRSRV   : Reserve selected messages                         *
+036100200528      *                                                               *
+036200200528      *  CALLED BY: Main processing section                           *
+036300200528      *                                                               *
+036400200528      *  CALLS    :         -                                         *
+036500200528      *                                                               *
+036600200528      *****************************************************************
+036700200528     CSR         SRRSRV    BEGSR
+036800200528      *
+036900200528      *  Set up subroutine stack name
+037000200528      *
+037100200528     C                     ADD  1         Q
+037200200528     C                     MOVEL'SRRSRV'  @STK,Q
+037300200528      *
+037400200528      *  /Copy point for Reservation
+037500200528      *
+037600200528     C/COPY WNCPYSRC,ME1070DRES
+037700200528      *
+037800200528      *  Check for existence of this message on the Reserved Msgs file
+037900200528      *
+038000200528     C                     Z-ADDW0MSGR    KFMSGR
+038100200528     C                     Z-ADDW0KPRT    KFKPRT
+038200200528      *
+038300200528     C           KYINMR    CHAINMEINMRL1             90
+038400200528      *
+038500200528      *  If a record found for this unique ref/part no.
+038600200528      *
+038700200528     C           *IN90     IFEQ '0'
+038800200528      *
+038900200528      *  If record is for this job, no updates required.
+039000200528      *  Set Return Code - Record Previously Allocated To THIS Job
+039100200528      *
+039200200528     C           MRJOB     IFEQ ##JOB
+039300200528     C           MRUSR     ANDEQ##USR
+039400200528     C           MRJNO     ANDEQ##JNO
+039500200528     C                     MOVEL'MIN0107' W0RTN
+039600200528      *
+039700200528      *  If record is NOT for this job, no updates required.
+039800200528      *  Set Return Code - Message Already Reserved For Another Job
+039900200528      *
+040000200528     C                     ELSE
+040100200528     C                     MOVEL'MIN0108' W0RTN
+040200200528     C                     END
+040300200528      *
+040400200528      *  If record is not found then write a record to reserve the
+040500200528      *  message reference for processing within this job.
+040600200528      *
+040700200528     C                     ELSE
+040800200528     C                     Z-ADDW0MSGR    MRMSGR
+040900200528     C                     Z-ADDW0KPRT    MRKPRT
+041000200528     C                     MOVEL##JOB     MRJOB
+041100200528     C                     MOVEL##USR     MRUSR
+041200200528     C                     Z-ADD##JNO     MRJNO
+041300200528     C                     WRITE@INMRL0                90
+041400200528      *
+041500200528      *  If a successful write then
+041600200528      *  Set Return Code - Message Is Now Reserved For This Job
+041700200528      *
+041800200528      *  If the write fails it implies that another workstation has
+041900200528      *  just reserved the message reference so
+042000200528      *  Set Return Code - Message Already Reserved For Another Job
+042100200528      *
+042200200528     C           *IN90     IFEQ '0'
+042300200528      *
+042400200528      * Re-Check that message not already processed
+042500200528      *
+042600200528     C                     Z-ADDW0MSGR    MPMSGR
+042700200528     C                     Z-ADDW0KPRT    MPKPRT
+042800200528      *
+042900200528      * Define key list for MEINMPJ1
+043000200528      *
+043100200528     C           KYMPJ1    KLIST
+043200200528     C                     KFLD           MPMSGR
+043300200528     C                     KFLD           MPKPRT
+043400200528      *
+043500200528     C           KYMPJ1    CHAINMEINMPJ1             90
+043600200528      *
+043700200528      *  If a record is not found then means that
+043800200528      *  the message part has already been processed by FT
+043900200528      *
+044000200528      *  Set retn code - Message Reference Not Available For Processing
+044100200528      *
+044200200528     C           *IN90     IFEQ '1'
+044300200528     C                     MOVEL'MIN0108' W0RTN
+044400200528      **                                                                                      CSC022
+044500200528      ** Execute rollback if SAR CSC022 is not enrolled or                                    CSC022
+044600200528      **   job is not currently running in batch mode                                         CSC022
+044700200528      **                                                                                      CSC022
+044800200528     C           CSC022    IFEQ 'N'                                                           CSC022
+044900200528     C                     ROLBK
+045000200528     C                     ELSE                                                               CSC022
+045100200528     C           WCRSKP    IFEQ 'N'                                                           CSC022
+045200200528     C                     ROLBK                                                              CSC022
+045300200528     C                     ELSE                                                               CSC022
+045400200528     C                     SETON                     U7U8                                     CSC022
+045500200528     C                     ENDIF                                                              CSC022
+045600200528     C                     ENDIF                                                              CSC022
+045700200528     C                     ELSE
+045800200528     C                     MOVEL'MIN0109' W0RTN
+045900200528     C                     END
+046000200528      *
+046100200528     C                     ELSE
+046200200528     C                     MOVEL'MIN0108' W0RTN
+046300200528     C                     END
+046400200528      *
+046500200528     C                     END
+046600200528      *
+046700200528      *  Unwind subroutine stack name
+046800200528      *
+046900200528     C           EXRSRV    TAG
+047000200528     C                     MOVEA*BLANKS   @STK,Q
+047100200528     C                     SUB  1         Q
+047200200528      *
+047300200528     CSR                   ENDSR
+047400200528     C/EJECT
+047500200528      *****************************************************************
+047600200528      *                                                               *
+047700200528      *  SRACT    : Undefined action - error                          *
+047800200528      *                                                               *
+047900200528      *  CALLED BY: Main Processing                                   *
+048000200528      *                                                               *
+048100200528      *  CALLS    : SRERR   - report error and close down program     *
+048200200528      *                                                               *
+048300200528      *****************************************************************
+048400200528     CSR         SRACT     BEGSR
+048500200528      *
+048600200528      *  Set up subroutine stack name
+048700200528      *
+048800200528     C                     ADD  1         Q
+048900200528     C                     MOVEL'SRACT '  @STK,Q
+049000200528      *
+049100200528      *  Database error undefined action
+049200200528      *
+049300200528     C                     MOVEL'*ACTION 'W0FILE
+049400200528     C                     MOVELW0ACT     W0KEY
+049500200528     C                     Z-ADD3         W0ERNB           ***************
+049600200528     C                     MOVEL'MEM5006' W0MSGD           * DB ERROR 03 *
+049700200528     C                     MOVEL'MIDAS  ' W0MSGF           ***************
+049800200528     C                     EXSR SRERR
+049900200528      *
+050000200528      *  Unwind subroutine stack name
+050100200528      *
+050200200528     C           EXACT     TAG
+050300200528     C                     MOVEA*BLANKS   @STK,Q
+050400200528     C                     SUB  1         Q
+050500200528      *
+050600200528     CSR                   ENDSR
+050700200528     C/EJECT
+050800200528      *****************************************************************
+050900200528      *                                                               *
+051000200528      *  SRINIT   : Initialise and define fields                      *
+051100200528      *                                                               *
+051200200528      *  CALLED BY: Main processing                                   *
+051300200528      *                                                               *
+051400200528      *  CALLS    * SRACCS - valid access                             *
+051500200528      *                                                               *
+051600200528      *****************************************************************
+051700200528     CSR         SRINIT    BEGSR
+051800200528      *
+051900200528      *  Set up copyright statement
+052000200528      *
+052100200528     C                     MOVEACPY@      BIS@   80
+052200200528      *
+052300200528      *  Set up subroutine stack name
+052400200528      *
+052500200528     C                     ADD  1         Q       50
+052600200528     C                     MOVEL'SRINIT'  @STK,Q
+052700200528      *
+052800200528      *  Define fields
+052900200528      *
+053000200528     C           *LIKE     DEFN MRMSGR    W0MSGR
+053100200528     C           *LIKE     DEFN MRKPRT    W0KPRT
+053200200528      *
+053300200528     C           *LIKE     DEFN MRMSGR    KFMSGR
+053400200528     C           *LIKE     DEFN MRKPRT    KFKPRT
+053500200528      *
+053600200528      * Define key list for MEINMRL0/L1
+053700200528      *
+053800200528     C           KYINMR    KLIST
+053900200528     C                     KFLD           KFMSGR
+054000200528     C                     KFLD           KFKPRT
+054100200528      *
+054200200528      * Define key list for MEINMRL2
+054300200528      *
+054400200528     C           KYMRL2    KLIST
+054500200528     C                     KFLD           ##JOB
+054600200528     C                     KFLD           ##USR
+054700200528     C                     KFLD           ##JNO
+054800200528      *
+054900200528      * Open Files
+055000200528      *
+055100200528     C                     OPEN MEINMRL0
+055200200528     C                     OPEN MEINMRL1
+055300200528     C                     OPEN MEINMRL2
+055400200528     C                     OPEN MEINMPJ1
+055500200528      *
+055600200528      *  Get Rundate information
+055700200528      *
+055800200528     C           *NAMVAR   DEFN RUNDAT    RUNDTA
+055900200528     C                     IN   RUNDTA
+056000200528     C                     MOVE AGMRDT    WUMRDT  7        Midas Run date
+056100200528     C                     MOVE AGRDNB    WURDNB  50       Run day number
+056200200528     C                     MOVE AGSUC     WUSUC   1        Set up complete
+056300200528     C                     MOVE AGDFF     WUDFF   1        Date Format
+056400200528     C                     MOVE AGMBIN    WUMBIN  1        Multi Branched
+056500200528      **                                                                                      CSC022
+056600200528      ** Initialize CSC022 and Skip Commit/Rollback flags                                     CSC022
+056700200528      **                                                                                      CSC022
+056800200528     C                     MOVE 'N'       CSC022  1                                           CSC022
+056900200528     C                     MOVE 'N'       WCRSKP  1                                           CSC022
+057000200528      **                                                                                      CSC022
+057100200528      ** Access SAR details file to determine if CSC022 switchable feature                    CSC022
+057200200528      ** is switched on                                                                       CSC022
+057300200528      **                                                                                      CSC022
+057400200528     C                     CALL 'AOSARDR0'                                                    CSC022
+057500200528     C                     PARM *BLANKS   @RTCD   7                                           CSC022
+057600200528     C                     PARM '*VERIFY' @OPTN   7                                           CSC022
+057700200528     C                     PARM 'CSC022'  @SARD   7                                           CSC022
+057800200528     C           SCSARD    PARM SCSARD    DSFDY                                               CSC022
+057900200528      **                                                                                      CSC022
+058000200528     C           @RTCD     IFEQ *BLANKS                                                       CSC022
+058100200528     C                     MOVE 'Y'       CSC022                                              CSC022
+058200200528      **                                                                                      CSC022
+058300200528      ** Get Jobs currently running i batch mode using SCCMRJOB dataarea                      CSC022
+058400200528      **                                                                                      CSC022
+058500200528     C           *NAMVAR   DEFN SCCMTJOB  SCCMT                                               CSC022
+058600200528     C                     IN   SCCMT                                                         CSC022
+058700200528      **                                                                                      CSC022
+058800200528     C           WCMTNO    IFGT 0                                                             CSC022
+058900200528      ** Move committed jobs to arrary for checking                                           CSC022
+059000200528     C                     MOVEAWCJOBS    WCMT                                                CSC022
+059100200528      ** Verify if job running exists in array                                                CSC022
+059200200528     C           ##JOB     LOKUPWCMT                     50                                   CSC022
+059300200528     C           *IN50     IFEQ *ON                                                           CSC022
+059400200528     C                     MOVE 'Y'       WCRSKP                                              CSC022
+059500200528     C                     ENDIF                                                              CSC022
+059600200528     C                     ENDIF                                                              CSC022
+059700200528      **                                                                                      CSC022
+059800200528     C                     ELSE                                                               CSC022
+059900200528      ** Execute *PSSR if CSC022 is not found or Database error                               CSC022
+060000200528     C           @RTCD     IFNE '*NRF'                                                        CSC022
+060100200528     C                     MOVEL'CSC022'  W0KEY                                               CSC022
+060200200528     C                     MOVEL'SCSARDPD'W0FILE                                              CSC022
+060300200528     C                     Z-ADD4         W0ERNB                                              CSC022
+060400200528     C                     EXSR SRERR                                                         CSC022
+060500200528     C                     ENDIF                                                              CSC022
+060600200528      **                                                                                      CSC022
+060700200528     C                     ENDIF                                                              CSC022
+060800200528     C                     MOVE WCRSKP    WCMTSK                                              CSC022
+060900200528      **                                                                                      CSC022
+061000200528      *                                                                                      BUG3279
+061100200528      *  Get ZMUSER information                                                              BUG3279
+061200200528      *                                                                                      BUG3279
+061300200528     C           *NAMVAR   DEFN           ZMUSER                                             BUG3279
+061400200528     C                     IN   ZMUSER                                                       BUG3279
+061500200528     C           USRID     IFNE *BLANKS                                                      BUG3279
+061600200528     C           USRID     ANDNE##USR                                                        BUG3279
+061700200528     C                     MOVELUSRID     ##USR                                              BUG3279
+061800200528     C                     ENDIF                                                             BUG3279
+061900200528      *
+062000200528      *  Indicate that set up is complete
+062100200528      *
+062200200528     C                     SETON                     50
+062300200528      *
+062400200528      *  Unwind subroutine stack name
+062500200528      *
+062600200528     C           EXINIT    TAG
+062700200528     C                     MOVEA*BLANKS   @STK,Q
+062800200528     C                     SUB  1         Q
+062900200528      *
+063000200528     CSR                   ENDSR
+063100200528     C/EJECT
+063200200528     C/COPY WNCPYSRC,ME1070DCPG
+063300200528      *
+063400200528      *  /Copy point for Calculations
+063500200528      *
+063600200528     C/EJECT
+063700200528      *
+063800200528      *  File and Program Error Processing
+063900200528      *
+064000200528     C/COPY MECPYSRC,SRERRC
+064100200528     C/EJECT
+064200200528     C/COPY WNCPYSRC,ME1070DOPG
+064300200528      *
+064400200528      *  /Copy point for Outputs
+064500200528      *
+064600200528**  CPY@ table
+064700200528(c) Finastra International Limited 2001

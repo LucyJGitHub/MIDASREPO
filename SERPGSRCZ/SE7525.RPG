@@ -1,833 +1,833 @@
-     H        1
-      *****************************************************************
-/*STD *  RPGBASE                                                      *
-/*EXI *  TEXT('Midas SE Currency change events creation')             *
-      *****************************************************************
-      *                                                               *
-      *  Midas - Securities Trading Module                            *
-      *                                                               *
-      *  SE7525 -  Currency Change Events Creation                    *
-      *                                                               *
-      *  Function:  The Currency Change events and Allocation will be *
-      *             created                                           *
-      *                                                               *
-      *  Called by: SE7521  -  Securities Redenomination Bulk Maint.  *
-      *                                                               *
-      *  Calls    : AOBANKR0 - Access Program for Bank Details        *
-      *             AOSTRDR0 - Access Program for Securities Trading  *
-      *                                                               *
-      *  (c) Finastra International Limited 2001                      *
-      *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
-      *                 CER020             Date 19May08               *
-      * Bank Fusion Midas 1.4 Base -----------------------------------*
-      * Midas Plus 1.4 Base 04 ---------------------------------------*
-      * Midas Plus 1.4 Base ------------------------------------------*
-      * Midas Plus 1.3 ----------- Base ------------------------------*
-      *                 CSD027             Date 09Dec05               *
-      *                 CSC023             Date 28Jan04               *
-      * Midas Release 4 --------------- Base -------------------------*
-      *                 CPK014             Date 11Oct01               *
-      * Midas DBA 3.03 -----------------------------------------------*
-      *                 CSE020             Date 21Mar00               *
-      * Midas DBA 3.00 ---------------- Base -------------------------*
-      *                 149983             Date 10Dec98               *
-      *                 149787             Date 30Nov98               *
-      *                 138962             Date 28Aug98               *
-      *                 136933             Date 25Jun98               *
-      *                 136428             Date 15Jun98               *
-      *                 135685             Date 28May98               *
-      *                 CEU017 *CREATE     Date 26Feb98               *
-      *                                                               *
-      *****************************************************************
-      *                                                               *
-      *  MD046248 - Finastra Rebranding                               *
-      *  CER059 - German Feature Upgrade to Delhi                     *
-      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
-      *           Midas Plus (Recompile)                              *
-      *  CSD027 - Conversion Of Customer Number to Alpha              *
-      *  CSC023 - SBMJOB output queue must be *JOBD.                  *
-      *  CPK014 - Submit jobs with user *JOBD                         *
-      *  CSE020 - Corporate Actions Domino Effect Processing          *
-      *           (Recompiled due to changes in PF/SECORFPD)          *
-      *  149983 - EMU: Block OLD Security for Sale as well            *
-      *  149787 - Duplicate CO refs are being generated because the   *
-      *           header SECORFPA is not updated with the next avail- *
-      *           able reference number until much later after        *
-      *           SECORFPD is updated.                                *
-      *  138962 - EMU: Problems when allocating reference numbers     *
-      *           to several users using the option at same time.     *
-      *  136933 - Block OLD Security from the allocation effective    *
-      *           Date when generating the 'CC' events.               *
-      *  136428 - Recompile due to addition of Days Basis and Divisor *
-      *           Basis field in SECORBPD.                            *
-      *  135685 - It's not feasible to enter the Compensation Price   *
-      *           at the Bulk level as the Bulk will have many        *
-      *           Securities all giving a cash compensation at a      *
-      *           different level. Therefore, allow the entry of      *
-      *           'MARKET' which will use the Market Price of the     *
-      *           Security at allocation effective date.              *
-      *  CEU017- Securities Redenomination Euro Changes               *
-      *                                                               *
-      *****************************************************************
-      *
-     FSECORSL0UF  E           K        DISK         KINFSR *PSSR A
-     F                                              KCOMIT
-      **  Securities Redenomination Bulk Securities
-      *
-     FSECORBL0UF  E           K        DISK         KINFSR *PSSR A
-     F                                              KCOMIT
-      **  Securities Redenomination Bulk Detail
-      *
-     F***SECORFL0UF**E           K        DISK         KINFSR *PSSR A     138962
-     FSECORFL0O   E           K        DISK         KINFSR *PSSR          138962
-     F                                              KCOMIT
-      **  Corporate Action References
-      *
-     FSECORFL1IF  E           K        DISK         KINFSR *PSSR          138962
-     F            SECORFD0                          KRENAMESECORFD1       138962
-      **  Corporate Action References                                     138962
-      *                                                                   138962
-     FSECORFPAUF  E           K        DISK         KINFSR *PSSR A
-     F                                              KCOMIT
-      **  Corporate Action Reference Number
-      *
-     FSECOCCL0UF  E           K        DISK         KINFSR *PSSR A
-     F                                              KCOMIT
-      **  Currency Change File
-      *
-     FSEDPOHL0IF  E           K        DISK         KINFSR *PSSR
-      **   Midas Corporate Actions - Depots update index
-      *
-     FSECOBKL2UF  E           K        DISK         KINFSR *PSSR A        136933
-     F                                              KCOMIT                136933
-      *                                                                   136933
-      **   MU - SE CORPORATE ACTIONS Blocked Positions                    136933
-     FSE7525AUO   E                    PRINTER      KINFSR *PSSR
-      ** Audit Report
-      *
-      /EJECT
-      *****************************************************************
-      *  F U N C T I O N    O F    I N D I C A T O R S                *
-      *                                                               *
-      *  80    Chain indicator                                        *
-      *  81    Read indicator for SECORSPD                            *
-      *  82    Read indicator for SECORFPA                            *
-      *  83    Read indicator for SEDPOHL0                            *
-      *                                                               *
-      *  LR    Last record indicator                                  *
-      *  U7-U8 Database error indicator                               *
-      *****************************************************************
-      /SPACE 3
-      ****************************************************************
-      *  S U B R O U T I N E    I N D E X                            *
-      *                                                              *
-      *  SRAUDT - Generates Audit report                             *
-      *  SRCALL - Calls SE7550 to for automatic allocation processing*
-      *  SRCC   - Writes record to SECOCCPD                          *
-      *  SRINIT - Program Initialisation                             *
-      *  SRNEXT - Setup next available Reference number              *
-      *  SRPROC - Process records from SECORSPD                      *
-      *  SRREF  - Writes record to SECORFPD                          *
-      *                                                              *
-      *  *PSSR  - Error routine                                      *
-      ****************************************************************
-      /EJECT
-      ****************************************************************
-     E                    CPY@    1   1 80
-      *
-     E                    CMD     1   3 80               SBMJOB
-      ****************************************************************
-     ISECORFD1                                                            138962
-     I              MARECI                          YYRECI                138962
-     I              MALCD                           YYLCD                 138962
-     I              MACHTP                          YYCHTP                138962
-     I              MALUID                          YYLUID                138962
-     I              MACORF                          YYCORF                138962
-     I              MAJOBN                          YYJOBN                138962
-     I              MAUSER                          YYUSER                138962
-     I              MAJNBR                          YYJNBR                138962
-     I              MASESN                          YYSESN                138962
-     I              MACOAT                          YYCOAT                138962
-     I              MAPTYP                          YYPTYP                138962
-     I              MACOAN                          YYCOAN                138962
-     I              MACOEX                          YYCOEX                138962
-     I              MAALEF                          YYALEF                138962
-     I              MANBOP                          YYNBOP                138962
-     I              MATDVD                          YYTDVD                138962
-     I              MACOPD                          YYCOPD                138962
-     I              MATDDT                          YYTDDT                138962
-     I              MAEVDT                          YYEVDT                138962
-     I              MACPNB                          YYCPNB                138962
-     I              MASHMD                          YYSHMD                138962
-     I              MALTBS                          YYLTBS                138962
-     I              MAOCPV                          YYOCPV                138962
-     I              MANCPV                          YYNCPV                138962
-     I              MAONML                          YYONML                138962
-     I              MANNML                          YYNNML                138962
-     I              MACUPC                          YYCUPC                138962
-     I              MAEXPC                          YYEXPC                138962
-     I              MACLRD                          YYCLRD                138962
-     I              MACLRT                          YYCLRT                138962
-     I              MADLRD                          YYDLRD                138962
-     I              MADLRT                          YYDLRT                138962
-     I              MABLOS                          YYBLOS                138962
-     I              MABLOP                          YYBLOP                138962
-     I              MABFRD                          YYBFRD                138962
-     I              MABEND                          YYBEND                138962
-     I              MAREFO                          YYREFO                138962
-     I              MACONR                          YYCONR                138962
-     I              MADFNR                          YYDFNR                138962
-     I              MADFCP                          YYDFCP                138962
-     I              MADFSP                          YYDFSP                138962
-     I              MALREQ                          YYLREQ                138962
-     I              MALPRO                          YYLPRO                138962
-     I              MALTSI                          YYLTSI                138962
-     I              MASTAT                          YYSTAT                138962
-      *
-      **  Data Structure for compilation - Copyright insertion
-     ICPYR@$      DS
-     I                                        1  80 CPY@
-     I                                        1  20 CPY@$$
-      *
-      **  Data Structure for command string for QCMDEXC
-     ICMDTXT      DS                            240
-     I                                       81 160 CMDTX2                                    CPK014
-     I                                      161 240 CMDTX3                                    CPK014
-     I                                       12  20 @CJOB
-     I                                       14  19 @REF
-     I                                       20  20 @ACTI
-     I                                       72  77 @REFN
-     I                                       83  85 @BRCD
-     I                                       91  96 @DEPT
-      *
-     IRUNDAT    E DS
-      **  Standard Data Area Layout for System flags and Run Date
-      *
-     ILDA       E DSLDA                         256
-      *
-      ** Local data area for database error details
-      ** *LOCK IN LDA immediately before and OUT LDA immediately
-      ** after each database error handling.
-      **
-      **                                    134 141 DBFILE
-      **       Defines:                     142 170 DBKEY
-      **                                    171 180 DBPGM
-      **                                    181 1830DBASE
-      *
-     IZMUSER      DS                             17
-      ** Data area ZMUSER
-     I                                       11  13 BVBRCD
-      *
-     IPSDS       SDS
-      ** Program Status Data Structure
-      *
-     I                                      254 263 WUSER
-      *
-     ISDBANK    E DSSDBANKPD
-      ** Bank Details
-      *
-     ISDSTRD    E DSSDSTRDPD
-      ** Securites Trading ICD
-      *
-     IDSSDY     E DSDSSDY
-      ** Long Data Structure
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *                                                               *
-      *            MAIN   - Main Routine.                             *
-      *                                                               *
-      * CALLS      SRAUDT - Writes record to SECORFPD                 *
-      *            SRINIT - Program Initialisation                    *
-      *            SRPROC - Process records from SECORSPD             *
-      *                                                               *
-      * CALLED BY         -                                           *
-      *                                                               *
-      * FLDS USED         -                                           *
-      *                                                               *
-      *****************************************************************
-      *
-     C           *ENTRY    PLIST                           ** Main **
-     C                     PARM           PBLKR   60
-     C                     PARM           PRETRN  1        Return code
-      *
-      **  Perform Initialisation
-      *
-     C                     EXSR SRINIT
-      *
-     C                     EXSR SRPROC
-      *
-     C                     EXSR SRAUDT
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *                                                               *
-      *            SRINIT - Program Initialisation                    *
-      *                                                               *
-      * CALLS      AOBANKR0 - Access Program for Bank Details         *
-      *            AOSTRDR0 - Access Program for Securities Trading   *
-      *            *PSSR  - Error routine                             *
-      *            SRAUDT   - Generates Audit report                  *
-      *                                                               *
-      * CALLED BY  MAIN   - Main routine                              *
-      *                                                               *
-      * FLDS USED         -                                           *
-      *                                                               *
-      *****************************************************************
-      *
-     C           SRINIT    BEGSR                           ** SRINIT **
-      *
-      ** Set up copyright parameter
-      *
-     C                     MOVEACPY@      WCPY   80
-      *
-      **  Initialise LDA field.
-      *
-     C           *NAMVAR   DEFN           LDA
-     C           *LOCK     IN   LDA
-     C                     MOVEL'SE7525'  DBPGM
-     C                     Z-ADD0         DBASE
-     C                     MOVE *BLANKS   DBKEY
-     C                     MOVE *BLANKS   DBFILE
-     C                     OUT  LDA
-      *
-      **  Read in DTAARA/ZMUSER
-      *
-     C           *NAMVAR   DEFN           ZMUSER
-     C                     IN   ZMUSER
-      *
-      **  Read in DTAARA/RUNDAT
-      *
-     C           *NAMVAR   DEFN           RUNDAT
-     C                     IN   RUNDAT
-      *
-      ** Access the Bank Details
-      *
-     C                     CALL 'AOBANKR0'
-     C                     PARM *BLANKS   PRTCD   7
-     C                     PARM '*FIRST ' POPTN   7
-     C           SDBANK    PARM SDBANK    DSSDY
-      *
-     C           PRTCD     IFNE *BLANKS
-     C           *LOCK     IN   LDA
-     C                     Z-ADD001       DBASE
-     C                     MOVEL'SDBANKPD'DBFILE
-     C                     MOVEL'*FIRST'  DBKEY
-     C                     OUT  LDA
-     C                     EXSR *PSSR
-     C                     ENDIF
-      *
-      **   Access to Securities Trading Data
-      *
-     C                     CALL 'AOSTRDR0'
-     C                     PARM *BLANKS   PRTCD
-     C                     PARM '*FIRST'  POPTN
-     C           SDSTRD    PARM SDSTRD    DSSDY
-      *
-      **   If Record not found
-      *
-     C           PRTCD     IFNE *BLANKS
-     C           *LOCK     IN   LDA
-     C                     Z-ADD002       DBASE
-     C                     MOVE 'SDSTRDPD'DBFILE
-     C                     MOVEL*BLANKS   DBKEY
-     C                     OUT  LDA
-     C                     EXSR *PSSR
-     C                     ENDIF
-      *
-     C           PBLKR     SETLLSECORSD0
-     C           PBLKR     READESECORSD0                 81
-      *
-     C           *IN81     IFEQ '1'
-     C                     EXSR SRAUDT
-     C                     ENDIF
-      *
-     C                     ENDSR
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *                                                               *
-      *            SRPROC - Process records from SECORSPD             *
-      *                                                               *
-      * CALLS      *PSSR  - Error routine                             *
-      *            SRCC   - Writes record to SECOCCPD                 *
-      *            SRREF  - Writes record from SECORSPD               *
-      *                                                               *
-      * CALLED BY  MAIN   - Main routine                              *
-      *                                                               *
-      * FLDS USED         -                                           *
-      *                                                               *
-      *****************************************************************
-      *
-     C           SRPROC    BEGSR                           ** SRPROC **
-      *
-     C           PBLKR     CHAINSECORBD0             80
-      *
-     C           *IN80     IFEQ '1'
-     C           *LOCK     IN   LDA
-     C                     Z-ADD003       DBASE
-     C                     MOVEL'SECORBPD'DBFILE
-     C                     MOVELPBLKR     DBKEY
-     C                     OUT  LDA
-     C                     EXSR *PSSR
-     C                     ENDIF
-      *
-     C           *LOVAL    SETLLSECORFPA
-     C                     READ SECORFPA            N    82
-      *
-     C           *IN82     IFEQ '1'
-     C                     MOVE 'D'       MXRECI
-     C                     Z-ADDBJRDNB    MXLCD
-     C                     MOVE 'I'       MXCHTP
-     C                     MOVE WUSER     MXLUID
-     C                     MOVE '000001'  MXCORF
-     C                     WRITESECORFP0
-     C                     COMIT
-     C                     ENDIF
-      *
-     C           PBLKR     SETLLSECORSD0
-     C           PBLKR     READESECORSD0                 81
-      *
-     C           *IN81     DOWEQ'0'
-      *
-     C                     EXSR SRREF
-      *
-     C                     EXSR SRCC
-      *
-      ** ALLOCATE CORPORATE REFERENCE USING SE7550
-     C                     EXSR SRCALL
-      *
-     C                     ADD  1         WTOTAL  50
-     C                     MOVE WCORF     NCCORF
-      *
-     C                     UPDATSECORSD0
-      *
-     C           PBLKR     READESECORSD0                 81
-     C                     ENDDO
-      *
-     C           PBLKR     CHAINSECORBD0             80
-     C                     MOVE 'L'       NBSTAT
-     C                     UPDATSECORBD0
-      *
-     C********** *LOVAL    SETLLSECORFPA                                  149787
-     C**********           READ SECORFPA                 82               149787
-     C********** *IN82     IFEQ '0'                                       149787
-     C**********           MOVE BJRDNB    MXLCD                           149787
-     C**********           MOVE WUSER     MXLUID                          149787
-     C**********           MOVE 'A'       MXCHTP                          149787
-     C**********           ADD  1         WNEXT                           149787
-     C**********                                                          149787
-     C**********           MOVE WNEXT     MXCORF                          149787
-     C**********           UPDATSECORFP0                                  149787
-     C**********           ENDIF                                          149787
-      *
-     C                     COMIT
-      *
-     C           *IN80     IFEQ '1'
-     C           *IN80     ANDEQ'0'
-     C                     WRITESECORSD0
-     C                     WRITESECORBD0
-     C                     READ SECOCCD0                 84
-     C                     ENDIF
-      *
-     C                     ENDSR
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *                                                               *
-      *            SRREF  - Writes record to SECORFPD                 *
-      *                                                               *
-      * CALLS      SRNEXT - Setup next available Reference number     *
-      *                                                               *
-      * CALLED BY  SRPROC - Process records from SECORSPD             *
-      *                                                               *
-      * FLDS USED         -                                           *
-      *                                                               *
-      *****************************************************************
-      *
-     C           SRREF     BEGSR                           ** SRREF  **
-      *
-     C**********           EXSR SRNEXT                                    138962
-      *
-     C                     CLEARSECORFD0
-      *
-     C                     MOVE 'D'       MARECI
-     C                     Z-ADDBJRDNB    MALCD
-     C                     MOVE 'I'       MACHTP
-     C                     MOVE WUSER     MALUID
-     C**********           MOVE WCORF     MACORF                          138962
-     C                     MOVE NCOSEC    MASESN
-     C                     MOVE NBCOAT    MACOAT
-     C                     MOVE 'CC'      MAPTYP
-     C                     MOVE NBCOAN    MACOAN
-     C                     MOVE NBCOEX    MACOEX
-     C                     MOVE NBALEF    MAALEF
-     C                     Z-ADD1         MANBOP
-     C                     MOVE NBTDVD    MATDVD
-     C                     MOVE NBCOPD    MACOPD
-     C                     MOVE NBTDDT    MATDDT
-     C                     MOVE NBEVDT    MAEVDT
-     C                     MOVE 'N'       MALTBS
-     C*****                MOVE 'N'       MABLOS                          136933
-     C                     MOVE 'E'       MABLOS                          136933
-     C                     MOVE 'N'       MABLOP
-     C                     Z-ADDNBALEF    MABFRD                          136933
-     C           MABFRD    IFLE BJRDNB                                    136933
-     C           BJRDNB    ADD  1         MABFRD                          136933
-     C                     ENDIF                                          136933
-     C                     Z-ADD*HIVAL    MABEND                          136933
-     C                     MOVE 'N'       MAREFO
-     C                     MOVE 'N'       MALREQ
-     C                     MOVE 'N'       MALTSI
-      *  'I' OR 'L'  ???????????????????????????????????
-     C                     MOVE 'L'       MASTAT
-      *
-     C                     EXSR SRNEXT                                    138962
-     C                     MOVE WCORF     MACORF                          138962
-     C                     WRITESECORFD0
-      *                                                                   136933
-      **   ACCESS BLOCKING FILE WITH THE CORPORATE ACTION REFERENCE       136933
-     C           MACORF    CHAINSECOBKL2             89                   136933
-      *                                                                   136933
-      **   IF BLOCK EXISTS, REVERSE THE CURRENT BLOCKING RECORD           136933
-     C           *IN89     IFEQ '0'                        B*1            136933
-     C                     MOVE '*'       MURECI                          136933
-     C                     UPDATSECOBKD0                                  136933
-     C                     ENDIF                           E*1            136933
-      *                                                                   149983
-      **   ACCESS BLOCKING FILE WITH THE CORPORATE ACTION REFERENCE       149983
-     C           MACORF    CHAINSECOBKL2             89                   149983
-      *                                                                   149983
-      **   IF BLOCK EXISTS, REVERSE THE CURRENT BLOCKING RECORD           149983
-     C           *IN89     IFEQ '0'                        B*1            149983
-     C                     MOVE '*'       MURECI                          149983
-     C                     UPDATSECOBKD0                                  149983
-     C                     ENDIF                           E*1            149983
-      *                                                                   136933
-      **   CREATE THE NEW BLOCKING RECORD IF BLOCK POSITION 'E' OR'W'     136933
-     C           MABLOS    IFEQ 'E'                        B*1            136933
-     C           MABLOS    OREQ 'W'                                       136933
-     C                     MOVE 'D'       MURECI                          136933
-     C                     Z-ADDBJRDNB    MULCD                           136933
-     C                     MOVE 'I'       MUCHTP                          136933
-     C                     MOVE WUSER     MULUID                          136933
-     C                     MOVE BVBRCD    MUBRCD                          136933
-     C**********           Z-ADD*ZEROS    MUCNUM                                       136933 CSD027
-     C                     MOVE *BLANKS   MUCNUM                                              CSD027
-     C                     MOVE *BLANKS   MUPTFR                          136933
-     C                     MOVE 'P'       MUBLTY                          136933
-     C                     MOVE MASESN    MUSESN                          136933
-     C                     MOVE MABEND    MUBEDT                          136933
-     C                     Z-ADD*ZEROS    MUNOMB                          136933
-      *                                                                   136933
-     C                     MOVELMACOAT    WWBNAR  9                       136933
-     C                     MOVE MACORF    WWBNAR                          136933
-     C                     MOVELWWBNAR    MUBNAR                          136933
-      *                                                                   136933
-     C                     Z-ADD1         MUSEQN                          136933
-     C                     MOVE MABFRD    MUBSTT                          136933
-     C                     MOVE MABLOS    MUBEWI                          136933
-     C                     MOVE MACORF    MUCORF                          136933
-     C                     WRITESECOBKD0                                  136933
-     C                     MOVE 'S'       MUBLTY                          149983
-     C                     WRITESECOBKD0                                  149983
-     C                     ENDIF                           E*1            136933
-      *
-     C                     ENDSR
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *                                                               *
-      *            SRNEXT - Setup next available Reference number     *
-      *                                                               *
-      * CALLS             -                                           *
-      *                                                               *
-      * CALLED BY  SRREF  - Writes record to SECORFPD                 *
-      *                                                               *
-      * FLDS USED         -                                           *
-      *                                                               *
-      *****************************************************************
-      *
-     C           SRNEXT    BEGSR                           ** SRNEXT **
-      *                                                                   138962
-     C           *LOVAL    SETLLSECORFPA                                  138962
-     C**********           READ SECORFPA            N    82        138962 149787
-     C                     READ SECORFPA                 82               149787
-      *
-      **   Setup next available Reference number
-      *
-     C                     MOVE MXCORF    WNEXT   60
-     C                     MOVE MXCORF    WCORF   6
-     C                     MOVE '0'       *IN80
-      *
-     C********** WCORF     CHAINSECORFD0             80                   138962
-     C           WCORF     CHAINSECORFD1             80                   138962
-      *
-     C           *IN80     DOWEQ'0'
-      *
-     C                     ADD  1         WNEXT
-     C                     MOVE WNEXT     WCORF
-      *
-     C********** WCORF     CHAINSECORFD0             80                   138962
-     C           WCORF     CHAINSECORFD1             80                   138962
-     C                     ENDDO
-      *                                                                   149787
-     C                     MOVE BJRDNB    MXLCD                           149787
-     C                     MOVE WUSER     MXLUID                          149787
-     C                     MOVE 'A'       MXCHTP                          149787
-     C                     ADD  1         WNEXT                           149787
-      *                                                                   149787
-     C                     MOVE WNEXT     MXCORF                          149787
-     C                     UPDATSECORFP0                                  149787
-      *
-     C                     ENDSR
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *                                                               *
-      *            SRCC   - Writes record to SECOCCPD                 *
-      *                                                               *
-      * CALLS             -                                           *
-      *                                                               *
-      * CALLED BY  SRPROC - Process records from SECORSPD             *
-      *                                                               *
-      * FLDS USED         -                                           *
-      *                                                               *
-      *****************************************************************
-      *
-     C           SRCC      BEGSR                           ** SRCC   **
-      *
-     C                     CLEARSECOCCD0
-      *
-     C                     MOVE 'D'       NARECI
-     C                     MOVE BJRDNB    NALCD
-     C                     MOVE 'I'       NACHTP
-     C                     MOVE WUSER     NALUID
-     C                     MOVE WCORF     NACORF
-     C                     MOVE NBNCCY    NANCCY
-     C                     MOVE NBNDCP    NANMDP
-     C                     MOVE NBVCCY    NAVCCY
-     C                     MOVE NCNSEC    NANSEC
-     C                     MOVE NBDMLT    NADMLT
-     C                     MOVE NBONSZ    NAONSZ
-     C                     MOVE NBNNSZ    NANNSZ
-     C                     MOVE NBRNDN    NARNDN
-     C                     MOVE NBRNDS    NARNDS
-     C                     MOVE NBCOMP    NACOMP
-     C                     MOVELNBTXT1    NATXT1
-     C                     MOVELNBTXT2    NATXT2
-     C                     MOVELNBTXT3    NATXT3
-     C                     MOVELNBTXT4    NATXT4
-     C                     MOVE PBLKR     NABLKR
-     C                     MOVE NBMRKI    NAMRKI                          135685
-      *
-     C                     WRITESECOCCD0
-      *
-     C                     ENDSR
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *                                                               *
-      *            SRAUDT - Generates Audit Report                    *
-      *                                                               *
-      * CALLS             -                                           *
-      *                                                               *
-      * CALLED BY  MAIN   - Main Routine.                             *
-      *            SRINIT - Program Initialisation                    *
-      *                                                               *
-      * FLDS USED         -                                           *
-      *                                                               *
-      *****************************************************************
-      *
-     C           SRAUDT    BEGSR                           ** SRAUDT **
-      *
-      **  If there is a DB Error, Output the DB Error Information.
-      *
-     C                     SELEC
-     C           *INU7     WHEQ '1'
-      *
-     C                     WRITESE7525A1
-     C                     WRITESE7525A2
-     C                     WRITESE7525A5
-     C                     WRITESE7525A6
-      *
-     C           *INU7     WHEQ '0'
-      *
-      **  Or, if no records read, Output "No Details" message.
-      *
-     C           WTOTAL    IFEQ 0
-      *
-     C                     WRITESE7525A1
-     C                     WRITESE7525A2
-     C                     WRITESE7525A4
-     C                     WRITESE7525A6
-      *
-     C                     ELSE
-      *
-     C                     MOVE WTOTAL    RRPROG
-     C                     WRITESE7525A1
-     C                     WRITESE7525A2
-     C                     WRITESE7525A3
-     C                     WRITESE7525A6
-      *
-     C                     ENDIF
-      *
-     C                     ENDSL
-      *
-      **  End Program and Return.
-      *
-     C                     CLOSE*ALL
-     C                     MOVE '1'       *INLR
-     C                     RETRN
-      *
-     C                     ENDSR
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *                                                               *
-      *            SRCALL - Calls SE7550 for automatic allocation     *
-      *                     processing                                *
-      *                                                               *
-      * CALLS      SE7550 - External program for automatic allocation *
-      *                     processing                                *
-      *                                                               *
-      * CALLED BY  SRPROC - Process records from SECORSPD             *
-      *                                                               *
-      * FLDS USED         -                                           *
-      *                                                               *
-      *****************************************************************
-      *
-     C           SRCALL    BEGSR                           ** SRCALL **
-      *
-     C           WKEY1     KLIST
-     C                     KFLD           WDSBA
-     C                     KFLD           WDDPT
-     C                     KFLD           WDSSC
-     C                     KFLD           WDDTE
-      *
-     C           WKEY2     KLIST
-     C                     KFLD           WDSBA
-     C                     KFLD           WDDPT
-     C                     KFLD           WDSSC
-     C                     KFLD           WDDTE2
-      *
-     C           *LOVAL    SETLLSEDPOHL0
-     C                     READ SEDPOHL0                 83
-      *
-     C           *IN83     IFEQ '0'
-      *
-     C                     MOVELDSBA      WDSBA   3
-     C**********           MOVELDDPT      WDDPT   60                                          CSD027
-     C                     MOVELDDPT      WDDPT   6                                           CSD027
-      *
-     C           *IN83     DOWEQ'0'
-      *
-     C                     MOVE MACOEX    WDDTE   50
-      *
-     C                     MOVE MASESN    WDSSC  10
-      *
-     C           WKEY1     SETGTSEDPOHL0
-      *
-     C                     READPSEDPOHL0                 83
-      *
-     C           *IN83     IFEQ '0'
-      *
-     C           DSSC      IFEQ WDSSC
-     C           DSBA      ANDEQWDSBA
-     C           DDPT      ANDEQWDDPT
-      *
-     C                     MOVE WDDPT     WDEPO   6
-      *
-     C                     MOVEL*BLANKS   CMDTXT
-     C***********          MOVEL*BLANKS   CMDTX1160                                           CPK014
-     C                     Z-ADD240       CMDLEN 155
-     C***********          MOVELCMD,1     CMDTX1                                              CPK014
-     C***********          MOVE CMD,2     CMDTX1                                              CPK014
-     C***********          MOVELCMDTX1    CMDTXT                                              CPK014
-     C***********          MOVE CMD,3     CMDTXT                                              CPK014
-     C                     MOVELCMD,1     CMDTXT                                              CPK014
-     C                     MOVELCMD,2     CMDTX2                                              CPK014
-     C                     MOVELCMD,3     CMDTX3                                              CPK014
-      *
-     C                     MOVELMACORF    @REF
-     C                     MOVEL'L'       @ACTI
-      *
-     C                     MOVELMACORF    @REFN
-     C                     MOVELWDSBA     @BRCD
-     C                     MOVELWDEPO     @DEPT
-      *
-     C                     CALL 'QCMDEXC'
-     C                     PARM           CMDTXT
-     C                     PARM           CMDLEN
-      *
-     C                     ENDIF
-     C                     ENDIF
-      *
-     C                     MOVEL*HIVAL    WDSSC
-     C                     MOVEL*HIVAL    WDDTE2  50
-      *
-     C           WKEY2     SETGTSEDPOHL0
-      *
-     C                     READ SEDPOHL0                 83
-      *
-     C           *IN83     IFEQ '0'
-     C                     MOVELDSBA      WDSBA
-     C                     MOVELDDPT      WDDPT
-     C                     ENDIF
-      *
-     C                     ENDDO
-      *
-     C                     ENDIF
-      *
-     C                     ENDSR
-      *
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *                                                               *
-      *            *PSSR  - Program Exception Error Routine.          *
-      *                                                               *
-      * CALLS      SRAUDT - Generates Audit report                    *
-      *                                                               *
-      * CALLED BY  SRINIT - Program initialisation                    *
-      *            SRPROC - Process records from SECORSPD             *
-      *                                                               *
-      * FLDS USED         -                                           *
-      *                                                               *
-      *****************************************************************
-      *
-     C           *PSSR     BEGSR                           ** PSSR **
-      *
-     C                     MOVE 'E'       PRETRN           Return code
-      *
-      ***  Check to see that *PSSR has not already been called.
-      *
-     C           WRUN      IFEQ *BLANK
-     C                     MOVE 'Y'       WRUN    1
-     C                     MOVEL'SE7525'  DBPGM
-      *
-      ** Dump and return to the calling program
-      *
-     C                     MOVE '1'       *INLR
-     C                     MOVE '1'       *INU7
-     C                     MOVE '1'       *INU8
-     C                     DUMP
-     C                     EXSR SRAUDT
-     C                     RETRN
-      *
-     C                     ENDIF
-      *
-     C                     ENDSR
-      *****************************************************************
-      *
-**  CPY@
-(c) Finastra International Limited 2001
-**  CMD - CALL 'QCMDEXC' TO SBMJOB
-SBMJOB JOB(COnnnnnnx) JOBD(BULKTJOBD) RQSDTA('CALL PGM(SEC7550) PARM(''xxxxxx''
-''xxx'' ''xxxxxx'' ''  '' ''          '' ''  '' ''      '' ''    '')')
-MSGQ(MOPERQ) RTGDTA(*NONE) INLLIBL(*JOBD) USER(*JOBD) OUTQ(*JOBD)                             CSC023
+000100200529     H        1
+000200200529      *****************************************************************
+000300200529/*STD *  RPGBASE                                                      *
+000400200529/*EXI *  TEXT('Midas SE Currency change events creation')             *
+000500200529      *****************************************************************
+000600200529      *                                                               *
+000700200529      *  Midas - Securities Trading Module                            *
+000800200529      *                                                               *
+000900200529      *  SE7525 -  Currency Change Events Creation                    *
+001000200529      *                                                               *
+001100200529      *  Function:  The Currency Change events and Allocation will be *
+001200200529      *             created                                           *
+001300200529      *                                                               *
+001400200529      *  Called by: SE7521  -  Securities Redenomination Bulk Maint.  *
+001500200529      *                                                               *
+001600200529      *  Calls    : AOBANKR0 - Access Program for Bank Details        *
+001700200529      *             AOSTRDR0 - Access Program for Securities Trading  *
+001800200529      *                                                               *
+001900200529      *  (c) Finastra International Limited 2001                      *
+002000200529      *                                                               *
+002200200619      *  LAST Amend No. MD046248           Date 27Oct17               *
+002300200619      *  Prev Amend No. CER059             Date 19Jul10               *
+002400200529      *                 CER020             Date 19May08               *
+002500200529      * Bank Fusion Midas 1.4 Base -----------------------------------*
+002600200529      * Midas Plus 1.4 Base 04 ---------------------------------------*
+002700200529      * Midas Plus 1.4 Base ------------------------------------------*
+002800200529      * Midas Plus 1.3 ----------- Base ------------------------------*
+002900200529      *                 CSD027             Date 09Dec05               *
+003000200529      *                 CSC023             Date 28Jan04               *
+003100200529      * Midas Release 4 --------------- Base -------------------------*
+003200200529      *                 CPK014             Date 11Oct01               *
+003300200529      * Midas DBA 3.03 -----------------------------------------------*
+003400200529      *                 CSE020             Date 21Mar00               *
+003500200529      * Midas DBA 3.00 ---------------- Base -------------------------*
+003600200529      *                 149983             Date 10Dec98               *
+003700200529      *                 149787             Date 30Nov98               *
+003800200529      *                 138962             Date 28Aug98               *
+003900200529      *                 136933             Date 25Jun98               *
+004000200529      *                 136428             Date 15Jun98               *
+004100200529      *                 135685             Date 28May98               *
+004200200529      *                 CEU017 *CREATE     Date 26Feb98               *
+004300200529      *                                                               *
+004400200529      *****************************************************************
+004500200529      *                                                               *
+005100200529      *  MD046248 - Finastra Rebranding                               *
+005200200529      *  CER059 - German Feature Upgrade to Delhi                     *
+005300200529      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+005400200529      *           Midas Plus (Recompile)                              *
+005500200529      *  CSD027 - Conversion Of Customer Number to Alpha              *
+005600200529      *  CSC023 - SBMJOB output queue must be *JOBD.                  *
+005700200529      *  CPK014 - Submit jobs with user *JOBD                         *
+005800200529      *  CSE020 - Corporate Actions Domino Effect Processing          *
+005900200529      *           (Recompiled due to changes in PF/SECORFPD)          *
+006000200529      *  149983 - EMU: Block OLD Security for Sale as well            *
+006100200529      *  149787 - Duplicate CO refs are being generated because the   *
+006200200529      *           header SECORFPA is not updated with the next avail- *
+006300200529      *           able reference number until much later after        *
+006400200529      *           SECORFPD is updated.                                *
+006500200529      *  138962 - EMU: Problems when allocating reference numbers     *
+006600200529      *           to several users using the option at same time.     *
+006700200529      *  136933 - Block OLD Security from the allocation effective    *
+006800200529      *           Date when generating the 'CC' events.               *
+006900200529      *  136428 - Recompile due to addition of Days Basis and Divisor *
+007000200529      *           Basis field in SECORBPD.                            *
+007100200529      *  135685 - It's not feasible to enter the Compensation Price   *
+007200200529      *           at the Bulk level as the Bulk will have many        *
+007300200529      *           Securities all giving a cash compensation at a      *
+007400200529      *           different level. Therefore, allow the entry of      *
+007500200529      *           'MARKET' which will use the Market Price of the     *
+007600200529      *           Security at allocation effective date.              *
+007700200529      *  CEU017- Securities Redenomination Euro Changes               *
+007800200529      *                                                               *
+007900200529      *****************************************************************
+008000200529      *
+008100200529     FSECORSL0UF  E           K        DISK         KINFSR *PSSR A
+008200200529     F                                              KCOMIT
+008300200529      **  Securities Redenomination Bulk Securities
+008400200529      *
+008500200529     FSECORBL0UF  E           K        DISK         KINFSR *PSSR A
+008600200529     F                                              KCOMIT
+008700200529      **  Securities Redenomination Bulk Detail
+008800200529      *
+008900200529     F***SECORFL0UF**E           K        DISK         KINFSR *PSSR A     138962
+009000200529     FSECORFL0O   E           K        DISK         KINFSR *PSSR          138962
+009100200529     F                                              KCOMIT
+009200200529      **  Corporate Action References
+009300200529      *
+009400200529     FSECORFL1IF  E           K        DISK         KINFSR *PSSR          138962
+009500200529     F            SECORFD0                          KRENAMESECORFD1       138962
+009600200529      **  Corporate Action References                                     138962
+009700200529      *                                                                   138962
+009800200529     FSECORFPAUF  E           K        DISK         KINFSR *PSSR A
+009900200529     F                                              KCOMIT
+010000200529      **  Corporate Action Reference Number
+010100200529      *
+010200200529     FSECOCCL0UF  E           K        DISK         KINFSR *PSSR A
+010300200529     F                                              KCOMIT
+010400200529      **  Currency Change File
+010500200529      *
+010600200529     FSEDPOHL0IF  E           K        DISK         KINFSR *PSSR
+010700200529      **   Midas Corporate Actions - Depots update index
+010800200529      *
+010900200529     FSECOBKL2UF  E           K        DISK         KINFSR *PSSR A        136933
+011000200529     F                                              KCOMIT                136933
+011100200529      *                                                                   136933
+011200200529      **   MU - SE CORPORATE ACTIONS Blocked Positions                    136933
+011300200529     FSE7525AUO   E                    PRINTER      KINFSR *PSSR
+011400200529      ** Audit Report
+011500200529      *
+011600200529      /EJECT
+011700200529      *****************************************************************
+011800200529      *  F U N C T I O N    O F    I N D I C A T O R S                *
+011900200529      *                                                               *
+012000200529      *  80    Chain indicator                                        *
+012100200529      *  81    Read indicator for SECORSPD                            *
+012200200529      *  82    Read indicator for SECORFPA                            *
+012300200529      *  83    Read indicator for SEDPOHL0                            *
+012400200529      *                                                               *
+012500200529      *  LR    Last record indicator                                  *
+012600200529      *  U7-U8 Database error indicator                               *
+012700200529      *****************************************************************
+012800200529      /SPACE 3
+012900200529      ****************************************************************
+013000200529      *  S U B R O U T I N E    I N D E X                            *
+013100200529      *                                                              *
+013200200529      *  SRAUDT - Generates Audit report                             *
+013300200529      *  SRCALL - Calls SE7550 to for automatic allocation processing*
+013400200529      *  SRCC   - Writes record to SECOCCPD                          *
+013500200529      *  SRINIT - Program Initialisation                             *
+013600200529      *  SRNEXT - Setup next available Reference number              *
+013700200529      *  SRPROC - Process records from SECORSPD                      *
+013800200529      *  SRREF  - Writes record to SECORFPD                          *
+013900200529      *                                                              *
+014000200529      *  *PSSR  - Error routine                                      *
+014100200529      ****************************************************************
+014200200529      /EJECT
+014300200529      ****************************************************************
+014400200529     E                    CPY@    1   1 80
+014500200529      *
+014600200529     E                    CMD     1   3 80               SBMJOB
+014700200529      ****************************************************************
+014800200529     ISECORFD1                                                            138962
+014900200529     I              MARECI                          YYRECI                138962
+015000200529     I              MALCD                           YYLCD                 138962
+015100200529     I              MACHTP                          YYCHTP                138962
+015200200529     I              MALUID                          YYLUID                138962
+015300200529     I              MACORF                          YYCORF                138962
+015400200529     I              MAJOBN                          YYJOBN                138962
+015500200529     I              MAUSER                          YYUSER                138962
+015600200529     I              MAJNBR                          YYJNBR                138962
+015700200529     I              MASESN                          YYSESN                138962
+015800200529     I              MACOAT                          YYCOAT                138962
+015900200529     I              MAPTYP                          YYPTYP                138962
+016000200529     I              MACOAN                          YYCOAN                138962
+016100200529     I              MACOEX                          YYCOEX                138962
+016200200529     I              MAALEF                          YYALEF                138962
+016300200529     I              MANBOP                          YYNBOP                138962
+016400200529     I              MATDVD                          YYTDVD                138962
+016500200529     I              MACOPD                          YYCOPD                138962
+016600200529     I              MATDDT                          YYTDDT                138962
+016700200529     I              MAEVDT                          YYEVDT                138962
+016800200529     I              MACPNB                          YYCPNB                138962
+016900200529     I              MASHMD                          YYSHMD                138962
+017000200529     I              MALTBS                          YYLTBS                138962
+017100200529     I              MAOCPV                          YYOCPV                138962
+017200200529     I              MANCPV                          YYNCPV                138962
+017300200529     I              MAONML                          YYONML                138962
+017400200529     I              MANNML                          YYNNML                138962
+017500200529     I              MACUPC                          YYCUPC                138962
+017600200529     I              MAEXPC                          YYEXPC                138962
+017700200529     I              MACLRD                          YYCLRD                138962
+017800200529     I              MACLRT                          YYCLRT                138962
+017900200529     I              MADLRD                          YYDLRD                138962
+018000200529     I              MADLRT                          YYDLRT                138962
+018100200529     I              MABLOS                          YYBLOS                138962
+018200200529     I              MABLOP                          YYBLOP                138962
+018300200529     I              MABFRD                          YYBFRD                138962
+018400200529     I              MABEND                          YYBEND                138962
+018500200529     I              MAREFO                          YYREFO                138962
+018600200529     I              MACONR                          YYCONR                138962
+018700200529     I              MADFNR                          YYDFNR                138962
+018800200529     I              MADFCP                          YYDFCP                138962
+018900200529     I              MADFSP                          YYDFSP                138962
+019000200529     I              MALREQ                          YYLREQ                138962
+019100200529     I              MALPRO                          YYLPRO                138962
+019200200529     I              MALTSI                          YYLTSI                138962
+019300200529     I              MASTAT                          YYSTAT                138962
+019400200529      *
+019500200529      **  Data Structure for compilation - Copyright insertion
+019600200529     ICPYR@$      DS
+019700200529     I                                        1  80 CPY@
+019800200529     I                                        1  20 CPY@$$
+019900200529      *
+020000200529      **  Data Structure for command string for QCMDEXC
+020100200529     ICMDTXT      DS                            240
+020200200529     I                                       81 160 CMDTX2                                    CPK014
+020300200529     I                                      161 240 CMDTX3                                    CPK014
+020400200529     I                                       12  20 @CJOB
+020500200529     I                                       14  19 @REF
+020600200529     I                                       20  20 @ACTI
+020700200529     I                                       72  77 @REFN
+020800200529     I                                       83  85 @BRCD
+020900200529     I                                       91  96 @DEPT
+021100200529      *
+021200200529     IRUNDAT    E DS
+021300200529      **  Standard Data Area Layout for System flags and Run Date
+021400200529      *
+021500200529     ILDA       E DSLDA                         256
+021600200529      *
+021700200529      ** Local data area for database error details
+021800200529      ** *LOCK IN LDA immediately before and OUT LDA immediately
+021900200529      ** after each database error handling.
+022000200529      **
+022100200529      **                                    134 141 DBFILE
+022200200529      **       Defines:                     142 170 DBKEY
+022300200529      **                                    171 180 DBPGM
+022400200529      **                                    181 1830DBASE
+022500200529      *
+022600200529     IZMUSER      DS                             17
+022700200529      ** Data area ZMUSER
+022900200529     I                                       11  13 BVBRCD
+023000200529      *
+023100200529     IPSDS       SDS
+023200200529      ** Program Status Data Structure
+023300200529      *
+023400200529     I                                      254 263 WUSER
+023500200529      *
+023600200529     ISDBANK    E DSSDBANKPD
+023700200529      ** Bank Details
+023800200529      *
+023900200529     ISDSTRD    E DSSDSTRDPD
+024000200529      ** Securites Trading ICD
+024100200529      *
+024200200529     IDSSDY     E DSDSSDY
+024300200529      ** Long Data Structure
+024400200529      *
+024500200529      *****************************************************************
+024600200529      /EJECT
+024700200529      *****************************************************************
+024800200529      *                                                               *
+024900200529      *            MAIN   - Main Routine.                             *
+025000200529      *                                                               *
+025100200529      * CALLS      SRAUDT - Writes record to SECORFPD                 *
+025200200529      *            SRINIT - Program Initialisation                    *
+025300200529      *            SRPROC - Process records from SECORSPD             *
+025400200529      *                                                               *
+025500200529      * CALLED BY         -                                           *
+025600200529      *                                                               *
+025700200529      * FLDS USED         -                                           *
+025800200529      *                                                               *
+025900200529      *****************************************************************
+026000200529      *
+026100200529     C           *ENTRY    PLIST                           ** Main **
+026200200529     C                     PARM           PBLKR   60
+026300200529     C                     PARM           PRETRN  1        Return code
+026400200529      *
+026500200529      **  Perform Initialisation
+026600200529      *
+026700200529     C                     EXSR SRINIT
+026800200529      *
+026900200529     C                     EXSR SRPROC
+027000200529      *
+027100200529     C                     EXSR SRAUDT
+027200200529      *
+027300200529      *****************************************************************
+027400200529      /EJECT
+027500200529      *****************************************************************
+027600200529      *                                                               *
+027700200529      *            SRINIT - Program Initialisation                    *
+027800200529      *                                                               *
+027900200529      * CALLS      AOBANKR0 - Access Program for Bank Details         *
+028000200529      *            AOSTRDR0 - Access Program for Securities Trading   *
+028100200529      *            *PSSR  - Error routine                             *
+028200200529      *            SRAUDT   - Generates Audit report                  *
+028300200529      *                                                               *
+028400200529      * CALLED BY  MAIN   - Main routine                              *
+028500200529      *                                                               *
+028600200529      * FLDS USED         -                                           *
+028700200529      *                                                               *
+028800200529      *****************************************************************
+028900200529      *
+029000200529     C           SRINIT    BEGSR                           ** SRINIT **
+029100200529      *
+029200200529      ** Set up copyright parameter
+029300200529      *
+029400200529     C                     MOVEACPY@      WCPY   80
+029500200529      *
+029600200529      **  Initialise LDA field.
+029700200529      *
+029800200529     C           *NAMVAR   DEFN           LDA
+029900200529     C           *LOCK     IN   LDA
+030000200529     C                     MOVEL'SE7525'  DBPGM
+030100200529     C                     Z-ADD0         DBASE
+030200200529     C                     MOVE *BLANKS   DBKEY
+030300200529     C                     MOVE *BLANKS   DBFILE
+030400200529     C                     OUT  LDA
+030500200529      *
+030600200529      **  Read in DTAARA/ZMUSER
+030700200529      *
+030800200529     C           *NAMVAR   DEFN           ZMUSER
+030900200529     C                     IN   ZMUSER
+031000200529      *
+031100200529      **  Read in DTAARA/RUNDAT
+031200200529      *
+031300200529     C           *NAMVAR   DEFN           RUNDAT
+031400200529     C                     IN   RUNDAT
+031500200529      *
+031600200529      ** Access the Bank Details
+031700200529      *
+031800200529     C                     CALL 'AOBANKR0'
+031900200529     C                     PARM *BLANKS   PRTCD   7
+032000200529     C                     PARM '*FIRST ' POPTN   7
+032100200529     C           SDBANK    PARM SDBANK    DSSDY
+032200200529      *
+032300200529     C           PRTCD     IFNE *BLANKS
+032400200529     C           *LOCK     IN   LDA
+032500200529     C                     Z-ADD001       DBASE
+032600200529     C                     MOVEL'SDBANKPD'DBFILE
+032700200529     C                     MOVEL'*FIRST'  DBKEY
+032800200529     C                     OUT  LDA
+032900200529     C                     EXSR *PSSR
+033000200529     C                     ENDIF
+033100200529      *
+033200200529      **   Access to Securities Trading Data
+033300200529      *
+033400200529     C                     CALL 'AOSTRDR0'
+033500200529     C                     PARM *BLANKS   PRTCD
+033600200529     C                     PARM '*FIRST'  POPTN
+033700200529     C           SDSTRD    PARM SDSTRD    DSSDY
+033800200529      *
+033900200529      **   If Record not found
+034000200529      *
+034100200529     C           PRTCD     IFNE *BLANKS
+034200200529     C           *LOCK     IN   LDA
+034300200529     C                     Z-ADD002       DBASE
+034400200529     C                     MOVE 'SDSTRDPD'DBFILE
+034500200529     C                     MOVEL*BLANKS   DBKEY
+034600200529     C                     OUT  LDA
+034700200529     C                     EXSR *PSSR
+034800200529     C                     ENDIF
+034900200529      *
+035000200529     C           PBLKR     SETLLSECORSD0
+035100200529     C           PBLKR     READESECORSD0                 81
+035200200529      *
+035300200529     C           *IN81     IFEQ '1'
+035400200529     C                     EXSR SRAUDT
+035500200529     C                     ENDIF
+035600200529      *
+035700200529     C                     ENDSR
+035800200529      *****************************************************************
+035900200529      /EJECT
+036000200529      *****************************************************************
+036100200529      *                                                               *
+036200200529      *            SRPROC - Process records from SECORSPD             *
+036300200529      *                                                               *
+036400200529      * CALLS      *PSSR  - Error routine                             *
+036500200529      *            SRCC   - Writes record to SECOCCPD                 *
+036600200529      *            SRREF  - Writes record from SECORSPD               *
+036700200529      *                                                               *
+036800200529      * CALLED BY  MAIN   - Main routine                              *
+036900200529      *                                                               *
+037000200529      * FLDS USED         -                                           *
+037100200529      *                                                               *
+037200200529      *****************************************************************
+037300200529      *
+037400200529     C           SRPROC    BEGSR                           ** SRPROC **
+037500200529      *
+037600200529     C           PBLKR     CHAINSECORBD0             80
+037700200529      *
+037800200529     C           *IN80     IFEQ '1'
+037900200529     C           *LOCK     IN   LDA
+038000200529     C                     Z-ADD003       DBASE
+038100200529     C                     MOVEL'SECORBPD'DBFILE
+038200200529     C                     MOVELPBLKR     DBKEY
+038300200529     C                     OUT  LDA
+038400200529     C                     EXSR *PSSR
+038500200529     C                     ENDIF
+038600200529      *
+038700200529     C           *LOVAL    SETLLSECORFPA
+038800200529     C                     READ SECORFPA            N    82
+038900200529      *
+039000200529     C           *IN82     IFEQ '1'
+039100200529     C                     MOVE 'D'       MXRECI
+039200200529     C                     Z-ADDBJRDNB    MXLCD
+039300200529     C                     MOVE 'I'       MXCHTP
+039400200529     C                     MOVE WUSER     MXLUID
+039500200529     C                     MOVE '000001'  MXCORF
+039600200529     C                     WRITESECORFP0
+039700200529     C                     COMIT
+039800200529     C                     ENDIF
+039900200529      *
+040000200529     C           PBLKR     SETLLSECORSD0
+040100200529     C           PBLKR     READESECORSD0                 81
+040200200529      *
+040300200529     C           *IN81     DOWEQ'0'
+040400200529      *
+040500200529     C                     EXSR SRREF
+040600200529      *
+040700200529     C                     EXSR SRCC
+040800200529      *
+040900200529      ** ALLOCATE CORPORATE REFERENCE USING SE7550
+041000200529     C                     EXSR SRCALL
+041100200529      *
+041200200529     C                     ADD  1         WTOTAL  50
+041300200529     C                     MOVE WCORF     NCCORF
+041400200529      *
+041500200529     C                     UPDATSECORSD0
+041600200529      *
+041700200529     C           PBLKR     READESECORSD0                 81
+041800200529     C                     ENDDO
+041900200529      *
+042000200529     C           PBLKR     CHAINSECORBD0             80
+042100200529     C                     MOVE 'L'       NBSTAT
+042200200529     C                     UPDATSECORBD0
+042300200529      *
+042400200529     C********** *LOVAL    SETLLSECORFPA                                  149787
+042500200529     C**********           READ SECORFPA                 82               149787
+042600200529     C********** *IN82     IFEQ '0'                                       149787
+042700200529     C**********           MOVE BJRDNB    MXLCD                           149787
+042800200529     C**********           MOVE WUSER     MXLUID                          149787
+042900200529     C**********           MOVE 'A'       MXCHTP                          149787
+043000200529     C**********           ADD  1         WNEXT                           149787
+043100200529     C**********                                                          149787
+043200200529     C**********           MOVE WNEXT     MXCORF                          149787
+043300200529     C**********           UPDATSECORFP0                                  149787
+043400200529     C**********           ENDIF                                          149787
+043500200529      *
+043600200529     C                     COMIT
+043700200529      *
+043800200529     C           *IN80     IFEQ '1'
+043900200529     C           *IN80     ANDEQ'0'
+044000200529     C                     WRITESECORSD0
+044100200529     C                     WRITESECORBD0
+044200200529     C                     READ SECOCCD0                 84
+044300200529     C                     ENDIF
+044400200529      *
+044500200529     C                     ENDSR
+044600200529      *****************************************************************
+044700200529      /EJECT
+044800200529      *****************************************************************
+044900200529      *                                                               *
+045000200529      *            SRREF  - Writes record to SECORFPD                 *
+045100200529      *                                                               *
+045200200529      * CALLS      SRNEXT - Setup next available Reference number     *
+045300200529      *                                                               *
+045400200529      * CALLED BY  SRPROC - Process records from SECORSPD             *
+045500200529      *                                                               *
+045600200529      * FLDS USED         -                                           *
+045700200529      *                                                               *
+045800200529      *****************************************************************
+045900200529      *
+046000200529     C           SRREF     BEGSR                           ** SRREF  **
+046100200529      *
+046200200529     C**********           EXSR SRNEXT                                    138962
+046300200529      *
+046400200529     C                     CLEARSECORFD0
+046500200529      *
+046600200529     C                     MOVE 'D'       MARECI
+046700200529     C                     Z-ADDBJRDNB    MALCD
+046800200529     C                     MOVE 'I'       MACHTP
+046900200529     C                     MOVE WUSER     MALUID
+047000200529     C**********           MOVE WCORF     MACORF                          138962
+047100200529     C                     MOVE NCOSEC    MASESN
+047200200529     C                     MOVE NBCOAT    MACOAT
+047300200529     C                     MOVE 'CC'      MAPTYP
+047400200529     C                     MOVE NBCOAN    MACOAN
+047500200529     C                     MOVE NBCOEX    MACOEX
+047600200529     C                     MOVE NBALEF    MAALEF
+047700200529     C                     Z-ADD1         MANBOP
+047800200529     C                     MOVE NBTDVD    MATDVD
+047900200529     C                     MOVE NBCOPD    MACOPD
+048000200529     C                     MOVE NBTDDT    MATDDT
+048100200529     C                     MOVE NBEVDT    MAEVDT
+048200200529     C                     MOVE 'N'       MALTBS
+048300200529     C*****                MOVE 'N'       MABLOS                          136933
+048400200529     C                     MOVE 'E'       MABLOS                          136933
+048500200529     C                     MOVE 'N'       MABLOP
+048600200529     C                     Z-ADDNBALEF    MABFRD                          136933
+048700200529     C           MABFRD    IFLE BJRDNB                                    136933
+048800200529     C           BJRDNB    ADD  1         MABFRD                          136933
+048900200529     C                     ENDIF                                          136933
+049000200529     C                     Z-ADD*HIVAL    MABEND                          136933
+049100200529     C                     MOVE 'N'       MAREFO
+049200200529     C                     MOVE 'N'       MALREQ
+049300200529     C                     MOVE 'N'       MALTSI
+049400200529      *  'I' OR 'L'  ???????????????????????????????????
+049500200529     C                     MOVE 'L'       MASTAT
+049600200529      *
+049700200529     C                     EXSR SRNEXT                                    138962
+049800200529     C                     MOVE WCORF     MACORF                          138962
+049900200529     C                     WRITESECORFD0
+050000200529      *                                                                   136933
+050100200529      **   ACCESS BLOCKING FILE WITH THE CORPORATE ACTION REFERENCE       136933
+050200200529     C           MACORF    CHAINSECOBKL2             89                   136933
+050300200529      *                                                                   136933
+050400200529      **   IF BLOCK EXISTS, REVERSE THE CURRENT BLOCKING RECORD           136933
+050500200529     C           *IN89     IFEQ '0'                        B*1            136933
+050600200529     C                     MOVE '*'       MURECI                          136933
+050700200529     C                     UPDATSECOBKD0                                  136933
+050800200529     C                     ENDIF                           E*1            136933
+050900200529      *                                                                   149983
+051000200529      **   ACCESS BLOCKING FILE WITH THE CORPORATE ACTION REFERENCE       149983
+051100200529     C           MACORF    CHAINSECOBKL2             89                   149983
+051200200529      *                                                                   149983
+051300200529      **   IF BLOCK EXISTS, REVERSE THE CURRENT BLOCKING RECORD           149983
+051400200529     C           *IN89     IFEQ '0'                        B*1            149983
+051500200529     C                     MOVE '*'       MURECI                          149983
+051600200529     C                     UPDATSECOBKD0                                  149983
+051700200529     C                     ENDIF                           E*1            149983
+051800200529      *                                                                   136933
+051900200529      **   CREATE THE NEW BLOCKING RECORD IF BLOCK POSITION 'E' OR'W'     136933
+052000200529     C           MABLOS    IFEQ 'E'                        B*1            136933
+052100200529     C           MABLOS    OREQ 'W'                                       136933
+052200200529     C                     MOVE 'D'       MURECI                          136933
+052300200529     C                     Z-ADDBJRDNB    MULCD                           136933
+052400200529     C                     MOVE 'I'       MUCHTP                          136933
+052500200529     C                     MOVE WUSER     MULUID                          136933
+052600200529     C                     MOVE BVBRCD    MUBRCD                          136933
+052700200529     C**********           Z-ADD*ZEROS    MUCNUM                                       136933 CSD027
+052800200529     C                     MOVE *BLANKS   MUCNUM                                              CSD027
+052900200529     C                     MOVE *BLANKS   MUPTFR                          136933
+053000200529     C                     MOVE 'P'       MUBLTY                          136933
+053100200529     C                     MOVE MASESN    MUSESN                          136933
+053200200529     C                     MOVE MABEND    MUBEDT                          136933
+053300200529     C                     Z-ADD*ZEROS    MUNOMB                          136933
+053400200529      *                                                                   136933
+053500200529     C                     MOVELMACOAT    WWBNAR  9                       136933
+053600200529     C                     MOVE MACORF    WWBNAR                          136933
+053700200529     C                     MOVELWWBNAR    MUBNAR                          136933
+053800200529      *                                                                   136933
+053900200529     C                     Z-ADD1         MUSEQN                          136933
+054000200529     C                     MOVE MABFRD    MUBSTT                          136933
+054100200529     C                     MOVE MABLOS    MUBEWI                          136933
+054200200529     C                     MOVE MACORF    MUCORF                          136933
+054300200529     C                     WRITESECOBKD0                                  136933
+054400200529     C                     MOVE 'S'       MUBLTY                          149983
+054500200529     C                     WRITESECOBKD0                                  149983
+054600200529     C                     ENDIF                           E*1            136933
+054700200529      *
+054800200529     C                     ENDSR
+054900200529      *****************************************************************
+055000200529      /EJECT
+055100200529      *****************************************************************
+055200200529      *                                                               *
+055300200529      *            SRNEXT - Setup next available Reference number     *
+055400200529      *                                                               *
+055500200529      * CALLS             -                                           *
+055600200529      *                                                               *
+055700200529      * CALLED BY  SRREF  - Writes record to SECORFPD                 *
+055800200529      *                                                               *
+055900200529      * FLDS USED         -                                           *
+056000200529      *                                                               *
+056100200529      *****************************************************************
+056200200529      *
+056300200529     C           SRNEXT    BEGSR                           ** SRNEXT **
+056400200529      *                                                                   138962
+056500200529     C           *LOVAL    SETLLSECORFPA                                  138962
+056600200529     C**********           READ SECORFPA            N    82        138962 149787
+056700200529     C                     READ SECORFPA                 82               149787
+056800200529      *
+056900200529      **   Setup next available Reference number
+057000200529      *
+057100200529     C                     MOVE MXCORF    WNEXT   60
+057200200529     C                     MOVE MXCORF    WCORF   6
+057300200529     C                     MOVE '0'       *IN80
+057400200529      *
+057500200529     C********** WCORF     CHAINSECORFD0             80                   138962
+057600200529     C           WCORF     CHAINSECORFD1             80                   138962
+057700200529      *
+057800200529     C           *IN80     DOWEQ'0'
+057900200529      *
+058000200529     C                     ADD  1         WNEXT
+058100200529     C                     MOVE WNEXT     WCORF
+058200200529      *
+058300200529     C********** WCORF     CHAINSECORFD0             80                   138962
+058400200529     C           WCORF     CHAINSECORFD1             80                   138962
+058500200529     C                     ENDDO
+058600200529      *                                                                   149787
+058700200529     C                     MOVE BJRDNB    MXLCD                           149787
+058800200529     C                     MOVE WUSER     MXLUID                          149787
+058900200529     C                     MOVE 'A'       MXCHTP                          149787
+059000200529     C                     ADD  1         WNEXT                           149787
+059100200529      *                                                                   149787
+059200200529     C                     MOVE WNEXT     MXCORF                          149787
+059300200529     C                     UPDATSECORFP0                                  149787
+059400200529      *
+059500200529     C                     ENDSR
+059600200529      *****************************************************************
+059700200529      /EJECT
+059800200529      *****************************************************************
+059900200529      *                                                               *
+060000200529      *            SRCC   - Writes record to SECOCCPD                 *
+060100200529      *                                                               *
+060200200529      * CALLS             -                                           *
+060300200529      *                                                               *
+060400200529      * CALLED BY  SRPROC - Process records from SECORSPD             *
+060500200529      *                                                               *
+060600200529      * FLDS USED         -                                           *
+060700200529      *                                                               *
+060800200529      *****************************************************************
+060900200529      *
+061000200529     C           SRCC      BEGSR                           ** SRCC   **
+061100200529      *
+061200200529     C                     CLEARSECOCCD0
+061300200529      *
+061400200529     C                     MOVE 'D'       NARECI
+061500200529     C                     MOVE BJRDNB    NALCD
+061600200529     C                     MOVE 'I'       NACHTP
+061700200529     C                     MOVE WUSER     NALUID
+061800200529     C                     MOVE WCORF     NACORF
+061900200529     C                     MOVE NBNCCY    NANCCY
+062000200529     C                     MOVE NBNDCP    NANMDP
+062100200529     C                     MOVE NBVCCY    NAVCCY
+062200200529     C                     MOVE NCNSEC    NANSEC
+062300200529     C                     MOVE NBDMLT    NADMLT
+062400200529     C                     MOVE NBONSZ    NAONSZ
+062500200529     C                     MOVE NBNNSZ    NANNSZ
+062600200529     C                     MOVE NBRNDN    NARNDN
+062700200529     C                     MOVE NBRNDS    NARNDS
+062800200529     C                     MOVE NBCOMP    NACOMP
+062900200529     C                     MOVELNBTXT1    NATXT1
+063000200529     C                     MOVELNBTXT2    NATXT2
+063100200529     C                     MOVELNBTXT3    NATXT3
+063200200529     C                     MOVELNBTXT4    NATXT4
+063300200529     C                     MOVE PBLKR     NABLKR
+063400200529     C                     MOVE NBMRKI    NAMRKI                          135685
+063500200529      *
+063600200529     C                     WRITESECOCCD0
+063700200529      *
+063800200529     C                     ENDSR
+063900200529      *****************************************************************
+064000200529      /EJECT
+064100200529      *****************************************************************
+064200200529      *                                                               *
+064300200529      *            SRAUDT - Generates Audit Report                    *
+064400200529      *                                                               *
+064500200529      * CALLS             -                                           *
+064600200529      *                                                               *
+064700200529      * CALLED BY  MAIN   - Main Routine.                             *
+064800200529      *            SRINIT - Program Initialisation                    *
+064900200529      *                                                               *
+065000200529      * FLDS USED         -                                           *
+065100200529      *                                                               *
+065200200529      *****************************************************************
+065300200529      *
+065400200529     C           SRAUDT    BEGSR                           ** SRAUDT **
+065500200529      *
+065600200529      **  If there is a DB Error, Output the DB Error Information.
+065700200529      *
+065800200529     C                     SELEC
+065900200529     C           *INU7     WHEQ '1'
+066000200529      *
+066100200529     C                     WRITESE7525A1
+066200200529     C                     WRITESE7525A2
+066300200529     C                     WRITESE7525A5
+066400200529     C                     WRITESE7525A6
+066500200529      *
+066600200529     C           *INU7     WHEQ '0'
+066700200529      *
+066800200529      **  Or, if no records read, Output "No Details" message.
+066900200529      *
+067000200529     C           WTOTAL    IFEQ 0
+067100200529      *
+067200200529     C                     WRITESE7525A1
+067300200529     C                     WRITESE7525A2
+067400200529     C                     WRITESE7525A4
+067500200529     C                     WRITESE7525A6
+067600200529      *
+067700200529     C                     ELSE
+067800200529      *
+067900200529     C                     MOVE WTOTAL    RRPROG
+068000200529     C                     WRITESE7525A1
+068100200529     C                     WRITESE7525A2
+068200200529     C                     WRITESE7525A3
+068300200529     C                     WRITESE7525A6
+068400200529      *
+068500200529     C                     ENDIF
+068600200529      *
+068700200529     C                     ENDSL
+068800200529      *
+068900200529      **  End Program and Return.
+069000200529      *
+069100200529     C                     CLOSE*ALL
+069200200529     C                     MOVE '1'       *INLR
+069300200529     C                     RETRN
+069400200529      *
+069500200529     C                     ENDSR
+069600200529      *****************************************************************
+069700200529      /EJECT
+069800200529      *****************************************************************
+069900200529      *                                                               *
+070000200529      *            SRCALL - Calls SE7550 for automatic allocation     *
+070100200529      *                     processing                                *
+070200200529      *                                                               *
+070300200529      * CALLS      SE7550 - External program for automatic allocation *
+070400200529      *                     processing                                *
+070500200529      *                                                               *
+070600200529      * CALLED BY  SRPROC - Process records from SECORSPD             *
+070700200529      *                                                               *
+070800200529      * FLDS USED         -                                           *
+070900200529      *                                                               *
+071000200529      *****************************************************************
+071100200529      *
+071200200529     C           SRCALL    BEGSR                           ** SRCALL **
+071300200529      *
+071400200529     C           WKEY1     KLIST
+071500200529     C                     KFLD           WDSBA
+071600200529     C                     KFLD           WDDPT
+071700200529     C                     KFLD           WDSSC
+071800200529     C                     KFLD           WDDTE
+071900200529      *
+072000200529     C           WKEY2     KLIST
+072100200529     C                     KFLD           WDSBA
+072200200529     C                     KFLD           WDDPT
+072300200529     C                     KFLD           WDSSC
+072400200529     C                     KFLD           WDDTE2
+072500200529      *
+072600200529     C           *LOVAL    SETLLSEDPOHL0
+072700200529     C                     READ SEDPOHL0                 83
+072800200529      *
+072900200529     C           *IN83     IFEQ '0'
+073000200529      *
+073100200529     C                     MOVELDSBA      WDSBA   3
+073200200529     C**********           MOVELDDPT      WDDPT   60                                          CSD027
+073300200529     C                     MOVELDDPT      WDDPT   6                                           CSD027
+073400200529      *
+073500200529     C           *IN83     DOWEQ'0'
+073600200529      *
+073700200529     C                     MOVE MACOEX    WDDTE   50
+073800200529      *
+073900200529     C                     MOVE MASESN    WDSSC  10
+074000200529      *
+074100200529     C           WKEY1     SETGTSEDPOHL0
+074200200529      *
+074300200529     C                     READPSEDPOHL0                 83
+074400200529      *
+074500200529     C           *IN83     IFEQ '0'
+074600200529      *
+074700200529     C           DSSC      IFEQ WDSSC
+074800200529     C           DSBA      ANDEQWDSBA
+074900200529     C           DDPT      ANDEQWDDPT
+075000200529      *
+075100200529     C                     MOVE WDDPT     WDEPO   6
+075200200529      *
+075300200529     C                     MOVEL*BLANKS   CMDTXT
+075400200529     C***********          MOVEL*BLANKS   CMDTX1160                                           CPK014
+075500200529     C                     Z-ADD240       CMDLEN 155
+075600200529     C***********          MOVELCMD,1     CMDTX1                                              CPK014
+075700200529     C***********          MOVE CMD,2     CMDTX1                                              CPK014
+075800200529     C***********          MOVELCMDTX1    CMDTXT                                              CPK014
+075900200529     C***********          MOVE CMD,3     CMDTXT                                              CPK014
+076000200529     C                     MOVELCMD,1     CMDTXT                                              CPK014
+076100200529     C                     MOVELCMD,2     CMDTX2                                              CPK014
+076200200529     C                     MOVELCMD,3     CMDTX3                                              CPK014
+076300200529      *
+076400200529     C                     MOVELMACORF    @REF
+076500200529     C                     MOVEL'L'       @ACTI
+076600200529      *
+076700200529     C                     MOVELMACORF    @REFN
+076800200529     C                     MOVELWDSBA     @BRCD
+076900200529     C                     MOVELWDEPO     @DEPT
+077200200529      *
+077300200529     C                     CALL 'QCMDEXC'
+077400200529     C                     PARM           CMDTXT
+077500200529     C                     PARM           CMDLEN
+077600200529      *
+077700200529     C                     ENDIF
+077800200529     C                     ENDIF
+077900200529      *
+078000200529     C                     MOVEL*HIVAL    WDSSC
+078100200529     C                     MOVEL*HIVAL    WDDTE2  50
+078200200529      *
+078300200529     C           WKEY2     SETGTSEDPOHL0
+078400200529      *
+078500200529     C                     READ SEDPOHL0                 83
+078600200529      *
+078700200529     C           *IN83     IFEQ '0'
+078800200529     C                     MOVELDSBA      WDSBA
+078900200529     C                     MOVELDDPT      WDDPT
+079000200529     C                     ENDIF
+079100200529      *
+079200200529     C                     ENDDO
+079300200529      *
+079400200529     C                     ENDIF
+079500200529      *
+079600200529     C                     ENDSR
+079700200529      *
+079800200529      *
+079900200529      *****************************************************************
+080000200529      /EJECT
+080100200529      *****************************************************************
+080200200529      *                                                               *
+080300200529      *            *PSSR  - Program Exception Error Routine.          *
+080400200529      *                                                               *
+080500200529      * CALLS      SRAUDT - Generates Audit report                    *
+080600200529      *                                                               *
+080700200529      * CALLED BY  SRINIT - Program initialisation                    *
+080800200529      *            SRPROC - Process records from SECORSPD             *
+080900200529      *                                                               *
+081000200529      * FLDS USED         -                                           *
+081100200529      *                                                               *
+081200200529      *****************************************************************
+081300200529      *
+081400200529     C           *PSSR     BEGSR                           ** PSSR **
+081500200529      *
+081600200529     C                     MOVE 'E'       PRETRN           Return code
+081700200529      *
+081800200529      ***  Check to see that *PSSR has not already been called.
+081900200529      *
+082000200529     C           WRUN      IFEQ *BLANK
+082100200529     C                     MOVE 'Y'       WRUN    1
+082200200529     C                     MOVEL'SE7525'  DBPGM
+082300200529      *
+082400200529      ** Dump and return to the calling program
+082500200529      *
+082600200529     C                     MOVE '1'       *INLR
+082700200529     C                     MOVE '1'       *INU7
+082800200529     C                     MOVE '1'       *INU8
+082900200529     C                     DUMP
+083000200529     C                     EXSR SRAUDT
+083100200529     C                     RETRN
+083200200529      *
+083300200529     C                     ENDIF
+083400200529      *
+083500200529     C                     ENDSR
+083600200529      *****************************************************************
+083700200529      *
+083800200529**  CPY@
+083900200529(c) Finastra International Limited 2001
+084000200529**  CMD - CALL 'QCMDEXC' TO SBMJOB
+084100200529SBMJOB JOB(COnnnnnnx) JOBD(BULKTJOBD) RQSDTA('CALL PGM(SEC7550) PARM(''xxxxxx''
+084101200619''XXX'' ''XXXXXX'' ''  '' ''          '' ''  '' ''      '' ''    '')')
+084102200619MSGQ(MOPERQ) RTGDTA(*NONE) INLLIBL(*JOBD) USER(*JOBD) OUTQ(*JOBD)                             CSC023

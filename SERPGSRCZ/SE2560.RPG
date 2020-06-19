@@ -1,1206 +1,1236 @@
-     H        1
-      *****************************************************************
-/*STD *  RPGBASE                                                      *
-/*EXI *  TEXT('Midas SE Drop off position settlements')
-     F*****************************************************************
-     F*                                                               *
-     F*  Midas - Securities Trading Module
-     F*                                                               *
-     F*  SE2560 - DROP OFF POSITION SETTLEMENTS                       *
-     F*                                                               *
-     F*  Function: To drop off positions Settlements for which:       *
-     F*   (COB)    - The Due Date is less than retention date         *
-     F*              (from Retention of Settled Trades period on ICD) *
-     F*            - or the related security has expired and is to be *
-     F*              dropped off,                                     *
-     F*            and to report dropped records.                     *
-     F*                                                               *
-     F*  Called by: SEC1005 - Drop off Position Settlements           *
-     F*                                                               *
-      *  (c) Finastra International Limited 2001                      *
-     F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      * Bank Fusion Midas 1.4 Base -----------------------------------*
-      * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. 095907             Date 26Jan07               *
-     F*                 243026             Date 26Jan07               *
-      * Midas Plus 1.4 Base ------------------------------------------*
-      * Midas Plus 1.3 ----------- Base ------------------------------*
-      *                 CSD027             Date 09Dec05               *
-      *                 CSE071             Date 19Jul05               *
-      *                 BUG7985            Date 12Jul05               *
-      *                 CRE020             Date 20Jan04               *
-      *                 CGL029             Date 01Sep03               *
-      *                 CSE040             Date 11Jun03               *
-      * Midas Release 4.01.02 ----------------------------------------*
-      *                 203832             Date 2JUl02                *
-      *                 206603             Date  2Jul02               *
-      * Midas Release 4 --------------- Base -------------------------*
-      * Midas DBA 3.04 -----------------------------------------------*
-      *                 CSE023             Date 14AUG00               *
-      * Midas DBA 3.02 -----------------------------------------------*
-      * Midas DBA 3.00 ---------------- Base -------------------------*
-      *                 CEU017             Date 03Avr98               *
-      *                 CSE007             Date 03feb98               *
-      *                 084236             DATE 29JUL96               *
-     F*                 085990             DATE 28APR95               *
-     F*                 S01496             DATE 21JUL94               *
-     F*                 S01447             DATE 04NOV93               *
-     F*                 052254             DATE 10JAN94               *
-     F*                 S01401             DATE 16JUN93               *
-     F*                 048919             DATE 10JAN93               *
-     F*                 S01397             DATE 10SEP92               *
-     F*                 E37493             DATE 02APR92               *
-     F*                 E29170             DATE 15OCT91               *
-     F*                 S01117             DATE 07JUN91               *
-     F*                 S01269             DATE 02AUG90               *
-     F*                 E20651             DATE 30JAN90               *
-     F*                 E20114             DATE 06DEC89               *
-     F*                 E14884             DATE 12/09/88              *
-     F*                                                               *
-     F*---------------------------------------------------------------*
-     F*                                                               *
-      *  MD046248 - Finastra Rebranding                               *
-     F*  095907 - TRAILERS POSETA MUST BE UPDATED                     *
-     F*         - MODIFICATIONS CALCULATIONS FOR OUTPUT TRAILER       *
-     F*         - UPDATES OF RECI WITH '*' REPLACED BY DELETES        *
-     F*         - IF FEATURE MT5XX (S01401) IS ACTIVE, DROP CORRESPON *
-     F*           RECORDS IN POSETDX1 AND POSETDX2                    *
-     F*         - DELETE RECORDS ALREADY WITH RECI '*'                *
-     F*         - ACCESS SECTYD ONLY WHEN CHANGE OF SECURITY          *
-     F*         - USE WORK FIELD OF 6,0 TO OUPTPUT DETAILS FOR POSETD *
-     F*           ON SE2560AU                                         *
-     F*         - Also include 243026                                 *
-     F*  243026 - Work field too short                                *
-     F*         - 6,0 is not enough on printer. Increase to 7,0       *
-      *  CSD027 - Conversion Of Customer Number to Alpha              *
-      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
-      *  BUG7985- Several components failed due to accessing TABLETR  *
-      *  CRE020 - Midas Plus Online Printing of Advices (GE7)         *
-      *  CGL029 - Increase Account Code to 10 digits (Recompile)      *
-      *  CSE040 - Securities Statement Processing                     *
-      *  203832 - Do not consider reversed position settlements when  *
-      *           computing for the number of records deleted (PSDEL) *
-      *  206603 - Do not consider reversed position settlements into  *
-      *           number of records (they are not included into core  *
-      *           of POSETA)                                          *
-      *  CSE023 - Treaty Withholding Tax                              *
-     F*  CEU017 - Securities Redenomination Euro Changes              *
-     F*  CSE007 - Corporate Actions                                   *
-     F*  084236 - Prevent CPF5004 'Print Overflow line' message being *
-     F*           received.                                           *
-     F*  085990 - Do not drop off matured records that are still      *
-     F*           within the retention period as they can still be    *
-     F*           enquired upon in position settlement input.         *
-     F*           Remove fix E14884.                                  *
-     F*  S01496 - Incorporation of Jyske Enhancements (S10985).       *
-     F*  S01447 - WITHHOLDING TAX (SE) ENHANCEMENT.                   *
-     F*           Recompiled due to changes in PF/POSETD.             *
-     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
-     F*           to 10,9                                             *
-     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
-     F*          - Recompiled due to changes to files.                *
-     F*  048919 - IF NO LIVE RECORDS IN POSETD, THE REPORT DOES NOT   *
-     F*           OUTPUT 'END OF REPORT'                              *
-     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
-     F*          - Recompiled due to changes to files.                *
-     F*  E37493 - Recompiled over changed printer file                *
-     F*  E29170 - Report Control Facility changes                     *
-     F*  S01117 - Multi-branching                                     *
-     F*  S01269 - TRADE AUTHORISATION: RECOMPILED OVER CHANGED        *
-     F*           FILE TABSE.                                         *
-     F*  E20651 - DB ERROR NUMBERS USED IN MORE THAN ONE PLACE.       *   E20651
-     F*           NEW ERROR NUMBERS AS FOLLOWS:                       *   E20651
-     F*           DB ERROR 01 -> 06                                   *   E20651
-     F*           DB ERROR 01 -> 07                                   *   E20651
-     F*  E20114 - PROGRAM CHANGED TO USE LF POSET1, WHICH IS BUILT    *   E20114
-     F*           OVER A SINGLE MEMBER POSETD.                        *   E20114
-     F*  E14884 - DROP OFF MATURED RECORDS (RECI 'M')                 *   E14884
-     F*                                                               *
-     F*****************************************************************
-     F*                                                               *
-     F*  C R E A T I O N     P A R A M E T E R S                      *
-     F*                                                               *
-     F*                                                               *
-     F*****************************************************************
-     F*
-     F*POSET***UP**E***********K        DISK                              E20114
-     FPOSET1  UP  E           K        DISK                               E20114
-     FSECTY   IF  E           K        DISK
-     FPOSETA  UF  E                    DISK
-     FTABSE   IF  E           K        DISK
-     F            TABLETAF                          KIGNORE
-     F            TABTB11F                          KIGNORE
-     F            TABTE10F                          KIGNORE
-     F            TABTE20F                          KIGNORE
-     F            TABTG20F                          KIGNORE
-     F            TABLETHF                          KIGNORE
-     F*********** TABLETJF                          KIGNORE               S01117
-     F            TABLETKF                          KIGNORE
-     F            TABLETNF                          KIGNORE
-     F            TABLETPF                          KIGNORE
-     F            TABLETXF                          KIGNORE
-     F            TABLET2F                          KIGNORE
-     F            TABLET3F                          KIGNORE
-     F            TABLET5F                          KIGNORE
-     F            TABTB40F                          KIGNORE
-     FCLINT   IF  E           K        DISK
-     F            CLINTCAF                          KIGNORE
-     F            CLINTCCF                          KIGNORE
-     F            CLINTC1F                          KIGNORE
-     F            CLINTSEF                          KIGNORE
-     FPOSETDYLUF  E           K        DISK                                                   CRE020
-      **  Midas SE Position Settlement Extension file                                         CRE020
-      *                                                                                       CRE020
-     FPOSETDY1UF  E           K        DISK                                                   095907
-     FPOSETDY2UF  E           K        DISK                                                   095907
-     FSE2560AUO   E                    PRINTER
-     F                                              KINFDS SPOOLU         E29170
-     FSE2560P1O   E                    PRINTER                        UC
-     F                                              KINFDS SPOOL          E29170
-     F/COPY WNCPYSRC,SE2560F001
-     F*
-      /EJECT
-     F*****************************************************************
-     F*                                                               *
-     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
-     F*                                                               *
-     F*   31 - Security not found for this record                     *
-     F*   32 - Control new page printing                              *
-     F*   33 - General work indicator                                 *
-     F*   36 - DETAIL PRINTER FILE P1 IS OPEN                         *   E29170
-     F*   37 - MULTIBRANCHING ON                                      *   E29170
-     F*   69 - Used to Control first cycle processing                 *
-     F*   70 - No Tabletl record                                      *
-     F*   71 - No Clintcb record                                      *
-     F*   72 - No Tabtg10 record                                      *
-     F*   74 - Narrative field required                               *
-     F*   73 - Number of records on audit file different from         *
-     F*      - number of records read                                 *
-     F*90-99 - Used in standard sub-routines                          *
-     F*   U7 - Database error                                         *
-     F*   U8 - Database / Control error                               *
-     F*   L3 - Change of Branch                                       *
-     F*   L2  -Change of Security                                     *
-     F*   L1 - Change of Counterparty                                 *
-     F*                                                               *
-     F*****************************************************************
-      /SPACE 3
-     F*****************************************************************
-     F*                                                               *
-     F*  I N D E X   T O   S U B R O U T I N E S                      *
-     F*                                                               *
-     F*  DECPLS - Get decimal places tabtg10                          *
-     F*  DLTREC - Flag records as deleted and count total             *
-     F*  PRINTD - Print deleted record                                *
-     F*  *PSSR  - Error handling                                      *   S01117
-     F*  RCFP1  - SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF      *   E29170
-     F*  RCFAU  - SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF      *   E29170
-     F*  ZDATE2 - DAYNO - DATE conversion                             *
-     F*  ZICDSE - Access ICD record for Securities Trading            *
-     F*  ZSEDIT - Insert a decimal point and sign into a numeric field*
-     F*           and blank out leading zeros                         *
-     F*  ZSYSTM - Access ICD record                                   *
-     F*                                                               *
-     F*****************************************************************
-      /EJECT
-     E                    CPY@    1   1 80
-     E/COPY ZSRSRC,ZDATE2Z1
-     E*
-     E/COPY ZSRSRC,ZSEDITZ1
-     E*
-      /EJECT
-     IPOSETDF
-     I***********                                   PBCH  L3              S01117
-     I                                              PBCA  L3              S01117
-     I                                              PSSH  L2
-     I                                              PCPY  L1
-     I              RECI                            RECIX
-     I/COPY WNCPYSRC,SE2560I001
-     I*LDA******* UDS                            256
-     I***********                           134 177 DBLOT                 S01117
-     I***********                           134 138 DBFILE                S01117
-     I***********                           139 167 DBKEY                 S01117
-     I***********                           168 175 DBPGM                 S01117
-     I***********                           176 177 DBASE                 S01117
-     ILDA         DS                            256
-     I                                      134 183 DBLOT                 S01117
-     I                                      134 141 DBFILE                S01117
-     I                                      142 170 DBKEY                 S01117
-     I                                      171 180 DBPGM                 S01117
-     I                                      181 1830DBASE                 S01117
-     I*                                                                   E29170
-     ISPOOL       DS                                                      E29170
-     I*                                                                   E29170
-     I**  DS FOR P1 SPOOL FILE NAME                                       E29170
-     I*                                                                   E29170
-     I                                       83  92 SFILE                 E29170
-     I                                    B 123 1240SFNUM                 E29170
-     I**                                                                  E29170
-     ISPOOLU      DS                                                      E29170
-     I                                       83  92 SFILEU                E29170
-     I                                    B 123 1240SFNUMU                E29170
-     IRUNDT       DS                                                      E29170
-     I                                        1   7 RUNA                  E29170
-     I                                    P   8  100RUND                  E29170
-     I                                       11  11 SSF                   E29170
-     I                                       12  12 DATF                  E29170
-     I                                       13  13 MBIN                  E29170
-     I*                                                                   E29170
-     I**  DATA STRUCTURE FOR RUN DATE DETAILS                             E29170
-     I*                                                                   E29170
-     I/COPY ZSRSRC,ZSEDITZ2
-     I* Data structure for file keys
-     I*
-     I            DS
-     I                                        1  12 TLKEY
-     I                                        1   2 TLRECT
-     I                                        3   7 TLZZ5
-     I                                        8  10 TLPSCU
-     I                                       11  12 TLPSE2
-     I*
-     I            DS
-     I                                        1  12 TKEY
-     I                                        1   2 TRECT
-     I                                        3   8 TZZ6
-     I                                        9  11 TPSCU
-     I                                       12  12 TSREC
-     I*
-     I            DS
-     I*
-     I* Data structure for settlement account field
-     I*
-     I**********                              1  12 PSEA                                      CGL029
-     I                                        1  18 PSEA                                      CGL029
-     I                                        1   6 PSEA06
-     I**********                              7  10 PSEA04                                    CGL029
-     I**********                             11  12 PSEA02                                    CGL029
-     I                                        7  16 PSEA10                                    CGL029
-     I                                       17  18 PSEA02                                    CGL029
-     I*
-     ICPYR@#      DS
-     I*
-     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
-     I*
-     I                                        1  80 CPY@
-     I                                        1  20 CPY@##
-     I*                                                                   S01496
-     I**  EXTERNAL DS FOR SECURITIES TRADING DETAILS                      S01496
-     I*                                                                   S01496
-     ISDBRCH    E DSSDBRCHPD                                                                 BUG7985
-     I              A8BRNM                          BRNM                                     BUG7985
-     ISDSTRD    E DSSDSTRDPD                                              S01496
-     I*                                                                   S01496
-     I** LONG STRUCTURE FOR ACCESS OBJECTS, LONG DATA STRUCTURE           S01496
-     I*                                                                   S01496
-     IDSSDY     E DSDSSDY                                                 S01496
-     I*
-     IDSFDY     E DSDSFDY                                                                     CRE020
-      *                                                                                       CRE020
-      /EJECT
-     C           *LIKE     DEFN PSSH      SPSSH                                               095907
-     C*================================================================
-     C*  P R O G R A M     S T A R T                                  *
-     C*================================================================
-     C*
-     C           *IN69     IFEQ '0'
-      *
-      * Define key list for chaining to clintcb file
-      *
-     C           CLICBK    KLIST
-     C**********           KFLD           CBNUM   60                                          CSD027
-     C                     KFLD           CBNUM   6                                           CSD027
-     C                     KFLD           CBRCDT  1
-      *                                                                                       CRE020
-      ** Midas SE Position Settlement Extension file                                          CRE020
-      *                                                                                       CRE020
-     C           KPOST3    KLIST                                                              CRE020
-     C                     KFLD           K3PBCA  3                                           CRE020
-     C                     KFLD           K3PSSH 10                                           CRE020
-     C**********           KFLD           K3PCPY  60                                   CRE020 CSD027
-     C                     KFLD           K3PCPY  6                                           CSD027
-     C                     KFLD           K3PDUD  50                                          CRE020
-     C                     KFLD           K3PEVT  2                                           CRE020
-      *                                                                                       CRE020
-     C/COPY WNCPYSRC,SE2560C001
-      *
-      * Define keylist for chaining to tabletl file
-      *
-     C           TABTLK    KLIST
-     C                     KFLD           TLKEY
-      *
-      * Define keylist for chaining to tabse file - tabtg10
-      *
-     C           TABTK     KLIST
-     C                     KFLD           TKEY
-      *
-     C** KLIST TO ACCESS MT5XX EXTENSION FILES                                                095907
-     C*                                                                                       095907
-     C           KEY1      KLIST                                                              095907
-     C                     KFLD           PBCA                                                095907
-     C                     KFLD           PSSH                                                095907
-     C                     KFLD           PCPY                                                095907
-     C                     KFLD           PDUD                                                095907
-     C                     KFLD           PEVT                                                095907
-     C*
-     C* Prepare LDA
-     C*
-     C           *NAMVAR   DEFN           LDA                             S01117
-     C           *LOCK     IN   LDA                                       S01117
-     C                     MOVE *BLANKS   DBLOT
-     C                     MOVE 'SE2560  'DBPGM
-     C                     OUT  LDA                                       S01117
-     C*
-     C* Get Installation Control Data record 1
-     C*
-     C                     EXSR ZSYSTM
-     C*
-     C* If error in ZSYSTM, abend program
-     C*
-     C           *IN99     IFEQ '1'                        ***************
-     C           *LOCK     IN   LDA                        ***************S01117
-     C***********          MOVE '01'      DBASE            **DB*ERROR*01**E20651
-     C***********          MOVE '06'      DBASE            **DB 6**E20651 S01117
-     C                     Z-ADD6         DBASE            **DB ERROR 06**S01117
-     C                     MOVEL'TABLE'   DBFILE           ***************
-     C                     MOVELZTABKY    DBKEY
-     C                     OUT  LDA                                       S01117
-     C                     EXSR *PSSR                                     S01117
-     C                     WRITEHEADAU
-     C                     WRITEERROR
-     C***********          WRITETRAILAU                                   E29170
-     C                     SETON                     U7U8LR
-     C                     RETRN
-     C                     END
-     C*
-     C* Get Installation Control Data record for Securities trading
-     C*
-     C                     EXSR ZICDSE
-     C*                                                                   S01496
-     C           *IN99     IFEQ *OFF                                      S01496
-     C*                                                                   S01496
-     C**   ACCESS SECURITIES TRADING DETAIL                               S01496
-     C*                                                                   S01496
-     C                     CALL 'AOSTRDR0'                                S01496
-     C                     PARM *BLANKS   @RTCD   7                       S01496
-     C                     PARM '*FIRST ' @OPTN   7                       S01496
-     C           SDSTRD    PARM SDSTRD    DSSDY                           S01496
-     C*                                                                   S01496
-     C           @RTCD     IFEQ '*EOF'                                    S01496
-     C                     SETON                     99                   S01496
-     C                     ELSE                                           S01496
-     C           @RTCD     IFNE *BLANK                                    S01496
-     C           *LOCK     IN   LDA                                       S01496
-     C                     MOVEL'SDSTRDPD'DBFILE                          S01496
-     C                     MOVEL@OPTN     DBKEY            ***************S01496
-     C                     MOVEL@OPTN     DBOPTN  7        * DB ERROR 08 *S01496
-     C                     Z-ADD8         DBASE            ***************S01496
-     C                     OUT  LDA                                       S01496
-     C                     EXSR *PSSR                               S01117S01496
-     C                     WRITEHEADAU                                    S01496
-     C                     WRITEERROR                                     S01496
-     C***********          WRITETRAILAU                             E29170S01496
-     C                     SETON                     U7U8LR               S01496
-     C                     RETRN                                          S01496
-     C                     ENDIF                                          S01496
-     C                     ENDIF                                          S01496
-      *                                                                   S01496
-     C                     ENDIF                                          S01496
-     C*
-     C* If error in ZICDSE, abend program
-     C*
-     C           *IN99     IFEQ '1'                        ***************
-     C           *LOCK     IN   LDA                        ***************S01117
-     C***********          MOVE '02'      DBASE            **DB ERROR 02**S01117
-     C                     Z-ADD2         DBASE            **DB ERROR 02**S01117
-     C                     MOVEL'TABLE'   DBFILE           ***************
-     C                     MOVELZTABKY    DBKEY
-     C                     OUT  LDA                                       S01117
-     C                     EXSR *PSSR                                     S01117
-     C                     WRITEHEADAU
-     C                     WRITEERROR
-     C***********          WRITETRAILAU                                   E29170
-     C                     SETON                     U7U8LR
-     C                     RETRN
-     C                     END
-     C*                                                                   S01496
-     C**  Check if Jyske Enhancements is installed                        S01496
-     C*                                                                   S01496
-     C                     CALL 'AOSARDR0'                                S01496
-     C                     PARM *BLANKS   WLRTCD  7                       S01496
-     C                     PARM '*VERIFY' WLOPTN  7                       S01496
-     C                     PARM 'S01496'  WLSARD  6                       S01496
-     C*                                                                   S01496
-     C           WLRTCD    IFEQ *BLANK                                    S01496
-     C                     MOVE 'Y'       S01496  1                       S01496
-     C                     END                                            S01496
-     C*                                                                   CSE007
-     C**  Check if Corporate Action is installed                          CSE007
-     C*                                                                   CSE007
-     C                     CALL 'AOSARDR0'                                CSE007
-     C                     PARM *BLANKS   WLRTCD  7                       CSE007
-     C                     PARM '*VERIFY' WLOPTN  7                       CSE007
-     C                     PARM 'CSE007'  WLSARD  6                       CSE007
-     C*                                                                   CSE007
-     C           WLRTCD    IFEQ *BLANK                                    CSE007
-     C                     MOVE 'Y'       CSE007  1                       CSE007
-     C                     END                                            CSE007
-      *                                                                   CEU017
-      **  Check if Securities Redenomination is installed                 CEU017
-      *                                                                   CEU017
-     C                     MOVE 'N'       CEU017  1                       CEU017
-     C                     CALL 'AOSARDR0'                                CEU017
-     C                     PARM *BLANKS   WLRTCD  7                       CEU017
-     C                     PARM '*VERIFY' WLOPTN  7                       CEU017
-     C                     PARM 'CEU017'  WLSARD  6                       CEU017
-      *                                                                   CEU017
-     C           WLRTCD    IFEQ *BLANK                                    CEU017
-     C                     MOVE 'Y'       CEU017                          CEU017
-     C                     ENDIF                                          CEU017
-      *                                                                   CSE023
-      ** Check if CSE023 - Treaty Withholding Tax present                 CSE023
-      *                                                                   CSE023
-     C                     MOVE 'N'       CSE023  1                       CSE023
-     C                     CALL 'AOSARDR0'                                CSE023
-     C                     PARM *BLANKS   @RTCD   7                       CSE023
-     C                     PARM '*VERIFY' @OPTN   7                       CSE023
-     C                     PARM 'CSE023'  @SARD   6                       CSE023
-      *                                                                   CSE023
-     C           @RTCD     IFEQ *BLANK                                    CSE023
-     C                     MOVE 'Y'       CSE023                          CSE023
-     C           31        MULT 18        @MINR   30                      CSE023
-     C                     ENDIF                                          CSE023
-     C*
-     C* Calculate Retention date
-     C*
-     C           S01496    IFNE 'Y'                                       S01496
-     C           CSE007    ANDNE'Y'                                       CSE007
-     C           CEU017    ANDNE'Y'                                       CEU017
-     C           CSE040    ANDNE'Y'                                       CSE040
-     C********** 31        MULT RTST      WK3N    30                                          243026
-     C           31        MULT RTST      WK3N    50                                          243026
-     C                     ELSE                                           S01496
-     C********** 31        MULT BVROPS    WK3N    30                      S01496              243026
-     C           31        MULT BVROPS    WK3N                                                243026
-     C                     END                                            S01496
-     C*                                                                   CSE023
-     C** If CSE023 is present, the minimum retention period is            CSE023
-     C** 18 months.                                                       CSE023
-     C*                                                                   CSE023
-     C           CSE023    IFEQ 'Y'                                       CSE023
-     C           WK3N      ANDLT@MINR                                     CSE023
-     C                     Z-ADD@MINR     WK3N                            CSE023
-     C                     END                                            CSE023
-     C*                                                                   CSE023
-     C           RUND      SUB  WK3N      RTNTDT  50
-     C*                                                                   086990
-     C** Access SAR files to check if value date for pos. settlements     085990
-     C*                                                                   085990
-     C                     MOVE 'N'       S01512                          085990
-     C                     CALL 'AOSARDR0'                                085990
-     C                     PARM '       ' WLRTCD                          085990
-     C                     PARM '*VERIFY' WLOPTN                          085990
-     C                     PARM 'S01512'  WLSARD                          085990
-     C*                                                                   085990
-     C           WLRTCD    IFEQ *BLANK                                    085990
-     C                     MOVE 'Y'       S01512  1                       085990
-     C                     END                                            085990
-      *                                                                   CSE040
-      ** Check if CRE020 is enabled.                                                          CRE020
-      *                                                                                       CRE020
-     C                     CALL 'AOSARDR0'                                                    CRE020
-     C                     PARM *BLANKS   PRTCD   7                                           CRE020
-     C                     PARM '*VERIFY' POPTN   7                                           CRE020
-     C                     PARM 'CRE020'  PSARD   6                                           CRE020
-      *                                                                                       CRE020
-     C                     MOVE 'N'       CRE020  1                                           CRE020
-     C           PRTCD     IFEQ *BLANKS                                                       CRE020
-     C                     MOVE 'Y'       CRE020                                              CRE020
-     C                     ELSE                                                               CRE020
-     C           PRTCD     IFNE '*NRF   '                                                     CRE020
-     C           *LOCK     IN   LDA                                                           CRE020
-     C                     MOVEL'SCSARDPD'DBFILE                                              CRE020
-     C                     MOVEL'CRE020'  DBKEY                                               CRE020
-     C                     Z-ADD46        DBASE                                               CRE020
-     C                     OUT  LDA                                                           CRE020
-     C                     EXSR *PSSR                                                         CRE020
-     C                     ENDIF                                                              CRE020
-     C                     ENDIF                                                              CRE020
-      *                                                                                       CRE020
-      ** CSE040 - Securities Statement Processing                         CSE040
-      *                                                                   CSE040
-     C                     MOVE 'N'       CSE040                          CSE040
-     C                     CALL 'AOSARDR0'                                CSE040
-     C                     PARM '       ' WLRTCD                          CSE040
-     C                     PARM '*VERIFY' WLOPTN                          CSE040
-     C                     PARM 'CSE040'  WLSARD                          CSE040
-      *                                                                   CSE040
-     C           WLRTCD    IFEQ *BLANK                                    CSE040
-     C                     MOVE 'Y'       CSE040  1                       CSE040
-     C                     ENDIF                                          CSE040
-     C*
-     C/COPY WNCPYSRC,SE2560C002
-     C                     SETON                     69
-     C*                                                                   E29170
-     C** IN THE DATAAREA RUNDAT                                           E29170
-     C*                                                                   E29170
-     C           *NAMVAR   DEFN RUNDAT    RUNDT                           E29170
-     C                     IN   RUNDT                                     E29170
-     C*                                                                   E29170
-     C**  TEST FOR MULTIBRANCHING                                         E29170
-     C*                                                                   E29170
-     C           MBIN      IFEQ 'Y'                                       E29170
-     C                     SETON                     37                   E29170
-     C                     END                                            E29170
-     C*                                                                   E29170
-     C** RCF Processing for Audit File                                    E29170
-     C*                                                                   E29170
-     C                     EXSR RCFAU                                     E29170
-     C*                                                                                       095907
-     C* CHECK IF MT5XX FEATURE IS ACTIVE                                                      095907
-     C*                                                                                       095907
-     C                     EXSR AOSARD                                                        095907
-     C                     END
-     C*
-      /EJECT
-     C*
-     C* Change of Branch calcs
-     C*
-     C   L3                DO
-     C*
-     C**Fetch*Branch*name**********************************************   E29170
-     C* Fetch Branch name if multibranching is on                         E29170
-     C*
-     C           *IN37     IFEQ '1'                                       E29170
-     C                     MOVE *BLANKS   KEY12A 12
-     C                     MOVEL'10'      KEY12A
-     C***********          MOVE PBCH      KEY12A                          S01117
-     C                     MOVE PBCA      KEY12A                          S01117
-     C********** KEY12A    CHAINTABLETRF             33                                      BUG7985
-     C********** *IN33     IFEQ '1'                        ***************                   BUG7985
-      *                                                                                      BUG7985
-     C                     CALL 'AOBRCHR1'                                                   BUG7985
-     C                     PARM *BLANKS   PRTCD   7                                          BUG7985
-     C                     PARM '*KEY   ' POPTN   7                                          BUG7985
-     C                     PARM PBCA      PBRCH   3                                          BUG7985
-     C           SDBRCH    PARM SDBRCH    DSSDY                                              BUG7985
-     C*                                                                                      BUG7985
-     C** Database error if no record found                                                   BUG7985
-     C*                                                                                      BUG7985
-     C           PRTCD     IFNE *BLANKS                                                      BUG7985
-     C***********          MOVEL'03'      DBASE            **DB ERROR 03**S01117
-     C                     Z-ADD3         DBASE            **DB ERROR 03**S01117
-     C**********           MOVEL'TABLE'   DBFILE           ***************                   BUG7985
-     C**********           MOVELKEY12A    DBKEY                                              BUG7985
-     C                     MOVEL'SDBRCHPD'DBFILE                                             BUG7985
-     C                     MOVELPBCA      DBKEY                                              BUG7985
-     C**********           OUT  LDA                                                   S01117 BUG7985
-     C                     EXSR *PSSR                                     S01117
-     C                     WRITEHEADAU
-     C                     WRITEERROR
-     C***********          WRITETRAILAU                                   E29170
-     C                     SETON                     U7U8LR
-     C                     RETRN
-     C                     END
-     C                     END                                            E29170
-     C*
-     C* Indicator controlling new page printing
-     C*
-     C                     SETOF                     32
-     C*
-     C   L3                END
-      /SPACE 3
-     C*
-     C* Detail processing
-     C*
-      /SPACE 2
-     C/COPY WNCPYSRC,SE2560C007
-     C*
-     C* Ignore this record if already deleted
-     C*
-     C           RECIX     IFNE '*'
-     C*
-     C* Count movements records read
-     C*    Not including Matured records                                  E14884
-     C*
-     C           RECIX     IFNE 'M'                                       E14884
-     C           RECIX     ANDNE'R'                                       206603
-     C***********          ADD  1         PSRRD                                               095907
-     C                     ADD  1         PSRRD   50                                          095907
-     C*********************ADD  1         PSRRD6                                       095907 243026
-     C                     ADD  1         PSRRD7                                              243026
-     C                     END                                            E14884
-     C*                                                                                       095907
-     C           RECIX     IFEQ 'D'                                                           095907
-     C                     ADD  1         LVREC   50                                          095907
-     C                     END                                                                095907
-     C*
-     C* Access Security
-     C*
-     C           PSSH      IFNE SPSSH                                                         095907
-     C                     MOVE PSSH      SPSSH                                               095907
-     C           PSSH      CHAINSECTYDF              31
-     C  N31      RECI      COMP '*'                      31
-     C                     END                                                                095907
-     C           *IN31     IFEQ '1'
-     C*
-     C* If not found get dec.places tabtg10
-     C*
-     C                     EXSR DECPLS
-     C*
-     C* If not found, flag position and count as deleted
-     C*
-     C                     EXSR DLTREC
-     C*
-     C* Print detail report
-     C*
-     C                     EXSR PRINTD
-     C*
-     C* Else if security found
-     C*
-     C                     ELSE
-     C*
-     C* If due date is greater than retention date take no action
-     C*   unless matured record                                           E14884
-     C*
-     C           PDUD      IFLE RTNTDT
-     C           S01512    ANDNE'Y'                                       085990
-     C           PSVL      ORLE RTNTDT                                    085990
-     C           S01512    ANDEQ'Y'                                       085990
-     C***********RECIX     OREQ 'M'                                E14884 085990
-     C*
-     C* Get dec places tabtg10
-     C*
-     C                     EXSR DECPLS
-     C/COPY WNCPYSRC,SE2560C005
-     C*
-     C* Flag position settlement records and count as deleted
-     C*
-     C                     EXSR DLTREC
-     C*
-     C* Print detail report
-     C*
-     C                     EXSR PRINTD
-     C*
-     C                     END
-     C                     END
-     C*                                                                                       095907
-     C                     ELSE                                                               095907
-     C*                                                                                       095907
-     C* Get dec places tabtg10                                                                095907
-     C*                                                                                       095907
-     C                     EXSR DECPLS                                                        095907
-     C*                                                                                       095907
-     C* Flag position settlement records and count as deleted                                 095907
-     C*                                                                                       095907
-     C                     EXSR DLTREC                                                        095907
-     C*                                                                                       095907
-     C* Print detail report                                                                   095907
-     C*                                                                                       095907
-     C                     EXSR PRINTD                                                        095907
-     C*
-     C                     END
-     C*
-      /SPACE 3
-     C*
-     C* Change of Branch
-     C*
-     C*L3******  PSRRD     IFGT *ZEROS                                    048919
-     C*L3******  *IN36     ANDEQ'1'                                 E29170048919
-     CL3         *IN36     IFEQ '1'                                       048919
-     CL3                   WRITETRAILP1                                   E29170
-     CL3                   CLOSESE2560P1
-     CL3                   SETOF                     36                   E29170
-     CL3                   END
-     C*
-      /SPACE 3
-     C*
-     C* LR time
-     C*
-     C/COPY WNCPYSRC,SE2560C003
-     CLR                   DO
-     C*
-     C* If no records read, perform 1st time calcs for audit report
-     C*
-     CL0         PSRRD     IFEQ *ZEROS
-     C*
-     C* Prepare LDA
-     C*
-     CL0                   MOVE *BLANKS   DBLOT
-     CL0                   MOVE 'SE2560  'DBPGM
-     C*
-     C* Get Installation Control Data record 1
-     C*
-     CL0                   EXSR ZSYSTM
-     C*
-     C* If error in ZSYSTM, abend program
-     C*
-     CL0         *IN99     IFEQ '1'                        ***************
-     CL0         *LOCK     IN   LDA                        ***************S01117
-     C**L0*******          MOVE '01'      DBASE            **DB*ERROR*01**E20651
-     C*L0********          MOVE '07'      DBASE            **DB ERROR 07**E20651
-     CL0                   Z-ADD7         DBASE            **DB ERROR 07**E20651
-     CL0                   MOVEL'TABLE'   DBFILE           ***************
-     CL0                   MOVELZTABKY    DBKEY
-     CL0                   OUT  LDA                                       S01117
-     CL0                   EXSR *PSSR                                     S01117
-     CL0                   WRITEHEADAU
-     CL0                   WRITEERROR
-     C*0*********          WRITETRAILAU                                   E29170
-     CL0                   SETON                     U7U8LR
-     CL0                   RETRN
-     CL0                   END
-     C*
-     CL0                   END
-     C*
-     C* Fetch Depot movements audit file
-     C*
-     CL0         1         CHAINPOSETAF              33
-     CL0         *IN33     IFEQ '1'                        ***************
-     CL0         *LOCK     IN   LDA                        ***************S01117
-     C*L0********          MOVEL'05'      DBASE            **DB ERROR 05**S01117
-     CL0                   Z-ADD5         DBASE            **DB ERROR 05**S01117
-     CL0                   MOVEL'POSETA'  DBFILE           ***************
-     CL0                   MOVEL'1'       DBKEY
-     CL0                   OUT  LDA                                       S01117
-     CL0                   EXSR *PSSR                                     S01117
-     CL0                   WRITEHEADAU
-     CL0                   WRITEERROR
-     C*0*********          WRITETRAILAU                                   E29170
-     CL0                   SETON                     U7U8
-     CL0                   RETRN
-     CL0                   ELSE
-     C*
-     C* Compare control total to number of records read
-     C*
-     CL0         NORE      COMP PSRRD                U8U8
-     CL0 U8                SETON                     73
-     C*
-     C* Calculate output fields
-     C*
-     C*0*********NORE      SUB  PSDEL     PSNEW                                               095907
-     CL0         NORE      SUB  PSDEL     PSNEW   50                                          095907
-     C*0*********NORE6     SUB  PSDEL6    PSNEW6                                       095907 243026
-     CL0         NORE7     SUB  PSDEL7    PSNEW7                                              243026
-     C*
-     C* Print audit report
-     C*
-     CL0                   WRITEHEADAU
-     CL0                   WRITEDETLAU
-     C*                                                                   E29170
-     C** If have read no records then output 'No Details' to Audit file   E29170
-     C*                                                                   E29170
-     CL0         PSRRD     IFEQ 0                                         E29170
-     CL0                   WRITENONE                                      E29170
-     CL0                   END                                            E29170
-     C*
-     C* If totals same, update audit record
-     C*
-     CL0         *INU8     IFEQ '0'
-     C***L0                Z-ADDPSNEW     NLRB                                                095907
-     C***L0                Z-ADDPSNEW     NORE                                                095907
-     CL0                   Z-ADDLVREC     NLRB                                                095907
-     CL0                   Z-ADDLVREC     NORE                                                095907
-     C*0*******************Z-ADDLVREC     NORE6                                        095907 243026
-     CL0                   Z-ADDLVREC     NORE7                                               243026
-     CL0                   UPDATPOSETAF
-     CL0                   END
-     C*
-     CL0                   END
-     C*                                                                                       095907
-     CLR         S01401    IFEQ 'Y'                                                           095907
-     CLR                   CLOSEPOSETDY1                                                      095907
-     CLR                   CLOSEPOSETDY2                                                      095907
-     CLR                   ENDIF                                                              095907
-     C*
-     CLR                   END
-     C*
-     C*****************************************************************
-      /EJECT
-     C*****************************************************************
-     C**                                                              *
-     C**   DECPLS SR. TO ACQUIRE DEC.PLACES - TABTG10                 *
-     C**                                                              *
-     C*****************************************************************
-     C*
-     CSR         DECPLS    BEGSR                           *** DECPLS ***
-     C*
-     C                     MOVEL'20      'TKEY
-     C                     MOVE PSCU      TPSCU
-     C                     MOVE '1'       TKEY
-     C           TABTK     CHAINTABTG10F             72
-     C           *IN72     IFEQ '0'
-     C           RECI      IFEQ '*'
-     C                     SETON                     72
-     C                     END
-     C                     END
-     C           *IN72     IFEQ '1'
-     C           *LOCK     IN   LDA                                       S01117
-     C                     MOVEL'1'       *INU8
-     C                     MOVEL'1'       *INU7            ***************
-     C***********          MOVEL'04'      DBASE            **DB ERROR 04**S01117
-     C                     Z-ADD4         DBASE            **DB ERROR 04**S01117
-     C                     MOVEL'TABLE'   DBFILE           ***************
-     C                     MOVELTKEY      DBKEY
-     C                     OUT  LDA                                       S01117
-     C                     EXSR *PSSR                                     S01117
-     C                     WRITEHEADAU
-     C                     WRITEERROR
-     C***********          WRITETRAILAU                                   E29170
-     C                     SETON                     U7U8LR
-     C                     RETRN
-     C                     END
-     C*
-     CSR                   ENDSR
-     C*
-     C*****************************************************************
-      /SPACE 3
-     C*****************************************************************
-     C**                                                              *
-     C**   DLTREC SR. TO FLAG RECORDS AND COUNT AS DELETED            *
-     C**                                                              *
-     C*****************************************************************
-     C**
-     CSR         DLTREC    BEGSR                           *** DLTREC  ***
-     C*
-     C* Flag Position record and count as deleted
-     C*
-     C***        RECIX     IFNE 'M'                                       E14884              095907
-     C****       RECIX     ANDNE'R'                                                    203832 095907
-     C*                                                                                       095907
-     C* DROP MT5XX EXTENSION FILES                                                            095907
-     C*                                                                                       095907
-     C           S01401    IFEQ 'Y'                                                           095907
-     C           KEY1      CHAINPOSETDY1             34                                       095907
-     C           *IN34     IFEQ '0'                                                           095907
-     C                     DELETPOSETDD1                                                      095907
-     C                     END                                                                095907
-     C           KEY1      CHAINPOSETDY2             35                                       095907
-     C           *IN35     IFEQ '0'                                                           095907
-     C                     DELETPOSETDD2                                                      095907
-     C                     END                                                                095907
-     C                     END                                                                095907
-     C                     DELETPOSETDF                                                       095907
-     C************         ADD  1         PSDEL                           E14884              095907
-     C                     ADD  1         PSDEL   50                                          095907
-     C*********************ADD  1         PSDEL6                                       095907 243026
-     C                     ADD  1         PSDEL7                                              243026
-     C***                  END                                            E14884              095907
-     C***                  MOVE '*'       RECIX                                               095907
-     C***                  EXCPTDELPSO                                                        095907
-     C/COPY WNCPYSRC,SE2560C006
-     C***********          ADD  1         PSDEL                           E14884
-      *                                                                                       CRE020
-      ** Once record is deleted, remove extension file record physically on file              CRE020
-      *                                                                                       CRE020
-     C           CRE020    IFEQ 'Y'                                                           CRE020
-     C                     MOVE PBCA      K3PBCA                                              CRE020
-     C                     MOVE PSSH      K3PSSH                                              CRE020
-     C                     MOVE PCPY      K3PCPY                                              CRE020
-     C                     MOVE PDUD      K3PDUD                                              CRE020
-     C                     MOVE PEVT      K3PEVT                                              CRE020
-      *                                                                                       CRE020
-     C           KPOST3    SETLLPOSETDD3                                                      CRE020
-     C           KPOST3    READEPOSETDD3                 78                                   CRE020
-     C           *IN78     DOWEQ'0'                                                           CRE020
-     C                     DELETPOSETDD3                                                      CRE020
-     C           KPOST3    READEPOSETDD3                 78                                   CRE020
-     C                     ENDDO                                                              CRE020
-     C                     ENDIF                                                              CRE020
-     C*
-     C* Increment deleted not authorised count if neccessary
-     C*
-     C           PAUI      IFNE 'Y'
-     C***********          ADD  1         PSDELX                                              095907
-     C                     ADD  1         PSDELX  50                                          095907
-     C*********************ADD  1         PSDEX6                                       095907 243026
-     C                     ADD  1         PSDEX7                                              243026
-     C                     END
-     C*
-     C/COPY WNCPYSRC,SE2560C004
-     CSR                   ENDSR
-     C*
-     C*****************************************************************
-      /SPACE 3
-     C*****************************************************************
-     C**                                                              *
-     C**   PRINTD SR. TO PRINT DETAIL RECORDS                         *
-     C**                                                              *
-     C*****************************************************************
-     C**
-     CSR         PRINTD    BEGSR                           *** PRINTD  ***
-     C*
-     C* Format due date
-     C*
-     C                     Z-ADDPDUD      ZDAYNO
-     C                     EXSR ZDATE2
-     C                     MOVE ZADATE    ZAPDUD
-     C*
-     C* Format settlement account depending on settlement method
-     C*
-     C**********           MOVE *BLANK    ZPSE14 14                                           CGL029
-     C**********           MOVE *BLANK    ZPSE12 12                                           CGL029
-     C                     MOVE *BLANK    ZPSE20 20                                           CGL029
-     C                     MOVE *BLANK    ZPSE18 18                                           CGL029
-     C*
-     C*    Format nnnnnn-nn-nnnn for settlement code 05
-     C*
-     C           PSMT      IFEQ 05
-     C                     MOVELPSEA06    ZPSE07  7
-     C                     MOVE '-'       ZPSE07
-     C*
-     C**********           MOVELPSEA04    ZPSE05  5                                           CGL029
-     C**********           MOVE '-'       ZPSE05                                              CGL029
-     C                     MOVELPSEA10    ZPSE11 11                                           CGL029
-     C                     MOVE '-'       ZPSE11                                              CGL029
-     C*
-     C**********           MOVELZPSE07    ZPSE12                                              CGL029
-     C**********           MOVE ZPSE05    ZPSE12                                              CGL029
-     C                     MOVELZPSE07    ZPSE18                                              CGL029
-     C                     MOVE ZPSE11    ZPSE18                                              CGL029
-     C*
-     C**********           MOVELZPSE12    ZPSE14                                              CGL029
-     C**********           MOVE PSEA02    ZPSE14                                              CGL029
-     C                     MOVELZPSE18    ZPSE20                                              CGL029
-     C                     MOVE PSEA02    ZPSE20                                              CGL029
-     C                     ELSE
-     C*
-     C*    Format settlement methods 01 02 07 08 12
-     C*
-     C           PSMT      IFEQ 01
-     C*
-     C           PSMT      OREQ 02
-     C*
-     C           PSMT      OREQ 07
-     C*
-     C           PSMT      OREQ 08
-     C*
-     C           PSMT      OREQ 12
-     C*
-     C*    Tabletl file using key
-     C*    If no record/record deleted - print psea not shortname
-     C*
-     C                     MOVE '70'      TLRECT
-     C                     MOVE PSCU      TLPSCU
-     C                     MOVELPSEA      TLPSE2
-     C           TABTLK    CHAINTABLETLF             70
-     C           *IN70     IFEQ '1'
-     C**********           MOVELPSEA      ZPSE14                                              CGL029
-     C                     MOVELPSEA      ZPSE20                                              CGL029
-     C                     ELSE
-     C           RECI      IFEQ '*'
-     C**********           MOVELPSEA      ZPSE14                                              CGL029
-     C                     MOVELPSEA      ZPSE20                                              CGL029
-     C                     ELSE
-     C*
-     C* Format customer shortname
-     C*    read clintcb file using key
-     C*    if no record/record deleted  - print psea not shortname
-     C*
-     C**********           Z-ADDCNUM      CBNUM                                               CSD027
-     C                     MOVE CNUM      CBNUM                                               CSD027
-     C                     MOVE 'A'       CBRCDT
-     C           CLICBK    CHAINCLINTCBF             71
-     C           *IN71     IFEQ '1'
-     C**********           MOVELPSEA      ZPSE14                                              CGL029
-     C                     MOVELPSEA      ZPSE20                                              CGL029
-     C                     ELSE
-     C           RECI      IFEQ '*'
-     C**********           MOVELPSEA      ZPSE14                                              CGL029
-     C                     MOVELPSEA      ZPSE20                                              CGL029
-     C                     ELSE
-     C**********           MOVELTLPSE2    ZPSE12                                              CGL029
-     C**********           MOVE CSNM      ZPSE12                                              CGL029
-     C**********           MOVELZPSE12    ZPSE14                                              CGL029
-     C                     MOVELTLPSE2    ZPSE18                                              CGL029
-     C                     MOVE CSNM      ZPSE18                                              CGL029
-     C                     MOVELZPSE18    ZPSE20                                              CGL029
-     C                     END
-     C                     END
-     C                     END
-     C                     END
-     C*
-     C*    Catch-all any other settlement codes
-     C*
-     C                     ELSE
-     C**********           MOVELPSEA      ZPSE14                                              CGL029
-     C                     MOVELPSEA      ZPSE20                                              CGL029
-     C*
-     C                     END
-     C                     END
-     C*
-     C* Format settlement amount
-     C*    Use dec places from tabtg10 for zdecs
-     C*    as input to zsedit
-     C*
-     C                     Z-ADDCDP       ZDECS
-     C                     Z-ADDPSAT      ZFLD15
-     C                     MOVE 'J'       ZECODE
-     C                     EXSR ZSEDIT
-     C                     MOVE ZOUT21    ZEPSAT 18
-     C*
-     C* Narrative required if authorised indicator posetd is not - y
-     C*
-     C                     SETOF                     74
-     C           PAUI      IFNE 'Y'
-     C                     SETON                     74
-     C                     END
-     C*
-     C* Open printer file and print heading
-     C*
-     C           *IN32     IFEQ '0'
-     C           *IN36     IFEQ '0'                                       E29170
-     C                     OPEN SE2560P1
-     C                     Z-ADD*ZEROS    PAGE
-     C                     END                                            E29170
-     C                     WRITEHEADL3
-     C*********************Z-ADD10        LCOUNT  30                      084236
-     C                     Z-ADD11        LCOUNT  30                      084236
-     C                     SETON                     32
-     C                     SETON                     36                   E29170
-     C*                                                                   E29170
-     C** RCF Processing for Detail Printer File                           E29170
-     C*                                                                   E29170
-     C                     EXSR RCFP1                                     E29170
-     C                     END
-     C*
-     C* Check for overflow
-     C*
-     C           LCOUNT    IFGT 56
-     C                     WRITEHEADL3
-     C*********************Z-ADD10        LCOUNT                          084236
-     C                     Z-ADD11        LCOUNT                          084236
-     C                     END
-     C*
-     C* Print Detail line
-     C*
-     C                     WRITEDETAIL
-     C                     ADD  2         LCOUNT
-     C*
-     CSR                   ENDSR
-     C*
-      *****************************************************************   S01117
-      /EJECT                                                              S01117
-      *****************************************************************   S01117
-      *                                                               *   S01117
-      *  *PSSR  - Error control subroutine                            *   S01117
-      *                                                               *   S01117
-      *****************************************************************   S01117
-      *                                                                   S01117
-     C           *PSSR     BEGSR                           ** *PSSR **    S01117
-     C**                                                                  S01117
-     C           @RUN      IFEQ *BLANKS                                   S01117
-     C                     MOVE 'Y'       @RUN    1                       S01117
-     C                     DUMP                                           S01117
-     C                     END                                            S01117
-     C**                                                                  S01117
-     C                     ENDSR                                          S01117
-      *                                                                   S01117
-     C*****************************************************************
-     C/EJECT                                                              E29170
-     C********************************************************************E29170
-     C*                                                                   E29170
-     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF          E29170
-     C*                                                                   E29170
-     C********************************************************************E29170
-     C*                                                                   E29170
-     C           RCFP1     BEGSR                            ** RCFP1 **   E29170
-     C*                                                                   E29170
-     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    E29170
-     C*                                                                   E29170
-     C                     Z-ADDSFNUM     ZSNUM   60                      E29170
-     C**                                                                  E29170
-     C                     CALL 'ZSFILE'                                  E29170
-     C                     PARM           SEQ     5                       E29170
-     C                     PARM PBCA      SENTY   3                       E29170
-     C                     PARM           SFILE                           E29170
-     C                     PARM           ZSNUM                           E29170
-     C                     PARM           ZSERR   1                       E29170
-     C*                                                                   E29170
-     C           ZSERR     IFEQ 'Y'                                       E29170
-     C*                                                                   E29170
-     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
-     C*                                                                   E29170
-     C                     SETON                     U7U8LR               E29170
-     C                     RETRN                                          E29170
-     C                     END                                            E29170
-     C*                                                                   E29170
-     C                     ENDSR                                          E29170
-     C*                                                                   E29170
-     C********************************************************************E29170
-     C/EJECT                                                              E29170
-     C********************************************************************E29170
-     C*                                                                   E29170
-     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF          E29170
-     C*                                                                   E29170
-     C********************************************************************E29170
-     C*                                                                   E29170
-     C           RCFAU     BEGSR                            ** RCFAU **   E29170
-     C*                                                                   E29170
-     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF                     E29170
-     C*                                                                   E29170
-     C                     Z-ADDSFNUMU    ZSNUMU  60                      E29170
-     C**                                                                  E29170
-     C                     CALL 'ZSFILE'                                  E29170
-     C                     PARM           SEQ                             E29170
-     C                     PARM *BLANKS   SENTY                           E29170
-     C                     PARM           SFILEU                          E29170
-     C                     PARM           ZSNUMU                          E29170
-     C                     PARM *BLANK    ZSERR                           E29170
-     C*                                                                   E29170
-     C           ZSERR     IFEQ 'Y'                                       E29170
-     C*                                                                   E29170
-     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
-     C*                                                                   E29170
-     C                     SETON                     U7U8LR               E29170
-     C                     RETRN                                          E29170
-     C                     END                                            E29170
-     C*                                                                   E29170
-     C                     ENDSR                                          E29170
-     C*                                                                   E29170
-     C*****************************************************************   E29170
-      /EJECT                                                                                  095907
-     C*****************************************************************                       095907
-      *                                                               *                       095907
-      * AOSARD - Subroutine to call access object : Switchabe Features*                       095907
-      *                                                               *                       095907
-      *****************************************************************                       095907
-      *                                                                                       095907
-     C           AOSARD    BEGSR                           ** AOSARD **                       095907
-      *                                                                                       095907
-     C                     MOVE 'N'       S01401                                              095907
-      *                                                                                       095907
-      **  Access Switchable features file for MT5xx processing -                              095907
-      *                                                                                       095907
-     C                     CALL 'AOSARDR0'                                                    095907
-     C                     PARM '       ' @RTCD   7                                           095907
-     C                     PARM '*VERIFY' @OPTN   7                                           095907
-     C                     PARM 'S01401'  @SARD   6                                           095907
-      *                                                                                       095907
-     C           @RTCD     IFEQ *BLANK                                                        095907
-     C                     MOVE 'Y'       S01401  1                                           095907
-     C                     END                                                                095907
-      *                                                                                       095907
-     C                     ENDSR                                                              095907
-      *****************************************************************                       095907
-      /EJECT
-     C/COPY ZSRSRC,ZDATE2Z4
-      /EJECT
-     C/COPY ZSRSRC,ZICDSEZ1
-      /EJECT
-     C/COPY ZSRSRC,ZSEDITZ3
-      /EJECT
-     C/COPY ZSRSRC,ZSYSTMZ1
-     O/EJECT
-     O***POSETDF E             DELPSO                                                         095907
-     O***                      RECIX                                                          095907
-      /EJECT
-      ***
-**  CPY@
-(c) Finastra International Limited 2001
-**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
-0366073110961461
-**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
-000031059090120151181212243273304334365
-**   ZMNM - MONTHS SHORT NAMES
-JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+000100200616     H        1
+000200200616      *****************************************************************
+000300200616/*STD *  RPGBASE                                                      *
+000400200616/*EXI *  TEXT('Midas SE Drop off position settlements')
+000500200616     F*****************************************************************
+000600200616     F*                                                               *
+000700200616     F*  Midas - Securities Trading Module
+000800200616     F*                                                               *
+000900200616     F*  SE2560 - DROP OFF POSITION SETTLEMENTS                       *
+001000200616     F*                                                               *
+001100200616     F*  Function: To drop off positions Settlements for which:       *
+001200200616     F*   (COB)    - The Due Date is less than retention date         *
+001300200616     F*              (from Retention of Settled Trades period on ICD) *
+001400200616     F*            - or the related security has expired and is to be *
+001500200616     F*              dropped off,                                     *
+001600200616     F*            and to report dropped records.                     *
+001700200616     F*                                                               *
+001800200616     F*  Called by: SEC1005 - Drop off Position Settlements           *
+001900200616     F*                                                               *
+002000200616      *  (c) Finastra International Limited 2001                      *
+002100200616     F*                                                               *
+002101200616      *  Last Amend No. AR324886           Date 01JUN20               *
+002200200616      *  PREV Amend No. MD046248           Date 27Oct17               *
+002300200616      * Bank Fusion Midas 1.4 Base -----------------------------------*
+002400200616      * Midas Plus 1.4 Base 04 ---------------------------------------*
+002500200616      *                 095907             Date 26Jan07               *
+002600200616     F*                 243026             Date 26Jan07               *
+002700200616      * Midas Plus 1.4 Base ------------------------------------------*
+002800200616      * Midas Plus 1.3 ----------- Base ------------------------------*
+002900200616      *                 CSD027             Date 09Dec05               *
+003000200616      *                 CSE071             Date 19Jul05               *
+003100200616      *                 BUG7985            Date 12Jul05               *
+003200200616      *                 CRE020             Date 20Jan04               *
+003300200616      *                 CGL029             Date 01Sep03               *
+003400200616      *                 CSE040             Date 11Jun03               *
+003500200616      * Midas Release 4.01.02 ----------------------------------------*
+003600200616      *                 203832             Date 2JUl02                *
+003700200616      *                 206603             Date  2Jul02               *
+003800200616      * Midas Release 4 --------------- Base -------------------------*
+003900200616      * Midas DBA 3.04 -----------------------------------------------*
+004000200616      *                 CSE023             Date 14AUG00               *
+004100200616      * Midas DBA 3.02 -----------------------------------------------*
+004200200616      * Midas DBA 3.00 ---------------- Base -------------------------*
+004300200616      *                 CEU017             Date 03Avr98               *
+004400200616      *                 CSE007             Date 03feb98               *
+004500200616      *                 084236             DATE 29JUL96               *
+004600200616     F*                 085990             DATE 28APR95               *
+004700200616     F*                 S01496             DATE 21JUL94               *
+004800200616     F*                 S01447             DATE 04NOV93               *
+004900200616     F*                 052254             DATE 10JAN94               *
+005000200616     F*                 S01401             DATE 16JUN93               *
+005100200616     F*                 048919             DATE 10JAN93               *
+005200200616     F*                 S01397             DATE 10SEP92               *
+005300200616     F*                 E37493             DATE 02APR92               *
+005400200616     F*                 E29170             DATE 15OCT91               *
+005500200616     F*                 S01117             DATE 07JUN91               *
+005600200616     F*                 S01269             DATE 02AUG90               *
+005700200616     F*                 E20651             DATE 30JAN90               *
+005800200616     F*                 E20114             DATE 06DEC89               *
+005900200616     F*                 E14884             DATE 12/09/88              *
+006000200616     F*                                                               *
+006100200616     F*---------------------------------------------------------------*
+006200200616     F*                                                               *
+006201200616      *  AR324886 - Implement 4-eyes processing in Position           *
+006202200616      *             Settlement Maintenance.                           *
+006300200616      *  MD046248 - Finastra Rebranding                               *
+006400200616     F*  095907 - TRAILERS POSETA MUST BE UPDATED                     *
+006500200616     F*         - MODIFICATIONS CALCULATIONS FOR OUTPUT TRAILER       *
+006600200616     F*         - UPDATES OF RECI WITH '*' REPLACED BY DELETES        *
+006700200616     F*         - IF FEATURE MT5XX (S01401) IS ACTIVE, DROP CORRESPON *
+006800200616     F*           RECORDS IN POSETDX1 AND POSETDX2                    *
+006900200616     F*         - DELETE RECORDS ALREADY WITH RECI '*'                *
+007000200616     F*         - ACCESS SECTYD ONLY WHEN CHANGE OF SECURITY          *
+007100200616     F*         - USE WORK FIELD OF 6,0 TO OUPTPUT DETAILS FOR POSETD *
+007200200616     F*           ON SE2560AU                                         *
+007300200616     F*         - Also include 243026                                 *
+007400200616     F*  243026 - Work field too short                                *
+007500200616     F*         - 6,0 is not enough on printer. Increase to 7,0       *
+007600200616      *  CSD027 - Conversion Of Customer Number to Alpha              *
+007700200616      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+007800200616      *  BUG7985- Several components failed due to accessing TABLETR  *
+007900200616      *  CRE020 - Midas Plus Online Printing of Advices (GE7)         *
+008000200616      *  CGL029 - Increase Account Code to 10 digits (Recompile)      *
+008100200616      *  CSE040 - Securities Statement Processing                     *
+008200200616      *  203832 - Do not consider reversed position settlements when  *
+008300200616      *           computing for the number of records deleted (PSDEL) *
+008400200616      *  206603 - Do not consider reversed position settlements into  *
+008500200616      *           number of records (they are not included into core  *
+008600200616      *           of POSETA)                                          *
+008700200616      *  CSE023 - Treaty Withholding Tax                              *
+008800200616     F*  CEU017 - Securities Redenomination Euro Changes              *
+008900200616     F*  CSE007 - Corporate Actions                                   *
+009000200616     F*  084236 - Prevent CPF5004 'Print Overflow line' message being *
+009100200616     F*           received.                                           *
+009200200616     F*  085990 - Do not drop off matured records that are still      *
+009300200616     F*           within the retention period as they can still be    *
+009400200616     F*           enquired upon in position settlement input.         *
+009500200616     F*           Remove fix E14884.                                  *
+009600200616     F*  S01496 - Incorporation of Jyske Enhancements (S10985).       *
+009700200616     F*  S01447 - WITHHOLDING TAX (SE) ENHANCEMENT.                   *
+009800200616     F*           Recompiled due to changes in PF/POSETD.             *
+009900200616     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+010000200616     F*           to 10,9                                             *
+010100200616     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
+010200200616     F*          - Recompiled due to changes to files.                *
+010300200616     F*  048919 - IF NO LIVE RECORDS IN POSETD, THE REPORT DOES NOT   *
+010400200616     F*           OUTPUT 'END OF REPORT'                              *
+010500200616     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+010600200616     F*          - Recompiled due to changes to files.                *
+010700200616     F*  E37493 - Recompiled over changed printer file                *
+010800200616     F*  E29170 - Report Control Facility changes                     *
+010900200616     F*  S01117 - Multi-branching                                     *
+011000200616     F*  S01269 - TRADE AUTHORISATION: RECOMPILED OVER CHANGED        *
+011100200616     F*           FILE TABSE.                                         *
+011200200616     F*  E20651 - DB ERROR NUMBERS USED IN MORE THAN ONE PLACE.       *   E20651
+011300200616     F*           NEW ERROR NUMBERS AS FOLLOWS:                       *   E20651
+011400200616     F*           DB ERROR 01 -> 06                                   *   E20651
+011500200616     F*           DB ERROR 01 -> 07                                   *   E20651
+011600200616     F*  E20114 - PROGRAM CHANGED TO USE LF POSET1, WHICH IS BUILT    *   E20114
+011700200616     F*           OVER A SINGLE MEMBER POSETD.                        *   E20114
+011800200616     F*  E14884 - DROP OFF MATURED RECORDS (RECI 'M')                 *   E14884
+011900200616     F*                                                               *
+012000200616     F*****************************************************************
+012100200616     F*                                                               *
+012200200616     F*  C R E A T I O N     P A R A M E T E R S                      *
+012300200616     F*                                                               *
+012400200616     F*                                                               *
+012500200616     F*****************************************************************
+012600200616     F*
+012700200616     F*POSET***UP**E***********K        DISK                              E20114
+012800200616     FPOSET1  UP  E           K        DISK                               E20114
+012801200616     FPSAUT   UF  E           K        DISK                                                 AR324886
+012802200616      ** SE Position Settlement Authorisation detail                                        AR324886
+012803200616      *                                                                                     AR324886
+012900200616     FSECTY   IF  E           K        DISK
+013000200616     FPOSETA  UF  E                    DISK
+013100200616     FTABSE   IF  E           K        DISK
+013200200616     F            TABLETAF                          KIGNORE
+013300200616     F            TABTB11F                          KIGNORE
+013400200616     F            TABTE10F                          KIGNORE
+013500200616     F            TABTE20F                          KIGNORE
+013600200616     F            TABTG20F                          KIGNORE
+013700200616     F            TABLETHF                          KIGNORE
+013800200616     F*********** TABLETJF                          KIGNORE               S01117
+013900200616     F            TABLETKF                          KIGNORE
+014000200616     F            TABLETNF                          KIGNORE
+014100200616     F            TABLETPF                          KIGNORE
+014200200616     F            TABLETXF                          KIGNORE
+014300200616     F            TABLET2F                          KIGNORE
+014400200616     F            TABLET3F                          KIGNORE
+014500200616     F            TABLET5F                          KIGNORE
+014600200616     F            TABTB40F                          KIGNORE
+014700200616     FCLINT   IF  E           K        DISK
+014800200616     F            CLINTCAF                          KIGNORE
+014900200616     F            CLINTCCF                          KIGNORE
+015000200616     F            CLINTC1F                          KIGNORE
+015100200616     F            CLINTSEF                          KIGNORE
+015200200616     FPOSETDYLUF  E           K        DISK                                                   CRE020
+015300200616      **  Midas SE Position Settlement Extension file                                         CRE020
+015400200616      *                                                                                       CRE020
+015500200616     FPOSETDY1UF  E           K        DISK                                                   095907
+015600200616     FPOSETDY2UF  E           K        DISK                                                   095907
+015700200616     FSE2560AUO   E                    PRINTER
+015800200616     F                                              KINFDS SPOOLU         E29170
+015900200616     FSE2560P1O   E                    PRINTER                        UC
+016000200616     F                                              KINFDS SPOOL          E29170
+016100200616     F/COPY WNCPYSRC,SE2560F001
+016200200616     F*
+016300200616      /EJECT
+016400200616     F*****************************************************************
+016500200616     F*                                                               *
+016600200616     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+016700200616     F*                                                               *
+016800200616     F*   31 - Security not found for this record                     *
+016900200616     F*   32 - Control new page printing                              *
+017000200616     F*   33 - General work indicator                                 *
+017100200616     F*   36 - DETAIL PRINTER FILE P1 IS OPEN                         *   E29170
+017200200616     F*   37 - MULTIBRANCHING ON                                      *   E29170
+017300200616     F*   69 - Used to Control first cycle processing                 *
+017400200616     F*   70 - No Tabletl record                                      *
+017500200616     F*   71 - No Clintcb record                                      *
+017600200616     F*   72 - No Tabtg10 record                                      *
+017700200616     F*   74 - Narrative field required                               *
+017800200616     F*   73 - Number of records on audit file different from         *
+017900200616     F*      - number of records read                                 *
+018000200616     F*90-99 - Used in standard sub-routines                          *
+018100200616     F*   U7 - Database error                                         *
+018200200616     F*   U8 - Database / Control error                               *
+018300200616     F*   L3 - Change of Branch                                       *
+018400200616     F*   L2  -Change of Security                                     *
+018500200616     F*   L1 - Change of Counterparty                                 *
+018600200616     F*                                                               *
+018700200616     F*****************************************************************
+018800200616      /SPACE 3
+018900200616     F*****************************************************************
+019000200616     F*                                                               *
+019100200616     F*  I N D E X   T O   S U B R O U T I N E S                      *
+019200200616     F*                                                               *
+019300200616     F*  DECPLS - Get decimal places tabtg10                          *
+019400200616     F*  DLTREC - Flag records as deleted and count total             *
+019500200616     F*  PRINTD - Print deleted record                                *
+019600200616     F*  *PSSR  - Error handling                                      *   S01117
+019700200616     F*  RCFP1  - SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF      *   E29170
+019800200616     F*  RCFAU  - SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF      *   E29170
+019900200616     F*  ZDATE2 - DAYNO - DATE conversion                             *
+020000200616     F*  ZICDSE - Access ICD record for Securities Trading            *
+020100200616     F*  ZSEDIT - Insert a decimal point and sign into a numeric field*
+020200200616     F*           and blank out leading zeros                         *
+020300200616     F*  ZSYSTM - Access ICD record                                   *
+020400200616     F*                                                               *
+020500200616     F*****************************************************************
+020600200616      /EJECT
+020700200616     E                    CPY@    1   1 80
+020800200616     E/COPY ZSRSRC,ZDATE2Z1
+020900200616     E*
+021000200616     E/COPY ZSRSRC,ZSEDITZ1
+021100200616     E*
+021200200616      /EJECT
+021300200616     IPOSETDF
+021400200616     I***********                                   PBCH  L3              S01117
+021500200616     I                                              PBCA  L3              S01117
+021600200616     I                                              PSSH  L2
+021700200616     I                                              PCPY  L1
+021800200616     I              RECI                            RECIX
+021801200616     I              TNLU                            TNLUX                                   AR324886
+021802200616     I              EXCD                            EXCDX                                   AR324886
+021900200616     I/COPY WNCPYSRC,SE2560I001
+022000200616     I*LDA******* UDS                            256
+022100200616     I***********                           134 177 DBLOT                 S01117
+022200200616     I***********                           134 138 DBFILE                S01117
+022300200616     I***********                           139 167 DBKEY                 S01117
+022400200616     I***********                           168 175 DBPGM                 S01117
+022500200616     I***********                           176 177 DBASE                 S01117
+022600200616     ILDA         DS                            256
+022700200616     I                                      134 183 DBLOT                 S01117
+022800200616     I                                      134 141 DBFILE                S01117
+022900200616     I                                      142 170 DBKEY                 S01117
+023000200616     I                                      171 180 DBPGM                 S01117
+023100200616     I                                      181 1830DBASE                 S01117
+023200200616     I*                                                                   E29170
+023300200616     ISPOOL       DS                                                      E29170
+023400200616     I*                                                                   E29170
+023500200616     I**  DS FOR P1 SPOOL FILE NAME                                       E29170
+023600200616     I*                                                                   E29170
+023700200616     I                                       83  92 SFILE                 E29170
+023800200616     I                                    B 123 1240SFNUM                 E29170
+023900200616     I**                                                                  E29170
+024000200616     ISPOOLU      DS                                                      E29170
+024100200616     I                                       83  92 SFILEU                E29170
+024200200616     I                                    B 123 1240SFNUMU                E29170
+024300200616     IRUNDT       DS                                                      E29170
+024400200616     I                                        1   7 RUNA                  E29170
+024500200616     I                                    P   8  100RUND                  E29170
+024600200616     I                                       11  11 SSF                   E29170
+024700200616     I                                       12  12 DATF                  E29170
+024800200616     I                                       13  13 MBIN                  E29170
+024900200616     I*                                                                   E29170
+025000200616     I**  DATA STRUCTURE FOR RUN DATE DETAILS                             E29170
+025100200616     I*                                                                   E29170
+025200200616     I/COPY ZSRSRC,ZSEDITZ2
+025300200616     I* Data structure for file keys
+025400200616     I*
+025500200616     I            DS
+025600200616     I                                        1  12 TLKEY
+025700200616     I                                        1   2 TLRECT
+025800200616     I                                        3   7 TLZZ5
+025900200616     I                                        8  10 TLPSCU
+026000200616     I                                       11  12 TLPSE2
+026100200616     I*
+026200200616     I            DS
+026300200616     I                                        1  12 TKEY
+026400200616     I                                        1   2 TRECT
+026500200616     I                                        3   8 TZZ6
+026600200616     I                                        9  11 TPSCU
+026700200616     I                                       12  12 TSREC
+026800200616     I*
+026900200616     I            DS
+027000200616     I*
+027100200616     I* Data structure for settlement account field
+027200200616     I*
+027300200616     I**********                              1  12 PSEA                                      CGL029
+027400200616     I                                        1  18 PSEA                                      CGL029
+027500200616     I                                        1   6 PSEA06
+027600200616     I**********                              7  10 PSEA04                                    CGL029
+027700200616     I**********                             11  12 PSEA02                                    CGL029
+027800200616     I                                        7  16 PSEA10                                    CGL029
+027900200616     I                                       17  18 PSEA02                                    CGL029
+028000200616     I*
+028100200616     ICPYR@#      DS
+028200200616     I*
+028300200616     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+028400200616     I*
+028500200616     I                                        1  80 CPY@
+028600200616     I                                        1  20 CPY@##
+028700200616     I*                                                                   S01496
+028800200616     I**  EXTERNAL DS FOR SECURITIES TRADING DETAILS                      S01496
+028900200616     I*                                                                   S01496
+029000200616     ISDBRCH    E DSSDBRCHPD                                                                 BUG7985
+029100200616     I              A8BRNM                          BRNM                                     BUG7985
+029200200616     ISDSTRD    E DSSDSTRDPD                                              S01496
+029300200616     I*                                                                   S01496
+029400200616     I** LONG STRUCTURE FOR ACCESS OBJECTS, LONG DATA STRUCTURE           S01496
+029500200616     I*                                                                   S01496
+029600200616     IDSSDY     E DSDSSDY                                                 S01496
+029700200616     I*
+029800200616     IDSFDY     E DSDSFDY                                                                     CRE020
+029900200616      *                                                                                       CRE020
+030000200616      /EJECT
+030100200616     C           *LIKE     DEFN PSSH      SPSSH                                               095907
+030200200616     C*================================================================
+030300200616     C*  P R O G R A M     S T A R T                                  *
+030400200616     C*================================================================
+030500200616     C*
+030600200616     C           *IN69     IFEQ '0'
+030700200616      *
+030800200616      * Define key list for chaining to clintcb file
+030900200616      *
+031000200616     C           CLICBK    KLIST
+031100200616     C**********           KFLD           CBNUM   60                                          CSD027
+031200200616     C                     KFLD           CBNUM   6                                           CSD027
+031300200616     C                     KFLD           CBRCDT  1
+031400200616      *                                                                                       CRE020
+031500200616      ** Midas SE Position Settlement Extension file                                          CRE020
+031600200616      *                                                                                       CRE020
+031700200616     C           KPOST3    KLIST                                                              CRE020
+031800200616     C                     KFLD           K3PBCA  3                                           CRE020
+031900200616     C                     KFLD           K3PSSH 10                                           CRE020
+032000200616     C**********           KFLD           K3PCPY  60                                   CRE020 CSD027
+032100200616     C                     KFLD           K3PCPY  6                                           CSD027
+032200200616     C                     KFLD           K3PDUD  50                                          CRE020
+032300200616     C                     KFLD           K3PEVT  2                                           CRE020
+032400200616      *                                                                                       CRE020
+032401200616     C           PSAUTH    KLIST                                                            AR324886
+032402200616     C                     KFLD           PBCA                                              AR324886
+032403200616     C                     KFLD           PSSH                                              AR324886
+032404200616     C                     KFLD           PCPY                                              AR324886
+032405200616     C                     KFLD           PDUD                                              AR324886
+032406200616     C                     KFLD           PEVT                                              AR324886
+032407200616     C                     KFLD           PTFR                                              AR324886
+032408200616     C                     KFLD           TNLUX                                             AR324886
+032409200616     C                     KFLD           TXBS                                              AR324886
+032410200616     C                     KFLD           BNFO                                              AR324886
+032411200616     C                     KFLD           EXCDX                                             AR324886
+032412200616      *                                                                                     AR324886
+032500200616     C/COPY WNCPYSRC,SE2560C001
+032600200616      *
+032700200616      * Define keylist for chaining to tabletl file
+032800200616      *
+032900200616     C           TABTLK    KLIST
+033000200616     C                     KFLD           TLKEY
+033100200616      *
+033200200616      * Define keylist for chaining to tabse file - tabtg10
+033300200616      *
+033400200616     C           TABTK     KLIST
+033500200616     C                     KFLD           TKEY
+033600200616      *
+033700200616     C** KLIST TO ACCESS MT5XX EXTENSION FILES                                                095907
+033800200616     C*                                                                                       095907
+033900200616     C           KEY1      KLIST                                                              095907
+034000200616     C                     KFLD           PBCA                                                095907
+034100200616     C                     KFLD           PSSH                                                095907
+034200200616     C                     KFLD           PCPY                                                095907
+034300200616     C                     KFLD           PDUD                                                095907
+034400200616     C                     KFLD           PEVT                                                095907
+034500200616     C*
+034600200616     C* Prepare LDA
+034700200616     C*
+034800200616     C           *NAMVAR   DEFN           LDA                             S01117
+034900200616     C           *LOCK     IN   LDA                                       S01117
+035000200616     C                     MOVE *BLANKS   DBLOT
+035100200616     C                     MOVE 'SE2560  'DBPGM
+035200200616     C                     OUT  LDA                                       S01117
+035300200616     C*
+035400200616     C* Get Installation Control Data record 1
+035500200616     C*
+035600200616     C                     EXSR ZSYSTM
+035700200616     C*
+035800200616     C* If error in ZSYSTM, abend program
+035900200616     C*
+036000200616     C           *IN99     IFEQ '1'                        ***************
+036100200616     C           *LOCK     IN   LDA                        ***************S01117
+036200200616     C***********          MOVE '01'      DBASE            **DB*ERROR*01**E20651
+036300200616     C***********          MOVE '06'      DBASE            **DB 6**E20651 S01117
+036400200616     C                     Z-ADD6         DBASE            **DB ERROR 06**S01117
+036500200616     C                     MOVEL'TABLE'   DBFILE           ***************
+036600200616     C                     MOVELZTABKY    DBKEY
+036700200616     C                     OUT  LDA                                       S01117
+036800200616     C                     EXSR *PSSR                                     S01117
+036900200616     C                     WRITEHEADAU
+037000200616     C                     WRITEERROR
+037100200616     C***********          WRITETRAILAU                                   E29170
+037200200616     C                     SETON                     U7U8LR
+037300200616     C                     RETRN
+037400200616     C                     END
+037500200616     C*
+037600200616     C* Get Installation Control Data record for Securities trading
+037700200616     C*
+037800200616     C                     EXSR ZICDSE
+037900200616     C*                                                                   S01496
+038000200616     C           *IN99     IFEQ *OFF                                      S01496
+038100200616     C*                                                                   S01496
+038200200616     C**   ACCESS SECURITIES TRADING DETAIL                               S01496
+038300200616     C*                                                                   S01496
+038400200616     C                     CALL 'AOSTRDR0'                                S01496
+038500200616     C                     PARM *BLANKS   @RTCD   7                       S01496
+038600200616     C                     PARM '*FIRST ' @OPTN   7                       S01496
+038700200616     C           SDSTRD    PARM SDSTRD    DSSDY                           S01496
+038800200616     C*                                                                   S01496
+038900200616     C           @RTCD     IFEQ '*EOF'                                    S01496
+039000200616     C                     SETON                     99                   S01496
+039100200616     C                     ELSE                                           S01496
+039200200616     C           @RTCD     IFNE *BLANK                                    S01496
+039300200616     C           *LOCK     IN   LDA                                       S01496
+039400200616     C                     MOVEL'SDSTRDPD'DBFILE                          S01496
+039500200616     C                     MOVEL@OPTN     DBKEY            ***************S01496
+039600200616     C                     MOVEL@OPTN     DBOPTN  7        * DB ERROR 08 *S01496
+039700200616     C                     Z-ADD8         DBASE            ***************S01496
+039800200616     C                     OUT  LDA                                       S01496
+039900200616     C                     EXSR *PSSR                               S01117S01496
+040000200616     C                     WRITEHEADAU                                    S01496
+040100200616     C                     WRITEERROR                                     S01496
+040200200616     C***********          WRITETRAILAU                             E29170S01496
+040300200616     C                     SETON                     U7U8LR               S01496
+040400200616     C                     RETRN                                          S01496
+040500200616     C                     ENDIF                                          S01496
+040600200616     C                     ENDIF                                          S01496
+040700200616      *                                                                   S01496
+040800200616     C                     ENDIF                                          S01496
+040900200616     C*
+041000200616     C* If error in ZICDSE, abend program
+041100200616     C*
+041200200616     C           *IN99     IFEQ '1'                        ***************
+041300200616     C           *LOCK     IN   LDA                        ***************S01117
+041400200616     C***********          MOVE '02'      DBASE            **DB ERROR 02**S01117
+041500200616     C                     Z-ADD2         DBASE            **DB ERROR 02**S01117
+041600200616     C                     MOVEL'TABLE'   DBFILE           ***************
+041700200616     C                     MOVELZTABKY    DBKEY
+041800200616     C                     OUT  LDA                                       S01117
+041900200616     C                     EXSR *PSSR                                     S01117
+042000200616     C                     WRITEHEADAU
+042100200616     C                     WRITEERROR
+042200200616     C***********          WRITETRAILAU                                   E29170
+042300200616     C                     SETON                     U7U8LR
+042400200616     C                     RETRN
+042500200616     C                     END
+042600200616     C*                                                                   S01496
+042700200616     C**  Check if Jyske Enhancements is installed                        S01496
+042800200616     C*                                                                   S01496
+042900200616     C                     CALL 'AOSARDR0'                                S01496
+043000200616     C                     PARM *BLANKS   WLRTCD  7                       S01496
+043100200616     C                     PARM '*VERIFY' WLOPTN  7                       S01496
+043200200616     C                     PARM 'S01496'  WLSARD  6                       S01496
+043300200616     C*                                                                   S01496
+043400200616     C           WLRTCD    IFEQ *BLANK                                    S01496
+043500200616     C                     MOVE 'Y'       S01496  1                       S01496
+043600200616     C                     END                                            S01496
+043700200616     C*                                                                   CSE007
+043800200616     C**  Check if Corporate Action is installed                          CSE007
+043900200616     C*                                                                   CSE007
+044000200616     C                     CALL 'AOSARDR0'                                CSE007
+044100200616     C                     PARM *BLANKS   WLRTCD  7                       CSE007
+044200200616     C                     PARM '*VERIFY' WLOPTN  7                       CSE007
+044300200616     C                     PARM 'CSE007'  WLSARD  6                       CSE007
+044400200616     C*                                                                   CSE007
+044500200616     C           WLRTCD    IFEQ *BLANK                                    CSE007
+044600200616     C                     MOVE 'Y'       CSE007  1                       CSE007
+044700200616     C                     END                                            CSE007
+044800200616      *                                                                   CEU017
+044900200616      **  Check if Securities Redenomination is installed                 CEU017
+045000200616      *                                                                   CEU017
+045100200616     C                     MOVE 'N'       CEU017  1                       CEU017
+045200200616     C                     CALL 'AOSARDR0'                                CEU017
+045300200616     C                     PARM *BLANKS   WLRTCD  7                       CEU017
+045400200616     C                     PARM '*VERIFY' WLOPTN  7                       CEU017
+045500200616     C                     PARM 'CEU017'  WLSARD  6                       CEU017
+045600200616      *                                                                   CEU017
+045700200616     C           WLRTCD    IFEQ *BLANK                                    CEU017
+045800200616     C                     MOVE 'Y'       CEU017                          CEU017
+045900200616     C                     ENDIF                                          CEU017
+046000200616      *                                                                   CSE023
+046100200616      ** Check if CSE023 - Treaty Withholding Tax present                 CSE023
+046200200616      *                                                                   CSE023
+046300200616     C                     MOVE 'N'       CSE023  1                       CSE023
+046400200616     C                     CALL 'AOSARDR0'                                CSE023
+046500200616     C                     PARM *BLANKS   @RTCD   7                       CSE023
+046600200616     C                     PARM '*VERIFY' @OPTN   7                       CSE023
+046700200616     C                     PARM 'CSE023'  @SARD   6                       CSE023
+046800200616      *                                                                   CSE023
+046900200616     C           @RTCD     IFEQ *BLANK                                    CSE023
+047000200616     C                     MOVE 'Y'       CSE023                          CSE023
+047100200616     C           31        MULT 18        @MINR   30                      CSE023
+047200200616     C                     ENDIF                                          CSE023
+047300200616     C*
+047400200616     C* Calculate Retention date
+047500200616     C*
+047600200616     C           S01496    IFNE 'Y'                                       S01496
+047700200616     C           CSE007    ANDNE'Y'                                       CSE007
+047800200616     C           CEU017    ANDNE'Y'                                       CEU017
+047900200616     C           CSE040    ANDNE'Y'                                       CSE040
+048000200616     C********** 31        MULT RTST      WK3N    30                                          243026
+048100200616     C           31        MULT RTST      WK3N    50                                          243026
+048200200616     C                     ELSE                                           S01496
+048300200616     C********** 31        MULT BVROPS    WK3N    30                      S01496              243026
+048400200616     C           31        MULT BVROPS    WK3N                                                243026
+048500200616     C                     END                                            S01496
+048600200616     C*                                                                   CSE023
+048700200616     C** If CSE023 is present, the minimum retention period is            CSE023
+048800200616     C** 18 months.                                                       CSE023
+048900200616     C*                                                                   CSE023
+049000200616     C           CSE023    IFEQ 'Y'                                       CSE023
+049100200616     C           WK3N      ANDLT@MINR                                     CSE023
+049200200616     C                     Z-ADD@MINR     WK3N                            CSE023
+049300200616     C                     END                                            CSE023
+049400200616     C*                                                                   CSE023
+049500200616     C           RUND      SUB  WK3N      RTNTDT  50
+049600200616     C*                                                                   086990
+049700200616     C** Access SAR files to check if value date for pos. settlements     085990
+049800200616     C*                                                                   085990
+049900200616     C                     MOVE 'N'       S01512                          085990
+050000200616     C                     CALL 'AOSARDR0'                                085990
+050100200616     C                     PARM '       ' WLRTCD                          085990
+050200200616     C                     PARM '*VERIFY' WLOPTN                          085990
+050300200616     C                     PARM 'S01512'  WLSARD                          085990
+050400200616     C*                                                                   085990
+050500200616     C           WLRTCD    IFEQ *BLANK                                    085990
+050600200616     C                     MOVE 'Y'       S01512  1                       085990
+050700200616     C                     END                                            085990
+050800200616      *                                                                   CSE040
+050900200616      ** Check if CRE020 is enabled.                                                          CRE020
+051000200616      *                                                                                       CRE020
+051100200616     C                     CALL 'AOSARDR0'                                                    CRE020
+051200200616     C                     PARM *BLANKS   PRTCD   7                                           CRE020
+051300200616     C                     PARM '*VERIFY' POPTN   7                                           CRE020
+051400200616     C                     PARM 'CRE020'  PSARD   6                                           CRE020
+051500200616      *                                                                                       CRE020
+051600200616     C                     MOVE 'N'       CRE020  1                                           CRE020
+051700200616     C           PRTCD     IFEQ *BLANKS                                                       CRE020
+051800200616     C                     MOVE 'Y'       CRE020                                              CRE020
+051900200616     C                     ELSE                                                               CRE020
+052000200616     C           PRTCD     IFNE '*NRF   '                                                     CRE020
+052100200616     C           *LOCK     IN   LDA                                                           CRE020
+052200200616     C                     MOVEL'SCSARDPD'DBFILE                                              CRE020
+052300200616     C                     MOVEL'CRE020'  DBKEY                                               CRE020
+052400200616     C                     Z-ADD46        DBASE                                               CRE020
+052500200616     C                     OUT  LDA                                                           CRE020
+052600200616     C                     EXSR *PSSR                                                         CRE020
+052700200616     C                     ENDIF                                                              CRE020
+052800200616     C                     ENDIF                                                              CRE020
+052900200616      *                                                                                       CRE020
+053000200616      ** CSE040 - Securities Statement Processing                         CSE040
+053100200616      *                                                                   CSE040
+053200200616     C                     MOVE 'N'       CSE040                          CSE040
+053300200616     C                     CALL 'AOSARDR0'                                CSE040
+053400200616     C                     PARM '       ' WLRTCD                          CSE040
+053500200616     C                     PARM '*VERIFY' WLOPTN                          CSE040
+053600200616     C                     PARM 'CSE040'  WLSARD                          CSE040
+053700200616      *                                                                   CSE040
+053800200616     C           WLRTCD    IFEQ *BLANK                                    CSE040
+053900200616     C                     MOVE 'Y'       CSE040  1                       CSE040
+054000200616     C                     ENDIF                                          CSE040
+054100200616     C*
+054200200616     C/COPY WNCPYSRC,SE2560C002
+054300200616     C                     SETON                     69
+054400200616     C*                                                                   E29170
+054500200616     C** IN THE DATAAREA RUNDAT                                           E29170
+054600200616     C*                                                                   E29170
+054700200616     C           *NAMVAR   DEFN RUNDAT    RUNDT                           E29170
+054800200616     C                     IN   RUNDT                                     E29170
+054900200616     C*                                                                   E29170
+055000200616     C**  TEST FOR MULTIBRANCHING                                         E29170
+055100200616     C*                                                                   E29170
+055200200616     C           MBIN      IFEQ 'Y'                                       E29170
+055300200616     C                     SETON                     37                   E29170
+055400200616     C                     END                                            E29170
+055500200616     C*                                                                   E29170
+055600200616     C** RCF Processing for Audit File                                    E29170
+055700200616     C*                                                                   E29170
+055800200616     C                     EXSR RCFAU                                     E29170
+055900200616     C*                                                                                       095907
+056000200616     C* CHECK IF MT5XX FEATURE IS ACTIVE                                                      095907
+056100200616     C*                                                                                       095907
+056200200616     C                     EXSR AOSARD                                                        095907
+056300200616     C                     END
+056400200616     C*
+056500200616      /EJECT
+056600200616     C*
+056700200616     C* Change of Branch calcs
+056800200616     C*
+056900200616     C   L3                DO
+057000200616     C*
+057100200616     C**Fetch*Branch*name**********************************************   E29170
+057200200616     C* Fetch Branch name if multibranching is on                         E29170
+057300200616     C*
+057400200616     C           *IN37     IFEQ '1'                                       E29170
+057500200616     C                     MOVE *BLANKS   KEY12A 12
+057600200616     C                     MOVEL'10'      KEY12A
+057700200616     C***********          MOVE PBCH      KEY12A                          S01117
+057800200616     C                     MOVE PBCA      KEY12A                          S01117
+057900200616     C********** KEY12A    CHAINTABLETRF             33                                      BUG7985
+058000200616     C********** *IN33     IFEQ '1'                        ***************                   BUG7985
+058100200616      *                                                                                      BUG7985
+058200200616     C                     CALL 'AOBRCHR1'                                                   BUG7985
+058300200616     C                     PARM *BLANKS   PRTCD   7                                          BUG7985
+058400200616     C                     PARM '*KEY   ' POPTN   7                                          BUG7985
+058500200616     C                     PARM PBCA      PBRCH   3                                          BUG7985
+058600200616     C           SDBRCH    PARM SDBRCH    DSSDY                                              BUG7985
+058700200616     C*                                                                                      BUG7985
+058800200616     C** Database error if no record found                                                   BUG7985
+058900200616     C*                                                                                      BUG7985
+059000200616     C           PRTCD     IFNE *BLANKS                                                      BUG7985
+059100200616     C***********          MOVEL'03'      DBASE            **DB ERROR 03**S01117
+059200200616     C                     Z-ADD3         DBASE            **DB ERROR 03**S01117
+059300200616     C**********           MOVEL'TABLE'   DBFILE           ***************                   BUG7985
+059400200616     C**********           MOVELKEY12A    DBKEY                                              BUG7985
+059500200616     C                     MOVEL'SDBRCHPD'DBFILE                                             BUG7985
+059600200616     C                     MOVELPBCA      DBKEY                                              BUG7985
+059700200616     C**********           OUT  LDA                                                   S01117 BUG7985
+059800200616     C                     EXSR *PSSR                                     S01117
+059900200616     C                     WRITEHEADAU
+060000200616     C                     WRITEERROR
+060100200616     C***********          WRITETRAILAU                                   E29170
+060200200616     C                     SETON                     U7U8LR
+060300200616     C                     RETRN
+060400200616     C                     END
+060500200616     C                     END                                            E29170
+060600200616     C*
+060700200616     C* Indicator controlling new page printing
+060800200616     C*
+060900200616     C                     SETOF                     32
+061000200616     C*
+061100200616     C   L3                END
+061200200616      /SPACE 3
+061300200616     C*
+061400200616     C* Detail processing
+061500200616     C*
+061600200616      /SPACE 2
+061700200616     C/COPY WNCPYSRC,SE2560C007
+061800200616     C*
+061900200616     C* Ignore this record if already deleted
+062000200616     C*
+062100200616     C           RECIX     IFNE '*'
+062200200616     C*
+062300200616     C* Count movements records read
+062400200616     C*    Not including Matured records                                  E14884
+062500200616     C*
+062600200616     C           RECIX     IFNE 'M'                                       E14884
+062700200616     C           RECIX     ANDNE'R'                                       206603
+062800200616     C***********          ADD  1         PSRRD                                               095907
+062900200616     C                     ADD  1         PSRRD   50                                          095907
+063000200616     C*********************ADD  1         PSRRD6                                       095907 243026
+063100200616     C                     ADD  1         PSRRD7                                              243026
+063200200616     C                     END                                            E14884
+063300200616     C*                                                                                       095907
+063400200616     C           RECIX     IFEQ 'D'                                                           095907
+063500200616     C                     ADD  1         LVREC   50                                          095907
+063600200616     C                     END                                                                095907
+063700200616     C*
+063800200616     C* Access Security
+063900200616     C*
+064000200616     C           PSSH      IFNE SPSSH                                                         095907
+064100200616     C                     MOVE PSSH      SPSSH                                               095907
+064200200616     C           PSSH      CHAINSECTYDF              31
+064300200616     C  N31      RECI      COMP '*'                      31
+064400200616     C                     END                                                                095907
+064500200616     C           *IN31     IFEQ '1'
+064600200616     C*
+064700200616     C* If not found get dec.places tabtg10
+064800200616     C*
+064900200616     C                     EXSR DECPLS
+065000200616     C*
+065100200616     C* If not found, flag position and count as deleted
+065200200616     C*
+065300200616     C                     EXSR DLTREC
+065400200616     C*
+065500200616     C* Print detail report
+065600200616     C*
+065700200616     C                     EXSR PRINTD
+065800200616     C*
+065900200616     C* Else if security found
+066000200616     C*
+066100200616     C                     ELSE
+066200200616     C*
+066300200616     C* If due date is greater than retention date take no action
+066400200616     C*   unless matured record                                           E14884
+066500200616     C*
+066600200616     C           PDUD      IFLE RTNTDT
+066700200616     C           S01512    ANDNE'Y'                                       085990
+066800200616     C           PSVL      ORLE RTNTDT                                    085990
+066900200616     C           S01512    ANDEQ'Y'                                       085990
+067000200616     C***********RECIX     OREQ 'M'                                E14884 085990
+067100200616     C*
+067200200616     C* Get dec places tabtg10
+067300200616     C*
+067400200616     C                     EXSR DECPLS
+067500200616     C/COPY WNCPYSRC,SE2560C005
+067600200616     C*
+067700200616     C* Flag position settlement records and count as deleted
+067800200616     C*
+067900200616     C                     EXSR DLTREC
+068000200616     C*
+068100200616     C* Print detail report
+068200200616     C*
+068300200616     C                     EXSR PRINTD
+068400200616     C*
+068500200616     C                     END
+068600200616     C                     END
+068700200616     C*                                                                                       095907
+068800200616     C                     ELSE                                                               095907
+068900200616     C*                                                                                       095907
+069000200616     C* Get dec places tabtg10                                                                095907
+069100200616     C*                                                                                       095907
+069200200616     C                     EXSR DECPLS                                                        095907
+069300200616     C*                                                                                       095907
+069400200616     C* Flag position settlement records and count as deleted                                 095907
+069500200616     C*                                                                                       095907
+069600200616     C                     EXSR DLTREC                                                        095907
+069700200616     C*                                                                                       095907
+069800200616     C* Print detail report                                                                   095907
+069900200616     C*                                                                                       095907
+070000200616     C                     EXSR PRINTD                                                        095907
+070001200616      *                                                                                     AR324886
+070002200616     C           PSAUTH    CHAINPSAUT                80                                     AR324886
+070003200616     C           *IN80     IFEQ *OFF                                                        AR324886
+070004200616     C                     DELETPSAUT                                                       AR324886
+070005200616     C                     ENDIF                                                            AR324886
+070100200616     C*
+070200200616     C                     END
+070300200616     C*
+070400200616      /SPACE 3
+070500200616     C*
+070600200616     C* Change of Branch
+070700200616     C*
+070800200616     C*L3******  PSRRD     IFGT *ZEROS                                    048919
+070900200616     C*L3******  *IN36     ANDEQ'1'                                 E29170048919
+071000200616     CL3         *IN36     IFEQ '1'                                       048919
+071100200616     CL3                   WRITETRAILP1                                   E29170
+071200200616     CL3                   CLOSESE2560P1
+071300200616     CL3                   SETOF                     36                   E29170
+071400200616     CL3                   END
+071500200616     C*
+071600200616      /SPACE 3
+071700200616     C*
+071800200616     C* LR time
+071900200616     C*
+072000200616     C/COPY WNCPYSRC,SE2560C003
+072100200616     CLR                   DO
+072200200616     C*
+072300200616     C* If no records read, perform 1st time calcs for audit report
+072400200616     C*
+072500200616     CL0         PSRRD     IFEQ *ZEROS
+072600200616     C*
+072700200616     C* Prepare LDA
+072800200616     C*
+072900200616     CL0                   MOVE *BLANKS   DBLOT
+073000200616     CL0                   MOVE 'SE2560  'DBPGM
+073100200616     C*
+073200200616     C* Get Installation Control Data record 1
+073300200616     C*
+073400200616     CL0                   EXSR ZSYSTM
+073500200616     C*
+073600200616     C* If error in ZSYSTM, abend program
+073700200616     C*
+073800200616     CL0         *IN99     IFEQ '1'                        ***************
+073900200616     CL0         *LOCK     IN   LDA                        ***************S01117
+074000200616     C**L0*******          MOVE '01'      DBASE            **DB*ERROR*01**E20651
+074100200616     C*L0********          MOVE '07'      DBASE            **DB ERROR 07**E20651
+074200200616     CL0                   Z-ADD7         DBASE            **DB ERROR 07**E20651
+074300200616     CL0                   MOVEL'TABLE'   DBFILE           ***************
+074400200616     CL0                   MOVELZTABKY    DBKEY
+074500200616     CL0                   OUT  LDA                                       S01117
+074600200616     CL0                   EXSR *PSSR                                     S01117
+074700200616     CL0                   WRITEHEADAU
+074800200616     CL0                   WRITEERROR
+074900200616     C*0*********          WRITETRAILAU                                   E29170
+075000200616     CL0                   SETON                     U7U8LR
+075100200616     CL0                   RETRN
+075200200616     CL0                   END
+075300200616     C*
+075400200616     CL0                   END
+075500200616     C*
+075600200616     C* Fetch Depot movements audit file
+075700200616     C*
+075800200616     CL0         1         CHAINPOSETAF              33
+075900200616     CL0         *IN33     IFEQ '1'                        ***************
+076000200616     CL0         *LOCK     IN   LDA                        ***************S01117
+076100200616     C*L0********          MOVEL'05'      DBASE            **DB ERROR 05**S01117
+076200200616     CL0                   Z-ADD5         DBASE            **DB ERROR 05**S01117
+076300200616     CL0                   MOVEL'POSETA'  DBFILE           ***************
+076400200616     CL0                   MOVEL'1'       DBKEY
+076500200616     CL0                   OUT  LDA                                       S01117
+076600200616     CL0                   EXSR *PSSR                                     S01117
+076700200616     CL0                   WRITEHEADAU
+076800200616     CL0                   WRITEERROR
+076900200616     C*0*********          WRITETRAILAU                                   E29170
+077000200616     CL0                   SETON                     U7U8
+077100200616     CL0                   RETRN
+077200200616     CL0                   ELSE
+077300200616     C*
+077400200616     C* Compare control total to number of records read
+077500200616     C*
+077600200616     CL0         NORE      COMP PSRRD                U8U8
+077700200616     CL0 U8                SETON                     73
+077800200616     C*
+077900200616     C* Calculate output fields
+078000200616     C*
+078100200616     C*0*********NORE      SUB  PSDEL     PSNEW                                               095907
+078200200616     CL0         NORE      SUB  PSDEL     PSNEW   50                                          095907
+078300200616     C*0*********NORE6     SUB  PSDEL6    PSNEW6                                       095907 243026
+078400200616     CL0         NORE7     SUB  PSDEL7    PSNEW7                                              243026
+078500200616     C*
+078600200616     C* Print audit report
+078700200616     C*
+078800200616     CL0                   WRITEHEADAU
+078900200616     CL0                   WRITEDETLAU
+079000200616     C*                                                                   E29170
+079100200616     C** If have read no records then output 'No Details' to Audit file   E29170
+079200200616     C*                                                                   E29170
+079300200616     CL0         PSRRD     IFEQ 0                                         E29170
+079400200616     CL0                   WRITENONE                                      E29170
+079500200616     CL0                   END                                            E29170
+079600200616     C*
+079700200616     C* If totals same, update audit record
+079800200616     C*
+079900200616     CL0         *INU8     IFEQ '0'
+080000200616     C***L0                Z-ADDPSNEW     NLRB                                                095907
+080100200616     C***L0                Z-ADDPSNEW     NORE                                                095907
+080200200616     CL0                   Z-ADDLVREC     NLRB                                                095907
+080300200616     CL0                   Z-ADDLVREC     NORE                                                095907
+080400200616     C*0*******************Z-ADDLVREC     NORE6                                        095907 243026
+080500200616     CL0                   Z-ADDLVREC     NORE7                                               243026
+080600200616     CL0                   UPDATPOSETAF
+080700200616     CL0                   END
+080800200616     C*
+080900200616     CL0                   END
+081000200616     C*                                                                                       095907
+081100200616     CLR         S01401    IFEQ 'Y'                                                           095907
+081200200616     CLR                   CLOSEPOSETDY1                                                      095907
+081300200616     CLR                   CLOSEPOSETDY2                                                      095907
+081400200616     CLR                   ENDIF                                                              095907
+081500200616     C*
+081600200616     CLR                   END
+081700200616     C*
+081800200616     C*****************************************************************
+081900200616      /EJECT
+082000200616     C*****************************************************************
+082100200616     C**                                                              *
+082200200616     C**   DECPLS SR. TO ACQUIRE DEC.PLACES - TABTG10                 *
+082300200616     C**                                                              *
+082400200616     C*****************************************************************
+082500200616     C*
+082600200616     CSR         DECPLS    BEGSR                           *** DECPLS ***
+082700200616     C*
+082800200616     C                     MOVEL'20      'TKEY
+082900200616     C                     MOVE PSCU      TPSCU
+083000200616     C                     MOVE '1'       TKEY
+083100200616     C           TABTK     CHAINTABTG10F             72
+083200200616     C           *IN72     IFEQ '0'
+083300200616     C           RECI      IFEQ '*'
+083400200616     C                     SETON                     72
+083500200616     C                     END
+083600200616     C                     END
+083700200616     C           *IN72     IFEQ '1'
+083800200616     C           *LOCK     IN   LDA                                       S01117
+083900200616     C                     MOVEL'1'       *INU8
+084000200616     C                     MOVEL'1'       *INU7            ***************
+084100200616     C***********          MOVEL'04'      DBASE            **DB ERROR 04**S01117
+084200200616     C                     Z-ADD4         DBASE            **DB ERROR 04**S01117
+084300200616     C                     MOVEL'TABLE'   DBFILE           ***************
+084400200616     C                     MOVELTKEY      DBKEY
+084500200616     C                     OUT  LDA                                       S01117
+084600200616     C                     EXSR *PSSR                                     S01117
+084700200616     C                     WRITEHEADAU
+084800200616     C                     WRITEERROR
+084900200616     C***********          WRITETRAILAU                                   E29170
+085000200616     C                     SETON                     U7U8LR
+085100200616     C                     RETRN
+085200200616     C                     END
+085300200616     C*
+085400200616     CSR                   ENDSR
+085500200616     C*
+085600200616     C*****************************************************************
+085700200616      /SPACE 3
+085800200616     C*****************************************************************
+085900200616     C**                                                              *
+086000200616     C**   DLTREC SR. TO FLAG RECORDS AND COUNT AS DELETED            *
+086100200616     C**                                                              *
+086200200616     C*****************************************************************
+086300200616     C**
+086400200616     CSR         DLTREC    BEGSR                           *** DLTREC  ***
+086500200616     C*
+086600200616     C* Flag Position record and count as deleted
+086700200616     C*
+086800200616     C***        RECIX     IFNE 'M'                                       E14884              095907
+086900200616     C****       RECIX     ANDNE'R'                                                    203832 095907
+087000200616     C*                                                                                       095907
+087100200616     C* DROP MT5XX EXTENSION FILES                                                            095907
+087200200616     C*                                                                                       095907
+087300200616     C           S01401    IFEQ 'Y'                                                           095907
+087400200616     C           KEY1      CHAINPOSETDY1             34                                       095907
+087500200616     C           *IN34     IFEQ '0'                                                           095907
+087600200616     C                     DELETPOSETDD1                                                      095907
+087700200616     C                     END                                                                095907
+087800200616     C           KEY1      CHAINPOSETDY2             35                                       095907
+087900200616     C           *IN35     IFEQ '0'                                                           095907
+088000200616     C                     DELETPOSETDD2                                                      095907
+088100200616     C                     END                                                                095907
+088200200616     C                     END                                                                095907
+088300200616     C                     DELETPOSETDF                                                       095907
+088400200616     C************         ADD  1         PSDEL                           E14884              095907
+088500200616     C                     ADD  1         PSDEL   50                                          095907
+088600200616     C*********************ADD  1         PSDEL6                                       095907 243026
+088700200616     C                     ADD  1         PSDEL7                                              243026
+088800200616     C***                  END                                            E14884              095907
+088900200616     C***                  MOVE '*'       RECIX                                               095907
+089000200616     C***                  EXCPTDELPSO                                                        095907
+089100200616     C/COPY WNCPYSRC,SE2560C006
+089200200616     C***********          ADD  1         PSDEL                           E14884
+089300200616      *                                                                                       CRE020
+089400200616      ** Once record is deleted, remove extension file record physically on file              CRE020
+089500200616      *                                                                                       CRE020
+089600200616     C           CRE020    IFEQ 'Y'                                                           CRE020
+089700200616     C                     MOVE PBCA      K3PBCA                                              CRE020
+089800200616     C                     MOVE PSSH      K3PSSH                                              CRE020
+089900200616     C                     MOVE PCPY      K3PCPY                                              CRE020
+090000200616     C                     MOVE PDUD      K3PDUD                                              CRE020
+090100200616     C                     MOVE PEVT      K3PEVT                                              CRE020
+090200200616      *                                                                                       CRE020
+090300200616     C           KPOST3    SETLLPOSETDD3                                                      CRE020
+090400200616     C           KPOST3    READEPOSETDD3                 78                                   CRE020
+090500200616     C           *IN78     DOWEQ'0'                                                           CRE020
+090600200616     C                     DELETPOSETDD3                                                      CRE020
+090700200616     C           KPOST3    READEPOSETDD3                 78                                   CRE020
+090800200616     C                     ENDDO                                                              CRE020
+090900200616     C                     ENDIF                                                              CRE020
+091000200616     C*
+091001200616      *                                                                                     AR324886
+091002200616     C           PSAUTH    CHAINPSAUT                80                                     AR324886
+091003200616     C           *IN80     IFEQ *OFF                                                        AR324886
+091004200616     C                     DELETPSAUT                                                       AR324886
+091005200616     C                     ENDIF                                                            AR324886
+091100200616     C* Increment deleted not authorised count if neccessary
+091200200616     C*
+091300200616     C           PAUI      IFNE 'Y'
+091400200616     C***********          ADD  1         PSDELX                                              095907
+091500200616     C                     ADD  1         PSDELX  50                                          095907
+091600200616     C*********************ADD  1         PSDEX6                                       095907 243026
+091700200616     C                     ADD  1         PSDEX7                                              243026
+091800200616     C                     END
+091900200616     C*
+092000200616     C/COPY WNCPYSRC,SE2560C004
+092100200616     CSR                   ENDSR
+092200200616     C*
+092300200616     C*****************************************************************
+092400200616      /SPACE 3
+092500200616     C*****************************************************************
+092600200616     C**                                                              *
+092700200616     C**   PRINTD SR. TO PRINT DETAIL RECORDS                         *
+092800200616     C**                                                              *
+092900200616     C*****************************************************************
+093000200616     C**
+093100200616     CSR         PRINTD    BEGSR                           *** PRINTD  ***
+093200200616     C*
+093300200616     C* Format due date
+093400200616     C*
+093500200616     C                     Z-ADDPDUD      ZDAYNO
+093600200616     C                     EXSR ZDATE2
+093700200616     C                     MOVE ZADATE    ZAPDUD
+093800200616     C*
+093900200616     C* Format settlement account depending on settlement method
+094000200616     C*
+094100200616     C**********           MOVE *BLANK    ZPSE14 14                                           CGL029
+094200200616     C**********           MOVE *BLANK    ZPSE12 12                                           CGL029
+094300200616     C                     MOVE *BLANK    ZPSE20 20                                           CGL029
+094400200616     C                     MOVE *BLANK    ZPSE18 18                                           CGL029
+094500200616     C*
+094600200616     C*    Format nnnnnn-nn-nnnn for settlement code 05
+094700200616     C*
+094800200616     C           PSMT      IFEQ 05
+094900200616     C                     MOVELPSEA06    ZPSE07  7
+095000200616     C                     MOVE '-'       ZPSE07
+095100200616     C*
+095200200616     C**********           MOVELPSEA04    ZPSE05  5                                           CGL029
+095300200616     C**********           MOVE '-'       ZPSE05                                              CGL029
+095400200616     C                     MOVELPSEA10    ZPSE11 11                                           CGL029
+095500200616     C                     MOVE '-'       ZPSE11                                              CGL029
+095600200616     C*
+095700200616     C**********           MOVELZPSE07    ZPSE12                                              CGL029
+095800200616     C**********           MOVE ZPSE05    ZPSE12                                              CGL029
+095900200616     C                     MOVELZPSE07    ZPSE18                                              CGL029
+096000200616     C                     MOVE ZPSE11    ZPSE18                                              CGL029
+096100200616     C*
+096200200616     C**********           MOVELZPSE12    ZPSE14                                              CGL029
+096300200616     C**********           MOVE PSEA02    ZPSE14                                              CGL029
+096400200616     C                     MOVELZPSE18    ZPSE20                                              CGL029
+096500200616     C                     MOVE PSEA02    ZPSE20                                              CGL029
+096600200616     C                     ELSE
+096700200616     C*
+096800200616     C*    Format settlement methods 01 02 07 08 12
+096900200616     C*
+097000200616     C           PSMT      IFEQ 01
+097100200616     C*
+097200200616     C           PSMT      OREQ 02
+097300200616     C*
+097400200616     C           PSMT      OREQ 07
+097500200616     C*
+097600200616     C           PSMT      OREQ 08
+097700200616     C*
+097800200616     C           PSMT      OREQ 12
+097900200616     C*
+098000200616     C*    Tabletl file using key
+098100200616     C*    If no record/record deleted - print psea not shortname
+098200200616     C*
+098300200616     C                     MOVE '70'      TLRECT
+098400200616     C                     MOVE PSCU      TLPSCU
+098500200616     C                     MOVELPSEA      TLPSE2
+098600200616     C           TABTLK    CHAINTABLETLF             70
+098700200616     C           *IN70     IFEQ '1'
+098800200616     C**********           MOVELPSEA      ZPSE14                                              CGL029
+098900200616     C                     MOVELPSEA      ZPSE20                                              CGL029
+099000200616     C                     ELSE
+099100200616     C           RECI      IFEQ '*'
+099200200616     C**********           MOVELPSEA      ZPSE14                                              CGL029
+099300200616     C                     MOVELPSEA      ZPSE20                                              CGL029
+099400200616     C                     ELSE
+099500200616     C*
+099600200616     C* Format customer shortname
+099700200616     C*    read clintcb file using key
+099800200616     C*    if no record/record deleted  - print psea not shortname
+099900200616     C*
+100000200616     C**********           Z-ADDCNUM      CBNUM                                               CSD027
+100100200616     C                     MOVE CNUM      CBNUM                                               CSD027
+100200200616     C                     MOVE 'A'       CBRCDT
+100300200616     C           CLICBK    CHAINCLINTCBF             71
+100400200616     C           *IN71     IFEQ '1'
+100500200616     C**********           MOVELPSEA      ZPSE14                                              CGL029
+100600200616     C                     MOVELPSEA      ZPSE20                                              CGL029
+100700200616     C                     ELSE
+100800200616     C           RECI      IFEQ '*'
+100900200616     C**********           MOVELPSEA      ZPSE14                                              CGL029
+101000200616     C                     MOVELPSEA      ZPSE20                                              CGL029
+101100200616     C                     ELSE
+101200200616     C**********           MOVELTLPSE2    ZPSE12                                              CGL029
+101300200616     C**********           MOVE CSNM      ZPSE12                                              CGL029
+101400200616     C**********           MOVELZPSE12    ZPSE14                                              CGL029
+101500200616     C                     MOVELTLPSE2    ZPSE18                                              CGL029
+101600200616     C                     MOVE CSNM      ZPSE18                                              CGL029
+101700200616     C                     MOVELZPSE18    ZPSE20                                              CGL029
+101800200616     C                     END
+101900200616     C                     END
+102000200616     C                     END
+102100200616     C                     END
+102200200616     C*
+102300200616     C*    Catch-all any other settlement codes
+102400200616     C*
+102500200616     C                     ELSE
+102600200616     C**********           MOVELPSEA      ZPSE14                                              CGL029
+102700200616     C                     MOVELPSEA      ZPSE20                                              CGL029
+102800200616     C*
+102900200616     C                     END
+103000200616     C                     END
+103100200616     C*
+103200200616     C* Format settlement amount
+103300200616     C*    Use dec places from tabtg10 for zdecs
+103400200616     C*    as input to zsedit
+103500200616     C*
+103600200616     C                     Z-ADDCDP       ZDECS
+103700200616     C                     Z-ADDPSAT      ZFLD15
+103800200616     C                     MOVE 'J'       ZECODE
+103900200616     C                     EXSR ZSEDIT
+104000200616     C                     MOVE ZOUT21    ZEPSAT 18
+104100200616     C*
+104200200616     C* Narrative required if authorised indicator posetd is not - y
+104300200616     C*
+104400200616     C                     SETOF                     74
+104500200616     C           PAUI      IFNE 'Y'
+104600200616     C                     SETON                     74
+104700200616     C                     END
+104800200616     C*
+104900200616     C* Open printer file and print heading
+105000200616     C*
+105100200616     C           *IN32     IFEQ '0'
+105200200616     C           *IN36     IFEQ '0'                                       E29170
+105300200616     C                     OPEN SE2560P1
+105400200616     C                     Z-ADD*ZEROS    PAGE
+105500200616     C                     END                                            E29170
+105600200616     C                     WRITEHEADL3
+105700200616     C*********************Z-ADD10        LCOUNT  30                      084236
+105800200616     C                     Z-ADD11        LCOUNT  30                      084236
+105900200616     C                     SETON                     32
+106000200616     C                     SETON                     36                   E29170
+106100200616     C*                                                                   E29170
+106200200616     C** RCF Processing for Detail Printer File                           E29170
+106300200616     C*                                                                   E29170
+106400200616     C                     EXSR RCFP1                                     E29170
+106500200616     C                     END
+106600200616     C*
+106700200616     C* Check for overflow
+106800200616     C*
+106900200616     C           LCOUNT    IFGT 56
+107000200616     C                     WRITEHEADL3
+107100200616     C*********************Z-ADD10        LCOUNT                          084236
+107200200616     C                     Z-ADD11        LCOUNT                          084236
+107300200616     C                     END
+107400200616     C*
+107500200616     C* Print Detail line
+107600200616     C*
+107700200616     C                     WRITEDETAIL
+107800200616     C                     ADD  2         LCOUNT
+107900200616     C*
+108000200616     CSR                   ENDSR
+108100200616     C*
+108200200616      *****************************************************************   S01117
+108300200616      /EJECT                                                              S01117
+108400200616      *****************************************************************   S01117
+108500200616      *                                                               *   S01117
+108600200616      *  *PSSR  - Error control subroutine                            *   S01117
+108700200616      *                                                               *   S01117
+108800200616      *****************************************************************   S01117
+108900200616      *                                                                   S01117
+109000200616     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+109100200616     C**                                                                  S01117
+109200200616     C           @RUN      IFEQ *BLANKS                                   S01117
+109300200616     C                     MOVE 'Y'       @RUN    1                       S01117
+109400200616     C                     DUMP                                           S01117
+109500200616     C                     END                                            S01117
+109600200616     C**                                                                  S01117
+109700200616     C                     ENDSR                                          S01117
+109800200616      *                                                                   S01117
+109900200616     C*****************************************************************
+110000200616     C/EJECT                                                              E29170
+110100200616     C********************************************************************E29170
+110200200616     C*                                                                   E29170
+110300200616     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF          E29170
+110400200616     C*                                                                   E29170
+110500200616     C********************************************************************E29170
+110600200616     C*                                                                   E29170
+110700200616     C           RCFP1     BEGSR                            ** RCFP1 **   E29170
+110800200616     C*                                                                   E29170
+110900200616     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    E29170
+111000200616     C*                                                                   E29170
+111100200616     C                     Z-ADDSFNUM     ZSNUM   60                      E29170
+111200200616     C**                                                                  E29170
+111300200616     C                     CALL 'ZSFILE'                                  E29170
+111400200616     C                     PARM           SEQ     5                       E29170
+111500200616     C                     PARM PBCA      SENTY   3                       E29170
+111600200616     C                     PARM           SFILE                           E29170
+111700200616     C                     PARM           ZSNUM                           E29170
+111800200616     C                     PARM           ZSERR   1                       E29170
+111900200616     C*                                                                   E29170
+112000200616     C           ZSERR     IFEQ 'Y'                                       E29170
+112100200616     C*                                                                   E29170
+112200200616     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+112300200616     C*                                                                   E29170
+112400200616     C                     SETON                     U7U8LR               E29170
+112500200616     C                     RETRN                                          E29170
+112600200616     C                     END                                            E29170
+112700200616     C*                                                                   E29170
+112800200616     C                     ENDSR                                          E29170
+112900200616     C*                                                                   E29170
+113000200616     C********************************************************************E29170
+113100200616     C/EJECT                                                              E29170
+113200200616     C********************************************************************E29170
+113300200616     C*                                                                   E29170
+113400200616     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF          E29170
+113500200616     C*                                                                   E29170
+113600200616     C********************************************************************E29170
+113700200616     C*                                                                   E29170
+113800200616     C           RCFAU     BEGSR                            ** RCFAU **   E29170
+113900200616     C*                                                                   E29170
+114000200616     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF                     E29170
+114100200616     C*                                                                   E29170
+114200200616     C                     Z-ADDSFNUMU    ZSNUMU  60                      E29170
+114300200616     C**                                                                  E29170
+114400200616     C                     CALL 'ZSFILE'                                  E29170
+114500200616     C                     PARM           SEQ                             E29170
+114600200616     C                     PARM *BLANKS   SENTY                           E29170
+114700200616     C                     PARM           SFILEU                          E29170
+114800200616     C                     PARM           ZSNUMU                          E29170
+114900200616     C                     PARM *BLANK    ZSERR                           E29170
+115000200616     C*                                                                   E29170
+115100200616     C           ZSERR     IFEQ 'Y'                                       E29170
+115200200616     C*                                                                   E29170
+115300200616     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+115400200616     C*                                                                   E29170
+115500200616     C                     SETON                     U7U8LR               E29170
+115600200616     C                     RETRN                                          E29170
+115700200616     C                     END                                            E29170
+115800200616     C*                                                                   E29170
+115900200616     C                     ENDSR                                          E29170
+116000200616     C*                                                                   E29170
+116100200616     C*****************************************************************   E29170
+116200200616      /EJECT                                                                                  095907
+116300200616     C*****************************************************************                       095907
+116400200616      *                                                               *                       095907
+116500200616      * AOSARD - Subroutine to call access object : Switchabe Features*                       095907
+116600200616      *                                                               *                       095907
+116700200616      *****************************************************************                       095907
+116800200616      *                                                                                       095907
+116900200616     C           AOSARD    BEGSR                           ** AOSARD **                       095907
+117000200616      *                                                                                       095907
+117100200616     C                     MOVE 'N'       S01401                                              095907
+117200200616      *                                                                                       095907
+117300200616      **  Access Switchable features file for MT5xx processing -                              095907
+117400200616      *                                                                                       095907
+117500200616     C                     CALL 'AOSARDR0'                                                    095907
+117600200616     C                     PARM '       ' @RTCD   7                                           095907
+117700200616     C                     PARM '*VERIFY' @OPTN   7                                           095907
+117800200616     C                     PARM 'S01401'  @SARD   6                                           095907
+117900200616      *                                                                                       095907
+118000200616     C           @RTCD     IFEQ *BLANK                                                        095907
+118100200616     C                     MOVE 'Y'       S01401  1                                           095907
+118200200616     C                     END                                                                095907
+118300200616      *                                                                                       095907
+118400200616     C                     ENDSR                                                              095907
+118500200616      *****************************************************************                       095907
+118600200616      /EJECT
+118700200616     C/COPY ZSRSRC,ZDATE2Z4
+118800200616      /EJECT
+118900200616     C/COPY ZSRSRC,ZICDSEZ1
+119000200616      /EJECT
+119100200616     C/COPY ZSRSRC,ZSEDITZ3
+119200200616      /EJECT
+119300200616     C/COPY ZSRSRC,ZSYSTMZ1
+119400200616     O/EJECT
+119500200616     O***POSETDF E             DELPSO                                                         095907
+119600200616     O***                      RECIX                                                          095907
+119700200616      /EJECT
+119800200616      ***
+119900200616**  CPY@
+120000200616(c) Finastra International Limited 2001
+120100200616**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+1202002006160366073110961461
+120300200616**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+120400200616000031059090120151181212243273304334365
+120500200616**   ZMNM - MONTHS SHORT NAMES
+120600200616JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

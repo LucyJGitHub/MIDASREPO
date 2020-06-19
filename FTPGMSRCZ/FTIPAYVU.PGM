@@ -1,178 +1,183 @@
-      *****************************************************************
-/*STD *  PGMBASE                                                      *
-/*EXI *  MODULE(FTIPAYVU) ACTGRP(*CALLER)                             *
-/*EXI *  TEXT('Midas FT IPAY Validate and Update')                    *
-      *****************************************************************
-      *                                                               *
-      *  Midas - Funds Transfer Module                                *
-      *                                                               *
-      *  FTIPAYVU - Incoming Payments validate and update             *
-      *                                                               *
-      *  Function: This program binds the modules that perform the    *
-      *            validation of Incoming Payments for input into     *
-      *            the Midas database.                                *
-      *                                                               *
-      *  Called By: APTRANVU                                          *
-      *                                                               *
-      *  (c) Finastra International Limited 2003                      *
-      *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD039094           Date 15May18               *
-      *                 MD047369A          Date 24Jan18               *
-      *                 MD046248           Date 27Oct17               *
-      *                 MD042042           Date 14Feb17               *
-      *                 MD044395           Date 08Mar17               *
-      *                 AR1090283          Date 10Aug16               *
-      *                 MD036159           Date 15Jul16               *
-      *                 MD034973           Date 16Jul15               *
-      *                 MD032077           Date 26Jan15               *
-      *                 MD030906           Date 13Nov14               *
-      *                 CFT157             Date 29Aug14               *
-      *                 MD025111           Date 10May14               *
-      *                 CFT151             Date 20Mar14               *
-      *                 CFT120             Date 28Sep12               *
-      *                 CAP211             Date 28Sep12               *
-      *                 CSC054             Date 23Feb12               *
-      *                 CSF011A            Date 28Nov11               *
-      *                 CSF011             Date 12Sep11               *
-      *                 CER049             Date 06Dec10               *
-      *                 CRE075             Date 06Dec10               *
-      *                 CER059             Date 19Jul10               *
-      *                 262664             Date 11Nov09               *
-      *                 CER030             Date 09Jul08               *
-      *                 CSD083             Date 27May10               *
-      * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *                 BUG24998           Date 17Jul09               *
-      *                 CSW209             Date 01Apr09               *
-      * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *                 BUG22146           Date 16Jan09               *
-      *                 256564             Date 17Sep08               *
-      *                 255190             Date 21Jul08               *
-      *                 BUG15006           Date 16Sep07               *
-      *                 247398             Date 30Jun07               *
-      *                 BUG14588           Date 12Sep07               *
-      *                 243991             Date 05Dec06               *
-      *                 BUG13159           Date 29Jan07               *
-      * Midas Plus 1.3 ----------- Base ------------------------------*
-      *                 CFT032             Date 11Sep06               *
-      *                 CSD031             Date 10Apr06               *
-      *                 240137             Date 31May06               *
-      *                 BUG6864            Date 16Dec05               *
-      *                 CDL049             Date 06Jul06               *
-      *                 CSD027             Date 09Dec05               *
-      *                 BUG9106            Date 12Aug05               *
-      *                 CER001             Date 25Apr05               *
-      *                 BUG7101            Date 06Jul05               *
-      *                 CSC024             Date 07Feb05               *
-      *                 BUG7029            Date 09Jun05               *
-      *                 BUG3279            Date 11Nov04               *
-      *                 BUG4728            Date 05Nov04               *
-      *                 BUG4196            Date 09Sep04               *
-      *                 CFT115             Date 01Jul04               *
-      *                 GB0015             Date 01Jul04               *
-      *                 CGL014             Date 20Oct03               *
-      *                 CLE025             Date 20Oct03               *
-      *                 BUG515             Date 29Mar04               *
-      *                 CSC022             Date 24Feb04               *
-      *                 BUG1282            Date 25Mar04               *
-      *                 BUG1493            Date 18Mar04               *
-      *                 CGL029             Date 01Sep03               *
-      *                 CGP001             Date 09Dec03               *
-      *                 222373             Date 04Nov03               *
-      *                 CAP084  *CREATE    Date 25Aug03               *
-      *                                                               *
-      *---------------------------------------------------------------*
-      *                                                               *
-      *  CSD102 - Password Length Extension (Recompile)               *
-      *  MD039094 - Adjust CFT157 to work with Rabo MHUB              *
-      *           - Correction to CFT157. Move fields to end of Buffer*
-      *             (Recompile)                                       *
-      *           - Applied fix for MD050928                          *
-      *  MD047369A - Funds transfter does not check block Dr flag on  *
-      *              beneficary customer account.                     *
-      *              (Recompile)                                      *
-      *  MD046248 - Finastra Rebranding                               *
-      *  MD042042 - Input Officer 1 and Input Officer 2 are being     *
-      *             populated with WIP authoriser. Use the WIP input  *
-      *             user profile instead. (Recompile)                 *
-      *  MD044395 - Incorrect Customer Name on Inputs details for     *
-      *             valid BIC entry (Recompile)                       *
-      *  AR1090283 - Customer details not visible for enquire.        *
-      *              Recompile. (Child: AR1090284)                    *
-      *            - Applied for MD-39986.                            *
-      *  MD036159 - Systems allows payment with same FRNT.            *
-      *             Pattern fix AR971184. (Recompile)                 *
-      *           - Applied for MD-39705.                             *
-      *  MD034973 - FT Payment Charges defaulting error (Recompile)   *
-      *  MD032077 - Blank Front Office ID after authorisation. Do not *
-      *             override IPFRNT when APFOTRANID is blank.         *
-      *	            (Recompile)                                       *
-      *  MD030906 - Counterparty Nostro not defaulted.                *
-      *  CFT157 - Stop FT Transaction after Authorisation             *
-      *           (Recompile)                                         *
-      *  MD025111 - Incoming payment without charges is not allowed   *
-      *             if the account is blocked for DR (Recompile)      *
-      *  CFT151 - FT IN/OP Alphanumeric sequence (Recompile)          *
-      *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
-      *           (Recompile)                                         *
-      *  CAP211 - FT IN_OP APIs - Auto-Authorization of Payment       *
-      *           (Recompile)                                         *
-      *  CSC054 - Period End Adjustments (Recompile)                  *
-      *  CSF011A - CCR015: Display Order in Confirmation Pages        *
-      *            (Recompile)                                        *
-      *  CSF011 - Customer Name on Inputs (Recompile)                 *
-      *  CER049 - Stamp Tax (Recompile)                               *
-      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
-      *  CER059 - German Feature Upgrade to Delhi                     *
-      *  262664 - Parameter conflict against SWIFT09.                 *
-      *         - Change the parameter name (Recompile).              *
-      *  CER030 - Multicash German Feature (Recompile)                *
-      *  CSD083 - Watch List Compliance Upgrade (Recompile)           *
-      *  BUG24998 - Bank operation code is missing (Recompile)        *
-      *  CSW209 - SWIFT 2009 Changes (Recompile)                      *
-      *  BUG22146 - Missing authorization field in repository.        *
-      *  256564 - Recompile due to PF changes done by fix 256330      *
-      *  255190 - Recompile due to changed FTIPAYVU module.           *
-      *  BUG15006 - A serious midas error occurred on IPAY (Recompile)*
-      *  247398 - Recompiled due to changes in FTIPAYVU module.       *
-      * BUG14588 - Cannot Edit and Authorise using Incoming FT        *
-      *            in JAVA Screen (Recompile)                         *
-      *  243991  - Recompiled due to change in FTIPAYVU module        *
-      * BUG13159 - Recompiled due to changes made in RPGLE/FTIPAYVU.  *
-      *  CFT032 - Account line in field 50X in MT103 (Recompile)      *
-      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
-      *  240137 - Applied fix 230309.                                 *
-      *  230309 - Recompiled due to change in FTIPAYVU                *
-      *  BUG6864 - Recompiled due to change in FTIPAYVU               *
-      *  CDL049 - Addition of a Reference Rate field (recompile)      *
-      *  CSD027 - Conversion Of Customer Number to Alpha              *
-      *  BUG9106 - Allow mandatory Charge Details 2 validation        *
-      *  CER001 - LUX Upgrade to MidasPlus                            *
-      *  BUG7101 - Recompiled due to changes in FTIPAYVU.             *
-      *  CSC024 - Open Month End                                      *
-      *  BUG7029 - Ensure ZMUSER is re-checked on every call,         *
-      *            move out of *INZSR.                                *
-      *  BUG3279 - Recompiled due to change in FTIPAYVU               *
-      *  BUG4728 - Serious Midas error with blank timestamp when      *
-      *            authorising insert of transaction.                 *
-      *  BUG4196- Stopping changes being overwritten by other user    *
-      *           when try to amend the record at the same time.      *
-      *  CFT115 - Core changes for GBO015.                            *
-      *         - Incoming Payments Beneficiary Validation            *
-      *                  - Upgrade to Midasplus                       *
-      *  GB0015 - Core changes for GBO015.                            *
-      *         - Incoming Payments Beneficiary Validation            *
-      *                  - Upgrade to Midasplus                       *
-      *  CGL014 - Collaterals Processing                              *
-      *  CLE025 - Credit Lines (Recompile)                            *
-      *  BUG515 - Recompiled due to change in FTIPAYVU                *
-      *  CSC022 - Commitment Control Changes for MidasPlus            *
-      *           (Recompile)                                         *
-      *  BUG1282 - Recompiled due to change in FTIPAYVU               *
-      *  BUG1493 - Recompiled due to change in FTIPAYVU               *
-      *  CGL029 - Increase Account Code to 10 digits                  *
-      *  CGP001 - Recompiled due to change in FTVOPY2PD               *
-      *  222373 - Recompile - Parameters corrected on program calls   *
-      *  CAP084 - Thin Client API Wrappers                            *
-      *                                                               *
-      *****************************************************************
+000100200528      *****************************************************************
+000200200528/*STD *  PGMBASE                                                      *
+000300200528/*EXI *  MODULE(FTIPAYVU) ACTGRP(*CALLER)                             *
+000400200528/*EXI *  TEXT('Midas FT IPAY Validate and Update')                    *
+000500200528      *****************************************************************
+000600200528      *                                                               *
+000700200528      *  Midas - Funds Transfer Module                                *
+000800200528      *                                                               *
+000900200528      *  FTIPAYVU - Incoming Payments validate and update             *
+001000200528      *                                                               *
+001100200528      *  Function: This program binds the modules that perform the    *
+001200200528      *            validation of Incoming Payments for input into     *
+001300200528      *            the Midas database.                                *
+001400200528      *                                                               *
+001500200528      *  Called By: APTRANVU                                          *
+001600200528      *                                                               *
+001700200528      *  (c) Finastra International Limited 2003                      *
+001800200528      *                                                               *
+001900200604      *  Last Amend No. 257943             Date 22May20               *
+002000200528      *  Prev Amend No. CSD102             Date 08Jan19               *
+002100200528      *                 MD039094           Date 15May18               *
+002200200528      *                 MD047369A          Date 24Jan18               *
+002300200528      *                 MD046248           Date 27Oct17               *
+002400200528      *                 MD042042           Date 14Feb17               *
+002500200528      *                 MD044395           Date 08Mar17               *
+002600200528      *                 AR1090283          Date 10Aug16               *
+002700200528      *                 MD036159           Date 15Jul16               *
+002800200528      *                 MD034973           Date 16Jul15               *
+002900200528      *                 MD032077           Date 26Jan15               *
+003000200528      *                 MD030906           Date 13Nov14               *
+003100200528      *                 CFT157             Date 29Aug14               *
+003200200528      *                 MD025111           Date 10May14               *
+003300200528      *                 CFT151             Date 20Mar14               *
+003400200528      *                 CFT120             Date 28Sep12               *
+003500200528      *                 CAP211             Date 28Sep12               *
+003600200528      *                 CSC054             Date 23Feb12               *
+003700200528      *                 CSF011A            Date 28Nov11               *
+003800200528      *                 CSF011             Date 12Sep11               *
+003900200528      *                 CER049             Date 06Dec10               *
+004000200528      *                 CRE075             Date 06Dec10               *
+004100200528      *                 CER059             Date 19Jul10               *
+004200200528      *                 262664             Date 11Nov09               *
+004300200528      *                 CER030             Date 09Jul08               *
+004400200528      *                 CSD083             Date 27May10               *
+004500200528      * Bank Fusion Midas 1.4 Base -----------------------------------*
+004600200528      *                 BUG24998           Date 17Jul09               *
+004700200528      *                 CSW209             Date 01Apr09               *
+004800200528      * Midas Plus 1.4 Base 04 ---------------------------------------*
+004900200528      *                 BUG22146           Date 16Jan09               *
+005000200528      *                 256564             Date 17Sep08               *
+005100200528      *                 255190             Date 21Jul08               *
+005200200528      *                 BUG15006           Date 16Sep07               *
+005300200528      *                 247398             Date 30Jun07               *
+005400200528      *                 BUG14588           Date 12Sep07               *
+005500200528      *                 243991             Date 05Dec06               *
+005600200528      *                 BUG13159           Date 29Jan07               *
+005700200528      * Midas Plus 1.3 ----------- Base ------------------------------*
+005800200528      *                 CFT032             Date 11Sep06               *
+005900200528      *                 CSD031             Date 10Apr06               *
+006000200528      *                 240137             Date 31May06               *
+006100200528      *                 BUG6864            Date 16Dec05               *
+006200200528      *                 CDL049             Date 06Jul06               *
+006300200528      *                 CSD027             Date 09Dec05               *
+006400200528      *                 BUG9106            Date 12Aug05               *
+006500200528      *                 CER001             Date 25Apr05               *
+006600200528      *                 BUG7101            Date 06Jul05               *
+006700200528      *                 CSC024             Date 07Feb05               *
+006800200528      *                 BUG7029            Date 09Jun05               *
+006900200528      *                 BUG3279            Date 11Nov04               *
+007000200528      *                 BUG4728            Date 05Nov04               *
+007100200528      *                 BUG4196            Date 09Sep04               *
+007200200528      *                 CFT115             Date 01Jul04               *
+007300200528      *                 GB0015             Date 01Jul04               *
+007400200528      *                 CGL014             Date 20Oct03               *
+007500200528      *                 CLE025             Date 20Oct03               *
+007600200528      *                 BUG515             Date 29Mar04               *
+007700200528      *                 CSC022             Date 24Feb04               *
+007800200528      *                 BUG1282            Date 25Mar04               *
+007900200528      *                 BUG1493            Date 18Mar04               *
+008000200528      *                 CGL029             Date 01Sep03               *
+008100200528      *                 CGP001             Date 09Dec03               *
+008200200528      *                 222373             Date 04Nov03               *
+008300200528      *                 CAP084  *CREATE    Date 25Aug03               *
+008400200528      *                                                               *
+008500200528      *---------------------------------------------------------------*
+008600200528      *                                                               *
+008700200528      *  257943 - Using the CANCEL button after routing MT103 to an   *
+008800200528      *           incoming message, does not release the MT103 to be  *
+008900200528      *           routed again. Recompile due to changes done in      *
+009000200528      *           module FTIPAYVU.                                    *
+009100200528      *  CSD102 - Password Length Extension (Recompile)               *
+009200200528      *  MD039094 - Adjust CFT157 to work with Rabo MHUB              *
+009300200528      *           - Correction to CFT157. Move fields to end of Buffer*
+009400200528      *             (Recompile)                                       *
+009500200528      *           - Applied fix for MD050928                          *
+009600200528      *  MD047369A - Funds transfter does not check block Dr flag on  *
+009700200528      *              beneficary customer account.                     *
+009800200528      *              (Recompile)                                      *
+009900200528      *  MD046248 - Finastra Rebranding                               *
+010000200528      *  MD042042 - Input Officer 1 and Input Officer 2 are being     *
+010100200528      *             populated with WIP authoriser. Use the WIP input  *
+010200200528      *             user profile instead. (Recompile)                 *
+010300200528      *  MD044395 - Incorrect Customer Name on Inputs details for     *
+010400200528      *             valid BIC entry (Recompile)                       *
+010500200528      *  AR1090283 - Customer details not visible for enquire.        *
+010600200528      *              Recompile. (Child: AR1090284)                    *
+010700200528      *            - Applied for MD-39986.                            *
+010800200528      *  MD036159 - Systems allows payment with same FRNT.            *
+010900200528      *             Pattern fix AR971184. (Recompile)                 *
+011000200528      *           - Applied for MD-39705.                             *
+011100200528      *  MD034973 - FT Payment Charges defaulting error (Recompile)   *
+011200200528      *  MD032077 - Blank Front Office ID after authorisation. Do not *
+011300200528      *             override IPFRNT when APFOTRANID is blank.         *
+011400200528      *	            (Recompile)                                       *
+011500200528      *  MD030906 - Counterparty Nostro not defaulted.                *
+011600200528      *  CFT157 - Stop FT Transaction after Authorisation             *
+011700200528      *           (Recompile)                                         *
+011800200528      *  MD025111 - Incoming payment without charges is not allowed   *
+011900200528      *             if the account is blocked for DR (Recompile)      *
+012000200528      *  CFT151 - FT IN/OP Alphanumeric sequence (Recompile)          *
+012100200528      *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
+012200200528      *           (Recompile)                                         *
+012300200528      *  CAP211 - FT IN_OP APIs - Auto-Authorization of Payment       *
+012400200528      *           (Recompile)                                         *
+012500200528      *  CSC054 - Period End Adjustments (Recompile)                  *
+012600200528      *  CSF011A - CCR015: Display Order in Confirmation Pages        *
+012700200528      *            (Recompile)                                        *
+012800200528      *  CSF011 - Customer Name on Inputs (Recompile)                 *
+012900200528      *  CER049 - Stamp Tax (Recompile)                               *
+013000200528      *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
+013100200528      *  CER059 - German Feature Upgrade to Delhi                     *
+013200200528      *  262664 - Parameter conflict against SWIFT09.                 *
+013300200528      *         - Change the parameter name (Recompile).              *
+013400200528      *  CER030 - Multicash German Feature (Recompile)                *
+013500200528      *  CSD083 - Watch List Compliance Upgrade (Recompile)           *
+013600200528      *  BUG24998 - Bank operation code is missing (Recompile)        *
+013700200528      *  CSW209 - SWIFT 2009 Changes (Recompile)                      *
+013800200528      *  BUG22146 - Missing authorization field in repository.        *
+013900200528      *  256564 - Recompile due to PF changes done by fix 256330      *
+014000200528      *  255190 - Recompile due to changed FTIPAYVU module.           *
+014100200528      *  BUG15006 - A serious midas error occurred on IPAY (Recompile)*
+014200200528      *  247398 - Recompiled due to changes in FTIPAYVU module.       *
+014300200528      * BUG14588 - Cannot Edit and Authorise using Incoming FT        *
+014400200528      *            in JAVA Screen (Recompile)                         *
+014500200528      *  243991  - Recompiled due to change in FTIPAYVU module        *
+014600200528      * BUG13159 - Recompiled due to changes made in RPGLE/FTIPAYVU.  *
+014700200528      *  CFT032 - Account line in field 50X in MT103 (Recompile)      *
+014800200528      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+014900200528      *  240137 - Applied fix 230309.                                 *
+015000200528      *  230309 - Recompiled due to change in FTIPAYVU                *
+015100200528      *  BUG6864 - Recompiled due to change in FTIPAYVU               *
+015200200528      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+015300200528      *  CSD027 - Conversion Of Customer Number to Alpha              *
+015400200528      *  BUG9106 - Allow mandatory Charge Details 2 validation        *
+015500200528      *  CER001 - LUX Upgrade to MidasPlus                            *
+015600200528      *  BUG7101 - Recompiled due to changes in FTIPAYVU.             *
+015700200528      *  CSC024 - Open Month End                                      *
+015800200528      *  BUG7029 - Ensure ZMUSER is re-checked on every call,         *
+015900200528      *            move out of *INZSR.                                *
+016000200528      *  BUG3279 - Recompiled due to change in FTIPAYVU               *
+016100200528      *  BUG4728 - Serious Midas error with blank timestamp when      *
+016200200528      *            authorising insert of transaction.                 *
+016300200528      *  BUG4196- Stopping changes being overwritten by other user    *
+016400200528      *           when try to amend the record at the same time.      *
+016500200528      *  CFT115 - Core changes for GBO015.                            *
+016600200528      *         - Incoming Payments Beneficiary Validation            *
+016700200528      *                  - Upgrade to Midasplus                       *
+016800200528      *  GB0015 - Core changes for GBO015.                            *
+016900200528      *         - Incoming Payments Beneficiary Validation            *
+017000200528      *                  - Upgrade to Midasplus                       *
+017100200528      *  CGL014 - Collaterals Processing                              *
+017200200528      *  CLE025 - Credit Lines (Recompile)                            *
+017300200528      *  BUG515 - Recompiled due to change in FTIPAYVU                *
+017400200528      *  CSC022 - Commitment Control Changes for MidasPlus            *
+017500200528      *           (Recompile)                                         *
+017600200528      *  BUG1282 - Recompiled due to change in FTIPAYVU               *
+017700200528      *  BUG1493 - Recompiled due to change in FTIPAYVU               *
+017800200528      *  CGL029 - Increase Account Code to 10 digits                  *
+017900200528      *  CGP001 - Recompiled due to change in FTVOPY2PD               *
+018000200528      *  222373 - Recompile - Parameters corrected on program calls   *
+018100200528      *  CAP084 - Thin Client API Wrappers                            *
+018200200528      *                                                               *
+018300200528      *****************************************************************

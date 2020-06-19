@@ -1,308 +1,310 @@
-      *****************************************************************
-/*STD *  PGMBASE                                                      *
-/*EXI *  MODULE(MMLDNIVU) ACTGRP(*CALLER)                             *
-/*EXI *  TEXT('Midas MM Loans/deposits validate and update')          *
-      *****************************************************************
-      *                                                               *
-      *  Midas  - Money Market                                        *
-      *                                                               *
-      *  MMLDNIVU - LE Assignments validate and update                *
-      *                                                               *
-      *  Function: This program validates fee settlements for input   *
-      *            into the Midas database.                           *
-      *            The action code determines which processes are     *
-      *            executed as follows:                               *
-      *            - For I (=Insert) or A (=Amend)                    *
-      *              - Validate the transaction details fields        *
-      *            - For A (=AMEND),                                  *
-      *              - if transaction is a partial amendment, call a  *
-      *                separate function to complete the transaction  *
-      *                details.                                       *
-      *              - if transaction is valid, call a separate       *
-      *                function to check whether it is a valid        *
-      *                amendment.                                     *
-      *            - For D (=DELETE), call a separate function to     *
-      *              process the transaction and bypass the rest of   *
-      *              the validation.                                  *
-      *                                                               *
-      *            For all action codes, the decision to as to        *
-      *            whether to write to the valid or invalid file and  *
-      *            the call to the message handler will take place    *
-      *            in this module                                     *
-      *                                                               *
-      *  (c) Finastra International Limited 2003                      *
-      *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
-      *                 CSD102             Date 08Jan19               *
-      *                 MD039547           Date 20Sep16               *
-      *                 MD049048           Date 20Dec17               *
-      *                 MD046248           Date 27Oct17               *
-      *                 CDL099             Date 06Oct17               *
-      *                 MD024884A          Date 04Jul17               *
-      *                 MD024884           Date 04Jul17               *
-      *                 MD047873           Date 23Mar17               *
-      *                 MD042711           Date 22Nov16               *
-      *                 MD033924           Date 27Mar15               *
-      *                 AR701789           Date 26Sep16               *
-      *                 MD037869A          Date 28Mar16               *
-      *                 MD038485           Date 10Aug16               *
-      *                 CGL165             Date 17Feb15               *
-      *                 CDL096             Date 22Sep14               *
-      *                 MD030436           Date 01Oct14               *
-      *                 MD027337A          Date 01Oct14               *
-      *                 CDL094             Date 01Sep14               *
-      *                 MD027415           Date 19Aug14               *
-      *                 MD027337           Date 04Jun14               *
-      *                 MD024884           Date 07Feb14               *
-      *                 CSD095             Date 08Apr14               *
-      *                 MD022849           Date 13Oct13               *
-      *                 MD022656           Date 01Oct13               *
-      *                 AR751620           Date 12Jun13               *
-      *                 MD000091           Date 14May13               *
-      *                 AR1060863          Date 06Apr13               *
-      *                 AR665113           Date 28Nov12               *
-      *                 AR971184A          Date 22Jun12               *
-      *                 CSF011A            Date 28Nov11               *
-      *                 AR863263           Date 11Nov11               *
-      *                 CSF011             Date 12Sep11               *
-      *                 AR819540A          Date 30Aug11               *
-      *                 CER049             Date 06Dec10               *
-      *                 CRE073             Date 06Dec10               *
-      *                 259924A            Date 31May09               *
-      *                 CER059             Date 19Jul10               *
-      *                 CER054             Date 07Apr09               *
-      *                 BUG23519           Date 24Mar09               *
-      *                 CER020             Date 19May08               *
-      *                 CER043             Date 19May08               *
-      * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *                 260428A            Date 10Jun09               *
-      *                 260428             Date 28May09               *
-      * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *                 256638             Date 21Oct08               *
-      *                 256564             Date 17Sep08               *
-      *                 248297             Date 05Jun07               *
-      *                 244784             DATE 11JAN07               *
-      *                 244537             Date 17Aug05               *
-      *                 BUG5169            Date 03Oct06               *
-      *                 BUG12810A          Date 29Dec06               *
-      * Midas Plus 1.3 ----------- Base ------------------------------*
-      *                 BUG12967           Date 21Dec06               *
-      *                 241685             Date 18Sep06               *
-      *                 BUG12589           Date 15Nov06               *
-      *                 BUG12551           Date 09Nov06               *
-      *                 239400             Date 26Jun06               *
-      *                 CDL049             Date 11Jul06               *
-      *                 CSD027             Date 09Dec05               *
-      *                 BUG10943           Date 27Mar06               *
-      *                 BUG10718           Date 03Mar06               *
-      *                 BUG10725           Date 02Mar06               *
-      *                 BUG10695           Date 25Feb06               *
-      *                 BUG10677           Date 24Feb05               *
-      *                 BUG10341           Date 08Feb05               *
-      *                 BUG10563           Date 14Feb06               *
-      *                 BUG10296           Date 07Feb06               *
-      *                 CAP087             Date 02Sep05               *
-      *                 CER001             Date 25Apr05               *
-      *                 CLE031             Date 26Apr05               *
-      *                 CDL038             Date 10May05               *
-      *                 BUG8119            Date 20Oct05               *
-      *                 CDL033             Date 10Feb05               *
-      *                 BUG6512            Date 21Apr05               *
-      *                 BUG6164            Date 01Apr05               *
-      *                 BUG4808            Date 16Nov04               *
-      *                 BUG4728            Date 05Nov04               *
-      *                 BUG3992            Date 01Oct04               *
-      *                 BUG4482            Date 29Sep04               *
-      *                 BUG3792            Date 28Sep04               *
-      *                 BUG4380            Date 29Sep04               *
-      *                 BUG4068            Date 03Sep04               *
-      *                 BUG4097            Date 01Sep04               *
-      *                 BUG3684            Date 13Aug04               *
-      *                 BUG3986            Date 13Aug04               *
-      *                 CMM105             Date 22Jun04               *
-      *                 BUG3869            Date 26Jul04               *
-      *                 CLE025             Date 20Oct03               *
-      *                 CGL014             Date 20Oct03               *
-      *                 BUG2310            Date 29Apr04               *
-      *                 TCA002             Date 26Mar04               *
-      *                 CGL029             Date 26Mar04               *
-      *                 CSC022             Date 24Feb04               *
-      *                 CDL020             Date 03Feb04               *
-      *                 CDL019             Date 03Feb04               *
-      *                 CDL018             Date 03Feb04               *
-      *                 CDL017             Date 03Feb04               *
-      *                 CDL016             Date 03Feb04               *
-      *                 222727             Date 05Nov03               *
-      *                 CAP084  *CREATE    Date 07Sep03               *
-      *                                                               *
-      *---------------------------------------------------------------*
-      *                                                               *
-      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
-      *             being updated (Recompile)                         *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
-      *  CSD102 - Password Length Extension (Recompile)               *
-      *  MD039547 - Referred account is not properly validated.       *
-      *  MD049048 - LDNI inserted through SOAP cannot be amended due  *
-      *             to Front Office ID being blank (Recompile)        *      
-      *  MD046248 - Finastra Rebranding                               *
-      *  CDL099 - Split Value Date (Recompile)                        *
-      *  MD024884A - Incorrect Payment and Receipt accounts           *
-      *              (Recompile)                                      *
-      *  MD024884 - Incorrect Payment and Receipt accounts (Recompile)*
-      *  MD044873 - Serious Midas Error is encountered when completing*
-      *             transaction in LDNI. Reverse MD042711. (Recompile)*
-      *  MD042711 - Database error and serious midas error encountered*
-      *             during insert of Fiduciary Deals (Recompile)      *
-      *  MD033924 - Cannot Insert Fiduciary Fixed-Term Placing        *
-      *             and Call Placing (Recompile)                      *
-      *  AR701789 - Unable to reject a deal amendment. Add a new      *
-      *             parameter to indicate reject transaction.         *
-      *             Recompile.                                        *
-      *             Applied for MD041482                              *
-      *  MD037869A - Unable to authorise deal in LDNI after updating  *
-      *              base rate.                                       *
-      *              (Recompile)                                      *
-      *  MD038485 - Correct mapping of Stamp Tax fields (CER049).     *
-      *             (Recompile)                                       *
-      *  CGL165 - Dual Withholding Tax (Recompile)                    *
-      *  CDL096 - Business Day Conventions on MM Deals                *
-      *           (Recompile)                                         *
-      *  MD030436 - Enhance fix MD027337A to the cater defaulting of  *
-      *             settlement from '00' to SSI details. (Recompile)  *
-      *  MD027337A - Settlement details are not being re-defaulted    *
-      *              during amend. (Recompile)                        *
-      *            - Applied for MD030436.                            *
-      *  CDL094 - Enhance  Receive Settlement Instructions            *
-      *           (Recompile)                                         *
-      *  MD027415 - Unexpected validation of settlement instruction   *
-      *             during 'EDIT' of a deal after it's value date.    *
-      *           - Recompiled due to changes done in module.         *
-      *  MD027337 - Settlement details are not being defaulted during *
-      *             amend. (Recompile)                                *
-      *  MD024884 - Incorrect Payment and Receipt accounts (Recompile)*
-      *  CSD095 - Allow Deal Sub-Type and Branch for MM and FX SSIs   *
-      *           (Recompile)                                         *
-      *  MD022849 - Settlement Payment Fields cannot be amended error *
-      *             (Recompile)                                       *
-      *  MD022656 - Amendment is allowed for protected settlement     *
-      *             fields (Recompile)                                *
-      *  AR751620 - Recompiled due to changes made in MMLDNIVU.       *
-      *             (Child: AR751621)                                 *
-      *  MD000091 - Event Codes Substitution (Recompile)              *
-      *  AR1060863 - Deal irregular interest schedules lost           *
-      *            - Applied for AR1097090 (Recompile)                *
-      *  AR665113 - Recompiled due to changes made in MMLDNIVU.       *
-      *             (Child: AR665114)                                 *
-      *  AR971184A- During Amend Front Ofc Id must be updated with the*
-      *             new one (Recompile)                               *
-      *  CSF011A - CCR015: Display Order in Confirmation Pages        *
-      *            (Recompile)                                        *
-      *  AR863263 - Further Pay/Receipt Settlement Accounts are       *
-      *             reset to blanks (Recompile)                       *
-      *  CSF011 - Customer Name on Inputs (Recompile)                 *
-      *  AR819540A - Mapping error encountered in LDNI (Recompile)    *
-      *  CER049 - Stamp Tax (Recompile)                               *
-      *  CRE073 - Interest Rate Rounding (Recompile)                  *
-      *  259924A- Recompiled due to changes done in MOD/MMLDNIVU.     *
-      *  CER059 - German Feature Upgrade to Delhi                     *
-      *  CER054 - German Features - Church Tax (Recompile)            *
-      *  BUG23519 - Warning messages with the same text are displayed *
-      *             at the same time (Recompile)                      *
-      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
-      *           Midas Plus (Recompile)                              *
-      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
-      *           (Recompile)                                         *
-      *  260428A - Always protect fields for validation if Authorise  *
-      *            (Recompile)
-      *  260428 - Skip validation on receipt side / pay side if       *
-      *           accounting has taken place already in the past.     *
-      *            (Recompile)
-      *  256638 - Add the parameters needed to prevent Serious Midas  *
-      *           Error message in Java screen.                       *
-      *  256564 - Recompile due to PF changes done by fix 256330      *
-      *  248297 - EXTDTA is no more part of Output buffers            *
-      *           - Add DS in Buffer2                                 *
-      *           - Ensure MMLDNIR also use it                        *
-      *           - ROLLBACK updates in case of Problem               *
-      *  244784 - Recompiled due to changes in MMLDNIVU module        *
-      *  244537 - To avoid overriding front office identifier.        *
-      *  BUG5169 - Apply Base Rate at Value Date. Recompile           *
-      *  BUG12810A - Validate Fix Base Rate only for deal types IT,   *
-      *              TD, IP and TI only. (BUG12810 reopened)          *
-      *  BUG12967 - MM LDNI crashes with serious Midas Error          *
-      *  241685 - Recompiled due to changes in MMLDNIVU module        *
-      *  BUG12589 - When short term rate is specified, it is not      *
-      *             reflected as actual interest rate in the files    *
-      *             due to recalculation in calling MMLDNIVLP.        *
-      *             (Recompile)                                       *
-      *  BUG12551 - LDNI was unable to amend transaction.             *
-      *             Serious Midas Plus error occurred.                *
-      *             Reference Rate field was not updated properly.    *
-      *             (Recompile)                                       *
-      *  239400 - Add Front Office ID to be used by SOAP Interface    *
-      *  CDL049 - Addition of a Reference Rate field (recompile)      *
-      *  CSD027 - Conversion Of Customer Number to Alpha              *
-      *  BUG10943 - Interest Rate Change Schedule not displayed       *
-      *             (Recompile)                                       *
-      *  BUG10718 - Deletion of Fiduciary Placing Associated Takings  *
-      *             not deleted, no warning message. (Recompile)      *
-      *  BUG10725 - Fiduciary code/charges are not updated during     *
-      *             insertion thereby causing Midasplus error in      *
-      *             deal amendments (Recompile)                       *
-      *  BUG10695 - Wrong Total Interest being computed for           *
-      *             fiduciary deals.  (Recompile)                     *
-      *  BUG10677- Recompiled due to change in MMLDNIVU module        *
-      *  BUG10341- Recompiled due to change in MMLDNIVU module        *
-      *  BUG10563-Resolve conflict between BUG10296 and 9827          *
-      *  BUG10296 - LUX extension fields are missing                  *
-      *  CAP087  - REPO JAVA changes                                  *
-      *  CER001 - LUX Upgrade to MidasPlus (Recompile only)           *
-      *  CLE031 - Lending Enhancements - Settlement Currency Recompile*
-      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
-      *  BUG8119 - Fields returned incorrectly from API if update     *
-      *            flag set to 'Y' but data is invalid.               *
-      *  CDL033  - Floating Rate CDs Issued.                          *
-      *  BUG6512 - Retrieve TRAM details                              *
-      *  BUG6164 - For WIP authorise cannot call ValidateAc before    *
-      *            ValidateTr as HK* fields are not always retrieved. *
-      *  BUG4808 - Unable to authorise transaction because WIP do     *
-      *            not have correct Timestamp.                        *
-      *  BUG4728 - Serious Midas error with blank timestamp when      *
-      *            authorising insert of transaction.                 *
-      *  BUG3992- Call new program MMLDNIVLP to perform post          *
-      *           settlement detail validation. Revalidate dates.     *
-      *  BUG4482- Authorise should call Validate to show all the      *
-      *           warning errors.                                     *
-      *  BUG3792- Only allow Block/Unblock on Deposits.               *
-      *  BUG4380- Clear Multiple Sett Account fields if not selected  *
-      *  BUG4068- Deal number range for Fixed Loan/Deposit            *
-      *  BUG4097 - Ensure Block/Unblock action leaves deal authorised *
-      *  BUG3684 - Set up action field for Block/Unblock              *
-      *  BUG3986- Pass the status and TimeStamp out to the MidasPlus *
-      *  CMM105 - Core changes for GBO005                             *
-      *         - Fixed Deposits Held Under Lien                      *
-      *                  - Upgrade to Midasplus                       *
-      *  BUG3869 - Records lost from DLFSACPD on authorization        *
-      *  CLE025 - Credit Lines (Recompile)                            *
-      *  CGL014 - Collaterals Processing (Recompile)                  *
-      *  BUG2310 - Interest Calculation Method being changed during   *
-      *            input (recompile).                                 *
-      *  TCA002 - 10-Digit Account Code Errors - Retrieve a/c details.*
-      *  CGL029 - 10-Digit Account Code Errors                        *
-      *  CSC022 - Commitment Control Changes for MidasPlus            *
-      *           (Recompile)                                         *
-      *  CDL020 - Apply Base Rate at Value Date                       *
-      *           (Recompile)                                         *
-      *  CDL019 - Allow Base Rate Changes on Fixed Deposits/Loans     *
-      *           (Recompile)                                         *
-      *  CDL018 - Multiple Settlement Accounts on Loans/Deposit       *
-      *           (Recompile)                                         *
-      *  CDL017 - Penalty Fee & Early Maturity of Fixed Term Loan/Dep *
-      *           (Recompile)                                         *
-      *  CDL016 - Automatic Rollover of Fixed Term Loan/Deposit       *
-      *           (Recompile)                                         *
-      *  222727 - Release 5.0 errors (recompile).                     *
-      *  CAP084 - API Wrapper project                                 *
-      *                                                               *
-      *****************************************************************
+000100200528      *****************************************************************
+000200200528/*STD *  PGMBASE                                                      *
+000300200528/*EXI *  MODULE(MMLDNIVU) ACTGRP(*CALLER)                             *
+000400200528/*EXI *  TEXT('Midas MM Loans/deposits validate and update')          *
+000500200528      *****************************************************************
+000600200528      *                                                               *
+000700200528      *  Midas  - Money Market                                        *
+000800200528      *                                                               *
+000900200528      *  MMLDNIVU - LE Assignments validate and update                *
+001000200528      *                                                               *
+001100200528      *  Function: This program validates fee settlements for input   *
+001200200528      *            into the Midas database.                           *
+001300200528      *            The action code determines which processes are     *
+001400200528      *            executed as follows:                               *
+001500200528      *            - For I (=Insert) or A (=Amend)                    *
+001600200528      *              - Validate the transaction details fields        *
+001700200528      *            - For A (=AMEND),                                  *
+001800200528      *              - if transaction is a partial amendment, call a  *
+001900200528      *                separate function to complete the transaction  *
+002000200528      *                details.                                       *
+002100200528      *              - if transaction is valid, call a separate       *
+002200200528      *                function to check whether it is a valid        *
+002300200528      *                amendment.                                     *
+002400200528      *            - For D (=DELETE), call a separate function to     *
+002500200528      *              process the transaction and bypass the rest of   *
+002600200528      *              the validation.                                  *
+002700200528      *                                                               *
+002800200528      *            For all action codes, the decision to as to        *
+002900200528      *            whether to write to the valid or invalid file and  *
+003000200528      *            the call to the message handler will take place    *
+003100200528      *            in this module                                     *
+003200200528      *                                                               *
+003300200528      *  (c) Finastra International Limited 2003                      *
+003400200528      *                                                               *
+003500200604      *  Last Amend No. 250161             Date 22May20               *
+003600200528      *  Prev Amend No. MD054028           Date 05Sep19               *
+003700200528      *                 CER050             Date 16Jun19               *
+003800200528      *                 CSD102             Date 08Jan19               *
+003900200528      *                 MD039547           Date 20Sep16               *
+004000200528      *                 MD049048           Date 20Dec17               *
+004100200528      *                 MD046248           Date 27Oct17               *
+004200200528      *                 CDL099             Date 06Oct17               *
+004300200528      *                 MD024884A          Date 04Jul17               *
+004400200528      *                 MD024884           Date 04Jul17               *
+004500200528      *                 MD047873           Date 23Mar17               *
+004600200528      *                 MD042711           Date 22Nov16               *
+004700200528      *                 MD033924           Date 27Mar15               *
+004800200528      *                 AR701789           Date 26Sep16               *
+004900200528      *                 MD037869A          Date 28Mar16               *
+005000200528      *                 MD038485           Date 10Aug16               *
+005100200528      *                 CGL165             Date 17Feb15               *
+005200200528      *                 CDL096             Date 22Sep14               *
+005300200528      *                 MD030436           Date 01Oct14               *
+005400200528      *                 MD027337A          Date 01Oct14               *
+005500200528      *                 CDL094             Date 01Sep14               *
+005600200528      *                 MD027415           Date 19Aug14               *
+005700200528      *                 MD027337           Date 04Jun14               *
+005800200528      *                 MD024884           Date 07Feb14               *
+005900200528      *                 CSD095             Date 08Apr14               *
+006000200528      *                 MD022849           Date 13Oct13               *
+006100200528      *                 MD022656           Date 01Oct13               *
+006200200528      *                 AR751620           Date 12Jun13               *
+006300200528      *                 MD000091           Date 14May13               *
+006400200528      *                 AR1060863          Date 06Apr13               *
+006500200528      *                 AR665113           Date 28Nov12               *
+006600200528      *                 AR971184A          Date 22Jun12               *
+006700200528      *                 CSF011A            Date 28Nov11               *
+006800200528      *                 AR863263           Date 11Nov11               *
+006900200528      *                 CSF011             Date 12Sep11               *
+007000200528      *                 AR819540A          Date 30Aug11               *
+007100200528      *                 CER049             Date 06Dec10               *
+007200200528      *                 CRE073             Date 06Dec10               *
+007300200528      *                 259924A            Date 31May09               *
+007400200528      *                 CER059             Date 19Jul10               *
+007500200528      *                 CER054             Date 07Apr09               *
+007600200528      *                 BUG23519           Date 24Mar09               *
+007700200528      *                 CER020             Date 19May08               *
+007800200528      *                 CER043             Date 19May08               *
+007900200528      * Bank Fusion Midas 1.4 Base -----------------------------------*
+008000200528      *                 260428A            Date 10Jun09               *
+008100200528      *                 260428             Date 28May09               *
+008200200528      * Midas Plus 1.4 Base 04 ---------------------------------------*
+008300200528      *                 256638             Date 21Oct08               *
+008400200528      *                 256564             Date 17Sep08               *
+008500200528      *                 248297             Date 05Jun07               *
+008600200528      *                 244784             DATE 11JAN07               *
+008700200528      *                 244537             Date 17Aug05               *
+008800200528      *                 BUG5169            Date 03Oct06               *
+008900200528      *                 BUG12810A          Date 29Dec06               *
+009000200528      * Midas Plus 1.3 ----------- Base ------------------------------*
+009100200528      *                 BUG12967           Date 21Dec06               *
+009200200528      *                 241685             Date 18Sep06               *
+009300200528      *                 BUG12589           Date 15Nov06               *
+009400200528      *                 BUG12551           Date 09Nov06               *
+009500200528      *                 239400             Date 26Jun06               *
+009600200528      *                 CDL049             Date 11Jul06               *
+009700200528      *                 CSD027             Date 09Dec05               *
+009800200528      *                 BUG10943           Date 27Mar06               *
+009900200528      *                 BUG10718           Date 03Mar06               *
+010000200528      *                 BUG10725           Date 02Mar06               *
+010100200528      *                 BUG10695           Date 25Feb06               *
+010200200528      *                 BUG10677           Date 24Feb05               *
+010300200528      *                 BUG10341           Date 08Feb05               *
+010400200528      *                 BUG10563           Date 14Feb06               *
+010500200528      *                 BUG10296           Date 07Feb06               *
+010600200528      *                 CAP087             Date 02Sep05               *
+010700200528      *                 CER001             Date 25Apr05               *
+010800200528      *                 CLE031             Date 26Apr05               *
+010900200528      *                 CDL038             Date 10May05               *
+011000200528      *                 BUG8119            Date 20Oct05               *
+011100200528      *                 CDL033             Date 10Feb05               *
+011200200528      *                 BUG6512            Date 21Apr05               *
+011300200528      *                 BUG6164            Date 01Apr05               *
+011400200528      *                 BUG4808            Date 16Nov04               *
+011500200528      *                 BUG4728            Date 05Nov04               *
+011600200528      *                 BUG3992            Date 01Oct04               *
+011700200528      *                 BUG4482            Date 29Sep04               *
+011800200528      *                 BUG3792            Date 28Sep04               *
+011900200528      *                 BUG4380            Date 29Sep04               *
+012000200528      *                 BUG4068            Date 03Sep04               *
+012100200528      *                 BUG4097            Date 01Sep04               *
+012200200528      *                 BUG3684            Date 13Aug04               *
+012300200528      *                 BUG3986            Date 13Aug04               *
+012400200528      *                 CMM105             Date 22Jun04               *
+012500200528      *                 BUG3869            Date 26Jul04               *
+012600200528      *                 CLE025             Date 20Oct03               *
+012700200528      *                 CGL014             Date 20Oct03               *
+012800200528      *                 BUG2310            Date 29Apr04               *
+012900200528      *                 TCA002             Date 26Mar04               *
+013000200528      *                 CGL029             Date 26Mar04               *
+013100200528      *                 CSC022             Date 24Feb04               *
+013200200528      *                 CDL020             Date 03Feb04               *
+013300200528      *                 CDL019             Date 03Feb04               *
+013400200528      *                 CDL018             Date 03Feb04               *
+013500200528      *                 CDL017             Date 03Feb04               *
+013600200528      *                 CDL016             Date 03Feb04               *
+013700200528      *                 222727             Date 05Nov03               *
+013800200528      *                 CAP084  *CREATE    Date 07Sep03               *
+013900200528      *                                                               *
+014000200528      *---------------------------------------------------------------*
+014100200528      *                                                               *
+014200200528      *  250161 - Recomiled due to changes in module MMLDNIVU.        *
+014300200528      *  MD054028 - Encountered issues in MQ Testing due to XML not   *
+014400200528      *             being updated (Recompile)                         *
+014500200528      *  CER050 - Annualised Percentage Rate (Recompile)              *
+014600200528      *  CSD102 - Password Length Extension (Recompile)               *
+014700200528      *  MD039547 - Referred account is not properly validated.       *
+014800200528      *  MD049048 - LDNI inserted through SOAP cannot be amended due  *
+014900200528      *             to Front Office ID being blank (Recompile)        *
+015000200528      *  MD046248 - Finastra Rebranding                               *
+015100200528      *  CDL099 - Split Value Date (Recompile)                        *
+015200200528      *  MD024884A - Incorrect Payment and Receipt accounts           *
+015300200528      *              (Recompile)                                      *
+015400200528      *  MD024884 - Incorrect Payment and Receipt accounts (Recompile)*
+015500200528      *  MD044873 - Serious Midas Error is encountered when completing*
+015600200528      *             transaction in LDNI. Reverse MD042711. (Recompile)*
+015700200528      *  MD042711 - Database error and serious midas error encountered*
+015800200528      *             during insert of Fiduciary Deals (Recompile)      *
+015900200528      *  MD033924 - Cannot Insert Fiduciary Fixed-Term Placing        *
+016000200528      *             and Call Placing (Recompile)                      *
+016100200528      *  AR701789 - Unable to reject a deal amendment. Add a new      *
+016200200528      *             parameter to indicate reject transaction.         *
+016300200528      *             Recompile.                                        *
+016400200528      *             Applied for MD041482                              *
+016500200528      *  MD037869A - Unable to authorise deal in LDNI after updating  *
+016600200528      *              base rate.                                       *
+016700200528      *              (Recompile)                                      *
+016800200528      *  MD038485 - Correct mapping of Stamp Tax fields (CER049).     *
+016900200528      *             (Recompile)                                       *
+017000200528      *  CGL165 - Dual Withholding Tax (Recompile)                    *
+017100200528      *  CDL096 - Business Day Conventions on MM Deals                *
+017200200528      *           (Recompile)                                         *
+017300200528      *  MD030436 - Enhance fix MD027337A to the cater defaulting of  *
+017400200528      *             settlement from '00' to SSI details. (Recompile)  *
+017500200528      *  MD027337A - Settlement details are not being re-defaulted    *
+017600200528      *              during amend. (Recompile)                        *
+017700200528      *            - Applied for MD030436.                            *
+017800200528      *  CDL094 - Enhance  Receive Settlement Instructions            *
+017900200528      *           (Recompile)                                         *
+018000200528      *  MD027415 - Unexpected validation of settlement instruction   *
+018100200528      *             during 'EDIT' of a deal after it's value date.    *
+018200200528      *           - Recompiled due to changes done in module.         *
+018300200528      *  MD027337 - Settlement details are not being defaulted during *
+018400200528      *             amend. (Recompile)                                *
+018500200528      *  MD024884 - Incorrect Payment and Receipt accounts (Recompile)*
+018600200528      *  CSD095 - Allow Deal Sub-Type and Branch for MM and FX SSIs   *
+018700200528      *           (Recompile)                                         *
+018800200528      *  MD022849 - Settlement Payment Fields cannot be amended error *
+018900200528      *             (Recompile)                                       *
+019000200528      *  MD022656 - Amendment is allowed for protected settlement     *
+019100200528      *             fields (Recompile)                                *
+019200200528      *  AR751620 - Recompiled due to changes made in MMLDNIVU.       *
+019300200528      *             (Child: AR751621)                                 *
+019400200528      *  MD000091 - Event Codes Substitution (Recompile)              *
+019500200528      *  AR1060863 - Deal irregular interest schedules lost           *
+019600200528      *            - Applied for AR1097090 (Recompile)                *
+019700200528      *  AR665113 - Recompiled due to changes made in MMLDNIVU.       *
+019800200528      *             (Child: AR665114)                                 *
+019900200528      *  AR971184A- During Amend Front Ofc Id must be updated with the*
+020000200528      *             new one (Recompile)                               *
+020100200528      *  CSF011A - CCR015: Display Order in Confirmation Pages        *
+020200200528      *            (Recompile)                                        *
+020300200528      *  AR863263 - Further Pay/Receipt Settlement Accounts are       *
+020400200528      *             reset to blanks (Recompile)                       *
+020500200528      *  CSF011 - Customer Name on Inputs (Recompile)                 *
+020600200528      *  AR819540A - Mapping error encountered in LDNI (Recompile)    *
+020700200528      *  CER049 - Stamp Tax (Recompile)                               *
+020800200528      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+020900200528      *  259924A- Recompiled due to changes done in MOD/MMLDNIVU.     *
+021000200528      *  CER059 - German Feature Upgrade to Delhi                     *
+021100200528      *  CER054 - German Features - Church Tax (Recompile)            *
+021200200528      *  BUG23519 - Warning messages with the same text are displayed *
+021300200528      *             at the same time (Recompile)                      *
+021400200528      *  CER020 - Enhanced Rollover Window: Upgrade FGE089 to         *
+021500200528      *           Midas Plus (Recompile)                              *
+021600200528      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+021700200528      *           (Recompile)                                         *
+021800200528      *  260428A - Always protect fields for validation if Authorise  *
+021900200528      *            (Recompile)
+022000200528      *  260428 - Skip validation on receipt side / pay side if       *
+022100200528      *           accounting has taken place already in the past.     *
+022200200528      *            (Recompile)
+022300200528      *  256638 - Add the parameters needed to prevent Serious Midas  *
+022400200528      *           Error message in Java screen.                       *
+022500200528      *  256564 - Recompile due to PF changes done by fix 256330      *
+022600200528      *  248297 - EXTDTA is no more part of Output buffers            *
+022700200528      *           - Add DS in Buffer2                                 *
+022800200528      *           - Ensure MMLDNIR also use it                        *
+022900200528      *           - ROLLBACK updates in case of Problem               *
+023000200528      *  244784 - Recompiled due to changes in MMLDNIVU module        *
+023100200528      *  244537 - To avoid overriding front office identifier.        *
+023200200528      *  BUG5169 - Apply Base Rate at Value Date. Recompile           *
+023300200528      *  BUG12810A - Validate Fix Base Rate only for deal types IT,   *
+023400200528      *              TD, IP and TI only. (BUG12810 reopened)          *
+023500200528      *  BUG12967 - MM LDNI crashes with serious Midas Error          *
+023600200528      *  241685 - Recompiled due to changes in MMLDNIVU module        *
+023700200528      *  BUG12589 - When short term rate is specified, it is not      *
+023800200528      *             reflected as actual interest rate in the files    *
+023900200528      *             due to recalculation in calling MMLDNIVLP.        *
+024000200528      *             (Recompile)                                       *
+024100200528      *  BUG12551 - LDNI was unable to amend transaction.             *
+024200200528      *             Serious Midas Plus error occurred.                *
+024300200528      *             Reference Rate field was not updated properly.    *
+024400200528      *             (Recompile)                                       *
+024500200528      *  239400 - Add Front Office ID to be used by SOAP Interface    *
+024600200528      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+024700200528      *  CSD027 - Conversion Of Customer Number to Alpha              *
+024800200528      *  BUG10943 - Interest Rate Change Schedule not displayed       *
+024900200528      *             (Recompile)                                       *
+025000200528      *  BUG10718 - Deletion of Fiduciary Placing Associated Takings  *
+025100200528      *             not deleted, no warning message. (Recompile)      *
+025200200528      *  BUG10725 - Fiduciary code/charges are not updated during     *
+025300200528      *             insertion thereby causing Midasplus error in      *
+025400200528      *             deal amendments (Recompile)                       *
+025500200528      *  BUG10695 - Wrong Total Interest being computed for           *
+025600200528      *             fiduciary deals.  (Recompile)                     *
+025700200528      *  BUG10677- Recompiled due to change in MMLDNIVU module        *
+025800200528      *  BUG10341- Recompiled due to change in MMLDNIVU module        *
+025900200528      *  BUG10563-Resolve conflict between BUG10296 and 9827          *
+026000200528      *  BUG10296 - LUX extension fields are missing                  *
+026100200528      *  CAP087  - REPO JAVA changes                                  *
+026200200528      *  CER001 - LUX Upgrade to MidasPlus (Recompile only)           *
+026300200528      *  CLE031 - Lending Enhancements - Settlement Currency Recompile*
+026400200528      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+026500200528      *  BUG8119 - Fields returned incorrectly from API if update     *
+026600200528      *            flag set to 'Y' but data is invalid.               *
+026700200528      *  CDL033  - Floating Rate CDs Issued.                          *
+026800200528      *  BUG6512 - Retrieve TRAM details                              *
+026900200528      *  BUG6164 - For WIP authorise cannot call ValidateAc before    *
+027000200528      *            ValidateTr as HK* fields are not always retrieved. *
+027100200528      *  BUG4808 - Unable to authorise transaction because WIP do     *
+027200200528      *            not have correct Timestamp.                        *
+027300200528      *  BUG4728 - Serious Midas error with blank timestamp when      *
+027400200528      *            authorising insert of transaction.                 *
+027500200528      *  BUG3992- Call new program MMLDNIVLP to perform post          *
+027600200528      *           settlement detail validation. Revalidate dates.     *
+027700200528      *  BUG4482- Authorise should call Validate to show all the      *
+027800200528      *           warning errors.                                     *
+027900200528      *  BUG3792- Only allow Block/Unblock on Deposits.               *
+028000200528      *  BUG4380- Clear Multiple Sett Account fields if not selected  *
+028100200528      *  BUG4068- Deal number range for Fixed Loan/Deposit            *
+028200200528      *  BUG4097 - Ensure Block/Unblock action leaves deal authorised *
+028300200528      *  BUG3684 - Set up action field for Block/Unblock              *
+028400200528      *  BUG3986- Pass the status and TimeStamp out to the MidasPlus *
+028500200528      *  CMM105 - Core changes for GBO005                             *
+028600200528      *         - Fixed Deposits Held Under Lien                      *
+028700200528      *                  - Upgrade to Midasplus                       *
+028800200528      *  BUG3869 - Records lost from DLFSACPD on authorization        *
+028900200528      *  CLE025 - Credit Lines (Recompile)                            *
+029000200528      *  CGL014 - Collaterals Processing (Recompile)                  *
+029100200528      *  BUG2310 - Interest Calculation Method being changed during   *
+029200200528      *            input (recompile).                                 *
+029300200528      *  TCA002 - 10-Digit Account Code Errors - Retrieve a/c details.*
+029400200528      *  CGL029 - 10-Digit Account Code Errors                        *
+029500200528      *  CSC022 - Commitment Control Changes for MidasPlus            *
+029600200528      *           (Recompile)                                         *
+029700200528      *  CDL020 - Apply Base Rate at Value Date                       *
+029800200528      *           (Recompile)                                         *
+029900200528      *  CDL019 - Allow Base Rate Changes on Fixed Deposits/Loans     *
+030000200528      *           (Recompile)                                         *
+030100200528      *  CDL018 - Multiple Settlement Accounts on Loans/Deposit       *
+030200200528      *           (Recompile)                                         *
+030300200528      *  CDL017 - Penalty Fee & Early Maturity of Fixed Term Loan/Dep *
+030400200528      *           (Recompile)                                         *
+030500200528      *  CDL016 - Automatic Rollover of Fixed Term Loan/Deposit       *
+030600200528      *           (Recompile)                                         *
+030700200528      *  222727 - Release 5.0 errors (recompile).                     *
+030800200528      *  CAP084 - API Wrapper project                                 *
+030900200528      *                                                               *
+031000200528      *****************************************************************

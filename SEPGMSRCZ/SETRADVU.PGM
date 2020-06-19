@@ -1,275 +1,281 @@
-      *****************************************************************
-/*STD *  PGMBASE                                                      *
-/*EXI *  MODULE(SETRADVU) ACTGRP(*CALLER)                             *
-/*EXI *  TEXT('Midas SE Securities trades validate and update')       *
-      *****************************************************************
-      *                                                               *
-      *  Midas - Securities Trading Module                            *
-      *                                                               *
-      *  SETRADVU - SE Securities Details validate and update         *
-      *                                                               *
-      *  Function: This program validates fee settlements for input   *
-      *            into the Midas database.                           *
-      *            The action code determines which processes are     *
-      *            executed as follows:                               *
-      *            - For I (=Insert) or A (=Amend)                    *
-      *              - Validate the transaction details fields        *
-      *            - For A (=AMEND),                                  *
-      *              - if transaction is a partial amendment, call a  *
-      *                separate function to complete the transaction  *
-      *                details.                                       *
-      *              - if transaction is valid, call a separate       *
-      *                function to check whether it is a valid        *
-      *                amendment.                                     *
-      *            - For D (=DELETE), call a separate function to     *
-      *              process the transaction and bypass the rest of   *
-      *              the validation.                                  *
-      *                                                               *
-      *            For all action codes, the decision to as to        *
-      *            whether to write to the valid or invalid file and  *
-      *            the call to the message handler will take place    *
-      *            in this module                                     *
-      *                                                               *
-      *  (c) Finastra International Limited 2003                      *
-      *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD049746           Date 15Mar18               * 
-      *                 MD046248           Date 27Oct17               *
-      *                 MD035243           Date 29Jul15               *
-      *                 AR596191           Date 19Aug14               *
-      *                 AR971184A          Date 13Jun12               *
-      *                 AR971184           Date 28May12               *
-      *                 CSF011A            Date 28Nov11               *
-      *                 CSF011             Date 12Sep11               *
-      *                 CER049             Date 06Dec10               *
-      *                 AR698195B          Date 20Jan11               *
-      *                 AR639840           Date 09Sep10               *
-      *                 AR638989           Date 08Sep10               *
-      *                 AR589197           Date 11Aug10               *
-      *                 CSW210             Date 04May10               *
-      *                 CER059             Date 19Jul10               *
-      *                 CER054             Date 07Apr09               *
-      *                 BUG22911           Date 17Feb09               *
-      *                 CER048             Date 19May08               *
-      *                 BUG27876           Date 06Jul10               *
-      * Bank Fusion Midas 1.4 Base -----------------------------------*
-      * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *                 BUG22232           Date 16Jan09               *
-      *                 256564             Date 17Sep08               *
-      *                 BUG21092           Date 23Sep08               *
-      *                 BUG18525           Date 07May08               *
-      *                 249422             Date 28Jul07               *
-      *                 247873             Date 15Jun07               *
-      *                 247868             Date 30May07               *
-      *                 247796             Date 23May07               *
-      *                 247451             Date 16May07               *
-      *                 246736             Date 28Mar07               *
-      *                 BUG14806A          Date 14Sep07               *
-      *                 BUG14514           Date 02Aug07               *
-      * Midas Plus 1.4 Base ------------------------------------------*
-      *                 245542             Date 11Feb07               *
-      *                 244537             Date 17Aug05               *
-      * Midas Plus 1.3 ----------- Base ------------------------------*
-      *                 BUG12874           Date 12Dec06               *
-      *                 BUG12579           Date 21Nov06               *
-      *                 CSW206E            Date 24Aug06               *
-      *                 BUG11622           Date 27Jun06               *
-      *                 BUG8690R (Reopen)  Date 09Jun06               *
-      *                 238825 (Reopen)    Date 06Jun06               *
-      *                 CSD031             Date 10Apr06               *
-      *                 238825             Date 21Apr06               *
-      *                 238859             Date 21Apr06               *
-      *                 BUG11213           Date 18Apr06               *
-      *                 BUG11529           Date 22Jun06               *
-      *                 CSD027             Date 09Dec05               *
-      *                 BUG11197           Date 25Apr06               *
-      *                 BUG11194           Date 24Apr06               *
-      *                 BUG10476           Date 15Feb06               *
-      *                 BUG10534           Date 10Feb06               *
-      *                 BUG9467            Date 02Dec06               *
-      *                 BUG9142            Date 01Nov05               *
-      *                 BUG10085           Date 15Mar06               *
-      *                 BUG10041           Date 08Feb06               *
-      *                 BUG10202           Date 29Jan06               *
-      *                 BUG10021           Date 23Jan05               *
-      *                 BUG9961            Date 19Jan06               *
-      *                 BUG9917            Date 17Jan06               *
-      *                 BUG8953            Date 07Nov05               *
-      *                 CAP087             Date 17Aug05               *
-      *                 BUG9089            Date 25Apr05               *
-      *                 CER001             Date 25Apr05               *
-      *                 CSE075             Date 17Nov05               *
-      *                 BUG8087            Date 03Aug05               *
-      *                 BUG8039            Date 02Aug05               *
-      *                 BUG8690            Date 14Nov05               *
-      *                 BUG8119            Date 20Oct05               *
-      *                 BUG7029            Date 09Jun05               *
-      *                 CSD027             Date 09Dec05               *
-      *                 CSE065             Date 08Nov04               *
-      *                 CSE071             Date 19Jul05               *
-      *                 BUG6496            Date 24Apr05               *
-      *                 BUG5557            Date 26Jan05               *
-      *                 CGL031             Date 05Jul04               *
-      *                 BUG5230            Date 14Dec04               *
-      *                 BUG4728            Date 05Nov04               *
-      *                 BUG4482            Date 29Sep04               *
-      *                 BUG4070            Date 24Aug04               *
-      *                 BUG2274            Date 19Aug04               *
-      *                 BUG3950            Date 10Aug04               *
-      *                 BUG3122            Date 17Jul04               *
-      *                 BUG3145            Date 15Jun04               *
-      *                 MLFIX1             Date 26May04               *
-      *                 CLE025             Date 20Oct03               *
-      *                 TDA035             Date 02Apr04               *
-      *                 CSC022             Date 24Feb03               *
-      *                 BUG1569            Date 17Mar04               *
-      *                 225421 (BUG1356)   Date 04Mar03               *
-      *                 CGL029             Date 01Sep03               *
-      *                 CAS006             Date 02Oct03               *
-      *                 CAP084  *CREATE    Date 07Sep03               *
-      *                                                               *
-      *---------------------------------------------------------------*
-      *                                                               *
-      *  CSD102 - Password Length Extension (Recompile)               *
-      *  MD049746 - Settlement details is not defaulted when Charges/ *
-      *             Commission fields have values when Trade is       *
-      *             inserted via API (Recompile)                      *
-      *  MD046248 - Finastra Rebranding                               *
-      *  MD035243 - Error message for Account with Institution        *
-      *             Account is not properly displayed (Recompile)     *
-      *  AR596191 - Error on Safekeeping Account is issued even if    *
-      *             a valid value is inserted (Recompile)             *
-      *  AR971184A - Additional Coding. Front Ofc Id should not be    *
-      *              equal to blanks when calling RTV (Recompile)     *
-      *           - Applied fix for AR989192 (Child:AR989193)         *
-      *           - During Amend Front Ofc Id must be updated with the*
-      *             new one                                           *
-      *  AR971184 - For some JMS APIs (CUSD, AMAD, DPMV, OPAY), Front *
-      *             Office Id is no more updated in master database   *
-      *             files which provokes some big problems in third   *
-      *             party product such as TOF.(Child:AR971185)        *
-      *             (Recompile)                                       *
-      *  CSF011A - CCR015: Display Order in Confirmation Pages        *
-      *            (Recompile)                                        *
-      *  CSF011 - Customer Name on Inputs (Recompile)                 *
-      *  CER049 - Stamp Tax (Recompile)                               *
-      *  AR698195B - Recompiled due to changes in module SETRADVU.    *
-      *             (Child: AR698196)                                 *
-      *  AR639840 - Safekeeping Account is being blanked-out          *
-      *             (Recompile)                                       *
-      *  AR638989 - Beneficiary of Money account should be            *
-      *             highlighted in blue (Recompile)                   *
-      *  AR589197 - The input validation of //xx has been removed if  *
-      *             ISO15022 is switched on, it should be reapplied   *
-      *             as the code is still used  (Recompile)            *
-      *  CSW210 - SWIFT 2010 Changes (Recompile)                      *
-      *  CER059 - German Feature Upgrade to Delhi                     *
-      *  CER054 - German Features - Church Tax (Recompile)            *
-      *  BUG22911 - Changes for Correct Tax Calculation (Recompile)   *
-      *  CER048 - German Features - Taxes (Recompile)                 *
-      *  BUG27876 - Serious midas error upon clicking settlement      *
-      *             tab (Recompile)                                   *
-      *  BUG22232 - Missing authorization field in repository.        *
-      *  256564 - Recompile due to PF changes done by fix 256330      *
-      *  BUG21092 - Missing SWIFT Identifier in Destination of        *
-      *             Confirmation field. (Recompile)                   *
-      *  BUG18525 - Recompile over changes in module SETRADVU.        *
-      *  249422 - Recompile over changes in module SETRADVU.          *
-      *  247873 - Recompile over changes in module SETRADVU.          *
-      *  247868 - Recompile over changes in module SETRADVU.          *
-      *  247796 - Decimal data error. Recompile.                      *
-      *  247451 - Pass Customer Number not Shortname to SETSESDFT and *
-      *           SEDORFRTV to prevent dumps later.                   *
-      *  246736 - Recompile due to change in module.                  *
-      *  BUG14806A - Recompile Program due to Decimal Error           *
-      *  BUG14514 - serious midas error on trade authorisation        *
-      *  245542 - Recompiled due to changes in SETRADVU *MODULE.      *
-      *  244537 - To avoid overriding front office identifier.        *
-      *  BUG12874 - Recompiled due to changes in SETRADVU module      *
-      *  BUG12579 - Recompiled due to bug fix.                        *
-      *  CSW206E - Change Control for SWIFT 2006 Standard Changes     *
-      *  BUG11622-Customer number not being setup correctly caused    *
-      *           DB error in AOSECSR0.                               *
-      *  BUG8690R - Countervalue not updated and Multiply/Divide      *
-      *             indicator entered by user overridden (Recompile)  *
-      *  238825 - (Reopen) Recompiled due to changed module SETRADVU. *
-      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
-      *  238825 - Recompiled due to changed module SETRADVU.          *
-      *  238859 - Recompiled due to changed module SETRADVU.          *
-      *  BUG11213- Defaulting of other details should be done only    *
-      *            during first time of processing flow. Applied      *
-      *            fixes BUG8690, BUG9917 and BUG10021 annotated by   *
-      *            the same corresponding bug references.             *
-      *  BUG11529 - Error in defaulting Settlement Details            *
-      *  CSD027 - Conversion Of Customer Number to Alpha              *
-      *  BUG11197- Settlement Ex-rate and M/D indicator should        *
-      *            default when ccy changes. (Recompile)              *
-      *  BUG11194 - SEFRN- Purchased Interest not recalculated when   *
-      *             trade value date is changed (Recompile)           *
-      *  BUG10476- Market Centre defaulting.                          *
-      *          - Place of settlement defaulting.                    *
-      *  BUG10534- Reverse out fix for BUG8690                        *
-      *  BUG9467 - Parameter mismatch in call to ZDYYR                *
-      *  BUG9142 - do not need to wait until no error find before     *
-      *            calculate trade value and days in a year.          *
-      *  BUG10085- Safekeeping Account not defaulted                  *
-      *  BUG10041 - Checking of Security name should be done for      *
-      *             delete. (Recompile)                               *
-      *  BUG10202- Mapping error in TRAD                              *
-      *  BUG10021- Exchange rate and M/D indicator not defaulting.    *
-      *  BUG9961- Parameter mismatch for ZDYYR due to changes made    *
-      *           by CSE071 and CAP087.(Recompile)                    *
-      *  BUG9917 - Include the Deliver From and Deliver To Field      *
-      *            in checking before passing thru the default values,*
-      *            this in conjunction with BUG8690.(Recompile)       *
-      *  BUG8953 - Recompile                                          *
-      *  CAP087  - Allow the processing of buy/Sell back trades.      *
-      *  BUG9089- Mapping error with Java for DPMV                    *
-      *  CER001 - LUX Upgrade to MidasPlus                            *
-      *  CSE075 - US Enhanced Treasury Upgrade to MidasPlus           *
-      *           (Recompile)                                         *
-      *  BUG8087 - Recompiled due to change in SETRADVU module        *
-      *  BUG8039 - Recompile due to change in SEVTCUST                *
-      *  BUG8690 - Recompiled due to change in SETRADVU module        *
-      *  BUG8119 - Fields returned incorrectly from API if update     *
-      *            flag set to 'Y' but data is invalid.               *
-      *  BUG7029 - Ensure ZMUSER is re-checked on every call,         *
-      *            move out of *INZSR.                                *
-      *  CSD027 - Conversion Of Customer Number to Alpha              *
-      *  CSE065 - Const. Yield Amort. on Mortgage backed assets       *
-      *           (Recompile)                                         *
-      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
-      *  BUG6496 - Missing CAS006 fields in Securities and Trades     *
-      *            Maintenance.                                       *
-      *  BUG5557 - Information for TRADSDX2 are being dropped during  *
-      *            insert. (Recompile)                                *
-      *  CGL031 - Taxation of Savings Income                          *
-      *  BUG5230 - Ensure output to buffer show what is on Midas      *
-      *            data base. (Recompile)                             *
-      *  BUG4728 - Serious Midas error with blank timestamp when      *
-      *            authorising insert of transaction.                 *
-      *  BUG4482 - Authorise should call Validate to show all the     *
-      *            warning errors.                                    *
-      *  BUG4070 - Countervalue and nominal currency code not being   *
-      *            passed to API for deletion of trades.              *
-      *  BUG2274 - Unable to access SSI information because market    *
-      *            not being passed in.                               *
-      *  BUG3950 - Stop validation if there is error on Security      *
-      *            and counterparty.                                  *
-      *  BUG3122 - Recompiled due to changes in SETRADVU module.      *
-      *  BUG3145 - Charges and Commission are being missed out of the *
-      *            calculation of countervalue.                       *
-      *  MLFIX1 - Add investment type to output message for           *
-      *           management limit.                                   *
-      *  CLE025 - Credit Lines (Recompile)                            *
-      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
-      *  CSC022 - Commitment Control Changes for MidasPlus            *
-      *           (Recompile)                                         *
-      *  BUG1569- Stopping user updating the same record at the same  *
-      *           time.                                               *
-      *  225421 - Recomplie over change in SETRADVU module            *
-      *  CGL029 - Increase Account Code to 10 digits                  *
-      *  CAS006 - Hedge Accounting Phase B                            *
-      *  CAP084 - API Wrapper project                                 *
-      *                                                               *
-      *****************************************************************
+000100200603      *****************************************************************
+000200200603/*STD *  PGMBASE                                                      *
+000300200603/*EXI *  MODULE(SETRADVU) ACTGRP(*CALLER)                             *
+000400200603/*EXI *  TEXT('Midas SE Securities trades validate and update')       *
+000500200603      *****************************************************************
+000600200603      *                                                               *
+000700200603      *  Midas - Securities Trading Module                            *
+000800200603      *                                                               *
+000900200603      *  SETRADVU - SE Securities Details validate and update         *
+001000200603      *                                                               *
+001100200603      *  Function: This program validates fee settlements for input   *
+001200200603      *            into the Midas database.                           *
+001300200603      *            The action code determines which processes are     *
+001400200603      *            executed as follows:                               *
+001500200603      *            - For I (=Insert) or A (=Amend)                    *
+001600200603      *              - Validate the transaction details fields        *
+001700200603      *            - For A (=AMEND),                                  *
+001800200603      *              - if transaction is a partial amendment, call a  *
+001900200603      *                separate function to complete the transaction  *
+002000200603      *                details.                                       *
+002100200603      *              - if transaction is valid, call a separate       *
+002200200603      *                function to check whether it is a valid        *
+002300200603      *                amendment.                                     *
+002400200603      *            - For D (=DELETE), call a separate function to     *
+002500200603      *              process the transaction and bypass the rest of   *
+002600200603      *              the validation.                                  *
+002700200603      *                                                               *
+002800200603      *            For all action codes, the decision to as to        *
+002900200603      *            whether to write to the valid or invalid file and  *
+003000200603      *            the call to the message handler will take place    *
+003100200603      *            in this module                                     *
+003200200603      *                                                               *
+003300200603      *  (c) Finastra International Limited 2003                      *
+003400200603
+003500200604      *  Last Amend No. 247907             Date 22May20               *
+003600200604      *  PREV Amend No. 247524             Date 22May20               *
+003700200604      *                 CSD102             Date 08Jan19               *
+003800200603      *                 MD049746           Date 15Mar18               *
+003900200603      *                 MD046248           Date 27Oct17               *
+004000200603      *                 MD035243           Date 29Jul15               *
+004100200603      *                 AR596191           Date 19Aug14               *
+004200200603      *                 AR971184A          Date 13Jun12               *
+004300200603      *                 AR971184           Date 28May12               *
+004400200603      *                 CSF011A            Date 28Nov11               *
+004500200603      *                 CSF011             Date 12Sep11               *
+004600200603      *                 CER049             Date 06Dec10               *
+004700200603      *                 AR698195B          Date 20Jan11               *
+004800200603      *                 AR639840           Date 09Sep10               *
+004900200603      *                 AR638989           Date 08Sep10               *
+005000200603      *                 AR589197           Date 11Aug10               *
+005100200603      *                 CSW210             Date 04May10               *
+005200200603      *                 CER059             Date 19Jul10               *
+005300200603      *                 CER054             Date 07Apr09               *
+005400200603      *                 BUG22911           Date 17Feb09               *
+005500200603      *                 CER048             Date 19May08               *
+005600200603      *                 BUG27876           Date 06Jul10               *
+005700200603      * Bank Fusion Midas 1.4 Base -----------------------------------*
+005800200603      * Midas Plus 1.4 Base 04 ---------------------------------------*
+005900200603      *                 BUG22232           Date 16Jan09               *
+006000200603      *                 256564             Date 17Sep08               *
+006100200603      *                 BUG21092           Date 23Sep08               *
+006200200603      *                 BUG18525           Date 07May08               *
+006300200603      *                 249422             Date 28Jul07               *
+006400200603      *                 247873             Date 15Jun07               *
+006500200603      *                 247868             Date 30May07               *
+006600200603      *                 247796             Date 23May07               *
+006700200603      *                 247451             Date 16May07               *
+006800200603      *                 246736             Date 28Mar07               *
+006900200603      *                 BUG14806A          Date 14Sep07               *
+007000200603      *                 BUG14514           Date 02Aug07               *
+007100200603      * Midas Plus 1.4 Base ------------------------------------------*
+007200200603      *                 245542             Date 11Feb07               *
+007300200603      *                 244537             Date 17Aug05               *
+007400200603      * Midas Plus 1.3 ----------- Base ------------------------------*
+007500200603      *                 BUG12874           Date 12Dec06               *
+007600200603      *                 BUG12579           Date 21Nov06               *
+007700200603      *                 CSW206E            Date 24Aug06               *
+007800200603      *                 BUG11622           Date 27Jun06               *
+007900200603      *                 BUG8690R (Reopen)  Date 09Jun06               *
+008000200603      *                 238825 (Reopen)    Date 06Jun06               *
+008100200603      *                 CSD031             Date 10Apr06               *
+008200200603      *                 238825             Date 21Apr06               *
+008300200603      *                 238859             Date 21Apr06               *
+008400200603      *                 BUG11213           Date 18Apr06               *
+008500200603      *                 BUG11529           Date 22Jun06               *
+008600200603      *                 CSD027             Date 09Dec05               *
+008700200603      *                 BUG11197           Date 25Apr06               *
+008800200603      *                 BUG11194           Date 24Apr06               *
+008900200603      *                 BUG10476           Date 15Feb06               *
+009000200603      *                 BUG10534           Date 10Feb06               *
+009100200603      *                 BUG9467            Date 02Dec06               *
+009200200603      *                 BUG9142            Date 01Nov05               *
+009300200603      *                 BUG10085           Date 15Mar06               *
+009400200603      *                 BUG10041           Date 08Feb06               *
+009500200603      *                 BUG10202           Date 29Jan06               *
+009600200603      *                 BUG10021           Date 23Jan05               *
+009700200603      *                 BUG9961            Date 19Jan06               *
+009800200603      *                 BUG9917            Date 17Jan06               *
+009900200603      *                 BUG8953            Date 07Nov05               *
+010000200603      *                 CAP087             Date 17Aug05               *
+010100200603      *                 BUG9089            Date 25Apr05               *
+010200200603      *                 CER001             Date 25Apr05               *
+010300200603      *                 CSE075             Date 17Nov05               *
+010400200603      *                 BUG8087            Date 03Aug05               *
+010500200603      *                 BUG8039            Date 02Aug05               *
+010600200603      *                 BUG8690            Date 14Nov05               *
+010700200603      *                 BUG8119            Date 20Oct05               *
+010800200603      *                 BUG7029            Date 09Jun05               *
+010900200603      *                 CSD027             Date 09Dec05               *
+011000200603      *                 CSE065             Date 08Nov04               *
+011100200603      *                 CSE071             Date 19Jul05               *
+011200200603      *                 BUG6496            Date 24Apr05               *
+011300200603      *                 BUG5557            Date 26Jan05               *
+011400200603      *                 CGL031             Date 05Jul04               *
+011500200603      *                 BUG5230            Date 14Dec04               *
+011600200603      *                 BUG4728            Date 05Nov04               *
+011700200603      *                 BUG4482            Date 29Sep04               *
+011800200603      *                 BUG4070            Date 24Aug04               *
+011900200603      *                 BUG2274            Date 19Aug04               *
+012000200603      *                 BUG3950            Date 10Aug04               *
+012100200603      *                 BUG3122            Date 17Jul04               *
+012200200603      *                 BUG3145            Date 15Jun04               *
+012300200603      *                 MLFIX1             Date 26May04               *
+012400200603      *                 CLE025             Date 20Oct03               *
+012500200603      *                 TDA035             Date 02Apr04               *
+012600200603      *                 CSC022             Date 24Feb03               *
+012700200603      *                 BUG1569            Date 17Mar04               *
+012800200603      *                 225421 (BUG1356)   Date 04Mar03               *
+012900200603      *                 CGL029             Date 01Sep03               *
+013000200603      *                 CAS006             Date 02Oct03               *
+013100200603      *                 CAP084  *CREATE    Date 07Sep03               *
+013200200603      *                                                               *
+013300200603      *---------------------------------------------------------------*
+013400200603      *                                                               *
+013500200603      *  247907 - Wrong settlement amount for trades with the same    *
+013600200603      *           nominal and settlement currency.  Recompile.        *
+013700200603      *  247524 - Securities Trades - charges are not defaulted and   *
+013800200603      *           not calculated.                                     *
+013900200603      *  CSD102 - Password Length Extension (Recompile)               *
+014000200603      *  MD049746 - Settlement details is not defaulted when Charges/ *
+014100200603      *             Commission fields have values when Trade is       *
+014200200603      *             inserted via API (Recompile)                      *
+014300200603      *  MD046248 - Finastra Rebranding                               *
+014400200603      *  MD035243 - Error message for Account with Institution        *
+014500200603      *             Account is not properly displayed (Recompile)     *
+014600200603      *  AR596191 - Error on Safekeeping Account is issued even if    *
+014700200603      *             a valid value is inserted (Recompile)             *
+014800200603      *  AR971184A - Additional Coding. Front Ofc Id should not be    *
+014900200603      *              equal to blanks when calling RTV (Recompile)     *
+015000200603      *           - Applied fix for AR989192 (Child:AR989193)         *
+015100200603      *           - During Amend Front Ofc Id must be updated with the*
+015200200603      *             new one                                           *
+015300200603      *  AR971184 - For some JMS APIs (CUSD, AMAD, DPMV, OPAY), Front *
+015400200603      *             Office Id is no more updated in master database   *
+015500200603      *             files which provokes some big problems in third   *
+015600200603      *             party product such as TOF.(Child:AR971185)        *
+015700200603      *             (Recompile)                                       *
+015800200603      *  CSF011A - CCR015: Display Order in Confirmation Pages        *
+015900200603      *            (Recompile)                                        *
+016000200603      *  CSF011 - Customer Name on Inputs (Recompile)                 *
+016100200603      *  CER049 - Stamp Tax (Recompile)                               *
+016200200603      *  AR698195B - Recompiled due to changes in module SETRADVU.    *
+016300200603      *             (Child: AR698196)                                 *
+016400200603      *  AR639840 - Safekeeping Account is being blanked-out          *
+016500200603      *             (Recompile)                                       *
+016600200603      *  AR638989 - Beneficiary of Money account should be            *
+016700200603      *             highlighted in blue (Recompile)                   *
+016800200603      *  AR589197 - The input validation of //xx has been removed if  *
+016900200603      *             ISO15022 is switched on, it should be reapplied   *
+017000200603      *             as the code is still used  (Recompile)            *
+017100200603      *  CSW210 - SWIFT 2010 Changes (Recompile)                      *
+017200200603      *  CER059 - German Feature Upgrade to Delhi                     *
+017300200603      *  CER054 - German Features - Church Tax (Recompile)            *
+017400200603      *  BUG22911 - Changes for Correct Tax Calculation (Recompile)   *
+017500200603      *  CER048 - German Features - Taxes (Recompile)                 *
+017600200603      *  BUG27876 - Serious midas error upon clicking settlement      *
+017700200603      *             tab (Recompile)                                   *
+017800200603      *  BUG22232 - Missing authorization field in repository.        *
+017900200603      *  256564 - Recompile due to PF changes done by fix 256330      *
+018000200603      *  BUG21092 - Missing SWIFT Identifier in Destination of        *
+018100200603      *             Confirmation field. (Recompile)                   *
+018200200603      *  BUG18525 - Recompile over changes in module SETRADVU.        *
+018300200603      *  249422 - Recompile over changes in module SETRADVU.          *
+018400200603      *  247873 - Recompile over changes in module SETRADVU.          *
+018500200603      *  247868 - Recompile over changes in module SETRADVU.          *
+018600200603      *  247796 - Decimal data error. Recompile.                      *
+018700200603      *  247451 - Pass Customer Number not Shortname to SETSESDFT and *
+018800200603      *           SEDORFRTV to prevent dumps later.                   *
+018900200603      *  246736 - Recompile due to change in module.                  *
+019000200603      *  BUG14806A - Recompile Program due to Decimal Error           *
+019100200603      *  BUG14514 - serious midas error on trade authorisation        *
+019200200603      *  245542 - Recompiled due to changes in SETRADVU *MODULE.      *
+019300200603      *  244537 - To avoid overriding front office identifier.        *
+019400200603      *  BUG12874 - Recompiled due to changes in SETRADVU module      *
+019500200603      *  BUG12579 - Recompiled due to bug fix.                        *
+019600200603      *  CSW206E - Change Control for SWIFT 2006 Standard Changes     *
+019700200603      *  BUG11622-Customer number not being setup correctly caused    *
+019800200603      *           DB error in AOSECSR0.                               *
+019900200603      *  BUG8690R - Countervalue not updated and Multiply/Divide      *
+020000200603      *             indicator entered by user overridden (Recompile)  *
+020100200603      *  238825 - (Reopen) Recompiled due to changed module SETRADVU. *
+020200200603      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+020300200603      *  238825 - Recompiled due to changed module SETRADVU.          *
+020400200603      *  238859 - Recompiled due to changed module SETRADVU.          *
+020500200603      *  BUG11213- Defaulting of other details should be done only    *
+020600200603      *            during first time of processing flow. Applied      *
+020700200603      *            fixes BUG8690, BUG9917 and BUG10021 annotated by   *
+020800200603      *            the same corresponding bug references.             *
+020900200603      *  BUG11529 - Error in defaulting Settlement Details            *
+021000200603      *  CSD027 - Conversion Of Customer Number to Alpha              *
+021100200603      *  BUG11197- Settlement Ex-rate and M/D indicator should        *
+021200200603      *            default when ccy changes. (Recompile)              *
+021300200603      *  BUG11194 - SEFRN- Purchased Interest not recalculated when   *
+021400200603      *             trade value date is changed (Recompile)           *
+021500200603      *  BUG10476- Market Centre defaulting.                          *
+021600200603      *          - Place of settlement defaulting.                    *
+021700200603      *  BUG10534- Reverse out fix for BUG8690                        *
+021800200603      *  BUG9467 - Parameter mismatch in call to ZDYYR                *
+021900200603      *  BUG9142 - do not need to wait until no error find before     *
+022000200603      *            calculate trade value and days in a year.          *
+022100200603      *  BUG10085- Safekeeping Account not defaulted                  *
+022200200603      *  BUG10041 - Checking of Security name should be done for      *
+022300200603      *             delete. (Recompile)                               *
+022400200603      *  BUG10202- Mapping error in TRAD                              *
+022500200603      *  BUG10021- Exchange rate and M/D indicator not defaulting.    *
+022600200603      *  BUG9961- Parameter mismatch for ZDYYR due to changes made    *
+022700200603      *           by CSE071 and CAP087.(Recompile)                    *
+022800200603      *  BUG9917 - Include the Deliver From and Deliver To Field      *
+022900200603      *            in checking before passing thru the default values,*
+023000200603      *            this in conjunction with BUG8690.(Recompile)       *
+023100200603      *  BUG8953 - Recompile                                          *
+023200200603      *  CAP087  - Allow the processing of buy/Sell back trades.      *
+023300200603      *  BUG9089- Mapping error with Java for DPMV                    *
+023400200603      *  CER001 - LUX Upgrade to MidasPlus                            *
+023500200603      *  CSE075 - US Enhanced Treasury Upgrade to MidasPlus           *
+023600200603      *           (Recompile)                                         *
+023700200603      *  BUG8087 - Recompiled due to change in SETRADVU module        *
+023800200603      *  BUG8039 - Recompile due to change in SEVTCUST                *
+023900200603      *  BUG8690 - Recompiled due to change in SETRADVU module        *
+024000200603      *  BUG8119 - Fields returned incorrectly from API if update     *
+024100200603      *            flag set to 'Y' but data is invalid.               *
+024200200603      *  BUG7029 - Ensure ZMUSER is re-checked on every call,         *
+024300200603      *            move out of *INZSR.                                *
+024400200603      *  CSD027 - Conversion Of Customer Number to Alpha              *
+024500200603      *  CSE065 - Const. Yield Amort. on Mortgage backed assets       *
+024600200603      *           (Recompile)                                         *
+024700200603      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+024800200603      *  BUG6496 - Missing CAS006 fields in Securities and Trades     *
+024900200603      *            Maintenance.                                       *
+025000200603      *  BUG5557 - Information for TRADSDX2 are being dropped during  *
+025100200603      *            insert. (Recompile)                                *
+025200200603      *  CGL031 - Taxation of Savings Income                          *
+025300200603      *  BUG5230 - Ensure output to buffer show what is on Midas      *
+025400200603      *            data base. (Recompile)                             *
+025500200603      *  BUG4728 - Serious Midas error with blank timestamp when      *
+025600200603      *            authorising insert of transaction.                 *
+025700200603      *  BUG4482 - Authorise should call Validate to show all the     *
+025800200603      *            warning errors.                                    *
+025900200603      *  BUG4070 - Countervalue and nominal currency code not being   *
+026000200603      *            passed to API for deletion of trades.              *
+026100200603      *  BUG2274 - Unable to access SSI information because market    *
+026200200603      *            not being passed in.                               *
+026300200603      *  BUG3950 - Stop validation if there is error on Security      *
+026400200603      *            and counterparty.                                  *
+026500200603      *  BUG3122 - Recompiled due to changes in SETRADVU module.      *
+026600200603      *  BUG3145 - Charges and Commission are being missed out of the *
+026700200603      *            calculation of countervalue.                       *
+026800200603      *  MLFIX1 - Add investment type to output message for           *
+026900200603      *           management limit.                                   *
+027000200603      *  CLE025 - Credit Lines (Recompile)                            *
+027100200603      *  TDA035 - RTS Signon changes for MidasPlus. (Recompile)       *
+027200200603      *  CSC022 - Commitment Control Changes for MidasPlus            *
+027300200603      *           (Recompile)                                         *
+027400200603      *  BUG1569- Stopping user updating the same record at the same  *
+027500200603      *           time.                                               *
+027600200603      *  225421 - Recomplie over change in SETRADVU module            *
+027700200603      *  CGL029 - Increase Account Code to 10 digits                  *
+027800200603      *  CAS006 - Hedge Accounting Phase B                            *
+027900200603      *  CAP084 - API Wrapper project                                 *
+028000200603      *                                                               *
+028100200603      *****************************************************************

@@ -1,120 +1,123 @@
-/*STD *: PGMBASE                                                    : *
-/*EXI *: MODULE(SE2310) ACTGRP(*CALLER)                             : *                       CPK016
-/*EXI *  TEXT('Midas SE Position settlement split')                   *
-/*E*I *:*MODULE(SE2310)*********************************************:**                       CPK016
-/*E*I *:*BNDSRVPGM(*NONE)*BNDDIR(MIDAS)*ACTGRP(*CALLER)*************:**                       CPK016
-      *****************************************************************
-      *                                                               *
-      *  Midas - Securities Trading  Module                           *
-      *                                                               *
-      *  SE2310 - SE Position Settlement Split for Treaty Withholding *
-      *           Tax                                                 *
-      *                                                               *
-      *  Function:  This program sub-divide each position settlement  *
-      *             record into either records for difference Tax     *
-      *             groups or records for difference beneifical       *
-      *             owners.                                           *
-      *                                                               *
-      *  (c) Finastra International Limited 2001                      *
-      *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 233071             Date 28Mar12               *
-      * Bank Fusion Midas 1.4 Base -----------------------------------*
-      * Midas Plus 1.4 Base 04 ---------------------------------------*
-      * Midas Plus 1.4 Base ------------------------------------------*
-      *                 245798             Date 19Feb07               *
-      *                 236594             Date 17May05               *
-      *                 CSD079             Date 05Feb07               *
-      * Midas Plus 1.3 ----------- Base ------------------------------*
-      *                 CSD031             Date 10Apr06               *
-      *                 CSD027             Date 09Dec05               *
-      *                 233709             Date 12Jun05               *
-      *                 CSE071             Date 19Jul05               *
-      *                 CSW037A            Date 02May05               *
-      *                 218116             Date 22May03               *
-      *                 216559             Date 03Apr03               *
-      *                 216556             Date 03Apr03               *
-      *                 215575             Date 13MAR03               *
-      *                 229342             Date 01Nov02               *
-      *                 CSD025             Date 11Jan05               *
-      *                 CSW037             Date 15Dec04               *
-      *                 CSW036             Date 15Dec04               *
-      *                 CLE025             Date 20Oct03               *
-      *                 CPK016             Date 29Jul03               *
-      * Midas Release 4 --------------- Base -------------------------*
-      * Midas DBA 3.05 -----------------------------------------------*
-      *                 187745             Date 12Jan01               *
-      *                 187962             Date 21Dec00               *
-      * Midas DBA 3.04 -----------------------------------------------*
-      *                 187179             Date 01Dec00               *
-      *                 186303             Date 14Nov00               *
-      *                 186237             Date 13Nov00               *
-      *                 186001             Date 08Nov00               *
-      *                 186000             Date 08Nov00               *
-      *                 185936             Date 06Nov00               *
-      *                 186051             Date 30Oct00               *
-      *                 186050             Date 30Oct00               *
-      *                 185756             Date 25Oct00               *
-      *                 185748             Date 25Oct00               *
-      *                 185731             Date 25Oct00               *
-      *                 185604             Date 230ct00               *
-      *                 185292             Date 20Oct00               *
-      *                 CSE023  *CREATE    Date 18Aug00               *
-      *                                                               *
-      *---------------------------------------------------------------*
-      *                                                               *
-      *  MD046248 - Finastra Rebranding                               *
-      *  233071 - Database error 106 in program AOTXBSR0 due to blank *
-      *           tax basket.  Default tax basket with WK_TXBS only   *
-      *           if it is not blank, otherwise should still use      *
-      *           value of WHTXBS or WTTXBS (Recompile)               *
-      *         - Applied for AR942829                                *
-      *  245798 - Apply 236594.                                       *
-      *  236594 - Decimal data error with fields added by fix 233711  *
-      *  CSD079 - Enhanced Customer Maintenance API (Recompile)       *
-      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
-      *  CSD027 - Conversion Of Customer Number to Alpha              *
-      *  233709 - POSETD layout changed (recompile)                   *
-      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
-      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
-      *  218116 - Recompiled over changes made in module.             *
-      *  216559 - Tax basket not correctly applied for exemption.     *
-      *  216556 - For position settlement 'R' for a customer no tax   *
-      *           should be calculated.                               *
-      *  215575 - CORPORATE ACTION FOR DEPOT.                         *
-      *  229342 - No DB Error if customer is flagged for closure      *
-      *  CSD025 - Customer De-Activation                              *
-      *  CSW037 - Additional Field Data on MT300/MT320                *
-      *  CSW036 - Dual SWIFT BIC held on Client Details               *
-      *  CLE025 - Credit Lines (Recompile)                            *
-      *  CPK016 - Release 5 packaging.  Standardise parameters.       *
-      *  187745 - For tax basket, check Customer/Beneficial owner     *
-      *           details first before Treaty tax details (Recompile) *
-      *  187962 - If the tax basket is blank, then the description    *
-      *           for the tax basket should be blank (Recompiled)     *
-      *  187179 - Program unable to set up tax basket foe QI caused   *
-      *           DB error in calculation of tax.                     *
-      *  186303 - OID = 'S', withholding tax only apply to customer   *
-      *           with documentation = 'U' or 'N'.                    *
-      *  186237 - A customer with documentation 'L' has got a tax     *
-      *           deduction on a maturity                             *
-      *  186001 - Withholding tax for User Holding                    *
-      *  186000 - Tax Identification Number needs to be added to      *
-      *           Customer Withholding Tax Details                    *
-      *  185936 - Depot position settlement not the same as customer  *
-      *           position settlement.                                *
-      *  186051 - Gross/Net Amount is being shown as zero for a       *
-      *           maturity event position which is not taxable        *
-      *  186050 - Beneficial owner is not being shown in screen/report*
-      *  185756 - Divide by zero occured for customer holdings whose  *
-      *           intermediary clients details were not completed     *
-      *  185748 - Position Settlement record for beneficial owner     *
-      *           holding has a wrong recipient code                  *
-      *  185731 - Divide by zero occured for maturity events without  *
-      *           any holdings                                        *
-      *  185604 - Incorrect data being added to the rounding record   *
-      *  185292 - Change in the processing of OID for client without  *
-      *           documentation.                                      *
-      *  CSE023 - Treaty Withholding Tax                              *
-      *                                                               *
-      *****************************************************************
+000100200616/*STD *: PGMBASE                                                    : *
+000200200616/*EXI *: MODULE(SE2310) ACTGRP(*CALLER)                             : *                       CPK016
+000300200616/*EXI *  TEXT('Midas SE Position settlement split')                   *
+000400200616/*E*I *:*MODULE(SE2310)*********************************************:**                       CPK016
+000500200616/*E*I *:*BNDSRVPGM(*NONE)*BNDDIR(MIDAS)*ACTGRP(*CALLER)*************:**                       CPK016
+000600200616      *****************************************************************
+000700200616      *                                                               *
+000800200616      *  Midas - Securities Trading  Module                           *
+000900200616      *                                                               *
+001000200616      *  SE2310 - SE Position Settlement Split for Treaty Withholding *
+001100200616      *           Tax                                                 *
+001200200616      *                                                               *
+001300200616      *  Function:  This program sub-divide each position settlement  *
+001400200616      *             record into either records for difference Tax     *
+001500200616      *             groups or records for difference beneifical       *
+001600200616      *             owners.                                           *
+001700200616      *                                                               *
+001800200616      *  (c) Finastra International Limited 2001                      *
+001900200616      *                                                               *
+001901200616      *  Last Amend No. AR324886           Date 01JUN20               *
+002000200616      *  PREV Amend No. MD046248           Date 27Oct17               *
+002100200616      *                 233071             Date 28Mar12               *
+002200200616      * Bank Fusion Midas 1.4 Base -----------------------------------*
+002300200616      * Midas Plus 1.4 Base 04 ---------------------------------------*
+002400200616      * Midas Plus 1.4 Base ------------------------------------------*
+002500200616      *                 245798             Date 19Feb07               *
+002600200616      *                 236594             Date 17May05               *
+002700200616      *                 CSD079             Date 05Feb07               *
+002800200616      * Midas Plus 1.3 ----------- Base ------------------------------*
+002900200616      *                 CSD031             Date 10Apr06               *
+003000200616      *                 CSD027             Date 09Dec05               *
+003100200616      *                 233709             Date 12Jun05               *
+003200200616      *                 CSE071             Date 19Jul05               *
+003300200616      *                 CSW037A            Date 02May05               *
+003400200616      *                 218116             Date 22May03               *
+003500200616      *                 216559             Date 03Apr03               *
+003600200616      *                 216556             Date 03Apr03               *
+003700200616      *                 215575             Date 13MAR03               *
+003800200616      *                 229342             Date 01Nov02               *
+003900200616      *                 CSD025             Date 11Jan05               *
+004000200616      *                 CSW037             Date 15Dec04               *
+004100200616      *                 CSW036             Date 15Dec04               *
+004200200616      *                 CLE025             Date 20Oct03               *
+004300200616      *                 CPK016             Date 29Jul03               *
+004400200616      * Midas Release 4 --------------- Base -------------------------*
+004500200616      * Midas DBA 3.05 -----------------------------------------------*
+004600200616      *                 187745             Date 12Jan01               *
+004700200616      *                 187962             Date 21Dec00               *
+004800200616      * Midas DBA 3.04 -----------------------------------------------*
+004900200616      *                 187179             Date 01Dec00               *
+005000200616      *                 186303             Date 14Nov00               *
+005100200616      *                 186237             Date 13Nov00               *
+005200200616      *                 186001             Date 08Nov00               *
+005300200616      *                 186000             Date 08Nov00               *
+005400200616      *                 185936             Date 06Nov00               *
+005500200616      *                 186051             Date 30Oct00               *
+005600200616      *                 186050             Date 30Oct00               *
+005700200616      *                 185756             Date 25Oct00               *
+005800200616      *                 185748             Date 25Oct00               *
+005900200616      *                 185731             Date 25Oct00               *
+006000200616      *                 185604             Date 230ct00               *
+006100200616      *                 185292             Date 20Oct00               *
+006200200616      *                 CSE023  *CREATE    Date 18Aug00               *
+006300200616      *                                                               *
+006400200616      *---------------------------------------------------------------*
+006500200616      *                                                               *
+006501200616      *  AR324886 - Implement 4-eyes processing in Position           *
+006502200616      *             Settlement Maintenance.                           *
+006600200616      *  MD046248 - Finastra Rebranding                               *
+006700200616      *  233071 - Database error 106 in program AOTXBSR0 due to blank *
+006800200616      *           tax basket.  Default tax basket with WK_TXBS only   *
+006900200616      *           if it is not blank, otherwise should still use      *
+007000200616      *           value of WHTXBS or WTTXBS (Recompile)               *
+007100200616      *         - Applied for AR942829                                *
+007200200616      *  245798 - Apply 236594.                                       *
+007300200616      *  236594 - Decimal data error with fields added by fix 233711  *
+007400200616      *  CSD079 - Enhanced Customer Maintenance API (Recompile)       *
+007500200616      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+007600200616      *  CSD027 - Conversion Of Customer Number to Alpha              *
+007700200616      *  233709 - POSETD layout changed (recompile)                   *
+007800200616      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+007900200616      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+008000200616      *  218116 - Recompiled over changes made in module.             *
+008100200616      *  216559 - Tax basket not correctly applied for exemption.     *
+008200200616      *  216556 - For position settlement 'R' for a customer no tax   *
+008300200616      *           should be calculated.                               *
+008400200616      *  215575 - CORPORATE ACTION FOR DEPOT.                         *
+008500200616      *  229342 - No DB Error if customer is flagged for closure      *
+008600200616      *  CSD025 - Customer De-Activation                              *
+008700200616      *  CSW037 - Additional Field Data on MT300/MT320                *
+008800200616      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+008900200616      *  CLE025 - Credit Lines (Recompile)                            *
+009000200616      *  CPK016 - Release 5 packaging.  Standardise parameters.       *
+009100200616      *  187745 - For tax basket, check Customer/Beneficial owner     *
+009200200616      *           details first before Treaty tax details (Recompile) *
+009300200616      *  187962 - If the tax basket is blank, then the description    *
+009400200616      *           for the tax basket should be blank (Recompiled)     *
+009500200616      *  187179 - Program unable to set up tax basket foe QI caused   *
+009600200616      *           DB error in calculation of tax.                     *
+009700200616      *  186303 - OID = 'S', withholding tax only apply to customer   *
+009800200616      *           with documentation = 'U' or 'N'.                    *
+009900200616      *  186237 - A customer with documentation 'L' has got a tax     *
+010000200616      *           deduction on a maturity                             *
+010100200616      *  186001 - Withholding tax for User Holding                    *
+010200200616      *  186000 - Tax Identification Number needs to be added to      *
+010300200616      *           Customer Withholding Tax Details                    *
+010400200616      *  185936 - Depot position settlement not the same as customer  *
+010500200616      *           position settlement.                                *
+010600200616      *  186051 - Gross/Net Amount is being shown as zero for a       *
+010700200616      *           maturity event position which is not taxable        *
+010800200616      *  186050 - Beneficial owner is not being shown in screen/report*
+010900200616      *  185756 - Divide by zero occured for customer holdings whose  *
+011000200616      *           intermediary clients details were not completed     *
+011100200616      *  185748 - Position Settlement record for beneficial owner     *
+011200200616      *           holding has a wrong recipient code                  *
+011300200616      *  185731 - Divide by zero occured for maturity events without  *
+011400200616      *           any holdings                                        *
+011500200616      *  185604 - Incorrect data being added to the rounding record   *
+011600200616      *  185292 - Change in the processing of OID for client without  *
+011700200616      *           documentation.                                      *
+011800200616      *  CSE023 - Treaty Withholding Tax                              *
+011900200616      *                                                               *
+012000200616      *****************************************************************

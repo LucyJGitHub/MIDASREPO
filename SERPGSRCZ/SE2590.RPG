@@ -1,435 +1,496 @@
-     H        1
-      *****************************************************************
-/*STD *  RPGBASE                                                      *
-/*EXI *  TEXT('Midas SE Drop Off Position Profit Centres')
-     F*****************************************************************
-     F*                                                               *
-     F*  Midas - Securities Trading Module                        *
-     F*                                                               *
-     F*  SE2590 - DROP OFF POSITION PROFIT CENTRES                    *
-     F*                                                               *
-     F*  Function: To drop off the default profit centre records for  *
-     F*   (COB)    both book and customer positions, where no live    *
-     F*            records exist.                                     *
-     F*                                                               *
-     F*  Called by: SEC1006 - Drop off Position Profit Centres        *
-     F*                                                               *
-      *  (c) Finastra International Limited 2001                      *
-     F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      * Bank Fusion Midas 1.4 Base -----------------------------------*
-      * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. 095907             Date 30Jan07               *
-      * Midas Plus 1.4 Base ------------------------------------------*
-      * Midas Plus 1.3 ----------- Base ------------------------------*
-      *                 CSD027             Date 09Dec05               *
-      * Midas Release 4 --------------- Base -------------------------*
-      * Midas DBA 3.00 ---------------- Base -------------------------*
-     F*                 070852             DATE 12OCT94               *
-     F*                 052254             DATE 10JAN94               *
-     F*                 048927             DATE 10JAN93               *
-     F*                 S01397             DATE 10SEP92               *
-     F*                 S01117             DATE 05AUG91               *
-     F*                                                               *
-     F*---------------------------------------------------------------*
-     F*                                                               *
-      *  MD046248 - Finastra Rebranding                               *
-     F*  095907 - UPDATES OF RECI WITH '*' REPLACED BY DELETES        *
-     F*  CSD027 - Conversion Of Customer Number to Alpha              *
-     F*  070852 - Check CLIAB file to see if any details before       *
-     F*           dropping records from SEPCCD.                       *
-     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
-     F*           to 10,9                                             *
-     F*  048927 - SE0930AU DOES NOT PRINT A TITLE                     *
-     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
-     F*          - Recompiled due to changes to files.                *
-     F*  S01117  -  Multibranching (new program)                      *
-     F*                                                               *
-     F*****************************************************************
-     F*
-     FSEPPC   UP  E           K        DISK
-     FBKPHD   IF  E           K        DISK
-     FCPOSN   IF  E           K        DISK
-     FSEPCA   UF  E           K        DISK
-     FCLIAB   IF  E           K        DISK                               070852
-     FSE2590AUO   E                    PRINTER
-     F/COPY WNCPYSRC,SE2590F001
-     F*
-      /EJECT
-     F*****************************************************************
-     F*                                                               *
-     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
-     F*                                                               *
-     F*   60 - Number of records on audit file different from         *
-     F*        number of records read                                 *
-     F*                                                               *
-     F*   70 - Indicator (set off) for fist time processing           *
-     F*   71 - SEPPC format read is SEPCBD (Book)                     *
-     F*   72 - SEPPC format read is SEPCCD (Customer)                 *
-     F*                                                               *
-     F*   80 - (set on) for chain fail on positions files             *
-     F*   81 - (set on) for chain fail on audit file                  *
-     F*                                                               *
-     F*90-99 - Used in standard subroutines                           *
-     F*                                                               *
-     F*   U7 - Database error                                         *
-     F*   U8 - Database / Control error                               *
-     F*                                                               *
-     F*****************************************************************
-      /SPACE 3
-     F*****************************************************************
-     F*                                                               *
-     F*  I N D E X   T O   S U B R O U T I N E S                      *
-     F*                                                               *
-     F*  *PSSR  - DUMP program on error                               *
-     F*  AUDIT  - Update Audit file                                   *
-     F*  BOOKRC - Drop off book position profit centre                *
-     F*  CUSTRC - Drop off customer position profit centre            *
-     F*  FIRST  - Initialisation processing                           *
-     F*                                                               *
-     F*****************************************************************
-     E/EJECT
-      *
-     E                    CPY@    1   1 80
-     I/EJECT
-      *
-      ** Identify individual SEPPC formats
-      *
-      ** Book Position:
-      *
-     ISEPCBDF     71
-      *
-      ** Customer Position:
-      *
-     ISEPCCDF     72
-      *
-      *                                                                   070852
-      *  Rename fields on CLIABD                                          070852
-     ICLIABDF                                                             070852
-     I              RECI                            XRECI                 070852
-     I              TDSS                            XTDSS                 070852
-     I              TDBA                            XTDBA                 070852
-     I              TCNR                            XTCNR                 070852
-     I              TDRF                            XTDRF                 070852
-     I              NOML                            XNOML                 070852
-      *                                                                   070852
-     ILDA         DS                            256
-      *
-      ** *LOCK IN LDA immediately before and OUT LDA immediately
-      ** after each database error handling.
-      *
-     I                                      134 183 DBLOT
-     I                                      134 141 DBFILE
-     I                                      142 170 DBKEY
-     I                                      171 180 DBPGM
-     I                                      181 1830DBASE
-     I*
-     ICPYR@#      DS
-     I*
-     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
-     I*
-     I                                        1  80 CPY@
-     I                                        1  20 CPY@##
-      *
-     IRUNDT       DS
-      *
-      ** RUNDAT data area
-      *
-     I                                        1   7 RUNA
-     I                                    P   8  100RUND
-     I                                       11  11 SSF
-     I                                       12  12 DATF
-     I                                       13  13 MBIN
-      *
-     ISDBANK    E DSSDBANKPD
-     I              BJURPT                          TITLE                 048927
-      *
-      ** Bank Details
-      *
-     IDSFDY     E DSDSFDY
-      *
-      ** Short data structure for access programs (200 long)
-     I/COPY WNCPYSRC,SE2590I001
-      *
-     C/EJECT
-     C*================================================================
-     C*  P R O G R A M     S T A R T                                  *
-     C*================================================================
-     C*
-      *
-      ** Execute Initialisation subroutine the first time around
-      *
-     C           *IN70     IFEQ '0'
-     C                     EXSR FIRST
-     C                     MOVE '1'       *IN70
-     C                     END
-      *
-      ** Maintain count of records read
-      *
-     C                     ADD  1         RECCNT
-      *
-      ** Execute appropriate subroutine dependant on record read
-      *
-     C           *IN71     CASEQ'1'       BOOKRC
-     C           *IN72     CASEQ'1'       CUSTRC
-     C                     END
-      *
-      ** Last Record - Audit process
-      *
-      ** If no records read, perform 1st time calcs for audit report
-      *
-     CLR         RECCNT    IFEQ *ZEROS
-     CLR                   EXSR FIRST
-     CLR                   END
-     C/COPY WNCPYSRC,SE2590C001
-      *
-     CLR                   EXSR AUDIT
-      *
-      *================================================================
-      *  P R O G R A M   E N D                                        *
-      *                                                               *
-      *================================================================
-      /EJECT
-      *****************************************************************
-      *                                                               *
-      *  AUDIT - Update Audit file                                    *
-      *                                                               *
-      *****************************************************************
-      *
-     C           AUDIT     BEGSR
-      *
-      ** Read Position Profit Centre Audit file
-      *
-     C                     READ SEPCA                    81
-      *
-     C           *IN81     IFEQ '1'
-      *
-      ** Database error if record not found
-      *
-     C           *LOCK     IN   LDA
-     C                     Z-ADD2         DBASE            ***************
-     C                     MOVEL'SEPCA'   DBFILE           * DB ERROR 02 *
-     C                     MOVEL'*FIRST'  DBKEY            ***************
-     C                     OUT  LDA
-     C                     WRITEHEADAU
-     C                     WRITEERROR
-     C                     SETON                     U7U8LR
-     C                     EXSR *PSSR
-     C                     RETRN
-     C                     END
-      *
-      ** Compare control total to number of records read
-      *
-     C           NORE      IFNE RECCNT
-     C                     MOVE '1'       *IN60
-     C                     MOVE '1'       *INU8
-     C                     END
-      *
-      ** Print audit report
-      *
-     C                     WRITEHEADAU
-     C                     WRITEDETLAU
-      *
-      ** If totals same, update audit record with new number of live
-      ** records on file
-      *
-     C           *INU8     IFEQ '0'
-     C                     MOVE RECNDT    SLRB
-     C                     MOVE *ZERO     SINS
-     C                     MOVE *ZERO     SAMD
-     C                     MOVE *ZERO     SDEL
-     C                     MOVE RECNDT    NORE
-     C                     UPDATSEPCAF
-     C                     END
-      *
-     C                     ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *                                                               *
-      *  BOOKRC - Drop off book position profit centre                *
-      *                                                               *
-      *****************************************************************
-      *
-     C           BOOKRC    BEGSR
-      *
-      ** Access BKPHD book position
-      *
-     C                     MOVELSESN      @BPSC
-     C                     MOVELBRCA      @BPBA
-     C                     MOVELBOKC      @BPBK
-     C                     MOVELMKTI      @BPMK
-     C           BKEY      CHAINBKPHDDF              80
-      *
-     C           *IN80     IFEQ '1'
-      *
-      ** If no live record exists then flag SEPPC record as deleted
-      *
-     C***                  MOVE '*'       RECI                                                095907
-     C/COPY WNCPYSRC,SE2590C002
-     C                     DELETSEPCBDF                                                       095907
-     C                     ADD  1         RECDLT
-     C***                  EXCPTBOOK                                                          095907
-     C                     ELSE
-      *
-      ** Else add one to the number of records on file
-      *
-     C                     ADD  1         RECNDT
-     C                     END
-      *
-     C                     ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *                                                               *
-      *  CUSTRC - Drop off customer position profit centre            *
-      *                                                               *
-      *****************************************************************
-      *
-     C           CUSTRC    BEGSR
-      *
-      ** Access CPOSN client position
-      *
-     C                     MOVELBRCA      @CSBA
-     C                     MOVELSESN      @CSSC
-     C                     MOVELCNUM      @CSCN
-     C           CKEY      CHAINCPOSNDF              80
-      *                                                                   070852
-      *  Check if any existing records on CLIABD                          070852
-      *                                                                   070852
-     C           *IN80     IFEQ '1'                                       070852
-     C           CKEY1     CHAINCLIABDF              80                   070852
-     C                     END                                            070852
-      *
-     C           *IN80     IFEQ '1'
-      *
-      ** If no live record exists then flag SEPPC record as deleted
-      *
-     C***                  MOVE '*'       RECI                                                095907
-     C/COPY WNCPYSRC,SE2590C003
-     C                     DELETSEPCCDF                                                       095907
-     C                     ADD  1         RECDLT
-     C***                  EXCPTCUST                                                          095907
-     C                     ELSE
-      *
-      ** Else add one to the number of records on file
-      *
-     C                     ADD  1         RECNDT
-     C                     END
-      *
-     C                     ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *                                                               *
-      *  FIRST - Initialisation processing                            *
-      *                                                               *
-      *****************************************************************
-      *
-     C           FIRST     BEGSR
-      *
-      ** Define key list for file CPOSN
-      *
-     C           CKEY      KLIST
-     C                     KFLD           @CSBA
-     C                     KFLD           @CSSC
-     C                     KFLD           @CSCN
-      *                                                                   070852
-      ** Define key list for file CLIAB                                   070852
-      *                                                                   070852
-     C           CKEY1     KLIST                                          070852
-     C                     KFLD           @CSSC                           070852
-     C                     KFLD           @CSBA                           070852
-     C                     KFLD           @CSCN                           070852
-      *
-      ** Define key list for BKPHD file
-      *
-     C           BKEY      KLIST
-     C                     KFLD           @BPSC
-     C                     KFLD           @BPBA
-     C                     KFLD           @BPBK
-     C                     KFLD           @BPMK
-      *
-      ** Define fields
-      *
-      ** Positions files key fields
-      *
-     C           *LIKE     DEFN BHSC      @BPSC
-     C           *LIKE     DEFN BHBA      @BPBA
-     C           *LIKE     DEFN BHBK      @BPBK
-     C           *LIKE     DEFN BHMK      @BPMK
-     C           *LIKE     DEFN CSBA      @CSBA
-     C           *LIKE     DEFN CSSC      @CSSC
-     C           *LIKE     DEFN CSCN      @CSCN
-      *
-      ** Prepare LDA
-      *
-     C           *NAMVAR   DEFN           LDA
-     C           *LOCK     IN   LDA
-     C                     MOVE *BLANKS   DBLOT
-     C                     MOVEL'SE2590'  DBPGM
-     C                     OUT  LDA
-      *
-      ** Read in RUNDAT data area
-      *
-     C           *NAMVAR   DEFN RUNDAT    RUNDT
-     C                     IN   RUNDT
-      *
-      ** Access bank details
-      *
-     C                     CALL 'AOBANKR0'
-     C                     PARM '*MSG   ' @RTCD   7
-     C                     PARM '*FIRST ' @OPTN   7
-     C           SDBANK    PARM SDBANK    DSFDY
-     C           @RTCD     IFNE *BLANKS
-     C           *LOCK     IN   LDA
-     C                     Z-ADD1         DBASE            ***************
-     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 01 *
-     C                     MOVEL'*FIRST'  DBKEY            ***************
-     C                     OUT  LDA
-     C                     WRITEHEADAU
-     C                     WRITEERROR
-     C                     SETON                     U7U8LR
-     C                     EXSR *PSSR
-     C                     RETRN
-     C                     END
-     C/COPY WNCPYSRC,SE2590C004
-      *
-     C                     ENDSR
-      *
-      *****************************************************************
-      /EJECT
-      *****************************************************************
-      *                                                               *
-      * *PSSR  - Database error subroutine.                           *
-      *          This subroutine DUMPs the program just once.         *
-      *                                                               *
-      * Called by: Database error processing                          *
-      *                                                               *
-      * Calls: None                                                   *
-      *                                                               *
-      *****************************************************************
-      *
-     C           *PSSR     BEGSR                           ** *PSSR **
-     C**
-     C           @RUN      IFEQ *BLANKS
-     C                     MOVE 'Y'       @RUN    1
-     C                     DUMP
-     C                     END
-     C**
-     C                     ENDSR
-      *
-     C*****************************************************************
-     C/COPY WNCPYSRC,SE2590C005
-     O/EJECT
-     O***SEPCBDF E             BOOK                                                           095907
-     O***                      RECI                                                           095907
-     O***SEPCCDF E             CUST                                                           095907
-     O***                      RECI                                                           095907
-      /EJECT
-      ***
-**  CPY@
-(c) Finastra International Limited 2001
+000100200529     H        1
+000200200529      *****************************************************************
+000300200529/*STD *  RPGBASE                                                      *
+000400200529/*EXI *  TEXT('Midas SE Drop Off Position Profit Centres')
+000500200529     F*****************************************************************
+000600200529     F*                                                               *
+000700200529     F*  Midas - Securities Trading Module                        *
+000800200529     F*                                                               *
+000900200529     F*  SE2590 - DROP OFF POSITION PROFIT CENTRES                    *
+001000200529     F*                                                               *
+001100200529     F*  Function: To drop off the default profit centre records for  *
+001200200529     F*   (COB)    both book and customer positions, where no live    *
+001300200529     F*            records exist.                                     *
+001400200529     F*                                                               *
+001500200529     F*  Called by: SEC1006 - Drop off Position Profit Centres        *
+001600200529     F*                                                               *
+001700200529      *  (c) Finastra International Limited 2001                      *
+001800200529     F*                                                               *
+001900200604     F*  Last Amend No. 261862             Date 22May20               *
+002000200529      *  Prev Amend No. MD046248           Date 27Oct17               *
+002100200529      * Bank Fusion Midas 1.4 Base -----------------------------------*
+002200200529      * Midas Plus 1.4 Base 04 ---------------------------------------*
+002300200529      *                 095907             Date 30Jan07               *
+002400200529      * Midas Plus 1.4 Base ------------------------------------------*
+002500200529      * Midas Plus 1.3 ----------- Base ------------------------------*
+002600200529      *                 CSD027             Date 09Dec05               *
+002700200529      * Midas Release 4 --------------- Base -------------------------*
+002800200529      * Midas DBA 3.00 ---------------- Base -------------------------*
+002900200529     F*                 070852             DATE 12OCT94               *
+003000200529     F*                 052254             DATE 10JAN94               *
+003100200529     F*                 048927             DATE 10JAN93               *
+003200200529     F*                 S01397             DATE 10SEP92               *
+003300200529     F*                 S01117             DATE 05AUG91               *
+003400200529     F*                                                               *
+003500200529     F*---------------------------------------------------------------*
+003600200529     F*                                                               *
+003700200529      *  261862 - Check POSET2 file to see if there are any           *
+003800200529      *           corresponding records before dropping from SEPCCD.  *
+003900200529      *           Check CDEPPD before dropping record in SEPCCD.      *
+004000200529      *  MD046248 - Finastra Rebranding                               *
+004100200529     F*  095907 - UPDATES OF RECI WITH '*' REPLACED BY DELETES        *
+004200200529     F*  CSD027 - Conversion Of Customer Number to Alpha              *
+004300200529     F*  070852 - Check CLIAB file to see if any details before       *
+004400200529     F*           dropping records from SEPCCD.                       *
+004500200529     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+004600200529     F*           to 10,9                                             *
+004700200529     F*  048927 - SE0930AU DOES NOT PRINT A TITLE                     *
+004800200529     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+004900200529     F*          - Recompiled due to changes to files.                *
+005000200529     F*  S01117  -  Multibranching (new program)                      *
+005100200529     F*                                                               *
+005200200529     F*****************************************************************
+005300200529     F*
+005400200529     FSEPPC   UP  E           K        DISK
+005500200529     FBKPHD   IF  E           K        DISK
+005600200529     FCPOSN   IF  E           K        DISK
+005700200529     FSEPCA   UF  E           K        DISK
+005800200529     FCLIAB   IF  E           K        DISK                               070852
+005900200529     FPOSET2  IF  E           K        DISK                                                   261862
+006000200529     FCDEPF   IF  E           K        DISK                                                   261862
+006100200529     FSE2590AUO   E                    PRINTER
+006200200529     F/COPY WNCPYSRC,SE2590F001
+006300200529     F*
+006400200529      /EJECT
+006500200529     F*****************************************************************
+006600200529     F*                                                               *
+006700200529     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+006800200529     F*                                                               *
+006900200529     F*   60 - Number of records on audit file different from         *
+007000200529     F*        number of records read                                 *
+007100200529     F*                                                               *
+007200200529     F*   70 - Indicator (set off) for fist time processing           *
+007300200529     F*   71 - SEPPC format read is SEPCBD (Book)                     *
+007400200529     F*   72 - SEPPC format read is SEPCCD (Customer)                 *
+007500200529     F*                                                               *
+007600200529     F*   80 - (set on) for chain fail on positions files             *
+007700200529     F*   81 - (set on) for chain fail on audit file                  *
+007800200529     F*                                                               *
+007900200529     F*90-99 - Used in standard subroutines                           *
+008000200529     F*                                                               *
+008100200529     F*   U7 - Database error                                         *
+008200200529     F*   U8 - Database / Control error                               *
+008300200529     F*                                                               *
+008400200529     F*****************************************************************
+008500200529      /SPACE 3
+008600200529     F*****************************************************************
+008700200529     F*                                                               *
+008800200529     F*  I N D E X   T O   S U B R O U T I N E S                      *
+008900200529     F*                                                               *
+009000200529     F*  *PSSR  - DUMP program on error                               *
+009100200529     F*  AUDIT  - Update Audit file                                   *
+009200200529     F*  BOOKRC - Drop off book position profit centre                *
+009300200529     F*  CUSTRC - Drop off customer position profit centre            *
+009400200529     F*  FIRST  - Initialisation processing                           *
+009500200529     F*                                                               *
+009600200529     F*****************************************************************
+009700200529     E/EJECT
+009800200529      *
+009900200529     E                    CPY@    1   1 80
+010000200529     I/EJECT
+010100200529      *
+010200200529      ** Identify individual SEPPC formats
+010300200529      *
+010400200529      ** Book Position:
+010500200529      *
+010600200529     ISEPCBDF     71
+010700200529      *
+010800200529      ** Customer Position:
+010900200529      *
+011000200529     ISEPCCDF     72
+011100200529      *
+011200200529      *                                                                   070852
+011300200529      *  Rename fields on CLIABD                                          070852
+011400200529     ICLIABDF                                                             070852
+011500200529     I              RECI                            XRECI                 070852
+011600200529     I              TDSS                            XTDSS                 070852
+011700200529     I              TDBA                            XTDBA                 070852
+011800200529     I              TCNR                            XTCNR                 070852
+011900200529     I              TDRF                            XTDRF                 070852
+012000200529     I              NOML                            XNOML                 070852
+012100200529      *                                                                   070852
+012200200529     ILDA         DS                            256
+012300200529      *
+012400200529      ** *LOCK IN LDA immediately before and OUT LDA immediately
+012500200529      ** after each database error handling.
+012600200529      *
+012700200529     I                                      134 183 DBLOT
+012800200529     I                                      134 141 DBFILE
+012900200529     I                                      142 170 DBKEY
+013000200529     I                                      171 180 DBPGM
+013100200529     I                                      181 1830DBASE
+013200200529     I*
+013300200529     ICPYR@#      DS
+013400200529     I*
+013500200529     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+013600200529     I*
+013700200529     I                                        1  80 CPY@
+013800200529     I                                        1  20 CPY@##
+013900200529      *
+014000200529     IRUNDT       DS
+014100200529      *
+014200200529      ** RUNDAT data area
+014300200529      *
+014400200529     I                                        1   7 RUNA
+014500200529     I                                    P   8  100RUND
+014600200529     I                                       11  11 SSF
+014700200529     I                                       12  12 DATF
+014800200529     I                                       13  13 MBIN
+014900200529     ISDMMOD    E DSSDMMODPD                                                                  261862
+015000200529      ** Module fields.                                                                       261862
+015100200529      *
+015200200529     ISDBANK    E DSSDBANKPD
+015300200529     I              BJURPT                          TITLE                 048927
+015400200529      *
+015500200529      ** Bank Details
+015600200529      *
+015700200529     IDSFDY     E DSDSFDY
+015800200529      *
+015900200529      ** Short data structure for access programs (200 long)
+016000200529     I/COPY WNCPYSRC,SE2590I001
+016100200529      *
+016200200529     C/EJECT
+016300200529     C*================================================================
+016400200529     C*  P R O G R A M     S T A R T                                  *
+016500200529     C*================================================================
+016600200529     C*
+016700200529      *
+016800200529      ** Execute Initialisation subroutine the first time around
+016900200529      *
+017000200529     C           *IN70     IFEQ '0'
+017100200529     C                     EXSR FIRST
+017200200529     C                     MOVE '1'       *IN70
+017300200529     C                     END
+017400200529      *
+017500200529      ** Maintain count of records read
+017600200529      *
+017700200529     C                     ADD  1         RECCNT
+017800200529      *
+017900200529      ** Execute appropriate subroutine dependant on record read
+018000200529      *
+018100200529     C           *IN71     CASEQ'1'       BOOKRC
+018200200529     C           *IN72     CASEQ'1'       CUSTRC
+018300200529     C                     END
+018400200529      *
+018500200529      ** Last Record - Audit process
+018600200529      *
+018700200529      ** If no records read, perform 1st time calcs for audit report
+018800200529      *
+018900200529     CLR         RECCNT    IFEQ *ZEROS
+019000200529     CLR                   EXSR FIRST
+019100200529     CLR                   END
+019200200529     C/COPY WNCPYSRC,SE2590C001
+019300200529      *
+019400200529     CLR                   EXSR AUDIT
+019500200529      *
+019600200529      *================================================================
+019700200529      *  P R O G R A M   E N D                                        *
+019800200529      *                                                               *
+019900200529      *================================================================
+020000200529      /EJECT
+020100200529      *****************************************************************
+020200200529      *                                                               *
+020300200529      *  AUDIT - Update Audit file                                    *
+020400200529      *                                                               *
+020500200529      *****************************************************************
+020600200529      *
+020700200529     C           AUDIT     BEGSR
+020800200529      *
+020900200529      ** Read Position Profit Centre Audit file
+021000200529      *
+021100200529     C                     READ SEPCA                    81
+021200200529      *
+021300200529     C           *IN81     IFEQ '1'
+021400200529      *
+021500200529      ** Database error if record not found
+021600200529      *
+021700200529     C           *LOCK     IN   LDA
+021800200529     C                     Z-ADD2         DBASE            ***************
+021900200529     C                     MOVEL'SEPCA'   DBFILE           * DB ERROR 02 *
+022000200529     C                     MOVEL'*FIRST'  DBKEY            ***************
+022100200529     C                     OUT  LDA
+022200200529     C                     WRITEHEADAU
+022300200529     C                     WRITEERROR
+022400200529     C                     SETON                     U7U8LR
+022500200529     C                     EXSR *PSSR
+022600200529     C                     RETRN
+022700200529     C                     END
+022800200529      *
+022900200529      ** Compare control total to number of records read
+023000200529      *
+023100200529     C           NORE      IFNE RECCNT
+023200200529     C                     MOVE '1'       *IN60
+023300200529     C                     MOVE '1'       *INU8
+023400200529     C                     END
+023500200529      *
+023600200529      ** Print audit report
+023700200529      *
+023800200529     C                     WRITEHEADAU
+023900200529     C                     WRITEDETLAU
+024000200529      *
+024100200529      ** If totals same, update audit record with new number of live
+024200200529      ** records on file
+024300200529      *
+024400200529     C           *INU8     IFEQ '0'
+024500200529     C                     MOVE RECNDT    SLRB
+024600200529     C                     MOVE *ZERO     SINS
+024700200529     C                     MOVE *ZERO     SAMD
+024800200529     C                     MOVE *ZERO     SDEL
+024900200529     C                     MOVE RECNDT    NORE
+025000200529     C                     UPDATSEPCAF
+025100200529     C                     END
+025200200529      *
+025300200529     C                     ENDSR
+025400200529      *
+025500200529      *****************************************************************
+025600200529      /EJECT
+025700200529      *****************************************************************
+025800200529      *                                                               *
+025900200529      *  BOOKRC - Drop off book position profit centre                *
+026000200529      *                                                               *
+026100200529      *****************************************************************
+026200200529      *
+026300200529     C           BOOKRC    BEGSR
+026400200529      *
+026500200529      ** Access BKPHD book position
+026600200529      *
+026700200529     C                     MOVELSESN      @BPSC
+026800200529     C                     MOVELBRCA      @BPBA
+026900200529     C                     MOVELBOKC      @BPBK
+027000200529     C                     MOVELMKTI      @BPMK
+027100200529     C           BKEY      CHAINBKPHDDF              80
+027200200529      *
+027300200529     C           *IN80     IFEQ '1'
+027400200529      *
+027500200529      ** If no live record exists then flag SEPPC record as deleted
+027600200529      *
+027700200529     C***                  MOVE '*'       RECI                                                095907
+027800200529     C/COPY WNCPYSRC,SE2590C002
+027900200529     C                     DELETSEPCBDF                                                       095907
+028000200529     C                     ADD  1         RECDLT
+028100200529     C***                  EXCPTBOOK                                                          095907
+028200200529     C                     ELSE
+028300200529      *
+028400200529      ** Else add one to the number of records on file
+028500200529      *
+028600200529     C                     ADD  1         RECNDT
+028700200529     C                     END
+028800200529      *
+028900200529     C                     ENDSR
+029000200529      *
+029100200529      *****************************************************************
+029200200529      /EJECT
+029300200529      *****************************************************************
+029400200529      *                                                               *
+029500200529      *  CUSTRC - Drop off customer position profit centre            *
+029600200529      *                                                               *
+029700200529      *****************************************************************
+029800200529      *
+029900200529     C           CUSTRC    BEGSR
+030000200529      *
+030100200529      ** Access CPOSN client position
+030200200529      *
+030300200529     C                     MOVELBRCA      @CSBA
+030400200529     C                     MOVELSESN      @CSSC
+030500200529     C                     MOVELCNUM      @CSCN
+030600200529     C           CKEY      CHAINCPOSNDF              80
+030700200529      *                                                                   070852
+030800200529      *  Check if any existing records on CLIABD                          070852
+030900200529      *                                                                   070852
+031000200529     C           *IN80     IFEQ '1'                                       070852
+031100200529     C           CKEY1     CHAINCLIABDF              80                   070852
+031200200529     C                     END                                            070852
+031300200529      *                                                                                       261862
+031400200529      **  If PM or PV is on. Check CDEPPD.                                                    261862
+031500200529      *                                                                                       261862
+031600200529     C           FCDEP     IFEQ 'Y'                                                           261862
+031700200529     C           *IN80     IFEQ '1'                                                           261862
+031800200529     C                     MOVELBRCA      CDPA                                                261862
+031900200529     C                     MOVELSESN      CDSN                                                261862
+032000200529     C                     MOVELCNUM      CDCN                                                261862
+032100200529     C           CDPK1     CHAINCDEPPDF             N80                                       261862
+032200200529     C                     ENDIF                                                              261862
+032300200529     C                     ENDIF                                                              261862
+032400200529      *                                                                                       261862
+032500200529      ** Check if any existing records on POSETD                                              261862
+032600200529      *                                                                                       261862
+032700200529     C           *IN80     IFEQ '1'                                                           261862
+032800200529     C                     MOVELBRCA      PBCA                                                261862
+032900200529     C                     MOVELSESN      PSSH                                                261862
+033000200529     C                     MOVELCNUM      PCPY                                                261862
+033100200529     C           PSTK1     CHAINPOSETDF             N80                                       261862
+033200200529     C                     ENDIF                                                              261862
+033300200529      *
+033400200529     C           *IN80     IFEQ '1'
+033500200529      *
+033600200529      ** If no live record exists then flag SEPPC record as deleted
+033700200529      *
+033800200529     C***                  MOVE '*'       RECI                                                095907
+033900200529     C/COPY WNCPYSRC,SE2590C003
+034000200529     C                     DELETSEPCCDF                                                       095907
+034100200529     C                     ADD  1         RECDLT
+034200200529     C***                  EXCPTCUST                                                          095907
+034300200529     C                     ELSE
+034400200529      *
+034500200529      ** Else add one to the number of records on file
+034600200529      *
+034700200529     C                     ADD  1         RECNDT
+034800200529     C                     END
+034900200529      *
+035000200529     C                     ENDSR
+035100200529      *
+035200200529      *****************************************************************
+035300200529      /EJECT
+035400200529      *****************************************************************
+035500200529      *                                                               *
+035600200529      *  FIRST - Initialisation processing                            *
+035700200529      *                                                               *
+035800200529      *****************************************************************
+035900200529      *
+036000200529     C           FIRST     BEGSR
+036100200529      *
+036200200529      ** Define key list for file CPOSN
+036300200529      *
+036400200529     C           CKEY      KLIST
+036500200529     C                     KFLD           @CSBA
+036600200529     C                     KFLD           @CSSC
+036700200529     C                     KFLD           @CSCN
+036800200529      *                                                                   070852
+036900200529      ** Define key list for file CLIAB                                   070852
+037000200529      *                                                                   070852
+037100200529     C           CKEY1     KLIST                                          070852
+037200200529     C                     KFLD           @CSSC                           070852
+037300200529     C                     KFLD           @CSBA                           070852
+037400200529     C                     KFLD           @CSCN                           070852
+037500200529      *                                                                                       261862
+037600200529      ** Define key list for file POSET2                                                      261862
+037700200529      *                                                                                       261862
+037800200529     C           PSTK1     KLIST                                                              261862
+037900200529     C                     KFLD           PBCA                                                261862
+038000200529     C                     KFLD           PSSH                                                261862
+038100200529     C                     KFLD           PCPY                                                261862
+038200200529      *                                                                                       261862
+038300200529      ** Define key list for file CDEPF.                                                      261862
+038400200529      *                                                                                       261862
+038500200529     C           CDPK1     KLIST                                                              261862
+038600200529     C                     KFLD           CDPA                                                261862
+038700200529     C                     KFLD           CDCN                                                261862
+038800200529     C                     KFLD           CDSN                                                261862
+038900200529      *
+039000200529      ** Define key list for BKPHD file
+039100200529      *
+039200200529     C           BKEY      KLIST
+039300200529     C                     KFLD           @BPSC
+039400200529     C                     KFLD           @BPBA
+039500200529     C                     KFLD           @BPBK
+039600200529     C                     KFLD           @BPMK
+039700200529      *
+039800200529      ** Define fields
+039900200529      *
+040000200529      ** Positions files key fields
+040100200529      *
+040200200529     C           *LIKE     DEFN BHSC      @BPSC
+040300200529     C           *LIKE     DEFN BHBA      @BPBA
+040400200529     C           *LIKE     DEFN BHBK      @BPBK
+040500200529     C           *LIKE     DEFN BHMK      @BPMK
+040600200529     C           *LIKE     DEFN CSBA      @CSBA
+040700200529     C           *LIKE     DEFN CSSC      @CSSC
+040800200529     C           *LIKE     DEFN CSCN      @CSCN
+040900200529      *
+041000200529      ** Prepare LDA
+041100200529      *
+041200200529     C           *NAMVAR   DEFN           LDA
+041300200529     C           *LOCK     IN   LDA
+041400200529     C                     MOVE *BLANKS   DBLOT
+041500200529     C                     MOVEL'SE2590'  DBPGM
+041600200529     C                     OUT  LDA
+041700200529      *
+041800200529      ** Read in RUNDAT data area
+041900200529      *
+042000200529     C           *NAMVAR   DEFN RUNDAT    RUNDT
+042100200529     C                     IN   RUNDT
+042200200529      *
+042300200529      ** Access bank details
+042400200529      *
+042500200529     C                     CALL 'AOBANKR0'
+042600200529     C                     PARM '*MSG   ' @RTCD   7
+042700200529     C                     PARM '*FIRST ' @OPTN   7
+042800200529     C           SDBANK    PARM SDBANK    DSFDY
+042900200529     C           @RTCD     IFNE *BLANKS
+043000200529     C           *LOCK     IN   LDA
+043100200529     C                     Z-ADD1         DBASE            ***************
+043200200529     C                     MOVEL'SDBANKPD'DBFILE           * DB ERROR 01 *
+043300200529     C                     MOVEL'*FIRST'  DBKEY            ***************
+043400200529     C                     OUT  LDA
+043500200529     C                     WRITEHEADAU
+043600200529     C                     WRITEERROR
+043700200529     C                     SETON                     U7U8LR
+043800200529     C                     EXSR *PSSR
+043900200529     C                     RETRN
+044000200529     C                     END
+044100200529      *                                                                                       261862
+044200200529      ** Check Portfolio Management is On or Off.                                             261862
+044300200529      *                                                                                       261862
+044400200529     C                     CALL 'AOMMODR0'                                                    261862
+044500200529     C                     PARM *BLANKS   XXRTCD  7                                           261862
+044600200529     C                     PARM '*FIRST ' WWOPTN  7                                           261862
+044700200529     C           SDMMOD    PARM SDMMOD    DSFDY                                               261862
+044800200529     C           XXRTCD    IFNE *BLANKS                                                       261862
+044900200529     C           *LOCK     IN   LDA                        ***************                    261862
+045000200529     C                     MOVE '3'       DBASE            **DB ERROR 03**                    261862
+045100200529     C                     MOVE 'SDMMODPD'DBFILE           ***************                    261862
+045200200529     C                     MOVELWWOPTN    DBKEY                                               261862
+045300200529     C                     MOVELWWOPTN    DBOPTN  7                                           261862
+045400200529     C                     OUT  LDA                                                           261862
+045500200529     C                     ENDIF                                                              261862
+045600200529     C           BGPFMG    IFEQ 'Y'                                                           261862
+045700200529     C           BGN4ST    OREQ 'Y'                                                           261862
+045800200529     C                     MOVEL'Y'       FCDEP   1                                           261862
+045900200529     C                     ENDIF                                                              261862
+046000200529     C/COPY WNCPYSRC,SE2590C004
+046100200529      *
+046200200529     C                     ENDSR
+046300200529      *
+046400200529      *****************************************************************
+046500200529      /EJECT
+046600200529      *****************************************************************
+046700200529      *                                                               *
+046800200529      * *PSSR  - Database error subroutine.                           *
+046900200529      *          This subroutine DUMPs the program just once.         *
+047000200529      *                                                               *
+047100200529      * Called by: Database error processing                          *
+047200200529      *                                                               *
+047300200529      * Calls: None                                                   *
+047400200529      *                                                               *
+047500200529      *****************************************************************
+047600200529      *
+047700200529     C           *PSSR     BEGSR                           ** *PSSR **
+047800200529     C**
+047900200529     C           @RUN      IFEQ *BLANKS
+048000200529     C                     MOVE 'Y'       @RUN    1
+048100200529     C                     DUMP
+048200200529     C                     END
+048300200529     C**
+048400200529     C                     ENDSR
+048500200529      *
+048600200529     C*****************************************************************
+048700200529     C/COPY WNCPYSRC,SE2590C005
+048800200529     O/EJECT
+048900200529     O***SEPCBDF E             BOOK                                                           095907
+049000200529     O***                      RECI                                                           095907
+049100200529     O***SEPCCDF E             CUST                                                           095907
+049200200529     O***                      RECI                                                           095907
+049300200529      /EJECT
+049400200529      ***
+049500200529**  CPY@
+049600200529(c) Finastra International Limited 2001

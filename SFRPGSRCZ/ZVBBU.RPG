@@ -1,194 +1,200 @@
-     H        1
-      *****************************************************************
-/*STD *  RPGBASE                                                      *
-/*EXI *  TEXT('Midas SF Validate booking branch/user')
-     F*****************************************************************
-     F*                                                               *
-     F*  Midas  SECURITY PROFILE FACILITY
-     F*                                                               *
-     F*   ZVBBU  - TO VALIDATE THAT THE USER IS AUTHORISED TO A       *
-     F*            BOOKING BRANCH                                     *
-     F*                                                               *
-     F*  Function: This program checks that the user is authorised    *
-     F*            to a Booking Branch.                               *
-     F*            A parameter is passed back to the calling program  *
-     F*            to indicate validity :                             *
-     F*            0 - all valid                                      *
-     F*            1 - no authorised branches found for user          *
-     F*            2 - user is not authorised to this branch          *
-     F*                                                               *
-     F*  Where Used: Input Cycle, multibranch environment             *
-     F*                                                               *
-     F*  Called By: Any program requiring this validation             *
-     F*                                                               *
-     F*  Calls: None                                                  *
-     F*                                                               *
-      *  (c) Finastra International Limited 2001                      *
-     F*                                                               *
-     F*  Any changes made to this program may also need to be         *
-     F*  incorporated in ZBBBU.                                       *
-     F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      * Bank Fusion Midas 1.4 Base -----------------------------------*
-      * Midas Plus 1.4 Base 04 ---------------------------------------*
-      * Midas Plus 1.4 Base ------------------------------------------*
-      * Midas Plus 1.3 ----------- Base ------------------------------*
-      * Midas Release 4.01.02 ----------------------------------------*
-      *  Prev Amend No. 197434             Date 09Oct01               *
-      * Midas Release 4 --------------- Base -------------------------*
-      * Midas DBA 3.00 ---------------- Base -------------------------*
-      *                 E26748             Date 01Aug91               *
-     F*                                                               *
-     F*****************************************************************
-     F*                                                               *
-      *  MD046248 - Finastra Rebranding                               *
-      *  197434 - Array index error on SF0021. Increase maximum       *
-      *           number of branches from 100 to 900.                 *
-     F*    E26748 - SOURCE MEMBER INCORRECTLY PLACED IN ZARPGSRC      *
-     F*             SO MOVE TO SFRPGSRC.                              *
-     F*                                                               *
-     F*****************************************************************
-     F*                                                               *
-     F*                                                               *
-     F*****************************************************************
-     F*
-     F* ID F  C  H  L     FUNCTION OF INDICATORS
-     F*
-     F*       01       OPEN FILE
-     F*       99       NO VALID BRANCHES FOUND
-     F*
-     F*****************************************************************
-     F*       INPUTS TO THIS PROGRAMME
-     F*
-     F*       BRANCH CODE 3A  (FROM THE CALLING PROGRAMME)
-     F*       DTAARA/ZBRU     VALID BOOKING BRANCHES FOR THIS USER
-     F*
-     F*****************************************************************
-     F*       OUTPUT FROM THIS PROGRAMME
-     F*
-     F*       ERROR CODE  : 0 = NO ERROR
-     F*                     1 = NO VALID BRANCHES FOUND FOR USER
-     F*                     2 = THIS BRANCH CODE NOT VALID FOR USER
-     F*
-     F*****************************************************************
-     E**********          ZBR       100  3               STORAGE ARRAY                        197434
-     E                    ZBR       900  3               STORAGE ARRAY                        197434
-     I*
-     I* DATA STRUCTURE TO SET UP VALID BOOKING BRANCHES
-     I*
-     IZBRU        DS
-     I                                        1   1 ZCHO
-     I                                        2   4 ZINO
-     I                                        5 154 ZBR1
-     I                                      155 304 ZBR2
-      *                                                                                       197434
-     IZBRU1       DS                                                                          197434
-      *                                                                                       197434
-      ** Bank Level Functions / Booking Branches 1                                            197434
-      *                                                                                       197434
-     I                                        1 255 ZBR11                                     197434
-     I                                      256 510 ZBR12                                     197434
-     I                                      511 765 ZBR13                                     197434
-     I                                      7661020 ZBR14                                     197434
-     I                                     10211275 ZBR15                                     197434
-     I                                     12761530 ZBR16                                     197434
-     I                                     15311785 ZBR17                                     197434
-     I                                     17861998 ZBR18                                     197434
-     IZBRU2       DS                                                                          197434
-      *                                                                                       197434
-      ** Bank Level Functions / Booking Branches 2                                            197434
-      *                                                                                       197434
-     I                                        1 255 ZBR21                                     197434
-     I                                      256 402 ZBR22                                     197434
-     C**
-     C           *ENTRY    PLIST
-     C                     PARM           ZBRCDX  3        BRANCH CODE 3A
-     C                     PARM           ERR     10       ERROR CODE 1S
-     C*
-     C                     SETOF                       99
-     C                     Z-ADD0         ERR
-     C*
-     C*****************************************************************
-     C**  IF FIRST ROUND MOVE ZBRU DETAILS INTO ARRAY
-     C*
-     C           *IN01     IFEQ '0'                        B01
-     C**
-     C                     SETON                     01    SET 1ST RND IND
-     C*
-     C                     EXSR ZSPFB
-     C*
-     C                     END
-     C*
-     C*****************************************************************
-     C* IF NO RECORDS ARE ON ZBRU SET ERROR CONDITION TO 1
-     C*
-     C           U         IFEQ 0
-     C                     Z-ADD1         ERR
-     C*
-     C* IF AT LEAST ONE RECORD ON ZBRU
-     C*
-     C                     ELSE
-     C*
-     C* SAVE 'U' SO THAT SEARCHING ALWAYS STARTS AT LOWEST ENTRY
-     C*
-     C                     Z-ADDU         V       30
-     C*
-     C           ZBRCDX    LOKUPZBR,V                    99
-     C*
-     C* IF INPUTED BRANCH NOT ON ZBRU SET ERROR CONDITION TO 2
-     C*
-     C           *IN99     IFEQ '0'
-     C                     Z-ADD2         ERR
-     C                     END
-     C*
-     C                     END
-     C*C
-     C                     RETRN
-     C*****************************************************************
-     C**  P/ZSPFB STD SR TO MAKE SPF USER/BRANCHES AVAILABLE TO PGM
-     C**    INPUT FROM EXT.DTAARA- ZBR1 & 2,UP TO 100 BRANCHES,TOP DOWN
-     C**                           ZIN,INDEX OF LOWEST ENTRY FOR ARRAY
-     C**    OUTPUT - ZBR  ARRAY, TOP DOWN
-     C**             U, EQ ZINO
-     C**
-     C           ZSPFB     BEGSR                           **  ZSPFB **
-     C           *NAMVAR   DEFN           ZBRU
-     C                     IN   ZBRU
-     C                     MOVEAZBR1      ZBR,1
-     C                     MOVEAZBR2      ZBR,51
-     C                     MOVE ZINO      U       30
-     C                     UNLCKZBRU
-      *                                                                                       197434
-      ** Set up the array ZBR by branches in data areas ZBRU1 and ZBRU2                       197434
-      *                                                                                       197434
-     C           *NAMVAR   DEFN           ZBRU1                                               197434
-     C                     IN   ZBRU1                                                         197434
-     C                     Z-ADD101       W       30                                          197434
-     C                     MOVEAZBR11     ZBR,W                                               197434
-     C                     Z-ADD186       W                                                   197434
-     C                     MOVEAZBR12     ZBR,W                                               197434
-     C                     Z-ADD271       W                                                   197434
-     C                     MOVEAZBR13     ZBR,W                                               197434
-     C                     Z-ADD356       W                                                   197434
-     C                     MOVEAZBR14     ZBR,W                                               197434
-     C                     Z-ADD441       W                                                   197434
-     C                     MOVEAZBR15     ZBR,W                                               197434
-     C                     Z-ADD526       W                                                   197434
-     C                     MOVEAZBR16     ZBR,W                                               197434
-     C                     Z-ADD611       W                                                   197434
-     C                     MOVEAZBR17     ZBR,W                                               197434
-     C                     Z-ADD696       W                                                   197434
-     C                     MOVEAZBR18     ZBR,W                                               197434
-     C                     UNLCKZBRU1                                                         197434
-      *                                                                                       197434
-     C           *NAMVAR   DEFN           ZBRU2                                               197434
-     C                     IN   ZBRU2                                                         197434
-     C                     Z-ADD767       W                                                   197434
-     C                     MOVEAZBR21     ZBR,W                                               197434
-     C                     Z-ADD852       W                                                   197434
-     C                     MOVEAZBR22     ZBR,W                                               197434
-     C                     UNLCKZBRU2                                                         197434
-      *                                                                                       197434
-     C                     ENDSR
-     C**
-     C*****************************************************************
+000100200529     H        1
+000200200529      *****************************************************************
+000300200529/*STD *  RPGBASE                                                      *
+000400200529/*EXI *  TEXT('Midas SF Validate booking branch/user')
+000500200529     F*****************************************************************
+000600200529     F*                                                               *
+000700200529     F*  Midas  SECURITY PROFILE FACILITY
+000800200529     F*                                                               *
+000900200529     F*   ZVBBU  - TO VALIDATE THAT THE USER IS AUTHORISED TO A       *
+001000200529     F*            BOOKING BRANCH                                     *
+001100200529     F*                                                               *
+001200200529     F*  Function: This program checks that the user is authorised    *
+001300200529     F*            to a Booking Branch.                               *
+001400200529     F*            A parameter is passed back to the calling program  *
+001500200529     F*            to indicate validity :                             *
+001600200529     F*            0 - all valid                                      *
+001700200529     F*            1 - no authorised branches found for user          *
+001800200529     F*            2 - user is not authorised to this branch          *
+001900200529     F*                                                               *
+002000200529     F*  Where Used: Input Cycle, multibranch environment             *
+002100200529     F*                                                               *
+002200200529     F*  Called By: Any program requiring this validation             *
+002300200529     F*                                                               *
+002400200529     F*  Calls: None                                                  *
+002500200529     F*                                                               *
+002600200529      *  (c) Finastra International Limited 2001                      *
+002700200529     F*                                                               *
+002800200529     F*  Any changes made to this program may also need to be         *
+002900200529     F*  incorporated in ZBBBU.                                       *
+003000200529     F*                                                               *
+003100200604     F*  Last Amend No. 259591             Date 22May20               *
+003200200529      *  Prev Amend No. MD046248           Date 27Oct17               *
+003300200529      * Bank Fusion Midas 1.4 Base -----------------------------------*
+003400200529      * Midas Plus 1.4 Base 04 ---------------------------------------*
+003500200529      * Midas Plus 1.4 Base ------------------------------------------*
+003600200529      * Midas Plus 1.3 ----------- Base ------------------------------*
+003700200529      * Midas Release 4.01.02 ----------------------------------------*
+003800200529      *                 197434             Date 09Oct01               *
+003900200529      * Midas Release 4 --------------- Base -------------------------*
+004000200529      * Midas DBA 3.00 ---------------- Base -------------------------*
+004100200529      *                 E26748             Date 01Aug91               *
+004200200529     F*                                                               *
+004300200529     F*****************************************************************
+004400200529     F*                                                               *
+004500200529      *  259591 - From the Deopt Walk In/Out, users intermittently    *
+004600200529      *           encounter booking branch validation error message.  *
+004700200529      *           Remove condition such that SR/ZSPFB is always       *
+004800200529      *           executed.                                           *
+004900200529      *  MD046248 - Finastra Rebranding                               *
+005000200529      *  197434 - Array index error on SF0021. Increase maximum       *
+005100200529      *           number of branches from 100 to 900.                 *
+005200200529     F*    E26748 - SOURCE MEMBER INCORRECTLY PLACED IN ZARPGSRC      *
+005300200529     F*             SO MOVE TO SFRPGSRC.                              *
+005400200529     F*                                                               *
+005500200529     F*****************************************************************
+005600200529     F*                                                               *
+005700200529     F*                                                               *
+005800200529     F*****************************************************************
+005900200529     F*
+006000200529     F* ID F  C  H  L     FUNCTION OF INDICATORS
+006100200529     F*
+006200200529     F*       01       OPEN FILE
+006300200529     F*       99       NO VALID BRANCHES FOUND
+006400200529     F*
+006500200529     F*****************************************************************
+006600200529     F*       INPUTS TO THIS PROGRAMME
+006700200529     F*
+006800200529     F*       BRANCH CODE 3A  (FROM THE CALLING PROGRAMME)
+006900200529     F*       DTAARA/ZBRU     VALID BOOKING BRANCHES FOR THIS USER
+007000200529     F*
+007100200529     F*****************************************************************
+007200200529     F*       OUTPUT FROM THIS PROGRAMME
+007300200529     F*
+007400200529     F*       ERROR CODE  : 0 = NO ERROR
+007500200529     F*                     1 = NO VALID BRANCHES FOUND FOR USER
+007600200529     F*                     2 = THIS BRANCH CODE NOT VALID FOR USER
+007700200529     F*
+007800200529     F*****************************************************************
+007900200529     E**********          ZBR       100  3               STORAGE ARRAY                        197434
+008000200529     E                    ZBR       900  3               STORAGE ARRAY                        197434
+008100200529     I*
+008200200529     I* DATA STRUCTURE TO SET UP VALID BOOKING BRANCHES
+008300200529     I*
+008400200529     IZBRU        DS
+008500200529     I                                        1   1 ZCHO
+008600200529     I                                        2   4 ZINO
+008700200529     I                                        5 154 ZBR1
+008800200529     I                                      155 304 ZBR2
+008900200529      *                                                                                       197434
+009000200529     IZBRU1       DS                                                                          197434
+009100200529      *                                                                                       197434
+009200200529      ** Bank Level Functions / Booking Branches 1                                            197434
+009300200529      *                                                                                       197434
+009400200529     I                                        1 255 ZBR11                                     197434
+009500200529     I                                      256 510 ZBR12                                     197434
+009600200529     I                                      511 765 ZBR13                                     197434
+009700200529     I                                      7661020 ZBR14                                     197434
+009800200529     I                                     10211275 ZBR15                                     197434
+009900200529     I                                     12761530 ZBR16                                     197434
+010000200529     I                                     15311785 ZBR17                                     197434
+010100200529     I                                     17861998 ZBR18                                     197434
+010200200529     IZBRU2       DS                                                                          197434
+010300200529      *                                                                                       197434
+010400200529      ** Bank Level Functions / Booking Branches 2                                            197434
+010500200529      *                                                                                       197434
+010600200529     I                                        1 255 ZBR21                                     197434
+010700200529     I                                      256 402 ZBR22                                     197434
+010800200529     C**
+010900200529     C           *ENTRY    PLIST
+011000200529     C                     PARM           ZBRCDX  3        BRANCH CODE 3A
+011100200529     C                     PARM           ERR     10       ERROR CODE 1S
+011200200529     C*
+011300200529     C                     SETOF                       99
+011400200529     C                     Z-ADD0         ERR
+011500200529     C*
+011600200529     C*****************************************************************
+011700200529     C**  IF FIRST ROUND MOVE ZBRU DETAILS INTO ARRAY
+011800200529      ** First round checking causes problem for Midas Plus thin client                       259591
+011900200529     C*
+012000200529     C********** *IN01     IFEQ '0'                        B01                                259591
+012100200529     C**
+012200200529     C                     SETON                     01    SET 1ST RND IND
+012300200529     C*
+012400200529     C                     EXSR ZSPFB
+012500200529     C*
+012600200529     C**********           END                                                                259591
+012700200529     C*
+012800200529     C*****************************************************************
+012900200529     C* IF NO RECORDS ARE ON ZBRU SET ERROR CONDITION TO 1
+013000200529     C*
+013100200529     C           U         IFEQ 0
+013200200529     C                     Z-ADD1         ERR
+013300200529     C*
+013400200529     C* IF AT LEAST ONE RECORD ON ZBRU
+013500200529     C*
+013600200529     C                     ELSE
+013700200529     C*
+013800200529     C* SAVE 'U' SO THAT SEARCHING ALWAYS STARTS AT LOWEST ENTRY
+013900200529     C*
+014000200529     C                     Z-ADDU         V       30
+014100200529     C*
+014200200529     C           ZBRCDX    LOKUPZBR,V                    99
+014300200529     C*
+014400200529     C* IF INPUTED BRANCH NOT ON ZBRU SET ERROR CONDITION TO 2
+014500200529     C*
+014600200529     C           *IN99     IFEQ '0'
+014700200529     C                     Z-ADD2         ERR
+014800200529     C                     END
+014900200529     C*
+015000200529     C                     END
+015100200529     C*C
+015200200529     C                     RETRN
+015300200529     C*****************************************************************
+015400200529     C**  P/ZSPFB STD SR TO MAKE SPF USER/BRANCHES AVAILABLE TO PGM
+015500200529     C**    INPUT FROM EXT.DTAARA- ZBR1 & 2,UP TO 100 BRANCHES,TOP DOWN
+015600200529     C**                           ZIN,INDEX OF LOWEST ENTRY FOR ARRAY
+015700200529     C**    OUTPUT - ZBR  ARRAY, TOP DOWN
+015800200529     C**             U, EQ ZINO
+015900200529     C**
+016000200529     C           ZSPFB     BEGSR                           **  ZSPFB **
+016100200529     C           *NAMVAR   DEFN           ZBRU
+016200200529     C                     IN   ZBRU
+016300200529     C                     MOVEAZBR1      ZBR,1
+016400200529     C                     MOVEAZBR2      ZBR,51
+016500200529     C                     MOVE ZINO      U       30
+016600200529     C                     UNLCKZBRU
+016700200529      *                                                                                       197434
+016800200529      ** Set up the array ZBR by branches in data areas ZBRU1 and ZBRU2                       197434
+016900200529      *                                                                                       197434
+017000200529     C           *NAMVAR   DEFN           ZBRU1                                               197434
+017100200529     C                     IN   ZBRU1                                                         197434
+017200200529     C                     Z-ADD101       W       30                                          197434
+017300200529     C                     MOVEAZBR11     ZBR,W                                               197434
+017400200529     C                     Z-ADD186       W                                                   197434
+017500200529     C                     MOVEAZBR12     ZBR,W                                               197434
+017600200529     C                     Z-ADD271       W                                                   197434
+017700200529     C                     MOVEAZBR13     ZBR,W                                               197434
+017800200529     C                     Z-ADD356       W                                                   197434
+017900200529     C                     MOVEAZBR14     ZBR,W                                               197434
+018000200529     C                     Z-ADD441       W                                                   197434
+018100200529     C                     MOVEAZBR15     ZBR,W                                               197434
+018200200529     C                     Z-ADD526       W                                                   197434
+018300200529     C                     MOVEAZBR16     ZBR,W                                               197434
+018400200529     C                     Z-ADD611       W                                                   197434
+018500200529     C                     MOVEAZBR17     ZBR,W                                               197434
+018600200529     C                     Z-ADD696       W                                                   197434
+018700200529     C                     MOVEAZBR18     ZBR,W                                               197434
+018800200529     C                     UNLCKZBRU1                                                         197434
+018900200529      *                                                                                       197434
+019000200529     C           *NAMVAR   DEFN           ZBRU2                                               197434
+019100200529     C                     IN   ZBRU2                                                         197434
+019200200529     C                     Z-ADD767       W                                                   197434
+019300200529     C                     MOVEAZBR21     ZBR,W                                               197434
+019400200529     C                     Z-ADD852       W                                                   197434
+019500200529     C                     MOVEAZBR22     ZBR,W                                               197434
+019600200529     C                     UNLCKZBRU2                                                         197434
+019700200529      *                                                                                       197434
+019800200529     C                     ENDSR
+019900200529     C**
+020000200529     C*****************************************************************

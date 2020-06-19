@@ -1,692 +1,702 @@
-     H        1
-      *****************************************************************
-/*STD *  RPGBASE                                                      *
-/*EXI *  TEXT('Midas SE Drop off customer positions')
-/*OVR *: OVRDBF FILE(CHECK) TOFILE(QAFDMBR)                         : *                       095907
-     F*****************************************************************
-     F*                                                               *
-     F*  Midas - Securities Trading Module
-     F*                                                               *
-     F*  SE2540 - DROP OFF CUSTOMER POSITIONS                         *
-     F*                                                               *
-     F*  Function: To drop from the files for Cust Positions,         *
-     F*   (COB)    - all records no longer needed by back valuation   *
-     F*              processing or enquiries                          *
-     F*            - all records for which the security has expired   *
-     F*            - all records which represent the current position *
-     F*              but which are zero and prior to back-valuation   *
-     F*              date                                             *
-     F*            For backvaluations, the positions as at b/valuation*
-     F*            date is required, ie the latest position record    *
-     F*            which pre-dates back valuation date;  earlier      *
-     F*            positions are required as at end of month, back    *
-     F*            to Retention Period for Settled Trades.  Earlier   *
-     F*            positions are dropped; the exception is where the  *
-     F*            current positons is zero and has been since before *
-     F*            b/v date - in this case the position is dropped    *
-     F*                                                               *
-     F*  Called by: SEC1004 - Drop off Positions - Depot/Cust/Book    *
-     F*                                                               *
-      *  (c) Finastra International Limited 2001                      *
-     F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      * Bank Fusion Midas 1.4 Base -----------------------------------*
-      * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. 095907             Date 25Jan07               *
-      * Midas Plus 1.4 Base ------------------------------------------*
-      * Midas Plus 1.3 ----------- Base ------------------------------*
-      *                 CSD027             Date 09Dec05               *
-      *                 CSE071             Date 19Jul05               *
-      * Midas Release 4.01.02 ----------------------------------------*
-      *                 207179             Date 23Sep02               *
-      * Midas Release 4 --------------- Base -------------------------*
-      * Midas DBA 3.03 -----------------------------------------------*
-      *                 157947             Date 07Jun00               *
-      * Midas DBA 3.00 ---------------- Base -------------------------*
-     F*                 102734             DATE 02MAY96               *
-     F*                 052254             DATE 10JAN94               *
-     F*                 S01401             DATE 16JUN93               *
-     F*                 S01397             DATE 10SEP92               *
-     F*                 E29170             DATE 07NOV91               *
-     F*                 S01117             DATE 07JUN91               *
-     F*                 S01269             DATE 02AUG90               *
-     F*                 E22042             DATE 18MAY90               *
-     F*                 E20651             DATE 30JAN90               *
-     F*                                                               *
-     F*---------------------------------------------------------------*
-      *                                                               *
-      *  MD046248 - Finastra Rebranding                               *
-      *  095907 -  CPOSO REPLACED BY CPOSOM (FOOB)                    *
-      *         -  MODIFICATIONS CALCULATIONS FOR OUTPUT TRAILER      *
-      *         -  UPDATES OF RECI WITH '*' REPLACED BY DELETES       *
-      *         -  NEW FILE CHECK ADDED TO CORRECT CAPRHA TRAILER     *
-      *         -  DROP CAPRHD RECORD IF OLDER THAN RETENTION PERIOD  *
-      *         -  IF INTEREST BEARING DONT REMOVE RECS IN CURR.COUP  *
-      *            PERIOD                                             *
-      *         -  IF RECORDS DELETED FROM CPOSND RETRIEVE ALL RECORDS*
-      *            IN CAPRHD FOR THE BRANCH/SECURITY IF SECURITY      *
-      *            DELETED                                            *
-      *         - ONLY ACCESS SECTYD WHEN CHANGE OF SECURITY          *
-      *         - COMPARE FOR TRAILER CPOSNA IS TOTALLY OBSOLETE;     *
-      *           ADD NUMBER OF RETAINED RECORDS TO NORE.             *
-      *         - USE WORK FIELD OF 6,0 TO OUPTPUT DETAILS FOR CPOSND *
-      *           AND CAPRHD ON SE2540AU                              *
-      *         - also include fix 243026.
-      *  243026 -  In case of rupture on security:                    *
-      *            SR/DLTCAP should be called only once               *
-      *         -  6,0 is not enough on printer. Increase to 7,0      *
-      *         - Work field too short                                *
-      *  CSD027 - Conversion Of Customer Number to Alpha              *
-      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
-      *  207179 - Retain first record past backvalue period if        *
-      *           non-zero and delete all others.  Also do not delete *
-      *           CAPRHD records unless all CPOSND records are dropped*
-     F*  157947 - Customer record with zero position will not be drop *
-     F*           from CPOSND. However, with all the records being    *
-     F*           dropped from CDEPPD which enable customer to be     *
-     F*           deleted from CLINTSE caused DB error in SE1480.     *
-     F*           Applied fix 100249.
-     F*  102734 - Retain latest position prior to back-value period   *
-     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
-     F*           to 10,9                                             *
-     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
-     F*          - Recompiled due to changes to files.                *
-     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
-     F*          - Recompiled due to changes to files.                *
-     F*  E29170  -  Report Control Facility changes                   *
-     F*  S01117  -  Multi-branching                                   *
-     F*  S01269  -  TRADE AUTHORISATION: RECOMPILED OVER CHANGED      *
-     F*             FILE TABSE.                                       *
-     F*  E22042  -  WRONG RECORDS WERE BEING FLAGGED TO BE DROPPED.   *
-     F*  E20651  -  DB ERRORS USED IN MORE THAN ONE PLACE.            *
-     F*             NEW ERROR NUMBERS AS FOLLOWS:                     *
-     F*             DB ERROR 01 -> 05                                 *
-     F*             DB ERROR 01 -> 06                                 *
-     F*                                                               *
-     F*****************************************************************
-     F*
-     F**CPOSO   UP  E           K        DISK                                                 095907
-     FCPOSOM  UP  E           K        DISK                                                   095907
-     FSECTY   IF  E           K        DISK
-     FCPOSNA  UF  E                    DISK
-     FCAPRBS  UF  E           K        DISK
-     FCAPRHA  UF  E                    DISK
-     FCHECK   IF  E                    DISK                                                   095907
-     FTABSE   IF  E           K        DISK
-     F            TABLETAF                          KIGNORE
-     F            TABTB11F                          KIGNORE
-     F            TABTE10F                          KIGNORE
-     F            TABTE20F                          KIGNORE
-     F            TABTG10F                          KIGNORE
-     F            TABTG20F                          KIGNORE
-     F            TABLETHF                          KIGNORE
-     F*********** TABLETJF                          KIGNORE               S01117
-     F            TABLETKF                          KIGNORE
-     F            TABLETLF                          KIGNORE
-     F            TABLETNF                          KIGNORE
-     F            TABLETPF                          KIGNORE
-     F            TABLETRF                          KIGNORE
-     F            TABLETXF                          KIGNORE
-     F            TABLET2F                          KIGNORE
-     F            TABLET3F                          KIGNORE
-     F            TABLET5F                          KIGNORE
-     F            TABTB40F                          KIGNORE
-     FSE2540AUO   E                    PRINTER
-     F/COPY WNCPYSRC,SE2540F001
-     F*
-      /EJECT
-     F*****************************************************************
-     F*                                                               *
-     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
-     F*                                                               *
-     F*   31       Security not found for this record                 *
-     F*   32       Control of live record count - change of branch    *
-     F*   33       General work indicator                             *
-     F*   34       Record found equal to Key1                         *
-     F*   35       End of match with Key1 on Caprbs file              *
-     F*   36       End of file on Caprha file                         *
-     F*   69       Used to Control first cycle processing             *
-     F*   73       Number of records on audit file different from     *
-     F*            number of records read                             *
-     F*90-99    Used in standard sub-routines                         *
-     F*   U7    Database error                                        *
-     F*   U8    Database / Control error                              *
-     F*   L3 Change of Branch                                         *
-     F*   L2 Change of Security                                       *
-     F*   L1 Change of Counterparty                                   *
-     F*****************************************************************
-      /SPACE 3
-     F*****************************************************************
-     F*                                                               *
-     F*  I N D E X   T O   S U B R O U T I N E S                      *
-     F*                                                               *
-     F*   DLTREC - Flag records as deleted and count total            *
-     F*   *PSSR  - Error handling                                     *   S01117
-     F*   ZDATE2 - DAYNO - DATE conversion                            *
-     F*   ZICDSE - Access ICD record for Securities Trading           *
-     F*   ZSEDIT - Insert a decimal point and sign into a numeric fiel*
-     F*            and blank out leading zeros                        *
-     F*   ZSYSTM - Access ICD record                                  *
-     F*                                                               *
-     F*****************************************************************
-      /EJECT
-     E/COPY ZSRSRC,ZDATE2Z1
-     E                    CPY@    1   1 80                                S01117
-     E*
-     E/COPY ZSRSRC,ZSEDITZ1
-     E*
-      /EJECT
-     E/COPY WNCPYSRC,SE2540E001
-     ICPOSNDF
-     I***********                                   CSBR  L3              S01117
-     I                                              CSBA  L3              S01117
-     I                                              CSSC  L2
-     I                                              CSCN  L1
-     I              RECI                            RECIX
-     ICAPRHDF
-     I              RECI                            RECIY
-     I              CSCN                            CSCNY
-     I              CSDA                            CSDAY
-     I*LDA******* UDS                            256                      S01117
-     I***********                           134 177 DBLOT                 S01117
-     I***********                           134 138 DBFILE                S01117
-     I***********                           139 167 DBKEY                 S01117
-     I***********                           168 175 DBPGM                 S01117
-     I***********                           176 177 DBASE                 S01117
-     ILDA         DS                            256                       S01117
-     I                                      134 183 DBLOT                 S01117
-     I                                      134 141 DBFILE                S01117
-     I                                      142 170 DBKEY                 S01117
-     I                                      171 180 DBPGM                 S01117
-     I                                      181 1830DBASE                 S01117
-     ICPYR@#      DS                                                      S01117
-     I*                                                                   S01117
-     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION            S01117
-     I*                                                                   S01117
-     I                                        1  80 CPY@                  S01117
-     I                                        1  20 CPY@##                S01117
-     I/COPY WNCPYSRC,SE2540I001
-     I/COPY ZSRSRC,ZSEDITZ2
-      /EJECT
-     C*
-     C**  KEY LIST TO ACCESS CAPRBS FILE
-     C*
-     C           KEY1      KLIST
-     C***********          KFLD           CSBR                            S01117
-     C                     KFLD           CSBA                            S01117
-     C                     KFLD           CSSC
-     C                     KFLD           CSCN                                                207179
-     C*
-     C           *LIKE     DEFN CSSC      SCSSC                                               095907
-     C           *LIKE     DEFN CSSC      TLCSSC                                              243026
-     C*================================================================
-     C*  P R O G R A M     S T A R T                                  *
-     C*================================================================
-     C*
-     C           *IN69     IFEQ '0'
-     C*
-     C* Prepare LDA
-     C*
-     C           *NAMVAR   DEFN           LDA                             S01117
-     C           *LOCK     IN   LDA                                       S01117
-     C                     MOVE *BLANKS   DBLOT
-     C                     MOVE 'SE2540  'DBPGM
-     C                     OUT  LDA                                       S01117
-     C*
-     C* Get Installation Control Data record 1
-     C*
-     C                     EXSR ZSYSTM
-     C*
-     C* If error in ZSYSTM, abend program
-     C*
-     C           *IN99     IFEQ '1'                        ***************
-     C           *LOCK     IN   LDA                        ***************S01117
-     C***********          MOVE '01'      DBASE            **DB*ERROR*01**E20651
-     C***********          MOVE '05'      DBASE            **DB 5**E20651 S01117
-     C                     Z-ADD5         DBASE            **DB ERROR 05**S01117
-     C                     MOVEL'TABLE'   DBFILE           ***************
-     C                     MOVELZTABKY    DBKEY
-     C                     OUT  LDA                                       S01117
-     C                     EXSR *PSSR                                     S01117
-     C                     WRITEHEADAU
-     C                     WRITEERROR
-     C***********          WRITETRAILAU                                   E29170
-     C                     SETON                     U7U8LR
-     C                     RETRN
-     C                     END
-     C*
-     C* Get Installation Control Data record for Securities trading
-     C*
-     C                     EXSR ZICDSE
-     C*
-     C* If error in ZICDSE, abend program
-     C*
-     C           *IN99     IFEQ '1'                        ***************
-     C           *LOCK     IN   LDA                        ***************S01117
-     C***********          MOVE '02'      DBASE            **DB ERROR 02**S01117
-     C                     Z-ADD2         DBASE            **DB ERROR 02**S01117
-     C                     MOVEL'TABLE'   DBFILE           ***************
-     C                     MOVELZTABKY    DBKEY
-     C                     OUT  LDA                                       S01117
-     C                     EXSR *PSSR                                     S01117
-     C                     WRITEHEADAU
-     C                     WRITEERROR
-     C***********          WRITETRAILAU                                   E29170
-     C                     SETON                     U7U8LR
-     C                     RETRN
-     C                     END
-     C*
-     C* Calculate Back valuation date
-     C*
-     C           RUND      SUB  BKVP      BVDATE  50
-     C*
-     C**Calculate*Retention date                                                              207179
-     C**********                                                                              207179
-     C********** 31        MULT RTST      WK3N    30                                          207179
-     C********** RUND      SUB  WK3N      RTNTDT  50                                          207179
-     C           31        MULT RTST      WK3N    50                                          243026
-     C           RUND      SUB  WK3N      RTNTDT  50                                          243026
-     C*
-     C                     SETON                     69
-     C                     READ CHECK                    33                                   095907
-     C                     Z-ADDMBNRCD    CNORE   50                                          095907
-     C                     Z-ADDMBNRCD    CNORE7  70                                          243026
-     C/COPY WNCPYSRC,SE2540C001
-     C                     END
-     C*
-      /EJECT
-     C*
-     C* Change of Branch live record count control
-     C*
-     C***L3******          SETOF                     32                   E22042
-     C   L1                SETOF                     32                   E22042
-     C   L1                Z-ADD*ZEROS    ZMTHX                           102734
-     C*
-     C* Ignore this record if already deleted
-     C*
-     C           RECIX     IFNE '*'
-     C*
-     C* Count movements records read
-     C*
-     C***********          ADD  1         CPRRD                                               095907
-     C                     ADD  1         CPRRD   50                                          095907
-     C                     ADD  1         CPRRD7                                              243026
-     C                     ADD  1         SNORE7                                              243026
-     C*
-     C* Access Security
-     C*
-     C           CSSC      IFNE SCSSC                                                         095907
-     C                     MOVE CSSC      SCSSC                                               095907
-     C           CSSC      CHAINSECTYDF              31
-     C  N31      RECI      COMP '*'                      31
-     C                     END                                                                095907
-     C           *IN31     IFEQ '1'
-     C*
-      /SPACE 3
-     C*
-     C* Detail processing
-     C*
-      /SPACE 2
-     C*
-     C* If not found, flag position and count as deleted
-     C*
-     C                     EXSR DLTREC
-     C*
-     C* Call this routine only once to avoid                                                  243026
-     C* unnecessary access                                                                    243026
-     C           CSSC      IFNE TLCSSC                                                        243026
-     C                     EXSR DLTCAP
-     C                     MOVE CSSC      TLCSSC                                              243026
-     C                     ENDIF                                                              243026
-     C*
-     C* Else if security found
-     C*
-     C                     ELSE
-     C*
-     C* Get month to determine if first record of new month - retain
-     C*
-     C                     Z-ADDCSDA      ZDAYNO
-     C                     EXSR ZDATE2
-     C*
-     C* If cposnd date is greater than backvalue date - retain
-     C*
-     C           CSBA      IFNE WCSBA                                                         207179
-     C           CSSC      ORNE WCSSC                                                         207179
-     C           CSCN      ORNE WCSCN                                                         207179
-     C                     MOVE CSBA      WCSBA   3                                           207179
-     C                     MOVE CSSC      WCSSC  10                                           207179
-     C**********           MOVE CSCN      WCSCN   60                                   207179 CSD027
-     C                     MOVE CSCN      WCSCN   6                                           CSD027
-     C                     MOVE *BLANKS   WCAP                                                207179
-     C                     ENDIF                                                              207179
-      *                                                                                       207179
-     C***********CSDA      IFGT BVDATE                                                        095907
-     C           CSDA      IFGT RTNTDT                                                        095907
-     C           CD01      ORNE *ZERO                                                         095907
-     C           CSDA      ANDGELCPN                                                          095907
-     C                     MOVE 'Y'       WCAP    1                                           207179
-     C***********          ADD  1         STOTO                                               095907
-     C                     ADD  1         STOTO   50                                          095907
-     C                     ADD  1         STOTO7                                              243026
-     C                     Z-ADDZMTH      ZMTHX   20
-     C*
-     C* Else if cposnd date is less or equal to backvalue date
-     C*
-     C                     ELSE
-     C*
-     C* If first record for this branch/security/customer - retain
-     C**  This should only be done for customer with position.            157947
-     C*                                                                   157947
-     C           *IN32     IFEQ '0'                                       157947
-     C                     MOVE '0'       *IN44                           157947
-     C           CSNT      IFEQ 0                                         157947
-     C           CSNV      ANDEQ0                                         157947
-     C           CSNS      ANDEQ0                                         157947
-     C           CSEX      ANDEQ0                                         157947
-     C                     MOVE '1'       *IN32                           157947
-     C                     MOVE '1'       *IN44                           157947
-     C                     END                                            157947
-     C                     END                                            157947
-     C*
-     C           *IN32     IFEQ '0'
-     C                     ADD  1         STOTO
-     C                     ADD  1         STOTO7                                              243026
-     C                     SETON                     32
-     C**********           Z-ADDZMTH      ZMTHX                                               207179
-     C**********                                                                              207179
-     C**Else*if*cposnd does not meet earlier conditions                                       207179
-     C**********                                                                              207179
-     C**********           ELSE                                                               207179
-     C**********                                                                       157947 207179
-     C***If*the*first record show zero customer position and also                      157947 207179
-     C***passed*backvalue period then it can be dropped.                               157947 207179
-     C**********                                                                       157947 207179
-     C********** *IN44     IFEQ '1'                                                    157947 207179
-     C**********           Z-ADDZMTH      ZMTHX                                        157947 207179
-     C**********           END                                                         157947 207179
-     C**********                                                                              207179
-     C**If*first record for a new month                                                       207179
-     C**********                                                                              207179
-     C********** ZMTH      IFNE ZMTHX                                                         207179
-     C**********                                                                              207179
-     C**And*date is greater than retention date                                               207179
-     C**********                                                                              207179
-     C********** CSDA      ANDGTRTNTDT                                                        207179
-     C**********           ADD  1         STOTO                                               207179
-     C**********           Z-ADDZMTH      ZMTHX                                               207179
-     C*
-     C* Else if record not required
-     C*
-     C                     ELSE
-     C/COPY WNCPYSRC,SE2540C007
-     C*
-     C* Flag position settlement records and count as deleted
-     C*
-     C                     EXSR DLTREC
-     C*                                                                                       243026
-     C* Call this routine only once to avoid                                                  243026
-     C* unnecessary access                                                                    243026
-     C           CSSC      IFNE TLCSSC                                                        243026
-     C                     EXSR DLTCAP                                                        095907
-     C                     MOVE CSSC      TLCSSC                                              243026
-     C                     ENDIF                                                              243026
-     C*                                                                   157947
-     C** If all the record in CPOSND is being deleted for a customer,     157947
-     C** then need to do the same for CAPRHD.                             157947
-     C*                                                                   157947
-     C           *IN44     IFEQ '1'                                       157947
-     C           WCAP      ANDEQ*BLANKS                                                       207179
-     C                     EXSR DLTCAP                                    157947
-     C                     MOVE '0'       *IN44                           157947
-     C                     END                                            157947
-     C*
-     C/COPY WNCPYSRC,SE2540C008
-     C**********           END                                                                207179
-     C                     END
-     C                     END
-     C                     END
-     C*
-     C                     END
-     C/COPY WNCPYSRC,SE2540C002
-     C*
-      /SPACE 3
-     C*
-     C* LR time
-     C*
-     CLR                   DO
-     C/COPY WNCPYSRC,SE2540C003
-     C*
-     C* If no records read, perform 1st time calcs for audit report
-     C*
-     CL0         CPRRD     IFEQ *ZEROS
-     C*
-     C* Prepare LDA
-     C*
-     CL0                   MOVE *BLANKS   DBLOT
-     CL0                   MOVE 'SE2540  'DBPGM
-     C*
-     C* Get Installation Control Data record 1
-     C*
-     CL0                   EXSR ZSYSTM
-     C*
-     C* If error in ZSYSTM, abend program
-     C*
-     CL0         *IN99     IFEQ '1'                        ***************
-     CL0         *LOCK     IN   LDA                                       S01117
-     C**L0*******          MOVE '01'      DBASE            **DB*ERROR*01**E20651
-     C*L0********          MOVE '06'      DBASE            **DB 6**E20651 S01117
-     CL0                   Z-ADD6         DBASE            **DB ERROR 06**S01117
-     CL0                   MOVEL'TABLE'   DBFILE           ***************
-     CL0                   MOVELZTABKY    DBKEY
-     CL0                   OUT  LDA                                       S01117
-     CL0                   EXSR *PSSR                                     S01117
-     CL0                   WRITEHEADAU
-     CL0                   WRITEERROR
-     C*0*********          WRITETRAILAU                                   E29170
-     CL0                   SETON                     U7U8LR
-     CL0                   RETRN
-     CL0                   END
-     C*
-     CL0                   END
-     C*
-     C* Fetch Depot movements audit file
-     C*
-     CL0         1         CHAINCPOSNAF              33
-     CL0         *IN33     IFEQ '1'                        ***************
-     CL0         *LOCK     IN   LDA                        ***************S01117
-     C*L0********          MOVEL'03'      DBASE            **DB ERROR 03**S01117
-     CL0                   Z-ADD3         DBASE            **DB ERROR 03**S01117
-     CL0                   MOVEL'CPOSNA'  DBFILE           ***************
-     CL0                   MOVEL'1'       DBKEY
-     CL0                   OUT  LDA                                       S01117
-     CL0                   EXSR *PSSR                                     S01117
-     CL0                   WRITEHEADAU
-     CL0                   WRITEERROR
-     C*0*********          WRITETRAILAU                                   E29170
-     CL0                   SETON                     U7U8
-     CL0                   RETRN
-     CL0                   ELSE
-     C*
-     C* Compare control total to number of records read
-     C*
-     C***L0      NORE      COMP CPRRD                U8U8                                     095907
-     C***L0 U8             SETON                     73                                       095907
-     C*
-     C* Output fields - print only
-     C*
-     C*0*********          Z-ADDNORE      SNORE                                               095907
-     CL0                   Z-ADDNORE      SNORE   50                                          095907
-     C*
-     CL0                   READ CAPRHA                   36
-     C*
-     CL0         *IN36     IFEQ '1'
-     CL0         *LOCK     IN   LDA                        ***************S01117
-     C*L0********          MOVEL'04'      DBASE            **DB ERROR 04**S01117
-     CL0                   Z-ADD4         DBASE            **DB ERROR 04**S01117
-     CL0                   MOVEL'CAPRHA'  DBFILE           ***************
-     CL0                   MOVEL'1'       DBKEY
-     CL0                   OUT  LDA                                       S01117
-     CL0                   EXSR *PSSR                                     S01117
-     CL0                   WRITEHEADAU
-     CL0                   WRITEERROR
-     C*0*********          WRITETRAILAU                                   E29170
-     CL0                   SETON                     U7U8
-     CL0                   RETRN
-     CL0                   ELSE
-     C*
-     C* Output fields - print only
-     C*
-     C***L0                Z-ADDNORE      CNORE                                               095907
-     C*0*********CNORE     SUB  CAPCNT    NNORE                                               095907
-     CL0         CNORE     SUB  CAPCNT    NNORE   50                                          095907
-     CL0         CNORE7    SUB  CAPCN7    NNORE7                                              243026
-     C*
-     C* Print audit report
-     C*
-     CL0                   WRITEHEADAU
-     CL0                   WRITETOTALS
-     C*0*********          WRITETRAILAU                                   E29170
-     C*
-     C* If totals same, update audit record
-     C*
-     CL0         *INU8     IFEQ '0'
-     CL0                   Z-ADDSTOTO     NORE
-     CL0                   UPDATCPOSNAF
-     C*
-     CL0                   Z-ADDNNORE     NORE
-     CL0                   UPDATCAPRHAF
-     CL0                   END
-     C*
-     CL0                   END
-     CL0                   END
-     C*
-     CLR                   END
-     C*
-     C*****************************************************************
-      /EJECT
-     C*****************************************************************
-     C**                                                              *
-     C**   DLTREC SR. TO FLAG RECORDS AND COUNT AS DELETED            *
-     C**                                                              *
-     C*****************************************************************
-     C**
-     CSR         DLTREC    BEGSR                           *** DLTREC  ***
-     C*
-     C* Flag Position record and count as deleted
-     C/COPY WNCPYSRC,SE2540C004
-     C*
-     C****                 MOVE '*'       RECIX                                               095907
-     C***                  EXCPTDELPSO                                                        095907
-     C                     DELETCPOSNDF                                                       095907
-     C***********          ADD  1         CPDEL                                               095907
-     C                     ADD  1         CPDEL   50                                          095907
-     C                     ADD  1         CPDEL7                                              243026
-     C*
-     CSR                   ENDSR
-     C*
-     C*****************************************************************
-      /SPACE 3
-     C*****************************************************************
-     C**                                                              *
-     C**   DLTCAP SR. TO FLAG RECORDS AND COUNT AS DELETED FOR CAPRHD *
-     C**                                                              *
-     C*****************************************************************
-     C**
-     C           DLTCAP    BEGSR                           *** DLTCAP  ***
-     C*
-     C* IF RECORD HAS BEEN DELETED FROM CPOSND FILE THEN RETRIEVE
-     C* ALL RECORDS ON CAPRHD FOR THE BRANCH/SECURITY
-     C*
-     C           *IN31     IFEQ '0'                                                           095907
-     C           KEY1      SETLLCAPRHDF                  34
-     C*
-     C           *IN34     IFEQ '1'
-     C           *IN35     DOUEQ'1'
-     C*
-     C           KEY1      READECAPRHDF                  35
-     C*
-     C* IF NOT END OF MATCH UPDATE THE RECORD AS DELETED AND INCREMENT
-     C* COUNT
-     C*
-     C           *IN35     IFEQ '0'
-     C           CSDAY     ANDLTRTNTDT                                                        095907
-     C*
-     C***********          MOVE '*'       RECIY                                               095907
-     C***********          ADD  1         CAPCNT                                              095907
-     C                     ADD  1         CAPCNT  50                                          095907
-     C                     ADD  1         CAPCN7                                              243026
-     C/COPY WNCPYSRC,SE2540C005
-     C                     DELETCAPRHDF                                                       095907
-     C***********          UPDATCAPRHDF                                                       095907
-     C*
-     C                     END
-     C                     END
-     C                     END
-     C*
-     C                     ELSE                                                               095907
-     C* IF RECORD HAS BEEN DELETED FROM CPOSND FILE THEN RETRIEVE                             095907
-     C* ALL RECORDS ON CAPRHD FOR THE BRANCH/SECURITY IF SEC. NOT LIVE                        095907
-     C*                                                                                       095907
-     C           KEY1      SETLLCAPRHDF                  34                                   095907
-     C*                                                                                       095907
-     C           *IN34     IFEQ '1'                                                           095907
-     C           *IN35     DOUEQ'1'                                                           095907
-     C*                                                                                       095907
-     C           KEY1      READECAPRHDF                  35                                   095907
-     C*                                                                                       095907
-     C* IF NOT END OF MATCH UPDATE THE RECORD AS DELETED AND INCREMENT                        095907
-     C* COUNT                                                                                 095907
-     C*                                                                                       095907
-     C           *IN35     IFEQ '0'                                                           095907
-     C*                                                                                       095907
-     C                     ADD  1         CAPCNT                                              095907
-     C                     ADD  1         CAPCN7                                              243026
-     C                     DELETCAPRHDF                                                       095907
-     C*                                                                                       095907
-     C                     END                                                                095907
-     C                     END                                                                095907
-     C                     END                                                                095907
-     C                     END                                                                095907
-     C*                                                                                       095907
-     C                     ENDSR
-     C*
-      *****************************************************************   S01117
-      /EJECT                                                              S01117
-      *****************************************************************   S01117
-      *                                                               *   S01117
-      *  *PSSR  - Error control subroutine                            *   S01117
-      *                                                               *   S01117
-      *****************************************************************   S01117
-      *                                                                   S01117
-     C           *PSSR     BEGSR                           ** *PSSR **    S01117
-     C**                                                                  S01117
-     C           @RUN      IFEQ *BLANKS                                   S01117
-     C                     MOVE 'Y'       @RUN    1                       S01117
-     C                     DUMP                                           S01117
-     C                     END                                            S01117
-     C**                                                                  S01117
-     C                     ENDSR                                          S01117
-      *                                                                   S01117
-     C*****************************************************************
-     C/COPY WNCPYSRC,SE2540C006
-      /EJECT
-     C/COPY ZSRSRC,ZDATE2Z4
-      /EJECT
-     C/COPY ZSRSRC,ZICDSEZ1
-      /EJECT
-     C/COPY ZSRSRC,ZSEDITZ3
-      /EJECT
-     C/COPY ZSRSRC,ZSYSTMZ1
-     O/EJECT
-     O***CPOSNDF E                DELPSO                                                      095907
-     O***                      RECIX                                                          095907
-      /EJECT
-      ***
-**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
-0366073110961461
-**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
-000031059090120151181212243273304334365
-**   ZMNM - MONTHS SHORT NAMES
-JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
-**  CPY@
-(c) Finastra International Limited 2001
+000100200529     H        1
+000200200529      *****************************************************************
+000300200529/*STD *  RPGBASE                                                      *
+000400200529/*EXI *  TEXT('Midas SE Drop off customer positions')
+000500200529/*OVR *: OVRDBF FILE(CHECK) TOFILE(QAFDMBR)                         : *                       095907
+000600200529     F*****************************************************************
+000700200529     F*                                                               *
+000800200529     F*  Midas - Securities Trading Module
+000900200529     F*                                                               *
+001000200529     F*  SE2540 - DROP OFF CUSTOMER POSITIONS                         *
+001100200529     F*                                                               *
+001200200529     F*  Function: To drop from the files for Cust Positions,         *
+001300200529     F*   (COB)    - all records no longer needed by back valuation   *
+001400200529     F*              processing or enquiries                          *
+001500200529     F*            - all records for which the security has expired   *
+001600200529     F*            - all records which represent the current position *
+001700200529     F*              but which are zero and prior to back-valuation   *
+001800200529     F*              date                                             *
+001900200529     F*            For backvaluations, the positions as at b/valuation*
+002000200529     F*            date is required, ie the latest position record    *
+002100200529     F*            which pre-dates back valuation date;  earlier      *
+002200200529     F*            positions are required as at end of month, back    *
+002300200529     F*            to Retention Period for Settled Trades.  Earlier   *
+002400200529     F*            positions are dropped; the exception is where the  *
+002500200529     F*            current positons is zero and has been since before *
+002600200529     F*            b/v date - in this case the position is dropped    *
+002700200529     F*                                                               *
+002800200529     F*  Called by: SEC1004 - Drop off Positions - Depot/Cust/Book    *
+002900200529     F*                                                               *
+003000200529      *  (c) Finastra International Limited 2001                      *
+003100200529     F*                                                               *
+003200200604     F*  Last Amend No. 255006             Date 22May20               *
+003300200529      *  Prev Amend No. MD046248           Date 27Oct17               *
+003400200529      * Bank Fusion Midas 1.4 Base -----------------------------------*
+003500200529      * Midas Plus 1.4 Base 04 ---------------------------------------*
+003600200529      *                 095907             Date 25Jan07               *
+003700200529      * Midas Plus 1.4 Base ------------------------------------------*
+003800200529      * Midas Plus 1.3 ----------- Base ------------------------------*
+003900200529      *                 CSD027             Date 09Dec05               *
+004000200529      *                 CSE071             Date 19Jul05               *
+004100200529      * Midas Release 4.01.02 ----------------------------------------*
+004200200529      *                 207179             Date 23Sep02               *
+004300200529      * Midas Release 4 --------------- Base -------------------------*
+004400200529      * Midas DBA 3.03 -----------------------------------------------*
+004500200529      *                 157947             Date 07Jun00               *
+004600200529      * Midas DBA 3.00 ---------------- Base -------------------------*
+004700200529     F*                 102734             DATE 02MAY96               *
+004800200529     F*                 052254             DATE 10JAN94               *
+004900200529     F*                 S01401             DATE 16JUN93               *
+005000200529     F*                 S01397             DATE 10SEP92               *
+005100200529     F*                 E29170             DATE 07NOV91               *
+005200200529     F*                 S01117             DATE 07JUN91               *
+005300200529     F*                 S01269             DATE 02AUG90               *
+005400200529     F*                 E22042             DATE 18MAY90               *
+005500200529     F*                 E20651             DATE 30JAN90               *
+005600200529     F*                                                               *
+005700200529     F*---------------------------------------------------------------*
+005800200529      *                                                               *
+005900200529      *  255006 - Component SEC0606J failed. Reset ex-coupon nominal  *
+006000200529      *           if position date is less than last coupon date.     *
+006100200529      *           Applied fix 227798.                                 *
+006200200529      *  MD046248 - Finastra Rebranding                               *
+006300200529      *  095907 -  CPOSO REPLACED BY CPOSOM (FOOB)                    *
+006400200529      *         -  MODIFICATIONS CALCULATIONS FOR OUTPUT TRAILER      *
+006500200529      *         -  UPDATES OF RECI WITH '*' REPLACED BY DELETES       *
+006600200529      *         -  NEW FILE CHECK ADDED TO CORRECT CAPRHA TRAILER     *
+006700200529      *         -  DROP CAPRHD RECORD IF OLDER THAN RETENTION PERIOD  *
+006800200529      *         -  IF INTEREST BEARING DONT REMOVE RECS IN CURR.COUP  *
+006900200529      *            PERIOD                                             *
+007000200529      *         -  IF RECORDS DELETED FROM CPOSND RETRIEVE ALL RECORDS*
+007100200529      *            IN CAPRHD FOR THE BRANCH/SECURITY IF SECURITY      *
+007200200529      *            DELETED                                            *
+007300200529      *         - ONLY ACCESS SECTYD WHEN CHANGE OF SECURITY          *
+007400200529      *         - COMPARE FOR TRAILER CPOSNA IS TOTALLY OBSOLETE;     *
+007500200529      *           ADD NUMBER OF RETAINED RECORDS TO NORE.             *
+007600200529      *         - USE WORK FIELD OF 6,0 TO OUPTPUT DETAILS FOR CPOSND *
+007700200529      *           AND CAPRHD ON SE2540AU                              *
+007800200529      *         - also include fix 243026.
+007900200529      *  243026 -  In case of rupture on security:                    *
+008000200529      *            SR/DLTCAP should be called only once               *
+008100200529      *         -  6,0 is not enough on printer. Increase to 7,0      *
+008200200529      *         - Work field too short                                *
+008300200529      *  CSD027 - Conversion Of Customer Number to Alpha              *
+008400200529      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+008500200529      *  207179 - Retain first record past backvalue period if        *
+008600200529      *           non-zero and delete all others.  Also do not delete *
+008700200529      *           CAPRHD records unless all CPOSND records are dropped*
+008800200529     F*  157947 - Customer record with zero position will not be drop *
+008900200529     F*           from CPOSND. However, with all the records being    *
+009000200529     F*           dropped from CDEPPD which enable customer to be     *
+009100200529     F*           deleted from CLINTSE caused DB error in SE1480.     *
+009200200529     F*           Applied fix 100249.
+009300200529     F*  102734 - Retain latest position prior to back-value period   *
+009400200529     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+009500200529     F*           to 10,9                                             *
+009600200529     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
+009700200529     F*          - Recompiled due to changes to files.                *
+009800200529     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+009900200529     F*          - Recompiled due to changes to files.                *
+010000200529     F*  E29170  -  Report Control Facility changes                   *
+010100200529     F*  S01117  -  Multi-branching                                   *
+010200200529     F*  S01269  -  TRADE AUTHORISATION: RECOMPILED OVER CHANGED      *
+010300200529     F*             FILE TABSE.                                       *
+010400200529     F*  E22042  -  WRONG RECORDS WERE BEING FLAGGED TO BE DROPPED.   *
+010500200529     F*  E20651  -  DB ERRORS USED IN MORE THAN ONE PLACE.            *
+010600200529     F*             NEW ERROR NUMBERS AS FOLLOWS:                     *
+010700200529     F*             DB ERROR 01 -> 05                                 *
+010800200529     F*             DB ERROR 01 -> 06                                 *
+010900200529     F*                                                               *
+011000200529     F*****************************************************************
+011100200529     F*
+011200200529     F**CPOSO   UP  E           K        DISK                                                 095907
+011300200529     FCPOSOM  UP  E           K        DISK                                                   095907
+011400200529     FSECTY   IF  E           K        DISK
+011500200529     FCPOSNA  UF  E                    DISK
+011600200529     FCAPRBS  UF  E           K        DISK
+011700200529     FCAPRHA  UF  E                    DISK
+011800200529     FCHECK   IF  E                    DISK                                                   095907
+011900200529     FTABSE   IF  E           K        DISK
+012000200529     F            TABLETAF                          KIGNORE
+012100200529     F            TABTB11F                          KIGNORE
+012200200529     F            TABTE10F                          KIGNORE
+012300200529     F            TABTE20F                          KIGNORE
+012400200529     F            TABTG10F                          KIGNORE
+012500200529     F            TABTG20F                          KIGNORE
+012600200529     F            TABLETHF                          KIGNORE
+012700200529     F*********** TABLETJF                          KIGNORE               S01117
+012800200529     F            TABLETKF                          KIGNORE
+012900200529     F            TABLETLF                          KIGNORE
+013000200529     F            TABLETNF                          KIGNORE
+013100200529     F            TABLETPF                          KIGNORE
+013200200529     F            TABLETRF                          KIGNORE
+013300200529     F            TABLETXF                          KIGNORE
+013400200529     F            TABLET2F                          KIGNORE
+013500200529     F            TABLET3F                          KIGNORE
+013600200529     F            TABLET5F                          KIGNORE
+013700200529     F            TABTB40F                          KIGNORE
+013800200529     FSE2540AUO   E                    PRINTER
+013900200529     F/COPY WNCPYSRC,SE2540F001
+014000200529     F*
+014100200529      /EJECT
+014200200529     F*****************************************************************
+014300200529     F*                                                               *
+014400200529     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+014500200529     F*                                                               *
+014600200529     F*   31       Security not found for this record                 *
+014700200529     F*   32       Control of live record count - change of branch    *
+014800200529     F*   33       General work indicator                             *
+014900200529     F*   34       Record found equal to Key1                         *
+015000200529     F*   35       End of match with Key1 on Caprbs file              *
+015100200529     F*   36       End of file on Caprha file                         *
+015200200529     F*   69       Used to Control first cycle processing             *
+015300200529     F*   73       Number of records on audit file different from     *
+015400200529     F*            number of records read                             *
+015500200529     F*90-99    Used in standard sub-routines                         *
+015600200529     F*   U7    Database error                                        *
+015700200529     F*   U8    Database / Control error                              *
+015800200529     F*   L3 Change of Branch                                         *
+015900200529     F*   L2 Change of Security                                       *
+016000200529     F*   L1 Change of Counterparty                                   *
+016100200529     F*****************************************************************
+016200200529      /SPACE 3
+016300200529     F*****************************************************************
+016400200529     F*                                                               *
+016500200529     F*  I N D E X   T O   S U B R O U T I N E S                      *
+016600200529     F*                                                               *
+016700200529     F*   DLTREC - Flag records as deleted and count total            *
+016800200529     F*   *PSSR  - Error handling                                     *   S01117
+016900200529     F*   ZDATE2 - DAYNO - DATE conversion                            *
+017000200529     F*   ZICDSE - Access ICD record for Securities Trading           *
+017100200529     F*   ZSEDIT - Insert a decimal point and sign into a numeric fiel*
+017200200529     F*            and blank out leading zeros                        *
+017300200529     F*   ZSYSTM - Access ICD record                                  *
+017400200529     F*                                                               *
+017500200529     F*****************************************************************
+017600200529      /EJECT
+017700200529     E/COPY ZSRSRC,ZDATE2Z1
+017800200529     E                    CPY@    1   1 80                                S01117
+017900200529     E*
+018000200529     E/COPY ZSRSRC,ZSEDITZ1
+018100200529     E*
+018200200529      /EJECT
+018300200529     E/COPY WNCPYSRC,SE2540E001
+018400200529     ICPOSNDF
+018500200529     I***********                                   CSBR  L3              S01117
+018600200529     I                                              CSBA  L3              S01117
+018700200529     I                                              CSSC  L2
+018800200529     I                                              CSCN  L1
+018900200529     I              RECI                            RECIX
+019000200529     ICAPRHDF
+019100200529     I              RECI                            RECIY
+019200200529     I              CSCN                            CSCNY
+019300200529     I              CSDA                            CSDAY
+019400200529     I*LDA******* UDS                            256                      S01117
+019500200529     I***********                           134 177 DBLOT                 S01117
+019600200529     I***********                           134 138 DBFILE                S01117
+019700200529     I***********                           139 167 DBKEY                 S01117
+019800200529     I***********                           168 175 DBPGM                 S01117
+019900200529     I***********                           176 177 DBASE                 S01117
+020000200529     ILDA         DS                            256                       S01117
+020100200529     I                                      134 183 DBLOT                 S01117
+020200200529     I                                      134 141 DBFILE                S01117
+020300200529     I                                      142 170 DBKEY                 S01117
+020400200529     I                                      171 180 DBPGM                 S01117
+020500200529     I                                      181 1830DBASE                 S01117
+020600200529     ICPYR@#      DS                                                      S01117
+020700200529     I*                                                                   S01117
+020800200529     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION            S01117
+020900200529     I*                                                                   S01117
+021000200529     I                                        1  80 CPY@                  S01117
+021100200529     I                                        1  20 CPY@##                S01117
+021200200529     I/COPY WNCPYSRC,SE2540I001
+021300200529     I/COPY ZSRSRC,ZSEDITZ2
+021400200529      /EJECT
+021500200529     C*
+021600200529     C**  KEY LIST TO ACCESS CAPRBS FILE
+021700200529     C*
+021800200529     C           KEY1      KLIST
+021900200529     C***********          KFLD           CSBR                            S01117
+022000200529     C                     KFLD           CSBA                            S01117
+022100200529     C                     KFLD           CSSC
+022200200529     C                     KFLD           CSCN                                                207179
+022300200529     C*
+022400200529     C           *LIKE     DEFN CSSC      SCSSC                                               095907
+022500200529     C           *LIKE     DEFN CSSC      TLCSSC                                              243026
+022600200529     C*================================================================
+022700200529     C*  P R O G R A M     S T A R T                                  *
+022800200529     C*================================================================
+022900200529     C*
+023000200529     C           *IN69     IFEQ '0'
+023100200529     C*
+023200200529     C* Prepare LDA
+023300200529     C*
+023400200529     C           *NAMVAR   DEFN           LDA                             S01117
+023500200529     C           *LOCK     IN   LDA                                       S01117
+023600200529     C                     MOVE *BLANKS   DBLOT
+023700200529     C                     MOVE 'SE2540  'DBPGM
+023800200529     C                     OUT  LDA                                       S01117
+023900200529     C*
+024000200529     C* Get Installation Control Data record 1
+024100200529     C*
+024200200529     C                     EXSR ZSYSTM
+024300200529     C*
+024400200529     C* If error in ZSYSTM, abend program
+024500200529     C*
+024600200529     C           *IN99     IFEQ '1'                        ***************
+024700200529     C           *LOCK     IN   LDA                        ***************S01117
+024800200529     C***********          MOVE '01'      DBASE            **DB*ERROR*01**E20651
+024900200529     C***********          MOVE '05'      DBASE            **DB 5**E20651 S01117
+025000200529     C                     Z-ADD5         DBASE            **DB ERROR 05**S01117
+025100200529     C                     MOVEL'TABLE'   DBFILE           ***************
+025200200529     C                     MOVELZTABKY    DBKEY
+025300200529     C                     OUT  LDA                                       S01117
+025400200529     C                     EXSR *PSSR                                     S01117
+025500200529     C                     WRITEHEADAU
+025600200529     C                     WRITEERROR
+025700200529     C***********          WRITETRAILAU                                   E29170
+025800200529     C                     SETON                     U7U8LR
+025900200529     C                     RETRN
+026000200529     C                     END
+026100200529     C*
+026200200529     C* Get Installation Control Data record for Securities trading
+026300200529     C*
+026400200529     C                     EXSR ZICDSE
+026500200529     C*
+026600200529     C* If error in ZICDSE, abend program
+026700200529     C*
+026800200529     C           *IN99     IFEQ '1'                        ***************
+026900200529     C           *LOCK     IN   LDA                        ***************S01117
+027000200529     C***********          MOVE '02'      DBASE            **DB ERROR 02**S01117
+027100200529     C                     Z-ADD2         DBASE            **DB ERROR 02**S01117
+027200200529     C                     MOVEL'TABLE'   DBFILE           ***************
+027300200529     C                     MOVELZTABKY    DBKEY
+027400200529     C                     OUT  LDA                                       S01117
+027500200529     C                     EXSR *PSSR                                     S01117
+027600200529     C                     WRITEHEADAU
+027700200529     C                     WRITEERROR
+027800200529     C***********          WRITETRAILAU                                   E29170
+027900200529     C                     SETON                     U7U8LR
+028000200529     C                     RETRN
+028100200529     C                     END
+028200200529     C*
+028300200529     C* Calculate Back valuation date
+028400200529     C*
+028500200529     C           RUND      SUB  BKVP      BVDATE  50
+028600200529     C*
+028700200529     C**Calculate*Retention date                                                              207179
+028800200529     C**********                                                                              207179
+028900200529     C********** 31        MULT RTST      WK3N    30                                          207179
+029000200529     C********** RUND      SUB  WK3N      RTNTDT  50                                          207179
+029100200529     C           31        MULT RTST      WK3N    50                                          243026
+029200200529     C           RUND      SUB  WK3N      RTNTDT  50                                          243026
+029300200529     C*
+029400200529     C                     SETON                     69
+029500200529     C                     READ CHECK                    33                                   095907
+029600200529     C                     Z-ADDMBNRCD    CNORE   50                                          095907
+029700200529     C                     Z-ADDMBNRCD    CNORE7  70                                          243026
+029800200529     C/COPY WNCPYSRC,SE2540C001
+029900200529     C                     END
+030000200529     C*
+030100200529      /EJECT
+030200200529     C*
+030300200529     C* Change of Branch live record count control
+030400200529     C*
+030500200529     C***L3******          SETOF                     32                   E22042
+030600200529     C   L1                SETOF                     32                   E22042
+030700200529     C   L1                Z-ADD*ZEROS    ZMTHX                           102734
+030800200529     C*
+030900200529     C* Ignore this record if already deleted
+031000200529     C*
+031100200529     C           RECIX     IFNE '*'
+031200200529     C*
+031300200529     C* Count movements records read
+031400200529     C*
+031500200529     C***********          ADD  1         CPRRD                                               095907
+031600200529     C                     ADD  1         CPRRD   50                                          095907
+031700200529     C                     ADD  1         CPRRD7                                              243026
+031800200529     C                     ADD  1         SNORE7                                              243026
+031900200529     C*
+032000200529     C* Access Security
+032100200529     C*
+032200200529     C           CSSC      IFNE SCSSC                                                         095907
+032300200529     C                     MOVE CSSC      SCSSC                                               095907
+032400200529     C           CSSC      CHAINSECTYDF              31
+032500200529     C  N31      RECI      COMP '*'                      31
+032600200529     C                     END                                                                095907
+032700200529     C           *IN31     IFEQ '1'
+032800200529     C*
+032900200529      /SPACE 3
+033000200529     C*
+033100200529     C* Detail processing
+033200200529     C*
+033300200529      /SPACE 2
+033400200529     C*
+033500200529     C* If not found, flag position and count as deleted
+033600200529     C*
+033700200529     C                     EXSR DLTREC
+033800200529     C*
+033900200529     C* Call this routine only once to avoid                                                  243026
+034000200529     C* unnecessary access                                                                    243026
+034100200529     C           CSSC      IFNE TLCSSC                                                        243026
+034200200529     C                     EXSR DLTCAP
+034300200529     C                     MOVE CSSC      TLCSSC                                              243026
+034400200529     C                     ENDIF                                                              243026
+034500200529     C*
+034600200529     C* Else if security found
+034700200529     C*
+034800200529     C                     ELSE
+034900200529     C*
+035000200529     C* Get month to determine if first record of new month - retain
+035100200529     C*
+035200200529     C                     Z-ADDCSDA      ZDAYNO
+035300200529     C                     EXSR ZDATE2
+035400200529     C*
+035500200529     C* If cposnd date is greater than backvalue date - retain
+035600200529     C*
+035700200529     C           CSBA      IFNE WCSBA                                                         207179
+035800200529     C           CSSC      ORNE WCSSC                                                         207179
+035900200529     C           CSCN      ORNE WCSCN                                                         207179
+036000200529     C                     MOVE CSBA      WCSBA   3                                           207179
+036100200529     C                     MOVE CSSC      WCSSC  10                                           207179
+036200200529     C**********           MOVE CSCN      WCSCN   60                                   207179 CSD027
+036300200529     C                     MOVE CSCN      WCSCN   6                                           CSD027
+036400200529     C                     MOVE *BLANKS   WCAP                                                207179
+036500200529     C                     ENDIF                                                              207179
+036600200529      *                                                                                       207179
+036700200529      *                                                                                       255006
+036800200529      ** Reset ex-coupon Nominal if position date LT last coupon date                         255006
+036900200529      *                                                                                       255006
+037000200529     C           CSDA      IFLT LCPN                                                          255006
+037100200529     C                     Z-ADD0         CSEX                                                255006
+037200200529     C                     ENDIF                                                              255006
+037300200529     C***********CSDA      IFGT BVDATE                                                        095907
+037400200529     C           CSDA      IFGT RTNTDT                                                        095907
+037500200529     C           CD01      ORNE *ZERO                                                         095907
+037600200529     C           CSDA      ANDGELCPN                                                          095907
+037700200529     C                     MOVE 'Y'       WCAP    1                                           207179
+037800200529     C***********          ADD  1         STOTO                                               095907
+037900200529     C                     ADD  1         STOTO   50                                          095907
+038000200529     C                     ADD  1         STOTO7                                              243026
+038100200529     C                     Z-ADDZMTH      ZMTHX   20
+038200200529     C*
+038300200529     C* Else if cposnd date is less or equal to backvalue date
+038400200529     C*
+038500200529     C                     ELSE
+038600200529     C*
+038700200529     C* If first record for this branch/security/customer - retain
+038800200529     C**  This should only be done for customer with position.            157947
+038900200529     C*                                                                   157947
+039000200529     C           *IN32     IFEQ '0'                                       157947
+039100200529     C                     MOVE '0'       *IN44                           157947
+039200200529     C           CSNT      IFEQ 0                                         157947
+039300200529     C           CSNV      ANDEQ0                                         157947
+039400200529     C           CSNS      ANDEQ0                                         157947
+039500200529     C           CSEX      ANDEQ0                                         157947
+039600200529     C                     MOVE '1'       *IN32                           157947
+039700200529     C                     MOVE '1'       *IN44                           157947
+039800200529     C                     END                                            157947
+039900200529     C                     END                                            157947
+040000200529     C*
+040100200529     C           *IN32     IFEQ '0'
+040200200529     C                     ADD  1         STOTO
+040300200529     C                     ADD  1         STOTO7                                              243026
+040400200529     C                     SETON                     32
+040500200529     C**********           Z-ADDZMTH      ZMTHX                                               207179
+040600200529     C**********                                                                              207179
+040700200529     C**Else*if*cposnd does not meet earlier conditions                                       207179
+040800200529     C**********                                                                              207179
+040900200529     C**********           ELSE                                                               207179
+041000200529     C**********                                                                       157947 207179
+041100200529     C***If*the*first record show zero customer position and also                      157947 207179
+041200200529     C***passed*backvalue period then it can be dropped.                               157947 207179
+041300200529     C**********                                                                       157947 207179
+041400200529     C********** *IN44     IFEQ '1'                                                    157947 207179
+041500200529     C**********           Z-ADDZMTH      ZMTHX                                        157947 207179
+041600200529     C**********           END                                                         157947 207179
+041700200529     C**********                                                                              207179
+041800200529     C**If*first record for a new month                                                       207179
+041900200529     C**********                                                                              207179
+042000200529     C********** ZMTH      IFNE ZMTHX                                                         207179
+042100200529     C**********                                                                              207179
+042200200529     C**And*date is greater than retention date                                               207179
+042300200529     C**********                                                                              207179
+042400200529     C********** CSDA      ANDGTRTNTDT                                                        207179
+042500200529     C**********           ADD  1         STOTO                                               207179
+042600200529     C**********           Z-ADDZMTH      ZMTHX                                               207179
+042700200529     C*
+042800200529     C* Else if record not required
+042900200529     C*
+043000200529     C                     ELSE
+043100200529     C/COPY WNCPYSRC,SE2540C007
+043200200529     C*
+043300200529     C* Flag position settlement records and count as deleted
+043400200529     C*
+043500200529     C                     EXSR DLTREC
+043600200529     C*                                                                                       243026
+043700200529     C* Call this routine only once to avoid                                                  243026
+043800200529     C* unnecessary access                                                                    243026
+043900200529     C           CSSC      IFNE TLCSSC                                                        243026
+044000200529     C                     EXSR DLTCAP                                                        095907
+044100200529     C                     MOVE CSSC      TLCSSC                                              243026
+044200200529     C                     ENDIF                                                              243026
+044300200529     C*                                                                   157947
+044400200529     C** If all the record in CPOSND is being deleted for a customer,     157947
+044500200529     C** then need to do the same for CAPRHD.                             157947
+044600200529     C*                                                                   157947
+044700200529     C           *IN44     IFEQ '1'                                       157947
+044800200529     C           WCAP      ANDEQ*BLANKS                                                       207179
+044900200529     C                     EXSR DLTCAP                                    157947
+045000200529     C                     MOVE '0'       *IN44                           157947
+045100200529     C                     END                                            157947
+045200200529     C*
+045300200529     C/COPY WNCPYSRC,SE2540C008
+045400200529     C**********           END                                                                207179
+045500200529     C                     END
+045600200529     C                     END
+045700200529     C                     END
+045800200529     C*
+045900200529     C                     END
+046000200529     C/COPY WNCPYSRC,SE2540C002
+046100200529     C*
+046200200529      /SPACE 3
+046300200529     C*
+046400200529     C* LR time
+046500200529     C*
+046600200529     CLR                   DO
+046700200529     C/COPY WNCPYSRC,SE2540C003
+046800200529     C*
+046900200529     C* If no records read, perform 1st time calcs for audit report
+047000200529     C*
+047100200529     CL0         CPRRD     IFEQ *ZEROS
+047200200529     C*
+047300200529     C* Prepare LDA
+047400200529     C*
+047500200529     CL0                   MOVE *BLANKS   DBLOT
+047600200529     CL0                   MOVE 'SE2540  'DBPGM
+047700200529     C*
+047800200529     C* Get Installation Control Data record 1
+047900200529     C*
+048000200529     CL0                   EXSR ZSYSTM
+048100200529     C*
+048200200529     C* If error in ZSYSTM, abend program
+048300200529     C*
+048400200529     CL0         *IN99     IFEQ '1'                        ***************
+048500200529     CL0         *LOCK     IN   LDA                                       S01117
+048600200529     C**L0*******          MOVE '01'      DBASE            **DB*ERROR*01**E20651
+048700200529     C*L0********          MOVE '06'      DBASE            **DB 6**E20651 S01117
+048800200529     CL0                   Z-ADD6         DBASE            **DB ERROR 06**S01117
+048900200529     CL0                   MOVEL'TABLE'   DBFILE           ***************
+049000200529     CL0                   MOVELZTABKY    DBKEY
+049100200529     CL0                   OUT  LDA                                       S01117
+049200200529     CL0                   EXSR *PSSR                                     S01117
+049300200529     CL0                   WRITEHEADAU
+049400200529     CL0                   WRITEERROR
+049500200529     C*0*********          WRITETRAILAU                                   E29170
+049600200529     CL0                   SETON                     U7U8LR
+049700200529     CL0                   RETRN
+049800200529     CL0                   END
+049900200529     C*
+050000200529     CL0                   END
+050100200529     C*
+050200200529     C* Fetch Depot movements audit file
+050300200529     C*
+050400200529     CL0         1         CHAINCPOSNAF              33
+050500200529     CL0         *IN33     IFEQ '1'                        ***************
+050600200529     CL0         *LOCK     IN   LDA                        ***************S01117
+050700200529     C*L0********          MOVEL'03'      DBASE            **DB ERROR 03**S01117
+050800200529     CL0                   Z-ADD3         DBASE            **DB ERROR 03**S01117
+050900200529     CL0                   MOVEL'CPOSNA'  DBFILE           ***************
+051000200529     CL0                   MOVEL'1'       DBKEY
+051100200529     CL0                   OUT  LDA                                       S01117
+051200200529     CL0                   EXSR *PSSR                                     S01117
+051300200529     CL0                   WRITEHEADAU
+051400200529     CL0                   WRITEERROR
+051500200529     C*0*********          WRITETRAILAU                                   E29170
+051600200529     CL0                   SETON                     U7U8
+051700200529     CL0                   RETRN
+051800200529     CL0                   ELSE
+051900200529     C*
+052000200529     C* Compare control total to number of records read
+052100200529     C*
+052200200529     C***L0      NORE      COMP CPRRD                U8U8                                     095907
+052300200529     C***L0 U8             SETON                     73                                       095907
+052400200529     C*
+052500200529     C* Output fields - print only
+052600200529     C*
+052700200529     C*0*********          Z-ADDNORE      SNORE                                               095907
+052800200529     CL0                   Z-ADDNORE      SNORE   50                                          095907
+052900200529     C*
+053000200529     CL0                   READ CAPRHA                   36
+053100200529     C*
+053200200529     CL0         *IN36     IFEQ '1'
+053300200529     CL0         *LOCK     IN   LDA                        ***************S01117
+053400200529     C*L0********          MOVEL'04'      DBASE            **DB ERROR 04**S01117
+053500200529     CL0                   Z-ADD4         DBASE            **DB ERROR 04**S01117
+053600200529     CL0                   MOVEL'CAPRHA'  DBFILE           ***************
+053700200529     CL0                   MOVEL'1'       DBKEY
+053800200529     CL0                   OUT  LDA                                       S01117
+053900200529     CL0                   EXSR *PSSR                                     S01117
+054000200529     CL0                   WRITEHEADAU
+054100200529     CL0                   WRITEERROR
+054200200529     C*0*********          WRITETRAILAU                                   E29170
+054300200529     CL0                   SETON                     U7U8
+054400200529     CL0                   RETRN
+054500200529     CL0                   ELSE
+054600200529     C*
+054700200529     C* Output fields - print only
+054800200529     C*
+054900200529     C***L0                Z-ADDNORE      CNORE                                               095907
+055000200529     C*0*********CNORE     SUB  CAPCNT    NNORE                                               095907
+055100200529     CL0         CNORE     SUB  CAPCNT    NNORE   50                                          095907
+055200200529     CL0         CNORE7    SUB  CAPCN7    NNORE7                                              243026
+055300200529     C*
+055400200529     C* Print audit report
+055500200529     C*
+055600200529     CL0                   WRITEHEADAU
+055700200529     CL0                   WRITETOTALS
+055800200529     C*0*********          WRITETRAILAU                                   E29170
+055900200529     C*
+056000200529     C* If totals same, update audit record
+056100200529     C*
+056200200529     CL0         *INU8     IFEQ '0'
+056300200529     CL0                   Z-ADDSTOTO     NORE
+056400200529     CL0                   UPDATCPOSNAF
+056500200529     C*
+056600200529     CL0                   Z-ADDNNORE     NORE
+056700200529     CL0                   UPDATCAPRHAF
+056800200529     CL0                   END
+056900200529     C*
+057000200529     CL0                   END
+057100200529     CL0                   END
+057200200529     C*
+057300200529     CLR                   END
+057400200529     C*
+057500200529     C*****************************************************************
+057600200529      /EJECT
+057700200529     C*****************************************************************
+057800200529     C**                                                              *
+057900200529     C**   DLTREC SR. TO FLAG RECORDS AND COUNT AS DELETED            *
+058000200529     C**                                                              *
+058100200529     C*****************************************************************
+058200200529     C**
+058300200529     CSR         DLTREC    BEGSR                           *** DLTREC  ***
+058400200529     C*
+058500200529     C* Flag Position record and count as deleted
+058600200529     C/COPY WNCPYSRC,SE2540C004
+058700200529     C*
+058800200529     C****                 MOVE '*'       RECIX                                               095907
+058900200529     C***                  EXCPTDELPSO                                                        095907
+059000200529     C                     DELETCPOSNDF                                                       095907
+059100200529     C***********          ADD  1         CPDEL                                               095907
+059200200529     C                     ADD  1         CPDEL   50                                          095907
+059300200529     C                     ADD  1         CPDEL7                                              243026
+059400200529     C*
+059500200529     CSR                   ENDSR
+059600200529     C*
+059700200529     C*****************************************************************
+059800200529      /SPACE 3
+059900200529     C*****************************************************************
+060000200529     C**                                                              *
+060100200529     C**   DLTCAP SR. TO FLAG RECORDS AND COUNT AS DELETED FOR CAPRHD *
+060200200529     C**                                                              *
+060300200529     C*****************************************************************
+060400200529     C**
+060500200529     C           DLTCAP    BEGSR                           *** DLTCAP  ***
+060600200529     C*
+060700200529     C* IF RECORD HAS BEEN DELETED FROM CPOSND FILE THEN RETRIEVE
+060800200529     C* ALL RECORDS ON CAPRHD FOR THE BRANCH/SECURITY
+060900200529     C*
+061000200529     C           *IN31     IFEQ '0'                                                           095907
+061100200529     C           KEY1      SETLLCAPRHDF                  34
+061200200529     C*
+061300200529     C           *IN34     IFEQ '1'
+061400200529     C           *IN35     DOUEQ'1'
+061500200529     C*
+061600200529     C           KEY1      READECAPRHDF                  35
+061700200529     C*
+061800200529     C* IF NOT END OF MATCH UPDATE THE RECORD AS DELETED AND INCREMENT
+061900200529     C* COUNT
+062000200529     C*
+062100200529     C           *IN35     IFEQ '0'
+062200200529     C           CSDAY     ANDLTRTNTDT                                                        095907
+062300200529     C*
+062400200529     C***********          MOVE '*'       RECIY                                               095907
+062500200529     C***********          ADD  1         CAPCNT                                              095907
+062600200529     C                     ADD  1         CAPCNT  50                                          095907
+062700200529     C                     ADD  1         CAPCN7                                              243026
+062800200529     C/COPY WNCPYSRC,SE2540C005
+062900200529     C                     DELETCAPRHDF                                                       095907
+063000200529     C***********          UPDATCAPRHDF                                                       095907
+063100200529     C*
+063200200529     C                     END
+063300200529     C                     END
+063400200529     C                     END
+063500200529     C*
+063600200529     C                     ELSE                                                               095907
+063700200529     C* IF RECORD HAS BEEN DELETED FROM CPOSND FILE THEN RETRIEVE                             095907
+063800200529     C* ALL RECORDS ON CAPRHD FOR THE BRANCH/SECURITY IF SEC. NOT LIVE                        095907
+063900200529     C*                                                                                       095907
+064000200529     C           KEY1      SETLLCAPRHDF                  34                                   095907
+064100200529     C*                                                                                       095907
+064200200529     C           *IN34     IFEQ '1'                                                           095907
+064300200529     C           *IN35     DOUEQ'1'                                                           095907
+064400200529     C*                                                                                       095907
+064500200529     C           KEY1      READECAPRHDF                  35                                   095907
+064600200529     C*                                                                                       095907
+064700200529     C* IF NOT END OF MATCH UPDATE THE RECORD AS DELETED AND INCREMENT                        095907
+064800200529     C* COUNT                                                                                 095907
+064900200529     C*                                                                                       095907
+065000200529     C           *IN35     IFEQ '0'                                                           095907
+065100200529     C*                                                                                       095907
+065200200529     C                     ADD  1         CAPCNT                                              095907
+065300200529     C                     ADD  1         CAPCN7                                              243026
+065400200529     C                     DELETCAPRHDF                                                       095907
+065500200529     C*                                                                                       095907
+065600200529     C                     END                                                                095907
+065700200529     C                     END                                                                095907
+065800200529     C                     END                                                                095907
+065900200529     C                     END                                                                095907
+066000200529     C*                                                                                       095907
+066100200529     C                     ENDSR
+066200200529     C*
+066300200529      *****************************************************************   S01117
+066400200529      /EJECT                                                              S01117
+066500200529      *****************************************************************   S01117
+066600200529      *                                                               *   S01117
+066700200529      *  *PSSR  - Error control subroutine                            *   S01117
+066800200529      *                                                               *   S01117
+066900200529      *****************************************************************   S01117
+067000200529      *                                                                   S01117
+067100200529     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+067200200529     C**                                                                  S01117
+067300200529     C           @RUN      IFEQ *BLANKS                                   S01117
+067400200529     C                     MOVE 'Y'       @RUN    1                       S01117
+067500200529     C                     DUMP                                           S01117
+067600200529     C                     END                                            S01117
+067700200529     C**                                                                  S01117
+067800200529     C                     ENDSR                                          S01117
+067900200529      *                                                                   S01117
+068000200529     C*****************************************************************
+068100200529     C/COPY WNCPYSRC,SE2540C006
+068200200529      /EJECT
+068300200529     C/COPY ZSRSRC,ZDATE2Z4
+068400200529      /EJECT
+068500200529     C/COPY ZSRSRC,ZICDSEZ1
+068600200529      /EJECT
+068700200529     C/COPY ZSRSRC,ZSEDITZ3
+068800200529      /EJECT
+068900200529     C/COPY ZSRSRC,ZSYSTMZ1
+069000200529     O/EJECT
+069100200529     O***CPOSNDF E                DELPSO                                                      095907
+069200200529     O***                      RECIX                                                          095907
+069300200529      /EJECT
+069400200529      ***
+069500200529**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0696002005290366073110961461
+069700200529**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+069800200529000031059090120151181212243273304334365
+069900200529**   ZMNM - MONTHS SHORT NAMES
+070000200529JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+070100200529**  CPY@
+070200200529(c) Finastra International Limited 2001

@@ -1,973 +1,981 @@
-     H        1
-      *****************************************************************
-/*STD *  RPGBASE                                                      *
-/*EXI *  TEXT('Midas SE Extract C.P. price change')                   *
-     F*****************************************************************
-     F*                                                               *
-     F*  Midas - Securities Trading Module
-     F*                                                               *
-     F*  SE5120 - EXTRACT COMMERCIAL PAPER PRICE CHANGES              *
-     F*                                                               *
-     F*  Function: To extract and keep as Security events, changes    *
-     F*   (COB)    input to the Commercial Paper Price matrix for a   *
-     F*            security.                                          *
-     F*                                                               *
-     F*  Called by: SEC0602H - Extract Commercial Paper Price Changes *
-     F*                                                               *
-      *  (c) Finastra International Limited 2001                      *
-     F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
-      * Bank Fusion Midas 1.4 Base -----------------------------------*
-      * Midas Plus 1.4 Base 04 ---------------------------------------*
-      * Midas Plus 1.4 Base ------------------------------------------*
-      * Midas Plus 1.3 ----------- Base ------------------------------*
-      *                 CSD027             Date 09Dec05               *
-      *                 CSE075             Date 17Nov05               *
-      *                 CSE071             Date 19Jul05               *
-      *                 CAS008             Date 11May04               *
-      *                 CAS006             Date 21Jan03               *
-      *                 111152             Date 23Aug02               *
-      *                 CSE037             Date 29Apr02               *
-      * Midas Release 4.01 -------------------------------------------*
-      * Midas Release 4 --------------- Base -------------------------*
-      * Midas DBA 3.05 -----------------------------------------------*
-      *                 CSD006             Date 16May01               *
-      * Midas DBA 3.04 -----------------------------------------------*
-      *                 CSE023             Date 12Jul00               *
-      * Midas DBA 3.03 -----------------------------------------------*
-      *                 CAP137             Date 07Feb00               *
-      * Midas DBA 3.02 -----------------------------------------------*
-      * Midas DBA 3.00 ---------------- Base -------------------------*
-     F*                 102718             DATE 22JAN97               *
-     F*                 S01455             DATE 05NOV93               *
-     F*                 052254             DATE 10JAN94               *
-     F*                 S01397             DATE 10SEP92               *
-     F*                 E37615             DATE 27MAR92               *
-     F*                 E29170             DATE 18NOV91               *
-     F*                 S01117             DATE 12JUN91               *
-     F*                 E22107             DATE 02MAY90               *
-     F*                 E20651             DATE 30JAN90               *
-     F*                 E20885             DATE 23JAN90               *
-     F*                 E17763             DATE 11/05/89              *
-     F*                 E18128             DATE 25/04/89              *
-     F*                 S01176             DATE 12/10/88              *
-     F*                                                               *
-     F*---------------------------------------------------------------*
-     F*                                                               *
-      *  MD046248 - Finastra Rebranding                               *
-      *  CRE073 - Interest Rate Rounding (Recompile)                  *
-      *  CSD027 - Conversion Of Customer Number to Alpha              *
-      *  CSE075 - US Enhanced Treasury Upgrade to MidasPlus           *
-      *           (Recompile)                                         *
-      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
-      *  CAS008 - Delayed Hedge Assessment (Recompile)                *
-      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
-      *  111152 - Interpolation of discount rates incorrect           *
-      *           Applied 2.3 fix NDF033 and recompiled.              *
-      *  CSE037 - Bond Pricing - 3 Decimal Places in Trades Input.    *
-      *  CSD006 - Market Data Feed (Recompiled)                       *
-      *  CSE023 - Treaty Withholding Tax (Recompiled)                 *
-      *  CAP137 - Conversion of SE Security inputs into modular       *
-      *           structure to use as APIs.                           *
-      *           Recompiled over changes in PF/SECTYD.               *
-     F*  102718 - Using wrong field for File Control update (SNDEVA)  *
-     F*  S01455 - 'FF' ACCOUNT KEY ENHANCEMENTS.                      *
-     F*           Recompiled due to changes in PF/TABTB80.            *
-     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
-     F*           to 10,9                                             *
-     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
-     F*          - Recompiled due to changes to files.                *
-     F*  E37615 - Recompiled for minor correction to Audit Print File.*
-     F*  E29170 - Report Control Facility changes                     *
-     F*  S01117 - Multibranching                                      *
-     F*  E22107 - OVERFLOW ERROR - OVERFLOW LINE EXCEEDED             *   E22107
-     F*  E20651 - DB ERROR NUMBERS USED IN MORE THAN ONE PLACE.       *   E20651
-     F*           NEW ERROR NUMBERS AS FOLLOWS:                       *   E20651
-     F*           DB ERROR 91 -> 95                                   *   E20651
-     F*           DB ERROR 91 -> 96                                   *   E20651
-     F*  E20885 - REPORT SHOULD SHOW "NO DETAILS TO REPORT" IF FILE   *   E20885
-     F*           CPPRIC EMPTY.                                       *   E20885
-     F*  E17763 - DATES SHOULD BE DAYS SINCE RUN DATE. NOT 1 JAN '72. *   E17763
-     F*  E18128 - INCLUDE S01186 CHANGES TO PREVENT D/B ERROR WHEN    *   E18128
-     F*           FILE CPPRIC EMPTY.                                  *   E18128
-     F*  S01176 - SECURITIES TRADING 3.1 (AUSTRALIA)                  *   S01176
-     F*                                                               *
-     F*****************************************************************
-     FCPPRIC  IF  E           K        DISK         KINFDS CPRDS
-     F                                              KINFSR CPRSR
-     FTABICD  IF  E           K        DISK
-     F            TABLETAF                          KIGNORE
-     F* ICD 1     TABTB10F                          KIGNORE
-     F* ICD 2     TABTB11F                          KIGNORE
-     F            TABTB20F                          KIGNORE
-     F            TABTB30F                          KIGNORE
-     F            TABTB35F                          KIGNORE
-     F            TABTB36F                          KIGNORE
-     F            TABTB40F                          KIGNORE
-     F            TABTB50F                          KIGNORE
-     F            TABTB55F                          KIGNORE
-     F            TABTE10F                          KIGNORE
-     F            TABTE20F                          KIGNORE
-     F            TABTG10F                          KIGNORE
-     F            TABTG20F                          KIGNORE
-     F            TABLETHF                          KIGNORE
-     F            TABLETRF                          KIGNORE
-     F            TABLETXF                          KIGNORE
-     F            TABLET5F                          KIGNORE
-     FSECTYC  UF  E           K        DISK         KINFDS SECDS
-     F                                              KINFSR SECSR
-     FINVTPC  IF  E           K        DISK         KINFDS INVDS
-     F                                              KINFSR INVSR
-     F*PPRIA**UF  E                    DISK         KINFDS CPADS          E18128
-     F***                                           KINFSR CPASR          E18128
-     FCPPRIA  IF  E                    DISK         KINFDS CPADS          E18128
-     F                                              KINFSR CPASR          E18128
-     FSNDEVA  UF  E                    DISK         KINFDS SNADS
-     F                                              KINFSR SNASR
-     FSNDEVD  O   E           K        DISK         KINFDS SNDDS
-     F/COPY WNCPYSRC,SE5120F001
-     F                                              KINFSR SNDSR
-     F***********SE5120P1O   E                    PRINTER                 E22107
-     F***SE5120P1O***E             01     PRINTER                   E22107E29170
-     FSE5120P1O   E             01     PRINTER                        UC  E29170
-     F                                              KINFDS SPOOL          E29170
-     FSE5120AUO   E                    PRINTER
-     F                                              KINFDS SPOOLU         E29170
-      /EJECT
-     F*****************************************************************
-     F*                                                               *
-     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
-     F*                                                               *
-     F*   01     OVERFLOW INDICATOR                                   *   E22107
-     F*   31     READ INDICATOR FOR CP PRICE RECORD                   *
-     F*   32     CHAIN INDICATOR FOR INVESTMENT TYPE RECORD           *
-     F****33     CHAIN INDICATOR FOR SECTYDF                          *   E18128
-     F*   33     SETLL INDICATOR FOR SECTYDF                          *   E18128
-     F*   34     READ INDICATOR FOR CP PRICES  AUDIT                  *
-     F*   35     READ INDICATOR FOR NON-DIARY EVENTS AUDIT            *
-     F*   36     READ INDICATOR FOR SECTYDF                           *   S01176
-     F*                                                               *
-     F*   41     INDICATORS USED FOR COMPARING THE DAYS TO            *
-     F*   42     MATURITY WITH THE VALUE IN THE EQUIVALENT            *
-     F*   43     FIELD IN CPPRIC                                      *
-     F*                                                               *
-     F*   45     LOOKUP INDICATOR FOR DAYS TO MATURITY                *
-     F*                                                               *
-     F*   87     INDICATOR USED IN ERROR SUBROUTINES                  *
-     F*                                                               *
-     F*   99     INDICATOR USED IN ZSYSTM AND ZICD2                   *
-     F*                                                               *
-     F*                                                               *
-     F*   U7     DATABASE ERROR                                       *
-     F*   U8     DATABASE ERROR                                       *
-     F*                                                               *
-     F*****************************************************************
-      /EJECT
-     F*****************************************************************
-     F*                                                               *
-     F*  S U B R O U T I N E   I N D E X                              *
-     F*                                                               *
-     F*  AUDIT  - PERFORM RUN CONTROL PROCESS                         *
-     F*  *PSSR  - Error handling                                      *   S01117
-     F*  RCFP1  - SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF      *   E29170
-     F*  RCFAU  - SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF      *   E29170
-     F*  ZEVCD  - CALCULATE EVENT CONTROL DATE                        *
-     F*  ZICD2  - RETRIEVE INSTALLATION CONTROL RECORD NO 2           *
-     F*  ZSYSTM - RETRIEVE INSTALLATION CONTROL RECORD                *
-     F*  ZYMTX  - CALCULATE YIELD RATE                                *
-     F*  ZEDIT  - INSERT DECIMAL POINT AND BLANK OUT LEADING ZEROS    *
-     F*  ZSEDIT - INSERT DEC. PT., SIGN AND BLANK OUT LEADING ZEROS   *
-     F*  ZDATE2 - CONVERT DAY NO. TO DATE FORMAT                      *
-     F* *                                                             *
-     F*****************************************************************
-      /EJECT
-     E/COPY ZSRSRC,ZYMTXZ1
-     E/COPY ZSRSRC,ZDATE2Z1
-     E/COPY ZSRSRC,ZEDITZ1
-     E/COPY ZSRSRC,ZSEDITZ1
-     E                    CPY@    1   1 80
-      /EJECT
-      *                                                                                       CSE037
-     IINVTPDF                                                                                 CSE037
-     I              SFLG                            ISFLG                                     CSE037
-      *                                                                                       CSE037
-     ICPPRIDF
-     I* SET UP DATA STRUCTURE FOR CPPRID
-     I              RECI                            CRECI
-     I              ND01                            ZND,1
-     I              ND02                            ZND,2
-     I              ND03                            ZND,3
-     I              ND04                            ZND,4
-     I              ND05                            ZND,5
-     I              ND06                            ZND,6
-     I              ND07                            ZND,7
-     I              ND08                            ZND,8
-     I              ND09                            ZND,9
-     I              ND10                            ZND,10
-     I              ND11                            ZND,11
-     I              ND12                            ZND,12
-     I              ND13                            ZND,13
-     I              ND14                            ZND,14
-     I              ND15                            ZND,15
-     I              ND16                            ZND,16
-     I              ND17                            ZND,17
-     I              ND18                            ZND,18
-     I              ND19                            ZND,19
-     I              ND20                            ZND,20
-     I              ND21                            ZND,21
-     I              ND22                            ZND,22
-     I              ND23                            ZND,23
-     I              ND24                            ZND,24
-     I              ND25                            ZND,25
-     I              YR01                            ZRT,1
-     I              YR02                            ZRT,2
-     I              YR03                            ZRT,3
-     I              YR04                            ZRT,4
-     I              YR05                            ZRT,5
-     I              YR06                            ZRT,6
-     I              YR07                            ZRT,7
-     I              YR08                            ZRT,8
-     I              YR09                            ZRT,9
-     I              YR10                            ZRT,10
-     I              YR11                            ZRT,11
-     I              YR12                            ZRT,12
-     I              YR13                            ZRT,13
-     I              YR14                            ZRT,14
-     I              YR15                            ZRT,15
-     I              YR16                            ZRT,16
-     I              YR17                            ZRT,17
-     I              YR18                            ZRT,18
-     I              YR19                            ZRT,19
-     I              YR20                            ZRT,20
-     I              YR21                            ZRT,21
-     I              YR22                            ZRT,22
-     I              YR23                            ZRT,23
-     I              YR24                            ZRT,24
-     I              YR25                            ZRT,25
-     I/COPY WNCPYSRC,SE5120I001
-     I*
-     ICPRDS       DS
-     I                                     *STATUS  STSCPR
-     I*
-     ISECDS       DS
-     I                                     *STATUS  STSSEC
-     I*
-     IINVDS       DS
-     I                                     *STATUS  STSINV
-     I*
-     ICPADS       DS
-     I                                     *STATUS  STSCPA
-     I*
-     ISNADS       DS
-     I                                     *STATUS  STSSNA
-     I*
-     ISNDDS       DS
-     I                                     *STATUS  STSSND
-     I*
-     ILDA         DS                            256                       S01117
-     I                                      134 183 DBLOT                 S01117
-     I                                      134 141 DBFILE                S01117
-     I                                      142 170 DBKEY                 S01117
-     I                                      171 180 DBPGM                 S01117
-     I                                      181 1830DBASE                 S01117
-     I*LDA******* UDS                            256                      S01117
-     I***********                           134 177 DBLOT                 S01117
-     I***********                           134 138 DBFILE                S01117
-     I***********                           139 167 DBKEY                 S01117
-     I***********                           168 175 DBPGM                 S01117
-     I***********                           176 177 DBASE                 S01117
-     I*                                                                   E29170
-     ISPOOL       DS                                                      E29170
-     I*                                                                   E29170
-     I**  DS FOR P1 SPOOL FILE NAME                                       E29170
-     I*                                                                   E29170
-     I                                       83  92 SFILE                 E29170
-     I                                    B 123 1240SFNUM                 E29170
-     I**                                                                  E29170
-     ISPOOLU      DS                                                      E29170
-     I                                       83  92 SFILEU                E29170
-     I                                    B 123 1240SFNUMU                E29170
-     I*
-     I/COPY ZSRSRC,ZSEDITZ2
-     I*
-     ICPYR@#      DS
-     I*
-     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
-     I*
-     I                                        1  80 CPY@
-     I                                        1  20 CPY@##
-     I/COPY WNCPYSRC,SE5120I002
-     C*****************************************************************
-     C/EJECT
-     C*****************************************************************
-     C*                                                               *
-     C*    MAIN PROCESSING                                            *
-     C*                                                               *
-     C*****************************************************************
-     C*
-     C**  PERFORM INITIAL PROCESSING
-     C*
-     C                     EXSR INIT
-     C*
-     C           *INU7     IFEQ '0'
-     C           *INU8     ANDEQ'0'
-     C           *IN31     DOWEQ'0'
-     C*
-     C*  IF NO DATABASE ERRORS, PERFORM MAIN PROCESSING UNTIL EOF
-     C*
-     C                     EXSR MAIN
-     C*
-     C                     END
-     C                     END
-     C*
-     C                     EXSR AUDIT
-     C*
-     C*****************************************************************
-     C/EJECT
-     C*****************************************************************
-     C*                                                               *
-     C* INIT - RETRIEVE ICD1 & ICD2 RECORDS, AND EVENT CONTROL DATE   *
-     C*                                                               *
-     C*****************************************************************
-     C*
-     C           INIT      BEGSR
-     C*
-     C* SETOF DATABASE ERROR INDICATORS
-     C*
-     C                     SETOF                       U7U8
-     C*
-     C* RETRIEVE ICD 1 RECORD - IF NOT THERE, DATABASE ERROR
-     C*
-     C           *NAMVAR   DEFN           LDA                             S01117
-     C           *LOCK     IN   LDA                                       S01117
-     C                     MOVE *BLANKS   DBLOT                           S01117
-     C                     MOVEL'SE5120'  DBPGM
-     C                     OUT  LDA                                       S01117
-     C                     EXSR ZSYSTM
-     C           *IN99     IFEQ '1'
-     C                     SETON                     LRU7U8
-     C           *LOCK     IN   LDA                                       S01117
-     C                     MOVE 'TABLE'   DBFILE
-     C                     MOVELZTABKY    DBKEY
-     C***********          MOVE '01'      DBASE            **DB ERROR 01**S01117
-     C                     Z-ADD1         DBASE            **DB ERROR 01**S01117
-     C                     OUT  LDA                                       S01117
-     C                     EXSR *PSSR                                     S01117
-     C                     END
-     C*
-     C* RETRIEVE ICD 2 RECORD - IF NOT THERE, DATABASE ERROR
-     C*
-     C                     EXSR ZICD2
-     C           *IN99     IFEQ '1'
-     C                     SETON                     LRU7U8
-     C           *LOCK     IN   LDA                                       S01117
-     C                     MOVE 'TABLE'   DBFILE
-     C                     MOVELZTABKY    DBKEY
-     C***********          MOVE '02'      DBASE            **DB ERROR 02**S01117
-     C                     Z-ADD2         DBASE            **DB ERROR 02**S01117
-     C                     OUT  LDA                                       S01117
-     C                     EXSR *PSSR                                     S01117
-     C                     END
-     C*
-     C* CALCULATE EVENT CONTROL DATE
-     C*
-     C                     Z-ADDDNWD      ZZDNWD                          S01117
-     C                     Z-ADDAPDA      ZZAPDT                          S01117
-     C                     EXSR ZEVCD
-      *                                                                                       111152
-      ** Calculate Accrual Control Date                                                       111152
-      *                                                                                       111152
-     C           ACLD      IFEQ 'Y'                                                           111152
-     C                     Z-ADDECD       ACDT    50                                          111152
-     C                     ELSE                                                               111152
-     C           ECD       ADD  1         ACDT                                                111152
-     C                     END                                                                111152
-      *
-     C* SETOF COMMERCIAL PAPER PRICE FILE READ INDICATOR DURING
-     C* FIRST TIME THROUGH PROCESS
-     C*
-     C                     SETOF                     31
-     C                     MOVEL'N'       FILOPN  1                       E29170
-     C/COPY WNCPYSRC,SE5120C001
-     C*
-     C                     ENDSR
-     C*
-     C*****************************************************************
-     C/EJECT
-     C*****************************************************************
-     C*                                                               *
-     C*   MAIN PROCESSING                                             *
-     C*                                                               *
-     C*****************************************************************
-     C*
-     C           MAIN      BEGSR
-     C*
-     C* PROCESS EACH LIVE COMMERCIAL PAPER PRICE
-     C*
-     C                     READ CPPRIC                   31
-     C/COPY WNCPYSRC,SE5120C002
-     C*
-     C           *IN31     IFEQ '0'
-     C*
-     C*
-     C*  ADD 1 TO RECORD COUNT
-     C*
-     C                     ADD  1         CPPCT   50
-     C*
-     C* PICK UP EACH NEW INVESTMENT TYPE USING KEY FROM CPPRID
-     C*
-     C           CPKEY     KLIST
-     C                     KFLD           INVT
-     C                     KFLD           CCY
-     C*
-     C           CPKEY     CHAININVTPC               32
-     C*
-     C           *IN32     IFEQ '0'
-     C*
-     C* ACCESS SECURITY FILE USING KEY FROM CPPRID
-     C*
-     C***********CPKEY     CHAINSECTYC               33                   S01176
-     C           CPKEY     SETLLSECTYC                   33               S01176
-     C*
-     C* IF RECORD FOUND
-     C*
-     C************IN33     IFEQ '0'                                       S01176
-     C           *IN33     IFEQ '1'                                       S01176
-     C*                                                                   S01176
-     C*                                                                   S01176
-     C* READ ALL RECORDS EQUAL TO THIS KEY                                S01176
-     C*                                                                   S01176
-     C           CPKEY     READESECTYC                   36               S01176
-     C*                                                                   S01176
-     C           *IN36     DOWEQ'0'                                       S01176
-     C*
-     C* IF UNFIXED COMPLETE SECURITY, ENSURE MATURITY DATE IS NOT
-     C* NEGATIVE
-     C*
-     C           MDTI      IFEQ 'A'
-     C********** RUND      ORLT MATY                                                          111152
-     C           ACDT      ORLT MATY                                                          111152
-     C/COPY WNCPYSRC,SE5120C004
-     C***********          Z-ADDRUND      ZBASD                                               111152
-     C                     Z-ADDACDT      ZBASD                                               111152
-     C                     Z-ADDMATY      ZMDAT
-     C*
-     C* CALCULATE YIELD RATE USING SR. ZYMTX
-     C*
-     C                     EXSR ZYMTX
-     C/COPY WNCPYSRC,SE5120C005
-     C*
-     C* UPDATE SECURITY
-     C*
-     C                     MOVE ZY1       MKPR
-     C                     MOVE ECD       LPRU
-     C                     UPDATSECTYDF
-     C                     ADD  1         SECUPD  50
-     C*
-     C                     ADD  1         UPDCT   50
-     C*                                                                   E29170
-     C** Open printer file if required                                    E29170
-     C*                                                                   E29170
-     C           FILOPN    IFEQ 'N'                                       E29170
-     C                     OPEN SE5120P1                                  E29170
-     C*                                                                   E29170
-     C** RCF Processing for Detail Printer File                           E29170
-     C*                                                                   E29170
-     C                     EXSR RCFP1                                     E29170
-     C                     Z-ADD0         PAGE                            E29170
-     C                     MOVEL'Y'       FILOPN  1                       E29170
-     C                     END                                            E29170
-     C*
-     C* PRINT OUT REPORT
-     C*
-     C           INVT      IFNE @INV
-     C                     WRITEHEADP1
-     C                     WRITEHEADP2                                    E20885
-     C                     MOVE INVT      @INV    3
-     C                     END
-     C*
-     C* DEFINE AND INITIALISE NO. DEC PLACES WORK FIELDS
-     C*
-     C                     Z-ADD8         ZADEC
-     C                     Z-ADD8         ZDECS
-     C                     MOVE *BLANK    ZECODE
-     C*
-     C                     MOVE *BLANKS   ZFLD15
-     C                     MOVE ZB1       ZFLD15
-     C                     EXSR ZSEDIT
-     C                     MOVE ZOUT21    RMAT
-     C*
-     C                     Z-ADDZMDAT     ZDAYNO
-     C                     EXSR ZDATE2
-     C                     MOVE ZADATE    RDAT
-     C*
-     C                     MOVE *BLANKS   ZFLD15
-     C                     MOVE ZY1       ZFLD15
-     C                     EXSR ZSEDIT
-     C                     MOVE ZOUT21    RYR
-     C*
-     C* ONLY SHOW FOLLOWING FIELDS IF THE DAYS TO MATURITY ON THE
-     C* SECURITY DOES NOT MATCH AN ENTRY ON MATRIX CPPRID
-     C*
-     C           ZB1       LOKUPZND                      45
-     C*
-     C           *IN45     IFEQ '0'
-     C*
-     C                     MOVE *BLANKS   ZFIELD
-     C                     MOVE ZB2       ZFIELD
-     C                     EXSR ZEDIT
-     C                     MOVE ZFIELD    RPDY
-     C*
-     C                     MOVE *BLANKS   ZFIELD
-     C                     MOVE ZB3       ZFIELD
-     C                     EXSR ZEDIT
-     C                     MOVE ZFIELD    RNDY
-     C*
-     C*********************Z-ADDZB2       ZDAYNO                          E17763
-     C********** RUND      ADD  ZB2       ZDAYNO                                       E17763 111152
-     C           ACDT      ADD  ZB2       ZDAYNO                                              111152
-     C                     EXSR ZDATE2
-     C                     MOVE ZADATE    RPDT
-     C*
-     C*********************Z-ADDZB3       ZDAYNO                          E17763
-     C********** RUND      ADD  ZB3       ZDAYNO                                       E17763 111152
-     C           ACDT      ADD  ZB3       ZDAYNO                                              111152
-     C                     EXSR ZDATE2
-     C                     MOVE ZADATE    RNDT
-     C*
-     C                     MOVE *BLANKS   ZFLD15
-     C                     MOVE ZY2       ZFLD15
-     C                     EXSR ZSEDIT
-     C                     MOVE ZOUT21    RPYR
-     C*
-     C                     MOVE *BLANKS   ZFLD15
-     C                     MOVE ZY3       ZFLD15
-     C                     EXSR ZSEDIT
-     C                     MOVE ZOUT21    RNYR
-     C*
-     C                     ELSE
-     C*
-     C                     MOVE *BLANKS   RPDY
-     C                     MOVE *BLANKS   RNDY
-     C                     MOVE *BLANKS   RPDT
-     C                     MOVE *BLANKS   RNDT
-     C                     MOVE *BLANKS   RPYR
-     C                     MOVE *BLANKS   RNYR
-     C*
-     C                     END
-     C*
-     C/COPY WNCPYSRC,SE5120C006
-     C                     WRITEDETAIL
-     C/COPY WNCPYSRC,SE5120C007
-     C           *IN01     IFEQ '1'                                       E22107
-     C                     WRITEHEADP1                                    E22107
-     C                     WRITEHEADP2                                    E22107
-     C                     SETOF                         01               E22107
-     C                     END                                            E22107
-     C*
-     C* ADD RECORD TO SECURITY NON-DIARY EVENTS FILE (SNDEVD)
-     C*
-     C                     MOVE 'D'       RECI
-     C                     MOVE SESN      SNSN
-     C**********           MOVE RUND      SNDT                                                111152
-     C                     MOVE ECD       SNDT                                                111152
-     C                     MOVE 'PR'      SNET
-     C                     MOVE ZY1       SNPR
-     C/COPY WNCPYSRC,SE5120C008
-     C                     MOVEL'MATRIX M'SNNA
-     C                     MOVE 'K PRICE' SNNA
-     C/COPY WNCPYSRC,SE5120C009
-     C*
-     C                     WRITESNDEVDF
-     C*
-     C                     ADD  1         EVNCT   50
-     C*
-     C                     END
-     C*                                                                   S01176
-     C           CPKEY     READESECTYC                   36               S01176
-     C                     END                                            S01176
-     C*                                                                   S01176
-     C                     END
-     C                     END
-     C*
-     C* PRINT 'END OF REPORT' STATEMENT WHEN NO MORE CPP RECORDS
-     C*
-     C                     ELSE
-     C*                                                                   E18128
-     C* FIX TO PRODUCE HEADER IF NOT ALREADY WRITTEN ON PRINT FILE.       E18128
-     C*                                                                   E18128
-     C***********@INV      IFEQ *BLANKS                            E18128 E20885
-     C***********          WRITEHEADP1                             E18128 E20885
-     C***********          END                                     E18128 E20885
-     C***********                                                  E18128 E20885
-     C***********          WRITETRAILP1                            E18128 E20885
-     C*                                                                   E20885
-     C           @INV      IFEQ *BLANKS                                   E20885
-     C***********          WRITEHEADP1                              E20885E29170
-     C***********          WRITENONE                                E20885E29170
-     C*                                                                   E20885
-     C                     ELSE                                           E20885
-     C           *INU7     IFEQ '1'                                       E29170
-     C                     WRITEERRORP1                                   E29170
-     C                     END                                            E29170
-     C*                                                                   E20885
-     C                     WRITETRAILP1                                   E20885
-     C*                                                                   E20885
-     C                     END                                            E20885
-     C*                                                                   E20885
-     C*
-     C                     END
-     C*
-     C                     ENDSR
-     C*
-     C*****************************************************************
-     C/EJECT
-     C*****************************************************************
-     C*                                                               *
-     C*  AUDIT - SUBROUTINE TO PERFORM RUN CONTROL PROCESS            *
-     C*                                                               *
-     C*****************************************************************
-     C*
-     C           AUDIT     BEGSR
-     C*
-     C* IF ALREADY HAD DATABASE ERROR REPORT IT
-     C*
-     C           *IN32     IFEQ '1'
-     C                     EXSR INVSR
-     C                     END
-     C*
-     C************INU7     IFEQ '0'                                       E18128
-     C************IN33     ANDEQ'1'                                       S01176
-     C************IN33     ANDEQ'0'                                 S01176E18128
-     C           *INU7     IFEQ '1'                                       E18128
-     C/COPY WNCPYSRC,SE5120C003
-     C                     EXSR SECSR
-     C                     END
-     C*
-     C           *INU7     IFEQ '0'
-     C*
-     C* READ C.PAPER PRICES RECORD - IF NOT THERE, DATABASE ERROR
-     C*
-     C                     READ CPPRIAF                  34
-     C           *IN34     IFEQ '1'
-     C                     SETON                     U7U8
-     C           *LOCK     IN   LDA                                       S01117
-     C                     MOVE 'C.P.PR'  DBFILE           ***************
-     C                     MOVEL'AUDIT'   DBKEY            **DB ERROR 03**
-     C***********          MOVE '03'      DBASE            ***************S01117
-     C                     Z-ADD3         DBASE            ***************S01117
-     C                     OUT  LDA                                       S01117
-     C                     EXSR *PSSR                                     S01117
-     C                     ELSE
-     C                     MOVE NORE      CNORE
-     C                     MOVE CPPCT     CPPCTT
-     C                     END
-     C                     END
-     C*
-     C* READ SECURITY NON-DIARY EVENTS AUDIT RECORD - IF NOT THERE
-     C*      DATA BASE ERROR
-     C*
-     C           *INU7     IFEQ '0'
-     C*
-     C                     READ SNDEVAF                  35
-     C           *IN35     IFEQ '1'
-     C                     SETON                     U7U8
-     C           *LOCK     IN   LDA                                       S01117
-     C                     MOVE 'SNDEV'   DBFILE           ***************
-     C                     MOVEL'AUDIT'   DBKEY            **DB ERROR 04**
-     C***********          MOVE '04'      DBASE            ***************S01117
-     C                     Z-ADD4         DBASE            ***************S01117
-     C                     OUT  LDA                                       S01117
-     C                     EXSR *PSSR                                     S01117
-     C                     END
-     C                     END
-     C*
-     C* ADD NO OF RECORDS OUTPUT TO RECORD COUNT AND UPDATE FILES
-     C*
-     C           *INU7     IFEQ '0'
-     C*
-     C                     Z-ADDNORE      SNORE   50
-     C********** NORE      ADD  UPDCT     ONORE   50                      102718
-     C           NORE      ADD  EVNCT     ONORE   50                      102718
-     C                     Z-ADDONORE     NORE
-     C                     UPDATSNDEVAF
-     C*
-     C*********************UPDATCPPRIAF                                   E18128
-     C*
-     C                     END
-     C*                                                                   E29170
-     C** RCF Processing for Audit File                                    E29170
-     C*                                                                   E29170
-     C                     EXSR RCFAU                                     E29170
-     C                     Z-ADD0         PAGE                            E29170
-     C*
-     C* WRITE OUT CONTROL REPORT OR DATABASE ERROR
-     C*
-     C                     WRITEHEADAU
-     C  NU7                WRITECONTROL
-     C   U7 U8             WRITEERROR
-     C           @INV      IFEQ *BLANKS                                   E29170
-     C                     WRITENONE                                      E29170
-     C                     END                                            E29170
-     C***********          WRITETRAIL                                     E29170
-     C*
-     C                     SETON                     LR
-     C*
-     C                     ENDSR
-     C*
-     C*****************************************************************
-      /EJECT
-     C*****************************************************************
-     C*                                                               *
-     C*   CPRSR  - SUBROUTINE FOR ERROR HANDLING OF COMMERCIAL PAPER  *
-     C*            PRICES FILE                                        *
-     C*                                                               *
-     C*****************************************************************
-     C*
-     C           CPRSR     BEGSR
-     C*
-     C           *LOCK     IN   LDA                                       S01117
-     C                     MOVE 'COMPP'   DBFILE
-     C                     MOVELINVT      PKEY   15
-     C                     MOVE CCY       PKEY
-     C                     MOVELPKEY      DBKEY
-     C***********          MOVE '90'      DBASE                           S01117
-     C                     Z-ADD90        DBASE                           S01117
-     C                     MOVE STSCPR    DBSTAT
-     C                     OUT  LDA                                       S01117
-     C                     EXSR *PSSR                                     S01117
-     C                     MOVE '1'       *IN87
-     C                     SETON                     LRU7U8
-     C*
-     C                     ENDSR
-     C*
-     C*****************************************************************
-      /SPACE 3
-     C*****************************************************************
-     C*                                                               *
-     C*   SECSR  - SUBROUTINE FOR ERROR HANDLING OF SECURITIES FILE   *
-     C*                                                               *
-     C*****************************************************************
-     C*
-     C           SECSR     BEGSR
-     C*
-     C           *LOCK     IN   LDA                                       S01117
-     C                     MOVE 'SECTY'   DBFILE
-     C                     MOVELSESN      DBKEY
-     C***********          MOVE '91'      DBASE                           E20651
-     C***********          MOVE '95'      DBASE                    E20651 S01117
-     C                     Z-ADD95        DBASE                           S01117
-     C                     MOVE STSSEC    DBSTAT
-     C                     OUT  LDA                                       S01117
-     C                     EXSR *PSSR                                     S01117
-     C                     MOVE '1'       *IN87
-     C                     SETON                     LRU7U8
-     C*
-     C                     ENDSR
-     C*
-     C*****************************************************************
-      /SPACE 3
-     C*****************************************************************
-     C*                                                               *
-     C*   INVSR  - SUBROUTINE FOR ERROR HANDLING OF INVESTMENT TYPES  *
-     C*            FILE                                               *
-     C*                                                               *
-     C*****************************************************************
-     C*
-     C           INVSR     BEGSR
-     C*
-     C           *LOCK     IN   LDA                                       S01117
-     C                     MOVE 'INVTP'   DBFILE
-     C                     MOVELINVT      DBKEY
-     C***********          MOVE '91'      DBASE                           E20651
-     C***********          MOVE '96'      DBASE                    E20651 S01117
-     C                     Z-ADD96        DBASE                           S01117
-     C                     MOVE STSINV    DBSTAT
-     C                     OUT  LDA                                       S01117
-     C                     EXSR *PSSR                                     S01117
-     C                     MOVE '1'       *IN87
-     C                     SETON                     LRU7U8
-     C*
-     C                     ENDSR
-     C*
-     C*****************************************************************
-      /SPACE 3
-     C*****************************************************************
-     C*                                                               *
-     C*   CPASR  - SUBROUTINE FOR ERROR HANDLING OF CP PRICES FILE    *
-     C*               AUDIT RECORD                                    *
-     C*                                                               *
-     C*****************************************************************
-     C*
-     C           CPASR     BEGSR
-     C*
-     C           *LOCK     IN   LDA                                       S01117
-     C                     MOVE 'C.P.P'   DBFILE
-     C                     MOVEL'AUDIT'   DBKEY
-     C***********          MOVE '92'      DBASE                           S01117
-     C                     Z-ADD92        DBASE                           S01117
-     C                     MOVE STSCPA    DBSTAT
-     C                     OUT  LDA                                       S01117
-     C                     EXSR *PSSR                                     S01117
-     C                     MOVE '1'       *IN87
-     C                     SETON                     LRU7U8
-     C*
-     C                     ENDSR
-     C*
-     C*****************************************************************
-      /SPACE 3
-     C*****************************************************************
-     C*                                                               *
-     C*   SNASR  - SUBROUTINE FOR ERROR HANDLING OF SECURITIES NON-   *
-     C*               DIARY EVENTS AUDIT RECORD                       *
-     C*                                                               *
-     C*****************************************************************
-     C*
-     C           SNASR     BEGSR
-     C*
-     C           *LOCK     IN   LDA                                       S01117
-     C                     MOVE 'SNDEV'   DBFILE
-     C                     MOVEL'AUDIT'   DBKEY
-     C***********          MOVE '93'      DBASE                           S01117
-     C                     Z-ADD93        DBASE                           S01117
-     C                     MOVE STSSNA    DBSTAT
-     C                     OUT  LDA                                       S01117
-     C                     EXSR *PSSR                                     S01117
-     C                     MOVE '1'       *IN87
-     C                     SETON                     LRU7U8
-     C*
-     C                     ENDSR
-     C*
-     C*****************************************************************
-      /SPACE 3
-     C*****************************************************************
-     C*                                                               *
-     C*   SNDSR  - SUBROUTINE FOR ERROR HANDLING OF SECURITIES NON -  *
-     C*               DIARY EVENTS FILE                               *
-     C*                                                               *
-     C*****************************************************************
-     C*
-     C           SNDSR     BEGSR
-     C*
-     C           *LOCK     IN   LDA                                       S01117
-     C                     MOVE 'SNDEV'   DBFILE
-     C                     MOVELSNSN      SNKEY  17
-     C                     MOVELSNDT      SNKEYA  7
-     C                     MOVE 'CP'      SNKEYA
-     C                     MOVE SNKEYA    SNKEY
-     C                     MOVELSNKEY     DBKEY
-     C***********          MOVE '94'      DBASE                           S01117
-     C                     Z-ADD94        DBASE                           S01117
-     C                     MOVE STSSND    DBSTAT
-     C                     OUT  LDA                                       S01117
-     C                     EXSR *PSSR                                     S01117
-     C                     MOVE '1'       *IN87
-     C                     SETON                     LRU7U8
-     C*
-     C                     ENDSR
-     C*
-      *****************************************************************   S01117
-      /EJECT                                                              S01117
-      *****************************************************************   S01117
-      *                                                               *   S01117
-      *  *PSSR  - Error control subroutine                            *   S01117
-      *                                                               *   S01117
-      *****************************************************************   S01117
-      *                                                                   S01117
-     C           *PSSR     BEGSR                           ** *PSSR **    S01117
-     C**                                                                  S01117
-     C           @RUN      IFEQ *BLANKS                                   S01117
-     C                     MOVE 'Y'       @RUN    1                       S01117
-     C                     DUMP                                           S01117
-     C                     END                                            S01117
-     C**                                                                  S01117
-     C                     ENDSR                                          S01117
-      *                                                                   S01117
-     C*****************************************************************
-     C/EJECT                                                              E29170
-     C********************************************************************E29170
-     C*                                                                   E29170
-     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF          E29170
-     C*                                                                   E29170
-     C********************************************************************E29170
-     C*                                                                   E29170
-     C           RCFP1     BEGSR                            ** RCFP1 **   E29170
-     C*                                                                   E29170
-     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    E29170
-     C*                                                                   E29170
-     C                     Z-ADDSFNUM     ZSNUM   60                      E29170
-     C**                                                                  E29170
-     C                     CALL 'ZSFILE'                                  E29170
-     C                     PARM           SEQ     5                       E29170
-     C                     PARM *BLANKS   SENTY   3                       E29170
-     C                     PARM           SFILE                           E29170
-     C                     PARM           ZSNUM                           E29170
-     C                     PARM           ZSERR   1                       E29170
-     C*                                                                   E29170
-     C           ZSERR     IFEQ 'Y'                                       E29170
-     C*                                                                   E29170
-     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
-     C*                                                                   E29170
-     C                     SETON                     U7U8LR               E29170
-     C                     RETRN                                          E29170
-     C                     END                                            E29170
-     C*                                                                   E29170
-     C                     ENDSR                                          E29170
-     C*                                                                   E29170
-     C********************************************************************E29170
-     C/EJECT                                                              E29170
-     C********************************************************************E29170
-     C*                                                                   E29170
-     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF          E29170
-     C*                                                                   E29170
-     C********************************************************************E29170
-     C*                                                                   E29170
-     C           RCFAU     BEGSR                            ** RCFAU **   E29170
-     C*                                                                   E29170
-     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF                     E29170
-     C*                                                                   E29170
-     C                     Z-ADDSFNUMU    ZSNUMU  60                      E29170
-     C**                                                                  E29170
-     C                     CALL 'ZSFILE'                                  E29170
-     C                     PARM           SEQ                             E29170
-     C                     PARM *BLANKS   SENTY                           E29170
-     C                     PARM           SFILEU                          E29170
-     C                     PARM           ZSNUMU                          E29170
-     C                     PARM *BLANK    ZSERR                           E29170
-     C*                                                                   E29170
-     C           ZSERR     IFEQ 'Y'                                       E29170
-     C*                                                                   E29170
-     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
-     C*                                                                   E29170
-     C                     SETON                     U7U8LR               E29170
-     C                     RETRN                                          E29170
-     C                     END                                            E29170
-     C*                                                                   E29170
-     C                     ENDSR                                          E29170
-     C*                                                                   E29170
-     C*****************************************************************   E29170
-      /EJECT
-     C/COPY ZSRSRC,ZDATE2Z2
-      /EJECT
-     C/COPY ZSRSRC,ZEDITZ2
-      /EJECT
-     C/COPY ZSRSRC,ZEVCDZ1
-      /EJECT
-     C/COPY ZSRSRC,ZICD2Z1
-      /EJECT
-     C/COPY ZSRSRC,ZSEDITZ3
-      /EJECT
-     C/COPY ZSRSRC,ZSYSTMZ1
-      /EJECT
-     C/COPY ZSRSRC,ZYMTXZ2
-      /EJECT
-      ***
-**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
-0366073110961461
-**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
-000031059090120151181212243273304334365
-**   ZMNM - MONTHS SHORT NAMES
-JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
-**  CPY@
-(c) Finastra International Limited 2001
+000100200529     H        1
+000200200529      *****************************************************************
+000300200529/*STD *  RPGBASE                                                      *
+000400200529/*EXI *  TEXT('Midas SE Extract C.P. price change')                   *
+000500200529     F*****************************************************************
+000600200529     F*                                                               *
+000700200529     F*  Midas - Securities Trading Module
+000800200529     F*                                                               *
+000900200529     F*  SE5120 - EXTRACT COMMERCIAL PAPER PRICE CHANGES              *
+001000200529     F*                                                               *
+001100200529     F*  Function: To extract and keep as Security events, changes    *
+001200200529     F*   (COB)    input to the Commercial Paper Price matrix for a   *
+001300200529     F*            security.                                          *
+001400200529     F*                                                               *
+001500200529     F*  Called by: SEC0602H - Extract Commercial Paper Price Changes *
+001600200529     F*                                                               *
+001700200529      *  (c) Finastra International Limited 2001                      *
+001800200529     F*                                                               *
+001900200604     F*  Last Amend No. 247420             Date 22May20               *
+002000200529      *  Prev Amend No. MD046248           Date 27Oct17               *
+002100200529      *                 CRE073             Date 06Dec10               *
+002200200529      * Bank Fusion Midas 1.4 Base -----------------------------------*
+002300200529      * Midas Plus 1.4 Base 04 ---------------------------------------*
+002400200529      * Midas Plus 1.4 Base ------------------------------------------*
+002500200529      * Midas Plus 1.3 ----------- Base ------------------------------*
+002600200529      *                 CSD027             Date 09Dec05               *
+002700200529      *                 CSE075             Date 17Nov05               *
+002800200529      *                 CSE071             Date 19Jul05               *
+002900200529      *                 CAS008             Date 11May04               *
+003000200529      *                 CAS006             Date 21Jan03               *
+003100200529      *                 111152             Date 23Aug02               *
+003200200529      *                 CSE037             Date 29Apr02               *
+003300200529      * Midas Release 4.01 -------------------------------------------*
+003400200529      * Midas Release 4 --------------- Base -------------------------*
+003500200529      * Midas DBA 3.05 -----------------------------------------------*
+003600200529      *                 CSD006             Date 16May01               *
+003700200529      * Midas DBA 3.04 -----------------------------------------------*
+003800200529      *                 CSE023             Date 12Jul00               *
+003900200529      * Midas DBA 3.03 -----------------------------------------------*
+004000200529      *                 CAP137             Date 07Feb00               *
+004100200529      * Midas DBA 3.02 -----------------------------------------------*
+004200200529      * Midas DBA 3.00 ---------------- Base -------------------------*
+004300200529     F*                 102718             DATE 22JAN97               *
+004400200529     F*                 S01455             DATE 05NOV93               *
+004500200529     F*                 052254             DATE 10JAN94               *
+004600200529     F*                 S01397             DATE 10SEP92               *
+004700200529     F*                 E37615             DATE 27MAR92               *
+004800200529     F*                 E29170             DATE 18NOV91               *
+004900200529     F*                 S01117             DATE 12JUN91               *
+005000200529     F*                 E22107             DATE 02MAY90               *
+005100200529     F*                 E20651             DATE 30JAN90               *
+005200200529     F*                 E20885             DATE 23JAN90               *
+005300200529     F*                 E17763             DATE 11/05/89              *
+005400200529     F*                 E18128             DATE 25/04/89              *
+005500200529     F*                 S01176             DATE 12/10/88              *
+005600200529     F*                                                               *
+005700200529     F*---------------------------------------------------------------*
+005800200529     F*                                                               *
+005900200529      *  247420 - Rename and increase length of field NORE in file    *
+006000200529      *           SNDEVA from NORE(5,0) to SNNORE(7,0).  Also increase*
+006100200529      *           length of working fields related to SNNORE.         *
+006200200529      *           Applied fix 230439.                                 *
+006300200529      *  MD046248 - Finastra Rebranding                               *
+006400200529      *  CRE073 - Interest Rate Rounding (Recompile)                  *
+006500200529      *  CSD027 - Conversion Of Customer Number to Alpha              *
+006600200529      *  CSE075 - US Enhanced Treasury Upgrade to MidasPlus           *
+006700200529      *           (Recompile)                                         *
+006800200529      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+006900200529      *  CAS008 - Delayed Hedge Assessment (Recompile)                *
+007000200529      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+007100200529      *  111152 - Interpolation of discount rates incorrect           *
+007200200529      *           Applied 2.3 fix NDF033 and recompiled.              *
+007300200529      *  CSE037 - Bond Pricing - 3 Decimal Places in Trades Input.    *
+007400200529      *  CSD006 - Market Data Feed (Recompiled)                       *
+007500200529      *  CSE023 - Treaty Withholding Tax (Recompiled)                 *
+007600200529      *  CAP137 - Conversion of SE Security inputs into modular       *
+007700200529      *           structure to use as APIs.                           *
+007800200529      *           Recompiled over changes in PF/SECTYD.               *
+007900200529     F*  102718 - Using wrong field for File Control update (SNDEVA)  *
+008000200529     F*  S01455 - 'FF' ACCOUNT KEY ENHANCEMENTS.                      *
+008100200529     F*           Recompiled due to changes in PF/TABTB80.            *
+008200200529     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+008300200529     F*           to 10,9                                             *
+008400200529     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+008500200529     F*          - Recompiled due to changes to files.                *
+008600200529     F*  E37615 - Recompiled for minor correction to Audit Print File.*
+008700200529     F*  E29170 - Report Control Facility changes                     *
+008800200529     F*  S01117 - Multibranching                                      *
+008900200529     F*  E22107 - OVERFLOW ERROR - OVERFLOW LINE EXCEEDED             *   E22107
+009000200529     F*  E20651 - DB ERROR NUMBERS USED IN MORE THAN ONE PLACE.       *   E20651
+009100200529     F*           NEW ERROR NUMBERS AS FOLLOWS:                       *   E20651
+009200200529     F*           DB ERROR 91 -> 95                                   *   E20651
+009300200529     F*           DB ERROR 91 -> 96                                   *   E20651
+009400200529     F*  E20885 - REPORT SHOULD SHOW "NO DETAILS TO REPORT" IF FILE   *   E20885
+009500200529     F*           CPPRIC EMPTY.                                       *   E20885
+009600200529     F*  E17763 - DATES SHOULD BE DAYS SINCE RUN DATE. NOT 1 JAN '72. *   E17763
+009700200529     F*  E18128 - INCLUDE S01186 CHANGES TO PREVENT D/B ERROR WHEN    *   E18128
+009800200529     F*           FILE CPPRIC EMPTY.                                  *   E18128
+009900200529     F*  S01176 - SECURITIES TRADING 3.1 (AUSTRALIA)                  *   S01176
+010000200529     F*                                                               *
+010100200529     F*****************************************************************
+010200200529     FCPPRIC  IF  E           K        DISK         KINFDS CPRDS
+010300200529     F                                              KINFSR CPRSR
+010400200529     FTABICD  IF  E           K        DISK
+010500200529     F            TABLETAF                          KIGNORE
+010600200529     F* ICD 1     TABTB10F                          KIGNORE
+010700200529     F* ICD 2     TABTB11F                          KIGNORE
+010800200529     F            TABTB20F                          KIGNORE
+010900200529     F            TABTB30F                          KIGNORE
+011000200529     F            TABTB35F                          KIGNORE
+011100200529     F            TABTB36F                          KIGNORE
+011200200529     F            TABTB40F                          KIGNORE
+011300200529     F            TABTB50F                          KIGNORE
+011400200529     F            TABTB55F                          KIGNORE
+011500200529     F            TABTE10F                          KIGNORE
+011600200529     F            TABTE20F                          KIGNORE
+011700200529     F            TABTG10F                          KIGNORE
+011800200529     F            TABTG20F                          KIGNORE
+011900200529     F            TABLETHF                          KIGNORE
+012000200529     F            TABLETRF                          KIGNORE
+012100200529     F            TABLETXF                          KIGNORE
+012200200529     F            TABLET5F                          KIGNORE
+012300200529     FSECTYC  UF  E           K        DISK         KINFDS SECDS
+012400200529     F                                              KINFSR SECSR
+012500200529     FINVTPC  IF  E           K        DISK         KINFDS INVDS
+012600200529     F                                              KINFSR INVSR
+012700200529     F*PPRIA**UF  E                    DISK         KINFDS CPADS          E18128
+012800200529     F***                                           KINFSR CPASR          E18128
+012900200529     FCPPRIA  IF  E                    DISK         KINFDS CPADS          E18128
+013000200529     F                                              KINFSR CPASR          E18128
+013100200529     FSNDEVA  UF  E                    DISK         KINFDS SNADS
+013200200529     F                                              KINFSR SNASR
+013300200529     FSNDEVD  O   E           K        DISK         KINFDS SNDDS
+013400200529     F/COPY WNCPYSRC,SE5120F001
+013500200529     F                                              KINFSR SNDSR
+013600200529     F***********SE5120P1O   E                    PRINTER                 E22107
+013700200529     F***SE5120P1O***E             01     PRINTER                   E22107E29170
+013800200529     FSE5120P1O   E             01     PRINTER                        UC  E29170
+013900200529     F                                              KINFDS SPOOL          E29170
+014000200529     FSE5120AUO   E                    PRINTER
+014100200529     F                                              KINFDS SPOOLU         E29170
+014200200529      /EJECT
+014300200529     F*****************************************************************
+014400200529     F*                                                               *
+014500200529     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+014600200529     F*                                                               *
+014700200529     F*   01     OVERFLOW INDICATOR                                   *   E22107
+014800200529     F*   31     READ INDICATOR FOR CP PRICE RECORD                   *
+014900200529     F*   32     CHAIN INDICATOR FOR INVESTMENT TYPE RECORD           *
+015000200529     F****33     CHAIN INDICATOR FOR SECTYDF                          *   E18128
+015100200529     F*   33     SETLL INDICATOR FOR SECTYDF                          *   E18128
+015200200529     F*   34     READ INDICATOR FOR CP PRICES  AUDIT                  *
+015300200529     F*   35     READ INDICATOR FOR NON-DIARY EVENTS AUDIT            *
+015400200529     F*   36     READ INDICATOR FOR SECTYDF                           *   S01176
+015500200529     F*                                                               *
+015600200529     F*   41     INDICATORS USED FOR COMPARING THE DAYS TO            *
+015700200529     F*   42     MATURITY WITH THE VALUE IN THE EQUIVALENT            *
+015800200529     F*   43     FIELD IN CPPRIC                                      *
+015900200529     F*                                                               *
+016000200529     F*   45     LOOKUP INDICATOR FOR DAYS TO MATURITY                *
+016100200529     F*                                                               *
+016200200529     F*   87     INDICATOR USED IN ERROR SUBROUTINES                  *
+016300200529     F*                                                               *
+016400200529     F*   99     INDICATOR USED IN ZSYSTM AND ZICD2                   *
+016500200529     F*                                                               *
+016600200529     F*                                                               *
+016700200529     F*   U7     DATABASE ERROR                                       *
+016800200529     F*   U8     DATABASE ERROR                                       *
+016900200529     F*                                                               *
+017000200529     F*****************************************************************
+017100200529      /EJECT
+017200200529     F*****************************************************************
+017300200529     F*                                                               *
+017400200529     F*  S U B R O U T I N E   I N D E X                              *
+017500200529     F*                                                               *
+017600200529     F*  AUDIT  - PERFORM RUN CONTROL PROCESS                         *
+017700200529     F*  *PSSR  - Error handling                                      *   S01117
+017800200529     F*  RCFP1  - SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF      *   E29170
+017900200529     F*  RCFAU  - SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF      *   E29170
+018000200529     F*  ZEVCD  - CALCULATE EVENT CONTROL DATE                        *
+018100200529     F*  ZICD2  - RETRIEVE INSTALLATION CONTROL RECORD NO 2           *
+018200200529     F*  ZSYSTM - RETRIEVE INSTALLATION CONTROL RECORD                *
+018300200529     F*  ZYMTX  - CALCULATE YIELD RATE                                *
+018400200529     F*  ZEDIT  - INSERT DECIMAL POINT AND BLANK OUT LEADING ZEROS    *
+018500200529     F*  ZSEDIT - INSERT DEC. PT., SIGN AND BLANK OUT LEADING ZEROS   *
+018600200529     F*  ZDATE2 - CONVERT DAY NO. TO DATE FORMAT                      *
+018700200529     F* *                                                             *
+018800200529     F*****************************************************************
+018900200529      /EJECT
+019000200529     E/COPY ZSRSRC,ZYMTXZ1
+019100200529     E/COPY ZSRSRC,ZDATE2Z1
+019200200529     E/COPY ZSRSRC,ZEDITZ1
+019300200529     E/COPY ZSRSRC,ZSEDITZ1
+019400200529     E                    CPY@    1   1 80
+019500200529      /EJECT
+019600200529      *                                                                                       CSE037
+019700200529     IINVTPDF                                                                                 CSE037
+019800200529     I              SFLG                            ISFLG                                     CSE037
+019900200529      *                                                                                       CSE037
+020000200529     ICPPRIDF
+020100200529     I* SET UP DATA STRUCTURE FOR CPPRID
+020200200529     I              RECI                            CRECI
+020300200529     I              ND01                            ZND,1
+020400200529     I              ND02                            ZND,2
+020500200529     I              ND03                            ZND,3
+020600200529     I              ND04                            ZND,4
+020700200529     I              ND05                            ZND,5
+020800200529     I              ND06                            ZND,6
+020900200529     I              ND07                            ZND,7
+021000200529     I              ND08                            ZND,8
+021100200529     I              ND09                            ZND,9
+021200200529     I              ND10                            ZND,10
+021300200529     I              ND11                            ZND,11
+021400200529     I              ND12                            ZND,12
+021500200529     I              ND13                            ZND,13
+021600200529     I              ND14                            ZND,14
+021700200529     I              ND15                            ZND,15
+021800200529     I              ND16                            ZND,16
+021900200529     I              ND17                            ZND,17
+022000200529     I              ND18                            ZND,18
+022100200529     I              ND19                            ZND,19
+022200200529     I              ND20                            ZND,20
+022300200529     I              ND21                            ZND,21
+022400200529     I              ND22                            ZND,22
+022500200529     I              ND23                            ZND,23
+022600200529     I              ND24                            ZND,24
+022700200529     I              ND25                            ZND,25
+022800200529     I              YR01                            ZRT,1
+022900200529     I              YR02                            ZRT,2
+023000200529     I              YR03                            ZRT,3
+023100200529     I              YR04                            ZRT,4
+023200200529     I              YR05                            ZRT,5
+023300200529     I              YR06                            ZRT,6
+023400200529     I              YR07                            ZRT,7
+023500200529     I              YR08                            ZRT,8
+023600200529     I              YR09                            ZRT,9
+023700200529     I              YR10                            ZRT,10
+023800200529     I              YR11                            ZRT,11
+023900200529     I              YR12                            ZRT,12
+024000200529     I              YR13                            ZRT,13
+024100200529     I              YR14                            ZRT,14
+024200200529     I              YR15                            ZRT,15
+024300200529     I              YR16                            ZRT,16
+024400200529     I              YR17                            ZRT,17
+024500200529     I              YR18                            ZRT,18
+024600200529     I              YR19                            ZRT,19
+024700200529     I              YR20                            ZRT,20
+024800200529     I              YR21                            ZRT,21
+024900200529     I              YR22                            ZRT,22
+025000200529     I              YR23                            ZRT,23
+025100200529     I              YR24                            ZRT,24
+025200200529     I              YR25                            ZRT,25
+025300200529     I/COPY WNCPYSRC,SE5120I001
+025400200529     I*
+025500200529     ICPRDS       DS
+025600200529     I                                     *STATUS  STSCPR
+025700200529     I*
+025800200529     ISECDS       DS
+025900200529     I                                     *STATUS  STSSEC
+026000200529     I*
+026100200529     IINVDS       DS
+026200200529     I                                     *STATUS  STSINV
+026300200529     I*
+026400200529     ICPADS       DS
+026500200529     I                                     *STATUS  STSCPA
+026600200529     I*
+026700200529     ISNADS       DS
+026800200529     I                                     *STATUS  STSSNA
+026900200529     I*
+027000200529     ISNDDS       DS
+027100200529     I                                     *STATUS  STSSND
+027200200529     I*
+027300200529     ILDA         DS                            256                       S01117
+027400200529     I                                      134 183 DBLOT                 S01117
+027500200529     I                                      134 141 DBFILE                S01117
+027600200529     I                                      142 170 DBKEY                 S01117
+027700200529     I                                      171 180 DBPGM                 S01117
+027800200529     I                                      181 1830DBASE                 S01117
+027900200529     I*LDA******* UDS                            256                      S01117
+028000200529     I***********                           134 177 DBLOT                 S01117
+028100200529     I***********                           134 138 DBFILE                S01117
+028200200529     I***********                           139 167 DBKEY                 S01117
+028300200529     I***********                           168 175 DBPGM                 S01117
+028400200529     I***********                           176 177 DBASE                 S01117
+028500200529     I*                                                                   E29170
+028600200529     ISPOOL       DS                                                      E29170
+028700200529     I*                                                                   E29170
+028800200529     I**  DS FOR P1 SPOOL FILE NAME                                       E29170
+028900200529     I*                                                                   E29170
+029000200529     I                                       83  92 SFILE                 E29170
+029100200529     I                                    B 123 1240SFNUM                 E29170
+029200200529     I**                                                                  E29170
+029300200529     ISPOOLU      DS                                                      E29170
+029400200529     I                                       83  92 SFILEU                E29170
+029500200529     I                                    B 123 1240SFNUMU                E29170
+029600200529     I*
+029700200529     I/COPY ZSRSRC,ZSEDITZ2
+029800200529     I*
+029900200529     ICPYR@#      DS
+030000200529     I*
+030100200529     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+030200200529     I*
+030300200529     I                                        1  80 CPY@
+030400200529     I                                        1  20 CPY@##
+030500200529     I/COPY WNCPYSRC,SE5120I002
+030600200529     C*****************************************************************
+030700200529     C/EJECT
+030800200529     C*****************************************************************
+030900200529     C*                                                               *
+031000200529     C*    MAIN PROCESSING                                            *
+031100200529     C*                                                               *
+031200200529     C*****************************************************************
+031300200529     C*
+031400200529     C**  PERFORM INITIAL PROCESSING
+031500200529     C*
+031600200529     C                     EXSR INIT
+031700200529     C*
+031800200529     C           *INU7     IFEQ '0'
+031900200529     C           *INU8     ANDEQ'0'
+032000200529     C           *IN31     DOWEQ'0'
+032100200529     C*
+032200200529     C*  IF NO DATABASE ERRORS, PERFORM MAIN PROCESSING UNTIL EOF
+032300200529     C*
+032400200529     C                     EXSR MAIN
+032500200529     C*
+032600200529     C                     END
+032700200529     C                     END
+032800200529     C*
+032900200529     C                     EXSR AUDIT
+033000200529     C*
+033100200529     C*****************************************************************
+033200200529     C/EJECT
+033300200529     C*****************************************************************
+033400200529     C*                                                               *
+033500200529     C* INIT - RETRIEVE ICD1 & ICD2 RECORDS, AND EVENT CONTROL DATE   *
+033600200529     C*                                                               *
+033700200529     C*****************************************************************
+033800200529     C*
+033900200529     C           INIT      BEGSR
+034000200529     C*
+034100200529     C* SETOF DATABASE ERROR INDICATORS
+034200200529     C*
+034300200529     C                     SETOF                       U7U8
+034400200529     C*
+034500200529     C* RETRIEVE ICD 1 RECORD - IF NOT THERE, DATABASE ERROR
+034600200529     C*
+034700200529     C           *NAMVAR   DEFN           LDA                             S01117
+034800200529     C           *LOCK     IN   LDA                                       S01117
+034900200529     C                     MOVE *BLANKS   DBLOT                           S01117
+035000200529     C                     MOVEL'SE5120'  DBPGM
+035100200529     C                     OUT  LDA                                       S01117
+035200200529     C                     EXSR ZSYSTM
+035300200529     C           *IN99     IFEQ '1'
+035400200529     C                     SETON                     LRU7U8
+035500200529     C           *LOCK     IN   LDA                                       S01117
+035600200529     C                     MOVE 'TABLE'   DBFILE
+035700200529     C                     MOVELZTABKY    DBKEY
+035800200529     C***********          MOVE '01'      DBASE            **DB ERROR 01**S01117
+035900200529     C                     Z-ADD1         DBASE            **DB ERROR 01**S01117
+036000200529     C                     OUT  LDA                                       S01117
+036100200529     C                     EXSR *PSSR                                     S01117
+036200200529     C                     END
+036300200529     C*
+036400200529     C* RETRIEVE ICD 2 RECORD - IF NOT THERE, DATABASE ERROR
+036500200529     C*
+036600200529     C                     EXSR ZICD2
+036700200529     C           *IN99     IFEQ '1'
+036800200529     C                     SETON                     LRU7U8
+036900200529     C           *LOCK     IN   LDA                                       S01117
+037000200529     C                     MOVE 'TABLE'   DBFILE
+037100200529     C                     MOVELZTABKY    DBKEY
+037200200529     C***********          MOVE '02'      DBASE            **DB ERROR 02**S01117
+037300200529     C                     Z-ADD2         DBASE            **DB ERROR 02**S01117
+037400200529     C                     OUT  LDA                                       S01117
+037500200529     C                     EXSR *PSSR                                     S01117
+037600200529     C                     END
+037700200529     C*
+037800200529     C* CALCULATE EVENT CONTROL DATE
+037900200529     C*
+038000200529     C                     Z-ADDDNWD      ZZDNWD                          S01117
+038100200529     C                     Z-ADDAPDA      ZZAPDT                          S01117
+038200200529     C                     EXSR ZEVCD
+038300200529      *                                                                                       111152
+038400200529      ** Calculate Accrual Control Date                                                       111152
+038500200529      *                                                                                       111152
+038600200529     C           ACLD      IFEQ 'Y'                                                           111152
+038700200529     C                     Z-ADDECD       ACDT    50                                          111152
+038800200529     C                     ELSE                                                               111152
+038900200529     C           ECD       ADD  1         ACDT                                                111152
+039000200529     C                     END                                                                111152
+039100200529      *
+039200200529     C* SETOF COMMERCIAL PAPER PRICE FILE READ INDICATOR DURING
+039300200529     C* FIRST TIME THROUGH PROCESS
+039400200529     C*
+039500200529     C                     SETOF                     31
+039600200529     C                     MOVEL'N'       FILOPN  1                       E29170
+039700200529     C/COPY WNCPYSRC,SE5120C001
+039800200529     C*
+039900200529     C                     ENDSR
+040000200529     C*
+040100200529     C*****************************************************************
+040200200529     C/EJECT
+040300200529     C*****************************************************************
+040400200529     C*                                                               *
+040500200529     C*   MAIN PROCESSING                                             *
+040600200529     C*                                                               *
+040700200529     C*****************************************************************
+040800200529     C*
+040900200529     C           MAIN      BEGSR
+041000200529     C*
+041100200529     C* PROCESS EACH LIVE COMMERCIAL PAPER PRICE
+041200200529     C*
+041300200529     C                     READ CPPRIC                   31
+041400200529     C/COPY WNCPYSRC,SE5120C002
+041500200529     C*
+041600200529     C           *IN31     IFEQ '0'
+041700200529     C*
+041800200529     C*
+041900200529     C*  ADD 1 TO RECORD COUNT
+042000200529     C*
+042100200529     C                     ADD  1         CPPCT   50
+042200200529     C*
+042300200529     C* PICK UP EACH NEW INVESTMENT TYPE USING KEY FROM CPPRID
+042400200529     C*
+042500200529     C           CPKEY     KLIST
+042600200529     C                     KFLD           INVT
+042700200529     C                     KFLD           CCY
+042800200529     C*
+042900200529     C           CPKEY     CHAININVTPC               32
+043000200529     C*
+043100200529     C           *IN32     IFEQ '0'
+043200200529     C*
+043300200529     C* ACCESS SECURITY FILE USING KEY FROM CPPRID
+043400200529     C*
+043500200529     C***********CPKEY     CHAINSECTYC               33                   S01176
+043600200529     C           CPKEY     SETLLSECTYC                   33               S01176
+043700200529     C*
+043800200529     C* IF RECORD FOUND
+043900200529     C*
+044000200529     C************IN33     IFEQ '0'                                       S01176
+044100200529     C           *IN33     IFEQ '1'                                       S01176
+044200200529     C*                                                                   S01176
+044300200529     C*                                                                   S01176
+044400200529     C* READ ALL RECORDS EQUAL TO THIS KEY                                S01176
+044500200529     C*                                                                   S01176
+044600200529     C           CPKEY     READESECTYC                   36               S01176
+044700200529     C*                                                                   S01176
+044800200529     C           *IN36     DOWEQ'0'                                       S01176
+044900200529     C*
+045000200529     C* IF UNFIXED COMPLETE SECURITY, ENSURE MATURITY DATE IS NOT
+045100200529     C* NEGATIVE
+045200200529     C*
+045300200529     C           MDTI      IFEQ 'A'
+045400200529     C********** RUND      ORLT MATY                                                          111152
+045500200529     C           ACDT      ORLT MATY                                                          111152
+045600200529     C/COPY WNCPYSRC,SE5120C004
+045700200529     C***********          Z-ADDRUND      ZBASD                                               111152
+045800200529     C                     Z-ADDACDT      ZBASD                                               111152
+045900200529     C                     Z-ADDMATY      ZMDAT
+046000200529     C*
+046100200529     C* CALCULATE YIELD RATE USING SR. ZYMTX
+046200200529     C*
+046300200529     C                     EXSR ZYMTX
+046400200529     C/COPY WNCPYSRC,SE5120C005
+046500200529     C*
+046600200529     C* UPDATE SECURITY
+046700200529     C*
+046800200529     C                     MOVE ZY1       MKPR
+046900200529     C                     MOVE ECD       LPRU
+047000200529     C                     UPDATSECTYDF
+047100200529     C                     ADD  1         SECUPD  50
+047200200529     C*
+047300200529     C                     ADD  1         UPDCT   50
+047400200529     C*                                                                   E29170
+047500200529     C** Open printer file if required                                    E29170
+047600200529     C*                                                                   E29170
+047700200529     C           FILOPN    IFEQ 'N'                                       E29170
+047800200529     C                     OPEN SE5120P1                                  E29170
+047900200529     C*                                                                   E29170
+048000200529     C** RCF Processing for Detail Printer File                           E29170
+048100200529     C*                                                                   E29170
+048200200529     C                     EXSR RCFP1                                     E29170
+048300200529     C                     Z-ADD0         PAGE                            E29170
+048400200529     C                     MOVEL'Y'       FILOPN  1                       E29170
+048500200529     C                     END                                            E29170
+048600200529     C*
+048700200529     C* PRINT OUT REPORT
+048800200529     C*
+048900200529     C           INVT      IFNE @INV
+049000200529     C                     WRITEHEADP1
+049100200529     C                     WRITEHEADP2                                    E20885
+049200200529     C                     MOVE INVT      @INV    3
+049300200529     C                     END
+049400200529     C*
+049500200529     C* DEFINE AND INITIALISE NO. DEC PLACES WORK FIELDS
+049600200529     C*
+049700200529     C                     Z-ADD8         ZADEC
+049800200529     C                     Z-ADD8         ZDECS
+049900200529     C                     MOVE *BLANK    ZECODE
+050000200529     C*
+050100200529     C                     MOVE *BLANKS   ZFLD15
+050200200529     C                     MOVE ZB1       ZFLD15
+050300200529     C                     EXSR ZSEDIT
+050400200529     C                     MOVE ZOUT21    RMAT
+050500200529     C*
+050600200529     C                     Z-ADDZMDAT     ZDAYNO
+050700200529     C                     EXSR ZDATE2
+050800200529     C                     MOVE ZADATE    RDAT
+050900200529     C*
+051000200529     C                     MOVE *BLANKS   ZFLD15
+051100200529     C                     MOVE ZY1       ZFLD15
+051200200529     C                     EXSR ZSEDIT
+051300200529     C                     MOVE ZOUT21    RYR
+051400200529     C*
+051500200529     C* ONLY SHOW FOLLOWING FIELDS IF THE DAYS TO MATURITY ON THE
+051600200529     C* SECURITY DOES NOT MATCH AN ENTRY ON MATRIX CPPRID
+051700200529     C*
+051800200529     C           ZB1       LOKUPZND                      45
+051900200529     C*
+052000200529     C           *IN45     IFEQ '0'
+052100200529     C*
+052200200529     C                     MOVE *BLANKS   ZFIELD
+052300200529     C                     MOVE ZB2       ZFIELD
+052400200529     C                     EXSR ZEDIT
+052500200529     C                     MOVE ZFIELD    RPDY
+052600200529     C*
+052700200529     C                     MOVE *BLANKS   ZFIELD
+052800200529     C                     MOVE ZB3       ZFIELD
+052900200529     C                     EXSR ZEDIT
+053000200529     C                     MOVE ZFIELD    RNDY
+053100200529     C*
+053200200529     C*********************Z-ADDZB2       ZDAYNO                          E17763
+053300200529     C********** RUND      ADD  ZB2       ZDAYNO                                       E17763 111152
+053400200529     C           ACDT      ADD  ZB2       ZDAYNO                                              111152
+053500200529     C                     EXSR ZDATE2
+053600200529     C                     MOVE ZADATE    RPDT
+053700200529     C*
+053800200529     C*********************Z-ADDZB3       ZDAYNO                          E17763
+053900200529     C********** RUND      ADD  ZB3       ZDAYNO                                       E17763 111152
+054000200529     C           ACDT      ADD  ZB3       ZDAYNO                                              111152
+054100200529     C                     EXSR ZDATE2
+054200200529     C                     MOVE ZADATE    RNDT
+054300200529     C*
+054400200529     C                     MOVE *BLANKS   ZFLD15
+054500200529     C                     MOVE ZY2       ZFLD15
+054600200529     C                     EXSR ZSEDIT
+054700200529     C                     MOVE ZOUT21    RPYR
+054800200529     C*
+054900200529     C                     MOVE *BLANKS   ZFLD15
+055000200529     C                     MOVE ZY3       ZFLD15
+055100200529     C                     EXSR ZSEDIT
+055200200529     C                     MOVE ZOUT21    RNYR
+055300200529     C*
+055400200529     C                     ELSE
+055500200529     C*
+055600200529     C                     MOVE *BLANKS   RPDY
+055700200529     C                     MOVE *BLANKS   RNDY
+055800200529     C                     MOVE *BLANKS   RPDT
+055900200529     C                     MOVE *BLANKS   RNDT
+056000200529     C                     MOVE *BLANKS   RPYR
+056100200529     C                     MOVE *BLANKS   RNYR
+056200200529     C*
+056300200529     C                     END
+056400200529     C*
+056500200529     C/COPY WNCPYSRC,SE5120C006
+056600200529     C                     WRITEDETAIL
+056700200529     C/COPY WNCPYSRC,SE5120C007
+056800200529     C           *IN01     IFEQ '1'                                       E22107
+056900200529     C                     WRITEHEADP1                                    E22107
+057000200529     C                     WRITEHEADP2                                    E22107
+057100200529     C                     SETOF                         01               E22107
+057200200529     C                     END                                            E22107
+057300200529     C*
+057400200529     C* ADD RECORD TO SECURITY NON-DIARY EVENTS FILE (SNDEVD)
+057500200529     C*
+057600200529     C                     MOVE 'D'       RECI
+057700200529     C                     MOVE SESN      SNSN
+057800200529     C**********           MOVE RUND      SNDT                                                111152
+057900200529     C                     MOVE ECD       SNDT                                                111152
+058000200529     C                     MOVE 'PR'      SNET
+058100200529     C                     MOVE ZY1       SNPR
+058200200529     C/COPY WNCPYSRC,SE5120C008
+058300200529     C                     MOVEL'MATRIX M'SNNA
+058400200529     C                     MOVE 'K PRICE' SNNA
+058500200529     C/COPY WNCPYSRC,SE5120C009
+058600200529     C*
+058700200529     C                     WRITESNDEVDF
+058800200529     C*
+058900200529     C                     ADD  1         EVNCT   50
+059000200529     C*
+059100200529     C                     END
+059200200529     C*                                                                   S01176
+059300200529     C           CPKEY     READESECTYC                   36               S01176
+059400200529     C                     END                                            S01176
+059500200529     C*                                                                   S01176
+059600200529     C                     END
+059700200529     C                     END
+059800200529     C*
+059900200529     C* PRINT 'END OF REPORT' STATEMENT WHEN NO MORE CPP RECORDS
+060000200529     C*
+060100200529     C                     ELSE
+060200200529     C*                                                                   E18128
+060300200529     C* FIX TO PRODUCE HEADER IF NOT ALREADY WRITTEN ON PRINT FILE.       E18128
+060400200529     C*                                                                   E18128
+060500200529     C***********@INV      IFEQ *BLANKS                            E18128 E20885
+060600200529     C***********          WRITEHEADP1                             E18128 E20885
+060700200529     C***********          END                                     E18128 E20885
+060800200529     C***********                                                  E18128 E20885
+060900200529     C***********          WRITETRAILP1                            E18128 E20885
+061000200529     C*                                                                   E20885
+061100200529     C           @INV      IFEQ *BLANKS                                   E20885
+061200200529     C***********          WRITEHEADP1                              E20885E29170
+061300200529     C***********          WRITENONE                                E20885E29170
+061400200529     C*                                                                   E20885
+061500200529     C                     ELSE                                           E20885
+061600200529     C           *INU7     IFEQ '1'                                       E29170
+061700200529     C                     WRITEERRORP1                                   E29170
+061800200529     C                     END                                            E29170
+061900200529     C*                                                                   E20885
+062000200529     C                     WRITETRAILP1                                   E20885
+062100200529     C*                                                                   E20885
+062200200529     C                     END                                            E20885
+062300200529     C*                                                                   E20885
+062400200529     C*
+062500200529     C                     END
+062600200529     C*
+062700200529     C                     ENDSR
+062800200529     C*
+062900200529     C*****************************************************************
+063000200529     C/EJECT
+063100200529     C*****************************************************************
+063200200529     C*                                                               *
+063300200529     C*  AUDIT - SUBROUTINE TO PERFORM RUN CONTROL PROCESS            *
+063400200529     C*                                                               *
+063500200529     C*****************************************************************
+063600200529     C*
+063700200529     C           AUDIT     BEGSR
+063800200529     C*
+063900200529     C* IF ALREADY HAD DATABASE ERROR REPORT IT
+064000200529     C*
+064100200529     C           *IN32     IFEQ '1'
+064200200529     C                     EXSR INVSR
+064300200529     C                     END
+064400200529     C*
+064500200529     C************INU7     IFEQ '0'                                       E18128
+064600200529     C************IN33     ANDEQ'1'                                       S01176
+064700200529     C************IN33     ANDEQ'0'                                 S01176E18128
+064800200529     C           *INU7     IFEQ '1'                                       E18128
+064900200529     C/COPY WNCPYSRC,SE5120C003
+065000200529     C                     EXSR SECSR
+065100200529     C                     END
+065200200529     C*
+065300200529     C           *INU7     IFEQ '0'
+065400200529     C*
+065500200529     C* READ C.PAPER PRICES RECORD - IF NOT THERE, DATABASE ERROR
+065600200529     C*
+065700200529     C                     READ CPPRIAF                  34
+065800200529     C           *IN34     IFEQ '1'
+065900200529     C                     SETON                     U7U8
+066000200529     C           *LOCK     IN   LDA                                       S01117
+066100200529     C                     MOVE 'C.P.PR'  DBFILE           ***************
+066200200529     C                     MOVEL'AUDIT'   DBKEY            **DB ERROR 03**
+066300200529     C***********          MOVE '03'      DBASE            ***************S01117
+066400200529     C                     Z-ADD3         DBASE            ***************S01117
+066500200529     C                     OUT  LDA                                       S01117
+066600200529     C                     EXSR *PSSR                                     S01117
+066700200529     C                     ELSE
+066800200529     C                     MOVE NORE      CNORE
+066900200529     C                     MOVE CPPCT     CPPCTT
+067000200529     C                     END
+067100200529     C                     END
+067200200529     C*
+067300200529     C* READ SECURITY NON-DIARY EVENTS AUDIT RECORD - IF NOT THERE
+067400200529     C*      DATA BASE ERROR
+067500200529     C*
+067600200529     C           *INU7     IFEQ '0'
+067700200529     C*
+067800200529     C                     READ SNDEVAF                  35
+067900200529     C           *IN35     IFEQ '1'
+068000200529     C                     SETON                     U7U8
+068100200529     C           *LOCK     IN   LDA                                       S01117
+068200200529     C                     MOVE 'SNDEV'   DBFILE           ***************
+068300200529     C                     MOVEL'AUDIT'   DBKEY            **DB ERROR 04**
+068400200529     C***********          MOVE '04'      DBASE            ***************S01117
+068500200529     C                     Z-ADD4         DBASE            ***************S01117
+068600200529     C                     OUT  LDA                                       S01117
+068700200529     C                     EXSR *PSSR                                     S01117
+068800200529     C                     END
+068900200529     C                     END
+069000200529     C*
+069100200529     C* ADD NO OF RECORDS OUTPUT TO RECORD COUNT AND UPDATE FILES
+069200200529     C*
+069300200529     C           *INU7     IFEQ '0'
+069400200529     C*
+069500200529     C**********           Z-ADDNORE      SNORE   50                                          247420
+069600200529     C                     Z-ADDSNNORE    SNORE   70                                          247420
+069700200529     C********** NORE      ADD  UPDCT     ONORE   50                      102718
+069800200529     C********** NORE      ADD  EVNCT     ONORE   50                      102718              247420
+069900200529     C**********           Z-ADDONORE     NORE                                                247420
+070000200529     C           SNNORE    ADD  EVNCT     ONORE   70                      102718              247420
+070100200529     C                     Z-ADDONORE     SNNORE                                              247420
+070200200529     C                     UPDATSNDEVAF
+070300200529     C*
+070400200529     C*********************UPDATCPPRIAF                                   E18128
+070500200529     C*
+070600200529     C                     END
+070700200529     C*                                                                   E29170
+070800200529     C** RCF Processing for Audit File                                    E29170
+070900200529     C*                                                                   E29170
+071000200529     C                     EXSR RCFAU                                     E29170
+071100200529     C                     Z-ADD0         PAGE                            E29170
+071200200529     C*
+071300200529     C* WRITE OUT CONTROL REPORT OR DATABASE ERROR
+071400200529     C*
+071500200529     C                     WRITEHEADAU
+071600200529     C  NU7                WRITECONTROL
+071700200529     C   U7 U8             WRITEERROR
+071800200529     C           @INV      IFEQ *BLANKS                                   E29170
+071900200529     C                     WRITENONE                                      E29170
+072000200529     C                     END                                            E29170
+072100200529     C***********          WRITETRAIL                                     E29170
+072200200529     C*
+072300200529     C                     SETON                     LR
+072400200529     C*
+072500200529     C                     ENDSR
+072600200529     C*
+072700200529     C*****************************************************************
+072800200529      /EJECT
+072900200529     C*****************************************************************
+073000200529     C*                                                               *
+073100200529     C*   CPRSR  - SUBROUTINE FOR ERROR HANDLING OF COMMERCIAL PAPER  *
+073200200529     C*            PRICES FILE                                        *
+073300200529     C*                                                               *
+073400200529     C*****************************************************************
+073500200529     C*
+073600200529     C           CPRSR     BEGSR
+073700200529     C*
+073800200529     C           *LOCK     IN   LDA                                       S01117
+073900200529     C                     MOVE 'COMPP'   DBFILE
+074000200529     C                     MOVELINVT      PKEY   15
+074100200529     C                     MOVE CCY       PKEY
+074200200529     C                     MOVELPKEY      DBKEY
+074300200529     C***********          MOVE '90'      DBASE                           S01117
+074400200529     C                     Z-ADD90        DBASE                           S01117
+074500200529     C                     MOVE STSCPR    DBSTAT
+074600200529     C                     OUT  LDA                                       S01117
+074700200529     C                     EXSR *PSSR                                     S01117
+074800200529     C                     MOVE '1'       *IN87
+074900200529     C                     SETON                     LRU7U8
+075000200529     C*
+075100200529     C                     ENDSR
+075200200529     C*
+075300200529     C*****************************************************************
+075400200529      /SPACE 3
+075500200529     C*****************************************************************
+075600200529     C*                                                               *
+075700200529     C*   SECSR  - SUBROUTINE FOR ERROR HANDLING OF SECURITIES FILE   *
+075800200529     C*                                                               *
+075900200529     C*****************************************************************
+076000200529     C*
+076100200529     C           SECSR     BEGSR
+076200200529     C*
+076300200529     C           *LOCK     IN   LDA                                       S01117
+076400200529     C                     MOVE 'SECTY'   DBFILE
+076500200529     C                     MOVELSESN      DBKEY
+076600200529     C***********          MOVE '91'      DBASE                           E20651
+076700200529     C***********          MOVE '95'      DBASE                    E20651 S01117
+076800200529     C                     Z-ADD95        DBASE                           S01117
+076900200529     C                     MOVE STSSEC    DBSTAT
+077000200529     C                     OUT  LDA                                       S01117
+077100200529     C                     EXSR *PSSR                                     S01117
+077200200529     C                     MOVE '1'       *IN87
+077300200529     C                     SETON                     LRU7U8
+077400200529     C*
+077500200529     C                     ENDSR
+077600200529     C*
+077700200529     C*****************************************************************
+077800200529      /SPACE 3
+077900200529     C*****************************************************************
+078000200529     C*                                                               *
+078100200529     C*   INVSR  - SUBROUTINE FOR ERROR HANDLING OF INVESTMENT TYPES  *
+078200200529     C*            FILE                                               *
+078300200529     C*                                                               *
+078400200529     C*****************************************************************
+078500200529     C*
+078600200529     C           INVSR     BEGSR
+078700200529     C*
+078800200529     C           *LOCK     IN   LDA                                       S01117
+078900200529     C                     MOVE 'INVTP'   DBFILE
+079000200529     C                     MOVELINVT      DBKEY
+079100200529     C***********          MOVE '91'      DBASE                           E20651
+079200200529     C***********          MOVE '96'      DBASE                    E20651 S01117
+079300200529     C                     Z-ADD96        DBASE                           S01117
+079400200529     C                     MOVE STSINV    DBSTAT
+079500200529     C                     OUT  LDA                                       S01117
+079600200529     C                     EXSR *PSSR                                     S01117
+079700200529     C                     MOVE '1'       *IN87
+079800200529     C                     SETON                     LRU7U8
+079900200529     C*
+080000200529     C                     ENDSR
+080100200529     C*
+080200200529     C*****************************************************************
+080300200529      /SPACE 3
+080400200529     C*****************************************************************
+080500200529     C*                                                               *
+080600200529     C*   CPASR  - SUBROUTINE FOR ERROR HANDLING OF CP PRICES FILE    *
+080700200529     C*               AUDIT RECORD                                    *
+080800200529     C*                                                               *
+080900200529     C*****************************************************************
+081000200529     C*
+081100200529     C           CPASR     BEGSR
+081200200529     C*
+081300200529     C           *LOCK     IN   LDA                                       S01117
+081400200529     C                     MOVE 'C.P.P'   DBFILE
+081500200529     C                     MOVEL'AUDIT'   DBKEY
+081600200529     C***********          MOVE '92'      DBASE                           S01117
+081700200529     C                     Z-ADD92        DBASE                           S01117
+081800200529     C                     MOVE STSCPA    DBSTAT
+081900200529     C                     OUT  LDA                                       S01117
+082000200529     C                     EXSR *PSSR                                     S01117
+082100200529     C                     MOVE '1'       *IN87
+082200200529     C                     SETON                     LRU7U8
+082300200529     C*
+082400200529     C                     ENDSR
+082500200529     C*
+082600200529     C*****************************************************************
+082700200529      /SPACE 3
+082800200529     C*****************************************************************
+082900200529     C*                                                               *
+083000200529     C*   SNASR  - SUBROUTINE FOR ERROR HANDLING OF SECURITIES NON-   *
+083100200529     C*               DIARY EVENTS AUDIT RECORD                       *
+083200200529     C*                                                               *
+083300200529     C*****************************************************************
+083400200529     C*
+083500200529     C           SNASR     BEGSR
+083600200529     C*
+083700200529     C           *LOCK     IN   LDA                                       S01117
+083800200529     C                     MOVE 'SNDEV'   DBFILE
+083900200529     C                     MOVEL'AUDIT'   DBKEY
+084000200529     C***********          MOVE '93'      DBASE                           S01117
+084100200529     C                     Z-ADD93        DBASE                           S01117
+084200200529     C                     MOVE STSSNA    DBSTAT
+084300200529     C                     OUT  LDA                                       S01117
+084400200529     C                     EXSR *PSSR                                     S01117
+084500200529     C                     MOVE '1'       *IN87
+084600200529     C                     SETON                     LRU7U8
+084700200529     C*
+084800200529     C                     ENDSR
+084900200529     C*
+085000200529     C*****************************************************************
+085100200529      /SPACE 3
+085200200529     C*****************************************************************
+085300200529     C*                                                               *
+085400200529     C*   SNDSR  - SUBROUTINE FOR ERROR HANDLING OF SECURITIES NON -  *
+085500200529     C*               DIARY EVENTS FILE                               *
+085600200529     C*                                                               *
+085700200529     C*****************************************************************
+085800200529     C*
+085900200529     C           SNDSR     BEGSR
+086000200529     C*
+086100200529     C           *LOCK     IN   LDA                                       S01117
+086200200529     C                     MOVE 'SNDEV'   DBFILE
+086300200529     C                     MOVELSNSN      SNKEY  17
+086400200529     C                     MOVELSNDT      SNKEYA  7
+086500200529     C                     MOVE 'CP'      SNKEYA
+086600200529     C                     MOVE SNKEYA    SNKEY
+086700200529     C                     MOVELSNKEY     DBKEY
+086800200529     C***********          MOVE '94'      DBASE                           S01117
+086900200529     C                     Z-ADD94        DBASE                           S01117
+087000200529     C                     MOVE STSSND    DBSTAT
+087100200529     C                     OUT  LDA                                       S01117
+087200200529     C                     EXSR *PSSR                                     S01117
+087300200529     C                     MOVE '1'       *IN87
+087400200529     C                     SETON                     LRU7U8
+087500200529     C*
+087600200529     C                     ENDSR
+087700200529     C*
+087800200529      *****************************************************************   S01117
+087900200529      /EJECT                                                              S01117
+088000200529      *****************************************************************   S01117
+088100200529      *                                                               *   S01117
+088200200529      *  *PSSR  - Error control subroutine                            *   S01117
+088300200529      *                                                               *   S01117
+088400200529      *****************************************************************   S01117
+088500200529      *                                                                   S01117
+088600200529     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+088700200529     C**                                                                  S01117
+088800200529     C           @RUN      IFEQ *BLANKS                                   S01117
+088900200529     C                     MOVE 'Y'       @RUN    1                       S01117
+089000200529     C                     DUMP                                           S01117
+089100200529     C                     END                                            S01117
+089200200529     C**                                                                  S01117
+089300200529     C                     ENDSR                                          S01117
+089400200529      *                                                                   S01117
+089500200529     C*****************************************************************
+089600200529     C/EJECT                                                              E29170
+089700200529     C********************************************************************E29170
+089800200529     C*                                                                   E29170
+089900200529     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF          E29170
+090000200529     C*                                                                   E29170
+090100200529     C********************************************************************E29170
+090200200529     C*                                                                   E29170
+090300200529     C           RCFP1     BEGSR                            ** RCFP1 **   E29170
+090400200529     C*                                                                   E29170
+090500200529     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    E29170
+090600200529     C*                                                                   E29170
+090700200529     C                     Z-ADDSFNUM     ZSNUM   60                      E29170
+090800200529     C**                                                                  E29170
+090900200529     C                     CALL 'ZSFILE'                                  E29170
+091000200529     C                     PARM           SEQ     5                       E29170
+091100200529     C                     PARM *BLANKS   SENTY   3                       E29170
+091200200529     C                     PARM           SFILE                           E29170
+091300200529     C                     PARM           ZSNUM                           E29170
+091400200529     C                     PARM           ZSERR   1                       E29170
+091500200529     C*                                                                   E29170
+091600200529     C           ZSERR     IFEQ 'Y'                                       E29170
+091700200529     C*                                                                   E29170
+091800200529     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+091900200529     C*                                                                   E29170
+092000200529     C                     SETON                     U7U8LR               E29170
+092100200529     C                     RETRN                                          E29170
+092200200529     C                     END                                            E29170
+092300200529     C*                                                                   E29170
+092400200529     C                     ENDSR                                          E29170
+092500200529     C*                                                                   E29170
+092600200529     C********************************************************************E29170
+092700200529     C/EJECT                                                              E29170
+092800200529     C********************************************************************E29170
+092900200529     C*                                                                   E29170
+093000200529     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF          E29170
+093100200529     C*                                                                   E29170
+093200200529     C********************************************************************E29170
+093300200529     C*                                                                   E29170
+093400200529     C           RCFAU     BEGSR                            ** RCFAU **   E29170
+093500200529     C*                                                                   E29170
+093600200529     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF                     E29170
+093700200529     C*                                                                   E29170
+093800200529     C                     Z-ADDSFNUMU    ZSNUMU  60                      E29170
+093900200529     C**                                                                  E29170
+094000200529     C                     CALL 'ZSFILE'                                  E29170
+094100200529     C                     PARM           SEQ                             E29170
+094200200529     C                     PARM *BLANKS   SENTY                           E29170
+094300200529     C                     PARM           SFILEU                          E29170
+094400200529     C                     PARM           ZSNUMU                          E29170
+094500200529     C                     PARM *BLANK    ZSERR                           E29170
+094600200529     C*                                                                   E29170
+094700200529     C           ZSERR     IFEQ 'Y'                                       E29170
+094800200529     C*                                                                   E29170
+094900200529     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+095000200529     C*                                                                   E29170
+095100200529     C                     SETON                     U7U8LR               E29170
+095200200529     C                     RETRN                                          E29170
+095300200529     C                     END                                            E29170
+095400200529     C*                                                                   E29170
+095500200529     C                     ENDSR                                          E29170
+095600200529     C*                                                                   E29170
+095700200529     C*****************************************************************   E29170
+095800200529      /EJECT
+095900200529     C/COPY ZSRSRC,ZDATE2Z2
+096000200529      /EJECT
+096100200529     C/COPY ZSRSRC,ZEDITZ2
+096200200529      /EJECT
+096300200529     C/COPY ZSRSRC,ZEVCDZ1
+096400200529      /EJECT
+096500200529     C/COPY ZSRSRC,ZICD2Z1
+096600200529      /EJECT
+096700200529     C/COPY ZSRSRC,ZSEDITZ3
+096800200529      /EJECT
+096900200529     C/COPY ZSRSRC,ZSYSTMZ1
+097000200529      /EJECT
+097100200529     C/COPY ZSRSRC,ZYMTXZ2
+097200200529      /EJECT
+097300200529      ***
+097400200529**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0975002005290366073110961461
+097600200529**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+097700200529000031059090120151181212243273304334365
+097800200529**   ZMNM - MONTHS SHORT NAMES
+097900200529JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+098000200529**  CPY@
+098100200529(c) Finastra International Limited 2001

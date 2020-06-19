@@ -1,281 +1,283 @@
-     H        1                                                           S01486
-      *****************************************************************
-/*STD *  RPGBASE                                                      *
-/*EXI *  TEXT('Midas PM Duplicate Start of Mon. Pos. for Pool')       *
-     H***********                                                         S01486
-     F*****************************************************************
-     F*                                                               *
-     F*  Midas - Portfolio Management Module                          *
-     F*                                                               *
-     F*  PM1810 - Duplicate Start of Month Positions for Pool Ptfr    *
-     F*                                                               *
-      *  (c) Finastra International Limited 2001                      *
-     F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
-      * Bank Fusion Midas 1.4 Base -----------------------------------*
-      * Midas Plus 1.4 Base 04 ---------------------------------------*
-      * Midas Plus 1.4 Base ------------------------------------------*
-      * Midas Plus 1.3 ----------- Base ------------------------------*
-      *                 CSD027             Date 09Dec05               *
-      * Midas Release 4 --------------- Base -------------------------*
-      * Midas DBA 3.00 ---------------- Base -------------------------*
-      *                 CPM005             Date 29Jul96               *
-     F*                 CFF004             Date 02OCT96               *
-     F*                 S01486             Date 11Aug94               *
-     F*                 057020             Date 16Jun93               *
-     F*                 056460             Date 09Jun93               *
-     F*                                                               *
-     F*---------------------------------------------------------------*
-     F*                                                               *
-      *  MD046248 - Finastra Rebranding                               *
-      *  CLE148 - Alpha Loan Reference (Recompile)                    *
-      *  CSD027 - Conversion Of Customer Number to Alpha              *
-     F*  CPM005 - Private Banking Phase II                            *
-     F*           Focus Group Changes Upgraded to DBA                 *
-     F*           Just Recompiled because of PM File(s) changes       *
-     F*  CFF004 - Increase in size of Price Fields,(Recompiled Only)  *
-     F*  S01486 - Portfolio Management Upgrade to Release 10.         *
-     F*  057020 - RECOMPILED DUE TO CHANGE IN FILES                   *
-     F*  056460 - SAVE DETAILS OF MATURE / FLAT POSITIONS             *
-     F*  WRITTEN FOR 056460                                           *
-     F*                                                               *
-     F*****************************************************************
-     F*                                                               *
-     F** C R E A T I O N     P A R A M E T E R S                      *
-     F**                                                              *
-     F**                                                              *
-     F*****************************************************************
-     F/EJECT
-     F*****************************************************************
-     F**
-     F**      FILE DEFINITIONS
-     F**     ------------------
-     F*
-     F*****BANK*DETAILS*FILE************************-*Prefix*BJ********   S01486
-     F***SDBANKL1IF**E           K        DISK         KINFSR *PSSR       S01486
-     F*
-     F**   PORTFOLIO CUSTOMER DETAILS               - Prefix QB
-     FSDPLCSPDIF  E                    DISK         KINFSR *PSSR
-     F*
-     F**   PORTFOLIO DETAILS                        - Prefix PN
-     FPMPORTL1IF  E           K        DISK         KINFSR *PSSR
-     F*
-     F**   POOL PORTFOLIO MEMBER DETAILS            - Prefix OS
-     FPMPPTMPDIF  E           K        DISK         KINFSR *PSSR
-     F*
-     F**   START OF MONTH PORTFOLIO POSITIONS       - Prefix QF
-     F***PMPSTMPPO***E           K        DISK         KINFSR *PSSR A     S01486
-     FPMPSTMQ0O   E           K        DISK         KINFSR *PSSR A        S01486
-     F*
-     F**   PORTFOLIO HOLDINGS                       - Prefix QF
-     FPMHDVNLLIF  E           K        DISK         KINFSR *PSSR
-     F*
-     F**   AUDIT REPORT
-     FPM1810AUO   E                    PRINTER      KINFSR *PSSR
-     F*
-     F/EJECT
-     E*****************************************************************
-     E*
-     E**   ARRAY FOR COPYRIGHT
-     E                    CPY@    1   1 80
-     E*****************************************************************
-     E/EJECT
-     E*****************************************************************
-     I*
-     I**   LOCAL DATA AREA
-     I***LDA********UDS***********************     256                    S01486
-     ILDA         DS                            256                       S01486
-     I                                      132 141 DBFILE
-     I                                      142 170 DBKEY
-     I                                      171 180 DBPGM
-     I                                      181 1830DBASE
-     I*
-     I**   DATA STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
-     ICPYR@$      DS
-     I                                        1  80 CPY@
-     I                                        1  20 CPY@$$
-     I*                                                                   S01486
-     ISDBANK    E DSSDBANKPD                                              S01486
-     I**  Data structure for Bank details                                 S01486
-     I*                                                                   S01486
-     IDSFDY     E DSDSFDY                                                 S01486
-     I**  Short data structure for access objects                         S01486
-     I*                                                                   S01486
-     C*****************************************************************
-     C/EJECT
-     C*****************************************************************
-     C           *ENTRY    PLIST
-     C                     PARM           QFSTMN
-     C*                                                                   47868
-     C** KEY LIST USED IN ACCESSING LF/PMHDVNLL                           47868
-     C           HDVNKY    KLIST                                          47868
-     C                     KFLD           OSCNUM                          47868
-     C                     KFLD           OSPTFR                          47868
-     C*                                                                   47868
-     C           PORTKY    KLIST                                          47868
-     C**********           KFLD           WKCNUM  60                                    47868 CSD027
-     C                     KFLD           WKCNUM  6                                           CSD027
-     C                     KFLD           WKPTFR  4                       47868
-     C*                                                                   47868
-     C           PPTMKY    KLIST                                          47868
-     C**********           KFLD           PNCNUM  60                                    47868 CSD027
-     C                     KFLD           PNCNUM  6                                           CSD027
-     C                     KFLD           PNPTFR  4                       47868
-     C*                                                                   S01486
-     C**  Copyright statement                                             S01486
-     C*                                                                   S01486
-     C                     MOVEACPY@      ACT@   80                       S01486
-     C*                                                                   S01486
-     C           *NAMVAR   DEFN           LDA                             S01486
-     C*
-     C**              START MAINLINE
-     C**             ----------------
-     C***********                                                         S01486
-     C***ACCESS*LF/SDBANKL1*TO*OBTAIN*BANK*DETAILS*********************   S01486
-     C***********          READ SDBANKL1                 70               S01486
-     C***********                                                         S01486
-     C***IF*RECORD*NOT*FOUND*OR*LAST*CHANGE*TYPE*=*'D'*THEN*DB*ERROR***   S01486
-     C************IN70     IFEQ '1'                        B1             S01486
-     C*                                                                   S01486
-     C** Get bank details using access object                             S01486
-     C*                                                                   S01486
-     C                     CALL 'AOBANKR0'                                S01486
-     C                     PARM *BLANKS   P@RTCD  7                       S01486
-     C                     PARM '*FIRST ' P@OPTN  7                       S01486
-     C           SDBANK    PARM SDBANK    DSFDY                           S01486
-     C*                                                                   S01486
-     C** Check if an error occurred                                       S01486
-     C*                                                                   S01486
-     C           P@RTCD    IFNE *BLANKS                                   S01486
-     C           *LOCK     IN   LDA                                       S01486
-     C                     Z-ADD1         DBASE            ****************
-     C***********          MOVEL'SDBANKL1'DBFILE           * DBERROR  001 S01486
-     C                     MOVE 'SDBANKPD'DBFILE           * DBERROR  001 S01486
-     C                     MOVE *BLANKS   DBKEY            ****************
-     C                     MOVEL'PM1810  'DBPGM
-     C                     OUT  LDA                                       S01486
-     C                     EXSR *PSSR
-     C                     END                             E1
-     C*
-     C** READ THROUGH ALL POOL CUSTOMERS
-     C                     READ SDPLCSPD                 60
-     C*
-     C           *IN60     DOWEQ'0'                        B1
-     C*
-     C** READ THROUGH ALL PORTFOLIOS FOR POOL CUSTOMER
-     C                     MOVE QBCUST    WKCNUM
-     C                     MOVE *LOVAL    WKPTFR
-     C*
-     C           PORTKY    SETLLPMPORTL1
-     C           WKCNUM    READEPMPORTL1                 61
-     C*
-     C           *IN61     DOWEQ'0'                        B2
-     C*
-     C** PERFORM SR/#P01 TO EXTRACT DETAILS OF STARTING POSITION FOR
-     C** POOL
-     C                     EXSR #P01
-     C*
-     C** READ NEXT PORTFOLIO FOR CUSTOMER
-     C           WKCNUM    READEPMPORTL1                 61
-     C                     END                             E2
-     C*
-     C** READ NEXT POOL CUSTOMER DETAILS
-     C                     READ SDPLCSPD                 60
-     C                     END                             E1
-     C*
-     C** WRITE PERFORMANCE AUDIT REPORT
-     C                     WRITEFORMTAU
-     C                     WRITECONTROL                                   S01486
-     C*                                                                   S01486
-     C** Check if no details to report                                    S01486
-     C*                                                                   S01486
-     C           RRPERW    IFEQ *ZERO                                     S01486
-     C                     WRITENODTLS                                    S01486
-     C                     END                                            S01486
-     C*
-     C**   END PROGRAM
-     C                     MOVE '1'       *INLR
-     C                     RETRN
-      ********************************************************************
-      /EJECT
-      ********************************************************************
-      *                                                                  *
-      * #P01     - READ POOL PORTFOLIO MEMBER DETAILS AND EXTRACT        *
-      *            POSITIONS                                             *
-      *                                                                  *
-      * SUBROUTINE CALLS:                                                *
-      * *PSSR    - OUTPUT DTABASE ERROR DETAILS                          *
-      *                                                                  *
-      * SUBROUTINE CALLED FROM:                                          *
-      * MAIN     - MAIN PROCESSING ROUTINE                               *
-      *                                                                  *
-      ********************************************************************
-     C           #P01      BEGSR
-     C*
-     C** READ THROUGH DETAILS OF MEMBERS OF POOL
-     C           PPTMKY    SETLLPMPPTMPD
-     C           PPTMKY    READEPMPPTMPD                 62
-     C*
-     C           *IN62     DOWEQ'0'                        B1
-     C*
-     C           OSRECI    IFEQ 'D'                        B2
-     C*
-     C** READ THROUGH ALL PORTFOLIO POSISTIONS
-     C           HDVNKY    SETLLPMHDVNLL
-     C           HDVNKY    READEPMHDVNLL                 63
-     C*
-     C           *IN63     DOWEQ'0'                        B3
-     C*
-     C** IF HOLDING VALUED AND FIDUCIARY, DEAL OR LOAN OUTPUT DETAILS
-     C           QFHLDV    IFEQ 'Y'                        B4
-     C           QFMODI    ANDEQ'FI'
-     C           QFHLDV    OREQ 'Y'
-     C           QFMODI    ANDEQ'MD'
-     C           QFHLDV    OREQ 'Y'
-     C           QFMODI    ANDEQ'ML'
-     C           QFHLDV    OREQ 'Y'
-     C           QFMODI    ANDEQ'FX'
-     C           QFHLDV    OREQ 'Y'
-     C           QFMODI    ANDEQ'LE'
-     C*
-     C** OUTPUT DETAILS FOR POOL PORTFOLIO
-     C**********           Z-ADDOSPCNU    QFCNUM                                              CSD027
-     C                     MOVE OSPCNU    QFCNUM                                              CSD027
-     C                     MOVE OSPPTF    QFPTFR
-     C                     MOVE 'N'       QFPPRC
-     C*
-     C                     WRITEPMPSTMP0
-     C                     ADD  1         RRPERW
-     C                     END                             E4             47868
-     C*                                                                   47868
-     C           HDVNKY    READEPMHDVNLL                 63
-     C                     END                             E3             47868
-     C                     END                             E2             47868
-     C*                                                                   47868
-     C           PPTMKY    READEPMPPTMPD                 62
-     C                     END                             E1             47868
-     C*
-     C                     ENDSR
-     C/EJECT
-     C*****************************************************************
-     C**                                                              *
-     C**   *PSSR     - Program error handling routine                 *
-     C**                                                              *
-     C*****************************************************************
-     C*
-     C           *PSSR     BEGSR
-     C*                                                                   S01486
-     C                     WRITEFORMTAU                                   S01486
-     C                     WRITEDBERROR                                   S01486
-     C                     DUMP
-     C*
-     C                     MOVE '1'       *INU7
-     C                     MOVE '1'       *INU8
-     C                     MOVE '1'       *INLR
-     C*
-     C                     RETRN
-     C*
-     C                     ENDSR
-**  CPY@
-(c) Finastra International Limited 2001
+000100200529     H        1                                                           S01486
+000200200529      *****************************************************************
+000300200529/*STD *  RPGBASE                                                      *
+000400200529/*EXI *  TEXT('Midas PM Duplicate Start of Mon. Pos. for Pool')       *
+000500200529     H***********                                                         S01486
+000600200529     F*****************************************************************
+000700200529     F*                                                               *
+000800200529     F*  Midas - Portfolio Management Module                          *
+000900200529     F*                                                               *
+001000200529     F*  PM1810 - Duplicate Start of Month Positions for Pool Ptfr    *
+001100200529     F*                                                               *
+001200200529      *  (c) Finastra International Limited 2001                      *
+001300200529     F*                                                               *
+001400200604     F*  Last Amend No. 250228             Date 22May20               *
+001500200529      *  Prev Amend No. MD046248           Date 27Oct17               *
+001600200529      *                 CLE148             Date 23Jul12               *
+001700200529      * Bank Fusion Midas 1.4 Base -----------------------------------*
+001800200529      * Midas Plus 1.4 Base 04 ---------------------------------------*
+001900200529      * Midas Plus 1.4 Base ------------------------------------------*
+002000200529      * Midas Plus 1.3 ----------- Base ------------------------------*
+002100200529      *                 CSD027             Date 09Dec05               *
+002200200529      * Midas Release 4 --------------- Base -------------------------*
+002300200529      * Midas DBA 3.00 ---------------- Base -------------------------*
+002400200529      *                 CPM005             Date 29Jul96               *
+002500200529     F*                 CFF004             Date 02OCT96               *
+002600200529     F*                 S01486             Date 11Aug94               *
+002700200529     F*                 057020             Date 16Jun93               *
+002800200529     F*                 056460             Date 09Jun93               *
+002900200529     F*                                                               *
+003000200529     F*---------------------------------------------------------------*
+003100200529     F*                                                               *
+003200200529      *  250228 - Recompile due to field change in PMPSTMQ0.          *
+003300200529      *  MD046248 - Finastra Rebranding                               *
+003400200529      *  CLE148 - Alpha Loan Reference (Recompile)                    *
+003500200529      *  CSD027 - Conversion Of Customer Number to Alpha              *
+003600200529     F*  CPM005 - Private Banking Phase II                            *
+003700200529     F*           Focus Group Changes Upgraded to DBA                 *
+003800200529     F*           Just Recompiled because of PM File(s) changes       *
+003900200529     F*  CFF004 - Increase in size of Price Fields,(Recompiled Only)  *
+004000200529     F*  S01486 - Portfolio Management Upgrade to Release 10.         *
+004100200529     F*  057020 - RECOMPILED DUE TO CHANGE IN FILES                   *
+004200200529     F*  056460 - SAVE DETAILS OF MATURE / FLAT POSITIONS             *
+004300200529     F*  WRITTEN FOR 056460                                           *
+004400200529     F*                                                               *
+004500200529     F*****************************************************************
+004600200529     F*                                                               *
+004700200529     F** C R E A T I O N     P A R A M E T E R S                      *
+004800200529     F**                                                              *
+004900200529     F**                                                              *
+005000200529     F*****************************************************************
+005100200529     F/EJECT
+005200200529     F*****************************************************************
+005300200529     F**
+005400200529     F**      FILE DEFINITIONS
+005500200529     F**     ------------------
+005600200529     F*
+005700200529     F*****BANK*DETAILS*FILE************************-*Prefix*BJ********   S01486
+005800200529     F***SDBANKL1IF**E           K        DISK         KINFSR *PSSR       S01486
+005900200529     F*
+006000200529     F**   PORTFOLIO CUSTOMER DETAILS               - Prefix QB
+006100200529     FSDPLCSPDIF  E                    DISK         KINFSR *PSSR
+006200200529     F*
+006300200529     F**   PORTFOLIO DETAILS                        - Prefix PN
+006400200529     FPMPORTL1IF  E           K        DISK         KINFSR *PSSR
+006500200529     F*
+006600200529     F**   POOL PORTFOLIO MEMBER DETAILS            - Prefix OS
+006700200529     FPMPPTMPDIF  E           K        DISK         KINFSR *PSSR
+006800200529     F*
+006900200529     F**   START OF MONTH PORTFOLIO POSITIONS       - Prefix QF
+007000200529     F***PMPSTMPPO***E           K        DISK         KINFSR *PSSR A     S01486
+007100200529     FPMPSTMQ0O   E           K        DISK         KINFSR *PSSR A        S01486
+007200200529     F*
+007300200529     F**   PORTFOLIO HOLDINGS                       - Prefix QF
+007400200529     FPMHDVNLLIF  E           K        DISK         KINFSR *PSSR
+007500200529     F*
+007600200529     F**   AUDIT REPORT
+007700200529     FPM1810AUO   E                    PRINTER      KINFSR *PSSR
+007800200529     F*
+007900200529     F/EJECT
+008000200529     E*****************************************************************
+008100200529     E*
+008200200529     E**   ARRAY FOR COPYRIGHT
+008300200529     E                    CPY@    1   1 80
+008400200529     E*****************************************************************
+008500200529     E/EJECT
+008600200529     E*****************************************************************
+008700200529     I*
+008800200529     I**   LOCAL DATA AREA
+008900200529     I***LDA********UDS***********************     256                    S01486
+009000200529     ILDA         DS                            256                       S01486
+009100200529     I                                      132 141 DBFILE
+009200200529     I                                      142 170 DBKEY
+009300200529     I                                      171 180 DBPGM
+009400200529     I                                      181 1830DBASE
+009500200529     I*
+009600200529     I**   DATA STRUCTURE FOR COMPILATION - COPYRIGHT INSERTION
+009700200529     ICPYR@$      DS
+009800200529     I                                        1  80 CPY@
+009900200529     I                                        1  20 CPY@$$
+010000200529     I*                                                                   S01486
+010100200529     ISDBANK    E DSSDBANKPD                                              S01486
+010200200529     I**  Data structure for Bank details                                 S01486
+010300200529     I*                                                                   S01486
+010400200529     IDSFDY     E DSDSFDY                                                 S01486
+010500200529     I**  Short data structure for access objects                         S01486
+010600200529     I*                                                                   S01486
+010700200529     C*****************************************************************
+010800200529     C/EJECT
+010900200529     C*****************************************************************
+011000200529     C           *ENTRY    PLIST
+011100200529     C                     PARM           QFSTMN
+011200200529     C*                                                                   47868
+011300200529     C** KEY LIST USED IN ACCESSING LF/PMHDVNLL                           47868
+011400200529     C           HDVNKY    KLIST                                          47868
+011500200529     C                     KFLD           OSCNUM                          47868
+011600200529     C                     KFLD           OSPTFR                          47868
+011700200529     C*                                                                   47868
+011800200529     C           PORTKY    KLIST                                          47868
+011900200529     C**********           KFLD           WKCNUM  60                                    47868 CSD027
+012000200529     C                     KFLD           WKCNUM  6                                           CSD027
+012100200529     C                     KFLD           WKPTFR  4                       47868
+012200200529     C*                                                                   47868
+012300200529     C           PPTMKY    KLIST                                          47868
+012400200529     C**********           KFLD           PNCNUM  60                                    47868 CSD027
+012500200529     C                     KFLD           PNCNUM  6                                           CSD027
+012600200529     C                     KFLD           PNPTFR  4                       47868
+012700200529     C*                                                                   S01486
+012800200529     C**  Copyright statement                                             S01486
+012900200529     C*                                                                   S01486
+013000200529     C                     MOVEACPY@      ACT@   80                       S01486
+013100200529     C*                                                                   S01486
+013200200529     C           *NAMVAR   DEFN           LDA                             S01486
+013300200529     C*
+013400200529     C**              START MAINLINE
+013500200529     C**             ----------------
+013600200529     C***********                                                         S01486
+013700200529     C***ACCESS*LF/SDBANKL1*TO*OBTAIN*BANK*DETAILS*********************   S01486
+013800200529     C***********          READ SDBANKL1                 70               S01486
+013900200529     C***********                                                         S01486
+014000200529     C***IF*RECORD*NOT*FOUND*OR*LAST*CHANGE*TYPE*=*'D'*THEN*DB*ERROR***   S01486
+014100200529     C************IN70     IFEQ '1'                        B1             S01486
+014200200529     C*                                                                   S01486
+014300200529     C** Get bank details using access object                             S01486
+014400200529     C*                                                                   S01486
+014500200529     C                     CALL 'AOBANKR0'                                S01486
+014600200529     C                     PARM *BLANKS   P@RTCD  7                       S01486
+014700200529     C                     PARM '*FIRST ' P@OPTN  7                       S01486
+014800200529     C           SDBANK    PARM SDBANK    DSFDY                           S01486
+014900200529     C*                                                                   S01486
+015000200529     C** Check if an error occurred                                       S01486
+015100200529     C*                                                                   S01486
+015200200529     C           P@RTCD    IFNE *BLANKS                                   S01486
+015300200529     C           *LOCK     IN   LDA                                       S01486
+015400200529     C                     Z-ADD1         DBASE            ****************
+015500200529     C***********          MOVEL'SDBANKL1'DBFILE           * DBERROR  001 S01486
+015600200529     C                     MOVE 'SDBANKPD'DBFILE           * DBERROR  001 S01486
+015700200529     C                     MOVE *BLANKS   DBKEY            ****************
+015800200529     C                     MOVEL'PM1810  'DBPGM
+015900200529     C                     OUT  LDA                                       S01486
+016000200529     C                     EXSR *PSSR
+016100200529     C                     END                             E1
+016200200529     C*
+016300200529     C** READ THROUGH ALL POOL CUSTOMERS
+016400200529     C                     READ SDPLCSPD                 60
+016500200529     C*
+016600200529     C           *IN60     DOWEQ'0'                        B1
+016700200529     C*
+016800200529     C** READ THROUGH ALL PORTFOLIOS FOR POOL CUSTOMER
+016900200529     C                     MOVE QBCUST    WKCNUM
+017000200529     C                     MOVE *LOVAL    WKPTFR
+017100200529     C*
+017200200529     C           PORTKY    SETLLPMPORTL1
+017300200529     C           WKCNUM    READEPMPORTL1                 61
+017400200529     C*
+017500200529     C           *IN61     DOWEQ'0'                        B2
+017600200529     C*
+017700200529     C** PERFORM SR/#P01 TO EXTRACT DETAILS OF STARTING POSITION FOR
+017800200529     C** POOL
+017900200529     C                     EXSR #P01
+018000200529     C*
+018100200529     C** READ NEXT PORTFOLIO FOR CUSTOMER
+018200200529     C           WKCNUM    READEPMPORTL1                 61
+018300200529     C                     END                             E2
+018400200529     C*
+018500200529     C** READ NEXT POOL CUSTOMER DETAILS
+018600200529     C                     READ SDPLCSPD                 60
+018700200529     C                     END                             E1
+018800200529     C*
+018900200529     C** WRITE PERFORMANCE AUDIT REPORT
+019000200529     C                     WRITEFORMTAU
+019100200529     C                     WRITECONTROL                                   S01486
+019200200529     C*                                                                   S01486
+019300200529     C** Check if no details to report                                    S01486
+019400200529     C*                                                                   S01486
+019500200529     C           RRPERW    IFEQ *ZERO                                     S01486
+019600200529     C                     WRITENODTLS                                    S01486
+019700200529     C                     END                                            S01486
+019800200529     C*
+019900200529     C**   END PROGRAM
+020000200529     C                     MOVE '1'       *INLR
+020100200529     C                     RETRN
+020200200529      ********************************************************************
+020300200529      /EJECT
+020400200529      ********************************************************************
+020500200529      *                                                                  *
+020600200529      * #P01     - READ POOL PORTFOLIO MEMBER DETAILS AND EXTRACT        *
+020700200529      *            POSITIONS                                             *
+020800200529      *                                                                  *
+020900200529      * SUBROUTINE CALLS:                                                *
+021000200529      * *PSSR    - OUTPUT DTABASE ERROR DETAILS                          *
+021100200529      *                                                                  *
+021200200529      * SUBROUTINE CALLED FROM:                                          *
+021300200529      * MAIN     - MAIN PROCESSING ROUTINE                               *
+021400200529      *                                                                  *
+021500200529      ********************************************************************
+021600200529     C           #P01      BEGSR
+021700200529     C*
+021800200529     C** READ THROUGH DETAILS OF MEMBERS OF POOL
+021900200529     C           PPTMKY    SETLLPMPPTMPD
+022000200529     C           PPTMKY    READEPMPPTMPD                 62
+022100200529     C*
+022200200529     C           *IN62     DOWEQ'0'                        B1
+022300200529     C*
+022400200529     C           OSRECI    IFEQ 'D'                        B2
+022500200529     C*
+022600200529     C** READ THROUGH ALL PORTFOLIO POSISTIONS
+022700200529     C           HDVNKY    SETLLPMHDVNLL
+022800200529     C           HDVNKY    READEPMHDVNLL                 63
+022900200529     C*
+023000200529     C           *IN63     DOWEQ'0'                        B3
+023100200529     C*
+023200200529     C** IF HOLDING VALUED AND FIDUCIARY, DEAL OR LOAN OUTPUT DETAILS
+023300200529     C           QFHLDV    IFEQ 'Y'                        B4
+023400200529     C           QFMODI    ANDEQ'FI'
+023500200529     C           QFHLDV    OREQ 'Y'
+023600200529     C           QFMODI    ANDEQ'MD'
+023700200529     C           QFHLDV    OREQ 'Y'
+023800200529     C           QFMODI    ANDEQ'ML'
+023900200529     C           QFHLDV    OREQ 'Y'
+024000200529     C           QFMODI    ANDEQ'FX'
+024100200529     C           QFHLDV    OREQ 'Y'
+024200200529     C           QFMODI    ANDEQ'LE'
+024300200529     C*
+024400200529     C** OUTPUT DETAILS FOR POOL PORTFOLIO
+024500200529     C**********           Z-ADDOSPCNU    QFCNUM                                              CSD027
+024600200529     C                     MOVE OSPCNU    QFCNUM                                              CSD027
+024700200529     C                     MOVE OSPPTF    QFPTFR
+024800200529     C                     MOVE 'N'       QFPPRC
+024900200529     C*
+025000200529     C                     WRITEPMPSTMP0
+025100200529     C                     ADD  1         RRPERW
+025200200529     C                     END                             E4             47868
+025300200529     C*                                                                   47868
+025400200529     C           HDVNKY    READEPMHDVNLL                 63
+025500200529     C                     END                             E3             47868
+025600200529     C                     END                             E2             47868
+025700200529     C*                                                                   47868
+025800200529     C           PPTMKY    READEPMPPTMPD                 62
+025900200529     C                     END                             E1             47868
+026000200529     C*
+026100200529     C                     ENDSR
+026200200529     C/EJECT
+026300200529     C*****************************************************************
+026400200529     C**                                                              *
+026500200529     C**   *PSSR     - Program error handling routine                 *
+026600200529     C**                                                              *
+026700200529     C*****************************************************************
+026800200529     C*
+026900200529     C           *PSSR     BEGSR
+027000200529     C*                                                                   S01486
+027100200529     C                     WRITEFORMTAU                                   S01486
+027200200529     C                     WRITEDBERROR                                   S01486
+027300200529     C                     DUMP
+027400200529     C*
+027500200529     C                     MOVE '1'       *INU7
+027600200529     C                     MOVE '1'       *INU8
+027700200529     C                     MOVE '1'       *INLR
+027800200529     C*
+027900200529     C                     RETRN
+028000200529     C*
+028100200529     C                     ENDSR
+028200200529**  CPY@
+028300200529(c) Finastra International Limited 2001

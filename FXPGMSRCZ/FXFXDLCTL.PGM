@@ -1,181 +1,183 @@
-      *****************************************************************
-/*STD *: PGMBASE                                                    : *
-/*EXI *: MODULE(FXFXDLCTL) ACTGRP(*CALLER)                          : *                       CPK016
-/*EXI *  TEXT('Midas FX Deal interface controller')                   *
-/*E*I *:*MODULE(FXFXDLCTL)******************************************:**                       CPK016
-/*E*I *:*BNDSRVPGM(*NONE)*BNDDIR(MIDAS)*ACTGRP(*CALLER)*************:**                       CPK016
-      *****************************************************************
-      *                                                               *
-      *  Midas - Foreign Exchange Dealing Module                      *
-      *                                                               *
-      *  FXFXDLCTL - FX Deals Interface Controller                    *
-      *                                                               *
-      *  Function: This Program Validates FX Deals for Input into     *
-      *            the Midas database.                                *
-      *                                                               *
-      *  (c) Finastra International Limited 2001                      *
-      *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 MD047971           Date 16Oct17               *
-      *                 CDL099             Date 06Oct17               *
-      *                 CDL094             Date 11Jun14               *
-      *                 CSD095             Date 08Apr14               *
-      *                 AR990243           Date 14Jun12               *
-      *                 CSW212             Date 03May12               *
-      *                 CSF011A            Date 28Nov11               *
-      *                 CER059             Date 19Jul10               *
-      *                 CER043             Date 19May08               *
-      * Bank Fusion Midas 1.4 Base -----------------------------------*
-      * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *                 256564             Date 17Sep08               *
-      *                 247888             Date 18May07               *
-      *                 246352             Date 13Mar07               *
-      * Midas Plus 1.4 Base ------------------------------------------*
-      *                 245158             Date 19Jan07               *
-      * Midas Plus 1.3 ----------- Base ------------------------------*
-      *                 CDL049             Date 07Jul06               *
-      *                 CSD027             Date 09Dec05               *
-      *                 CLE031             Date 26Apr05               *
-      *                 CDL038             Date 10May05               *
-      *                 CSW037A            Date 02May05               *
-      *                 CSD025             Date 11Jan05               *
-      *                 CSW037             Date 15Dec04               *
-      *                 CSW036             Date 15Dec04               *
-      *                 CFX114             Date 15Jun04               *
-      *                 CDL018             Date 03Feb04               *
-      *                 CSC022             Date 24Feb04               *
-      *                 222373             Date 04Nov03               *
-      *                 CPK016             Date 29Jul03               *
-      *                 CAS006             Date 21Jan03               *
-      *                 CAS005             Date 16Dec02               *
-      *                 CRE008             Date 19Feb02               *
-      *                 CDL010             Date 02Aug02               *
-      *                 CAS004             Date 26Jun02               *
-      * Midas Release 4.01.02 ----------------------------------------*
-      *                 201083             Date 15May02               *
-      *                 196952             Date 06May02               *
-      *                 196461             Date 22Apr02               *
-      * Midas Release 4.01 -------------------------------------------*
-      *                 CSC011             Date 18Sep01               *
-      *                 CAS001             Date 23Nov01               *
-      *                 195763             Date 07Jan02               *
-      * Midas Release 4 --------------- Base -------------------------*
-      *                 200400             Date 20Nov01               *
-      * Midas DBA 3.05 -----------------------------------------------*
-      *                 190876             Date 08Mar01               *
-      *                 185751             Date 17Nov00               *
-      *                 CPB002             Date 08Aug00               *
-      * Midas DBA 3.04 -----------------------------------------------*
-      *                 179510             Date 09Nov00               *
-      *                 CDL008             Date 02May00               *
-      *                 166888             Date 02Sep99               *
-      * Midas DBA 3.03 -----------------------------------------------*
-      * Midas DBA 3.02 Patch Z ---------------------------------------*
-      *                 176883             Date 24Mar00               *
-      * Midas DBA 3.02 -----------------------------------------------*
-      *                 CAP052             DATE 12Nov99               *
-      *                 CAP051             DATE 11Nov99               *
-      *                 CPB001             Date 01Jun99               *
-      *                 CAP013             Date 07Sep99               *
-      *                 CAP011             Date 07Sep99               *
-      *                 170909             Date 07Sep99               *
-      *                 CAP033             Date 26Apr99               *
-      * Midas DBA 3.00 ---------------- Base -------------------------*
-      *                 CAP006  *CREATE    Date 01Dec98               *
-      *                                                               *
-      *---------------------------------------------------------------*
-      *                                                               *
-      *  CSD102 - Password Length Extension (Recompile)               *  
-      *  MD046248 - Finastra Rebranding                               *
-      *  MD047971 - Do not allow amendment to settlement account if   *
-      *             that side is already netted.                      *    
-      *  CDL099 - Split Value Date (Recompile)                        *
-      *  CDL094 - Enhance Receive Settlement Instructions             *
-      *           (Recompile)                                         *
-      *  CSD095 - Allow Deal Sub-Type and Branch for MM and FX SSIs   *
-      *           (Recompile)                                         *
-      *  AR990243 - Additional deliveries for CSW212 (Recompile)      *
-      *  CSW212 - SWIFT 2012 Changes (Recompile)                      *
-      *  CSF011A - CCR015: Display Order in Confirmation Pages        *
-      *            (Recompile)                                        *
-      *  CER059 - German Feature Upgrade to Delhi                     *
-      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
-      *           (Recompile)                                         *
-      *  256564 - Recompile due to PF changes done by fix 256330      *
-      *  247888 - Missing record in CLE025 files.                     *
-      *  246352 - Applied core fix 224231.                            *
-      *  224231 - CLS Deal in RPR default incorrect Nostro Code.      *
-      *           Validate Trade details before defaulting settlements*
-      *         - Bank to Bank Info. 6' field strangely defaulted to  *
-      *           'N'. It should be blank when 'Bank to Bank Info. 1  *
-      *           to 5' are blanks.                                   *
-      *  245158 - APISERVER generates dumps for module FXVSODLNO.     *
-      *           Pointer not set for location referenced.            *
-      *  CDL049 - Addition of a Reference Rate field (recompile)      *
-      *  CSD027 - Conversion Of Customer Number to Alpha              *
-      *  CLE031 - Lending Enhancements - Settlement Currency Recompile*
-      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
-      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
-      *  CSD025 - Customer De-Activation                              *
-      *  CSW037 - Additional Field Data on MT300/MT320                *
-      *  CSW036 - Dual SWIFT BIC held on Client Details               *
-      *  CFX114 - Core changes for GBO014                             *
-      *         - Perform Override when Exchange Rate Tolerance is    *
-      *                    exceeded.                                  *
-      *                  - Upgrade to Midasplus                       *
-      *  CDL018 - Multiple Settlement Accounts on Loans/Deposits      *
-      *           (Recompile)                                         *
-      *  CSC022 - Commitment Control Changes for MidasPlus            *
-      *           (Recompile)                                         *
-      *  222373 - Recompile - Parameters corrected on program calls   *
-      *  CPK016 - Release 5 packaging.  Standardise parameters.       *
-      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
-      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
-      *           (Recompile)                                         *
-      *  CRE008 - Cash Management (Recompile)                         *
-      *  CDL010 - Prevent last user that actioned the trade from      *
-      *           authorising it. Recompile due to changes in         *
-      *           FXVFXDLPD that affected FXFXDLCTL.                  *
-      *  CAS004 - Hedge Accounting Phase A                            *
-      *  201083 - Recompiled due to changes in PF/FXIFXDLPD.          *
-      *  196952 - Ensure Rate has 5 digits before decimal and 8       *
-      *           digits after. Recompiled over changed FXFXDLCTL.    *
-      *  196461 - Recompiled due to changes in FXFXDLCTL module.      *
-      *  CSC011 - 24x7 Midas Availability (Recompiled)                *
-      *  CAS001 - Net Present Value (NPV) Accounting (Recompile)      *
-      *  195763 - Recompiled due to recompiled FXFXDLVAL.             *
-      *  200400 - Reverse fix 179510.  Recompile                      *
-      *  190876 - Reject Meridian interface deals with warnings.      *
-      *           New warning if Counterparty is not a CLS Customer.  *
-      *  185751 - ReCompiled due to changes to FXFXDLCTL  module      *
-      *  CPB002 - Meridian DBA Middleware Replication Customization.  *
-      *           Just recompile.                                     *
-      *  179510 - Re_Compiled due to changes to FXFXDLCTL  module     *
-      *  CDL008 - Continuous Linked Settlement (Recompile)            *
-      *  166888 - Settlement Instructions - Pay Ordering Bank returns *
-      *           to defaulted value all the time. Apply GEMS 163745  *
-      *           However, 163745 only fixes the problem for 'A' and  *
-      *           'X' processing. Problem still exists for insert.    *
-      *           Need to default only the 1st time validation is     *
-      *           done. Do not re-default for subsequent validations. *
-      *           Due to this 163745 in its original form is no       *
-      *           longer required, now default required only for      *
-      *           'first time insert' (Recompile)                     *
-      *  176883 - Errors found as a result of creating DBAR3.02       *
-      *           Meridian repository file.                           *
-      *           Mismatch on parameters for call to ZASETINDFT       *
-      *  CAP052 - Deal Range Authorisation (By Front Office Id)       *
-      *           Recompiled due to changes in SP530FXSCN             *
-      *  CAP051 - Automatic Authorisation (FX Part)                   *
-      *           Recompiled due to changes in FXFXDLCTL              *
-      *  CPB001 - Meridian DBA Middleware Replication Customization.  *
-      *           Recompiled due to changes in FXFXDLCTL              *
-      *  CAP013 - Allow access by Midas transaction ID if not insert  *
-      *  CAP011 - Substitution of Midas database flds for externl i/fs*
-      *  170909 - Settlement instructions not updated on amendment    *
-      *  CAP033 - Conversion of PM inputs into modular structure to   *
-      *           use as APIs. Recompiled over changed modules.       *
-      *  CAP006 - Created as part of the APISERVER breakdown          *
-      *                                                               *
-      *****************************************************************
+000100200528      *****************************************************************
+000200200528/*STD *: PGMBASE                                                    : *
+000300200528/*EXI *: MODULE(FXFXDLCTL) ACTGRP(*CALLER)                          : *                       CPK016
+000400200528/*EXI *  TEXT('Midas FX Deal interface controller')                   *
+000500200528/*E*I *:*MODULE(FXFXDLCTL)******************************************:**                       CPK016
+000600200528/*E*I *:*BNDSRVPGM(*NONE)*BNDDIR(MIDAS)*ACTGRP(*CALLER)*************:**                       CPK016
+000700200528      *****************************************************************
+000800200528      *                                                               *
+000900200528      *  Midas - Foreign Exchange Dealing Module                      *
+001000200528      *                                                               *
+001100200528      *  FXFXDLCTL - FX Deals Interface Controller                    *
+001200200528      *                                                               *
+001300200528      *  Function: This Program Validates FX Deals for Input into     *
+001400200528      *            the Midas database.                                *
+001500200528      *                                                               *
+001600200528      *  (c) Finastra International Limited 2001                      *
+001700200528      *                                                               *
+001800200604      *  Last Amend No. 251029             Date 22May20               *
+001900200528      *  Prev Amend No. CSD102             Date 08Jan19               *
+002000200528      *                 MD046248           Date 27Oct17               *
+002100200528      *                 MD047971           Date 16Oct17               *
+002200200528      *                 CDL099             Date 06Oct17               *
+002300200528      *                 CDL094             Date 11Jun14               *
+002400200528      *                 CSD095             Date 08Apr14               *
+002500200528      *                 AR990243           Date 14Jun12               *
+002600200528      *                 CSW212             Date 03May12               *
+002700200528      *                 CSF011A            Date 28Nov11               *
+002800200528      *                 CER059             Date 19Jul10               *
+002900200528      *                 CER043             Date 19May08               *
+003000200528      * Bank Fusion Midas 1.4 Base -----------------------------------*
+003100200528      * Midas Plus 1.4 Base 04 ---------------------------------------*
+003200200528      *                 256564             Date 17Sep08               *
+003300200528      *                 247888             Date 18May07               *
+003400200528      *                 246352             Date 13Mar07               *
+003500200528      * Midas Plus 1.4 Base ------------------------------------------*
+003600200528      *                 245158             Date 19Jan07               *
+003700200528      * Midas Plus 1.3 ----------- Base ------------------------------*
+003800200528      *                 CDL049             Date 07Jul06               *
+003900200528      *                 CSD027             Date 09Dec05               *
+004000200528      *                 CLE031             Date 26Apr05               *
+004100200528      *                 CDL038             Date 10May05               *
+004200200528      *                 CSW037A            Date 02May05               *
+004300200528      *                 CSD025             Date 11Jan05               *
+004400200528      *                 CSW037             Date 15Dec04               *
+004500200528      *                 CSW036             Date 15Dec04               *
+004600200528      *                 CFX114             Date 15Jun04               *
+004700200528      *                 CDL018             Date 03Feb04               *
+004800200528      *                 CSC022             Date 24Feb04               *
+004900200528      *                 222373             Date 04Nov03               *
+005000200528      *                 CPK016             Date 29Jul03               *
+005100200528      *                 CAS006             Date 21Jan03               *
+005200200528      *                 CAS005             Date 16Dec02               *
+005300200528      *                 CRE008             Date 19Feb02               *
+005400200528      *                 CDL010             Date 02Aug02               *
+005500200528      *                 CAS004             Date 26Jun02               *
+005600200528      * Midas Release 4.01.02 ----------------------------------------*
+005700200528      *                 201083             Date 15May02               *
+005800200528      *                 196952             Date 06May02               *
+005900200528      *                 196461             Date 22Apr02               *
+006000200528      * Midas Release 4.01 -------------------------------------------*
+006100200528      *                 CSC011             Date 18Sep01               *
+006200200528      *                 CAS001             Date 23Nov01               *
+006300200528      *                 195763             Date 07Jan02               *
+006400200528      * Midas Release 4 --------------- Base -------------------------*
+006500200528      *                 200400             Date 20Nov01               *
+006600200528      * Midas DBA 3.05 -----------------------------------------------*
+006700200528      *                 190876             Date 08Mar01               *
+006800200528      *                 185751             Date 17Nov00               *
+006900200528      *                 CPB002             Date 08Aug00               *
+007000200528      * Midas DBA 3.04 -----------------------------------------------*
+007100200528      *                 179510             Date 09Nov00               *
+007200200528      *                 CDL008             Date 02May00               *
+007300200528      *                 166888             Date 02Sep99               *
+007400200528      * Midas DBA 3.03 -----------------------------------------------*
+007500200528      * Midas DBA 3.02 Patch Z ---------------------------------------*
+007600200528      *                 176883             Date 24Mar00               *
+007700200528      * Midas DBA 3.02 -----------------------------------------------*
+007800200528      *                 CAP052             DATE 12Nov99               *
+007900200528      *                 CAP051             DATE 11Nov99               *
+008000200528      *                 CPB001             Date 01Jun99               *
+008100200528      *                 CAP013             Date 07Sep99               *
+008200200528      *                 CAP011             Date 07Sep99               *
+008300200528      *                 170909             Date 07Sep99               *
+008400200528      *                 CAP033             Date 26Apr99               *
+008500200528      * Midas DBA 3.00 ---------------- Base -------------------------*
+008600200528      *                 CAP006  *CREATE    Date 01Dec98               *
+008700200528      *                                                               *
+008800200528      *---------------------------------------------------------------*
+008900200528      *                                                               *
+009000200528      *  251029 - Recompiled due to changes in module FXFXDLCTL.      *
+009100200528      *  CSD102 - Password Length Extension (Recompile)               *
+009200200528      *  MD046248 - Finastra Rebranding                               *
+009300200528      *  MD047971 - Do not allow amendment to settlement account if   *
+009400200528      *             that side is already netted.                      *
+009500200528      *  CDL099 - Split Value Date (Recompile)                        *
+009600200528      *  CDL094 - Enhance Receive Settlement Instructions             *
+009700200528      *           (Recompile)                                         *
+009800200528      *  CSD095 - Allow Deal Sub-Type and Branch for MM and FX SSIs   *
+009900200528      *           (Recompile)                                         *
+010000200528      *  AR990243 - Additional deliveries for CSW212 (Recompile)      *
+010100200528      *  CSW212 - SWIFT 2012 Changes (Recompile)                      *
+010200200528      *  CSF011A - CCR015: Display Order in Confirmation Pages        *
+010300200528      *            (Recompile)                                        *
+010400200528      *  CER059 - German Feature Upgrade to Delhi                     *
+010500200528      *  CER043 - German Features LF041-00 New Fields and Defaulting  *
+010600200528      *           (Recompile)                                         *
+010700200528      *  256564 - Recompile due to PF changes done by fix 256330      *
+010800200528      *  247888 - Missing record in CLE025 files.                     *
+010900200528      *  246352 - Applied core fix 224231.                            *
+011000200528      *  224231 - CLS Deal in RPR default incorrect Nostro Code.      *
+011100200528      *           Validate Trade details before defaulting settlements*
+011200200528      *         - Bank to Bank Info. 6' field strangely defaulted to  *
+011300200528      *           'N'. It should be blank when 'Bank to Bank Info. 1  *
+011400200528      *           to 5' are blanks.                                   *
+011500200528      *  245158 - APISERVER generates dumps for module FXVSODLNO.     *
+011600200528      *           Pointer not set for location referenced.            *
+011700200528      *  CDL049 - Addition of a Reference Rate field (recompile)      *
+011800200528      *  CSD027 - Conversion Of Customer Number to Alpha              *
+011900200528      *  CLE031 - Lending Enhancements - Settlement Currency Recompile*
+012000200528      *  CDL038 - Extended Deal Sub Type (Recompile)                  *
+012100200528      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+012200200528      *  CSD025 - Customer De-Activation                              *
+012300200528      *  CSW037 - Additional Field Data on MT300/MT320                *
+012400200528      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+012500200528      *  CFX114 - Core changes for GBO014                             *
+012600200528      *         - Perform Override when Exchange Rate Tolerance is    *
+012700200528      *                    exceeded.                                  *
+012800200528      *                  - Upgrade to Midasplus                       *
+012900200528      *  CDL018 - Multiple Settlement Accounts on Loans/Deposits      *
+013000200528      *           (Recompile)                                         *
+013100200528      *  CSC022 - Commitment Control Changes for MidasPlus            *
+013200200528      *           (Recompile)                                         *
+013300200528      *  222373 - Recompile - Parameters corrected on program calls   *
+013400200528      *  CPK016 - Release 5 packaging.  Standardise parameters.       *
+013500200528      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+013600200528      *  CAS005 - Enhancements to CAS001, CAS002 and CAS004           *
+013700200528      *           (Recompile)                                         *
+013800200528      *  CRE008 - Cash Management (Recompile)                         *
+013900200528      *  CDL010 - Prevent last user that actioned the trade from      *
+014000200528      *           authorising it. Recompile due to changes in         *
+014100200528      *           FXVFXDLPD that affected FXFXDLCTL.                  *
+014200200528      *  CAS004 - Hedge Accounting Phase A                            *
+014300200528      *  201083 - Recompiled due to changes in PF/FXIFXDLPD.          *
+014400200528      *  196952 - Ensure Rate has 5 digits before decimal and 8       *
+014500200528      *           digits after. Recompiled over changed FXFXDLCTL.    *
+014600200528      *  196461 - Recompiled due to changes in FXFXDLCTL module.      *
+014700200528      *  CSC011 - 24x7 Midas Availability (Recompiled)                *
+014800200528      *  CAS001 - Net Present Value (NPV) Accounting (Recompile)      *
+014900200528      *  195763 - Recompiled due to recompiled FXFXDLVAL.             *
+015000200528      *  200400 - Reverse fix 179510.  Recompile                      *
+015100200528      *  190876 - Reject Meridian interface deals with warnings.      *
+015200200528      *           New warning if Counterparty is not a CLS Customer.  *
+015300200528      *  185751 - ReCompiled due to changes to FXFXDLCTL  module      *
+015400200528      *  CPB002 - Meridian DBA Middleware Replication Customization.  *
+015500200528      *           Just recompile.                                     *
+015600200528      *  179510 - Re_Compiled due to changes to FXFXDLCTL  module     *
+015700200528      *  CDL008 - Continuous Linked Settlement (Recompile)            *
+015800200528      *  166888 - Settlement Instructions - Pay Ordering Bank returns *
+015900200528      *           to defaulted value all the time. Apply GEMS 163745  *
+016000200528      *           However, 163745 only fixes the problem for 'A' and  *
+016100200528      *           'X' processing. Problem still exists for insert.    *
+016200200528      *           Need to default only the 1st time validation is     *
+016300200528      *           done. Do not re-default for subsequent validations. *
+016400200528      *           Due to this 163745 in its original form is no       *
+016500200528      *           longer required, now default required only for      *
+016600200528      *           'first time insert' (Recompile)                     *
+016700200528      *  176883 - Errors found as a result of creating DBAR3.02       *
+016800200528      *           Meridian repository file.                           *
+016900200528      *           Mismatch on parameters for call to ZASETINDFT       *
+017000200528      *  CAP052 - Deal Range Authorisation (By Front Office Id)       *
+017100200528      *           Recompiled due to changes in SP530FXSCN             *
+017200200528      *  CAP051 - Automatic Authorisation (FX Part)                   *
+017300200528      *           Recompiled due to changes in FXFXDLCTL              *
+017400200528      *  CPB001 - Meridian DBA Middleware Replication Customization.  *
+017500200528      *           Recompiled due to changes in FXFXDLCTL              *
+017600200528      *  CAP013 - Allow access by Midas transaction ID if not insert  *
+017700200528      *  CAP011 - Substitution of Midas database flds for externl i/fs*
+017800200528      *  170909 - Settlement instructions not updated on amendment    *
+017900200528      *  CAP033 - Conversion of PM inputs into modular structure to   *
+018000200528      *           use as APIs. Recompiled over changed modules.       *
+018100200528      *  CAP006 - Created as part of the APISERVER breakdown          *
+018200200528      *                                                               *
+018300200528      *****************************************************************

@@ -1,1125 +1,1146 @@
-     H        1
-      *****************************************************************
-/*STD *  RPGBASE                                                      *
-/*EXI *  TEXT('Midas SE Security Balances at Depot')
-     F*****************************************************************
-     F*                                                               *
-     F*  Midas - Securities Trading Module                        *
-     F*                                                               *
-     F*  SE1130 - SECURITY BALANCES AT DEPOT                          *
-     F*                                                               *
-     F*  Function: To print Trade, Value & Settlement date balances,  *
-     F*   (COB)    and depot reference, for each security held at     *
-     F*            each depot.                                        *
-     F*                                                               *
-     F*  Called by: SEC0810 - Securities Balances at Depot            *
-     F*                                                               *
-     F*            Frequency:                                         *
-     F*            - On request during COB                            *
-     F*                                                               *
-      *  (c) Finastra International Limited 2001                      *
-      *                                                               *
-      *  Last Amend No. MD053007           Date 30Oct19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      * Bank Fusion Midas 1.4 Base -----------------------------------*
-      * Midas Plus 1.4 Base 04 ---------------------------------------*
-      * Midas Plus 1.4 Base ------------------------------------------*
-      * Midas Plus 1.3 ----------- Base ------------------------------*
-      *                 BUG11630           Date 28Jun06               *
-      *                 CSD027             Date 09Dec05               *
-      *                 CSE071             Date 19Jul05               *
-      *                 BUG7985            Date 07Jul05               *
-      *                 208241             Date 22Aug02               *
-      *                 208281             Date 29Mar01               *
-      *                 CSE037             Date 29Apr02               *
-      *                 CAS006             Date 21Jan03               *
-      * Midas Release 4.01.03 ----------------------------------------*
-      *                 209880             Date 10Jan03               *
-      * Midas Release 4 --------------- Base -------------------------*
-      *                 CSE022             Date 29Mar01               *
-      *                 191697             Date 05Jun01               *
-      *                 178775             Date 30Apr01               *
-      *                 127566             Date 09May01               *
-      * Midas DBA 3.03 -----------------------------------------------*
-      *                 077441             Date 20Apr00               *
-      *                 131723             Date 08Nov99               *
-      * Midas DBA 3.00 ---------------- Base -------------------------*
-     F*                 034141             DATE 01MAY96               *
-     F*                 S01502             DATE 08JUL94               *
-     F*                 S01408             DATE 19MAY94               *
-     F*                 052254             DATE 10JAN94               *
-     F*                 S01401             DATE 16JUN93               *
-     F*                 S01397             DATE 10SEP92               *
-     F*                 E37493             DATE 02APR92               *
-     F*                 E37680             DATE 26MAR92               *
-     F*                 E29170             DATE 11OCT11               *
-     F*                 S01117             DATE 03JUN91               *
-     F*                 S01269             DATE 01AUG90               *
-     F*                 E21575             DATE 06APR90               *
-     F*                 E21519             DATE 06APR90               *
-     F*                 E20651             DATE 30JAN90               *
-     F*                 E17166             DATE 04/05/88              *
-     F*                 S01176             DATE 15/08/88              *
-     F*                                                               *
-     F*---------------------------------------------------------------*
-      *                                                               *
-      *  MD053007 - REPO Balance is truncated in report. Recompiled   *
-      *             due to changes in SE1130P1 printer file.          *
-      *  MD046248 - Finastra Rebranding                               *
-      *  BUG11630 - SEC0810 failed                                    *
-      *  CSD027 - Conversion Of Customer Number to Alpha              *
-      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
-      *  BUG7985- Several components failed due to accessing TABLETR  *
-      *  208241 - Recompiled over changed /CPY ZSDESCZ3.              *
-      *  208281 - Printer Overflow problem when writing detail  file. *
-      *  CSE037 - Bond Pricing - 3 Decimal Places in Trades Input.    *
-      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
-      *  209880 - Depot reference is truncated                        *
-      *           Recompiled due to changes in printer file SE1130P1. *
-      *  CSE022 - Depository Definition Enhancement                   *
-      *  191697 - Printer Overflow problem when writing trailer file. *
-      *  178775 - Recompiled due to changes in printer file SE1130P1. *
-      *  127566 - Recompiled over changed ZSDESCZ3                    *
-     F*  077441 - Increase the line count for the report so that      *
-     F*           more items would be included in a page.             *
-     F*  131723 - Repo position not being shown in this report.       *
-     F*           Include repo position in this report if not 0.      *
-     A*  034141 - NOMINAL CURRENCY OF THE SECURITY IS NOT REPORTED.   *  *
-     F*           PGM RECOMPILED OVER AMENDMENT IN SE1130P1.          *
-     F*  S01502 - BLI Telekurs Processing.  Recompiled due to change  *
-     F*           in length of SESTAT, 133 long.                      *
-     F*  S01408 - Core hook SE1130CPLH added                          *
-     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
-     F*           to 10,9                                             *
-     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
-     F*          - Recompiled due to changes to files.                *
-     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
-     F*          - Recompiled due to changes to files.                *
-     F*  E37493 - Recompiled over changed printer file                *
-     F*  E37680 - In single branch mode no details are reported as    *
-     F*           branch is blank                                     *
-     F*  E29170 - Report Control Facility changes                     *
-     F*  S01117 - Multi-Branching                                     *
-     F*  S01269 - Trade authorisation: recompile over changed file    *
-     F*           TABSE                                               *
-     F*  E21575 - Securities that Matured in a prior month should not *   E21575
-     F*           appear on this report.                              *   E21575
-     F*  E21519 - E17166 is correct, but comments and Database Error  *   E21519
-     F*           need to be updated with the correct File name.      *   E21519
-     F*     Also: DB error due to deletion of Customer which had been *   E21519
-     F*           designated as a depot on an investment type record. *   E21519
-     F*  E20651 - DB Error Numbers used in more than one place.       *   E20651
-     F*           New Error Numbers as follows:                       *   E20651
-     F*           DB ERROR 04 -> 08                                   *   E20651
-     F*           DB ERROR 04 -> 09                                   *   E20651
-     F*  E17166 - New Logical File for Branch, Depot, Secty sequence. *   E17166
-     F*  S01176 - RELEASE 3.1 MODIFICATIONS                           *   S01176
-     F*                                                               *
-     F*****************************************************************
-     F*                                                               *
-     F*  C R E A T I O N     P A R A M E T E R S                      *
-     F*                                                               *
-     F*                                                               *
-     F*****************************************************************
-      *
-     F***DPOSN***IF**E***        K        DISK                            E17166
-     FDPOSNL  IF  E           K        DISK                               E17166
-     FDPOSNA  IF  E                    DISK
-     FCLINT   IF  E           K        DISK
-     F            CLINTC1F                          KIGNORE
-     F            CLINTCAF                          KIGNORE
-     F            CLINTCCF                          KIGNORE
-     FINVTP   IF  E           K        DISK
-     FSECTY   IF  E           K        DISK
-     FSE1130P1O   E                    PRINTER                        UC
-     F                                              KINFDS SPOOL          E29170
-     FSE1130AUO   E                    PRINTER
-     F                                              KINFDS SPOOLU         E29170
-     FTABSE   IF  E           K        DISK
-     F* ICD 1     TABTB10F                          KIGNORE
-     F            TABTB11F                          KIGNORE
-     F* ICD SE    TABTB36F                          KIGNORE
-     F            TABTB40F                          KIGNORE
-     F            TABTG10F                          KIGNORE
-     F            TABTG20F                          KIGNORE
-     F            TABLETHF                          KIGNORE
-     F*********** TABLETJF                          KIGNORE               S01117
-     F            TABLETLF                          KIGNORE
-     F* BRANCH    TABLETRF                          KIGNORE
-     F            TABLETXF                          KIGNORE
-     F            TABLET2F                          KIGNORE
-     F            TABLET3F                          KIGNORE
-     F            TABLET5F                          KIGNORE
-     F            TABTE10F                          KIGNORE
-     F            TABLETNF                          KIGNORE
-     F            TABLETKF                          KIGNORE
-     F            TABLETPF                          KIGNORE
-      /EJECT
-     F*****************************************************************
-     F*                                                               *
-     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
-     F*                                                               *
-     F*   01  - ERROR ON CHAIN INVTP AND CLINT                        *
-     F*   37  - MULTIBRANCHING ON                                     *   E29170
-     F*   50  - DIFFERENCE BETWEEN CALC AND FILE TOTALS OF RECORDS    *
-     F****89**-*END*OF*FILE*ON*DPOSN***********************************   E21519
-     F*   89  - END OF FILE ON DPOSNL                                 *   E21519
-     F*                                                               *
-     F* 90-99 - Used in Standard Subroutines.                         *
-     F*                                                               *
-     F*   U7  - DATABASE ERROR                                        *
-     F*   U8  - DATABASE ERROR                                        *
-     F*                                                               *
-     F*****************************************************************
-      /EJECT
-     F*****************************************************************
-     F*                                                               *
-     F*  S U B R O U T I N E   I N D E X                              *
-     F*                                                               *
-     F*  FIRST  - OBTAINS ICD INFO                                    *
-     F*  PR01   - CONTROLS PRINTING OF REPORT                         *
-     F*  AUDIT  - OUTPUTS CONTROL REPORT                              *
-     F*  DREF   - OBTAINS DEPOT REFERENCE                             *
-     F*  TABCHN - CHAINS TO TABLETRF                                  *
-     F*  SECCHN - CHAINS TO SECURITIES FILE                           *
-     F*  *PSSR  - Error handling                                      *   S01117
-     F*  RCFP1  - SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF      *   E29170
-     F*  RCFAU  - SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF      *   E29170
-     F*                                                               *
-     F*  ZDATE2 - DAYNO - DATE conversion                             *
-     F*  ZICDSE - ACCESSES ICD FOR SE                                 *
-     F*  ZSDESC - FORMAT SECURITY SHORT DESCRIPTION                   *
-     F*  ZSEDIT - EDITS NUMERIC FIELDS WITH DECIMAL PLACES AND COMMAS *
-     F*  ZSYSTM - CHAINS TO ICD TABTB10                               *
-     F*                                                               *
-     F*****************************************************************
-      /EJECT
-     E                    CPY@    1   1 80
-     E/COPY ZSRSRC,ZSEDITZ1
-     E/COPY ZSRSRC,ZDATE2Z1
-     E/COPY ZSRSRC,ZSDESCZ1
-      /EJECT
-      *                                                                                       CSE037
-     IINVTPDF                                                                                 CSE037
-     I              SFLG                            ISFLG                                     CSE037
-      *                                                                                       CSE037
-     I*
-     I* DATA STRUCTURE FOR TABLE FILE KEY
-     I*
-     I            DS
-     I                                        1  12 TKEY
-     I                                        1   20RECT
-     I                                        3  10 ZZ008
-     I                                       11  120RCDE
-     I*
-     I* DATA STRUCTURE FOR INVESTMENTS FILE
-     I*
-     I            DS
-     I                                        1   6 IKEY
-     I                                        1   3 NMCY
-     I                                        4   6 SITP
-     I*
-     I* DATA STRUCTURE FOR ZSEDIT
-     I*
-     I/COPY ZSRSRC,ZSEDITZ2
-     I/COPY ZSRSRC,ZSDESCZ2
-     I*
-     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
-     ICPYR@#      DS
-     I                                        1  80 CPY@
-     I                                        1  20 CPY@##
-     I*
-     I*LDA*******UDS                            256                       S01117
-     I***********                           134 177 DBLOT                 S01117
-     I***********                           134 138 DBFILE                S01117
-     I***********                           139 167 DBKEY                 S01117
-     I***********                           168 175 DBPGM                 S01117
-     I***********                           176 1770DBASE                 S01117
-     ILDA         DS                            256                       S01117
-     I                                      134 183 DBLOT                 S01117
-     I                                      134 141 DBFILE                S01117
-     I                                      142 170 DBKEY                 S01117
-     I                                      171 180 DBPGM                 S01117
-     I                                      181 1830DBASE                 S01117
-     I*                                                                   E29170
-     ISPOOL       DS                                                      E29170
-     I*                                                                   E29170
-     I**  DS FOR P1 SPOOL FILE NAME                                       E29170
-     I*                                                                   E29170
-     I                                       83  92 SFILE                 E29170
-     I                                    B 123 1240SFNUM                 E29170
-     I**                                                                  E29170
-     ISPOOLU      DS                                                      E29170
-     I                                       83  92 SFILEU                E29170
-     I                                    B 123 1240SFNUMU                E29170
-     IRUNDT       DS                                                      E29170
-     I                                        1   7 RUNA                  E29170
-     I                                    P   8  100RUND                  E29170
-     I                                       11  11 SSF                   E29170
-     I                                       12  12 DATF                  E29170
-     I                                       13  13 MBIN                  E29170
-     I*                                                                   E29170
-     I**  DATA STRUCTURE FOR RUN DATE DETAILS                             E29170
-     I*                                                                   E29170
-      *                                                                   E21575
-      ***  SESTAT Data Structure (to get End of Last Month Date).         E21575
-      *                                                                   E21575
-     ISDBRCH    E DSSDBRCHPD                                                                 BUG7985
-     I              A8BRNM                          BRNM                                     BUG7985
-     IDSSDY     E DSDSSDY                                                                    BUG7985
-     IDTAARA    E DSSESTAT                                                E21575
-     C/EJECT
-     C*================================================================
-     C*  P R O G R A M     S T A R T
-     C*================================================================
-     C*                                                                   S01117
-     C           *ENTRY    PLIST                                          S01117
-     C                     PARM           SEQ     5                       S01117
-     C                     PARM           ENT     3                       S01117
-     C*
-     C**  KEYLISTS FOR CHAINING TO FILES
-     C*
-     C*
-     C**  SECURITIES FILE
-     C*
-     C           SECKEY    KLIST
-     C                     KFLD           DSSC
-     C*
-     C**  INVESTMENT FILE
-     C*
-     C           INVKEY    KLIST
-     C                     KFLD           NMCY
-     C                     KFLD           SITP
-     C*
-     C**  CLIENT FILE
-     C*
-     C           CLIKEY    KLIST
-     C                     KFLD           CLKY
-     C*
-     C**  TABLE FILE
-     C*
-     C           TABKEY    KLIST
-     C                     KFLD           TKEY
-     C*
-     C**  ACCESS ICD INFORMATION
-     C*
-     C           *NAMVAR   DEFN           LDA                             S01117
-     C           *LOCK     IN   LDA                                       S01117
-     C                     MOVE *BLANK    DBLOT
-     C                     MOVE 'SE1130  'DBPGM
-     C                     OUT  LDA                                       S01117
-     C*                                                                   E29170
-     C** IN THE DATAAREA RUNDAT                                           E29170
-     C*                                                                   E29170
-     C           *NAMVAR   DEFN RUNDAT    RUNDT                           E29170
-     C                     IN   RUNDT                                     E29170
-     C*                                                                   E29170
-     C**  TEST FOR MULTIBRANCHING                                         E29170
-     C*                                                                   E29170
-     C           MBIN      IFEQ 'Y'                                       E29170
-     C                     SETON                     37                   E29170
-     C                     END                                            E29170
-     C*                                                                   E29170
-     C** RCF Processing for Audit File                                    E29170
-     C*                                                                   E29170
-     C                     EXSR RCFAU                                     E29170
-     C*
-     C**  OBTAIN ICD INFO
-     C*
-     C                     EXSR FIRST
-     C*
-     C**  CHECK FOR DATABASE ERRORS
-     C*
-     C           *INU7     IFEQ '1'
-     C                     GOTO EAUDIT
-     C                     END
-     C*
-     C**  CLEAR WORK FIELDS
-     C*
-     C           *LIKE     DEFN DSSC      WDSSC
-     C************LIKE     DEFN DSBR      WDSBR                           S01117
-     C           *LIKE     DEFN DSBA      WDSBA                           S01117
-     C           *LIKE     DEFN DDPT      WDDPT
-     C                     Z-ADD0         LCNT    20
-     C                     Z-ADD0         PREC    50
-     C                     Z-ADD0         IREC    50
-     C***********          MOVE *ZEROS    WDSBR                           S01117
-     C                     MOVE *BLANKS   WDSBA                           S01117
-     C                     MOVE *BLANKS   WDSSC
-     C**********           MOVE *ZEROS    WDDPT                                               CSD027
-     C                     MOVE *BLANKS   WDDPT                                               CSD027
-     C*
-     C**LOOP*ROUND*PROCESSING*FOR*EACH*RECORD*READ*FROM*DPOSN**********   E21519
-     C*
-     C**  LOOP ROUND PROCESSING FOR EACH RECORD READ FROM DPOSNL          E21519
-     C*
-     C           *IN89     DOUEQ'1'
-     C           *INU7     OREQ '1'
-     C*
-     C***********          READ DPOSN                    89               E17166
-     C                     READ DPOSNL                   89               E17166
-     C*                                                                   E29170
-     C** IF BRANCH READ IS NOT THE SAME AS THE SPECIFIC BRANCH            E29170
-     C** REQUESTED THEN STOP PROCESSING                                   E29170
-     C*                                                                   E29170
-     C           *IN89     IFEQ '0'                                       E29170
-     C           MBIN      ANDEQ'Y'                                       E37680
-     C           ENT       ANDNE'ALL'                                     E29170
-     C           ENT       ANDNEDSBA                                      E29170
-     C                     SETON                     89                   E29170
-     C                     END                                            E29170
-     C*
-     C**  AT END OF FILE - PRINT TRAILER IF DETAILS HAVE BEEN PRINTED
-     C**  AND EXIT
-     C*
-     C           *IN89     IFEQ '1'
-     C*
-     C           PREC      IFNE 0
-      ** Check if need to write header before writing trailer to prevent  191697
-      ** printer over flow.                                               191697
-     C                     ADD  3         LCNT                            191697
-     C           LCNT      IFGT 44                                        191697
-     C                     Z-ADD0         LCNT                            191697
-     C                     WRITEHEAD1                                     191697
-     C                     WRITEHEAD2                                     191697
-     C                     WRITEHEAD3                                     191697
-     C                     WRITEHEAD4                                     191697
-     C                     ENDIF                                          191697
-     C                     WRITETRAIL
-     C                     CLOSESE1130P1
-     C                     END
-     C                     GOTO ENDLP
-     C*
-     C                     END
-     C*
-     C**  DEPENDING ON RECORD ID AND BALANCES HELD ON FILE
-     C**   PRINT DETAIL FOR REPORT
-     C*
-     C           RECI      IFEQ 'D'
-     C*
-     C**  ADD TO COUNT
-     C*
-     C                     ADD  1         IREC
-     C*
-     C           DSNT      IFNE 0
-     C           DSNV      ORNE 0
-     C           DSNS      ORNE 0
-     C           DSRV      ORNE 0                                         131723
-     C                     EXSR PR01
-     C                     END
-     C*
-     C                     END
-     C*
-     C           ENDLP     TAG
-     C*
-     C                     END
-     C*
-     C           EAUDIT    TAG
-     C*
-     C                     EXSR AUDIT
-     C*
-     C*================================================================
-     C*  P R O G R A M     E N D
-     C*================================================================
-     C*
-     C                     SETON                     LR
-      *
-      ******************************************************************
-      /EJECT
-      ******************************************************************
-      *
-      *  FIRST  - Subroutine to access ICD Information.
-      *
-      ******************************************************************
-      *
-     C           FIRST     BEGSR                           ** FIRST **
-     C*
-     C**  ACCESS ICD
-     C*
-     C                     EXSR ZSYSTM
-     C           *IN99     IFEQ '1'
-     C                     MOVE '1'       *INU7
-     C                     MOVE '1'       *INU8
-     C           *LOCK     IN   LDA                                       S01117
-     C                     MOVE 'TABLE'   DBFILE           *****************
-     C                     MOVELZTABKY    DBKEY            ** DB ERROR 01 **
-     C                     Z-ADD1         DBASE            *****************
-     C                     OUT  LDA                                       S01117
-     C                     EXSR *PSSR                                     S01117
-     C                     ELSE
-     C*
-     C**  ACCESS ICDSE
-     C*
-     C                     EXSR ZICDSE
-     C           *INU7     IFEQ '1'
-     C           *LOCK     IN   LDA                                       S01117
-     C                     MOVE 'TABLE'   DBFILE           *****************
-     C                     MOVELTKEY      DBKEY            ** DB ERROR 02 **
-     C                     Z-ADD2         DBASE            *****************
-     C                     OUT  LDA                                       S01117
-     C                     EXSR *PSSR                                     S01117
-     C                     END
-     C*
-     C                     END
-      *                                                                   E21575
-      **  Get Data Area SESTAT and move End of Previous Month field       E21575
-      **  to a numeric field.                                             E21575
-      *                                                                   E21575
-     C           *NAMVAR   DEFN SESTAT    DTAARA                          E21575
-     C                     IN   DTAARA                                    E21575
-      *                                                                   E21575
-     C                     MOVE EOPM      EOPMTH  50                      E21575
-     C/COPY WNCPYSRC,SE1130C001
-     C*
-     C                     ENDSR
-      *
-      ******************************************************************
-      /EJECT
-      ******************************************************************
-      *
-      *  PR01   - Subroutine to Print Report.
-      *           Note: A new Print File is started for each change of
-      *                 Branch and a new Page on change of Depot.
-      *
-      ******************************************************************
-      *
-     C           PR01      BEGSR
-     C*
-     C**  CHECK FOR CHANGE IN BRANCH - OBTAIN NEW BRANCH NAME
-     C**  CLOSE AND RE-OPEN PRINT FILE
-     C*
-     C***********WDSBR     IFNE DSBR                                      S01117
-     C           WDSBA     IFNE DSBA                                      S01117
-     C*
-     C***********WDSBR     IFNE *ZEROS                                    S01117
-     C           WDSBA     IFNE *BLANKS                                   S01117
-      ** Check if need to write header before writing trailer to prevent  191697
-      ** printer over flow.                                               191697
-     C                     ADD  3         LCNT                            191697
-     C           LCNT      IFGT 44                                        191697
-     C                     Z-ADD0         LCNT                            191697
-     C                     WRITEHEAD1                                     191697
-     C                     WRITEHEAD2                                     191697
-     C                     WRITEHEAD3                                     191697
-     C                     WRITEHEAD4                                     191697
-     C                     ENDIF                                          191697
-     C                     WRITETRAIL
-     C                     CLOSESE1130P1
-     C                     END
-     C*
-     C                     OPEN SE1130P1
-     C                     Z-ADD0         PAGE
-     C*                                                                   E29170
-     C** RCF Processing for Detail Printer File                           E29170
-     C*                                                                   E29170
-     C                     EXSR RCFP1                                     E29170
-     C*                                                                   E29170
-     C**  Access Branch details if multibranching is on                   E29170
-     C*                                                                   E29170
-     C           *IN37     IFEQ '1'                                       E29170
-     C                     EXSR TABCHN
-     C           *INU7     IFEQ '1'
-     C                     GOTO EPR01
-     C                     END
-     C                     END                                            E29170
-     C                     END
-     C*
-     C**  IF CHANGE IN BRANCH,DEPOT OR OVERFLOW - START A NEW PAGE
-     C*
-     C***********WDSBR     IFNE DSBR                                      S01117
-     C           WDSBA     IFNE DSBA                                      S01117
-     C           WDDPT     ORNE DDPT
-     C***********LCNT      ORGT 22                                        077441
-     C           LCNT      ORGT 44                                        077441
-     C                     Z-ADD0         LCNT
-     C*
-     C**  OBTAIN CUSTOMER REPORT NAME FOR NEW DEPOT
-     C*
-     C                     MOVE DDPT      CLKY
-     C                     EXSR CLBCHN
-     C           *INU7     IFEQ '1'
-     C                     GOTO EPR01
-     C                     END
-     C*
-     C**  OUTPUT HEADINGS
-     C*
-     C                     MOVELCRNM      HDPNAM
-     C*                                                                   S01408
-     C** Core hook for externalisation.                                   S01408
-     C/COPY WNCPYSRC,SE1130CPLH                                           S01408
-     C*                                                                   S01408
-     C***********          MOVE DSBR      WDSBR                           S01117
-     C                     MOVE DSBA      WDSBA                           S01117
-     C                     MOVE DDPT      WDDPT
-     C***********          MOVE DSBR      HDBR                            S01117
-     C                     MOVE DSBA      HDBA                            S01117
-     C                     MOVELBRNM      HDBRNM
-     C                     WRITEHEAD1
-     C                     WRITEHEAD2
-     C                     WRITEHEAD3
-     C                     WRITEHEAD4
-     C*
-     C                     END
-     C*
-     C**  IF CHANGE IN SECURITY - OBTAIN NEW SECURITIES INFO
-     C*
-     C           WDSSC     IFNE DSSC
-     C                     MOVE DSSC      WDSSC
-     C                     EXSR SECCHN
-     C*
-     C           *INU7     IFEQ '1'
-     C                     GOTO EPR01
-     C                     END
-     C*
-     C                     END
-      *                                                                   E21575
-      **  Do not process Securities that Matured in a prior month.        E21575
-      *                                                                   E21575
-     C           MATY      IFLE EOPMTH                                    E21575
-     C           MATY      ANDNE0                                         E21575
-     C                     GOTO EPR01                                     E21575
-     C                     END                                            E21575
-     C*
-     C**  EDIT DETAILS FOR REPORT
-     C*
-     C**  SECURITY REPORT NAME AND OTHER SECURITY DETAILS
-     C*
-     C                     MOVELDSSC      DTSEC
-     C/COPY WNCPYSRC,SE1130C002
-     C                     MOVELSRPN      ZSRPN
-     C                     MOVE RSFD      ZRSFD                           S01117
-     C                     EXSR ZSDESC
-     C                     MOVELZRNME     DTSECN
-     C/COPY WNCPYSRC,SE1130C003
-     C*
-     C**  TRADE BALANCE
-     C*
-     C                     Z-ADDDSNT      ZFLD15
-     C                     Z-ADDNMDP      ZDECS
-     C                     MOVEL'J'       ZECODE
-     C                     EXSR ZSEDIT
-     C                     MOVE ZOUT21    DTTBAL
-     C*
-     C**  VALUE BALANCE
-     C*
-     C                     Z-ADDDSNV      ZFLD15
-     C                     Z-ADDNMDP      ZDECS
-     C                     MOVEL'J'       ZECODE
-     C                     EXSR ZSEDIT
-     C                     MOVE ZOUT21    DTVBAL
-     C*
-     C**  SETTLEMENT BALANCE
-     C*
-     C                     Z-ADDDSNS      ZFLD15
-     C                     Z-ADDNMDP      ZDECS
-     C                     MOVEL'J'       ZECODE
-     C                     EXSR ZSEDIT
-     C                     MOVE ZOUT21    DTSBAL
-     C*
-     C** REPO BALANCE                                                     131723
-     C*                                                                   131723
-     C                     MOVE '0'       *IN55                           131723
-     C           DSRV      IFNE *ZERO                                     131723
-     C                     Z-ADDDSRV      ZFLD15                          131723
-     C                     Z-ADDNMDP      ZDECS                           131723
-     C                     MOVEL'J'       ZECODE                          131723
-     C                     EXSR ZSEDIT                                    131723
-     C                     MOVE ZOUT21    DREBAL                          131723
-     C                     MOVE '1'       *IN55                           131723
-     C                     END                                            131723
-     C*                                                                   131723
-     C**  DEPOT REFERENCE
-     C*
-     C                     EXSR DREF
-     C                     MOVELSDREF     DTDREF
-     C/COPY WNCPYSRC,SE1130C004
-     C           *INU7     IFEQ '1'
-     C                     GOTO EPR01
-     C                     END
-     C*
-     C**  WRITE DETAIL LINE
-      ** Check if need to write header before writing trailer to prevent                      208281
-      ** printer over flow.                                                                   208281
-     C                     ADD  3         LCNT                                                208281
-     C           LCNT      IFGT 44                                                            208281
-     C                     Z-ADD0         LCNT                                                208281
-     C                     WRITEHEAD1                                                         208281
-     C                     WRITEHEAD2                                                         208281
-     C                     WRITEHEAD3                                                         208281
-     C                     WRITEHEAD4                                                         208281
-     C                     ENDIF                                                              208281
-     C*
-     C                     WRITEDETAIL1
-     C*
-     C**  INCREMENT RECORD COUNT AND LINE COUNT
-     C*
-     C                     ADD  1         PREC
-     C                     ADD  1         LCNT
-     C*
-     C           EPR01     ENDSR
-      *
-      ******************************************************************
-      /EJECT
-      ******************************************************************
-      *
-      *  DREF   - Subroutine to get Depot reference.
-      *
-      ******************************************************************
-      *
-     C           DREF      BEGSR                           ** DREF   **
-     C*
-     C**  Access CLIENT File record for depot input
-     C*
-     C**********           MOVE DDPT      CLKY    60                                          CSD027
-     C                     MOVE DDPT      CLKY    6                                           CSD027
-     C                     EXSR CLICHN
-     C           *INU7     IFEQ '1'
-     C                     GOTO EDREF
-     C                     ELSE
-     C                     MOVE C1DI      SVC1DI  1
-     C                     END
-     C*
-     C**  Access Investment type file
-     C*
-     C           INVKEY    CHAININVTP                01
-     C*
-     C**  Check if record deleted
-     C*
-     C           *IN01     IFEQ '0'
-     C           RECI      ANDNE'D'
-     C                     MOVE '1'       *IN01
-     C                     END
-     C*
-     C**  If no record found  or deleted record
-     C**  then it is a database error
-     C*
-     C           *IN01     IFEQ '1'
-     C           *LOCK     IN   LDA                                       S01117
-     C                     MOVELIKEY      DBKEY            *****************
-     C                     MOVE 'INVTP'   DBFILE           ** DB ERROR 03 **
-     C                     Z-ADD03        DBASE            *****************
-     C                     OUT  LDA                                       S01117
-     C                     EXSR *PSSR                                     S01117
-     C                     SETON                       U7U8
-     C                     GOTO EDREF
-     C                     END
-     C*
-     C**  Check if one of depot custs on INVTP is same as Depot input
-     C**  enquiry depot -
-     C**     if so output corresponding depot ref from SECTYD
-     C*
-     C***********          MOVE *BLANKS   SDREF   9                       S01176
-     C                     MOVE *BLANKS   SDREF  12                       S01176
-     C           DDPT      IFEQ SDC1
-     C***********          MOVELD1SR      SDREF                           S01176
-     C                     MOVELDASR      SDREF                           S01176
-     C                     GOTO EDREF
-     C                     END
-     C           DDPT      IFEQ SDC2
-     C***********          MOVELD2SR      SDREF                           S01176
-     C                     MOVELDCSR      SDREF                           S01176
-     C                     GOTO EDREF
-     C                     END
-     C           DDPT      IFEQ SDC3
-     C***********          MOVELD3SR      SDREF                           S01176
-     C                     MOVELDDSR      SDREF                           S01176
-     C                     GOTO EDREF
-     C                     END
-     C*
-     C**  Check if one of the depot custs on INVTP is Euroclear,
-     C****Cedel*or*Kassenverein*&*depot*input*is*same******************   CSE022
-      ** or Cedel and depot input is same                                 CSE022
-     C**  (by reading CLINTSE for each depot cust)
-     C**     if so   -  output corresponding depot ref from SECTYD
-     C**                 (if it is non-blank)
-     C**             - if corresponding depot ref is blank output
-     C**               ref. from SECTYD according to STC ind
-     C*
-     C********** SDC1      IFNE *ZEROS                                                        CSD027
-     C           SDC1      IFNE *BLANKS                                                       CSD027
-     C           SDC1      ANDNE'000000'                                                    BUG11630
-     C                     MOVE SDC1      CLKY
-     C                     EXSR CLICHN
-     C           *INU7     IFEQ '1'
-     C                     GOTO EDREF
-     C                     END
-     C*
-     C           C1DI      IFEQ 'E'
-     C           C1DI      OREQ 'C'
-     C********** C1DI      OREQ 'K'                                       CSE022
-     C           C1DI      IFEQ SVC1DI
-     C***********D1SR      IFNE *BLANKS                                   S01176
-     C***********          MOVELD1SR      SDREF                           S01176
-     C           DASR      IFNE *BLANKS                                   S01176
-     C                     MOVELDASR      SDREF                           S01176
-     C                     GOTO EDREF
-     C                     ELSE
-     C           STC1      IFEQ 'S'
-     C                     MOVELSREF      SDREF
-     C                     GOTO EDREF
-     C                     ELSE
-     C           STC1      IFEQ 'T'
-     C***********          MOVELTVRF      SDREF                           S01176
-     C                     MOVELT2RF      SDREF                           S01176
-     C                     GOTO EDREF
-     C                     ELSE
-     C           STC1      IFEQ 'C'
-     C                     MOVELCSPN      SDREF
-     C                     GOTO EDREF
-     C                     END
-     C                     END
-     C                     END
-     C                     END
-     C                     END
-     C                     END
-     C                     END
-     C**
-     C********** SDC2      IFNE *ZEROS                                                        CSD027
-     C           SDC2      IFNE *BLANKS                                                       CSD027
-     C           SDC2      ANDNE'000000'                                                    BUG11630
-     C                     MOVE SDC2      CLKY
-     C                     EXSR CLICHN
-     C           *INU7     IFEQ '1'
-     C                     GOTO EDREF
-     C                     END
-     C*
-     C           C1DI      IFEQ 'E'
-     C           C1DI      OREQ 'C'
-     C********** C1DI      OREQ 'K'                                       CSE022
-     C           C1DI      IFEQ SVC1DI
-     C***********D2SR      IFNE *BLANKS                                   S01176
-     C***********          MOVELD2SR      SDREF                           S01176
-     C           DCSR      IFNE *BLANKS                                   S01176
-     C                     MOVELDCSR      SDREF                           S01176
-     C                     GOTO EDREF
-     C                     ELSE
-     C           STC2      IFEQ 'S'
-     C                     MOVELSREF      SDREF
-     C                     GOTO EDREF
-     C                     ELSE
-     C           STC2      IFEQ 'T'
-     C***********          MOVELTVRF      SDREF                           S01176
-     C                     MOVELT2RF      SDREF                           S01176
-     C                     GOTO EDREF
-     C                     ELSE
-     C           STC2      IFEQ 'C'
-     C                     MOVELCSPN      SDREF
-     C                     GOTO EDREF
-     C                     END
-     C                     END
-     C                     END
-     C                     END
-     C                     END
-     C                     END
-     C                     END
-     C**
-     C********** SDC3      IFNE *ZEROS                                                        CSD027
-     C           SDC3      IFNE *BLANKS                                                       CSD027
-     C           SDC3      ANDNE'000000'                                                    BUG11630
-     C                     MOVE SDC3      CLKY
-     C                     EXSR CLICHN
-     C           *INU7     IFEQ '1'
-     C                     GOTO EDREF
-     C                     END
-     C*
-     C           C1DI      IFEQ 'E'
-     C           C1DI      OREQ 'C'
-     C********** C1DI      OREQ 'K'                                       CSE022
-     C           C1DI      IFEQ SVC1DI
-     C***********D3SR      IFNE *BLANKS                                   S01176
-     C***********          MOVELD3SR      SDREF                           S01176
-     C           DDSR      IFNE *BLANKS                                   S01176
-     C                     MOVELDDSR      SDREF                           S01176
-     C                     GOTO EDREF
-     C                     ELSE
-     C           STC3      IFEQ 'S'
-     C                     MOVELSREF      SDREF
-     C                     GOTO EDREF
-     C                     ELSE
-     C           STC3      IFEQ 'T'
-     C***********          MOVELTVRF      SDREF                           S01176
-     C                     MOVELT2RF      SDREF                           S01176
-     C                     GOTO EDREF
-     C                     ELSE
-     C           STC3      IFEQ 'C'
-     C                     MOVELCSPN      SDREF
-     C                     GOTO EDREF
-     C                     END
-     C                     END
-     C                     END
-     C                     END
-     C                     END
-     C                     END
-     C                     END
-     C*
-     C           EDREF     TAG                             ** EDREF TAG **
-      *
-     C                     ENDSR
-      *
-      ******************************************************************
-      /EJECT
-      ******************************************************************
-      *
-      *  AUDIT  - Subroutine to Output Audit Report.
-      *
-      ******************************************************************
-      *
-     C           AUDIT     BEGSR
-     C*
-     C**  IF NO DATABASE ERRORS - READ DPOSNA AUDIT RECORD
-     C*
-     C           *INU7     IFEQ '0'
-     C*
-     C                     READ DPOSNAF                  99
-     C*
-     C**  IF NOT FOUND - ERROR
-     C*
-     C           *IN99     IFEQ '1'
-     C           *LOCK     IN   LDA                                       S01117
-     C***********          MOVE 'DPOSN'   DBFILE           ***************E21519
-     C                     MOVE 'DPOSNL'  DBFILE           ***************E21519
-     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 07 *
-     C                     Z-ADD7         DBASE            ***************
-     C                     OUT  LDA                                       S01117
-     C                     EXSR *PSSR                                     S01117
-     C                     SETON                     99U7U8
-     C                     END
-     C*
-     C                     END
-     C*
-     C                     WRITEHEADAU
-     C           *INU7     IFEQ '1'
-     C                     WRITEERROR
-     C                     ELSE
-     C*
-     C**  CHECK FOR ANY RECORDS PRINTED
-     C*
-     C           PREC      IFEQ 0
-     C                     WRITENONE
-     C                     ELSE
-     C                     WRITECONTROL
-     C                     END
-     C*
-     C                     END
-     C***********                                                         E29170
-     C***********          WRITETRAILAU                                   E29170
-     C*
-     C                     ENDSR
-      *
-      ******************************************************************
-      /EJECT
-      ******************************************************************
-      *
-      *  TABCHN - Subroutine to Chain to TABLETR.
-      *
-      ******************************************************************
-      *
-     C           TABCHN    BEGSR
-     C*
-     C                     MOVE *BLANK    TKEY
-     C**********           MOVEL'10'      TKEY                                               BUG7985
-     C***********          MOVE DSBR      TKEY                            S01117
-     C**********           MOVE DSBA      TKEY                                        S01117 BUG7985
-     C********** TABKEY    CHAINTABLETRF             99                                      BUG7985
-     C********** *IN99     IFEQ '1'                                                          BUG7985
-     C********** RECI      ORNE 'D'                                                          BUG7985
-     C                     CALL 'AOBRCHR1'                                                   BUG7985
-     C                     PARM *BLANKS   PRTCD   7                                          BUG7985
-     C                     PARM '*KEY   ' POPTN   7                                          BUG7985
-     C                     PARM DSBA      PBRCH   3                                          BUG7985
-     C           SDBRCH    PARM SDBRCH    DSSDY                                              BUG7985
-      *                                                                                      BUG7985
-     C           PRTCD     IFNE *BLANKS                                                      BUG7985
-     C           *LOCK     IN   LDA                                       S01117
-     C**********           MOVE 'TABLE'   DBFILE           ***************                   BUG7985
-     C**********           MOVELTKEY      DBKEY            * DB ERROR 05 *                   BUG7985
-     C                     MOVE 'SDBRCHPD'DBFILE                                             BUG7985
-     C                     MOVELDSBA      DBKEY                                              BUG7985
-     C                     Z-ADD5         DBASE            ***************
-     C                     OUT  LDA                                       S01117
-     C                     EXSR *PSSR                                     S01117
-     C                     SETON                     U7U8
-     C                     END
-     C*
-     C                     ENDSR
-      *
-      ******************************************************************
-      /SPACE 3
-      ******************************************************************
-      *
-      *  SECCHN - Subroutine to Chain to Securities File.
-      *
-      ******************************************************************
-      *
-     C           SECCHN    BEGSR
-     C*
-     C           SECKEY    CHAINSECTY                99
-     C           *IN99     IFEQ '1'
-     C           RECI      OREQ '*'
-     C           *LOCK     IN   LDA                                       S01117
-     C                     MOVE 'SECTY'   DBFILE           ***************
-     C                     MOVELDSSC      DBKEY            * DB ERROR 06 *
-     C                     Z-ADD6         DBASE            ***************
-     C                     OUT  LDA                                       S01117
-     C                     EXSR *PSSR                                     S01117
-     C                     SETON                     U7U8
-     C                     END
-     C*
-     C                     ENDSR
-      *
-      ******************************************************************
-      /SPACE 3
-      ******************************************************************
-      *
-      *  CLBCHN - Subroutine to Chain to Customer File.
-      *
-      ******************************************************************
-      *
-     C           CLBCHN    BEGSR
-     C*
-     C           CLIKEY    CHAINCLINTCBF             99
-     C           *IN99     IFEQ '1'
-     C***********RECI      ORNE 'D'                                       E21519
-     C           *LOCK     IN   LDA                                       S01117
-     C                     MOVE 'CLINT'   DBFILE           ***************
-     C***********          MOVELCLKY      KEY7    7        **DB*ERROR*04**E20651
-     C                     MOVELCLKY      KEY7    7        * DB ERROR 08 *E20651
-     C                     MOVE 'B'       KEY7             ***************
-     C                     MOVELKEY7      DBKEY
-     C***********          Z-ADD4         DBASE                           E20651
-     C                     Z-ADD8         DBASE                           E20651
-     C                     OUT  LDA                                       S01117
-     C                     EXSR *PSSR                                     S01117
-     C                     SETON                     U7U8
-     C                     END
-     C*
-     C                     ENDSR
-      *
-      ******************************************************************
-      /SPACE 3
-      ******************************************************************
-      *
-      *  CLICHN - Subroutine to Chain to Client File.
-      *
-      ******************************************************************
-      *
-     C           CLICHN    BEGSR
-     C*
-     C           CLIKEY    CHAINCLINTSEF             99
-     C           *IN99     IFEQ '1'
-     C***********RECI      ORNE 'D'                                       E21519
-     C           *LOCK     IN   LDA                                       S01117
-     C                     MOVE 'CLINT'   DBFILE           ***************
-     C***********          MOVELCLKY      KEY7             **DB*ERROR*04**E20651
-     C                     MOVELCLKY      KEY7             * DB ERROR 09 *E20651
-     C                     MOVE '1'       KEY7             ***************
-     C                     MOVELKEY7      DBKEY
-     C***********          Z-ADD4         DBASE                           E20651
-     C                     Z-ADD9         DBASE                           E20651
-     C                     OUT  LDA                                       S01117
-     C                     EXSR *PSSR                                     S01117
-     C                     SETON                     U7U8
-     C                     END
-     C*
-     C                     ENDSR
-      *
-      *****************************************************************   S01117
-      /EJECT                                                              S01117
-      *****************************************************************   S01117
-      *                                                               *   S01117
-      *  *PSSR  - Error control subroutine                            *   S01117
-      *                                                               *   S01117
-      *****************************************************************   S01117
-      *                                                                   S01117
-     C           *PSSR     BEGSR                           ** *PSSR **    S01117
-     C**                                                                  S01117
-     C           @RUN      IFEQ *BLANKS                                   S01117
-     C                     MOVE 'Y'       @RUN    1                       S01117
-     C                     DUMP                                           S01117
-     C                     END                                            S01117
-     C**                                                                  S01117
-     C                     ENDSR                                          S01117
-      *                                                                   S01117
-      ******************************************************************
-     C/EJECT                                                              E29170
-     C********************************************************************E29170
-     C*                                                                   E29170
-     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF          E29170
-     C*                                                                   E29170
-     C********************************************************************E29170
-     C*                                                                   E29170
-     C           RCFP1     BEGSR                            ** RCFP1 **   E29170
-     C*                                                                   E29170
-     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    E29170
-     C*                                                                   E29170
-     C                     Z-ADDSFNUM     ZSNUM   60                      E29170
-     C**                                                                  E29170
-     C                     CALL 'ZSFILE'                                  E29170
-     C                     PARM           SEQ     5                       E29170
-     C                     PARM DSBA      SENTY   3                       E29170
-     C                     PARM           SFILE                           E29170
-     C                     PARM           ZSNUM                           E29170
-     C                     PARM           ZSERR   1                       E29170
-     C*                                                                   E29170
-     C           ZSERR     IFEQ 'Y'                                       E29170
-     C*                                                                   E29170
-     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
-     C*                                                                   E29170
-     C                     SETON                     U7U8LR               E29170
-     C                     RETRN                                          E29170
-     C                     END                                            E29170
-     C*                                                                   E29170
-     C                     ENDSR                                          E29170
-     C*                                                                   E29170
-     C********************************************************************E29170
-     C/EJECT                                                              E29170
-     C********************************************************************E29170
-     C*                                                                   E29170
-     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF          E29170
-     C*                                                                   E29170
-     C********************************************************************E29170
-     C*                                                                   E29170
-     C           RCFAU     BEGSR                            ** RCFAU **   E29170
-     C*                                                                   E29170
-     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF                     E29170
-     C*                                                                   E29170
-     C                     Z-ADDSFNUMU    ZSNUMU  60                      E29170
-     C**                                                                  E29170
-     C                     CALL 'ZSFILE'                                  E29170
-     C                     PARM           SEQ                             E29170
-     C                     PARM *BLANKS   SENTY                           E29170
-     C                     PARM           SFILEU                          E29170
-     C                     PARM           ZSNUMU                          E29170
-     C                     PARM *BLANK    ZSERR                           E29170
-     C*                                                                   E29170
-     C           ZSERR     IFEQ 'Y'                                       E29170
-     C*                                                                   E29170
-     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
-     C*                                                                   E29170
-     C                     SETON                     U7U8LR               E29170
-     C                     RETRN                                          E29170
-     C                     END                                            E29170
-     C*                                                                   E29170
-     C                     ENDSR                                          E29170
-     C*                                                                   E29170
-     C*****************************************************************   E29170
-      /EJECT
-     C/COPY ZSRSRC,ZDATE2Z4
-      /EJECT
-     C/COPY ZSRSRC,ZICDSEZ1
-      /EJECT
-     C/COPY ZSRSRC,ZSDESCZ3
-      /EJECT
-     C/COPY ZSRSRC,ZSEDITZ3
-      /EJECT
-     C/COPY ZSRSRC,ZSYSTMZ1
-      /EJECT
-      ***
-**  CPY@
-(c) Finastra International Limited 2001
-**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
-0366073110961461
-**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
-000031059090120151181212243273304334365
-**   ZMNM - MONTHS SHORT NAMES
-JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+000100200529     H        1
+000200200529      *****************************************************************
+000300200529/*STD *  RPGBASE                                                      *
+000400200529/*EXI *  TEXT('Midas SE Security Balances at Depot')
+000500200529     F*****************************************************************
+000600200529     F*                                                               *
+000700200529     F*  Midas - Securities Trading Module                        *
+000800200529     F*                                                               *
+000900200529     F*  SE1130 - SECURITY BALANCES AT DEPOT                          *
+001000200529     F*                                                               *
+001100200529     F*  Function: To print Trade, Value & Settlement date balances,  *
+001200200529     F*   (COB)    and depot reference, for each security held at     *
+001300200529     F*            each depot.                                        *
+001400200529     F*                                                               *
+001500200529     F*  Called by: SEC0810 - Securities Balances at Depot            *
+001600200529     F*                                                               *
+001700200529     F*            Frequency:                                         *
+001800200529     F*            - On request during COB                            *
+001900200529     F*                                                               *
+002000200529      *  (c) Finastra International Limited 2001                      *
+002100200529      *                                                               *
+002200200604      *  Last Amend No. 249492A            Date 22May20               *
+002300200604      *  PREV Amend No. 249492             Date 22May20               *
+002400200604      *                 MD053007           Date 30Oct19               *
+002500200529      *                 MD046248           Date 27Oct17               *
+002600200529      * Bank Fusion Midas 1.4 Base -----------------------------------*
+002700200529      * Midas Plus 1.4 Base 04 ---------------------------------------*
+002800200529      * Midas Plus 1.4 Base ------------------------------------------*
+002900200529      * Midas Plus 1.3 ----------- Base ------------------------------*
+003000200529      *                 BUG11630           Date 28Jun06               *
+003100200529      *                 CSD027             Date 09Dec05               *
+003200200529      *                 CSE071             Date 19Jul05               *
+003300200529      *                 BUG7985            Date 07Jul05               *
+003400200529      *                 208241             Date 22Aug02               *
+003500200529      *                 208281             Date 29Mar01               *
+003600200529      *                 CSE037             Date 29Apr02               *
+003700200529      *                 CAS006             Date 21Jan03               *
+003800200529      * Midas Release 4.01.03 ----------------------------------------*
+003900200529      *                 209880             Date 10Jan03               *
+004000200529      * Midas Release 4 --------------- Base -------------------------*
+004100200529      *                 CSE022             Date 29Mar01               *
+004200200529      *                 191697             Date 05Jun01               *
+004300200529      *                 178775             Date 30Apr01               *
+004400200529      *                 127566             Date 09May01               *
+004500200529      * Midas DBA 3.03 -----------------------------------------------*
+004600200529      *                 077441             Date 20Apr00               *
+004700200529      *                 131723             Date 08Nov99               *
+004800200529      * Midas DBA 3.00 ---------------- Base -------------------------*
+004900200529     F*                 034141             DATE 01MAY96               *
+005000200529     F*                 S01502             DATE 08JUL94               *
+005100200529     F*                 S01408             DATE 19MAY94               *
+005200200529     F*                 052254             DATE 10JAN94               *
+005300200529     F*                 S01401             DATE 16JUN93               *
+005400200529     F*                 S01397             DATE 10SEP92               *
+005500200529     F*                 E37493             DATE 02APR92               *
+005600200529     F*                 E37680             DATE 26MAR92               *
+005700200529     F*                 E29170             DATE 11OCT11               *
+005800200529     F*                 S01117             DATE 03JUN91               *
+005900200529     F*                 S01269             DATE 01AUG90               *
+006000200529     F*                 E21575             DATE 06APR90               *
+006100200529     F*                 E21519             DATE 06APR90               *
+006200200529     F*                 E20651             DATE 30JAN90               *
+006300200529     F*                 E17166             DATE 04/05/88              *
+006400200529     F*                 S01176             DATE 15/08/88              *
+006500200529     F*                                                               *
+006600200529     F*---------------------------------------------------------------*
+006700200529      *                                                               *
+006800200529      *  249492A - SE1130P1 Report Issue, increase printed lines      *
+006900200529      *  249492 - SE1130P1 Report Issue and Printer Overflow Problem  *
+007000200529      *  MD053007 - REPO Balance is truncated in report. Recompiled   *
+007100200529      *             due to changes in SE1130P1 printer file.          *
+007200200529      *  MD046248 - Finastra Rebranding                               *
+007300200529      *  BUG11630 - SEC0810 failed                                    *
+007400200529      *  CSD027 - Conversion Of Customer Number to Alpha              *
+007500200529      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+007600200529      *  BUG7985- Several components failed due to accessing TABLETR  *
+007700200529      *  208241 - Recompiled over changed /CPY ZSDESCZ3.              *
+007800200529      *  208281 - Printer Overflow problem when writing detail  file. *
+007900200529      *  CSE037 - Bond Pricing - 3 Decimal Places in Trades Input.    *
+008000200529      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+008100200529      *  209880 - Depot reference is truncated                        *
+008200200529      *           Recompiled due to changes in printer file SE1130P1. *
+008300200529      *  CSE022 - Depository Definition Enhancement                   *
+008400200529      *  191697 - Printer Overflow problem when writing trailer file. *
+008500200529      *  178775 - Recompiled due to changes in printer file SE1130P1. *
+008600200529      *  127566 - Recompiled over changed ZSDESCZ3                    *
+008700200529     F*  077441 - Increase the line count for the report so that      *
+008800200529     F*           more items would be included in a page.             *
+008900200529     F*  131723 - Repo position not being shown in this report.       *
+009000200529     F*           Include repo position in this report if not 0.      *
+009100200529     A*  034141 - NOMINAL CURRENCY OF THE SECURITY IS NOT REPORTED.   *  *
+009200200529     F*           PGM RECOMPILED OVER AMENDMENT IN SE1130P1.          *
+009300200529     F*  S01502 - BLI Telekurs Processing.  Recompiled due to change  *
+009400200529     F*           in length of SESTAT, 133 long.                      *
+009500200529     F*  S01408 - Core hook SE1130CPLH added                          *
+009600200529     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+009700200529     F*           to 10,9                                             *
+009800200529     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
+009900200529     F*          - Recompiled due to changes to files.                *
+010000200529     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+010100200529     F*          - Recompiled due to changes to files.                *
+010200200529     F*  E37493 - Recompiled over changed printer file                *
+010300200529     F*  E37680 - In single branch mode no details are reported as    *
+010400200529     F*           branch is blank                                     *
+010500200529     F*  E29170 - Report Control Facility changes                     *
+010600200529     F*  S01117 - Multi-Branching                                     *
+010700200529     F*  S01269 - Trade authorisation: recompile over changed file    *
+010800200529     F*           TABSE                                               *
+010900200529     F*  E21575 - Securities that Matured in a prior month should not *   E21575
+011000200529     F*           appear on this report.                              *   E21575
+011100200529     F*  E21519 - E17166 is correct, but comments and Database Error  *   E21519
+011200200529     F*           need to be updated with the correct File name.      *   E21519
+011300200529     F*     Also: DB error due to deletion of Customer which had been *   E21519
+011400200529     F*           designated as a depot on an investment type record. *   E21519
+011500200529     F*  E20651 - DB Error Numbers used in more than one place.       *   E20651
+011600200529     F*           New Error Numbers as follows:                       *   E20651
+011700200529     F*           DB ERROR 04 -> 08                                   *   E20651
+011800200529     F*           DB ERROR 04 -> 09                                   *   E20651
+011900200529     F*  E17166 - New Logical File for Branch, Depot, Secty sequence. *   E17166
+012000200529     F*  S01176 - RELEASE 3.1 MODIFICATIONS                           *   S01176
+012100200529     F*                                                               *
+012200200529     F*****************************************************************
+012300200529     F*                                                               *
+012400200529     F*  C R E A T I O N     P A R A M E T E R S                      *
+012500200529     F*                                                               *
+012600200529     F*                                                               *
+012700200529     F*****************************************************************
+012800200529      *
+012900200529     F***DPOSN***IF**E***        K        DISK                            E17166
+013000200529     FDPOSNL  IF  E           K        DISK                               E17166
+013100200529     FDPOSNA  IF  E                    DISK
+013200200529     FCLINT   IF  E           K        DISK
+013300200529     F            CLINTC1F                          KIGNORE
+013400200529     F            CLINTCAF                          KIGNORE
+013500200529     F            CLINTCCF                          KIGNORE
+013600200529     FINVTP   IF  E           K        DISK
+013700200529     FSECTY   IF  E           K        DISK
+013800200529     FSE1130P1O   E                    PRINTER                        UC
+013900200529     F                                              KINFDS SPOOL          E29170
+014000200529     FSE1130AUO   E                    PRINTER
+014100200529     F                                              KINFDS SPOOLU         E29170
+014200200529     FTABSE   IF  E           K        DISK
+014300200529     F* ICD 1     TABTB10F                          KIGNORE
+014400200529     F            TABTB11F                          KIGNORE
+014500200529     F* ICD SE    TABTB36F                          KIGNORE
+014600200529     F            TABTB40F                          KIGNORE
+014700200529     F            TABTG10F                          KIGNORE
+014800200529     F            TABTG20F                          KIGNORE
+014900200529     F            TABLETHF                          KIGNORE
+015000200529     F*********** TABLETJF                          KIGNORE               S01117
+015100200529     F            TABLETLF                          KIGNORE
+015200200529     F* BRANCH    TABLETRF                          KIGNORE
+015300200529     F            TABLETXF                          KIGNORE
+015400200529     F            TABLET2F                          KIGNORE
+015500200529     F            TABLET3F                          KIGNORE
+015600200529     F            TABLET5F                          KIGNORE
+015700200529     F            TABTE10F                          KIGNORE
+015800200529     F            TABLETNF                          KIGNORE
+015900200529     F            TABLETKF                          KIGNORE
+016000200529     F            TABLETPF                          KIGNORE
+016100200529      /EJECT
+016200200529     F*****************************************************************
+016300200529     F*                                                               *
+016400200529     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+016500200529     F*                                                               *
+016600200529     F*   01  - ERROR ON CHAIN INVTP AND CLINT                        *
+016700200529     F*   37  - MULTIBRANCHING ON                                     *   E29170
+016800200529     F*   50  - DIFFERENCE BETWEEN CALC AND FILE TOTALS OF RECORDS    *
+016900200529     F****89**-*END*OF*FILE*ON*DPOSN***********************************   E21519
+017000200529     F*   89  - END OF FILE ON DPOSNL                                 *   E21519
+017100200529     F*                                                               *
+017200200529     F* 90-99 - Used in Standard Subroutines.                         *
+017300200529     F*                                                               *
+017400200529     F*   U7  - DATABASE ERROR                                        *
+017500200529     F*   U8  - DATABASE ERROR                                        *
+017600200529     F*                                                               *
+017700200529     F*****************************************************************
+017800200529      /EJECT
+017900200529     F*****************************************************************
+018000200529     F*                                                               *
+018100200529     F*  S U B R O U T I N E   I N D E X                              *
+018200200529     F*                                                               *
+018300200529     F*  FIRST  - OBTAINS ICD INFO                                    *
+018400200529     F*  PR01   - CONTROLS PRINTING OF REPORT                         *
+018500200529     F*  AUDIT  - OUTPUTS CONTROL REPORT                              *
+018600200529     F*  DREF   - OBTAINS DEPOT REFERENCE                             *
+018700200529     F*  TABCHN - CHAINS TO TABLETRF                                  *
+018800200529     F*  SECCHN - CHAINS TO SECURITIES FILE                           *
+018900200529     F*  *PSSR  - Error handling                                      *   S01117
+019000200529     F*  RCFP1  - SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF      *   E29170
+019100200529     F*  RCFAU  - SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF      *   E29170
+019200200529     F*                                                               *
+019300200529     F*  ZDATE2 - DAYNO - DATE conversion                             *
+019400200529     F*  ZICDSE - ACCESSES ICD FOR SE                                 *
+019500200529     F*  ZSDESC - FORMAT SECURITY SHORT DESCRIPTION                   *
+019600200529     F*  ZSEDIT - EDITS NUMERIC FIELDS WITH DECIMAL PLACES AND COMMAS *
+019700200529     F*  ZSYSTM - CHAINS TO ICD TABTB10                               *
+019800200529     F*                                                               *
+019900200529     F*****************************************************************
+020000200529      /EJECT
+020100200529     E                    CPY@    1   1 80
+020200200529     E/COPY ZSRSRC,ZSEDITZ1
+020300200529     E/COPY ZSRSRC,ZDATE2Z1
+020400200529     E/COPY ZSRSRC,ZSDESCZ1
+020500200529      /EJECT
+020600200529      *                                                                                       CSE037
+020700200529     IINVTPDF                                                                                 CSE037
+020800200529     I              SFLG                            ISFLG                                     CSE037
+020900200529      *                                                                                       CSE037
+021000200529     I*
+021100200529     I* DATA STRUCTURE FOR TABLE FILE KEY
+021200200529     I*
+021300200529     I            DS
+021400200529     I                                        1  12 TKEY
+021500200529     I                                        1   20RECT
+021600200529     I                                        3  10 ZZ008
+021700200529     I                                       11  120RCDE
+021800200529     I*
+021900200529     I* DATA STRUCTURE FOR INVESTMENTS FILE
+022000200529     I*
+022100200529     I            DS
+022200200529     I                                        1   6 IKEY
+022300200529     I                                        1   3 NMCY
+022400200529     I                                        4   6 SITP
+022500200529     I*
+022600200529     I* DATA STRUCTURE FOR ZSEDIT
+022700200529     I*
+022800200529     I/COPY ZSRSRC,ZSEDITZ2
+022900200529     I/COPY ZSRSRC,ZSDESCZ2
+023000200529     I*
+023100200529     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+023200200529     ICPYR@#      DS
+023300200529     I                                        1  80 CPY@
+023400200529     I                                        1  20 CPY@##
+023500200529     I*
+023600200529     I*LDA*******UDS                            256                       S01117
+023700200529     I***********                           134 177 DBLOT                 S01117
+023800200529     I***********                           134 138 DBFILE                S01117
+023900200529     I***********                           139 167 DBKEY                 S01117
+024000200529     I***********                           168 175 DBPGM                 S01117
+024100200529     I***********                           176 1770DBASE                 S01117
+024200200529     ILDA         DS                            256                       S01117
+024300200529     I                                      134 183 DBLOT                 S01117
+024400200529     I                                      134 141 DBFILE                S01117
+024500200529     I                                      142 170 DBKEY                 S01117
+024600200529     I                                      171 180 DBPGM                 S01117
+024700200529     I                                      181 1830DBASE                 S01117
+024800200529     I*                                                                   E29170
+024900200529     ISPOOL       DS                                                      E29170
+025000200529     I*                                                                   E29170
+025100200529     I**  DS FOR P1 SPOOL FILE NAME                                       E29170
+025200200529     I*                                                                   E29170
+025300200529     I                                       83  92 SFILE                 E29170
+025400200529     I                                    B 123 1240SFNUM                 E29170
+025500200529     I**                                                                  E29170
+025600200529     ISPOOLU      DS                                                      E29170
+025700200529     I                                       83  92 SFILEU                E29170
+025800200529     I                                    B 123 1240SFNUMU                E29170
+025900200529     IRUNDT       DS                                                      E29170
+026000200529     I                                        1   7 RUNA                  E29170
+026100200529     I                                    P   8  100RUND                  E29170
+026200200529     I                                       11  11 SSF                   E29170
+026300200529     I                                       12  12 DATF                  E29170
+026400200529     I                                       13  13 MBIN                  E29170
+026500200529     I*                                                                   E29170
+026600200529     I**  DATA STRUCTURE FOR RUN DATE DETAILS                             E29170
+026700200529     I*                                                                   E29170
+026800200529      *                                                                   E21575
+026900200529      ***  SESTAT Data Structure (to get End of Last Month Date).         E21575
+027000200529      *                                                                   E21575
+027100200529     ISDBRCH    E DSSDBRCHPD                                                                 BUG7985
+027200200529     I              A8BRNM                          BRNM                                     BUG7985
+027300200529     IDSSDY     E DSDSSDY                                                                    BUG7985
+027400200529     IDTAARA    E DSSESTAT                                                E21575
+027500200529     C/EJECT
+027600200529     C*================================================================
+027700200529     C*  P R O G R A M     S T A R T
+027800200529     C*================================================================
+027900200529     C*                                                                   S01117
+028000200529     C           *ENTRY    PLIST                                          S01117
+028100200529     C                     PARM           SEQ     5                       S01117
+028200200529     C                     PARM           ENT     3                       S01117
+028300200529     C*
+028400200529     C**  KEYLISTS FOR CHAINING TO FILES
+028500200529     C*
+028600200529     C*
+028700200529     C**  SECURITIES FILE
+028800200529     C*
+028900200529     C           SECKEY    KLIST
+029000200529     C                     KFLD           DSSC
+029100200529     C*
+029200200529     C**  INVESTMENT FILE
+029300200529     C*
+029400200529     C           INVKEY    KLIST
+029500200529     C                     KFLD           NMCY
+029600200529     C                     KFLD           SITP
+029700200529     C*
+029800200529     C**  CLIENT FILE
+029900200529     C*
+030000200529     C           CLIKEY    KLIST
+030100200529     C                     KFLD           CLKY
+030200200529     C*
+030300200529     C**  TABLE FILE
+030400200529     C*
+030500200529     C           TABKEY    KLIST
+030600200529     C                     KFLD           TKEY
+030700200529     C*
+030800200529     C**  ACCESS ICD INFORMATION
+030900200529     C*
+031000200529     C           *NAMVAR   DEFN           LDA                             S01117
+031100200529     C           *LOCK     IN   LDA                                       S01117
+031200200529     C                     MOVE *BLANK    DBLOT
+031300200529     C                     MOVE 'SE1130  'DBPGM
+031400200529     C                     OUT  LDA                                       S01117
+031500200529     C*                                                                   E29170
+031600200529     C** IN THE DATAAREA RUNDAT                                           E29170
+031700200529     C*                                                                   E29170
+031800200529     C           *NAMVAR   DEFN RUNDAT    RUNDT                           E29170
+031900200529     C                     IN   RUNDT                                     E29170
+032000200529     C*                                                                   E29170
+032100200529     C**  TEST FOR MULTIBRANCHING                                         E29170
+032200200529     C*                                                                   E29170
+032300200529     C           MBIN      IFEQ 'Y'                                       E29170
+032400200529     C                     SETON                     37                   E29170
+032500200529     C                     END                                            E29170
+032600200529     C*                                                                   E29170
+032700200529     C** RCF Processing for Audit File                                    E29170
+032800200529     C*                                                                   E29170
+032900200529     C                     EXSR RCFAU                                     E29170
+033000200529     C*
+033100200529     C**  OBTAIN ICD INFO
+033200200529     C*
+033300200529     C                     EXSR FIRST
+033400200529     C*
+033500200529     C**  CHECK FOR DATABASE ERRORS
+033600200529     C*
+033700200529     C           *INU7     IFEQ '1'
+033800200529     C                     GOTO EAUDIT
+033900200529     C                     END
+034000200529     C*
+034100200529     C**  CLEAR WORK FIELDS
+034200200529     C*
+034300200529     C           *LIKE     DEFN DSSC      WDSSC
+034400200529     C************LIKE     DEFN DSBR      WDSBR                           S01117
+034500200529     C           *LIKE     DEFN DSBA      WDSBA                           S01117
+034600200529     C           *LIKE     DEFN DDPT      WDDPT
+034700200529     C                     Z-ADD0         LCNT    20
+034800200529     C                     Z-ADD0         PREC    50
+034900200529     C                     Z-ADD0         IREC    50
+035000200529     C***********          MOVE *ZEROS    WDSBR                           S01117
+035100200529     C                     MOVE *BLANKS   WDSBA                           S01117
+035200200529     C                     MOVE *BLANKS   WDSSC
+035300200529     C**********           MOVE *ZEROS    WDDPT                                               CSD027
+035400200529     C                     MOVE *BLANKS   WDDPT                                               CSD027
+035500200529     C*
+035600200529     C**LOOP*ROUND*PROCESSING*FOR*EACH*RECORD*READ*FROM*DPOSN**********   E21519
+035700200529     C*
+035800200529     C**  LOOP ROUND PROCESSING FOR EACH RECORD READ FROM DPOSNL          E21519
+035900200529     C*
+036000200529     C           *IN89     DOUEQ'1'
+036100200529     C           *INU7     OREQ '1'
+036200200529     C*
+036300200529     C***********          READ DPOSN                    89               E17166
+036400200529     C                     READ DPOSNL                   89               E17166
+036500200529     C*                                                                   E29170
+036600200529     C** IF BRANCH READ IS NOT THE SAME AS THE SPECIFIC BRANCH            E29170
+036700200529     C** REQUESTED THEN STOP PROCESSING                                   E29170
+036800200529     C*                                                                   E29170
+036900200529     C           *IN89     IFEQ '0'                                       E29170
+037000200529     C           MBIN      ANDEQ'Y'                                       E37680
+037100200529     C           ENT       ANDNE'ALL'                                     E29170
+037200200529     C           ENT       ANDNEDSBA                                      E29170
+037300200529     C                     SETON                     89                   E29170
+037400200529     C                     END                                            E29170
+037500200529     C*
+037600200529     C**  AT END OF FILE - PRINT TRAILER IF DETAILS HAVE BEEN PRINTED
+037700200529     C**  AND EXIT
+037800200529     C*
+037900200529     C           *IN89     IFEQ '1'
+038000200529     C*
+038100200529     C           PREC      IFNE 0
+038200200529      ** Check if need to write header before writing trailer to prevent  191697
+038300200529      ** printer over flow.                                               191697
+038400200529      ** printer over flow.                                               191697
+038500200529     C**********           ADD  3         LCNT                                         191697 249492
+038600200529     C********** LCNT      IFGT 44                                                     191697 249492
+038700200529     C********** LCNT      IFGE 52                                                    249492 249492A
+038800200529     C           LCNT      IFGE 59                                                           249492A
+038900200529     C**********           Z-ADD0         LCNT                                         191697 249492
+039000200529     C                     Z-ADD12        LCNT                                                249492
+039100200529     C                     WRITEHEAD1                                     191697
+039200200529     C                     WRITEHEAD2                                     191697
+039300200529     C                     WRITEHEAD3                                     191697
+039400200529     C                     WRITEHEAD4                                     191697
+039500200529     C                     ENDIF                                          191697
+039600200529     C                     WRITETRAIL
+039700200529     C                     CLOSESE1130P1
+039800200529     C                     END
+039900200529     C                     GOTO ENDLP
+040000200529     C*
+040100200529     C                     END
+040200200529     C*
+040300200529     C**  DEPENDING ON RECORD ID AND BALANCES HELD ON FILE
+040400200529     C**   PRINT DETAIL FOR REPORT
+040500200529     C*
+040600200529     C           RECI      IFEQ 'D'
+040700200529     C*
+040800200529     C**  ADD TO COUNT
+040900200529     C*
+041000200529     C                     ADD  1         IREC
+041100200529     C*
+041200200529     C           DSNT      IFNE 0
+041300200529     C           DSNV      ORNE 0
+041400200529     C           DSNS      ORNE 0
+041500200529     C           DSRV      ORNE 0                                         131723
+041600200529     C                     EXSR PR01
+041700200529     C                     END
+041800200529     C*
+041900200529     C                     END
+042000200529     C*
+042100200529     C           ENDLP     TAG
+042200200529     C*
+042300200529     C                     END
+042400200529     C*
+042500200529     C           EAUDIT    TAG
+042600200529     C*
+042700200529     C                     EXSR AUDIT
+042800200529     C*
+042900200529     C*================================================================
+043000200529     C*  P R O G R A M     E N D
+043100200529     C*================================================================
+043200200529     C*
+043300200529     C                     SETON                     LR
+043400200529      *
+043500200529      ******************************************************************
+043600200529      /EJECT
+043700200529      ******************************************************************
+043800200529      *
+043900200529      *  FIRST  - Subroutine to access ICD Information.
+044000200529      *
+044100200529      ******************************************************************
+044200200529      *
+044300200529     C           FIRST     BEGSR                           ** FIRST **
+044400200529     C*
+044500200529     C**  ACCESS ICD
+044600200529     C*
+044700200529     C                     EXSR ZSYSTM
+044800200529     C           *IN99     IFEQ '1'
+044900200529     C                     MOVE '1'       *INU7
+045000200529     C                     MOVE '1'       *INU8
+045100200529     C           *LOCK     IN   LDA                                       S01117
+045200200529     C                     MOVE 'TABLE'   DBFILE           *****************
+045300200529     C                     MOVELZTABKY    DBKEY            ** DB ERROR 01 **
+045400200529     C                     Z-ADD1         DBASE            *****************
+045500200529     C                     OUT  LDA                                       S01117
+045600200529     C                     EXSR *PSSR                                     S01117
+045700200529     C                     ELSE
+045800200529     C*
+045900200529     C**  ACCESS ICDSE
+046000200529     C*
+046100200529     C                     EXSR ZICDSE
+046200200529     C           *INU7     IFEQ '1'
+046300200529     C           *LOCK     IN   LDA                                       S01117
+046400200529     C                     MOVE 'TABLE'   DBFILE           *****************
+046500200529     C                     MOVELTKEY      DBKEY            ** DB ERROR 02 **
+046600200529     C                     Z-ADD2         DBASE            *****************
+046700200529     C                     OUT  LDA                                       S01117
+046800200529     C                     EXSR *PSSR                                     S01117
+046900200529     C                     END
+047000200529     C*
+047100200529     C                     END
+047200200529      *                                                                   E21575
+047300200529      **  Get Data Area SESTAT and move End of Previous Month field       E21575
+047400200529      **  to a numeric field.                                             E21575
+047500200529      *                                                                   E21575
+047600200529     C           *NAMVAR   DEFN SESTAT    DTAARA                          E21575
+047700200529     C                     IN   DTAARA                                    E21575
+047800200529      *                                                                   E21575
+047900200529     C                     MOVE EOPM      EOPMTH  50                      E21575
+048000200529     C/COPY WNCPYSRC,SE1130C001
+048100200529     C*
+048200200529     C                     ENDSR
+048300200529      *
+048400200529      ******************************************************************
+048500200529      /EJECT
+048600200529      ******************************************************************
+048700200529      *
+048800200529      *  PR01   - Subroutine to Print Report.
+048900200529      *           Note: A new Print File is started for each change of
+049000200529      *                 Branch and a new Page on change of Depot.
+049100200529      *
+049200200529      ******************************************************************
+049300200529      *
+049400200529     C           PR01      BEGSR
+049500200529     C*
+049600200529     C**  CHECK FOR CHANGE IN BRANCH - OBTAIN NEW BRANCH NAME
+049700200529     C**  CLOSE AND RE-OPEN PRINT FILE
+049800200529     C*
+049900200529     C***********WDSBR     IFNE DSBR                                      S01117
+050000200529     C           WDSBA     IFNE DSBA                                      S01117
+050100200529     C*
+050200200529     C***********WDSBR     IFNE *ZEROS                                    S01117
+050300200529     C           WDSBA     IFNE *BLANKS                                   S01117
+050400200529      ** Check if need to write header before writing trailer to prevent  191697
+050500200529      ** printer over flow.                                               191697
+050600200529     C**********           ADD  3         LCNT                                         191697 249492
+050700200529     C********** LCNT      IFGT 44                                                     191697 249492
+050800200529     C********** LCNT      IFGE 52                                                    249492 249492A
+050900200529     C           LCNT      IFGE 59                                                           249492A
+051000200529     C**********           Z-ADD0         LCNT                                         191697 249492
+051100200529     C                     Z-ADD12        LCNT                                                249492
+051200200529     C                     WRITEHEAD1                                     191697
+051300200529     C                     WRITEHEAD2                                     191697
+051400200529     C                     WRITEHEAD3                                     191697
+051500200529     C                     WRITEHEAD4                                     191697
+051600200529     C                     ENDIF                                          191697
+051700200529     C                     WRITETRAIL
+051800200529     C                     CLOSESE1130P1
+051900200529     C                     END
+052000200529     C*
+052100200529     C                     OPEN SE1130P1
+052200200529     C                     Z-ADD0         PAGE
+052300200529     C*                                                                   E29170
+052400200529     C** RCF Processing for Detail Printer File                           E29170
+052500200529     C*                                                                   E29170
+052600200529     C                     EXSR RCFP1                                     E29170
+052700200529     C*                                                                   E29170
+052800200529     C**  Access Branch details if multibranching is on                   E29170
+052900200529     C*                                                                   E29170
+053000200529     C           *IN37     IFEQ '1'                                       E29170
+053100200529     C                     EXSR TABCHN
+053200200529     C           *INU7     IFEQ '1'
+053300200529     C                     GOTO EPR01
+053400200529     C                     END
+053500200529     C                     END                                            E29170
+053600200529     C                     END
+053700200529     C*
+053800200529     C**  IF CHANGE IN BRANCH,DEPOT OR OVERFLOW - START A NEW PAGE
+053900200529     C*
+054000200529     C***********WDSBR     IFNE DSBR                                      S01117
+054100200529     C           WDSBA     IFNE DSBA                                      S01117
+054200200529     C           WDDPT     ORNE DDPT
+054300200529     C***********LCNT      ORGT 22                                        077441
+054400200529     C********** LCNT      ORGT 44                                                     077441 249492
+054500200529     C********** LCNT      ORGE 52                                                    249492 249492A
+054600200529     C           LCNT      ORGE 59                                                           249492A
+054700200529     C**********           Z-ADD0         LCNT                                                249492
+054800200529     C*
+054900200529     C**  OBTAIN CUSTOMER REPORT NAME FOR NEW DEPOT
+055000200529     C*
+055100200529     C                     MOVE DDPT      CLKY
+055200200529     C                     EXSR CLBCHN
+055300200529     C           *INU7     IFEQ '1'
+055400200529     C                     GOTO EPR01
+055500200529     C                     END
+055600200529     C*
+055700200529     C**  OUTPUT HEADINGS
+055800200529     C*
+055900200529     C                     MOVELCRNM      HDPNAM
+056000200529     C*                                                                   S01408
+056100200529     C** Core hook for externalisation.                                   S01408
+056200200529     C/COPY WNCPYSRC,SE1130CPLH                                           S01408
+056300200529     C*                                                                   S01408
+056400200529     C***********          MOVE DSBR      WDSBR                           S01117
+056500200529     C                     MOVE DSBA      WDSBA                           S01117
+056600200529     C                     MOVE DDPT      WDDPT
+056700200529     C***********          MOVE DSBR      HDBR                            S01117
+056800200529     C                     MOVE DSBA      HDBA                            S01117
+056900200529     C                     MOVELBRNM      HDBRNM
+057000200529     C                     Z-ADD12        LCNT                                                249492
+057100200529     C                     WRITEHEAD1
+057200200529     C                     WRITEHEAD2
+057300200529     C                     WRITEHEAD3
+057400200529     C                     WRITEHEAD4
+057500200529     C*
+057600200529     C                     END
+057700200529     C*
+057800200529     C**  IF CHANGE IN SECURITY - OBTAIN NEW SECURITIES INFO
+057900200529     C*
+058000200529     C           WDSSC     IFNE DSSC
+058100200529     C                     MOVE DSSC      WDSSC
+058200200529     C                     EXSR SECCHN
+058300200529     C*
+058400200529     C           *INU7     IFEQ '1'
+058500200529     C                     GOTO EPR01
+058600200529     C                     END
+058700200529     C*
+058800200529     C                     END
+058900200529      *                                                                   E21575
+059000200529      **  Do not process Securities that Matured in a prior month.        E21575
+059100200529      *                                                                   E21575
+059200200529     C           MATY      IFLE EOPMTH                                    E21575
+059300200529     C           MATY      ANDNE0                                         E21575
+059400200529     C                     GOTO EPR01                                     E21575
+059500200529     C                     END                                            E21575
+059600200529     C*
+059700200529     C**  EDIT DETAILS FOR REPORT
+059800200529     C*
+059900200529     C**  SECURITY REPORT NAME AND OTHER SECURITY DETAILS
+060000200529     C*
+060100200529     C                     MOVELDSSC      DTSEC
+060200200529     C/COPY WNCPYSRC,SE1130C002
+060300200529     C                     MOVELSRPN      ZSRPN
+060400200529     C                     MOVE RSFD      ZRSFD                           S01117
+060500200529     C                     EXSR ZSDESC
+060600200529     C                     MOVELZRNME     DTSECN
+060700200529     C/COPY WNCPYSRC,SE1130C003
+060800200529     C*
+060900200529     C**  TRADE BALANCE
+061000200529     C*
+061100200529     C                     Z-ADDDSNT      ZFLD15
+061200200529     C                     Z-ADDNMDP      ZDECS
+061300200529     C                     MOVEL'J'       ZECODE
+061400200529     C                     EXSR ZSEDIT
+061500200529     C                     MOVE ZOUT21    DTTBAL
+061600200529     C*
+061700200529     C**  VALUE BALANCE
+061800200529     C*
+061900200529     C                     Z-ADDDSNV      ZFLD15
+062000200529     C                     Z-ADDNMDP      ZDECS
+062100200529     C                     MOVEL'J'       ZECODE
+062200200529     C                     EXSR ZSEDIT
+062300200529     C                     MOVE ZOUT21    DTVBAL
+062400200529     C*
+062500200529     C**  SETTLEMENT BALANCE
+062600200529     C*
+062700200529     C                     Z-ADDDSNS      ZFLD15
+062800200529     C                     Z-ADDNMDP      ZDECS
+062900200529     C                     MOVEL'J'       ZECODE
+063000200529     C                     EXSR ZSEDIT
+063100200529     C                     MOVE ZOUT21    DTSBAL
+063200200529     C*
+063300200529     C** REPO BALANCE                                                     131723
+063400200529     C*                                                                   131723
+063500200529     C                     MOVE '0'       *IN55                           131723
+063600200529     C           DSRV      IFNE *ZERO                                     131723
+063700200529     C                     Z-ADDDSRV      ZFLD15                          131723
+063800200529     C                     Z-ADDNMDP      ZDECS                           131723
+063900200529     C                     MOVEL'J'       ZECODE                          131723
+064000200529     C                     EXSR ZSEDIT                                    131723
+064100200529     C                     MOVE ZOUT21    DREBAL                          131723
+064200200529     C                     MOVE '1'       *IN55                           131723
+064300200529     C                     END                                            131723
+064400200529     C*                                                                   131723
+064500200529     C**  DEPOT REFERENCE
+064600200529     C*
+064700200529     C                     EXSR DREF
+064800200529     C                     MOVELSDREF     DTDREF
+064900200529     C/COPY WNCPYSRC,SE1130C004
+065000200529     C           *INU7     IFEQ '1'
+065100200529     C                     GOTO EPR01
+065200200529     C                     END
+065300200529     C*
+065400200529     C**  WRITE DETAIL LINE
+065500200529      ** Check if need to write header before writing trailer to prevent                      208281
+065600200529      ** printer over flow.                                                                   208281
+065700200529     C**********           ADD  3         LCNT                                         208281 249492
+065800200529     C********** LCNT      IFGT 44                                                     208281 249492
+065900200529     C********** LCNT      IFGE 52                                                    249492 249492A
+066000200529     C           LCNT      IFGE 59                                                           249492A
+066100200529     C**********           Z-ADD0         LCNT                                         208281 249492
+066200200529     C                     Z-ADD12        LCNT                                                249492
+066300200529     C                     WRITEHEAD1                                                         208281
+066400200529     C                     WRITEHEAD2                                                         208281
+066500200529     C                     WRITEHEAD3                                                         208281
+066600200529     C                     WRITEHEAD4                                                         208281
+066700200529     C                     ENDIF                                                              208281
+066800200529     C*
+066900200529     C**********           WRITEDETAIL1                                                       249492
+067000200529     C*
+067100200529     C**  INCREMENT RECORD COUNT AND LINE COUNT
+067200200529     C*
+067300200529     C                     ADD  1         PREC
+067400200529     C                     ADD  1         LCNT
+067500200529     C           *IN55     IFEQ '1'                                                           249492
+067600200529     C                     ADD  1         LCNT                                                249492
+067700200529     C                     ENDIF                                                              249492
+067800200529     C                     WRITEDETAIL1                                                       249492
+067900200529     C*
+068000200529     C           EPR01     ENDSR
+068100200529      *
+068200200529      ******************************************************************
+068300200529      /EJECT
+068400200529      ******************************************************************
+068500200529      *
+068600200529      *  DREF   - Subroutine to get Depot reference.
+068700200529      *
+068800200529      ******************************************************************
+068900200529      *
+069000200529     C           DREF      BEGSR                           ** DREF   **
+069100200529     C*
+069200200529     C**  Access CLIENT File record for depot input
+069300200529     C*
+069400200529     C**********           MOVE DDPT      CLKY    60                                          CSD027
+069500200529     C                     MOVE DDPT      CLKY    6                                           CSD027
+069600200529     C                     EXSR CLICHN
+069700200529     C           *INU7     IFEQ '1'
+069800200529     C                     GOTO EDREF
+069900200529     C                     ELSE
+070000200529     C                     MOVE C1DI      SVC1DI  1
+070100200529     C                     END
+070200200529     C*
+070300200529     C**  Access Investment type file
+070400200529     C*
+070500200529     C           INVKEY    CHAININVTP                01
+070600200529     C*
+070700200529     C**  Check if record deleted
+070800200529     C*
+070900200529     C           *IN01     IFEQ '0'
+071000200529     C           RECI      ANDNE'D'
+071100200529     C                     MOVE '1'       *IN01
+071200200529     C                     END
+071300200529     C*
+071400200529     C**  If no record found  or deleted record
+071500200529     C**  then it is a database error
+071600200529     C*
+071700200529     C           *IN01     IFEQ '1'
+071800200529     C           *LOCK     IN   LDA                                       S01117
+071900200529     C                     MOVELIKEY      DBKEY            *****************
+072000200529     C                     MOVE 'INVTP'   DBFILE           ** DB ERROR 03 **
+072100200529     C                     Z-ADD03        DBASE            *****************
+072200200529     C                     OUT  LDA                                       S01117
+072300200529     C                     EXSR *PSSR                                     S01117
+072400200529     C                     SETON                       U7U8
+072500200529     C                     GOTO EDREF
+072600200529     C                     END
+072700200529     C*
+072800200529     C**  Check if one of depot custs on INVTP is same as Depot input
+072900200529     C**  enquiry depot -
+073000200529     C**     if so output corresponding depot ref from SECTYD
+073100200529     C*
+073200200529     C***********          MOVE *BLANKS   SDREF   9                       S01176
+073300200529     C                     MOVE *BLANKS   SDREF  12                       S01176
+073400200529     C           DDPT      IFEQ SDC1
+073500200529     C***********          MOVELD1SR      SDREF                           S01176
+073600200529     C                     MOVELDASR      SDREF                           S01176
+073700200529     C                     GOTO EDREF
+073800200529     C                     END
+073900200529     C           DDPT      IFEQ SDC2
+074000200529     C***********          MOVELD2SR      SDREF                           S01176
+074100200529     C                     MOVELDCSR      SDREF                           S01176
+074200200529     C                     GOTO EDREF
+074300200529     C                     END
+074400200529     C           DDPT      IFEQ SDC3
+074500200529     C***********          MOVELD3SR      SDREF                           S01176
+074600200529     C                     MOVELDDSR      SDREF                           S01176
+074700200529     C                     GOTO EDREF
+074800200529     C                     END
+074900200529     C*
+075000200529     C**  Check if one of the depot custs on INVTP is Euroclear,
+075100200529     C****Cedel*or*Kassenverein*&*depot*input*is*same******************   CSE022
+075200200529      ** or Cedel and depot input is same                                 CSE022
+075300200529     C**  (by reading CLINTSE for each depot cust)
+075400200529     C**     if so   -  output corresponding depot ref from SECTYD
+075500200529     C**                 (if it is non-blank)
+075600200529     C**             - if corresponding depot ref is blank output
+075700200529     C**               ref. from SECTYD according to STC ind
+075800200529     C*
+075900200529     C********** SDC1      IFNE *ZEROS                                                        CSD027
+076000200529     C           SDC1      IFNE *BLANKS                                                       CSD027
+076100200529     C           SDC1      ANDNE'000000'                                                    BUG11630
+076200200529     C                     MOVE SDC1      CLKY
+076300200529     C                     EXSR CLICHN
+076400200529     C           *INU7     IFEQ '1'
+076500200529     C                     GOTO EDREF
+076600200529     C                     END
+076700200529     C*
+076800200529     C           C1DI      IFEQ 'E'
+076900200529     C           C1DI      OREQ 'C'
+077000200529     C********** C1DI      OREQ 'K'                                       CSE022
+077100200529     C           C1DI      IFEQ SVC1DI
+077200200529     C***********D1SR      IFNE *BLANKS                                   S01176
+077300200529     C***********          MOVELD1SR      SDREF                           S01176
+077400200529     C           DASR      IFNE *BLANKS                                   S01176
+077500200529     C                     MOVELDASR      SDREF                           S01176
+077600200529     C                     GOTO EDREF
+077700200529     C                     ELSE
+077800200529     C           STC1      IFEQ 'S'
+077900200529     C                     MOVELSREF      SDREF
+078000200529     C                     GOTO EDREF
+078100200529     C                     ELSE
+078200200529     C           STC1      IFEQ 'T'
+078300200529     C***********          MOVELTVRF      SDREF                           S01176
+078400200529     C                     MOVELT2RF      SDREF                           S01176
+078500200529     C                     GOTO EDREF
+078600200529     C                     ELSE
+078700200529     C           STC1      IFEQ 'C'
+078800200529     C                     MOVELCSPN      SDREF
+078900200529     C                     GOTO EDREF
+079000200529     C                     END
+079100200529     C                     END
+079200200529     C                     END
+079300200529     C                     END
+079400200529     C                     END
+079500200529     C                     END
+079600200529     C                     END
+079700200529     C**
+079800200529     C********** SDC2      IFNE *ZEROS                                                        CSD027
+079900200529     C           SDC2      IFNE *BLANKS                                                       CSD027
+080000200529     C           SDC2      ANDNE'000000'                                                    BUG11630
+080100200529     C                     MOVE SDC2      CLKY
+080200200529     C                     EXSR CLICHN
+080300200529     C           *INU7     IFEQ '1'
+080400200529     C                     GOTO EDREF
+080500200529     C                     END
+080600200529     C*
+080700200529     C           C1DI      IFEQ 'E'
+080800200529     C           C1DI      OREQ 'C'
+080900200529     C********** C1DI      OREQ 'K'                                       CSE022
+081000200529     C           C1DI      IFEQ SVC1DI
+081100200529     C***********D2SR      IFNE *BLANKS                                   S01176
+081200200529     C***********          MOVELD2SR      SDREF                           S01176
+081300200529     C           DCSR      IFNE *BLANKS                                   S01176
+081400200529     C                     MOVELDCSR      SDREF                           S01176
+081500200529     C                     GOTO EDREF
+081600200529     C                     ELSE
+081700200529     C           STC2      IFEQ 'S'
+081800200529     C                     MOVELSREF      SDREF
+081900200529     C                     GOTO EDREF
+082000200529     C                     ELSE
+082100200529     C           STC2      IFEQ 'T'
+082200200529     C***********          MOVELTVRF      SDREF                           S01176
+082300200529     C                     MOVELT2RF      SDREF                           S01176
+082400200529     C                     GOTO EDREF
+082500200529     C                     ELSE
+082600200529     C           STC2      IFEQ 'C'
+082700200529     C                     MOVELCSPN      SDREF
+082800200529     C                     GOTO EDREF
+082900200529     C                     END
+083000200529     C                     END
+083100200529     C                     END
+083200200529     C                     END
+083300200529     C                     END
+083400200529     C                     END
+083500200529     C                     END
+083600200529     C**
+083700200529     C********** SDC3      IFNE *ZEROS                                                        CSD027
+083800200529     C           SDC3      IFNE *BLANKS                                                       CSD027
+083900200529     C           SDC3      ANDNE'000000'                                                    BUG11630
+084000200529     C                     MOVE SDC3      CLKY
+084100200529     C                     EXSR CLICHN
+084200200529     C           *INU7     IFEQ '1'
+084300200529     C                     GOTO EDREF
+084400200529     C                     END
+084500200529     C*
+084600200529     C           C1DI      IFEQ 'E'
+084700200529     C           C1DI      OREQ 'C'
+084800200529     C********** C1DI      OREQ 'K'                                       CSE022
+084900200529     C           C1DI      IFEQ SVC1DI
+085000200529     C***********D3SR      IFNE *BLANKS                                   S01176
+085100200529     C***********          MOVELD3SR      SDREF                           S01176
+085200200529     C           DDSR      IFNE *BLANKS                                   S01176
+085300200529     C                     MOVELDDSR      SDREF                           S01176
+085400200529     C                     GOTO EDREF
+085500200529     C                     ELSE
+085600200529     C           STC3      IFEQ 'S'
+085700200529     C                     MOVELSREF      SDREF
+085800200529     C                     GOTO EDREF
+085900200529     C                     ELSE
+086000200529     C           STC3      IFEQ 'T'
+086100200529     C***********          MOVELTVRF      SDREF                           S01176
+086200200529     C                     MOVELT2RF      SDREF                           S01176
+086300200529     C                     GOTO EDREF
+086400200529     C                     ELSE
+086500200529     C           STC3      IFEQ 'C'
+086600200529     C                     MOVELCSPN      SDREF
+086700200529     C                     GOTO EDREF
+086800200529     C                     END
+086900200529     C                     END
+087000200529     C                     END
+087100200529     C                     END
+087200200529     C                     END
+087300200529     C                     END
+087400200529     C                     END
+087500200529     C*
+087600200529     C           EDREF     TAG                             ** EDREF TAG **
+087700200529      *
+087800200529     C                     ENDSR
+087900200529      *
+088000200529      ******************************************************************
+088100200529      /EJECT
+088200200529      ******************************************************************
+088300200529      *
+088400200529      *  AUDIT  - Subroutine to Output Audit Report.
+088500200529      *
+088600200529      ******************************************************************
+088700200529      *
+088800200529     C           AUDIT     BEGSR
+088900200529     C*
+089000200529     C**  IF NO DATABASE ERRORS - READ DPOSNA AUDIT RECORD
+089100200529     C*
+089200200529     C           *INU7     IFEQ '0'
+089300200529     C*
+089400200529     C                     READ DPOSNAF                  99
+089500200529     C*
+089600200529     C**  IF NOT FOUND - ERROR
+089700200529     C*
+089800200529     C           *IN99     IFEQ '1'
+089900200529     C           *LOCK     IN   LDA                                       S01117
+090000200529     C***********          MOVE 'DPOSN'   DBFILE           ***************E21519
+090100200529     C                     MOVE 'DPOSNL'  DBFILE           ***************E21519
+090200200529     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 07 *
+090300200529     C                     Z-ADD7         DBASE            ***************
+090400200529     C                     OUT  LDA                                       S01117
+090500200529     C                     EXSR *PSSR                                     S01117
+090600200529     C                     SETON                     99U7U8
+090700200529     C                     END
+090800200529     C*
+090900200529     C                     END
+091000200529     C*
+091100200529     C                     WRITEHEADAU
+091200200529     C           *INU7     IFEQ '1'
+091300200529     C                     WRITEERROR
+091400200529     C                     ELSE
+091500200529     C*
+091600200529     C**  CHECK FOR ANY RECORDS PRINTED
+091700200529     C*
+091800200529     C           PREC      IFEQ 0
+091900200529     C                     WRITENONE
+092000200529     C                     ELSE
+092100200529     C                     WRITECONTROL
+092200200529     C                     END
+092300200529     C*
+092400200529     C                     END
+092500200529     C***********                                                         E29170
+092600200529     C***********          WRITETRAILAU                                   E29170
+092700200529     C*
+092800200529     C                     ENDSR
+092900200529      *
+093000200529      ******************************************************************
+093100200529      /EJECT
+093200200529      ******************************************************************
+093300200529      *
+093400200529      *  TABCHN - Subroutine to Chain to TABLETR.
+093500200529      *
+093600200529      ******************************************************************
+093700200529      *
+093800200529     C           TABCHN    BEGSR
+093900200529     C*
+094000200529     C                     MOVE *BLANK    TKEY
+094100200529     C**********           MOVEL'10'      TKEY                                               BUG7985
+094200200529     C***********          MOVE DSBR      TKEY                            S01117
+094300200529     C**********           MOVE DSBA      TKEY                                        S01117 BUG7985
+094400200529     C********** TABKEY    CHAINTABLETRF             99                                      BUG7985
+094500200529     C********** *IN99     IFEQ '1'                                                          BUG7985
+094600200529     C********** RECI      ORNE 'D'                                                          BUG7985
+094700200529     C                     CALL 'AOBRCHR1'                                                   BUG7985
+094800200529     C                     PARM *BLANKS   PRTCD   7                                          BUG7985
+094900200529     C                     PARM '*KEY   ' POPTN   7                                          BUG7985
+095000200529     C                     PARM DSBA      PBRCH   3                                          BUG7985
+095100200529     C           SDBRCH    PARM SDBRCH    DSSDY                                              BUG7985
+095200200529      *                                                                                      BUG7985
+095300200529     C           PRTCD     IFNE *BLANKS                                                      BUG7985
+095400200529     C           *LOCK     IN   LDA                                       S01117
+095500200529     C**********           MOVE 'TABLE'   DBFILE           ***************                   BUG7985
+095600200529     C**********           MOVELTKEY      DBKEY            * DB ERROR 05 *                   BUG7985
+095700200529     C                     MOVE 'SDBRCHPD'DBFILE                                             BUG7985
+095800200529     C                     MOVELDSBA      DBKEY                                              BUG7985
+095900200529     C                     Z-ADD5         DBASE            ***************
+096000200529     C                     OUT  LDA                                       S01117
+096100200529     C                     EXSR *PSSR                                     S01117
+096200200529     C                     SETON                     U7U8
+096300200529     C                     END
+096400200529     C*
+096500200529     C                     ENDSR
+096600200529      *
+096700200529      ******************************************************************
+096800200529      /SPACE 3
+096900200529      ******************************************************************
+097000200529      *
+097100200529      *  SECCHN - Subroutine to Chain to Securities File.
+097200200529      *
+097300200529      ******************************************************************
+097400200529      *
+097500200529     C           SECCHN    BEGSR
+097600200529     C*
+097700200529     C           SECKEY    CHAINSECTY                99
+097800200529     C           *IN99     IFEQ '1'
+097900200529     C           RECI      OREQ '*'
+098000200529     C           *LOCK     IN   LDA                                       S01117
+098100200529     C                     MOVE 'SECTY'   DBFILE           ***************
+098200200529     C                     MOVELDSSC      DBKEY            * DB ERROR 06 *
+098300200529     C                     Z-ADD6         DBASE            ***************
+098400200529     C                     OUT  LDA                                       S01117
+098500200529     C                     EXSR *PSSR                                     S01117
+098600200529     C                     SETON                     U7U8
+098700200529     C                     END
+098800200529     C*
+098900200529     C                     ENDSR
+099000200529      *
+099100200529      ******************************************************************
+099200200529      /SPACE 3
+099300200529      ******************************************************************
+099400200529      *
+099500200529      *  CLBCHN - Subroutine to Chain to Customer File.
+099600200529      *
+099700200529      ******************************************************************
+099800200529      *
+099900200529     C           CLBCHN    BEGSR
+100000200529     C*
+100100200529     C           CLIKEY    CHAINCLINTCBF             99
+100200200529     C           *IN99     IFEQ '1'
+100300200529     C***********RECI      ORNE 'D'                                       E21519
+100400200529     C           *LOCK     IN   LDA                                       S01117
+100500200529     C                     MOVE 'CLINT'   DBFILE           ***************
+100600200529     C***********          MOVELCLKY      KEY7    7        **DB*ERROR*04**E20651
+100700200529     C                     MOVELCLKY      KEY7    7        * DB ERROR 08 *E20651
+100800200529     C                     MOVE 'B'       KEY7             ***************
+100900200529     C                     MOVELKEY7      DBKEY
+101000200529     C***********          Z-ADD4         DBASE                           E20651
+101100200529     C                     Z-ADD8         DBASE                           E20651
+101200200529     C                     OUT  LDA                                       S01117
+101300200529     C                     EXSR *PSSR                                     S01117
+101400200529     C                     SETON                     U7U8
+101500200529     C                     END
+101600200529     C*
+101700200529     C                     ENDSR
+101800200529      *
+101900200529      ******************************************************************
+102000200529      /SPACE 3
+102100200529      ******************************************************************
+102200200529      *
+102300200529      *  CLICHN - Subroutine to Chain to Client File.
+102400200529      *
+102500200529      ******************************************************************
+102600200529      *
+102700200529     C           CLICHN    BEGSR
+102800200529     C*
+102900200529     C           CLIKEY    CHAINCLINTSEF             99
+103000200529     C           *IN99     IFEQ '1'
+103100200529     C***********RECI      ORNE 'D'                                       E21519
+103200200529     C           *LOCK     IN   LDA                                       S01117
+103300200529     C                     MOVE 'CLINT'   DBFILE           ***************
+103400200529     C***********          MOVELCLKY      KEY7             **DB*ERROR*04**E20651
+103500200529     C                     MOVELCLKY      KEY7             * DB ERROR 09 *E20651
+103600200529     C                     MOVE '1'       KEY7             ***************
+103700200529     C                     MOVELKEY7      DBKEY
+103800200529     C***********          Z-ADD4         DBASE                           E20651
+103900200529     C                     Z-ADD9         DBASE                           E20651
+104000200529     C                     OUT  LDA                                       S01117
+104100200529     C                     EXSR *PSSR                                     S01117
+104200200529     C                     SETON                     U7U8
+104300200529     C                     END
+104400200529     C*
+104500200529     C                     ENDSR
+104600200529      *
+104700200529      *****************************************************************   S01117
+104800200529      /EJECT                                                              S01117
+104900200529      *****************************************************************   S01117
+105000200529      *                                                               *   S01117
+105100200529      *  *PSSR  - Error control subroutine                            *   S01117
+105200200529      *                                                               *   S01117
+105300200529      *****************************************************************   S01117
+105400200529      *                                                                   S01117
+105500200529     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+105600200529     C**                                                                  S01117
+105700200529     C           @RUN      IFEQ *BLANKS                                   S01117
+105800200529     C                     MOVE 'Y'       @RUN    1                       S01117
+105900200529     C                     DUMP                                           S01117
+106000200529     C                     END                                            S01117
+106100200529     C**                                                                  S01117
+106200200529     C                     ENDSR                                          S01117
+106300200529      *                                                                   S01117
+106400200529      ******************************************************************
+106500200529     C/EJECT                                                              E29170
+106600200529     C********************************************************************E29170
+106700200529     C*                                                                   E29170
+106800200529     C*  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF          E29170
+106900200529     C*                                                                   E29170
+107000200529     C********************************************************************E29170
+107100200529     C*                                                                   E29170
+107200200529     C           RCFP1     BEGSR                            ** RCFP1 **   E29170
+107300200529     C*                                                                   E29170
+107400200529     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF                    E29170
+107500200529     C*                                                                   E29170
+107600200529     C                     Z-ADDSFNUM     ZSNUM   60                      E29170
+107700200529     C**                                                                  E29170
+107800200529     C                     CALL 'ZSFILE'                                  E29170
+107900200529     C                     PARM           SEQ     5                       E29170
+108000200529     C                     PARM DSBA      SENTY   3                       E29170
+108100200529     C                     PARM           SFILE                           E29170
+108200200529     C                     PARM           ZSNUM                           E29170
+108300200529     C                     PARM           ZSERR   1                       E29170
+108400200529     C*                                                                   E29170
+108500200529     C           ZSERR     IFEQ 'Y'                                       E29170
+108600200529     C*                                                                   E29170
+108700200529     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+108800200529     C*                                                                   E29170
+108900200529     C                     SETON                     U7U8LR               E29170
+109000200529     C                     RETRN                                          E29170
+109100200529     C                     END                                            E29170
+109200200529     C*                                                                   E29170
+109300200529     C                     ENDSR                                          E29170
+109400200529     C*                                                                   E29170
+109500200529     C********************************************************************E29170
+109600200529     C/EJECT                                                              E29170
+109700200529     C********************************************************************E29170
+109800200529     C*                                                                   E29170
+109900200529     C*  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF          E29170
+110000200529     C*                                                                   E29170
+110100200529     C********************************************************************E29170
+110200200529     C*                                                                   E29170
+110300200529     C           RCFAU     BEGSR                            ** RCFAU **   E29170
+110400200529     C*                                                                   E29170
+110500200529     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF                     E29170
+110600200529     C*                                                                   E29170
+110700200529     C                     Z-ADDSFNUMU    ZSNUMU  60                      E29170
+110800200529     C**                                                                  E29170
+110900200529     C                     CALL 'ZSFILE'                                  E29170
+111000200529     C                     PARM           SEQ                             E29170
+111100200529     C                     PARM *BLANKS   SENTY                           E29170
+111200200529     C                     PARM           SFILEU                          E29170
+111300200529     C                     PARM           ZSNUMU                          E29170
+111400200529     C                     PARM *BLANK    ZSERR                           E29170
+111500200529     C*                                                                   E29170
+111600200529     C           ZSERR     IFEQ 'Y'                                       E29170
+111700200529     C*                                                                   E29170
+111800200529     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM       E29170
+111900200529     C*                                                                   E29170
+112000200529     C                     SETON                     U7U8LR               E29170
+112100200529     C                     RETRN                                          E29170
+112200200529     C                     END                                            E29170
+112300200529     C*                                                                   E29170
+112400200529     C                     ENDSR                                          E29170
+112500200529     C*                                                                   E29170
+112600200529     C*****************************************************************   E29170
+112700200529      /EJECT
+112800200529     C/COPY ZSRSRC,ZDATE2Z4
+112900200529      /EJECT
+113000200529     C/COPY ZSRSRC,ZICDSEZ1
+113100200529      /EJECT
+113200200529     C/COPY ZSRSRC,ZSDESCZ3
+113300200529      /EJECT
+113400200529     C/COPY ZSRSRC,ZSEDITZ3
+113500200529      /EJECT
+113600200529     C/COPY ZSRSRC,ZSYSTMZ1
+113700200529      /EJECT
+113800200529      ***
+113900200529**  CPY@
+114000200529(c) Finastra International Limited 2001
+114100200529**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+1142002005290366073110961461
+114300200529**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+114400200529000031059090120151181212243273304334365
+114500200529**   ZMNM - MONTHS SHORT NAMES
+114600200529JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

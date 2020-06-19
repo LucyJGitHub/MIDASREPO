@@ -5,8 +5,8 @@
 /*                                                                   */
 /*       Midas - System Control Module                               */
 /*                                                                   */
-/*       SCC000361 - Midas SC 24x7 API Layer setup                   */
-/*                   End Journalling in DZLIB                        */
+/*       SCC000362 - Midas SC 24x7 API Layer setup                   */
+/*                   Start Journalling in DZLIB                      */
 /*                                                                   */
 /*       (c) Finastra International Limited 2020                     */
 /*                                                                   */
@@ -29,8 +29,7 @@
 
 /* Variables for zone libs  */
              DCL        VAR(&DZLIB) TYPE(*CHAR) LEN(8)
-             DCL        VAR(&JLIB) TYPE(*CHAR) LEN(8)
-             DCL        VAR(&GJLIB) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&NDBLB) TYPE(*CHAR) LEN(8)
 
              DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)
              DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)
@@ -43,22 +42,17 @@
                           Finastra International Limited +
                           2020')
 
-/* Declare files for Loop17 to Loop20 */
-             DCLF       FILE(SCSRACTD) OPNID(S5C)
-             DCLF       FILE(SCSRABTD) OPNID(S5B)
-             DCLF       FILE(GPSRACTD) OPNID(G5C)
-             DCLF       FILE(GPSRABTD) OPNID(G5B)
+             DCLF       FILE(SCSRACTD) OPNID(S6C)
+             DCLF       FILE(SCSRABTD) OPNID(S6B)
+             DCLF       FILE(GPSRACTD) OPNID(G6C)
+             DCLF       FILE(GPSRABTD) OPNID(G6B)
 
 /* Retrieve Zone prefix                */
              RTVDTAARA  DTAARA(SDSTAT *ALL) RTNVAR(&SDSTAT)
 /**/
              CHGVAR     VAR(&PRE) VALUE(%SST(&SDSTAT 6 2))
              CHGVAR     VAR(&DZLIB) VALUE(&PRE *TCAT 'DZLIB')
-             CHGVAR     VAR(&JLIB) VALUE(&PRE *TCAT 'JLIB')
-
-/* Retrieve Global prefix              */
-             CALL       PGM(GPRTVLIB) PARM(&PREGG)
-             CHGVAR     VAR(&GJLIB) VALUE(&PREGG *TCAT 'GJLIB')
+             CHGVAR     VAR(&NDBLB) VALUE(&PRE *TCAT 'X24LIB')
 
 /**   CHECK FOR SWITCHABLE FEATURE CAP702     */
 
@@ -91,81 +85,89 @@
              IF         COND(&RTCD = '       ') THEN(CHGVAR +
                           VAR(&CAP735) VALUE('Y'))   /*CAP735*/
 
-/* 21a. End Journaling for zone core files                 */
-LOOP17:      RCVF       OPNID(S5C)
-             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(EXIT17))
-             IF         COND(&S5C_SATYPE *NE 'PF') THEN(GOTO CMDLBL(LOOP17))
+/* 22a. Start Journaling for zone core files                 */
+LOOP21:      RCVF       OPNID(S6C)
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(EXIT21))
+             IF         COND(&S6C_SATYPE *NE 'PF') THEN(GOTO CMDLBL(LOOP21))
 
-             IF COND(((&S5C_SASARN = 'CAP734') *AND (&CAP734 = 'Y')) *OR +
-                    ((&S5C_SASARN = 'CAP735') *AND (&CAP735 = 'Y')) *OR +
-                    ((&S5C_SASARN = 'CAP702') *AND (&CAP702 = 'Y'))) THEN(DO)
+             IF COND(((&S6C_SASARN = 'CAP734') *AND (&CAP734 = 'Y')) *OR +
+                    ((&S6C_SASARN = 'CAP735') *AND (&CAP735 = 'Y')) *OR +
+                    ((&S6C_SASARN = 'CAP702') *AND (&CAP702 = 'Y'))) THEN(DO)
 
-             IF         COND(&S5C_SATYPE *EQ 'PF') THEN(DO)
-             ENDJRNPF FILE(&DZLIB/&S5C_SAOBJ) JRN(&JLIB/ICJRN)
+             IF         COND(&S6C_SATYPE *EQ 'PF') THEN(DO)
+                STRJRNPF   FILE(&DZLIB/&S6C_SAOBJ) +
+                             JRN(&NDBLB/ICJRN24X7) IMAGES(*BOTH) +
+                             OMTJRNE(*OPNCLO)
+             MONMSG     MSGID(CPF7030)
+                          GOTO LOOP21
+             ENDDO
+                          GOTO LOOP21
+             ENDDO
+                          GOTO LOOP21
+EXIT21:
+
+/* 22b. Start Journaling for zone non core files             */
+LOOP22:      RCVF       OPNID(S6B)
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(EXIT22))
+             IF         COND(&S6B_SATYPE *NE 'PF') THEN(GOTO CMDLBL(LOOP22))
+
+             IF COND(((&S6B_SASARN = 'CAP734') *AND (&CAP734 = 'Y')) *OR +
+                    ((&S6B_SASARN = 'CAP735') *AND (&CAP735 = 'Y')) *OR +
+                    ((&S6B_SASARN = 'CAP702') *AND (&CAP702 = 'Y'))) THEN(DO)
+
+             IF         COND(&S6B_SATYPE *EQ 'PF') THEN(DO)
+                STRJRNPF   FILE(&DZLIB/&S6B_SAOBJ) +
+                             JRN(&NDBLB/ICJRN24X7) IMAGES(*BOTH) +
+                             OMTJRNE(*OPNCLO)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
-                          GOTO LOOP17
+                          GOTO LOOP22
              ENDDO
-                          GOTO LOOP17
+                          GOTO LOOP22
              ENDDO
-                          GOTO LOOP17
-EXIT17:
+                          GOTO LOOP22
+EXIT22:
 
-/* 21b. End Journaling for zone non core files             */
-LOOP18:      RCVF       OPNID(S5B)
-             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(EXIT18))
-             IF         COND(&S5B_SATYPE *NE 'PF') THEN(GOTO CMDLBL(LOOP18))
+/* 22c. Start Journaling for global core files                 */
+LOOP23:      RCVF       OPNID(G6C)
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(EXIT23))
+             IF         COND(&G6C_SATYPE *NE 'PF') THEN(GOTO CMDLBL(LOOP23))
 
-             IF COND(((&S5B_SASARN = 'CAP734') *AND (&CAP734 = 'Y')) *OR +
-                    ((&S5B_SASARN = 'CAP735') *AND (&CAP735 = 'Y')) *OR +
-                    ((&S5B_SASARN = 'CAP702') *AND (&CAP702 = 'Y'))) THEN(DO)
+             IF COND(((&G6C_SASARN = 'CAP734') *AND (&CAP734 = 'Y')) *OR +
+                    ((&G6C_SASARN = 'CAP735') *AND (&CAP735 = 'Y')) *OR +
+                    ((&G6C_SASARN = 'CAP702') *AND (&CAP702 = 'Y'))) THEN(DO)
 
-             IF         COND(&S5B_SATYPE *EQ 'PF') THEN(DO)
-             ENDJRNPF FILE(&DZLIB/&S5B_SAOBJ) JRN(&JLIB/ICJRN)
+             IF         COND(&G6C_SATYPE *EQ 'PF') THEN(DO)
+                STRJRNPF   FILE(&DZLIB/&G6C_SAOBJ) +
+                             JRN(&NDBLB/ICJRN24X7) IMAGES(*BOTH) +
+                             OMTJRNE(*OPNCLO)
+             MONMSG     MSGID(CPF7030)
+                          GOTO LOOP23
+             ENDDO
+                          GOTO LOOP23
+             ENDDO
+                          GOTO LOOP23
+EXIT23:
+
+/* 22D. End Journaling for global non core files             */
+LOOP24:      RCVF       OPNID(G6B)
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(EXIT24))
+             IF         COND(&G6B_SATYPE *NE 'PF') THEN(GOTO CMDLBL(LOOP24))
+
+             IF COND(((&G6B_SASARN = 'CAP734') *AND (&CAP734 = 'Y')) *OR +
+                    ((&G6B_SASARN = 'CAP735') *AND (&CAP735 = 'Y')) *OR +
+                    ((&G6B_SASARN = 'CAP702') *AND (&CAP702 = 'Y'))) THEN(DO)
+
+             IF         COND(&G6B_SATYPE *EQ 'PF') THEN(DO)
+                STRJRNPF   FILE(&DZLIB/&G6B_SAOBJ) +
+                             JRN(&NDBLB/ICJRN24X7) IMAGES(*BOTH) +
+                             OMTJRNE(*OPNCLO)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
-                          GOTO LOOP18
+                          GOTO LOOP24
              ENDDO
-                          GOTO LOOP18
+                          GOTO LOOP24
              ENDDO
-                          GOTO LOOP18
-EXIT18:
-
-/* 21C. End Journaling for global core files                 */
-LOOP19:      RCVF       OPNID(G5C)
-             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(EXIT19))
-             IF         COND(&G5C_SATYPE *NE 'PF') THEN(GOTO CMDLBL(LOOP19))
-
-             IF COND(((&G5C_SASARN = 'CAP734') *AND (&CAP734 = 'Y')) *OR +
-                    ((&G5C_SASARN = 'CAP735') *AND (&CAP735 = 'Y')) *OR +
-                    ((&G5C_SASARN = 'CAP702') *AND (&CAP702 = 'Y'))) THEN(DO)
-
-             IF         COND(&G5C_SATYPE *EQ 'PF') THEN(DO)
-             ENDJRNPF FILE(&DZLIB/&G5C_SAOBJ) JRN(&GJLIB/GPJRN)
-             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
-                          GOTO LOOP19
-             ENDDO
-                          GOTO LOOP19
-             ENDDO
-                          GOTO LOOP19
-EXIT19:
-
-/* 21d. End Journaling for gloabl non core files             */
-LOOP20:      RCVF       OPNID(G5B)
-             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(EXIT20))
-             IF         COND(&G5B_SATYPE *NE 'PF') THEN(GOTO CMDLBL(LOOP20))
-
-             IF COND(((&G5B_SASARN = 'CAP734') *AND (&CAP734 = 'Y')) *OR +
-                    ((&G5B_SASARN = 'CAP735') *AND (&CAP735 = 'Y')) *OR +
-                    ((&G5B_SASARN = 'CAP702') *AND (&CAP702 = 'Y'))) THEN(DO)
-
-             IF         COND(&G5B_SATYPE *EQ 'PF') THEN(DO)
-             ENDJRNPF FILE(&DZLIB/&G5B_SAOBJ) JRN(&GJLIB/GPJRN)
-             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
-                          GOTO LOOP20
-             ENDDO
-                          GOTO LOOP20
-             ENDDO
-                          GOTO LOOP20
-EXIT20:
+                          GOTO LOOP24
+EXIT24:
 
              GOTO       CMDLBL(END)
 

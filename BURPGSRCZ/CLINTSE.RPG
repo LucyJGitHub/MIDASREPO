@@ -1,538 +1,538 @@
-000100200528      *****************************************************************
-000200200528/*STD *  RPGBASE                                                      *
-000300200528/*EXI *  TEXT('Midas BU BackGnd Upd of CLINTSE')                      *
-000400200528     F********************************************************************
-000500200528     F*                                                                  *
-000600200528     F*  Midas  STANDING DATA MODULE
-000700200528     F*                                                                  *
-000800200528     F*     CLINTSE - BACKGROUND UPDATE OF CLINTSE FILE                  *
-000900200528     F*                                                                  *
-001000200528     F*  (c) Finastra International Limited 2001                         *
-001100200528     F*                                                                  *
-001200200604     F*  Last Amend No. 259250             Date 22May20               *
-001300200528      *  Prev Amend No. MD046248           Date 27Oct17               *
-001400200528      *                 CER059             Date 19Jul10               *
-001500200528      *                 BUG23967           Date 13May09               *
-001600200528      * Bank Fusion Midas 1.4 Base -----------------------------------*
-001700200528      * Midas Plus 1.4 Base 04 ---------------------------------------*
-001800200528      * Midas Plus 1.4 Base ------------------------------------------*
-001900200528      * Midas Plus 1.3 ----------- Base ------------------------------*
-002000200528      *                 CSD027             Date 09Dec05               *
-002100200528      *                 CGL029             Date 01Sep03               *
-002200200528      * Midas Release 4 --------------- Base -------------------------*
-002300200528      *                 CSE022             Date 29Mar01               *
-002400200528      * Midas DBA 3.00 ---------------- Base -------------------------*
-002500200528      *                 E20531             Date 05Dec89               *
-002600200528      *                 E19956             Date 23Oct89               *
-002700200528     F*                   S01230              DATE 07/11/89              *S01230
-002800200528     F*                   S01229              DATE 19/10/89              *
-002900200528     F*                                                                  *
-003000200528     F********************************************************************
-003100200528      *                                                               *
-003200200528      *  259250 - Securities Trading Customer Details Maint -         *
-003300200528      *           Tax code error.                                     *
-003400200528      *  MD046248 - Finastra Rebranding                               *
-003500200528      *  CER059 - German Feature Upgrade to Delhi                     *
-003600200528      *  BUG23967 - Add Local Industry Code Field. (Recompile)        *
-003700200528      *  CSD027 - Conversion Of Customer Number to Alpha              *
-003800200528      *  CGL029 - Increase Account Code to 10 digits                  *
-003900200528      *  CSE022 - Depository Definition                               *
-004000200528     F*     E20531 - AUTO-SETTLE INDICATOR NOT UPDATED TO CLINTSE        *E20531
-004100200528     F*     E19956 - DEPOT REFERENCE FIELDS FOR EUROCLEAR & CEDEL        *E19956
-004200200528     F*              SHOULD BE LEFT ADJUSTED AS EUCLID VALIDATION        *E19956
-004300200528     F*              PROGRAMS EXPECT THIS FORMAT                         *E19956
-004400200528     F*     S01230 - STANDARDISE PROGRAMS                                *S01230
-004500200528     F*     S01229 - SYNON FIELD NAME CHANGES                            *S01229
-004600200528     F********************************************************************S01229
-004700200528     F* ID F  C  H  L    FUNCTION OF INDICATORS                          *
-004800200528     F*                                                                  *
-004900200528     F*       30      CHAIN CLINT FAILED/ERROR                           *
-005000200528     F*       31      ERROR ON CLINT FILE                                *
-005100200528     F*       32      CHAIN CLINT FAILED/ERROR                           *
-005200200528     F*                                                                  *
-005300200528     F********************************************************************
-005400200528     FCLINT   UF  E           K        DISK                      A
-005500200528     F                                              KCOMIT
-005600200528     F            CLINTCBF                          KIGNORE
-005700200528     F            CLINTCCF                          KIGNORE
-005800200528     F            CLINTC1F                          KIGNORE
-005900200528      /EJECT
-006000200528     E* Description     : Copyright notice for inclusion in all programs  S01230
-006100200528     E*                                                                   S01230
-006200200528     E********************************************************************S01230
-006300200528     E                    CPY@    1   1 80               Copyright        S01230
-006400200528     E********************************************************************S01230
-006500200528      /EJECT                                                              S01230
-006600200528     I*
-006700200528     I* RENAME RECORD ID ON HEADER FILE TO AVOID OVERWRITING
-006800200528     I*
-006900200528     ICLINTCAF
-007000200528     I              CNUM                            CNUMA
-007100200528     I              RCDT                            RCDTA
-007200200528     I**                                                                  E19956
-007300200528     I**  DATA STRUCTURE TO LEFT ADJUST DEPOT REFERENCES                  E19956
-007400200528     IDEPOT       DS                                                      E19956
-007500200528     I                                        1   1 DTBLK@                E19956
-007600200528     I                                        2   60DETNO                 E19956
-007700200528     I                                        1   6 DET@                  E19956
-007800200528     I                                        7  20 DEPREF                                    CSE022
-007900200528     I*                                                                   S01230
-008000200528     I* Description     : Copyright notice for inclusion in all programs  S01230
-008100200528     I*                                                                   S01230
-008200200528     IA@CPY       DS                                                      S01230
-008300200528     I* Copyright array                                                   S01230
-008400200528     I                                        1  80 CPY@                  S01230
-008500200528     I*                                                                   S01230
-008600200528      /EJECT
-008700200528     C*
-008800200528     C           *ENTRY    PLIST
-008900200528     C                     PARM           P0RTN   7        RETURN CODE
-009000200528     C*********************PARM           WCNUM   6        CUSTOMER NO.   S01229
-009100200528     C                     PARM           WCUST   6        CUSTOMER NO.   S01229
-009200200528     C*********************PARM           WC1AC   4        ACCOUNT CODE   S01229
-009300200528     C**********           PARM           WACCD   4        ACCOUNT CODE                S01229 CGL029
-009400200528     C                     PARM           WACCD  10                                           CGL029
-009500200528     C                     PARM           WC1PC   3        PORTFOLIO CURR.
-009600200528     C                     PARM           WC1SC   3        SETTLEMENT CURR
-009700200528     C                     PARM           WC1AN   1        ALT. NAME/ADD.
-009800200528     C*********************PARM           WC1SQ   20       ACCOUNT SEQUENCS01229
-009900200528     C                     PARM           WACSN   20       ACCOUNT SEQUENCS01229
-010000200528     C*********************PARM           WC1DI   1        CLASSIFICATION S01229
-010100200528     C                     PARM           WCLAS   1        CLASSIFICATION S01229
-010200200528     C*********************PARM           WC101   6        DEPOT 1 REF.   S01229
-010300200528     C*********************PARM           WC102   6        DEPOT 2 REF.   S01229
-010400200528     C*********************PARM           WC103   6        DEPOT 3 REF.   S01229
-010500200528     C*********************PARM           WC104   6        DEPOT 4 REF.   S01229
-010600200528     C*********************PARM           WC105   6        DEPOT 5 REF.   S01229
-010700200528     C*********************PARM           WC106   6        DEPOT 6 REF.   S01229
-010800200528     C*********************PARM           WC107   6        DEPOT 7 REF.   S01229
-010900200528     C*********************PARM           WC108   6        DEPOT 8 REF.   S01229
-011000200528     C*********************PARM           WC109   6        DEPOT 9 REF.   S01229
-011100200528     C*********************PARM           WC110   6        DEPOT 10 REF   S01229
-011200200528     C***********          PARM           WDRF1   6        DEPOT 1 REF.   S01229              CSE022
-011300200528     C***********          PARM           WDRF2   6        DEPOT 2 REF.   S01229              CSE022
-011400200528     C***********          PARM           WDRF3   6        DEPOT 3 REF.   S01229              CSE022
-011500200528     C***********          PARM           WDRF4   6        DEPOT 4 REF.   S01229              CSE022
-011600200528     C***********          PARM           WDRF5   6        DEPOT 5 REF.   S01229              CSE022
-011700200528     C***********          PARM           WDRF6   6        DEPOT 6 REF.   S01229              CSE022
-011800200528     C***********          PARM           WDRF7   6        DEPOT 7 REF.   S01229              CSE022
-011900200528     C***********          PARM           WDRF8   6        DEPOT 8 REF.   S01229              CSE022
-012000200528     C***********          PARM           WDRF9   6        DEPOT 9 REF.   S01229              CSE022
-012100200528     C***********          PARM           WDRF0   6        DEPOT 10 REF   S01229              CSE022
-012200200528      *                                                                                       CSE022
-012300200528      **  New Depot Reference                                                                 CSE022
-012400200528      *                                                                                       CSE022
-012500200528     C                     PARM           PDNDR1 20        New Dep Ref 1                      CSE022
-012600200528     C                     PARM           PDNDR2 20        New Dep Ref 2                      CSE022
-012700200528     C                     PARM           PDNDR3 20        New Dep Ref 3                      CSE022
-012800200528     C                     PARM           PDNDR4 20        New Dep Ref 4                      CSE022
-012900200528     C                     PARM           PDNDR5 20        New Dep Ref 5                      CSE022
-013000200528     C                     PARM           PDNDR6 20        New Dep Ref 6                      CSE022
-013100200528     C                     PARM           PDNDR7 20        New Dep Ref 7                      CSE022
-013200200528     C                     PARM           PDNDR8 20        New Dep Ref 8                      CSE022
-013300200528     C                     PARM           PDNDR9 20        New Dep Ref 9                      CSE022
-013400200528     C                     PARM           PDNDR0 20        New Dep Ref 10                     CSE022
-013500200528      *                                                                                       CSE022
-013600200528     C                     PARM           WPN01   2        PARTIC. 1
-013700200528     C                     PARM           WPN02   2        PARTIC. 2
-013800200528     C                     PARM           WPN03   2        PARTIC. 3
-013900200528     C                     PARM           WPN04   2        PARTIC. 4
-014000200528     C                     PARM           WPN05   2        PARTIC. 5
-014100200528     C                     PARM           WPN06   2        PARTIC. 6
-014200200528     C                     PARM           WPN07   2        PARTIC. 7
-014300200528     C                     PARM           WPN08   2        PARTIC. 8
-014400200528     C                     PARM           WPN09   2        PARTIC. 9
-014500200528     C                     PARM           WPN10   2        PARTIC. 10
-014600200528     C*********************PARM           WC1CF   1        CEDEL FUNG.IND.S01229
-014700200528     C                     PARM           WCFIN   1        CEDEL FUNG.IND.S01229
-014800200528     C*********************PARM           WC1VF   1        VAL. FREQUENCY S01229
-014900200528     C                     PARM           WSTFQ   1        STAT FREQUENCY S01229
-015000200528     C*********************PARM           WC1NV   50       NEXT VAL. DATE S01229
-015100200528     C                     PARM           WNSDT   50       NEXT STAT DATE S01229
-015200200528     C*********************PARM           WC1VB   20       VAL. BASE DATE S01229
-015300200528     C                     PARM           WSBDM   20       VAL. BASE DATE S01229
-015400200528     C*********************PARM           WC1PA   1        PLEDGE AGREEMENS01229
-015500200528     C                     PARM           WPLAG   1        PLEDGE AGREEMENS01229
-015600200528     C*********************PARM           WC1NR  35        NARRATIVE      S01229
-015700200528     C                     PARM           WNARR  35        NARRATIVE      S01229
-015800200528     C                     PARM           WC1CN   50       COUNT
-015900200528     C*********************PARM           WC1SR   5        STAT. RETURNS  S01229
-016000200528     C                     PARM           WSRCD   5        STAT. RETURNS  S01229
-016100200528     C*********************PARM           WTAXC   2        TAX CODE       S01229
-016200200528     C                     PARM           WFTCD   2        TAX CODE       S01229
-016300200528     C*********************PARM           WAUTS   1        AUTO-SETTLE INDS01229
-016400200528     C                     PARM           WASIN   1        AUTO-SETTLE INDS01229
-016500200528     C                     PARM           WLCD    50       LAST CHG DATE
-016600200528     C*********************PARM           WCHTP   1        TYPE OF LST CHGS01229
-016700200528     C                     PARM           WTYLC   1        TYPE OF LST CHGS01229
-016800200528     C*
-016900200528     C* DEFINE KEY TO CLINT FILE
-017000200528     C*
-017100200528     C           KEY       KLIST
-017200200528     C                     KFLD           CNUM
-017300200528     C                     KFLD           RCDT
-017400200528     C*
-017500200528     C           KEYA      KLIST
-017600200528     C                     KFLD           CNUMA
-017700200528     C                     KFLD           RCDTA
-017800200528     C*
-017900200528      /EJECT
-018000200528     C****************************************************************
-018100200528     C*
-018200200528     C*   M A I N L I N E   P R O G R A M
-018300200528     C*
-018400200528     C****************************************************************
-018500200528     C*
-018600200528     C* IF RECORD HAS BEEN INSERTED, CHAIN TO CLINT   TO CHECK THAT
-018700200528     C* RECORD DOES NOT ALREADY EXIST ON THIS FILE
-018800200528     C*
-018900200528     C***********WCHTP     IFEQ 'I'                                       S01229
-019000200528     C           WTYLC     IFEQ 'I'                                       S01229
-019100200528     C*********************MOVE WCNUM     CNUM                            S01229
-019200200528     C                     MOVE WCUST     CNUM                            S01229
-019300200528     C                     MOVE '1'       RCDT
-019400200528     C           KEY       CHAINCLINT                30    CHAIN FAILED
-019500200528     C*
-019600200528     C* IF RECORD DOES NOT EXIST
-019700200528     C* THEN MOVE PARAMETERS RECEIVED INTO FILE FIELDS AND WRITE
-019800200528     C* A NEW RECORD
-019900200528     C*
-020000200528     C           *IN30     IFEQ '1'
-020100200528     C*
-020200200528     C* IF IT DOES EXIST AS DELETED(RECI *)
-020300200528     C* THEN MOVE PARAMETERS RECEIVED INTO FILE FIELDS AND UPDATE
-020400200528     C* OLD RECORD
-020500200528     C*
-020600200528     C           *IN30     OREQ '0'
-020700200528     C           RECI      ANDEQ'*'
-020800200528     C                     MOVE 'D'       RECI
-020900200528     C*********************MOVE WCNUM     CNUM                            S01229
-021000200528     C                     MOVE WCUST     CNUM                            S01229
-021100200528     C*********************MOVE WC1DI     C1DI                         ON S01229
-021200200528     C                     MOVE WCLAS     C1DI                         ON S01229
-021300200528     C                     MOVE WC1PC     C1PC                         RR.
-021400200528     C                     MOVE WC1SC     C1SC                         URR
-021500200528     C*********************MOVE WC1AC     C1AC                            S01229
-021600200528     C                     MOVE WACCD     C1AC                            S01229
-021700200528     C*********************Z-ADDWC1SQ     C1SQ                         ENCS01229
-021800200528     C                     Z-ADDWACSN     C1SQ                         ENCS01229
-021900200528     C                     MOVE WC1AN     C1AN                         D.
-022000200528     C*********************MOVE WC1SR     C1SR                         S  S01229
-022100200528     C                     MOVE WSRCD     C1SR                         S  S01229
-022200200528     C*                                                                   E19956
-022300200528     C***********          MOVE WDRF1     DEPOT                           S01229              CSE022
-022400200528     C                     MOVE PDNDR1    DEPOT                                               CSE022
-022500200528     C           DET@      IFNE *BLANKS                                   E19956
-022600200528     C           DTBLK@    ANDEQ*BLANK                                    E19956
-022700200528     C***********          MOVE DTBLK@    C101                            E19956              CSE022
-022800200528     C***********          MOVELDETNO     C101                            E19956              CSE022
-022900200528     C                     MOVE DTBLK@    WDEPOT  6                                           CSE022
-023000200528     C                     MOVELDETNO     WDEPOT                                              CSE022
-023100200528     C                     MOVE DEPREF    C201   20                                           CSE022
-023200200528     C                     MOVELWDEPOT    C201                                                CSE022
-023300200528     C                     ELSE                                           E19956
-023400200528     C*********************MOVE WC101     C101                            S01229
-023500200528     C*********************MOVE WC102     C102                            S01229
-023600200528     C*********************MOVE WC103     C103                            S01229
-023700200528     C*********************MOVE WC104     C104                            S01229
-023800200528     C*********************MOVE WC105     C105                            S01229
-023900200528     C*********************MOVE WC106     C106                            S01229
-024000200528     C*********************MOVE WC107     C107                            S01229
-024100200528     C*********************MOVE WC108     C108                            S01229
-024200200528     C*********************MOVE WC109     C109                            S01229
-024300200528     C*********************MOVE WC110     C110                            S01229
-024400200528     C***********          MOVE WDRF1     C101                            S01229              CSE022
-024500200528     C                     MOVE PDNDR1    C201                                                CSE022
-024600200528     C                     END                                            E19956
-024700200528     C*                                                                   E19956
-024800200528     C***********          MOVE WDRF2     DEPOT                           S01229              CSE022
-024900200528     C                     MOVE PDNDR2    DEPOT                                               CSE022
-025000200528     C           DET@      IFNE *BLANKS                                   E19956
-025100200528     C           DTBLK@    ANDEQ*BLANK                                    E19956
-025200200528     C***********          MOVE DTBLK@    C102                            E19956              CSE022
-025300200528     C***********          MOVELDETNO     C102                            E19956              CSE022
-025400200528     C                     MOVE DTBLK@    WDEPOT                                              CSE022
-025500200528     C                     MOVELDETNO     WDEPOT                                              CSE022
-025600200528     C                     MOVE DEPREF    C202   20                                           CSE022
-025700200528     C                     MOVELWDEPOT    C202                                                CSE022
-025800200528     C                     ELSE                                           E19956
-025900200528     C***********          MOVE WDRF2     C102                            S01229              CSE022
-026000200528     C                     MOVE PDNDR2    C202                                                CSE022
-026100200528     C                     END                                            E19956
-026200200528     C***********          MOVE WDRF3     C103                            S01229              CSE022
-026300200528     C***********          MOVE WDRF4     C104                            S01229              CSE022
-026400200528     C***********          MOVE WDRF5     C105                            S01229              CSE022
-026500200528     C***********          MOVE WDRF6     C106                            S01229              CSE022
-026600200528     C***********          MOVE WDRF7     C107                            S01229              CSE022
-026700200528     C***********          MOVE WDRF8     C108                            S01229              CSE022
-026800200528     C***********          MOVE WDRF9     C109                            S01229              CSE022
-026900200528     C***********          MOVE WDRF0     C110                            S01229              CSE022
-027000200528     C                     MOVE PDNDR3    C203   20                                           CSE022
-027100200528     C                     MOVE PDNDR4    C204   20                                           CSE022
-027200200528     C                     MOVE PDNDR5    C205   20                                           CSE022
-027300200528     C                     MOVE PDNDR6    C206   20                                           CSE022
-027400200528     C                     MOVE PDNDR7    C207   20                                           CSE022
-027500200528     C                     MOVE PDNDR8    C208   20                                           CSE022
-027600200528     C                     MOVE PDNDR9    C209   20                                           CSE022
-027700200528     C                     MOVE PDNDR0    C210   20                                           CSE022
-027800200528     C                     MOVE WPN01     PN01
-027900200528     C                     MOVE WPN02     PN02
-028000200528     C                     MOVE WPN03     PN03
-028100200528     C                     MOVE WPN04     PN04
-028200200528     C                     MOVE WPN05     PN05
-028300200528     C                     MOVE WPN06     PN06
-028400200528     C                     MOVE WPN07     PN07
-028500200528     C                     MOVE WPN08     PN08
-028600200528     C                     MOVE WPN09     PN09
-028700200528     C                     MOVE WPN10     PN10
-028800200528     C*********************MOVE WC1CF     C1CF                         ND.S01229
-028900200528     C                     MOVE WCFIN     C1CF                         ND.S01229
-029000200528     C*********************MOVE WC1VF     C1VF                         CY S01229
-029100200528     C                     MOVE WSTFQ     C1VF                         CY S01229
-029200200528     C*********************Z-ADDWC1NV     C1NV                         TE S01229
-029300200528     C                     Z-ADDWNSDT     C1NV                         TE S01229
-029400200528     C*********************Z-ADDWC1VB     C1VB                         TE S01229
-029500200528     C                     Z-ADDWSBDM     C1VB                         TE S01229
-029600200528     C*********************MOVE WC1PA     C1PA                         MENS01229
-029700200528     C                     MOVE WPLAG     C1PA                         MENS01229
-029800200528     C*********************MOVE WC1NR     C1NR                            S01229
-029900200528     C                     MOVE WNARR     C1NR                            S01229
-030000200528     C                     Z-ADDWC1CN     C1CN
-030100200528     C***                  MOVE WTAXC     TAXC
-030200200528     C                     MOVE WFTCD     TAXC                                                259250
-030300200528     C***                  MOVE WAUTS     AUTS                         IND
-030400200528     C                     MOVE WASIN     AUTS                            E20531
-030500200528     C*********************MOVE WCHTP     CHTP                            S01229
-030600200528     C                     MOVE WTYLC     CHTP                            S01229
-030700200528     C                     Z-ADDWLCD      LCD
-030800200528     C*
-030900200528     C* IF RECORD FOUND ON FILE AND IS NOT A DELETED RECORD SET ERROR
-031000200528     C*
-031100200528     C                     ELSE
-031200200528     C*
-031300200528     C                     SETON                     31
-031400200528     C                     END
-031500200528     C*
-031600200528     C           *IN30     IFEQ '1'
-031700200528     C                     WRITECLINTSEF               31   ERROR
-031800200528     C                     END
-031900200528     C*
-032000200528     C           *IN30     IFEQ '0'
-032100200528     C           *IN31     ANDEQ'0'
-032200200528     C                     UPDATCLINTSEF               31   ERROR
-032300200528     C                     END
-032400200528     C*
-032500200528     C           *IN31     IFEQ '1'
-032600200528     C                     MOVE '*ERROR*' P0RTN
-032700200528     C                     END
-032800200528     C*
-032900200528     C* RECORD IS NOT AN INSERT
-033000200528     C*
-033100200528     C                     END
-033200200528     C*
-033300200528     C* IF RECORD HAS BEEN CHANGED, RETRIEVE RECORD FROM FILE
-033400200528     C*
-033500200528     C***********WCHTP     IFEQ 'A'                                       S01229
-033600200528     C           WTYLC     IFEQ 'A'                                       S01229
-033700200528     C*********************MOVE WCNUM     CNUM                            S01229
-033800200528     C                     MOVE WCUST     CNUM                            S01229
-033900200528     C                     MOVE '1'       RCDT
-034000200528     C           KEY       CHAINCLINT                30    CHAIN FAILED
-034100200528     C*
-034200200528     C* IF RECORD FOUND, MOVE RECEIVED PARAMETERS INTO FILE FIELDS
-034300200528     C* AND UPDATE
-034400200528     C*
-034500200528     C           *IN30     IFEQ '0'
-034600200528     C*********************MOVE WCNUM     CNUM                            S01229
-034700200528     C                     MOVE WCUST     CNUM                            S01229
-034800200528     C*********************MOVE WC1DI     C1DI                         ON S01229
-034900200528     C                     MOVE WCLAS     C1DI                         ON S01229
-035000200528     C                     MOVE WC1PC     C1PC                         RR.
-035100200528     C                     MOVE WC1SC     C1SC                         URR
-035200200528     C*********************MOVE WC1AC     C1AC                            S01229
-035300200528     C                     MOVE WACCD     C1AC                            S01229
-035400200528     C*********************Z-ADDWC1SQ     C1SQ                         ENCS01229
-035500200528     C                     Z-ADDWACSN     C1SQ                         ENCS01229
-035600200528     C                     MOVE WC1AN     C1AN                         D.
-035700200528     C*********************MOVE WC1SR     C1SR                         S  S01229
-035800200528     C*********************MOVE WC101     C101                            S01229
-035900200528     C*********************MOVE WC102     C102                            S01229
-036000200528     C*********************MOVE WC103     C103                            S01229
-036100200528     C*********************MOVE WC104     C104                            S01229
-036200200528     C*********************MOVE WC105     C105                            S01229
-036300200528     C*********************MOVE WC106     C106                            S01229
-036400200528     C*********************MOVE WC107     C107                            S01229
-036500200528     C*********************MOVE WC108     C108                            S01229
-036600200528     C*********************MOVE WC109     C109                            S01229
-036700200528     C*********************MOVE WC110     C110                            S01229
-036800200528     C***********          MOVE WDRF1     DEPOT                           S01229              CSE022
-036900200528     C                     MOVE PDNDR1    DEPOT                                               CSE022
-037000200528     C           DET@      IFNE *BLANKS                                   E19956
-037100200528     C           DTBLK@    ANDEQ*BLANK                                    E19956
-037200200528     C***********          MOVE DTBLK@    C101                            E19956              CSE022
-037300200528     C***********          MOVELDETNO     C101                            E19956              CSE022
-037400200528     C                     MOVE DTBLK@    WDEPOT                                              CSE022
-037500200528     C                     MOVELDETNO     WDEPOT                                              CSE022
-037600200528     C                     MOVE DEPREF    C201                                                CSE022
-037700200528     C                     MOVELWDEPOT    C201                                                CSE022
-037800200528     C                     ELSE                                           E19956
-037900200528     C***********          MOVE WDRF1     C101                            S01229              CSE022
-038000200528     C                     MOVE PDNDR1    C201                                                CSE022
-038100200528     C                     END                                            E19956
-038200200528     C*                                                                   E19956
-038300200528     C***********          MOVE WDRF2     DEPOT                           S01229              CSE022
-038400200528     C                     MOVE PDNDR2    DEPOT                                               CSE022
-038500200528     C           DET@      IFNE *BLANKS                                   E19956
-038600200528     C           DTBLK@    ANDEQ*BLANK                                    E19956
-038700200528     C***********          MOVE DTBLK@    C102                            E19956              CSE022
-038800200528     C***********          MOVELDETNO     C102                            E19956              CSE022
-038900200528     C                     MOVE DTBLK@    WDEPOT                                              CSE022
-039000200528     C                     MOVELDETNO     WDEPOT                                              CSE022
-039100200528     C                     MOVE DEPREF    C202                                                CSE022
-039200200528     C                     MOVELWDEPOT    C202                                                CSE022
-039300200528     C                     ELSE                                           E19956
-039400200528     C***********          MOVE WDRF2     C102                            S01229              CSE022
-039500200528     C                     MOVE PDNDR2    C202                                                CSE022
-039600200528     C                     END                                            E19956
-039700200528     C                     MOVE WSRCD     C1SR                         S  S01229
-039800200528     C***********          MOVE WDRF3     C103                            S01229              CSE022
-039900200528     C***********          MOVE WDRF4     C104                            S01229              CSE022
-040000200528     C***********          MOVE WDRF5     C105                            S01229              CSE022
-040100200528     C***********          MOVE WDRF6     C106                            S01229              CSE022
-040200200528     C***********          MOVE WDRF7     C107                            S01229              CSE022
-040300200528     C***********          MOVE WDRF8     C108                            S01229              CSE022
-040400200528     C***********          MOVE WDRF9     C109                            S01229              CSE022
-040500200528     C***********          MOVE WDRF0     C110                            S01229              CSE022
-040600200528     C                     MOVE PDNDR3    C203                                                CSE022
-040700200528     C                     MOVE PDNDR4    C204                                                CSE022
-040800200528     C                     MOVE PDNDR5    C205                                                CSE022
-040900200528     C                     MOVE PDNDR6    C206                                                CSE022
-041000200528     C                     MOVE PDNDR7    C207                                                CSE022
-041100200528     C                     MOVE PDNDR8    C208                                                CSE022
-041200200528     C                     MOVE PDNDR9    C209                                                CSE022
-041300200528     C                     MOVE PDNDR0    C210                                                CSE022
-041400200528     C                     MOVE WPN01     PN01
-041500200528     C                     MOVE WPN02     PN02
-041600200528     C                     MOVE WPN03     PN03
-041700200528     C                     MOVE WPN04     PN04
-041800200528     C                     MOVE WPN05     PN05
-041900200528     C                     MOVE WPN06     PN06
-042000200528     C                     MOVE WPN07     PN07
-042100200528     C                     MOVE WPN08     PN08
-042200200528     C                     MOVE WPN09     PN09
-042300200528     C                     MOVE WPN10     PN10
-042400200528     C*********************MOVE WC1CF     C1CF                         ND.S01229
-042500200528     C                     MOVE WCFIN     C1CF                         ND.S01229
-042600200528     C*********************MOVE WC1VF     C1VF                         CY S01229
-042700200528     C                     MOVE WSTFQ     C1VF                         CY S01229
-042800200528     C*********************Z-ADDWC1NV     C1NV                         TE S01229
-042900200528     C                     Z-ADDWNSDT     C1NV                         TE S01229
-043000200528     C*********************Z-ADDWC1VB     C1VB                         TE S01229
-043100200528     C                     Z-ADDWSBDM     C1VB                         TE S01229
-043200200528     C*********************MOVE WC1PA     C1PA                         MENS01229
-043300200528     C                     MOVE WPLAG     C1PA                         MENS01229
-043400200528     C*********************MOVE WC1NR     C1NR                            S01229
-043500200528     C                     MOVE WNARR     C1NR                            S01229
-043600200528     C                     Z-ADDWC1CN     C1CN
-043700200528     C***                  MOVE WTAXC     TAXC
-043800200528     C                     MOVE WFTCD     TAXC                                                259250
-043900200528     C***                  MOVE WAUTS     AUTS                         IND
-044000200528     C                     MOVE WASIN     AUTS                            E20531
-044100200528     C*********************MOVE WCHTP     CHTP                            S01229
-044200200528     C                     MOVE WTYLC     CHTP                            S01229
-044300200528     C                     Z-ADDWLCD      LCD
-044400200528     C                     UPDATCLINTSEF               30  ERROR
-044500200528     C                     END
-044600200528     C*
-044700200528     C* IF RECORD NOT FOUND OR ERROR OCCURRED ON UPDATE SET ERROR
-044800200528     C* PARAMETER
-044900200528     C*
-045000200528     C           *IN30     IFEQ '1'
-045100200528     C                     MOVE '*ERROR*' P0RTN
-045200200528     C                     END
-045300200528     C*
-045400200528     C* RECORD IS NOT A CHANGED RECORD
-045500200528     C*
-045600200528     C                     END
-045700200528     C*
-045800200528     C* IF RECORD HAS BEEN DELETED FROM THE NEW FILE, RETRIEVE IT
-045900200528     C* FROM CLINTSE
-046000200528     C*
-046100200528     C***********WCHTP     IFEQ 'D'                                       S01229
-046200200528     C           WTYLC     IFEQ 'D'                                       S01229
-046300200528     C*********************MOVE WCNUM     CNUM                            S01229
-046400200528     C                     MOVE WCUST     CNUM                            S01229
-046500200528     C                     MOVE '1'       RCDT
-046600200528     C           KEY       CHAINCLINT                30    CHAIN FAILED
-046700200528     C*
-046800200528     C* IF RECORD FOUND, UPDATE RELEVANT FIELDS (WE DON'T ACTUALLY
-046900200528     C* DELETE ANY RECORDS FROM THE OLD FILES)
-047000200528     C*
-047100200528     C           *IN30     IFEQ '0'
-047200200528     C                     MOVE '*'       RECI
-047300200528     C*********************MOVE WCHTP     CHTP                            S01229
-047400200528     C                     MOVE WTYLC     CHTP                            S01229
-047500200528     C                     Z-ADDWLCD      LCD
-047600200528     C                     UPDATCLINTSEF               30  ERROR
-047700200528     C                     END
-047800200528     C*
-047900200528     C* IF RECORD NOT FOUND OR ERROR OCCURRED ON UPDATE SET ERROR
-048000200528     C* PARAMETER
-048100200528     C*
-048200200528     C           *IN30     IFEQ '1'
-048300200528     C                     MOVE '*ERROR*' P0RTN
-048400200528     C                     END
-048500200528     C*
-048600200528     C                     END
-048700200528     C*
-048800200528     C* IF NO ERRORS HAVE OCCURRED ON CLINTSE UPDATE
-048900200528     C*
-049000200528     C           P0RTN     IFEQ *BLANKS
-049100200528     C*
-049200200528     C* RETRIEVE OLD TRAILER FILE RECORD
-049300200528     C*
-049400200528     C**********           MOVE '0'       CNUMA                                               CSD027
-049500200528     C                     MOVE *BLANKS   CNUMA                                               CSD027
-049600200528     C                     MOVE '0'       RCDTA
-049700200528     C*
-049800200528     C           KEYA      CHAINCLINT                32    CHAIN FAILED
-049900200528     C           *IN32     IFEQ '0'
-050000200528     C*
-050100200528     C* UPDATE AS APPROPRIATE THE NUMBER OF INSERTS,AMENDS OR DELETES
-050200200528     C* ON THE TRAILER FILE
-050300200528     C*
-050400200528     C***********WCHTP     IFEQ 'I'                                       S01229
-050500200528     C           WTYLC     IFEQ 'I'                                       S01229
-050600200528     C                     ADD  1         TSTI
-050700200528     C                     ADD  1         TSTR
-050800200528     C                     END
-050900200528     C*
-051000200528     C***********WCHTP     IFEQ 'A'                                       S01229
-051100200528     C           WTYLC     IFEQ 'A'                                       S01229
-051200200528     C                     ADD  1         TSTA
-051300200528     C                     END
-051400200528     C*
-051500200528     C***********WCHTP     IFEQ 'D'                                       S01229
-051600200528     C           WTYLC     IFEQ 'D'                                       S01229
-051700200528     C                     ADD  1         TSTD
-051800200528     C                     SUB  1         TSTR
-051900200528     C                     END
-052000200528     C*
-052100200528     C                     UPDATCLINTCAF               32    ERROR
-052200200528     C*
-052300200528     C                     END
-052400200528     C*
-052500200528     C* CHECK FOR ANY ERRORS AND SET ERROR PARAMETER FOR RETURN TO
-052600200528     C* NEW FILE MAINTENANCE PROGRAM
-052700200528     C*
-052800200528     C           *IN32     IFEQ '1'
-052900200528     C                     MOVE '*ERROR*' P0RTN
-053000200528     C                     END
-053100200528     C*
-053200200528     C                     END
-053300200528     C*
-053400200528     C                     SETON                     LR
-053500200528     C                     RETRN
-053600200528     C*
-053700200528** CPY@     : Copyright notice for inclusion in all programs           grams
-053800200528(c) Finastra International Limited 2001
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas BU BackGnd Upd of CLINTSE')                      *
+     F********************************************************************
+     F*                                                                  *
+     F*  Midas  STANDING DATA MODULE
+     F*                                                                  *
+     F*     CLINTSE - BACKGROUND UPDATE OF CLINTSE FILE                  *
+     F*                                                                  *
+     F*  (c) Finastra International Limited 2001                         *
+     F*                                                                  *
+     F*  Last Amend No. 259250             Date 22May20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
+      *                 BUG23967           Date 13May09               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSE022             Date 29Mar01               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 E20531             Date 05Dec89               *
+      *                 E19956             Date 23Oct89               *
+     F*                   S01230              DATE 07/11/89              *S01230
+     F*                   S01229              DATE 19/10/89              *
+     F*                                                                  *
+     F********************************************************************
+      *                                                               *
+      *  259250 - Securities Trading Customer Details Maint -         *
+      *           Tax code error.                                     *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CER059 - German Feature Upgrade to Delhi                     *
+      *  BUG23967 - Add Local Industry Code Field. (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      *  CSE022 - Depository Definition                               *
+     F*     E20531 - AUTO-SETTLE INDICATOR NOT UPDATED TO CLINTSE        *E20531
+     F*     E19956 - DEPOT REFERENCE FIELDS FOR EUROCLEAR & CEDEL        *E19956
+     F*              SHOULD BE LEFT ADJUSTED AS EUCLID VALIDATION        *E19956
+     F*              PROGRAMS EXPECT THIS FORMAT                         *E19956
+     F*     S01230 - STANDARDISE PROGRAMS                                *S01230
+     F*     S01229 - SYNON FIELD NAME CHANGES                            *S01229
+     F********************************************************************S01229
+     F* ID F  C  H  L    FUNCTION OF INDICATORS                          *
+     F*                                                                  *
+     F*       30      CHAIN CLINT FAILED/ERROR                           *
+     F*       31      ERROR ON CLINT FILE                                *
+     F*       32      CHAIN CLINT FAILED/ERROR                           *
+     F*                                                                  *
+     F********************************************************************
+     FCLINT   UF  E           K        DISK                      A
+     F                                              KCOMIT
+     F            CLINTCBF                          KIGNORE
+     F            CLINTCCF                          KIGNORE
+     F            CLINTC1F                          KIGNORE
+      /EJECT
+     E* Description     : Copyright notice for inclusion in all programs  S01230
+     E*                                                                   S01230
+     E********************************************************************S01230
+     E                    CPY@    1   1 80               Copyright        S01230
+     E********************************************************************S01230
+      /EJECT                                                              S01230
+     I*
+     I* RENAME RECORD ID ON HEADER FILE TO AVOID OVERWRITING
+     I*
+     ICLINTCAF
+     I              CNUM                            CNUMA
+     I              RCDT                            RCDTA
+     I**                                                                  E19956
+     I**  DATA STRUCTURE TO LEFT ADJUST DEPOT REFERENCES                  E19956
+     IDEPOT       DS                                                      E19956
+     I                                        1   1 DTBLK@                E19956
+     I                                        2   60DETNO                 E19956
+     I                                        1   6 DET@                  E19956
+     I                                        7  20 DEPREF                                    CSE022
+     I*                                                                   S01230
+     I* Description     : Copyright notice for inclusion in all programs  S01230
+     I*                                                                   S01230
+     IA@CPY       DS                                                      S01230
+     I* Copyright array                                                   S01230
+     I                                        1  80 CPY@                  S01230
+     I*                                                                   S01230
+      /EJECT
+     C*
+     C           *ENTRY    PLIST
+     C                     PARM           P0RTN   7        RETURN CODE
+     C*********************PARM           WCNUM   6        CUSTOMER NO.   S01229
+     C                     PARM           WCUST   6        CUSTOMER NO.   S01229
+     C*********************PARM           WC1AC   4        ACCOUNT CODE   S01229
+     C**********           PARM           WACCD   4        ACCOUNT CODE                S01229 CGL029
+     C                     PARM           WACCD  10                                           CGL029
+     C                     PARM           WC1PC   3        PORTFOLIO CURR.
+     C                     PARM           WC1SC   3        SETTLEMENT CURR
+     C                     PARM           WC1AN   1        ALT. NAME/ADD.
+     C*********************PARM           WC1SQ   20       ACCOUNT SEQUENCS01229
+     C                     PARM           WACSN   20       ACCOUNT SEQUENCS01229
+     C*********************PARM           WC1DI   1        CLASSIFICATION S01229
+     C                     PARM           WCLAS   1        CLASSIFICATION S01229
+     C*********************PARM           WC101   6        DEPOT 1 REF.   S01229
+     C*********************PARM           WC102   6        DEPOT 2 REF.   S01229
+     C*********************PARM           WC103   6        DEPOT 3 REF.   S01229
+     C*********************PARM           WC104   6        DEPOT 4 REF.   S01229
+     C*********************PARM           WC105   6        DEPOT 5 REF.   S01229
+     C*********************PARM           WC106   6        DEPOT 6 REF.   S01229
+     C*********************PARM           WC107   6        DEPOT 7 REF.   S01229
+     C*********************PARM           WC108   6        DEPOT 8 REF.   S01229
+     C*********************PARM           WC109   6        DEPOT 9 REF.   S01229
+     C*********************PARM           WC110   6        DEPOT 10 REF   S01229
+     C***********          PARM           WDRF1   6        DEPOT 1 REF.   S01229              CSE022
+     C***********          PARM           WDRF2   6        DEPOT 2 REF.   S01229              CSE022
+     C***********          PARM           WDRF3   6        DEPOT 3 REF.   S01229              CSE022
+     C***********          PARM           WDRF4   6        DEPOT 4 REF.   S01229              CSE022
+     C***********          PARM           WDRF5   6        DEPOT 5 REF.   S01229              CSE022
+     C***********          PARM           WDRF6   6        DEPOT 6 REF.   S01229              CSE022
+     C***********          PARM           WDRF7   6        DEPOT 7 REF.   S01229              CSE022
+     C***********          PARM           WDRF8   6        DEPOT 8 REF.   S01229              CSE022
+     C***********          PARM           WDRF9   6        DEPOT 9 REF.   S01229              CSE022
+     C***********          PARM           WDRF0   6        DEPOT 10 REF   S01229              CSE022
+      *                                                                                       CSE022
+      **  New Depot Reference                                                                 CSE022
+      *                                                                                       CSE022
+     C                     PARM           PDNDR1 20        New Dep Ref 1                      CSE022
+     C                     PARM           PDNDR2 20        New Dep Ref 2                      CSE022
+     C                     PARM           PDNDR3 20        New Dep Ref 3                      CSE022
+     C                     PARM           PDNDR4 20        New Dep Ref 4                      CSE022
+     C                     PARM           PDNDR5 20        New Dep Ref 5                      CSE022
+     C                     PARM           PDNDR6 20        New Dep Ref 6                      CSE022
+     C                     PARM           PDNDR7 20        New Dep Ref 7                      CSE022
+     C                     PARM           PDNDR8 20        New Dep Ref 8                      CSE022
+     C                     PARM           PDNDR9 20        New Dep Ref 9                      CSE022
+     C                     PARM           PDNDR0 20        New Dep Ref 10                     CSE022
+      *                                                                                       CSE022
+     C                     PARM           WPN01   2        PARTIC. 1
+     C                     PARM           WPN02   2        PARTIC. 2
+     C                     PARM           WPN03   2        PARTIC. 3
+     C                     PARM           WPN04   2        PARTIC. 4
+     C                     PARM           WPN05   2        PARTIC. 5
+     C                     PARM           WPN06   2        PARTIC. 6
+     C                     PARM           WPN07   2        PARTIC. 7
+     C                     PARM           WPN08   2        PARTIC. 8
+     C                     PARM           WPN09   2        PARTIC. 9
+     C                     PARM           WPN10   2        PARTIC. 10
+     C*********************PARM           WC1CF   1        CEDEL FUNG.IND.S01229
+     C                     PARM           WCFIN   1        CEDEL FUNG.IND.S01229
+     C*********************PARM           WC1VF   1        VAL. FREQUENCY S01229
+     C                     PARM           WSTFQ   1        STAT FREQUENCY S01229
+     C*********************PARM           WC1NV   50       NEXT VAL. DATE S01229
+     C                     PARM           WNSDT   50       NEXT STAT DATE S01229
+     C*********************PARM           WC1VB   20       VAL. BASE DATE S01229
+     C                     PARM           WSBDM   20       VAL. BASE DATE S01229
+     C*********************PARM           WC1PA   1        PLEDGE AGREEMENS01229
+     C                     PARM           WPLAG   1        PLEDGE AGREEMENS01229
+     C*********************PARM           WC1NR  35        NARRATIVE      S01229
+     C                     PARM           WNARR  35        NARRATIVE      S01229
+     C                     PARM           WC1CN   50       COUNT
+     C*********************PARM           WC1SR   5        STAT. RETURNS  S01229
+     C                     PARM           WSRCD   5        STAT. RETURNS  S01229
+     C*********************PARM           WTAXC   2        TAX CODE       S01229
+     C                     PARM           WFTCD   2        TAX CODE       S01229
+     C*********************PARM           WAUTS   1        AUTO-SETTLE INDS01229
+     C                     PARM           WASIN   1        AUTO-SETTLE INDS01229
+     C                     PARM           WLCD    50       LAST CHG DATE
+     C*********************PARM           WCHTP   1        TYPE OF LST CHGS01229
+     C                     PARM           WTYLC   1        TYPE OF LST CHGS01229
+     C*
+     C* DEFINE KEY TO CLINT FILE
+     C*
+     C           KEY       KLIST
+     C                     KFLD           CNUM
+     C                     KFLD           RCDT
+     C*
+     C           KEYA      KLIST
+     C                     KFLD           CNUMA
+     C                     KFLD           RCDTA
+     C*
+      /EJECT
+     C****************************************************************
+     C*
+     C*   M A I N L I N E   P R O G R A M
+     C*
+     C****************************************************************
+     C*
+     C* IF RECORD HAS BEEN INSERTED, CHAIN TO CLINT   TO CHECK THAT
+     C* RECORD DOES NOT ALREADY EXIST ON THIS FILE
+     C*
+     C***********WCHTP     IFEQ 'I'                                       S01229
+     C           WTYLC     IFEQ 'I'                                       S01229
+     C*********************MOVE WCNUM     CNUM                            S01229
+     C                     MOVE WCUST     CNUM                            S01229
+     C                     MOVE '1'       RCDT
+     C           KEY       CHAINCLINT                30    CHAIN FAILED
+     C*
+     C* IF RECORD DOES NOT EXIST
+     C* THEN MOVE PARAMETERS RECEIVED INTO FILE FIELDS AND WRITE
+     C* A NEW RECORD
+     C*
+     C           *IN30     IFEQ '1'
+     C*
+     C* IF IT DOES EXIST AS DELETED(RECI *)
+     C* THEN MOVE PARAMETERS RECEIVED INTO FILE FIELDS AND UPDATE
+     C* OLD RECORD
+     C*
+     C           *IN30     OREQ '0'
+     C           RECI      ANDEQ'*'
+     C                     MOVE 'D'       RECI
+     C*********************MOVE WCNUM     CNUM                            S01229
+     C                     MOVE WCUST     CNUM                            S01229
+     C*********************MOVE WC1DI     C1DI                         ON S01229
+     C                     MOVE WCLAS     C1DI                         ON S01229
+     C                     MOVE WC1PC     C1PC                         RR.
+     C                     MOVE WC1SC     C1SC                         URR
+     C*********************MOVE WC1AC     C1AC                            S01229
+     C                     MOVE WACCD     C1AC                            S01229
+     C*********************Z-ADDWC1SQ     C1SQ                         ENCS01229
+     C                     Z-ADDWACSN     C1SQ                         ENCS01229
+     C                     MOVE WC1AN     C1AN                         D.
+     C*********************MOVE WC1SR     C1SR                         S  S01229
+     C                     MOVE WSRCD     C1SR                         S  S01229
+     C*                                                                   E19956
+     C***********          MOVE WDRF1     DEPOT                           S01229              CSE022
+     C                     MOVE PDNDR1    DEPOT                                               CSE022
+     C           DET@      IFNE *BLANKS                                   E19956
+     C           DTBLK@    ANDEQ*BLANK                                    E19956
+     C***********          MOVE DTBLK@    C101                            E19956              CSE022
+     C***********          MOVELDETNO     C101                            E19956              CSE022
+     C                     MOVE DTBLK@    WDEPOT  6                                           CSE022
+     C                     MOVELDETNO     WDEPOT                                              CSE022
+     C                     MOVE DEPREF    C201   20                                           CSE022
+     C                     MOVELWDEPOT    C201                                                CSE022
+     C                     ELSE                                           E19956
+     C*********************MOVE WC101     C101                            S01229
+     C*********************MOVE WC102     C102                            S01229
+     C*********************MOVE WC103     C103                            S01229
+     C*********************MOVE WC104     C104                            S01229
+     C*********************MOVE WC105     C105                            S01229
+     C*********************MOVE WC106     C106                            S01229
+     C*********************MOVE WC107     C107                            S01229
+     C*********************MOVE WC108     C108                            S01229
+     C*********************MOVE WC109     C109                            S01229
+     C*********************MOVE WC110     C110                            S01229
+     C***********          MOVE WDRF1     C101                            S01229              CSE022
+     C                     MOVE PDNDR1    C201                                                CSE022
+     C                     END                                            E19956
+     C*                                                                   E19956
+     C***********          MOVE WDRF2     DEPOT                           S01229              CSE022
+     C                     MOVE PDNDR2    DEPOT                                               CSE022
+     C           DET@      IFNE *BLANKS                                   E19956
+     C           DTBLK@    ANDEQ*BLANK                                    E19956
+     C***********          MOVE DTBLK@    C102                            E19956              CSE022
+     C***********          MOVELDETNO     C102                            E19956              CSE022
+     C                     MOVE DTBLK@    WDEPOT                                              CSE022
+     C                     MOVELDETNO     WDEPOT                                              CSE022
+     C                     MOVE DEPREF    C202   20                                           CSE022
+     C                     MOVELWDEPOT    C202                                                CSE022
+     C                     ELSE                                           E19956
+     C***********          MOVE WDRF2     C102                            S01229              CSE022
+     C                     MOVE PDNDR2    C202                                                CSE022
+     C                     END                                            E19956
+     C***********          MOVE WDRF3     C103                            S01229              CSE022
+     C***********          MOVE WDRF4     C104                            S01229              CSE022
+     C***********          MOVE WDRF5     C105                            S01229              CSE022
+     C***********          MOVE WDRF6     C106                            S01229              CSE022
+     C***********          MOVE WDRF7     C107                            S01229              CSE022
+     C***********          MOVE WDRF8     C108                            S01229              CSE022
+     C***********          MOVE WDRF9     C109                            S01229              CSE022
+     C***********          MOVE WDRF0     C110                            S01229              CSE022
+     C                     MOVE PDNDR3    C203   20                                           CSE022
+     C                     MOVE PDNDR4    C204   20                                           CSE022
+     C                     MOVE PDNDR5    C205   20                                           CSE022
+     C                     MOVE PDNDR6    C206   20                                           CSE022
+     C                     MOVE PDNDR7    C207   20                                           CSE022
+     C                     MOVE PDNDR8    C208   20                                           CSE022
+     C                     MOVE PDNDR9    C209   20                                           CSE022
+     C                     MOVE PDNDR0    C210   20                                           CSE022
+     C                     MOVE WPN01     PN01
+     C                     MOVE WPN02     PN02
+     C                     MOVE WPN03     PN03
+     C                     MOVE WPN04     PN04
+     C                     MOVE WPN05     PN05
+     C                     MOVE WPN06     PN06
+     C                     MOVE WPN07     PN07
+     C                     MOVE WPN08     PN08
+     C                     MOVE WPN09     PN09
+     C                     MOVE WPN10     PN10
+     C*********************MOVE WC1CF     C1CF                         ND.S01229
+     C                     MOVE WCFIN     C1CF                         ND.S01229
+     C*********************MOVE WC1VF     C1VF                         CY S01229
+     C                     MOVE WSTFQ     C1VF                         CY S01229
+     C*********************Z-ADDWC1NV     C1NV                         TE S01229
+     C                     Z-ADDWNSDT     C1NV                         TE S01229
+     C*********************Z-ADDWC1VB     C1VB                         TE S01229
+     C                     Z-ADDWSBDM     C1VB                         TE S01229
+     C*********************MOVE WC1PA     C1PA                         MENS01229
+     C                     MOVE WPLAG     C1PA                         MENS01229
+     C*********************MOVE WC1NR     C1NR                            S01229
+     C                     MOVE WNARR     C1NR                            S01229
+     C                     Z-ADDWC1CN     C1CN
+     C***                  MOVE WTAXC     TAXC
+     C                     MOVE WFTCD     TAXC                                                259250
+     C***                  MOVE WAUTS     AUTS                         IND
+     C                     MOVE WASIN     AUTS                            E20531
+     C*********************MOVE WCHTP     CHTP                            S01229
+     C                     MOVE WTYLC     CHTP                            S01229
+     C                     Z-ADDWLCD      LCD
+     C*
+     C* IF RECORD FOUND ON FILE AND IS NOT A DELETED RECORD SET ERROR
+     C*
+     C                     ELSE
+     C*
+     C                     SETON                     31
+     C                     END
+     C*
+     C           *IN30     IFEQ '1'
+     C                     WRITECLINTSEF               31   ERROR
+     C                     END
+     C*
+     C           *IN30     IFEQ '0'
+     C           *IN31     ANDEQ'0'
+     C                     UPDATCLINTSEF               31   ERROR
+     C                     END
+     C*
+     C           *IN31     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C* RECORD IS NOT AN INSERT
+     C*
+     C                     END
+     C*
+     C* IF RECORD HAS BEEN CHANGED, RETRIEVE RECORD FROM FILE
+     C*
+     C***********WCHTP     IFEQ 'A'                                       S01229
+     C           WTYLC     IFEQ 'A'                                       S01229
+     C*********************MOVE WCNUM     CNUM                            S01229
+     C                     MOVE WCUST     CNUM                            S01229
+     C                     MOVE '1'       RCDT
+     C           KEY       CHAINCLINT                30    CHAIN FAILED
+     C*
+     C* IF RECORD FOUND, MOVE RECEIVED PARAMETERS INTO FILE FIELDS
+     C* AND UPDATE
+     C*
+     C           *IN30     IFEQ '0'
+     C*********************MOVE WCNUM     CNUM                            S01229
+     C                     MOVE WCUST     CNUM                            S01229
+     C*********************MOVE WC1DI     C1DI                         ON S01229
+     C                     MOVE WCLAS     C1DI                         ON S01229
+     C                     MOVE WC1PC     C1PC                         RR.
+     C                     MOVE WC1SC     C1SC                         URR
+     C*********************MOVE WC1AC     C1AC                            S01229
+     C                     MOVE WACCD     C1AC                            S01229
+     C*********************Z-ADDWC1SQ     C1SQ                         ENCS01229
+     C                     Z-ADDWACSN     C1SQ                         ENCS01229
+     C                     MOVE WC1AN     C1AN                         D.
+     C*********************MOVE WC1SR     C1SR                         S  S01229
+     C*********************MOVE WC101     C101                            S01229
+     C*********************MOVE WC102     C102                            S01229
+     C*********************MOVE WC103     C103                            S01229
+     C*********************MOVE WC104     C104                            S01229
+     C*********************MOVE WC105     C105                            S01229
+     C*********************MOVE WC106     C106                            S01229
+     C*********************MOVE WC107     C107                            S01229
+     C*********************MOVE WC108     C108                            S01229
+     C*********************MOVE WC109     C109                            S01229
+     C*********************MOVE WC110     C110                            S01229
+     C***********          MOVE WDRF1     DEPOT                           S01229              CSE022
+     C                     MOVE PDNDR1    DEPOT                                               CSE022
+     C           DET@      IFNE *BLANKS                                   E19956
+     C           DTBLK@    ANDEQ*BLANK                                    E19956
+     C***********          MOVE DTBLK@    C101                            E19956              CSE022
+     C***********          MOVELDETNO     C101                            E19956              CSE022
+     C                     MOVE DTBLK@    WDEPOT                                              CSE022
+     C                     MOVELDETNO     WDEPOT                                              CSE022
+     C                     MOVE DEPREF    C201                                                CSE022
+     C                     MOVELWDEPOT    C201                                                CSE022
+     C                     ELSE                                           E19956
+     C***********          MOVE WDRF1     C101                            S01229              CSE022
+     C                     MOVE PDNDR1    C201                                                CSE022
+     C                     END                                            E19956
+     C*                                                                   E19956
+     C***********          MOVE WDRF2     DEPOT                           S01229              CSE022
+     C                     MOVE PDNDR2    DEPOT                                               CSE022
+     C           DET@      IFNE *BLANKS                                   E19956
+     C           DTBLK@    ANDEQ*BLANK                                    E19956
+     C***********          MOVE DTBLK@    C102                            E19956              CSE022
+     C***********          MOVELDETNO     C102                            E19956              CSE022
+     C                     MOVE DTBLK@    WDEPOT                                              CSE022
+     C                     MOVELDETNO     WDEPOT                                              CSE022
+     C                     MOVE DEPREF    C202                                                CSE022
+     C                     MOVELWDEPOT    C202                                                CSE022
+     C                     ELSE                                           E19956
+     C***********          MOVE WDRF2     C102                            S01229              CSE022
+     C                     MOVE PDNDR2    C202                                                CSE022
+     C                     END                                            E19956
+     C                     MOVE WSRCD     C1SR                         S  S01229
+     C***********          MOVE WDRF3     C103                            S01229              CSE022
+     C***********          MOVE WDRF4     C104                            S01229              CSE022
+     C***********          MOVE WDRF5     C105                            S01229              CSE022
+     C***********          MOVE WDRF6     C106                            S01229              CSE022
+     C***********          MOVE WDRF7     C107                            S01229              CSE022
+     C***********          MOVE WDRF8     C108                            S01229              CSE022
+     C***********          MOVE WDRF9     C109                            S01229              CSE022
+     C***********          MOVE WDRF0     C110                            S01229              CSE022
+     C                     MOVE PDNDR3    C203                                                CSE022
+     C                     MOVE PDNDR4    C204                                                CSE022
+     C                     MOVE PDNDR5    C205                                                CSE022
+     C                     MOVE PDNDR6    C206                                                CSE022
+     C                     MOVE PDNDR7    C207                                                CSE022
+     C                     MOVE PDNDR8    C208                                                CSE022
+     C                     MOVE PDNDR9    C209                                                CSE022
+     C                     MOVE PDNDR0    C210                                                CSE022
+     C                     MOVE WPN01     PN01
+     C                     MOVE WPN02     PN02
+     C                     MOVE WPN03     PN03
+     C                     MOVE WPN04     PN04
+     C                     MOVE WPN05     PN05
+     C                     MOVE WPN06     PN06
+     C                     MOVE WPN07     PN07
+     C                     MOVE WPN08     PN08
+     C                     MOVE WPN09     PN09
+     C                     MOVE WPN10     PN10
+     C*********************MOVE WC1CF     C1CF                         ND.S01229
+     C                     MOVE WCFIN     C1CF                         ND.S01229
+     C*********************MOVE WC1VF     C1VF                         CY S01229
+     C                     MOVE WSTFQ     C1VF                         CY S01229
+     C*********************Z-ADDWC1NV     C1NV                         TE S01229
+     C                     Z-ADDWNSDT     C1NV                         TE S01229
+     C*********************Z-ADDWC1VB     C1VB                         TE S01229
+     C                     Z-ADDWSBDM     C1VB                         TE S01229
+     C*********************MOVE WC1PA     C1PA                         MENS01229
+     C                     MOVE WPLAG     C1PA                         MENS01229
+     C*********************MOVE WC1NR     C1NR                            S01229
+     C                     MOVE WNARR     C1NR                            S01229
+     C                     Z-ADDWC1CN     C1CN
+     C***                  MOVE WTAXC     TAXC
+     C                     MOVE WFTCD     TAXC                                                259250
+     C***                  MOVE WAUTS     AUTS                         IND
+     C                     MOVE WASIN     AUTS                            E20531
+     C*********************MOVE WCHTP     CHTP                            S01229
+     C                     MOVE WTYLC     CHTP                            S01229
+     C                     Z-ADDWLCD      LCD
+     C                     UPDATCLINTSEF               30  ERROR
+     C                     END
+     C*
+     C* IF RECORD NOT FOUND OR ERROR OCCURRED ON UPDATE SET ERROR
+     C* PARAMETER
+     C*
+     C           *IN30     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C* RECORD IS NOT A CHANGED RECORD
+     C*
+     C                     END
+     C*
+     C* IF RECORD HAS BEEN DELETED FROM THE NEW FILE, RETRIEVE IT
+     C* FROM CLINTSE
+     C*
+     C***********WCHTP     IFEQ 'D'                                       S01229
+     C           WTYLC     IFEQ 'D'                                       S01229
+     C*********************MOVE WCNUM     CNUM                            S01229
+     C                     MOVE WCUST     CNUM                            S01229
+     C                     MOVE '1'       RCDT
+     C           KEY       CHAINCLINT                30    CHAIN FAILED
+     C*
+     C* IF RECORD FOUND, UPDATE RELEVANT FIELDS (WE DON'T ACTUALLY
+     C* DELETE ANY RECORDS FROM THE OLD FILES)
+     C*
+     C           *IN30     IFEQ '0'
+     C                     MOVE '*'       RECI
+     C*********************MOVE WCHTP     CHTP                            S01229
+     C                     MOVE WTYLC     CHTP                            S01229
+     C                     Z-ADDWLCD      LCD
+     C                     UPDATCLINTSEF               30  ERROR
+     C                     END
+     C*
+     C* IF RECORD NOT FOUND OR ERROR OCCURRED ON UPDATE SET ERROR
+     C* PARAMETER
+     C*
+     C           *IN30     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C                     END
+     C*
+     C* IF NO ERRORS HAVE OCCURRED ON CLINTSE UPDATE
+     C*
+     C           P0RTN     IFEQ *BLANKS
+     C*
+     C* RETRIEVE OLD TRAILER FILE RECORD
+     C*
+     C**********           MOVE '0'       CNUMA                                               CSD027
+     C                     MOVE *BLANKS   CNUMA                                               CSD027
+     C                     MOVE '0'       RCDTA
+     C*
+     C           KEYA      CHAINCLINT                32    CHAIN FAILED
+     C           *IN32     IFEQ '0'
+     C*
+     C* UPDATE AS APPROPRIATE THE NUMBER OF INSERTS,AMENDS OR DELETES
+     C* ON THE TRAILER FILE
+     C*
+     C***********WCHTP     IFEQ 'I'                                       S01229
+     C           WTYLC     IFEQ 'I'                                       S01229
+     C                     ADD  1         TSTI
+     C                     ADD  1         TSTR
+     C                     END
+     C*
+     C***********WCHTP     IFEQ 'A'                                       S01229
+     C           WTYLC     IFEQ 'A'                                       S01229
+     C                     ADD  1         TSTA
+     C                     END
+     C*
+     C***********WCHTP     IFEQ 'D'                                       S01229
+     C           WTYLC     IFEQ 'D'                                       S01229
+     C                     ADD  1         TSTD
+     C                     SUB  1         TSTR
+     C                     END
+     C*
+     C                     UPDATCLINTCAF               32    ERROR
+     C*
+     C                     END
+     C*
+     C* CHECK FOR ANY ERRORS AND SET ERROR PARAMETER FOR RETURN TO
+     C* NEW FILE MAINTENANCE PROGRAM
+     C*
+     C           *IN32     IFEQ '1'
+     C                     MOVE '*ERROR*' P0RTN
+     C                     END
+     C*
+     C                     END
+     C*
+     C                     SETON                     LR
+     C                     RETRN
+     C*
+** CPY@     : Copyright notice for inclusion in all programs           grams
+(c) Finastra International Limited 2001

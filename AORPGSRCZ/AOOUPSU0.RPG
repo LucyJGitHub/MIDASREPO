@@ -1,970 +1,970 @@
-000100200528     H        1
-000200200528      *****************************************************************
-000300200528/*STD *  RPGBASE                                                      *
-000400200528/*EXI *  TEXT('Midas AO Update of position sett posn files (SE)')     *
-000500200528     F*****************************************************************
-000600200528     F*                                                               *
-000700200528     F*  Midas - Access Objects Module                                *
-000800200528     F*                                                               *
-000900200528     F*  AOOUPSU0 - On-line Update of (SE) Posn Setlmt Positions files*
-001000200528     F*                                                               *
-001100200528      *  (c) Finastra International Limited 2001                      *
-001200200528     F*                                                               *
-001300200604     F*  Last Amend No. 250115             Date 22May20               *
-001400200528      *  Prev Amend No. MD046248           Date 27Oct17               *
-001500200528      *                 CLE134             Date 01Aug12               *
-001600200528      * Bank Fusion Midas 1.4 Base -----------------------------------*
-001700200528      *                 CAP205             Date 03Mar10               *
-001800200528      *                 CAP204             Date 09Feb10               *
-001900200528      * Midas Plus 1.4 Base 04 ---------------------------------------*
-002000200528      *                 247870             Date 06Jun07               *
-002100200528      * Midas Plus 1.4 Base ------------------------------------------*
-002200200528      * Midas Plus 1.3 ----------- Base ------------------------------*
-002300200528      *                 CSD027             Date 09Dec05               *
-002400200528      *                 CSE071             Date 19Jul05               *
-002500200528      *                 CLE025             Date 20Oct03               *
-002600200528      *                 CRE020             Date 20Jan04               *
-002700200528      *                 CGL029             Date 01Sep03               *
-002800200528      * Midas Release 4.01 -------------------------------------------*
-002900200528      *                 102929              Date  30Aug01             *
-003000200528      * Midas Release 4 --------------- Base -------------------------*
-003100200528      * Midas DBA 3.02 -----------------------------------------------*
-003200200528      * Midas DBA 3.00 ---------------- Base -------------------------*
-003300200528     F*                 105034              Date  02Aug96             *
-003400200528     F*                 088311              Date  26May95             *
-003500200528     F*                 082738 *CREATE      DATE  03FEB95             *
-003600200528     F*                                                               *
-003700200528     F*---------------------------------------------------------------*
-003800200528     F*                                                               *
-003900200528      *  250115 - Reversal of the original projected account movement *
-004000200528      *           should be done when an authorized position          *
-004100200528      *           settlement is amended. Applied fix 234985.          *
-004200200528      *  MD046248 - Finastra Rebranding                               *
-004300200528      *  CLE134 - Past Due Call Loan Processing                       *
-004400200528      *  CAP205 - Teller Related APIs - Account Balance Check         *
-004500200528      *  CAP204 - Teller Related APIs - Account Transfer              *
-004600200528      *  247870 - No narrative on Projected Account Movements enquiry *
-004700200528      *           for Position Settlements entries.                   *
-004800200528      *  CSD027 - Conversion Of Customer Number to Alpha              *
-004900200528      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
-005000200528      *  CLE025 - Credit Lines (Recompile)                            *
-005100200528      * CRE020 - Midas Plus Online Printing of Advices (GE7)          *
-005200200528      *  CGL029 - Increase Account Code to 10 digits                  *
-005300200528      * 102929 - Use Value Date if Switchable Feature S01512 is       *
-005400200528      *          active instead of Due Date for the Value date        *
-005500200528      *          of the Projected Movement.                           *
-005600200528     F* 105034 - Correctly verify nostro number when amending sett.   *
-005700200528     F*          account for settlement methods 01,02,07,08 and 12,   *
-005800200528     F*          else changes not accepted.                           *
-005900200528     F* 088311 - Build the settlement account for settlement method 04*
-006000200528     F* 082738 - New program for redesign of update to PRONO, MEMOS,  *
-006100200528     F*          OLPOS & RSACMTPD.                                    *
-006200200528     F*                                                               *
-006300200528     F*****************************************************************
-006400200528     FSECTY   IF  E           K        DISK
-006500200528     FINVTP   IF  E           K        DISK
-006600200528     FPOSETDY3UF  E           K        DISK         KCOMIT                                    CRE020
-006700200528     F/COPY WNCPYSRC,AOH00057
-006800200528     E/SPACE 5
-006900200528     E*
-007000200528     E**  (Posting) Naratives
-007100200528     E                    ##NAR   1   5 30
-007200200528     E*
-007300200528     E*  Subroutine stack
-007400200528     E                    @STK       20 10
-007500200528     E/COPY WNCPYSRC,AOH00058
-007600200528     E*
-007700200528     E**  Copyright array.
-007800200528     E                    ##CPY   1   1 80
-007900200528     I/SPACE 5
-008000200528     ISECTYDF                                                                                 CRE020
-008100200528     I              TNLU                            STNL1                                     CRE020
-008200200528     IINVTPDF                                                                                 CRE020
-008300200528     I              TNLU                            ITNL1                                     CRE020
-008400200528      *                                                                                       CRE020
-008500200528     IZ#BSTS    E DSZ#BST
-008600200528     IZ#ASTS    E DSZ#AST
-008700200528     I*
-008800200528     IPOSETF    E DSPOSETD
-008900200528     I/COPY WNCPYSRC,AOH00059
-009000200528     I##PAYD      DS
-009100200528     I                                        1   1 ##PAY
-009200200528     I                                        2   3 ##PAYM
-009300200528     I**********                              4  15 ##PAYA                                    CGL029
-009400200528     I**********                             16  18 ##PAYB                                    CGL029
-009500200528     I                                        4  21 ##PAYA                                    CGL029
-009600200528     I                                       22  24 ##PAYB                                    CGL029
-009700200528     I##RECD      DS
-009800200528     I                                        1   1 ##REC
-009900200528     I                                        2   3 ##RECM
-010000200528     I**********                              4  15 ##RECA                                    CGL029
-010100200528     I**********                             16  18 ##RECB                                    CGL029
-010200200528     I                                        4  21 ##RECA                                    CGL029
-010300200528     I                                       22  24 ##RECB                                    CGL029
-010400200528     I##SETD      DS
-010500200528      * pay/receive (P/R)
-010600200528     I                                        1   1 ##PYRC
-010700200528      * settlement method
-010800200528     I                                        2   3 ##SETM
-010900200528      * settlement account
-011000200528     I**********                              4  15 ##SETA                                    CGL029
-011100200528     I                                        4  21 ##SETA                                    CGL029
-011200200528     I                                        4   5 ##NOSN
-011300200528     I                                        4  13 ##ACNO
-011400200528     I                                        4   9 ##CNUM
-011500200528     I**********                             10  13 ##ACOD                                    CGL029
-011600200528     I**********                             14  15 ##ACSQ                                    CGL029
-011700200528     I                                       10  19 ##ACOD                                    CGL029
-011800200528     I                                       20  21 ##ACSQ                                    CGL029
-011900200528      * settlement branch
-012000200528     I**********                             16  18 ##BRCA                                    CGL029
-012100200528     I                                       22  24 ##BRCA                                    CGL029
-012200200528      *
-012300200528      *  Calling parameter data structure for AOSPOSU0
-012400200528      *
-012500200528     IC#DTA       DS                            256
-012600200528      *  Account type N=nostro nbr F=Full nostro G=General Ledger
-012700200528      *               P=Partial Ledger R= Retail Number  X= no settlement
-012800200528     I                                        1   1 C#ATYP
-012900200528      *               Full General Ledger - CNUM/CCY/ACOD/ACSQ
-013000200528     I                                        2  19 C#ACCT
-013100200528     I**********                              2   70C#CNU1                                    CSD027
-013200200528     I                                        2   7 C#CNU1                                    CSD027
-013300200528     I                                        8  10 C#CCY1
-013400200528     I**********                             11  140C#ACO1                                    CGL029
-013500200528     I                                       11  140QQACO1                                    CGL029
-013600200528     I                                       15  160C#ACS1
-013700200528     I                                       17  19 C#BRC1
-013800200528      *               Nostro number
-013900200528     I                                        2   30C#NOSN
-014000200528      *               Full Nostro - CCY/NOSN
-014100200528     I                                        2   6 C#NOS
-014200200528      *               Retail Number
-014300200528     I                                        2  110C#ACNO
-014400200528      *               Partial Account - CNUM/ACOD/ACSQ
-014500200528     I**********                              2   70C#CNUM                                    CSD027
-014600200528     I                                        2   7 C#CNUM                                    CSD027
-014700200528     I**********                              8  110C#ACOD                                    CGL029
-014800200528     I                                        8  110QQACOD                                    CGL029
-014900200528     I                                       12  130C#ACSQ
-015000200528      *               Branch of account if Partial                      '
-015100200528     I                                       14  16 C#BRCA
-015200200528      *               OLPOS Incoming/Outgoing Indicator 'I' or 'O' or ' '
-015300200528      *                     ' ' no OLPOS update
-015400200528     I                                       24  24 C#IO
-015500200528      *               Currency of transaction
-015600200528     I                                       25  27 C#CCY
-015700200528      *               Transaction Type
-015800200528     I                                       28  29 C#TRYP
-015900200528      *               Transaction Narrative
-016000200528     I                                       30  59 C#NARR
-016100200528      *               Cheque Number
-016200200528     I                                       60  670C#CHQN
-016300200528      *               FT transaction reference
-016400200528     I                                       68  82 C#PREF
-016500200528      *               DL/LE/GL/RE transaction reference
-016600200528     I                                       83  88 C#TRN
-016700200528      *               Movement amount
-016800200528     I                                    P  89  960C#AMT
-016900200528      *               Processing indicators Not blank = no update
-017000200528      *                                     ' ' = Update
-017100200528      *               Prono update indicator
-017200200528     I                                       97  97 C#PRON
-017300200528      *               Olpos update indicator
-017400200528     I                                       98  98 C#OLPS
-017500200528      *               Memos update indicator
-017600200528     I                                       99  99 C#MEMS
-017700200528      *               Rsacmtpd write indicator
-017800200528     I                                      100 100 C#RSAC
-017900200528      *               Module
-018000200528     I                                      101 102 C#MOD
-018100200528      *               Olpos record number to update
-018200200528      *                     '01' for FX
-018300200528      *                     '02' for Interest movements
-018400200528      *                     '03' for loans and deposits
-018500200528     I                                      103 104 C#OLRC
-018600200528      *               FT Memos ledger balance override
-018700200528      *                        'Y' update ledger balance irrespective of
-018800200528      *                        posting date
-018900200528     I                                      105 105 C#FTOV
-019000200528      *               Value date and posting date
-019100200528     I                                    P 106 1080C#VDAT
-019200200528     I                                    P 109 1110C#PSTD
-019300200528      *               Override posting date correction
-019400200528      *                        for forward valued items
-019500200528      *                        'Y' prevents date being changed
-019600200528     I                                      112 112 C#PSTO
-019700200528      *               Indicator to show if removal allowed Y, N or " "
-019800200528     I                                      113 113 C#RPST
-019900200528      *               Removal set number
-020000200528     I                                      114 1160C#RPNB
-020100200528      *               Removal type "C" = Credit entries
-020200200528      *                            "D" = Debit entries
-020300200528     I                                      117 117 C#RTYP
-020400200528      *               Booking branch
-020500200528     I                                      118 120 C#BBRN
-020600200528      *                                                                                       CGL029
-020700200528      ** Account Code for Full Acount                                                         CGL029
-020800200528      *                                                                                       CGL029
-020900200528     I                                      121 1300C#ACO1                                    CGL029
-021000200528      *                                                                                       CGL029
-021100200528      ** Account code for Partial Account                                                     CGL029
-021200200528      *                                                                                       CGL029
-021300200528     I                                      131 1400C#ACOD                                    CGL029
-021400200528      *                                                                                       CAP204
-021500200528      ** Other Transaction Reference                                                          CAP204
-021600200528      *                                                                                       CAP204
-021700200528     I                                      141 160 C#OTR1                                    CAP204
-021800200528      *                                                                                       CAP205
-021900200528      ** Movement type                                                                        CAP205
-022000200528      *                                                                                       CAP205
-022100200528     I                                      161 161 C#MTYP                                    CAP205
-022200200528      *                                                                                       CLE134
-022300200528      ** Exception Reference Id/Number                                                        CLE134
-022400200528      *                                                                                       CLE134
-022500200528     I                                      162 164 C#XRFI                                    CLE134
-022600200528     I                                      165 1740C#XRFN                                    CLE134
-022700200528      *
-022800200528     ISDRETL    E DSSDRETLPD                                              088311
-022900200528     I**  Retail Details                                                  088311
-023000200528     IDSFDY     E DSDSFDY
-023100200528     IDSSDY     E DSDSSDY
-023200200528     I*
-023300200528     ICPYR        DS
-023400200528     I**  Data Structure for Compilation - Copyright Insertion
-023500200528     I                                        1  80 ##CPY
-023600200528     I/COPY WNCPYSRC,AOOUPSU0I1
-023700200528     C/SPACE 5
-023800200528      *****************************************************************
-023900200528      * Process     :  MAINLINE                                       *
-024000200528      * Function    :  Mainline processing                            *
-024100200528      *                                                               *
-024200200528      * Called by   :  None                                           *
-024300200528      * Calls       :  SRINIT - Initial Processing - On First Call    *
-024400200528      *                SRMAIN - Main Processing                       *
-024500200528      *****************************************************************
-024600200528      *
-024700200528      **  Parameter list for current program invocation.
-024800200528     C           *ENTRY    PLIST
-024900200528     C                     PARM           ##RTCD  7
-025000200528     C                     PARM           Z#BSTS
-025100200528     C                     PARM           Z#ASTS
-025200200528      *
-025300200528      **  Set up subroutine stack name
-025400200528     C                     ADD  1         Q
-025500200528     C                     MOVEL'MAIN'    @STK,Q
-025600200528      *
-025700200528      *................................................................
-025800200528      *
-025900200528      **  Initial processing - Once Only
-026000200528     C           ##INIT    IFEQ *BLANK
-026100200528     C                     EXSR SRINIT
-026200200528     C                     MOVE 'Y'       ##INIT  1
-026300200528     C                     ENDIF
-026400200528      *
-026500200528      *  Main processing
-026600200528     C                     EXSR SRMAIN
-026700200528      *
-026800200528      *................................................................
-026900200528      *
-027000200528      **  Unwind subroutine stack name
-027100200528     C                     MOVEA*BLANKS   @STK,Q
-027200200528     C                     SUB  1         Q
-027300200528      *
-027400200528      **  Terminate program
-027500200528     C                     RETRN
-027600200528      *****************************************************************
-027700200528     C/SPACE 5
-027800200528      *****************************************************************
-027900200528      * Subroutine  :  SRMAIN                                         *
-028000200528      * Function    :  Main processing                                *
-028100200528      *                                                               *
-028200200528      * Called by   :  Mainline                                       *
-028300200528      * Calls       :                                                 *
-028400200528      *****************************************************************
-028500200528     C           SRMAIN    BEGSR
-028600200528      *
-028700200528      **  Set up subroutine stack name
-028800200528     C                     ADD  1         Q       50
-028900200528     C                     MOVEL'SRMAIN'  @STK,Q
-029000200528      *
-029100200528      *................................................................
-029200200528      *
-029300200528      ** Clear down all shadow postings in store (within AOSPOSU0)
-029400200528      *
-029500200528     C                     EXSR SRCLR
-029600200528      *
-029700200528     C                     MOVELZ#BSTS    #BRCID  2
-029800200528     C                     MOVELZ#ASTS    #ARCID  2
-029900200528      *                                                                                       CRE020
-030000200528     C           CRE020    IFEQ 'Y'                                                           CRE020
-030100200528     C                     MOVE 'N'       W2POST                                              CRE020
-030200200528     C                     ENDIF                                                              CRE020
-030300200528      *
-030400200528      *-------------------------------------------------------------------
-030500200528      *
-030600200528      ** GENERATE 'BEFORE STATUS' ACCOUNT MOVEMENTS
-030700200528      ** (if not insertion, when __RCID will be blank)
-030800200528      *
-030900200528     C           #BRCID    IFNE *BLANK
-031000200528      *
-031100200528     C                     MOVEL'YES'     ##REVI  3
-031200200528     C                     MOVELZ#BSTS    POSETF
-031300200528      *                                                                                       CRE020
-031400200528      ** Store TNLU before update.  This TNLU is use to chain POSETDX3.                       CRE020
-031500200528      *                                                                                       CRE020
-031600200528     C           CRE020    IFEQ 'Y'                                                           CRE020
-031700200528     C                     MOVE TNLU      KTNLU                                               CRE020
-031800200528     C                     ENDIF                                                              CRE020
-031900200528      *
-032000200528      ** Access security details
-032100200528      *
-032200200528     C                     MOVELPSSH      SESN
-032300200528     C                     EXSR SRSECT
-032400200528      *
-032500200528      ** Position settlement processing
-032600200528      *
-032700200528     C                     EXSR SRPOST
-032800200528      *
-032900200528      ** If latest TNLU is not equal to previous TNLU, update latest TNLU on                  CRE020
-033000200528      ** extension file to keep up to date                                                    CRE020
-033100200528      *                                                                                       CRE020
-033200200528     C           CRE020    IFEQ 'Y'                                                           CRE020
-033300200528     C           TNLU      ANDNEKTNLU                                                         CRE020
-033400200528     C           KPOST3    CHAINPOSETDD3             78                                       CRE020
-033500200528     C           *IN78     IFEQ '0'                                                           CRE020
-033600200528     C                     MOVE TNLU      P3TNLU                                              CRE020
-033700200528     C                     MOVE TNLU      KTNLU                                               CRE020
-033800200528     C                     UPDATPOSETDD3                                                      CRE020
-033900200528     C                     ENDIF                                                              CRE020
-034000200528     C                     ENDIF                                                              CRE020
-034100200528     C                     MOVE 'Y'       W2POST  1                                           CRE020
-034200200528      *                                                                                       CRE020
-034300200528     C                     END                             * Z#BSTS
-034400200528      *-------------------------------------------------------------------
-034500200528      *
-034600200528      ** GENERATE 'AFTER STATUS' ACCOUNT MOVEMENTS
-034700200528      ** (if not deletion, when __CHTP will be 'D')
-034800200528      *
-034900200528     C                     MOVEL*BLANK    ##REVI
-035000200528     C                     MOVELZ#ASTS    POSETF
-035100200528     C           CRE020    IFEQ 'Y'                                                           CRE020
-035200200528     C           W2POST    IFEQ 'N'                                                           CRE020
-035300200528     C                     MOVE TNLU      KTNLU                                               CRE020
-035400200528     C                     ENDIF                                                              CRE020
-035500200528     C                     ENDIF                                                              CRE020
-035600200528     C           CHTP      IFNE 'D'
-035700200528      *                                                                                       250115
-035800200528     C           CHTP      IFEQ 'A'                                                           250115
-035900200528     C           PAUI      ANDNE'Y'                                                           250115
-036000200528     C                     ELSE                                                               250115
-036100200528      *
-036200200528      ** Access security details
-036300200528      *
-036400200528     C                     MOVELPSSH      SESN
-036500200528     C                     EXSR SRSECT
-036600200528      *
-036700200528      ** Position settlement processing
-036800200528      *
-036900200528     C                     EXSR SRPOST
-037000200528      *
-037100200528     C                     ENDIF                                                              250115
-037200200528     C                     END
-037300200528      *-------------------------------------------------------------------
-037400200528      *
-037500200528      ** Update database with shadow postings in store (within AOSPOSU0)
-037600200528      *
-037700200528     C                     EXSR SRUPD
-037800200528      *
-037900200528      *................................................................
-038000200528      *
-038100200528     C           EXMAIN    TAG
-038200200528      *
-038300200528      **  Unwind subroutine stack name
-038400200528     C                     MOVEA*BLANKS   @STK,Q
-038500200528     C                     SUB  1         Q
-038600200528      *
-038700200528     C                     ENDSR
-038800200528     C*****************************************************************
-038900200528     C/SPACE 5
-039000200528      *****************************************************************
-039100200528      * Subroutine  :  SRPOST                                         *
-039200200528      * Function    :  Position Settlement Processing                 *
-039300200528      *                                                               *
-039400200528      * Called by   :  Mainline                                       *
-039500200528      * Calls       :  AOSPOSU0 - On-line Positions Update            *
-039600200528      *****************************************************************
-039700200528     C           SRPOST    BEGSR
-039800200528      *
-039900200528      **  Set up subroutine stack name
-040000200528     C                     ADD  1         Q       50
-040100200528     C                     MOVEL'SRPOST'  @STK,Q
-040200200528      *
-040300200528      *................................................................
-040400200528      *
-040500200528      **  Store settlement method, account & branch
-040600200528      *
-040700200528     C           PPRE      IFEQ 'P'
-040800200528     C                     MOVELPSMT      ##PAYM           * pay method
-040900200528     C                     MOVELPSEA      ##PAYA           * pay account
-041000200528     C                     MOVELPSEB      ##PAYB           * pay branch
-041100200528     C                     MOVEL##PAYD    ##SETD           * Pay details
-041200200528     C                     ELSE
-041300200528     C                     MOVELPSMT      ##RECM           * rec method
-041400200528     C                     MOVELPSEA      ##RECA           * rec account
-041500200528     C                     MOVELPSEB      ##RECB           * rec branch
-041600200528     C                     MOVEL##RECD    ##SETD           * Rec details
-041700200528     C                     END
-041800200528      *
-041900200528      **  Store basic position settlement details
-042000200528      *
-042100200528     C                     MOVELPEVT      ##TRYP  2        * transact type
-042200200528     C           CRE020    IFEQ 'Y'                                                           CRE020
-042300200528     C                     MOVELPCPY      ##TRN                                               CRE020
-042400200528     C                     ELSE                                                               CRE020
-042500200528     C**********           MOVEL*BLANK    ##TRN   6        * transact no.                     247870
-042600200528     C                     MOVEL'000000'  ##TRN   6                                           247870
-042700200528     C                     ENDIF                                                              CRE020
-042800200528     C                     MOVELPBCA      ##BBRN  3        * booking branch
-042900200528      *
-043000200528      ** Generate account movement
-043100200528      ** =========================
-043200200528      *
-043300200528     C** If S01512 is active, use Payment/Value Date of the Pos. Sett.                        102929
-043400200528     C*                                                                                       102929
-043500200528     C           S01512    IFEQ 'Y'                                                           102929
-043600200528     C                     Z-ADDPSVL      ##VDAT           * value date                       102929
-043700200528     C                     ELSE                                                               102929
-043800200528     C                     Z-ADDPDUD      ##VDAT  50       * value date
-043900200528     C                     ENDIF                                                              102929
-044000200528     C*                                                                                       102929
-044100200528     C           PSAT      IFEQ *ZERO
-044200200528     C                     Z-ADDPAMD      ##AMT  150       * amount due in
-044300200528     C                     MOVELPNCY      ##CCY   3        * nominal ccy
-044400200528     C                     ELSE
-044500200528     C                     Z-ADDPSAT      ##AMT            * settlemt amt in
-044600200528     C                     MOVELPSCU      ##CCY            * settlement ccy
-044700200528     C                     END
-044800200528      *
-044900200528     C                     Z-ADD001       ##RPNB  30
-045000200528      *
-045100200528     C           PEVT      IFEQ 'CP'
-045200200528     C**********           MOVEL##NAR,1   ##NARR 30        * coupon                           247870
-045300200528     C                     MOVEL##NAR,1   NAR20  20        * coupon                           247870
-045400200528     C                     ELSE
-045500200528     C           PEVT      IFEQ 'DV'
-045600200528     C**********           MOVEL##NAR,2   ##NARR           * dividend                         247870
-045700200528     C                     MOVEL##NAR,2   NAR20            * dividend                         247870
-045800200528     C                     ELSE
-045900200528     C           PEVT      IFEQ 'PP'
-046000200528     C**********           MOVEL##NAR,3   ##NARR           * part pay                         247870
-046100200528     C                     MOVEL##NAR,3   NAR20            * part pay                         247870
-046200200528     C                     ELSE
-046300200528     C           PEVT      IFEQ 'MP'
-046400200528     C**********           MOVEL##NAR,4   ##NARR           * mort pay                         247870
-046500200528     C                     MOVEL##NAR,4   NAR20            * mort pay                         247870
-046600200528     C                     ELSE
-046700200528     C**********           MOVEL##NAR,5   ##NARR           * maturity                         247870
-046800200528     C                     MOVEL##NAR,5   NAR20            * maturity                         247870
-046900200528     C                     END
-047000200528     C                     END
-047100200528     C                     END
-047200200528     C                     END
-047300200528      *                                                                                       247870
-047400200528      ** Include security shortname to be more descriptive                                    247870
-047500200528      *                                                                                       247870
-047600200528     C                     MOVE SESN      NAR20                                               247870
-047700200528     C                     MOVELNAR20     ##NARR 30                                           247870
-047800200528      *
-047900200528     C           CAP205    IFEQ 'Y'                                                           CAP205
-048000200528     C                     MOVEL'F'       ##MTYP  1                                           CAP205
-048100200528     C                     ENDIF                                                              CAP205
-048200200528     C                     EXSR SRMOVE
-048300200528      *................................................................
-048400200528      *
-048500200528     C           EXTRAD    TAG
-048600200528      *
-048700200528      **  Unwind subroutine stack name
-048800200528     C                     MOVEA*BLANKS   @STK,Q
-048900200528     C                     SUB  1         Q
-049000200528      *
-049100200528     C                     ENDSR
-049200200528     C*****************************************************************
-049300200528     C/SPACE 5
-049400200528      *****************************************************************
-049500200528      * Subroutine  :  SRSECT                                         *
-049600200528      * Function    :  Get Security and Investment Type Details       *
-049700200528      *                                                               *
-049800200528      * Called by   :  Mainline                                       *
-049900200528      * Calls       :                                                 *
-050000200528      *****************************************************************
-050100200528     C           SRSECT    BEGSR
-050200200528      *
-050300200528      **  Set up subroutine stack name
-050400200528     C                     ADD  1         Q       50
-050500200528     C                     MOVEL'SRSECT'  @STK,Q
-050600200528      *
-050700200528      *................................................................
-050800200528      *
-050900200528      ** Access security details
-051000200528      *
-051100200528     C           SESN      CHAINSECTYDF              99    *
-051200200528     C           *IN99     IFEQ '1'
-051300200528     C                     MOVEL'SECTYD  'W0FILE
-051400200528     C                     MOVELSESN      W0KEY
-051500200528     C                     Z-ADD001       W0ERNB
-051600200528     C                     EXSR SRERR
-051700200528     C                     END
-051800200528      *
-051900200528      ** Access investment type details
-052000200528      *
-052100200528     C           INVTPK    KLIST
-052200200528     C                     KFLD           NMCY
-052300200528     C                     KFLD           SITP
-052400200528     C           INVTPK    CHAININVTPDF              99    *
-052500200528     C           *IN99     IFEQ '1'
-052600200528     C                     MOVEL'INVTYPD 'W0FILE
-052700200528     C                     MOVELNMCY      W0KEY
-052800200528     C                     MOVE SITP      W0KEY
-052900200528     C                     Z-ADD002       W0ERNB
-053000200528     C                     EXSR SRERR
-053100200528     C                     END
-053200200528      *................................................................
-053300200528      *
-053400200528     C           EXSECT    TAG
-053500200528      *
-053600200528      **  Unwind subroutine stack name
-053700200528     C                     MOVEA*BLANKS   @STK,Q
-053800200528     C                     SUB  1         Q
-053900200528      *
-054000200528     C                     ENDSR
-054100200528     C*****************************************************************
-054200200528      /SPACE 5
-054300200528      *****************************************************************
-054400200528      * Subroutine  :  SRMOVE                                         *
-054500200528      * Function    :  Pass Movement To Write Program                 *
-054600200528      *                                                               *
-054700200528      * Called by   :  Various                                        *
-054800200528      * Calls       :  None                                           *
-054900200528      *****************************************************************
-055000200528     C           SRMOVE    BEGSR
-055100200528      *
-055200200528      **  Set up subroutine stack name
-055300200528     C                     ADD  1         Q
-055400200528     C                     MOVEL'SRMOVE'  @STK,Q
-055500200528      *
-055600200528      *................................................................
-055700200528      *
-055800200528      ** Bypass if no amount to post
-055900200528      *
-056000200528     C           ##AMT     CABEQ*ZERO     EXMOVE
-056100200528      *
-056200200528      ** Determine account movement settlement details
-056300200528      *
-056400200528     C                     CLEARC#DTA
-056500200528      *
-056600200528     C           ##SETM    IFEQ '01'
-056700200528     C           ##SETM    OREQ '02'
-056800200528     C           ##SETM    OREQ '07'
-056900200528     C           ##SETM    OREQ '08'
-057000200528     C           ##SETM    OREQ '12'
-057100200528     C                     MOVEL'N'       C#ATYP
-057200200528     C***********          MOVEL##NOSN    C#NOSN
-057300200528     C                     MOVEL##SETA    C#NOS6  6                       105034
-057400200528     C                     MOVE C#NOS6    C#NOS1  1                       105034
-057500200528     C           C#NOS1    IFNE *BLANK                                    105034
-057600200528     C                     MOVE ##SETA    C#NOSN                          105034
-057700200528     C                     ELSE                                           105034
-057800200528     C                     MOVEL##SETA    C#NOS5  5                       105034
-057900200528     C                     MOVELC#NOS5    C#NOS3  3                       105034
-058000200528     C                     MOVE C#NOS3    C#NO1B  1                       105034
-058100200528     C           C#NO1B    IFNE *BLANK                                    105034
-058200200528     C                     MOVE C#NOS5    C#NOSN                          105034
-058300200528     C                     ELSE                                           105034
-058400200528     C                     MOVELC#NOS5    C#NOSN                          105034
-058500200528     C                     END                                            105034
-058600200528     C                     END                                            105034
-058700200528     C                     ELSE
-058800200528     C           ##SETM    IFEQ '14'
-058900200528     C                     MOVEL'R'       C#ATYP
-059000200528     C                     MOVEL##ACNO    C#ACNO
-059100200528     C                     ELSE
-059200200528     C***********##SETM    IFEQ '04'                                      088311
-059300200528     C***********##SETM    OREQ '05'                                      088311
-059400200528     C           ##SETM    IFEQ '05'                                      088311
-059500200528     C           ##SETM    OREQ '15'
-059600200528     C                     MOVEL'P'       C#ATYP
-059700200528     C                     MOVEL##CNUM    C#CNUM
-059800200528     C                     MOVEL##ACOD    C#ACOD
-059900200528     C                     MOVEL##ACSQ    C#ACSQ
-060000200528     C                     MOVEL##BRCA    C#BRCA
-060100200528     C                     ELSE                                           088311
-060200200528     C           ##SETM    IFEQ '04'                                      088311
-060300200528     C                     CALL 'AORETLR0'                                088311
-060400200528     C                     PARM '*DBERR ' @RTCD   7                       088311
-060500200528     C                     PARM '*FIRST ' @OPTN   7                       088311
-060600200528     C           SDRETL    PARM SDRETL    DSFDY                           088311
-060700200528     C                     MOVEL'P'       C#ATYP                          088311
-060800200528     C                     MOVELPCPY      C#CNUM                          088311
-060900200528     C                     MOVELBMACCD    C#ACOD                          088311
-061000200528     C                     Z-ADD1         C#ACSQ                          088311
-061100200528     C                     MOVEL##BRCA    C#BRCA                          088311
-061200200528     C                     END                                            088311
-061300200528     C                     END
-061400200528     C                     END
-061500200528     C                     END
-061600200528      *
-061700200528      * OLPOS Incoming/Outgoing Indicator 'I' or 'O'
-061800200528     C           ##PYRC    IFEQ 'P'
-061900200528     C                     MOVEL'O'       C#IO             * outgoing
-062000200528     C                     ELSE
-062100200528     C                     MOVEL'I'       C#IO             * incoming
-062200200528     C                     END
-062300200528      *
-062400200528      * Currency of transaction
-062500200528     C                     MOVEL##CCY     C#CCY
-062600200528      *
-062700200528      * Transaction type
-062800200528     C           PEVT      IFEQ 'MT'                                                          247870
-062900200528     C                     MOVE 'MA'      ##TRYP                                              247870
-063000200528     C                     ENDIF                                                              247870
-063100200528      *                                                                                       247870
-063200200528     C                     MOVEL##TRYP    C#TRYP
-063300200528      * Transaction Narrative
-063400200528     C/COPY WNCPYSRC,AOOUPSU0C3
-063500200528     C                     MOVEL##NARR    C#NARR
-063600200528     C/COPY WNCPYSRC,AOH00060
-063700200528     C           ##REVI    IFEQ 'YES'
-063800200528     C                     MOVE '*'       C#NARR
-063900200528     C                     END
-064000200528      *
-064100200528      * SE/DL/LE/GL/RE transaction reference
-064200200528     C                     MOVEL##TRN     C#TRN
-064300200528      *
-064400200528      * Movement amount
-064500200528     C           ##PYRC    IFEQ 'P'
-064600200528     C           ##REVI    ANDNE'YES'
-064700200528     C           ##PYRC    OREQ 'R'
-064800200528     C           ##REVI    ANDEQ'YES'
-064900200528     C                     Z-SUB##AMT     C#AMT            * pay ie credit
-065000200528     C                     ELSE
-065100200528     C                     Z-ADD##AMT     C#AMT            * rec ie debit
-065200200528     C                     END
-065300200528      *
-065400200528      * Module
-065500200528     C                     MOVEL'SE'      C#MOD
-065600200528      *
-065700200528      * Olpos record number to update
-065800200528      * '01' for FX
-065900200528      * '02' for Interest movements
-066000200528      * '03' for loans and deposits
-066100200528     C                     MOVE '03'      C#OLRC
-066200200528      *
-066300200528      * Value date and posting date
-066400200528     C                     Z-ADD##VDAT    C#VDAT
-066500200528     C                     Z-ADD##VDAT    C#PSTD
-066600200528      *
-066700200528      * Indicator to show if removal allowed Y, N or " "
-066800200528     C                     MOVEL'Y'       C#RPST
-066900200528      *
-067000200528      * Removal set number
-067100200528     C                     Z-ADD##RPNB    C#RPNB
-067200200528      *
-067300200528      * Removal type "C" = Credit entries
-067400200528      *              "D" = Debit entries
-067500200528     C                     MOVEL'C'       C#RTYP
-067600200528      *
-067700200528      * Booking branch
-067800200528     C                     MOVEL##BBRN    C#BBRN
-067900200528      *                                                                                       CRE020
-068000200528      ** FT Transaction reference = Security Shortname                                        CRE020
-068100200528      *                                                                                       CRE020
-068200200528     C           CRE020    IFEQ 'Y'                                                           CRE020
-068300200528     C                     MOVELSESN      C#PREF                                              CRE020
-068400200528     C                     EXSR SRTNLU                                                        CRE020
-068500200528     C                     MOVE WTNLU     C#PREF                                              CRE020
-068600200528     C                     ENDIF                                                              CRE020
-068700200528      *
-068800200528      *  If settlement details are present
-068900200528      *  AOSPOSU0 will be called to update PRONO, MEMOS, RSACMTPD, OLPOS
-069000200528      *
-069100200528      *  OTHERWISE
-069200200528      *
-069300200528      *  If no settlement details are present
-069400200528      *  AOSPOSU0 will be called to only update OLPOS
-069500200528      *
-069600200528     C           C#ATYP    IFEQ *BLANK
-069700200528      *
-069800200528      * Set account type indicator to signify no settlement
-069900200528     C                     MOVEL'X'       C#ATYP
-070000200528      *
-070100200528      * Set update indicators for no update
-070200200528     C                     MOVE 'N'       C#PRON
-070300200528     C                     MOVE 'N'       C#MEMS
-070400200528     C                     MOVE 'N'       C#RSAC
-070500200528     C                     END
-070600200528      *                                                                                       CAP205
-070700200528      ** Set C#MTYP to ##MTYP                                                                 CAP205
-070800200528      *                                                                                       CAP205
-070900200528     C           CAP205    IFEQ 'Y'                                                           CAP205
-071000200528     C                     MOVEL##MTYP    C#MTYP                                              CAP205
-071100200528     C                     ENDIF                                                              CAP205
-071200200528      *
-071300200528      *  Call AOSPOSU0
-071400200528      *
-071500200528     C                     CALL 'AOSPOSU0'             9090
-071600200528     C           R#RTN     PARM *BLANKS   O#RTN   7
-071700200528     C                     PARM '*ADD    'W0ACT   8
-071800200528     C                     PARM C#DTA     O#DTA 256
-071900200528      *
-072000200528     C           *IN90     IFEQ '1'
-072100200528     C           R#RTN     ORNE *BLANKS
-072200200528     C                     MOVEL'*CALL   'W0FILE  8
-072300200528     C                     MOVEL'AOSPOSU0'W0KEY  29
-072400200528     C                     Z-ADD902       W0ERNB  30
-072500200528     C                     EXSR SRERR
-072600200528     C                     END
-072700200528      *
-072800200528      *................................................................
-072900200528      *
-073000200528     C           EXMOVE    TAG
-073100200528      *
-073200200528      **  Unwind subroutine stack name
-073300200528     C                     MOVEA*BLANKS   @STK,Q
-073400200528     C                     SUB  1         Q
-073500200528      *
-073600200528     C                     ENDSR
-073700200528      *****************************************************************
-073800200528     C/SPACE 5
-073900200528      *****************************************************************
-074000200528      *                                                               *
-074100200528      *  SRUPD    : Update database with shadow postings in store     *
-074200200528      *                                                               *
-074300200528      *  CALLED BY: Various                                           *
-074400200528      *                                                               *
-074500200528      *  CALLS    : SRERR - Report errors                             *
-074600200528      *                                                               *
-074700200528      *****************************************************************
-074800200528     C           SRUPD     BEGSR
-074900200528      *
-075000200528      *  Set up subroutine stack name
-075100200528      *
-075200200528     C                     ADD  1         Q
-075300200528     C                     MOVEL'SRUPD'   @STK,Q
-075400200528     C/COPY WNCPYSRC,AOOUPSU0C1
-075500200528      *
-075600200528      *................................................................
-075700200528      *
-075800200528      *  Call AOSPOSU0 to update database
-075900200528      *
-076000200528     C                     CALL 'AOSPOSU0'             9090
-076100200528     C           R#RTN     PARM *BLANKS   O#RTN   7
-076200200528     C                     PARM '*UPDATE 'W0ACT   8
-076300200528     C                     PARM C#DTA     O#DTA 256
-076400200528      *
-076500200528     C           *IN90     IFEQ '1'
-076600200528     C           R#RTN     ORNE *BLANKS
-076700200528     C                     MOVEL'*CALL   'W0FILE
-076800200528     C                     MOVEL'AOSPOSU0'W0KEY
-076900200528     C                     Z-ADD903       W0ERNB
-077000200528     C                     EXSR SRERR
-077100200528     C                     END
-077200200528      *
-077300200528      *................................................................
-077400200528      *
-077500200528      *  Unwind subroutine stack name
-077600200528      *
-077700200528     C           EXUPD     TAG
-077800200528     C                     MOVEA*BLANKS   @STK,Q
-077900200528     C                     SUB  1         Q
-078000200528      *
-078100200528     C                     ENDSR
-078200200528      *****************************************************************
-078300200528     C/SPACE 5
-078400200528      *****************************************************************
-078500200528      *                                                               *
-078600200528      *  SRCLR    : Clear all postings in store                       *
-078700200528      *                                                               *
-078800200528      *  CALLED BY: UPDATE - Update database                          *
-078900200528      *                                                               *
-079000200528      *  CALLS    : SRERR - Report errors                             *
-079100200528      *                                                               *
-079200200528      *****************************************************************
-079300200528     C           SRCLR     BEGSR
-079400200528      *
-079500200528      *  Set up subroutine stack name
-079600200528      *
-079700200528     C                     ADD  1         Q
-079800200528     C                     MOVEL'SRCLR'   @STK,Q
-079900200528      *
-080000200528      *................................................................
-080100200528      *
-080200200528      *  Clear arrays in AOSPOSU0
-080300200528      *
-080400200528     C                     CLEARC#DTA
-080500200528     C                     CALL 'AOSPOSU0'             9090
-080600200528     C           R#RTN     PARM *BLANKS   O#RTN   7
-080700200528     C                     PARM '*CLEAR  'W0ACT   8
-080800200528     C                     PARM C#DTA     O#DTA 256
-080900200528      *
-081000200528     C           *IN90     IFEQ '1'
-081100200528     C           R#RTN     ORNE *BLANKS
-081200200528     C                     MOVEL'*CALL   'W0FILE
-081300200528     C                     MOVEL'AOSPOSU0'W0KEY
-081400200528     C                     Z-ADD901       W0ERNB
-081500200528     C                     EXSR SRERR
-081600200528     C                     END
-081700200528      *
-081800200528      *................................................................
-081900200528      *
-082000200528      *  Unwind subroutine stack name
-082100200528      *
-082200200528     C           EXCLR     TAG
-082300200528     C                     MOVEA*BLANKS   @STK,Q
-082400200528     C                     SUB  1         Q
-082500200528      *
-082600200528     C                     ENDSR
-082700200528      *****************************************************************
-082800200528     C/SPACE 5
-082900200528      *****************************************************************
-083000200528      *                                                               *
-083100200528      *  SRERR    : Report error and close down program               *
-083200200528      *                                                               *
-083300200528      *  CALLED BY: Various                                           *
-083400200528      *  CALLS    : *NONE                                             *
-083500200528      *                                                               *
-083600200528      *****************************************************************
-083700200528     C           SRERR     BEGSR
-083800200528      *
-083900200528      *  Dump program
-084000200528      *
-084100200528     C                     DUMP
-084200200528     C                     ROLBK
-084300200528      *
-084400200528      *  Close down program
-084500200528      *
-084600200528     C                     SETON                     LR
-084700200528     C                     MOVEL'*ERROR*' ##RTCD
-084800200528     C                     RETRN
-084900200528      *
-085000200528     C           EXERR     ENDSR
-085100200528      *****************************************************************
-085200200528      /SPACE 5
-085300200528      *****************************************************************                       CRE020
-085400200528      *                                                               *                       CRE020
-085500200528      *  SRTNLU   : Determine original TNLU                           *                       CRE020
-085600200528      *                                                               *                       CRE020
-085700200528      *  CALLED BY: Various                                           *                       CRE020
-085800200528      *  CALLS    : *NONE                                             *                       CRE020
-085900200528      *                                                               *                       CRE020
-086000200528      *****************************************************************                       CRE020
-086100200528     C           SRTNLU    BEGSR                                                              CRE020
-086200200528      *                                                                                       CRE020
-086300200528     C           KPOST3    KLIST                                                              CRE020
-086400200528     C                     KFLD           PBCA                                                CRE020
-086500200528     C                     KFLD           PSSH                                                CRE020
-086600200528     C                     KFLD           PCPY                                                CRE020
-086700200528     C                     KFLD           PDUD                                                CRE020
-086800200528     C                     KFLD           PEVT                                                CRE020
-086900200528     C                     KFLD           KTNLU   50                                          CRE020
-087000200528      *                                                                                       CRE020
-087100200528     C           KPOST3    CHAINPOSETDD3             78                                       CRE020
-087200200528     C           *IN78     IFEQ '0'                                                           CRE020
-087300200528     C                     MOVE P3OTNL    WTNLU   5                                           CRE020
-087400200528     C                     ELSE                                                               CRE020
-087500200528     C                     MOVE *BLANKS   WTNLU                                               CRE020
-087600200528     C                     ENDIF                                                              CRE020
-087700200528      *                                                                                       CRE020
-087800200528     C                     ENDSR                                                              CRE020
-087900200528      *****************************************************************                       CRE020
-088000200528      /SPACE 5                                                                                CRE020
-088100200528      *****************************************************************
-088200200528      * Subroutine  :  SRINIT                                         *
-088300200528      * Function    :  Initial processing - First Call Only           *
-088400200528      *                                                               *
-088500200528      * Called by   :  Mainline                                       *
-088600200528      * Calls       :  None                                           *
-088700200528      *****************************************************************
-088800200528     C           SRINIT    BEGSR
-088900200528      *
-089000200528      **  Set up subroutine stack name
-089100200528     C                     ADD  1         Q
-089200200528     C                     MOVEL'SRINIT'  @STK,Q
-089300200528     C/COPY WNCPYSRC,AOOUPSU0C2
-089400200528      *
-089500200528      *................................................................
-089600200528      *
-089700200528      **  Initialise work fields
-089800200528     C                     MOVEL'P'       ##PAY
-089900200528     C                     MOVEL'R'       ##REC
-090000200528     C                     MOVEL*BLANKS   R#RTN   7
-090100200528     C                     MOVE '0'       *IN98
-090200200528      *
-090300200528      **  Copyright
-090400200528     C                     MOVEA##CPY     ##BIS  80
-090500200528      *
-090600200528     C**  Access SAR details file to see if S01512 SAR is installed.                          102929
-090700200528     C*                                                                                       102929
-090800200528     C                     CALL 'AOSARDR0'                                                    102929
-090900200528     C                     PARM *BLANKS   @RTCD                                               102929
-091000200528     C                     PARM '*VERIFY' @OPTN                                               102929
-091100200528     C                     PARM 'S01512'  @SARD   6                                           102929
-091200200528     C*                                                                                       102929
-091300200528     C           @RTCD     IFEQ *BLANK                                                        102929
-091400200528     C                     MOVE 'Y'       S01512  1                                           102929
-091500200528     C                     ELSE                                                               102929
-091600200528     C                     MOVE 'N'       S01512                                              102929
-091700200528     C                     END                                                                102929
-091800200528      *                                                                                       102929
-091900200528      **  Access SAR details file to see if CRE020 SAR is installed.                          CRE020
-092000200528      *                                                                                       CRE020
-092100200528     C                     CALL 'AOSARDR0'                                                    CRE020
-092200200528     C                     PARM *BLANKS   @RTCD                                               CRE020
-092300200528     C                     PARM '*VERIFY' @OPTN                                               CRE020
-092400200528     C                     PARM 'CRE020'  @SARD                                               CRE020
-092500200528      *                                                                                       CRE020
-092600200528     C           @RTCD     IFEQ *BLANK                                                        CRE020
-092700200528     C                     MOVE 'Y'       CRE020  1                                           CRE020
-092800200528     C                     ELSE                                                               CRE020
-092900200528     C                     MOVE 'N'       CRE020                                              CRE020
-093000200528     C                     END                                                                CRE020
-093100200528      *                                                                                       CRE020
-093200200528      *                                                                                       CAP205
-093300200528      **  Access SAR details file to see if CAP205 SAR is installed.                          CAP205
-093400200528      *                                                                                       CAP205
-093500200528     C                     CALL 'AOSARDR0'                                                    CAP205
-093600200528     C                     PARM *BLANKS   @RTCD                                               CAP205
-093700200528     C                     PARM '*VERIFY' @OPTN                                               CAP205
-093800200528     C                     PARM 'CAP205'  @SARD                                               CAP205
-093900200528      *                                                                                       CAP205
-094000200528     C           @RTCD     IFEQ *BLANK                                                        CAP205
-094100200528     C                     MOVE 'Y'       CAP205  1                                           CAP205
-094200200528     C                     ELSE                                                               CAP205
-094300200528     C                     MOVE 'N'       CAP205                                              CAP205
-094400200528     C           @RTCD     IFNE '*NRF'                                                        CAP205
-094500200528     C                     MOVEL'SCSARDPD'W0FILE                                              CAP205
-094600200528     C                     MOVEL'AOSPOSU0'W0KEY                                               CAP205
-094700200528     C                     Z-ADD904       W0ERNB                                              CAP205
-094800200528     C                     EXSR SRERR                                                         CAP205
-094900200528     C                     ENDIF                                                              CAP205
-095000200528     C                     ENDIF                                                              CAP205
-095100200528      *                                                                                       CAP205
-095200200528     C/COPY WNCPYSRC,AOH00061
-095300200528      *................................................................
-095400200528      *
-095500200528     C           EXINIT    TAG
-095600200528      *
-095700200528      **  Unwind subroutine stack name
-095800200528     C                     MOVEA*BLANKS   @STK,Q
-095900200528     C                     SUB  1         Q
-096000200528      *
-096100200528     C                     ENDSR
-096200200528      *****************************************************************
-096300200528** ##NAR  **      NARRATIVES
-096400200528INTEREST
-096500200528DIVIDEND
-096600200528PART PAYMENT                                                                                  247870
-096700200528MORTGAGE PAYMENT                                                                              247870
-096800200528MATURITY
-096900200528** ##CPY  **      OBJECT COPYRIGHT
-097000200528(c) Finastra International Limited 2001
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas AO Update of position sett posn files (SE)')     *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Access Objects Module                                *
+     F*                                                               *
+     F*  AOOUPSU0 - On-line Update of (SE) Posn Setlmt Positions files*
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+     F*  Last Amend No. 250115             Date 22May20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      *                 CAP205             Date 03Mar10               *
+      *                 CAP204             Date 09Feb10               *
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      *                 247870             Date 06Jun07               *
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CRE020             Date 20Jan04               *
+      *                 CGL029             Date 01Sep03               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 102929              Date  30Aug01             *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.02 -----------------------------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 105034              Date  02Aug96             *
+     F*                 088311              Date  26May95             *
+     F*                 082738 *CREATE      DATE  03FEB95             *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  250115 - Reversal of the original projected account movement *
+      *           should be done when an authorized position          *
+      *           settlement is amended. Applied fix 234985.          *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CLE134 - Past Due Call Loan Processing                       *
+      *  CAP205 - Teller Related APIs - Account Balance Check         *
+      *  CAP204 - Teller Related APIs - Account Transfer              *
+      *  247870 - No narrative on Projected Account Movements enquiry *
+      *           for Position Settlements entries.                   *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      * CRE020 - Midas Plus Online Printing of Advices (GE7)          *
+      *  CGL029 - Increase Account Code to 10 digits                  *
+      * 102929 - Use Value Date if Switchable Feature S01512 is       *
+      *          active instead of Due Date for the Value date        *
+      *          of the Projected Movement.                           *
+     F* 105034 - Correctly verify nostro number when amending sett.   *
+     F*          account for settlement methods 01,02,07,08 and 12,   *
+     F*          else changes not accepted.                           *
+     F* 088311 - Build the settlement account for settlement method 04*
+     F* 082738 - New program for redesign of update to PRONO, MEMOS,  *
+     F*          OLPOS & RSACMTPD.                                    *
+     F*                                                               *
+     F*****************************************************************
+     FSECTY   IF  E           K        DISK
+     FINVTP   IF  E           K        DISK
+     FPOSETDY3UF  E           K        DISK         KCOMIT                                    CRE020
+     F/COPY WNCPYSRC,AOH00057
+     E/SPACE 5
+     E*
+     E**  (Posting) Naratives
+     E                    ##NAR   1   5 30
+     E*
+     E*  Subroutine stack
+     E                    @STK       20 10
+     E/COPY WNCPYSRC,AOH00058
+     E*
+     E**  Copyright array.
+     E                    ##CPY   1   1 80
+     I/SPACE 5
+     ISECTYDF                                                                                 CRE020
+     I              TNLU                            STNL1                                     CRE020
+     IINVTPDF                                                                                 CRE020
+     I              TNLU                            ITNL1                                     CRE020
+      *                                                                                       CRE020
+     IZ#BSTS    E DSZ#BST
+     IZ#ASTS    E DSZ#AST
+     I*
+     IPOSETF    E DSPOSETD
+     I/COPY WNCPYSRC,AOH00059
+     I##PAYD      DS
+     I                                        1   1 ##PAY
+     I                                        2   3 ##PAYM
+     I**********                              4  15 ##PAYA                                    CGL029
+     I**********                             16  18 ##PAYB                                    CGL029
+     I                                        4  21 ##PAYA                                    CGL029
+     I                                       22  24 ##PAYB                                    CGL029
+     I##RECD      DS
+     I                                        1   1 ##REC
+     I                                        2   3 ##RECM
+     I**********                              4  15 ##RECA                                    CGL029
+     I**********                             16  18 ##RECB                                    CGL029
+     I                                        4  21 ##RECA                                    CGL029
+     I                                       22  24 ##RECB                                    CGL029
+     I##SETD      DS
+      * pay/receive (P/R)
+     I                                        1   1 ##PYRC
+      * settlement method
+     I                                        2   3 ##SETM
+      * settlement account
+     I**********                              4  15 ##SETA                                    CGL029
+     I                                        4  21 ##SETA                                    CGL029
+     I                                        4   5 ##NOSN
+     I                                        4  13 ##ACNO
+     I                                        4   9 ##CNUM
+     I**********                             10  13 ##ACOD                                    CGL029
+     I**********                             14  15 ##ACSQ                                    CGL029
+     I                                       10  19 ##ACOD                                    CGL029
+     I                                       20  21 ##ACSQ                                    CGL029
+      * settlement branch
+     I**********                             16  18 ##BRCA                                    CGL029
+     I                                       22  24 ##BRCA                                    CGL029
+      *
+      *  Calling parameter data structure for AOSPOSU0
+      *
+     IC#DTA       DS                            256
+      *  Account type N=nostro nbr F=Full nostro G=General Ledger
+      *               P=Partial Ledger R= Retail Number  X= no settlement
+     I                                        1   1 C#ATYP
+      *               Full General Ledger - CNUM/CCY/ACOD/ACSQ
+     I                                        2  19 C#ACCT
+     I**********                              2   70C#CNU1                                    CSD027
+     I                                        2   7 C#CNU1                                    CSD027
+     I                                        8  10 C#CCY1
+     I**********                             11  140C#ACO1                                    CGL029
+     I                                       11  140QQACO1                                    CGL029
+     I                                       15  160C#ACS1
+     I                                       17  19 C#BRC1
+      *               Nostro number
+     I                                        2   30C#NOSN
+      *               Full Nostro - CCY/NOSN
+     I                                        2   6 C#NOS
+      *               Retail Number
+     I                                        2  110C#ACNO
+      *               Partial Account - CNUM/ACOD/ACSQ
+     I**********                              2   70C#CNUM                                    CSD027
+     I                                        2   7 C#CNUM                                    CSD027
+     I**********                              8  110C#ACOD                                    CGL029
+     I                                        8  110QQACOD                                    CGL029
+     I                                       12  130C#ACSQ
+      *               Branch of account if Partial                      '
+     I                                       14  16 C#BRCA
+      *               OLPOS Incoming/Outgoing Indicator 'I' or 'O' or ' '
+      *                     ' ' no OLPOS update
+     I                                       24  24 C#IO
+      *               Currency of transaction
+     I                                       25  27 C#CCY
+      *               Transaction Type
+     I                                       28  29 C#TRYP
+      *               Transaction Narrative
+     I                                       30  59 C#NARR
+      *               Cheque Number
+     I                                       60  670C#CHQN
+      *               FT transaction reference
+     I                                       68  82 C#PREF
+      *               DL/LE/GL/RE transaction reference
+     I                                       83  88 C#TRN
+      *               Movement amount
+     I                                    P  89  960C#AMT
+      *               Processing indicators Not blank = no update
+      *                                     ' ' = Update
+      *               Prono update indicator
+     I                                       97  97 C#PRON
+      *               Olpos update indicator
+     I                                       98  98 C#OLPS
+      *               Memos update indicator
+     I                                       99  99 C#MEMS
+      *               Rsacmtpd write indicator
+     I                                      100 100 C#RSAC
+      *               Module
+     I                                      101 102 C#MOD
+      *               Olpos record number to update
+      *                     '01' for FX
+      *                     '02' for Interest movements
+      *                     '03' for loans and deposits
+     I                                      103 104 C#OLRC
+      *               FT Memos ledger balance override
+      *                        'Y' update ledger balance irrespective of
+      *                        posting date
+     I                                      105 105 C#FTOV
+      *               Value date and posting date
+     I                                    P 106 1080C#VDAT
+     I                                    P 109 1110C#PSTD
+      *               Override posting date correction
+      *                        for forward valued items
+      *                        'Y' prevents date being changed
+     I                                      112 112 C#PSTO
+      *               Indicator to show if removal allowed Y, N or " "
+     I                                      113 113 C#RPST
+      *               Removal set number
+     I                                      114 1160C#RPNB
+      *               Removal type "C" = Credit entries
+      *                            "D" = Debit entries
+     I                                      117 117 C#RTYP
+      *               Booking branch
+     I                                      118 120 C#BBRN
+      *                                                                                       CGL029
+      ** Account Code for Full Acount                                                         CGL029
+      *                                                                                       CGL029
+     I                                      121 1300C#ACO1                                    CGL029
+      *                                                                                       CGL029
+      ** Account code for Partial Account                                                     CGL029
+      *                                                                                       CGL029
+     I                                      131 1400C#ACOD                                    CGL029
+      *                                                                                       CAP204
+      ** Other Transaction Reference                                                          CAP204
+      *                                                                                       CAP204
+     I                                      141 160 C#OTR1                                    CAP204
+      *                                                                                       CAP205
+      ** Movement type                                                                        CAP205
+      *                                                                                       CAP205
+     I                                      161 161 C#MTYP                                    CAP205
+      *                                                                                       CLE134
+      ** Exception Reference Id/Number                                                        CLE134
+      *                                                                                       CLE134
+     I                                      162 164 C#XRFI                                    CLE134
+     I                                      165 1740C#XRFN                                    CLE134
+      *
+     ISDRETL    E DSSDRETLPD                                              088311
+     I**  Retail Details                                                  088311
+     IDSFDY     E DSDSFDY
+     IDSSDY     E DSDSSDY
+     I*
+     ICPYR        DS
+     I**  Data Structure for Compilation - Copyright Insertion
+     I                                        1  80 ##CPY
+     I/COPY WNCPYSRC,AOOUPSU0I1
+     C/SPACE 5
+      *****************************************************************
+      * Process     :  MAINLINE                                       *
+      * Function    :  Mainline processing                            *
+      *                                                               *
+      * Called by   :  None                                           *
+      * Calls       :  SRINIT - Initial Processing - On First Call    *
+      *                SRMAIN - Main Processing                       *
+      *****************************************************************
+      *
+      **  Parameter list for current program invocation.
+     C           *ENTRY    PLIST
+     C                     PARM           ##RTCD  7
+     C                     PARM           Z#BSTS
+     C                     PARM           Z#ASTS
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'MAIN'    @STK,Q
+      *
+      *................................................................
+      *
+      **  Initial processing - Once Only
+     C           ##INIT    IFEQ *BLANK
+     C                     EXSR SRINIT
+     C                     MOVE 'Y'       ##INIT  1
+     C                     ENDIF
+      *
+      *  Main processing
+     C                     EXSR SRMAIN
+      *
+      *................................................................
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+      **  Terminate program
+     C                     RETRN
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRMAIN                                         *
+      * Function    :  Main processing                                *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           SRMAIN    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRMAIN'  @STK,Q
+      *
+      *................................................................
+      *
+      ** Clear down all shadow postings in store (within AOSPOSU0)
+      *
+     C                     EXSR SRCLR
+      *
+     C                     MOVELZ#BSTS    #BRCID  2
+     C                     MOVELZ#ASTS    #ARCID  2
+      *                                                                                       CRE020
+     C           CRE020    IFEQ 'Y'                                                           CRE020
+     C                     MOVE 'N'       W2POST                                              CRE020
+     C                     ENDIF                                                              CRE020
+      *
+      *-------------------------------------------------------------------
+      *
+      ** GENERATE 'BEFORE STATUS' ACCOUNT MOVEMENTS
+      ** (if not insertion, when __RCID will be blank)
+      *
+     C           #BRCID    IFNE *BLANK
+      *
+     C                     MOVEL'YES'     ##REVI  3
+     C                     MOVELZ#BSTS    POSETF
+      *                                                                                       CRE020
+      ** Store TNLU before update.  This TNLU is use to chain POSETDX3.                       CRE020
+      *                                                                                       CRE020
+     C           CRE020    IFEQ 'Y'                                                           CRE020
+     C                     MOVE TNLU      KTNLU                                               CRE020
+     C                     ENDIF                                                              CRE020
+      *
+      ** Access security details
+      *
+     C                     MOVELPSSH      SESN
+     C                     EXSR SRSECT
+      *
+      ** Position settlement processing
+      *
+     C                     EXSR SRPOST
+      *
+      ** If latest TNLU is not equal to previous TNLU, update latest TNLU on                  CRE020
+      ** extension file to keep up to date                                                    CRE020
+      *                                                                                       CRE020
+     C           CRE020    IFEQ 'Y'                                                           CRE020
+     C           TNLU      ANDNEKTNLU                                                         CRE020
+     C           KPOST3    CHAINPOSETDD3             78                                       CRE020
+     C           *IN78     IFEQ '0'                                                           CRE020
+     C                     MOVE TNLU      P3TNLU                                              CRE020
+     C                     MOVE TNLU      KTNLU                                               CRE020
+     C                     UPDATPOSETDD3                                                      CRE020
+     C                     ENDIF                                                              CRE020
+     C                     ENDIF                                                              CRE020
+     C                     MOVE 'Y'       W2POST  1                                           CRE020
+      *                                                                                       CRE020
+     C                     END                             * Z#BSTS
+      *-------------------------------------------------------------------
+      *
+      ** GENERATE 'AFTER STATUS' ACCOUNT MOVEMENTS
+      ** (if not deletion, when __CHTP will be 'D')
+      *
+     C                     MOVEL*BLANK    ##REVI
+     C                     MOVELZ#ASTS    POSETF
+     C           CRE020    IFEQ 'Y'                                                           CRE020
+     C           W2POST    IFEQ 'N'                                                           CRE020
+     C                     MOVE TNLU      KTNLU                                               CRE020
+     C                     ENDIF                                                              CRE020
+     C                     ENDIF                                                              CRE020
+     C           CHTP      IFNE 'D'
+      *                                                                                       250115
+     C           CHTP      IFEQ 'A'                                                           250115
+     C           PAUI      ANDNE'Y'                                                           250115
+     C                     ELSE                                                               250115
+      *
+      ** Access security details
+      *
+     C                     MOVELPSSH      SESN
+     C                     EXSR SRSECT
+      *
+      ** Position settlement processing
+      *
+     C                     EXSR SRPOST
+      *
+     C                     ENDIF                                                              250115
+     C                     END
+      *-------------------------------------------------------------------
+      *
+      ** Update database with shadow postings in store (within AOSPOSU0)
+      *
+     C                     EXSR SRUPD
+      *
+      *................................................................
+      *
+     C           EXMAIN    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRPOST                                         *
+      * Function    :  Position Settlement Processing                 *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  AOSPOSU0 - On-line Positions Update            *
+      *****************************************************************
+     C           SRPOST    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRPOST'  @STK,Q
+      *
+      *................................................................
+      *
+      **  Store settlement method, account & branch
+      *
+     C           PPRE      IFEQ 'P'
+     C                     MOVELPSMT      ##PAYM           * pay method
+     C                     MOVELPSEA      ##PAYA           * pay account
+     C                     MOVELPSEB      ##PAYB           * pay branch
+     C                     MOVEL##PAYD    ##SETD           * Pay details
+     C                     ELSE
+     C                     MOVELPSMT      ##RECM           * rec method
+     C                     MOVELPSEA      ##RECA           * rec account
+     C                     MOVELPSEB      ##RECB           * rec branch
+     C                     MOVEL##RECD    ##SETD           * Rec details
+     C                     END
+      *
+      **  Store basic position settlement details
+      *
+     C                     MOVELPEVT      ##TRYP  2        * transact type
+     C           CRE020    IFEQ 'Y'                                                           CRE020
+     C                     MOVELPCPY      ##TRN                                               CRE020
+     C                     ELSE                                                               CRE020
+     C**********           MOVEL*BLANK    ##TRN   6        * transact no.                     247870
+     C                     MOVEL'000000'  ##TRN   6                                           247870
+     C                     ENDIF                                                              CRE020
+     C                     MOVELPBCA      ##BBRN  3        * booking branch
+      *
+      ** Generate account movement
+      ** =========================
+      *
+     C** If S01512 is active, use Payment/Value Date of the Pos. Sett.                        102929
+     C*                                                                                       102929
+     C           S01512    IFEQ 'Y'                                                           102929
+     C                     Z-ADDPSVL      ##VDAT           * value date                       102929
+     C                     ELSE                                                               102929
+     C                     Z-ADDPDUD      ##VDAT  50       * value date
+     C                     ENDIF                                                              102929
+     C*                                                                                       102929
+     C           PSAT      IFEQ *ZERO
+     C                     Z-ADDPAMD      ##AMT  150       * amount due in
+     C                     MOVELPNCY      ##CCY   3        * nominal ccy
+     C                     ELSE
+     C                     Z-ADDPSAT      ##AMT            * settlemt amt in
+     C                     MOVELPSCU      ##CCY            * settlement ccy
+     C                     END
+      *
+     C                     Z-ADD001       ##RPNB  30
+      *
+     C           PEVT      IFEQ 'CP'
+     C**********           MOVEL##NAR,1   ##NARR 30        * coupon                           247870
+     C                     MOVEL##NAR,1   NAR20  20        * coupon                           247870
+     C                     ELSE
+     C           PEVT      IFEQ 'DV'
+     C**********           MOVEL##NAR,2   ##NARR           * dividend                         247870
+     C                     MOVEL##NAR,2   NAR20            * dividend                         247870
+     C                     ELSE
+     C           PEVT      IFEQ 'PP'
+     C**********           MOVEL##NAR,3   ##NARR           * part pay                         247870
+     C                     MOVEL##NAR,3   NAR20            * part pay                         247870
+     C                     ELSE
+     C           PEVT      IFEQ 'MP'
+     C**********           MOVEL##NAR,4   ##NARR           * mort pay                         247870
+     C                     MOVEL##NAR,4   NAR20            * mort pay                         247870
+     C                     ELSE
+     C**********           MOVEL##NAR,5   ##NARR           * maturity                         247870
+     C                     MOVEL##NAR,5   NAR20            * maturity                         247870
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *                                                                                       247870
+      ** Include security shortname to be more descriptive                                    247870
+      *                                                                                       247870
+     C                     MOVE SESN      NAR20                                               247870
+     C                     MOVELNAR20     ##NARR 30                                           247870
+      *
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL'F'       ##MTYP  1                                           CAP205
+     C                     ENDIF                                                              CAP205
+     C                     EXSR SRMOVE
+      *................................................................
+      *
+     C           EXTRAD    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRSECT                                         *
+      * Function    :  Get Security and Investment Type Details       *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :                                                 *
+      *****************************************************************
+     C           SRSECT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q       50
+     C                     MOVEL'SRSECT'  @STK,Q
+      *
+      *................................................................
+      *
+      ** Access security details
+      *
+     C           SESN      CHAINSECTYDF              99    *
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'SECTYD  'W0FILE
+     C                     MOVELSESN      W0KEY
+     C                     Z-ADD001       W0ERNB
+     C                     EXSR SRERR
+     C                     END
+      *
+      ** Access investment type details
+      *
+     C           INVTPK    KLIST
+     C                     KFLD           NMCY
+     C                     KFLD           SITP
+     C           INVTPK    CHAININVTPDF              99    *
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'INVTYPD 'W0FILE
+     C                     MOVELNMCY      W0KEY
+     C                     MOVE SITP      W0KEY
+     C                     Z-ADD002       W0ERNB
+     C                     EXSR SRERR
+     C                     END
+      *................................................................
+      *
+     C           EXSECT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+     C*****************************************************************
+      /SPACE 5
+      *****************************************************************
+      * Subroutine  :  SRMOVE                                         *
+      * Function    :  Pass Movement To Write Program                 *
+      *                                                               *
+      * Called by   :  Various                                        *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRMOVE    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRMOVE'  @STK,Q
+      *
+      *................................................................
+      *
+      ** Bypass if no amount to post
+      *
+     C           ##AMT     CABEQ*ZERO     EXMOVE
+      *
+      ** Determine account movement settlement details
+      *
+     C                     CLEARC#DTA
+      *
+     C           ##SETM    IFEQ '01'
+     C           ##SETM    OREQ '02'
+     C           ##SETM    OREQ '07'
+     C           ##SETM    OREQ '08'
+     C           ##SETM    OREQ '12'
+     C                     MOVEL'N'       C#ATYP
+     C***********          MOVEL##NOSN    C#NOSN
+     C                     MOVEL##SETA    C#NOS6  6                       105034
+     C                     MOVE C#NOS6    C#NOS1  1                       105034
+     C           C#NOS1    IFNE *BLANK                                    105034
+     C                     MOVE ##SETA    C#NOSN                          105034
+     C                     ELSE                                           105034
+     C                     MOVEL##SETA    C#NOS5  5                       105034
+     C                     MOVELC#NOS5    C#NOS3  3                       105034
+     C                     MOVE C#NOS3    C#NO1B  1                       105034
+     C           C#NO1B    IFNE *BLANK                                    105034
+     C                     MOVE C#NOS5    C#NOSN                          105034
+     C                     ELSE                                           105034
+     C                     MOVELC#NOS5    C#NOSN                          105034
+     C                     END                                            105034
+     C                     END                                            105034
+     C                     ELSE
+     C           ##SETM    IFEQ '14'
+     C                     MOVEL'R'       C#ATYP
+     C                     MOVEL##ACNO    C#ACNO
+     C                     ELSE
+     C***********##SETM    IFEQ '04'                                      088311
+     C***********##SETM    OREQ '05'                                      088311
+     C           ##SETM    IFEQ '05'                                      088311
+     C           ##SETM    OREQ '15'
+     C                     MOVEL'P'       C#ATYP
+     C                     MOVEL##CNUM    C#CNUM
+     C                     MOVEL##ACOD    C#ACOD
+     C                     MOVEL##ACSQ    C#ACSQ
+     C                     MOVEL##BRCA    C#BRCA
+     C                     ELSE                                           088311
+     C           ##SETM    IFEQ '04'                                      088311
+     C                     CALL 'AORETLR0'                                088311
+     C                     PARM '*DBERR ' @RTCD   7                       088311
+     C                     PARM '*FIRST ' @OPTN   7                       088311
+     C           SDRETL    PARM SDRETL    DSFDY                           088311
+     C                     MOVEL'P'       C#ATYP                          088311
+     C                     MOVELPCPY      C#CNUM                          088311
+     C                     MOVELBMACCD    C#ACOD                          088311
+     C                     Z-ADD1         C#ACSQ                          088311
+     C                     MOVEL##BRCA    C#BRCA                          088311
+     C                     END                                            088311
+     C                     END
+     C                     END
+     C                     END
+      *
+      * OLPOS Incoming/Outgoing Indicator 'I' or 'O'
+     C           ##PYRC    IFEQ 'P'
+     C                     MOVEL'O'       C#IO             * outgoing
+     C                     ELSE
+     C                     MOVEL'I'       C#IO             * incoming
+     C                     END
+      *
+      * Currency of transaction
+     C                     MOVEL##CCY     C#CCY
+      *
+      * Transaction type
+     C           PEVT      IFEQ 'MT'                                                          247870
+     C                     MOVE 'MA'      ##TRYP                                              247870
+     C                     ENDIF                                                              247870
+      *                                                                                       247870
+     C                     MOVEL##TRYP    C#TRYP
+      * Transaction Narrative
+     C/COPY WNCPYSRC,AOOUPSU0C3
+     C                     MOVEL##NARR    C#NARR
+     C/COPY WNCPYSRC,AOH00060
+     C           ##REVI    IFEQ 'YES'
+     C                     MOVE '*'       C#NARR
+     C                     END
+      *
+      * SE/DL/LE/GL/RE transaction reference
+     C                     MOVEL##TRN     C#TRN
+      *
+      * Movement amount
+     C           ##PYRC    IFEQ 'P'
+     C           ##REVI    ANDNE'YES'
+     C           ##PYRC    OREQ 'R'
+     C           ##REVI    ANDEQ'YES'
+     C                     Z-SUB##AMT     C#AMT            * pay ie credit
+     C                     ELSE
+     C                     Z-ADD##AMT     C#AMT            * rec ie debit
+     C                     END
+      *
+      * Module
+     C                     MOVEL'SE'      C#MOD
+      *
+      * Olpos record number to update
+      * '01' for FX
+      * '02' for Interest movements
+      * '03' for loans and deposits
+     C                     MOVE '03'      C#OLRC
+      *
+      * Value date and posting date
+     C                     Z-ADD##VDAT    C#VDAT
+     C                     Z-ADD##VDAT    C#PSTD
+      *
+      * Indicator to show if removal allowed Y, N or " "
+     C                     MOVEL'Y'       C#RPST
+      *
+      * Removal set number
+     C                     Z-ADD##RPNB    C#RPNB
+      *
+      * Removal type "C" = Credit entries
+      *              "D" = Debit entries
+     C                     MOVEL'C'       C#RTYP
+      *
+      * Booking branch
+     C                     MOVEL##BBRN    C#BBRN
+      *                                                                                       CRE020
+      ** FT Transaction reference = Security Shortname                                        CRE020
+      *                                                                                       CRE020
+     C           CRE020    IFEQ 'Y'                                                           CRE020
+     C                     MOVELSESN      C#PREF                                              CRE020
+     C                     EXSR SRTNLU                                                        CRE020
+     C                     MOVE WTNLU     C#PREF                                              CRE020
+     C                     ENDIF                                                              CRE020
+      *
+      *  If settlement details are present
+      *  AOSPOSU0 will be called to update PRONO, MEMOS, RSACMTPD, OLPOS
+      *
+      *  OTHERWISE
+      *
+      *  If no settlement details are present
+      *  AOSPOSU0 will be called to only update OLPOS
+      *
+     C           C#ATYP    IFEQ *BLANK
+      *
+      * Set account type indicator to signify no settlement
+     C                     MOVEL'X'       C#ATYP
+      *
+      * Set update indicators for no update
+     C                     MOVE 'N'       C#PRON
+     C                     MOVE 'N'       C#MEMS
+     C                     MOVE 'N'       C#RSAC
+     C                     END
+      *                                                                                       CAP205
+      ** Set C#MTYP to ##MTYP                                                                 CAP205
+      *                                                                                       CAP205
+     C           CAP205    IFEQ 'Y'                                                           CAP205
+     C                     MOVEL##MTYP    C#MTYP                                              CAP205
+     C                     ENDIF                                                              CAP205
+      *
+      *  Call AOSPOSU0
+      *
+     C                     CALL 'AOSPOSU0'             9090
+     C           R#RTN     PARM *BLANKS   O#RTN   7
+     C                     PARM '*ADD    'W0ACT   8
+     C                     PARM C#DTA     O#DTA 256
+      *
+     C           *IN90     IFEQ '1'
+     C           R#RTN     ORNE *BLANKS
+     C                     MOVEL'*CALL   'W0FILE  8
+     C                     MOVEL'AOSPOSU0'W0KEY  29
+     C                     Z-ADD902       W0ERNB  30
+     C                     EXSR SRERR
+     C                     END
+      *
+      *................................................................
+      *
+     C           EXMOVE    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      *                                                               *
+      *  SRUPD    : Update database with shadow postings in store     *
+      *                                                               *
+      *  CALLED BY: Various                                           *
+      *                                                               *
+      *  CALLS    : SRERR - Report errors                             *
+      *                                                               *
+      *****************************************************************
+     C           SRUPD     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRUPD'   @STK,Q
+     C/COPY WNCPYSRC,AOOUPSU0C1
+      *
+      *................................................................
+      *
+      *  Call AOSPOSU0 to update database
+      *
+     C                     CALL 'AOSPOSU0'             9090
+     C           R#RTN     PARM *BLANKS   O#RTN   7
+     C                     PARM '*UPDATE 'W0ACT   8
+     C                     PARM C#DTA     O#DTA 256
+      *
+     C           *IN90     IFEQ '1'
+     C           R#RTN     ORNE *BLANKS
+     C                     MOVEL'*CALL   'W0FILE
+     C                     MOVEL'AOSPOSU0'W0KEY
+     C                     Z-ADD903       W0ERNB
+     C                     EXSR SRERR
+     C                     END
+      *
+      *................................................................
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXUPD     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      *                                                               *
+      *  SRCLR    : Clear all postings in store                       *
+      *                                                               *
+      *  CALLED BY: UPDATE - Update database                          *
+      *                                                               *
+      *  CALLS    : SRERR - Report errors                             *
+      *                                                               *
+      *****************************************************************
+     C           SRCLR     BEGSR
+      *
+      *  Set up subroutine stack name
+      *
+     C                     ADD  1         Q
+     C                     MOVEL'SRCLR'   @STK,Q
+      *
+      *................................................................
+      *
+      *  Clear arrays in AOSPOSU0
+      *
+     C                     CLEARC#DTA
+     C                     CALL 'AOSPOSU0'             9090
+     C           R#RTN     PARM *BLANKS   O#RTN   7
+     C                     PARM '*CLEAR  'W0ACT   8
+     C                     PARM C#DTA     O#DTA 256
+      *
+     C           *IN90     IFEQ '1'
+     C           R#RTN     ORNE *BLANKS
+     C                     MOVEL'*CALL   'W0FILE
+     C                     MOVEL'AOSPOSU0'W0KEY
+     C                     Z-ADD901       W0ERNB
+     C                     EXSR SRERR
+     C                     END
+      *
+      *................................................................
+      *
+      *  Unwind subroutine stack name
+      *
+     C           EXCLR     TAG
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+     C/SPACE 5
+      *****************************************************************
+      *                                                               *
+      *  SRERR    : Report error and close down program               *
+      *                                                               *
+      *  CALLED BY: Various                                           *
+      *  CALLS    : *NONE                                             *
+      *                                                               *
+      *****************************************************************
+     C           SRERR     BEGSR
+      *
+      *  Dump program
+      *
+     C                     DUMP
+     C                     ROLBK
+      *
+      *  Close down program
+      *
+     C                     SETON                     LR
+     C                     MOVEL'*ERROR*' ##RTCD
+     C                     RETRN
+      *
+     C           EXERR     ENDSR
+      *****************************************************************
+      /SPACE 5
+      *****************************************************************                       CRE020
+      *                                                               *                       CRE020
+      *  SRTNLU   : Determine original TNLU                           *                       CRE020
+      *                                                               *                       CRE020
+      *  CALLED BY: Various                                           *                       CRE020
+      *  CALLS    : *NONE                                             *                       CRE020
+      *                                                               *                       CRE020
+      *****************************************************************                       CRE020
+     C           SRTNLU    BEGSR                                                              CRE020
+      *                                                                                       CRE020
+     C           KPOST3    KLIST                                                              CRE020
+     C                     KFLD           PBCA                                                CRE020
+     C                     KFLD           PSSH                                                CRE020
+     C                     KFLD           PCPY                                                CRE020
+     C                     KFLD           PDUD                                                CRE020
+     C                     KFLD           PEVT                                                CRE020
+     C                     KFLD           KTNLU   50                                          CRE020
+      *                                                                                       CRE020
+     C           KPOST3    CHAINPOSETDD3             78                                       CRE020
+     C           *IN78     IFEQ '0'                                                           CRE020
+     C                     MOVE P3OTNL    WTNLU   5                                           CRE020
+     C                     ELSE                                                               CRE020
+     C                     MOVE *BLANKS   WTNLU                                               CRE020
+     C                     ENDIF                                                              CRE020
+      *                                                                                       CRE020
+     C                     ENDSR                                                              CRE020
+      *****************************************************************                       CRE020
+      /SPACE 5                                                                                CRE020
+      *****************************************************************
+      * Subroutine  :  SRINIT                                         *
+      * Function    :  Initial processing - First Call Only           *
+      *                                                               *
+      * Called by   :  Mainline                                       *
+      * Calls       :  None                                           *
+      *****************************************************************
+     C           SRINIT    BEGSR
+      *
+      **  Set up subroutine stack name
+     C                     ADD  1         Q
+     C                     MOVEL'SRINIT'  @STK,Q
+     C/COPY WNCPYSRC,AOOUPSU0C2
+      *
+      *................................................................
+      *
+      **  Initialise work fields
+     C                     MOVEL'P'       ##PAY
+     C                     MOVEL'R'       ##REC
+     C                     MOVEL*BLANKS   R#RTN   7
+     C                     MOVE '0'       *IN98
+      *
+      **  Copyright
+     C                     MOVEA##CPY     ##BIS  80
+      *
+     C**  Access SAR details file to see if S01512 SAR is installed.                          102929
+     C*                                                                                       102929
+     C                     CALL 'AOSARDR0'                                                    102929
+     C                     PARM *BLANKS   @RTCD                                               102929
+     C                     PARM '*VERIFY' @OPTN                                               102929
+     C                     PARM 'S01512'  @SARD   6                                           102929
+     C*                                                                                       102929
+     C           @RTCD     IFEQ *BLANK                                                        102929
+     C                     MOVE 'Y'       S01512  1                                           102929
+     C                     ELSE                                                               102929
+     C                     MOVE 'N'       S01512                                              102929
+     C                     END                                                                102929
+      *                                                                                       102929
+      **  Access SAR details file to see if CRE020 SAR is installed.                          CRE020
+      *                                                                                       CRE020
+     C                     CALL 'AOSARDR0'                                                    CRE020
+     C                     PARM *BLANKS   @RTCD                                               CRE020
+     C                     PARM '*VERIFY' @OPTN                                               CRE020
+     C                     PARM 'CRE020'  @SARD                                               CRE020
+      *                                                                                       CRE020
+     C           @RTCD     IFEQ *BLANK                                                        CRE020
+     C                     MOVE 'Y'       CRE020  1                                           CRE020
+     C                     ELSE                                                               CRE020
+     C                     MOVE 'N'       CRE020                                              CRE020
+     C                     END                                                                CRE020
+      *                                                                                       CRE020
+      *                                                                                       CAP205
+      **  Access SAR details file to see if CAP205 SAR is installed.                          CAP205
+      *                                                                                       CAP205
+     C                     CALL 'AOSARDR0'                                                    CAP205
+     C                     PARM *BLANKS   @RTCD                                               CAP205
+     C                     PARM '*VERIFY' @OPTN                                               CAP205
+     C                     PARM 'CAP205'  @SARD                                               CAP205
+      *                                                                                       CAP205
+     C           @RTCD     IFEQ *BLANK                                                        CAP205
+     C                     MOVE 'Y'       CAP205  1                                           CAP205
+     C                     ELSE                                                               CAP205
+     C                     MOVE 'N'       CAP205                                              CAP205
+     C           @RTCD     IFNE '*NRF'                                                        CAP205
+     C                     MOVEL'SCSARDPD'W0FILE                                              CAP205
+     C                     MOVEL'AOSPOSU0'W0KEY                                               CAP205
+     C                     Z-ADD904       W0ERNB                                              CAP205
+     C                     EXSR SRERR                                                         CAP205
+     C                     ENDIF                                                              CAP205
+     C                     ENDIF                                                              CAP205
+      *                                                                                       CAP205
+     C/COPY WNCPYSRC,AOH00061
+      *................................................................
+      *
+     C           EXINIT    TAG
+      *
+      **  Unwind subroutine stack name
+     C                     MOVEA*BLANKS   @STK,Q
+     C                     SUB  1         Q
+      *
+     C                     ENDSR
+      *****************************************************************
+** ##NAR  **      NARRATIVES
+INTEREST
+DIVIDEND
+PART PAYMENT                                                                                  247870
+MORTGAGE PAYMENT                                                                              247870
+MATURITY
+** ##CPY  **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

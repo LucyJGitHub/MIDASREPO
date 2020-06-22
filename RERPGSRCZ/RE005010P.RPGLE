@@ -16,11 +16,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165  *CREATE    Date 23Feb15               *
+      *  Last Amend No. HUT107             Date 27May20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165  *CREATE    Date 23Feb15               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HUT107 - Additional 3rd Party Trust Indicator                *
+      *           (Upgrade HUT016 to FM2.1 SP22)                      *
+      *           Addition of hooks HUT107_007 to HUT107_010          *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax                                *
       *                                                               *
@@ -63,6 +67,7 @@
      FRE005010P1O    E             PRINTER INFDS(SPOOL)
      F                                     OFLIND(*IN01)
       ** Tax Rate Codes List
+     F/COPY WNCPYSRC,HUT107_007                                                          HUT107
       *
       /EJECT
       ****************************************************************
@@ -112,6 +117,7 @@
       **  Number of database error
      D  DBASE                176    177
       *
+     D/COPY WNCPYSRC,HUT107_008                                                          HUT107
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D**  MIDAS ABS Bank Details
      D*
@@ -290,6 +296,7 @@
      C     @KEY1         KLIST
      C                   KFLD                    CCY
      C                   KFLD                    @TTXRC
+     C/COPY WNCPYSRC,HUT107_009                                                          HUT107
       *
      C                   ENDSR
       *****************************************************************
@@ -358,6 +365,7 @@
      C                   EXSR      *PSSR
      C                   END
      C                   MOVEL     BBCNA1        CNA1
+     C/COPY WNCPYSRC,HUT107_010                                                          HUT107
       *
       ** Format Tax Amounts if main tax rate code is not blanks
       *

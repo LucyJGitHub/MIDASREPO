@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. HUT109             Date 14Apr20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -34,6 +35,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HUT109 - Partial upgrade of HUT020 to FB 2.1 SP22.           *
+      *           Additional Authorisation Steps in SE Module         *
+      *           Added hook: SDH00560                                *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CSD027A - Conversion Of Customer Number to Alpha             *
@@ -57,14 +61,14 @@
      FSDAUTHFDF CF   E             WORKSTN
      F                                     SFILE(SDAUTHS0:@@RRN)
       ** Midas SD Authorisation Function Display
- 
+
      FSDAULGL0  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SDAULGD0:SDAULGD1)
       ** Midas SD Authorisation Log - by Key
- 
+
      FSDAULGL2  IF   E           K DISK    INFSR(*PSSR)
       ** Midas SD Authorisation Log - by Function
- 
+
      FSDCWHTL1  IF   E           K DISK    INFSR(*PSSR)                                       CSD015
       ** Midas SD Compliance Watch Hit List                                                   CSD015
                                                                                               CSD015
@@ -90,48 +94,48 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for Access Programs, Short Data Structure
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CSD015
       ** Data Structure for SAR Details                                                       CSD015
                                                                                               CSD015
@@ -148,12 +152,12 @@
      D ZMUSER          DS            17
      D  BRC                   11     13
      D  DEPT                  14     16
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D W0RSF           S              1
      D WQA3N           S              3  0
      D WQB3N           S              3  0
@@ -166,7 +170,7 @@
      D WSkipRec        S              1
      D @RUN            S              1
      D CPY2@           S             80
- 
+
       ** Declared variables for enhancement CSD015                                            CSD015
                                                                                               CSD015
      D WFuncType       S              8A                                                      CSD015
@@ -190,7 +194,7 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       /EJECT
       *****************************************************************
      C
@@ -200,11 +204,11 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
       ** Main Program
                                                                                            BUG6979
       **  GET ZMUSER to access default branch                                              BUG6979
@@ -212,11 +216,11 @@
      C     *DTAARA       DEFINE                  ZMUSER                                    BUG6979
      C                   IN        ZMUSER                                                  BUG6979
      C                   UNLOCK    ZMUSER                                                  BUG6979
- 
+
      C                   DO        *HIVAL
- 
+
       ** If no records found, display no record screen and exit
- 
+
      C                   IF        CSD028 = 'N'                                               CSD028
      C     *LOVAL        SETLL     SDAULGL2
      C                   READ      SDAULGL2                               82
@@ -234,35 +238,35 @@
      C                   EXFMT     SDAUTHNR
      C                   EXSR      SREnd
      C                   ENDIF
- 
+
       ** Initialise and load subfile page
- 
+
      C                   EXSR      SRBuild
- 
+
      C                   EVAL      W0RSF = 'N'
- 
+
       ** Display screen until reload requested
- 
+
      C     W0RSF         DOWEQ     'N'
- 
+
       ** Display screen
      C                   EXSR      SRDisplay
- 
+
       ** Process response
- 
+
      C     *IN03         CASEQ     '1'           SREnd
- 
+
      C     *IN05         CASEQ     '1'           SRReload
- 
+
      C     *IN27         CASEQ     '1'           SRLoad
- 
+
      C                   CAS                     SRProcess
      C                   ENDCS
- 
+
      C                   ENDDO
- 
+
      C                   ENDDO
- 
+
       /EJECT
       *****************************************************************
       * SRBuild - Initialise and Load Subfile Page                    *
@@ -271,18 +275,18 @@
       * Calls    : QDCXLATE, SRLoad                                   *
       *****************************************************************
      C     SRBuild       BEGSR
- 
+
       ** Initialise & load subfile page
- 
+
      C                   EVAL      *IN80 = *ON
      C                   WRITE     SDAUTHC0
      C                   EVAL      *IN80 = *OFF
      C                   EVAL      *IN81 = *OFF
- 
+
       ** Reset Number of Records in Subfile
- 
+
      C                   Z-ADD     0             WLRCD             4 0
- 
+
       ** Position file
      C     KAUTH1        KLIST
      C                   KFLD                    DDFNSL
@@ -292,7 +296,7 @@
      C                   KFLD                    DDFNSL                                       CSD028
      C                   KFLD                    DDKYSL                                       CSD028
      C                   KFLD                    DDSTSL                                       CSD028
- 
+
      C                   IF        CSD028 = 'N'                                               CSD028
      C     KAUTH1        SETLL     SDAULGL2
      C                   READ      SDAULGL2
@@ -300,34 +304,34 @@
      C     KAUTH2        SETLL     SDAULGL5                                                   CSD028
      C                   READ      SDAULGL5                                                   CSD028
      C                   ENDIF                                                                CSD028
- 
+
       ** Save previous selector values
- 
+
      C     *LIKE         DEFINE    DDKYSL        WZKYSL
      C                   EVAL      WZKYSL = DDKYSL
      C     *LIKE         DEFINE    DDFNSL        WZFNSL
      C                   EVAL      WZFNSL = DDFNSL
      C     *LIKE         DEFINE    DDSTSL        WZSTSL                                       CSD028
      C                   EVAL      WZSTSL = DDSTSL                                            CSD028
- 
+
       ** Translate search mask for text field
- 
+
      C     *LIKE         DEFINE    DDKYSL        WQKYSL
- 
+
      C                   CALL      'QDCXLATE'
      C                   PARM      20            WQA5N             5 0
      C                   PARM      DDKYSL        WQKYSL
      C                   PARM      'QSYSTRNTBL'  WQB10X
      C                   PARM      'QSYS'        WQC10X           10
- 
+
      C     *LIKE         DEFINE    DDFNSL        WQFNSL
- 
+
      C                   CALL      'QDCXLATE'
      C                   PARM      21            WQA5N
      C                   PARM      DDFNSL        WQFNSL
      C                   PARM      'QSYSTRNTBL'  WQB10X
      C                   PARM      'QSYS'        WQC10X
- 
+
      C                   IF        CSD028 = 'Y'                                               CSD028
      C     *LIKE         DEFINE    DDSTSL        WQSTSL                                       CSD028
                                                                                               CSD028
@@ -339,9 +343,9 @@
      C                   ENDIF                                                                CSD028
                                                                                               CSD028
       ** Load subfile page
- 
+
      C                   EXSR      SRLoad
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -351,9 +355,9 @@
       * Calls    : QCLSCAN                                            *
       *****************************************************************
      C     SRLoad        BEGSR
- 
+
       ** Re-establish fields in read-ahead record
- 
+
      C                   IF        *IN27 and *IN82 = '0'
      C                   IF        CSD028 = 'N'                                               CSD028
      C                   READP     SDAULGL2                               60
@@ -363,25 +367,25 @@
      C                   READ      SDAULGL5                               60                  CSD028
      C                   ENDIF                                                                CSD028
      C                   ENDIF
- 
+
       ** Start at previous highest record in SFL
- 
+
      C                   Z-ADD     WLRCD         @@RRN
      C                   Z-ADD     1             WRCTR             5 0
- 
+
       ** Load next subfile page
- 
+
      C     *IN82         DOWEQ     '0'
      C     WRCTR         ANDLE     WSFPG
- 
+
      C                   EVAL      WSkipRec = 'N'
      C                   ADD       1             @@RRN
      C                   EVAL      *IN32 = '0'
- 
+
       ** Protect fields during Enquiry Mode
- 
+
      C                   IF        DDKYSL <> *BLANKS
- 
+
      C                   CALL      'QCLSCAN'
      C                   PARM                    ALKEY
      C                   PARM      20            WQA3N
@@ -392,14 +396,14 @@
      C                   PARM      '1'           WQE1
      C                   PARM      '?'           WQF1
      C                   PARM                    WQG3N
- 
+
      C                   IF        WQG3N < 1
      C                   EVAL      WSkipRec = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        DDFNSL <> *BLANKS
- 
+
      C                   CALL      'QCLSCAN'
      C                   PARM                    ALFUNC
      C                   PARM      21            WQA3N
@@ -410,12 +414,12 @@
      C                   PARM      '1'           WQE1
      C                   PARM      '?'           WQF1
      C                   PARM                    WQG3N
- 
+
      C                   IF        WQG3N < 1
      C                   EVAL      WSkipRec = 'Y'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        CSD028 = 'Y'                                               CSD028
      C                   IF        DDSTSL <> *BLANKS                                          CSD028
                                                                                               CSD028
@@ -437,9 +441,9 @@
      C                   ENDIF                                                                CSD028
                                                                                               CSD028
      C                   IF        WSkipRec = 'N'
- 
+
       ** Load subfile fields
- 
+
      C                   MOVE      *BLANK        DDOPTN
      C                   MOVEL     ALKEY         DDKEY
      C                   MOVEL     ALFUNC        DDFUNC
@@ -448,28 +452,28 @@
      C                   IF        CSD028 = 'Y'                                               CSD028
      C                   MOVE      ALSTAT        DDSTAT                                       CSD028
      C                   ENDIF                                                                CSD028
- 
+
       ** Output to subfile
- 
+
      C                   ADD       1             WRCTR                81
      C                   EVAL      *IN81 = *ON
      C                   WRITE     SDAUTHS0
- 
+
      C                   ELSE
      C                   SUB       1             @@RRN
      C                   ENDIF
- 
+
       ** End of File
- 
+
      C                   IF        CSD028 = 'N'                                               CSD028
      C                   READ      SDAULGL2                               82
      C                   ELSE                                                                 CSD028
      C                   READ      SDAULGL5                               82                  CSD028
      C                   ENDIF                                                                CSD028
      C                   ENDDO
- 
+
      C                   Z-ADD     @@RRN         WLRCD
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -479,11 +483,11 @@
       * Calls    :                                                    *
       *****************************************************************
      C     SRReload      BEGSR
- 
+
       ** Request subfile reload
- 
+
      C                   EVAL      W0RSF = 'Y'
- 
+
      C                   IF        *IN05
      C                   MOVE      '0'           *IN32
      C                   MOVE      '0'           *IN94
@@ -500,7 +504,7 @@
       ** Clear messages from program message queue
      C                   CALL      'ZA0250'
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -510,20 +514,20 @@
       *  Calls    :                                                   *
       *****************************************************************
      C     SRDisplay     BEGSR
- 
+
       ** PUTOVR unless conditioned fields change
- 
+
      C                   EVAL      *IN86 = *ON
- 
+
      C                   TIME                    DDTIME
      C                   WRITE     SDAUTHC1
      C                   WRITE     SDAUTHF0
      C                   EXFMT     SDAUTHC0
- 
+
       ** Clear messages from program message queue
- 
+
      C                   CALL      'ZA0250'
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -533,23 +537,23 @@
       * Calls    : SRReload, SRValid, SRSelection                     *
       *****************************************************************
      C     SRProcess     BEGSR
- 
+
       ** Change of position specified
- 
+
      C                   IF        WZKYSL <> DDKYSL OR WZFNSL <> DDFNSL
      C                             OR WZSTSL <> DDSTSL AND CSD028 = 'Y'                       CSD028
      C                   EXSR      SRReload
      C                   ENDIF
- 
+
       ** Quit if reload requested
- 
+
      C     W0RSF         IFNE      'Y'
- 
+
       **  Read the subfile for selected records
       **  Only process those for which the option field is blank.
- 
+
      C                   MOVE      '0'           *IN94
- 
+
      C                   READC     SDAUTHS0                               99
      C     *IN99         DOWEQ     '0'
       *
@@ -571,9 +575,9 @@
      C                   UPDATE    SDAUTHS0
      C                   READC     SDAUTHS0                               99
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -583,7 +587,7 @@
       * Calls    : SRZasnms                                           *
       *****************************************************************
      C     SRValid       BEGSR
- 
+
      C                   MOVE      '0'           *IN32
       *
       ** Validate Action Code
@@ -679,7 +683,7 @@
      C     BJSBRC        IFEQ      *BLANK
      C                   EXSR      ACSSEM
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -689,11 +693,11 @@
       * Calls    : Authorisation Programs, SREnd, SRZasnms            *
       *****************************************************************
      C     SRSelection   BEGSR
- 
+
       ** Pass the Key and Action code to the Authorisation programs
- 
+
      C                   SELECT
- 
+
      C                   WHEN      DDFUNC = 'ACCOUNT DETAILS'
                                                                                               CSD015
      C                   IF        CSD015 = 'Y'  AND  W1EWLC = 'Y'                            CSD015
@@ -710,7 +714,7 @@
      C                   PARM                    @INKC             1
      C                   ENDIF                                                                CSD015
      C                   Eval      PZMsgFile = 'REUSRMSG'                                    BUG5340
- 
+
      C                   WHEN      DDFUNC = 'EXTENDED SETTLEMENTS'
      C                   CALLB     'SDEXSTAUT'
      C                   PARM      *BLANKS       RETCODE
@@ -718,7 +722,7 @@
      C                   PARM                    DDOPTN
      C                   PARM      *BLANKS       ERRMSG
      C                   PARM                    @INKC
- 
+
      C                   WHEN      DDFUNC = 'CURRENCY DETAILS'
      C                   CALLB     'SDCURRAUT'
      C                   PARM      *BLANKS       RETCODE
@@ -726,7 +730,7 @@
      C                   PARM                    DDOPTN
      C                   PARM      *BLANKS       ERRMSG
      C                   PARM                    @INKC
- 
+
      C                   WHEN      DDFUNC = 'NOSTRO DETAILS'
      C                   CALLB     'SDNOSTAUT'
      C                   PARM      *BLANKS       RETCODE
@@ -734,7 +738,7 @@
      C                   PARM                    DDOPTN
      C                   PARM      *BLANKS       ERRMSG
      C                   PARM                    @INKC
- 
+
      C                   WHEN      DDFUNC = 'HOLIDAY DETAILS'
      C                   CALLB     'SDHOLIAUT'
      C                   PARM      *BLANKS       RETCODE
@@ -742,7 +746,7 @@
      C                   PARM                    DDOPTN
      C                   PARM      *BLANKS       ERRMSG
      C                   PARM                    @INKC
- 
+
      C                   WHEN      DDFUNC = 'BASE RATE DETAILS'
      C                   CALLB     'SDBSRTAUT'
      C                   PARM      *BLANKS       RETCODE
@@ -750,7 +754,7 @@
      C                   PARM                    DDOPTN
      C                   PARM      *BLANKS       ERRMSG
      C                   PARM                    @INKC
- 
+
      C                   WHEN      DDFUNC = 'COUNTERPARTY NOSTROS'
      C                   CALLB     'SDCPNOAUT'
      C                   PARM      *BLANKS       RETCODE
@@ -758,7 +762,7 @@
      C                   PARM                    DDOPTN
      C                   PARM      *BLANKS       ERRMSG
      C                   PARM                    @INKC
- 
+
      C                   WHEN      DDFUNC = 'CUSTOMER DETAILS'
                                                                                               CSD015
      C                   IF        CSD015 = 'Y'  AND  W1EWLC = 'Y'                            CSD015
@@ -793,7 +797,7 @@
      C                   PARM                    PCustNumC                                    CSD028
      C                   ENDIF                                                                CSD028
      C                   ENDIF                                                                CSD028
- 
+
      C                   WHEN      DDFUNC = 'ALTERNATIVE CUSTOMER'
                                                                                               CSD015
      C                   IF        CSD015 = 'Y'  AND  W1EWLC = 'Y'                            CSD015
@@ -808,7 +812,7 @@
      C                   PARM      *BLANKS       ERRMSG
      C                   PARM                    @INKC
      C                   ENDIF                                                                CSD015
- 
+
      C                   WHEN      DDFUNC = 'CORRESPONDENT DETAILS'
      C                   CALLB     'CGCORRAUT'
      C                   PARM      *BLANKS       RETCODE
@@ -817,14 +821,14 @@
      C                   PARM      *BLANKS       ERRMSG
      C                   PARM                    @INKC
      C/COPY WNCPYSRC,SDH00560
- 
+
      C                   ENDSL
- 
+
       ** Exit if F3 requested
      C                   If        @INKC = '1'
      C                   EXSR      SREnd
      C                   Endif
- 
+
       ** Process any Errors
      C                   If        ERRMSG <> *BLANKS
      C                   MOVE      '1'           *IN32
@@ -837,7 +841,7 @@
       *
      C                   EXSR      SRZasnms
      C                   Endif
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -899,15 +903,15 @@
       * Calls    :                                                    *
       *****************************************************************
      C     SREnd         BEGSR
- 
+
       ** Terminate program
- 
+
      C                   EVAL      *INLR = *ON
- 
+
       ** Exit program
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -917,17 +921,17 @@
       * Calls    : ZA0340                                             *
       *****************************************************************
      C     SRZasnms      BEGSR
- 
+
      C                   IF        PZMsgFile = *BLANKS
      C                   EVAL      PZMsgFile = 'SDUSRMSG'
      C                   ENDIF
- 
+
      C                   CALL      'ZA0340'
      C                   PARM                    PZMsgFile        10
      C                   PARM                    PZMsgID          10
- 
+
      C                   EVAL      PZMsgFile = *BLANKS
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************                       CSD015
@@ -1005,40 +1009,40 @@
       *             *PSSR                                             *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       ** Set up copyright parameter
- 
+
      C                   MOVEA     CPY@          CPY2@
- 
+
       ** Receive entry parameters
- 
+
      C     *ENTRY        PLIST
       *
      C                   PARM                    MODE              1
- 
+
       ** Initialize program name
- 
+
      C                   MOVEL     'SDAUTHFNC'   DBPGM
- 
+
       ** Move workstation ID to screen field
- 
+
      C                   EVAL      ##PGMQ = PSProcName
      C                   EVAL      DDUSR  = PsUser
      C                   EVAL      DDWID  = PsJobName
- 
+
       ** Set Display according to enquiry or maintenance mode
- 
+
      C     MODE          IFEQ      'E'
      C                   EVAL      *IN70 = *ON
      C                   ENDIF
- 
+
       ** Initialise Subfile Control
- 
+
      C                   MOVE      *BLANKS       DDFNSL
      C                   Z-ADD     13            WSFPG             3 0
- 
+
       ** Access Bank Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
@@ -1051,13 +1055,13 @@
      C                   MOVEL     @OPTN         DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ****GET*ZMUSER*to*access*default*branch                                              BUG6979
- 
+
      C******DTAARA       DEFINE                  ZMUSER                                    BUG6979
      C**********         IN        ZMUSER                                                  BUG6979
      C**********         UNLOCK    ZMUSER                                                  BUG6979
- 
+
       ** Check if CSC011 is installed                                                         CSD015
                                                                                               CSD015
      C                   EVAL      CSC011 = 'N'                                               CSD015

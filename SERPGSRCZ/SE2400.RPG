@@ -39,8 +39,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD052583           Date 22Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR324886           Date 07Apr20               *
+      *  Prev Amend No. HUT103             Date 03Apr20               *
+      *                 MD052583           Date 22Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CSE110             Date 06Oct17               *
       *                 260331             Date 31Mar16               *
       *                 215959             Date 21Mar16               *
@@ -236,10 +238,18 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  AR324886 - Implement 4-eyes processing in Position           *
+      *             Settlement Maintenance.                           *
+      *             (Upgrade as required by HUT105)                   *
+      *  HUT103 - Position Settlement Account Defaulting              *
+      *           Upgrade HUT009 to FM2.1 SP22                        *
+      *           Amendmnet of core hook SE2400CCP4                   *
+      *           Addition of hook HUT103_002                         *
+      *           Addition of hook HUT103_003                         *
       *  MD052583 - Reinstate deleted fixes CSE110                    *
       *  MD046248 - Finastra Rebranding                               *
       *  CSE110 - Condition Output of Partly Paid Account Key on      *
-      *           Position Settlement.                                *      
+      *           Position Settlement.                                *
       *  260331 - Incorrect posting created due to a deleted diary    *
       *           event. Applied fix 255857.                          *
       *         - Applied for MD-37742.                               *
@@ -737,6 +747,9 @@
      F                                              KINFSR SEKDSR
      FPOSETD  O   E           K        DISK         KINFDS POSDDS
      F                                              KINFSR POSDSR
+     FPSAUTD  O   E           K        DISK                                                 AR324886
+      ** SE Position Settlement Authorisation detail                                        AR324886
+      *                                                                                     AR324886
      FSDCUSQL0IF  E           K        DISK                                                 AR853119
       **  Midas SD Stamp Tax Customer Extension file                                        AR853119
      FPOSETDX3O   E           K        DISK         KINFSR *PSSR                            AR853119
@@ -1182,6 +1195,7 @@
      I              CSCN                            ETCSCN                                    234440
      I              PTFR                            ETPTFR                                    234440
      I              SAPD                            ETSAPD                                    234440
+     I/COPY WNCPYSRC,HUT103_002                                                               HUT103
       *                                                                                       CGL031
       ** Constant for Instrument Reference                                                    CGL031
      I              ' - Coupon'           C         WINST1                                    CGL031
@@ -1193,6 +1207,9 @@
      I              'ZAAMLSETSE'          C         ZAAMLP                                    CGL020
       *                                                                                       CGL020
      I**********    'ZACALCSPRT'          C         SPRDSR                      AR1001183 AR1001183A
+     ISDSTAT    E DSSDSTAT                                                                  AR324886
+      ** SD Data area                                                                       AR324886
+      *                                                                                     AR324886
      I/COPY ZSRSRC,ZHOLI                                                  S01512
      I*                                                                   S01512
       *                                                                                       219566
@@ -1378,6 +1395,8 @@
      C                     MOVE *BLANKS   DBPGM                           S01447
      C                     MOVEL'SE2400'  DBPGM                           S01447
      C                     OUT  LDA                                       S01117
+     C           *NAMVAR   DEFN           SDSTAT                                            AR324886
+     C                     IN   SDSTAT                                                      AR324886
      C                     EXSR FIRST
      C*
      C*  DEPOT NAME INFORMATION - LF/CLINT (PF/CLINTSE)
@@ -6144,6 +6163,7 @@
      C*                                                                   CAC002
      C                     ADD  1         W02CNT  50                      046500
      C                     WRITEPOSETDF
+     C                     EXSR PSAUDT                                                      AR324886
       *                                                                                     AR853119
      C           CER049    IFEQ 'Y'                                                         AR853119
      C                     WRITEPOSETDD3                                                    AR853119
@@ -6780,6 +6800,7 @@
      C*                                                                   S01486
      C                     END                                            219688
      C*                                                                   219688
+     C/COPY WNCPYSRC,HUT103_003                                                               HUT103
      C                     ENDSR                                          S01486
      C********************************************************************S01486
       /EJECT                                                              S01447
@@ -9908,6 +9929,28 @@
       **********                                                                AR1001183 AR1001183A
      C**********           ENDSR                                                AR1001183 AR1001183A
       **********                                                                AR1001183 AR1001183A
+     C********************************************************************                  AR324886
+     C/EJECT                                                                                AR324886
+     C********************************************************************                  AR324886
+     C           PSAUDT    BEGSR                                                            AR324886
+      *                                                                                     AR324886
+     C                     MOVE RECI      PARECI                                            AR324886
+     C                     MOVE PBCA      PAPBCA                                            AR324886
+     C                     MOVE PSSH      PAPSSH                                            AR324886
+     C                     MOVE PCPY      PAPCPY                                            AR324886
+     C                     MOVE PDUD      PAPDUD                                            AR324886
+     C                     MOVE PEVT      PAPEVT                                            AR324886
+     C                     MOVE PTFR      PAPTFR                                            AR324886
+     C                     MOVE TNLU      PATNLU                                            AR324886
+     C                     MOVE TXBS      PATXBS                                            AR324886
+     C                     MOVE BNFO      PABNFO                                            AR324886
+     C                     MOVE EXCD      PAEXCD                                            AR324886
+     C           LIBR      CAT  'OWNER'   PALUSR                                            AR324886
+     C                     MOVE LCD       PALCD                                             AR324886
+     C                     MOVE CHTP      PALCTP                                            AR324886
+     C                     WRITEPSAUTDF                                                     AR324886
+      *                                                                                     AR324886
+     C                     ENDSR                                                            AR324886
       *****************************************************************
       /EJECT                                                              S01117
       *****************************************************************   S01117

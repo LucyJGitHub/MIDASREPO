@@ -40,8 +40,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 260331             Date 31Mar16               *
+      *  Last Amend No. AR324886           Date 07Apr20               *
+      *  Prev Amend No. HUT103             Date 02Apr20               *
+      *                 MD046248           Date 27Oct17               *
+      *                 260331             Date 31Mar16               *
       *                 215959             Date 21Mar16               *
       *                 226449             Date 24Jun15               *
       *                 AR1067108          Date 11Dec12               *
@@ -206,6 +208,14 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *   AR324886 - Implement 4-eyes processing in Position          *
+      *              Settlement Maintenance.                          *
+      *              (Upgrade as required by HUT105)                  *
+      *  HUT103 - Position Settlement Account defaulting              *
+      *           (Upgrade HUT009 to FM2.1 SP22)                      *
+      *           Amendment of core hook SE2378IIP2                   *
+      *           Amendment of core hook SE2380CCP4                   *
+      *           Addition of hook HUT103_001                         *
       *  MD046248 - Finastra Rebranding                               *
       *  260331 - Incorrect posting created due to a deleted diary    *
       *           event. Applied fix 255857.                          *
@@ -607,6 +617,9 @@
      F                                              KINFSR SEKDSR
      FPOSETD  O   E           K        DISK         KINFDS POSDDS
      F                                              KINFSR POSDSR
+     FPSAUTD  O   E           K        DISK                                                 AR324886
+      ** SE Position Settlement Authorisation detail                                        AR324886
+      *                                                                                     AR324886
      FMATEXD  O   E           K        DISK         KINFDS MXDDDS
      F                                              KINFSR MXDDSR
      FCSPAC   IF  E           K        DISK
@@ -1162,6 +1175,9 @@
      I            DS                                                                          219566
      I I            'UseDefaultSettAccnt'     1  20 SVALK1                                    219566
       *                                                                                       219566
+     ISDSTAT    E DSSDSTAT                                                                  AR324886
+      ** SD Data area                                                                       AR324886
+      *                                                                                     AR324886
      I/COPY WNCPYSRC,SE2380I001
       /EJECT
       *================================================================
@@ -1394,6 +1410,8 @@
      C***********          MOVE 'SE2380  'DBPGM
      C                     MOVE *BLANKS   DBPGM
      C                     MOVEL'SE2380'  DBPGM
+     C           *NAMVAR   DEFN           SDSTAT                                            AR324886
+     C                     IN   SDSTAT                                                      AR324886
      C*                                                                   S01447
      C                     EXSR FIRST
      C*                                                                   S01447
@@ -5870,6 +5888,7 @@
       *                                                                   CSE023
      C                     ADD  1         W02CNT  50                      CSE023
      C                     WRITEPOSETDF
+     C                     EXSR PSAUDT                                                      AR324886
       *                                                                                     AR853119
      C           CER049    IFEQ 'Y'                                                         AR853119
      C                     WRITEPOSETDD3                                                    AR853119
@@ -6610,6 +6629,7 @@
      C                     END                                            219688
      C*                                                                   219688
      C                     END                                            S01486
+     C/COPY WNCPYSRC,HUT103_001                                           HUT103
      C*                                                                   S01486
      C                     ENDSR                                          S01486
      C********************************************************************S01486
@@ -8275,6 +8295,28 @@ AW   C                     Z-ADDDEC,1     WHASHD
      C           *LIKE     DEFN TBDLOR    UDLOR            ded.tax local  S01447
      C*
      C                     ENDSR
+     C********************************************************************                  AR324886
+     C/EJECT                                                                                AR324886
+     C********************************************************************                  AR324886
+     C           PSAUDT    BEGSR                                                            AR324886
+      *                                                                                     AR324886
+     C                     MOVE RECI      PARECI                                            AR324886
+     C                     MOVE PBCA      PAPBCA                                            AR324886
+     C                     MOVE PSSH      PAPSSH                                            AR324886
+     C                     MOVE PCPY      PAPCPY                                            AR324886
+     C                     MOVE PDUD      PAPDUD                                            AR324886
+     C                     MOVE PEVT      PAPEVT                                            AR324886
+     C                     MOVE PTFR      PAPTFR                                            AR324886
+     C                     MOVE TNLU      PATNLU                                            AR324886
+     C                     MOVE TXBS      PATXBS                                            AR324886
+     C                     MOVE BNFO      PABNFO                                            AR324886
+     C                     MOVE EXCD      PAEXCD                                            AR324886
+     C           LIBR      CAT  'OWNER'   PALUSR                                            AR324886
+     C                     MOVE LCD       PALCD                                             AR324886
+     C                     MOVE CHTP      PALCTP                                            AR324886
+     C                     WRITEPSAUTDF                                                     AR324886
+      *                                                                                     AR324886
+     C                     ENDSR                                                            AR324886
      C********************************************************************S01486
      C/EJECT                                                              S01486
      C********************************************************************S01486

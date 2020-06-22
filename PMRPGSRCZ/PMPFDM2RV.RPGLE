@@ -18,12 +18,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. HUT113             Date 01Apr20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 209092             Date 04Sep02               *
       *                 CSW037A            Date 02May05               *
@@ -38,7 +39,16 @@
       *                 CAP033  *CREATE    Date 26Apr99               *
       *                                                               *
       *---------------------------------------------------------------*
-      *                                                               *
+      *  HUT113 - Full Private Banking Functionality in FM            *
+      *           Addition of hooks HUT113_001 to HUT113_003 and      *
+      *           HUT113_034 and HUT113_035.                          *
+      *           Add MD052257                                        *
+      *    MD052257A - System still accepts alphanumeric portfolio    *
+      *                000A to 000I for portfolio reference and   *
+      *                error message was issued for the valid         *
+      *                portfolio reference.                           *
+      *    MD052257 - System accepts input of alphanumeric portfolio  *
+      *               '000G' and '000A' as Portfolio Reference        *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -171,6 +181,7 @@
       *                                                                         CPB002
       ** DS for Access Programs - very long data structure                      CPB002
      D DSLDY         E DS                  EXTNAME(DSLDY)                       CPB002
+     D/COPY WNCPYSRC,HUT113_001                                                 HUT113
       *
       ** DS for Multibranching Checking
      D ZMUSER          DS            17
@@ -610,6 +621,8 @@
      C     PMODE         IFEQ      '*SIN  '
      C     BBPRBA        ANDEQ     'Y'
       *
+     C/COPY WNCPYSRC,HUT113_002                                                 HUT113
+      *
      C     DDACTN        IFEQ      'I'
      C     DDACTN        OREQ      'C'
       *
@@ -702,14 +715,17 @@
      C                   ADD       1             Ix
      C                   MOVEL     'DDPREF'      FldNameArr(Ix)
      C                   MOVEL     'PMA1004'     MsgIdArr(Ix)
- 
+
      C                   ELSE
       *
       ** Validate supplied Portfolio Reference.
       *
+     C/COPY WNCPYSRC,HUT113_034                                                 HUT113
      C                   TESTN                   DDPREF               10
       *
      C     *IN10         IFEQ      '1'
+      *
+     C/COPY WNCPYSRC,HUT113_035                                                 HUT113
       *
      C                   MOVEL     DDPREF        WDPREF
       *
@@ -1121,6 +1137,8 @@
      C     WKEY1         KLIST
      C                   KFLD                    WCNUM
      C                   KFLD                    DDPREF
+      *
+     C/COPY WNCPYSRC,HUT113_003                                                 HUT113
       *
       ** Program, module and procedure names for database error processing
       ** =================================================================

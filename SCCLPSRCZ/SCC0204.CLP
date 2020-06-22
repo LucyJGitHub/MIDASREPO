@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 05Feb18              */
-/*       Prev Amend No. MD045731           Date 27Sep17              */
+/*       Last Amend No. HUT104             Date 27Apr20              */
+/*       Prev Amend No. MD046248           Date 05Feb18              */
+/*                      MD045731           Date 27Sep17              */
 /*                      MD031644           Date 08Jan15              */
 /*                      CGL155             Date 21Mar14              */
 /*                      MD025679A          Date 12May14              */
@@ -35,6 +36,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       HUT104   - UPGRADE HUT010 TO FBM 2.1 SP 22                  */
+/*                - Call In-House Program on Input Cycle Re-open     */
+/*                  USE /COPY SCC0204MPE                             */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD045731 - Restart batch job for MT94x if not active.       */
 /*       MD031644 - SP7 Build issue (Rework of CFT158 Return         */

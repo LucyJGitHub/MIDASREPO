@@ -19,8 +19,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1095995          Date 08Apr13               *
+      *  Last Amend No. MD043182           Date 08Apr20               *
+      *  Prev Amend No. HUT111             Date 08Apr20               *
+      *                 AR586601           Date 07Apr20               *
+      *                 AR568653           Date 07Apr20               *
+      *                 AR324886           Date 07Apr20               *
+      *                 MD046248           Date 27Oct17               *
+      *                 AR1095995          Date 08Apr13               *
       *                 AR1095995          Date 18Mar13               *
       *                 CLE148             Date 23Jul12               *
       *                 AR888911           Date 26Jan12               *
@@ -220,6 +225,24 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD043182 - Inconsistency in Block Dr/Cr indicator for POST   *
+      *  HUT111 - Corporate Action Blocked Credit Account             *
+      *           (Upgrade HUT024 to FM2.1 SP22)                      *
+      *           (Include MD-43182 as it also affects HUT111         *
+      *            processing)                                        *
+      *           Amendment of core hook SE0170FFP1                   *
+      *           Amendment of core hook SE0170CCP5                   *
+      *           Addition of hooks: HUT111_001 to _008               *
+      *  AR586601 - Unable to allocate a record in PSAUT. Fix is to   *
+      *             put 'N' in position 53 of CHAIN opcode used only  *
+      *             for validation and not update.                    *
+      *             (Upgraded as required by AR324886)                *
+      *  AR568653 - Same user can Reverse and Auth, Matured position  *
+      *             settlements. Additional fix for AR324886.         *
+      *             (Upgraded as required by AR324886)                *
+      *  AR324886 - Implement 4-eyes processing in Position           *
+      *             Settlement Maintenance.                           *
+      *             (Upgraded as required by HUT105)                  *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1095995C - Generate projected movement when authorising    *
       *               position settlements with no amendments during  *
@@ -654,6 +677,9 @@
      F                                              KINFSR INFSR
      FPOSETX  IF  E           K        DISK
      F            POSETDF                           KRENAMEPOSETDFX
+     FPSAUT   UF  E           K        DISK         KCOMIT       A                          AR324886
+      ** SE Position Settlement Authorisation detail                                        AR324886
+      *                                                                                     AR324886
      FPOSETA  UF  E                    DISK         KCOMIT
       *                                                                   CSE023
       ** Withholding tax customer details for retrieve.                   CSE023
@@ -908,7 +934,8 @@
      E/COPY WNCPYSRC,SE0170E002
      E***********         INF     1  12 76                                S01496
      E***********         INF     1  13 76                         S01496 084981
-     E                    INF     1  14 76                                084981
+     E**********          INF     1  14 76                                           084981 AR324886
+     E                    INF     1  17 76                                                  AR324886
      E/COPY WNCPYSRC,SE0170E003
      E***********         AND         5  3               NOSTRO DAT051475 082738
      E***********         ANB         5  8               NOSTRO BAL051475 082738
@@ -1439,6 +1466,9 @@
       *                                                                   CSE003
      ISESDS     E DS                                                      CSE003
       ** SE Linked Enquiry Data Area                                      CSE003
+     IDSAUTH    E DSPSAUTD                                                                  AR324886
+      ** PSAUTD Data structure                                                              AR324886
+      *                                                                                     AR324886
      I/COPY WNCPYSRC,SE0170I003
      C/EJECT
       *================================================================
@@ -1492,6 +1522,18 @@
      C                     KFLD           TXBS                            CSE023
      C                     KFLD           BNFO                            CSE023
      C                     KFLD           EXCD                            CSE023
+     C           PSAUTH    KLIST                                                            AR324886
+     C                     KFLD           PBCA                                              AR324886
+     C                     KFLD           PSSH                                              AR324886
+     C                     KFLD           PCPY                                              AR324886
+     C                     KFLD           PDUD                                              AR324886
+     C                     KFLD           PEVT                                              AR324886
+     C                     KFLD           PTFR                                              AR324886
+     C                     KFLD           SPTNLU                                            AR324886
+     C                     KFLD           TXBS                                              AR324886
+     C                     KFLD           BNFO                                              AR324886
+     C                     KFLD           EXCD                                              AR324886
+      *                                                                                     AR324886
       *                                                                                     BUG12729
      C           PTXBS6    KLIST                                                            BUG12729
      C                     KFLD           PBCA                                              BUG12729
@@ -2488,7 +2530,8 @@
      C                     MOVEA'000000'  *IN,21
      C                     MOVE '0'       *IN89
      C                     MOVEL*BLANK    SCRCTL
-     C                     MOVELINF,1     INFMSG
+     C**********           MOVELINF,1     INFMSG                                            AR324886
+     C                     MOVELINF,16    INFMSG                                            AR324886
      C                     MOVE *BLANKS   XSFRNO
      C                     MOVE 'Y'       @DPTXB                          185811
      C                     MOVE 'N'       W1STPS  1                                         AR851784
@@ -2564,6 +2607,8 @@
      C**********           WRITEKEYINPUT                                                     BUG1992
      C           INFMSG    IFEQ *BLANKS                                   084981
      C                     MOVELINF,1     INFMSG                          S01117
+     C**********           MOVELINF,1     INFMSG                                     S01117 AR324886
+     C                     MOVELINF,16    INFMSG                                            AR324886
      C                     ENDIF                                          084981
      C                     WRITEMESSAGES
      C                     WRITEKEYINPUT                                                     BUG1992
@@ -3199,7 +3244,8 @@
      C*                                                                   084981
      C           WRDIS     DOUEQ*BLANK                                    084981
      C           ENDPGM    OREQ 'Y'                                       084981
-     C                     MOVELINF,2     INFMSG                          084981
+     C**********           MOVELINF,2     INFMSG                                     084981 AR324886
+     C                     MOVELINF,17    INFMSG                                            AR324886
      C/COPY WNCPYSRC,SE0170C056
      C*                                                                   084981
      C**********           WRITESUBFLCTL                                              084981 BUG1992
@@ -3352,6 +3398,7 @@
      C           OACTN     OREQ 'D'                                       141869
      C           OACTN     OREQ 'Y'                                       141869
      C           OACTN     OREQ 'R'                                       141869
+     C           OACTN     OREQ 'U'                                                         AR324886
      C*                                                                   141869
      C                     MOVE ' '       WRDIS                           141869
      C                     MOVE *BLANK    OACTN                           141869
@@ -3506,6 +3553,8 @@
      C                     ENDIF                                          084981
      C                     ENDIF                                          084981
      C*                                                                   084981
+     C                     Z-ADDTNL1      SPTNLU                                            AR324886
+      *                                                                                     AR324886
      C           @ERR      IFEQ 0                                         084981
      C*                                                                   084981
      C** Ignore records with record ID of 'M'                             084981
@@ -3553,12 +3602,21 @@
      C                     ELSE                                           084981
      C                     MOVE RECI      STAT                            084981
      C                     ENDIF                                          084981
+     C           RECI      IFEQ 'M'                                                         AR324886
+     C********** PSAUTH    CHAINPSAUT                80                            AR324886 AR586601
+     C           PSAUTH    CHAINPSAUT               N80                                     AR586601
+     C           *IN80     IFEQ *OFF                                                        AR324886
+     C           PALCTP    ANDEQ'R'                                                         AR324886
+     C                     MOVE 'R'       STAT                                              AR324886
+     C                     ENDIF                                                            AR324886
+     C                     ENDIF                                                            AR324886
      C                     ENDIF                                          084981
      C                     ENDIF                                          084981
      C*                                                                   084981
      C                     ADD  1         RRN     40                      084981
      C                     ADD  1         WSCTR                           084981
      C*                                                                   084981
+     C                     MOVE RECI      SRECI   1                                         AR324886
      C                     MOVE ' '       ACTN                            084981
      C                     MOVE '0'       SWARN                           084981
      C                     MOVELPBCA      SPBCA                           084981
@@ -3615,7 +3673,12 @@
      C                     MOVELZDATE     SFPSVL                          084981
      C                     ENDIF                                          084981
      C*                                                                   084981
+     C           SRECI     IFEQ 'M'                                                         AR324886
+     C           STAT      ANDEQ'R'                                                         AR324886
+     C                     MOVE *BLANK    SPAUI                                             AR324886
+     C                     ELSE                                                             AR324886
      C                     MOVELPAUI      SPAUI                           084981
+     C                     ENDIF                                                            AR324886
      C           KEYFLD    IFEQ SAVFLD                                    084981
      C                     ADD  1         SEQ                             084981
      C                     ELSE                                           084981
@@ -3904,6 +3967,7 @@
      C                     MOVEL'E'       ACTN                            084981
      C                     MOVEL'DELETED' DELT                            084981
      C           RECI      WHEQ 'M'                                       084981
+     C           STAT      ANDEQ'M'                                                         AR324886
      C           ACTN      IFNE 'R'                                       186400
      C                     MOVEL'E'       ACTN                            084981
      C                     END                                            186400
@@ -3912,6 +3976,13 @@
      C           PAUI      ANDEQ'Y'                                       084981
      C                     MOVEL'AUTHORI' DELT                            084981
      C                     MOVE 'SED'     DELT                            084981
+     C           RECI      WHEQ 'M'                                                         AR324886
+     C           STAT      ANDEQ'R'                                                         AR324886
+     C                     MOVEL'REVERSE' DELT                                              AR324886
+     C                     MOVE 'D  '     DELT                                              AR324886
+     C           RECI      WHEQ 'R'                                                         AR324886
+     C                     MOVEL'REV. AU' DELT                                              AR324886
+     C                     MOVE 'TH.'     DELT                                              AR324886
      C                     END
      C*
      C**  TRANSLATE RECORD DETAILS FROM FILE LAYOUT TO SCREEN LAYOUT
@@ -4018,6 +4089,7 @@
      C           CSE007    ANDEQ'Y'                                       CSE007
      C           ACTN      OREQ 'R'                                       CEU017
      C           CEU017    ANDEQ'Y'                                       CEU017
+     C           ACTN      OREQ 'U'                                                         AR324886
      C                     MOVEA'1'       *IN,6            *PROTECT/NDS
      C                     END
       *                                                                   CAC002
@@ -4108,6 +4180,9 @@
      C           CEU017    ANDEQ'Y'                                       CEU017
      C                     MOVELINF,13    INFMSG                          S01496
      C                     END                                            S01496
+     C           ACTN      IFEQ 'U'                                                         AR324886
+     C                     MOVELINF,15    INFMSG                                            AR324886
+     C                     ENDIF                                                            AR324886
      C                     END
      C/COPY WNCPYSRC,SE0170C016
       *
@@ -4189,7 +4264,7 @@
      C                     Z-ADDPDUD      ZDAYNO
      C                     EXSR ZDATE2
      C                     MOVELZDATE     SPDUD
-     C                     MOVELPAUI      SPAUI
+     C**********           MOVELPAUI      SPAUI                                             AR324886
      C                     MOVELSPCPY     CUSTNO                          S01401
      C                     CALL 'AOSECSR0'                                S01401
      C                     PARM *BLANKS   @RTCD                           S01401
@@ -4446,6 +4521,7 @@
      C           CSE007    ANDEQ'Y'                                       CSE007
      C           ACTN      OREQ 'R'                                       CEU017
      C           CEU017    ANDEQ'Y'                                       CEU017
+     C           ACTN      OREQ 'U'                                                         AR324886
      C                     EXSR UPDFLS
      C                     END
      C/COPY WNCPYSRC,SE0170C112
@@ -4608,6 +4684,7 @@
      C           S01496    ANDNE'Y'                                       S01496
      C           CSE007    ANDNE'Y'                                       CSE007
      C           CEU017    ANDNE'Y'                                       CEU017
+     C           ACTN      ANDNE'U'                                                         AR324886
      C*                                                                   S01496
      C           ACTN      ORNE 'I'                                       S01496
      C           ACTN      ANDNE'A'                                       S01496
@@ -4616,6 +4693,7 @@
      C           ACTN      ANDNE'E'                                       S01496
      C           ACTN      ANDNE'R'                                       S01496
      C           S01496    ANDEQ'Y'                                       S01496
+     C           ACTN      ANDNE'U'                                                         AR324886
      C*                                                                   CSE007
      C           ACTN      ORNE 'I'                                       CSE007
      C           ACTN      ANDNE'A'                                       CSE007
@@ -4624,6 +4702,7 @@
      C           ACTN      ANDNE'E'                                       CSE007
      C           ACTN      ANDNE'R'                                       CSE007
      C           CSE007    ANDEQ'Y'                                       CSE007
+     C           ACTN      ANDNE'U'                                                         AR324886
      C*                                                                   CEU017
      C           ACTN      ORNE 'I'                                       CEU017
      C           ACTN      ANDNE'A'                                       CEU017
@@ -4632,6 +4711,7 @@
      C           ACTN      ANDNE'E'                                       CEU017
      C           ACTN      ANDNE'R'                                       CEU017
      C           CEU017    ANDEQ'Y'                                       CEU017
+     C           ACTN      ANDNE'U'                                                         AR324886
      C*                                                                   084981
      C** Make sure that for subfile, this error will appear only once     084981
      C***********          ADD  1         EC                              084981
@@ -5638,6 +5718,8 @@
      C           CSE007    ANDEQ'Y'                                       CSE007
      C           ACTN      OREQ 'R'                                       CEU017
      C           CEU017    ANDEQ'Y'                                       CEU017
+      *                                                                                     AR324886
+     C           ACTN      OREQ 'U'                                                         AR324886
      C*
      C***A*C*T*I*O*N****C*O*D*E****A*,*D*,E*OR*Y*********                 S01496
      C** A C T I O N    C O D E    A , D ,E OR Y OR R                     S01496
@@ -5850,21 +5932,33 @@
      C           S01496    ANDNE'Y'                                       S01496
      C           CSE007    ANDNE'Y'                                       CSE007
      C           CEU017    ANDNE'Y'                                       CEU017
+     C           ACTN      ANDNE'Y'                                                         AR324886
      C*
      C           RECI      OREQ 'M'                                       S01496
      C           ACTN      ANDNE'E'                                       S01496
      C           ACTN      ANDNE'R'                                       S01496
      C           S01496    ANDEQ'Y'                                       S01496
+     C           ACTN      ANDNE'Y'                                                         AR324886
      C*                                                                   CSE007
      C           RECI      OREQ 'M'                                       CSE007
      C           ACTN      ANDNE'E'                                       CSE007
      C           ACTN      ANDNE'R'                                       CSE007
      C           CSE007    ANDEQ'Y'                                       CSE007
+     C           ACTN      ANDNE'Y'                                                         AR324886
      C*                                                                   CEU017
      C           RECI      OREQ 'M'                                       CEU017
      C           ACTN      ANDNE'E'                                       CEU017
      C           ACTN      ANDNE'R'                                       CEU017
      C           CEU017    ANDEQ'Y'                                       CEU017
+     C           ACTN      ANDNE'Y'                                                         AR324886
+      *                                                                                     AR324886
+     C********** PSAUTH    CHAINPSAUT                80                            AR324886 AR586601
+     C           PSAUTH    CHAINPSAUT               N80                                     AR586601
+     C           *IN80     IFEQ *OFF                                                        AR324886
+     C           PALCTP    ANDNE'R'                                                         AR324886
+     C           ACTN      ANDEQ'Y'                                                         AR324886
+     C           ACTN      ORNE 'E'                                                         AR324886
+     C           ACTN      ANDNE'R'                                                         AR324886
      C******               SETON                     99            E14884 S01496
      C*                                                                   E21590
      C**  Produce Error 115 for non-Enquiry Action on Actioned record.    E21590
@@ -5878,6 +5972,7 @@
      C                     ADD  1         EC                              E21590
      C                     MOVEL' 115'    ERR,EC                          E21590
      C                     ENDIF                                          084981
+     C                     ENDIF                                                            AR324886
      C                     ELSE                                           S01496
      C           RECI      IFEQ 'R'                                       S01496
      C           ACTN      ANDNE'E'                                       S01496
@@ -5911,6 +6006,50 @@
      C                     ADD  1         EC                              S01496
      C                     MOVEL' 991'    ERR,EC                          S01496
      C                     ENDIF                                          084981
+     C                     ELSE                                                             AR324886
+     C           ACTN      IFEQ 'U'                                                         AR324886
+     C           PAUI      ANDNE'Y'                                                         AR324886
+     C                     MOVE *ON       *IN88                                             AR324886
+     C                     MOVE *ON       *IN21                                             AR324886
+     C           ' 993'    LOKUPERR                      64                                 AR324886
+     C           *IN64     IFEQ '0'                                                         AR324886
+     C                     ADD  1         EC                                                AR324886
+     C                     MOVEL' 993'    ERR,EC                                            AR324886
+     C                     ENDIF                                                            AR324886
+     C                     ELSE                                                             AR324886
+     C           ACTN      IFEQ 'Y'                                                         AR324886
+     C           PAUI      ANDNE'Y'                                                         AR324886
+     C           ACTN      OREQ 'Y'                                                         AR568653
+     C           STAT      ANDEQ'R'                                                         AR568653
+     C********** PSAUTH    CHAINPSAUT                80                            AR324886 AR586601
+     C           PSAUTH    CHAINPSAUT               N80                                     AR586601
+     C           *IN80     IFEQ *OFF                                                        AR324886
+     C           USID      ANDEQPALUSR                                                      AR324886
+     C                     MOVE *ON       *IN88                                             AR324886
+     C                     MOVE *ON       *IN21                                             AR324886
+     C           ' 994'    LOKUPERR                      64                                 AR324886
+     C           *IN64     IFEQ '0'                                                         AR324886
+     C                     ADD  1         EC                                                AR324886
+     C                     MOVEL' 994'    ERR,EC                                            AR324886
+     C                     ENDIF                                                            AR324886
+     C                     ENDIF                                                            AR324886
+     C                     ELSE                                                             AR324886
+     C           ACTN      IFEQ 'R'                                                         AR324886
+     C********** PSAUTH    CHAINPSAUT                80                            AR324886 AR586601
+     C           PSAUTH    CHAINPSAUT               N80                                     AR586601
+     C           *IN80     IFEQ *OFF                                                        AR324886
+     C           PALCTP    ANDEQ'R'                                                         AR324886
+     C                     MOVE *ON       *IN88                                             AR324886
+     C                     MOVE *ON       *IN21                                             AR324886
+     C           ' 995'    LOKUPERR                      64                                 AR324886
+     C           *IN64     IFEQ '0'                                                         AR324886
+     C                     ADD  1         EC                                                AR324886
+     C                     MOVEL' 995'    ERR,EC                                            AR324886
+     C                     ENDIF                                                            AR324886
+     C                     ENDIF                                                            AR324886
+     C                     ENDIF                                                            AR324886
+     C                     ENDIF                                                            AR324886
+     C                     ENDIF                                                            AR324886
      C                     ENDIF                                          S01496
      C                     ENDIF                                          S01496
      C*                                                                   S01496
@@ -5956,16 +6095,19 @@
      C           ACTN      OREQ 'D'
      C           ACTN      OREQ 'Y'
      C           PAUI      IFEQ 'Y'
-     C           SFRNO     ANDNEXSFRNO
-     C           SWARN     ANDEQ'0'                                       084981
+     C           STAT      ANDNE'R'                                                         AR324886
+     C********** SFRNO     ANDNEXSFRNO                                                      AR324886
+     C********** SWARN     ANDEQ'0'                                                  084981 AR324886
      C                     MOVE '1'       *IN21
      C*                                                                   084981
      C** Make sure that for subfile, this error will appear only once     084981
-     C           ' W01'    LOKUPERR                      64               084981
+     C********** ' W01'    LOKUPERR                      64                          084981 AR324886
+     C           ' 996'    LOKUPERR                      64                                 AR324886
      C           *IN64     IFEQ '0'                                       084981
-     C                     ADD  1         WEC                             E14214
+     C**********           ADD  1         WEC                                        E14214 AR324886
      C                     ADD  1         EC
-     C                     MOVEL' W01'    ERR,EC
+     C**********           MOVEL' W01'    ERR,EC                                            AR324886
+     C                     MOVEL' 996'    ERR,EC                                            AR324886
      C                     ENDIF                                          084981
      C                     MOVE SFRNO     XSFRNO
      C**********           MOVEL'E'       ACTN                                         E20237 247333
@@ -6051,6 +6193,7 @@
      C                     MOVE *BLANKS   XPFAC   8                                           CSD015
      C                     MOVE *BLANKS   WSTAX   1                                           CER049
      C                     MOVE *BLANKS   WCTAX   1                                           CER049
+     C/COPY WNCPYSRC,HUT111_001                                                               HUT111
       *                                                                                       CSD015
      C                     MOVE '0'       *IN29                           S01512
      C                     MOVEA'00000000'*IN,30
@@ -6925,11 +7068,15 @@
      C                     TESTB'2'       RETB           16               E16843
      C                     TESTB'3'       RETB           17               E16843
      C           SPPRE     IFEQ 'P'                                       E16843
-     C           *IN16     ANDEQ'1'                                       E16843
+     C********** *IN16     ANDEQ'1'                                                  E16843 MD043182
+     C           *IN17     ANDEQ'1'                                                         MD043182
      C           SPPRE     OREQ 'R'                                       E16843
-     C           *IN17     ANDEQ'1'                                       E16843
+     C********** *IN17     ANDEQ'1'                                                  E16843 MD043182
+     C           *IN16     ANDEQ'1'                                                         MD043182
+     C/COPY WNCPYSRC,HUT111_002                                                               HUT111
      C                     ADD  1         EC         39                   E16843
      C                     MOVEL' 226'    ERR,EC                          E16843
+     C/COPY WNCPYSRC,HUT111_003                                                               HUT111
      C                     END                                            E16843
      C                     END                                            E16843
      C*                                                                   E14712
@@ -7193,10 +7340,14 @@
      C                     TESTB'2'       RETB           16               E16843
      C                     TESTB'3'       RETB           17               E16843
      C           SPPRE     IFEQ 'P'                                       E16843
-     C           *IN16     ANDEQ'1'                                       E16843
+     C********** *IN16     ANDEQ'1'                                                  E16843 MD043182
+     C           *IN17     ANDEQ'1'                                                         MD043182
      C           SPPRE     OREQ 'R'                                       E16843
-     C           *IN17     ANDEQ'1'                                       E16843
+     C********** *IN17     ANDEQ'1'                                                  E16843 MD043182
+     C           *IN16     ANDEQ'1'                                                         MD043182
+     C/COPY WNCPYSRC,HUT111_004                                                               HUT111
      C                     SETON                     99                   E16843
+     C/COPY WNCPYSRC,HUT111_005                                                               HUT111
      C                     END                                            E16843
      C*                                                                   E16843
      C***********          END                                            S01117
@@ -7269,10 +7420,14 @@
      C                     TESTB'2'       RETB           16               E16843
      C                     TESTB'3'       RETB           17               E16843
      C           SPPRE     IFEQ 'P'                                       E16843
-     C           *IN16     ANDEQ'1'                                       E16843
+     C********** *IN16     ANDEQ'1'                                                  E16843 MD043182
+     C           *IN17     ANDEQ'1'                                                         MD043182
      C           SPPRE     OREQ 'R'                                       E16843
-     C           *IN17     ANDEQ'1'                                       E16843
+     C********** *IN17     ANDEQ'1'                                                  E16843 MD043182
+     C           *IN16     ANDEQ'1'                                                         MD043182
+     C/COPY WNCPYSRC,HUT111_006                                                               HUT111
      C                     SETON                     99                   E16843
+     C/COPY WNCPYSRC,HUT111_007                                                               HUT111
      C                     END                             *SPPRE =P OR R E16843
      C                     END                                            E16843
      C*                                                                   E16843
@@ -7355,9 +7510,11 @@
      C                     TESTB'2'       RETB           16               E16843
      C                     TESTB'3'       RETB           17               E16843
      C           SPPRE     IFEQ 'P'                                       E16843
-     C           *IN16     ANDEQ'1'                                       E16843
+     C********** *IN16     ANDEQ'1'                                                  E16843 MD043182
+     C           *IN17     ANDEQ'1'                                                         MD043182
      C           SPPRE     OREQ 'R'                                       E16843
-     C           *IN17     ANDEQ'1'                                       E16843
+     C********** *IN17     ANDEQ'1'                                                  E16843 MD043182
+     C           *IN16     ANDEQ'1'                                                         MD043182
      C                     SETON                     99                   E16843
      C                     END                             *SPPRE =P OR R E16843
      C                     END                             *IN99=1        E16843
@@ -9847,7 +10004,7 @@
      C**********                                                   095550 185397
      C**  TRANSLATE PAUI (#ALPV) AUTH IND
      C*
-     C                     MOVELPAUI      SPAUI
+     C**********           MOVELPAUI      SPAUI                                             AR324886
      C*
      C**  TRANSLATE PNMP (#AMNT)  NOMINAL POSITION
      C*
@@ -10720,6 +10877,7 @@
       ** Update processing for CSE023 ENDS here.                          CSE023
      C                     ENDIF                                          CSE023
       *                                                                   CSE023
+     C                     MOVE ACTN      SACTN   1                                         AR324886
      C*
      C**  I  N  S  E  R  T  S                 -  S T A R T
      C*
@@ -10874,8 +11032,10 @@
      C********** *IN60     IFEQ '1'                                118340 186400
      C           CSE023    IFEQ 'Y'                                                         BUG12729
      C                     WRITEPOSETDF6               15                                   BUG12729
+     C                     EXSR PSAUDT                                                      AR324886
      C                     ELSE                                                             BUG12729
      C                     WRITEPOSETDF                15  *              118340
+     C                     EXSR PSAUDT                                                      AR324886
      C                     ENDIF                                                            BUG12729
      C           *IN15     IFEQ '0'                                       118340
       *                                                                                       CRE020
@@ -10977,6 +11137,7 @@
      C**  A  M  E  N  D  S                    -  S T A R T
      C*
      C           ACTN      IFEQ 'A'
+     C           ACTN      OREQ 'U'                                                         AR324886
      C** IF PORTFOLIO MANAGEMENT INSTALLED                                S01486
      C********** BGPFMG    IFEQ 'Y'                                S01486 CSE023
      C********** BGN4ST    OREQ 'Y'                                CPB001 CSE023
@@ -11178,8 +11339,10 @@
       *                                                                                       CSD015
      C           CSE023    IFEQ 'Y'                                                         BUG12729
      C                     UPDATPOSETDF6                                                    BUG12729
+     C                     EXSR PSAUDT                                                      AR324886
      C                     ELSE                                                             BUG12729
      C                     UPDATPOSETDF                                   118340
+     C                     EXSR PSAUDT                                                      AR324886
      C                     ENDIF                                                            BUG12729
       *                                                                                       CRE020
       ** Handle the advice index of this transaction if CRE020 is enabled.                    CRE020
@@ -11346,8 +11509,10 @@
      C           *IN60     IFEQ '0'                                       118340
      C           CSE023    IFEQ 'Y'                                                         BUG12729
      C                     UPDATPOSETDF6                                                    BUG12729
+     C                     EXSR PSAUDT                                                      AR324886
      C                     ELSE                                                             BUG12729
      C                     UPDATPOSETDF                                   118340
+     C                     EXSR PSAUDT                                                      AR324886
      C                     ENDIF                                                            BUG12729
       *                                                                                       CRE020
       ** Handle the advice index of this transaction if CRE020 is enabled.                    CRE020
@@ -11403,6 +11568,7 @@
      C**      A  U  T  H  O  R  I  T  A  T  I  O  N  S     -  S T A R T
      C*
      C           ACTN      IFEQ 'Y'
+     C           STAT      ANDNE'R'                                                         AR324886
      C** IF PORTFOLIO MANAGEMENT INSTALLED                                S01486
      C********** BGPFMG    IFEQ 'Y'                                S01486 CSE023
      C********** BGN4ST    OREQ 'Y'                                CPB001 CSE023
@@ -11515,8 +11681,14 @@
      C                     MOVE 'S'       PMAR
      C           CSE023    IFEQ 'Y'                                                         BUG12729
      C  N60                UPDATPOSETDF6                                                    BUG12729
+     C           *IN60     IFEQ *OFF                                                        AR324886
+     C                     EXSR PSAUDT                                                      AR324886
+     C                     ENDIF                                                            AR324886
      C                     ELSE                                                             BUG12729
      C  N60                UPDATPOSETDF
+     C           *IN60     IFEQ *OFF                                                        AR324886
+     C                     EXSR PSAUDT                                                      AR324886
+     C                     ENDIF                                                            AR324886
      C                     ENDIF                                                            BUG12729
       *                                                                                       CRE020
       ** Handle the advice index of this transaction if CRE020 is enabled.                    CRE020
@@ -11565,6 +11737,12 @@
      C**      R E V E R S A L S    -  S T A R T                           S01496
      C*                                                                   S01496
      C           ACTN      IFEQ 'R'                                       S01496
+     C                     MOVE 'D'       RECI                                              AR324886
+     C                     EXSR PSAUDT                                                      AR324886
+     C                     ENDIF                                                            AR324886
+     C           ACTN      IFEQ 'Y'                                                         AR324886
+     C           STAT      ANDEQ'R'                                                         AR324886
+     C                     MOVE 'R'       ACTN                                              AR324886
      C***********          Z-ADDSTNLU     TNLU                     S01496 S01486
      C                     Z-ADDSTNLU     TNL1                            S01486
      C           CSE023    IFEQ 'Y'                                       186055
@@ -11621,8 +11799,10 @@
      C           *IN60     IFEQ *OFF                                      S01496
      C           CSE023    IFEQ 'Y'                                                         BUG12729
      C                     UPDATPOSETDF6                                                    BUG12729
+     C                     EXSR PSAUDT                                                      AR324886
      C                     ELSE                                                             BUG12729
      C                     UPDATPOSETDF                                   S01496
+     C                     EXSR PSAUDT                                                      AR324886
      C                     ENDIF                                                            BUG12729
       *                                                                                       CRE020
       ** Handle the advice index of this transaction if CRE020 is enabled.                    CRE020
@@ -11682,6 +11862,8 @@
      C********** ACTN      IFEQ 'Y'                                                    100604 247951
      C********** PDUD      OREQ RUND                                                   100604 247951
       *****************************************************************                100604 247951
+     C           ACTN      IFEQ 'U'                                                         AR324886
+     C           Z#BSTS    ANDNE*BLANKS                                                     AR324886
      C           CRE020    IFEQ 'Y'                                                           CRE020
      C                     MOVE TNL1      TNLUX1                                              CRE020
      C                     MOVE TNL1      TNLUX2                                              CRE020
@@ -11705,6 +11887,7 @@
      C                     END                                            082738
       **********                                                                       100604 247951
      C**********           END                                                         100604 247951
+     C                     ENDIF                                                            AR324886
      C*
      C** GET AUDIT RECORD
      C*
@@ -11923,6 +12106,7 @@
      C***********          END                                     E16843 082738
      C***********          END                                     E16843 082738
      C***********          END                             *INU1=1 E16843 082738
+     C/COPY WNCPYSRC,HUT111_008                                                               HUT111
      C*
      C**  C  O  M  I  T
      C*
@@ -13487,6 +13671,56 @@
       *                                                                                       CER049
      C                     ENDSR                                                              CER049
       *****************************************************************                       CER049
+      /EJECT                                                                                AR324886
+      *****************************************************************                     AR324886
+     C           PSAUDT    BEGSR                                                            AR324886
+      *                                                                                     AR324886
+     C                     CLEARDSAUTH                                                      AR324886
+     C           PSAUTH    CHAINPSAUT                80                                     AR324886
+      *                                                                                     AR324886
+     C                     MOVE RECI      PARECI                                            AR324886
+     C                     MOVE TNL1      PATNLU                                            AR324886
+      *                                                                                     AR324886
+     C           SACTN     IFEQ 'U'                                                         AR324886
+     C                     MOVE USID      PAUUSR                                            AR324886
+     C                     MOVE RUND      PALUD                                             AR324886
+     C                     ENDIF                                                            AR324886
+      *                                                                                     AR324886
+     C           *IN80     IFEQ *ON                                                         AR324886
+     C                     MOVE PBCA      PAPBCA                                            AR324886
+     C                     MOVE PSSH      PAPSSH                                            AR324886
+     C                     MOVE PCPY      PAPCPY                                            AR324886
+     C                     MOVE PDUD      PAPDUD                                            AR324886
+     C                     MOVE PEVT      PAPEVT                                            AR324886
+     C                     MOVE PTFR      PAPTFR                                            AR324886
+     C                     MOVE TXBS      PATXBS                                            AR324886
+     C                     MOVE BNFO      PABNFO                                            AR324886
+     C                     MOVE EXCD      PAEXCD                                            AR324886
+     C                     MOVE USID      PALUSR                                            AR324886
+     C                     MOVE RUND      PALCD                                             AR324886
+     C                     MOVE SACTN     PALCTP                                            AR324886
+     C                     WRITEPSAUTDF                                                     AR324886
+      *                                                                                     AR324886
+     C                     ELSE                                                             AR324886
+     C           SACTN     IFNE 'A'                                                         AR324886
+     C           SACTN     OREQ 'A'                                                         AR324886
+     C           PALCTP    ANDNE'A'                                                         AR324886
+     C           SACTN     OREQ 'A'                                                         AR324886
+     C           PALCTP    ANDEQ'A'                                                         AR324886
+     C           USID      ANDNEPALUSR                                                      AR324886
+     C                     MOVE PALUSR    PAPUSR                                            AR324886
+     C                     MOVE PALCD     PAPCD                                             AR324886
+     C                     MOVE PALCTP    PAPCTP                                            AR324886
+     C                     ENDIF                                                            AR324886
+     C                     MOVE USID      PALUSR                                            AR324886
+     C                     MOVE RUND      PALCD                                             AR324886
+     C                     MOVE SACTN     PALCTP                                            AR324886
+     C                     UPDATPSAUTDF                                                     AR324886
+      *                                                                                     AR324886
+     C                     ENDIF                                                            AR324886
+      *                                                                                     AR324886
+     C                     ENDSR                                                            AR324886
+      *****************************************************************                     AR324886
       /EJECT
      C/COPY WNCPYSRC,SE0170C035
      C/COPY ZSRSRC,ZSDESCZ3                                               CSE016
@@ -13517,10 +13751,13 @@
  Rollup is not possible
  Rolldown is not possible
  F10=Confirm
- 
+
  Record has been updated by another workstation
  REVERSAL F3:F10=Revert:F12:Help
  F12=Not possible
+ UNAUTHORISATION Enter:F3:F12:Help                                                          AR324886
+ Enter:Action Code I,A,D,E,R,Y,U and selection:Review from point:F3:Help                    AR324886
+ Enter:Review from point:Action Code A,D,E,R,Y,U:F3:F12:Rollup:Rolldown:Help                AR324886
 **   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
 0366073110961461
 **   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR

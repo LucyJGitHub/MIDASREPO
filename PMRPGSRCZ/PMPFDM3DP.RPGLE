@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. HUT113             Date 01Apr20               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR689705           Date 03Jan11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -39,6 +40,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HUT113 - Full Private Banking Functionality in FM            *
+      *           Applies fixes MD-54548 and MD-54322                 *
+      *           Addition of hooks HUT113_015 to HUT113_026          *
+      *    MD054548 - Error is found in Portfolio Definition Maint.   *
+      *               (Inconsistency on screen).                      *
+      *             - Display the new PB screen for cust either PM    *
+      *               or PB when HUT113 feature is ON.                *
+      *    MD054322 - PM - SE - Incorrect holdings for                *
+      *               custody fee calculation report.                 *
+      *             - Allow portfolio definition for PB customer.     *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  AR689705 - Nominal and value settled were missing after      *
@@ -195,10 +206,15 @@
       ** Error indicators
      D PMEPMD        E DS                  EXTNAME(PMEPFDMPD)
       *
+      /COPY WNCPYSRC,HUT113_015                                                       HUT113
+      *
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
+      *
+      /COPY WNCPYSRC,HUT113_016                                                       HUT113
+      *
       *
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -304,7 +320,11 @@
       ** Enable CF01 (Portfolio Charges screen).
       *
      C     PEINKA        IFEQ      'Y'
+      *
+      /COPY WNCPYSRC,HUT113_017                                                       HUT113
+      *
      C                   EVAL      *IN71 = *ON
+      /COPY WNCPYSRC,HUT113_018                                                       HUT113
      C                   ELSE
      C                   EVAL      *IN71 = *OFF
      C                   ENDIF
@@ -336,7 +356,11 @@
       ** Enable CF24 (Notepad screen).
       *
      C     PEINKY        IFEQ      'Y'
+      *
+      /COPY WNCPYSRC,HUT113_019                                                       HUT113
+      *
      C                   EVAL      *IN75 = *ON
+      /COPY WNCPYSRC,HUT113_020                                                       HUT113
      C                   ELSE
      C                   EVAL      *IN75 = *OFF
      C                   ENDIF
@@ -367,10 +391,15 @@
       *                                                                                       198173
      C     PRTCD         IFEQ      *BLANKS                                                    198173
      C     BBPRBA        ANDEQ     'Y'                                                        198173
+      *
+      /COPY WNCPYSRC,HUT113_021                                                       HUT113
+      *
      C                   MOVE      '1'           *IN51                                        198173
      C                   ENDIF                                                                198173
      C                   ENDIF                                                                198173
-      *                                                                                       198173
+      *
+      /COPY WNCPYSRC,HUT113_022                                                       HUT113
+      *
       ** Condition write of record format on PM Customer flag.
       *
      C     PMCUST        IFNE      'Y'
@@ -379,11 +408,15 @@
      C                   WRITE     PMPFDMD1
      C                   ENDIF
       *
+      /COPY WNCPYSRC,HUT113_023                                                       HUT113
+      *
      C**********         WRITE     PMPFDMF1                                                 AR656294
       *
       ** If not write only, read details screen.
       *
      C     WriteOnly     IFNE      'Y'
+      *
+      /COPY WNCPYSRC,HUT113_024                                                       HUT113
       *
       ** Condition read of record format on PM Customer flag.
       *
@@ -392,6 +425,8 @@
      C                   ELSE
      C                   READ      PMPFDMD1                               99
      C                   ENDIF
+      *
+      /COPY WNCPYSRC,HUT113_025                                                       HUT113
       *
      C                   ENDIF
       *
@@ -581,6 +616,9 @@
       *
      C                   MOVE      '1'           *IN97
      C                   MOVEL     '*'           DDPGMQ
+      *
+      *
+      /COPY WNCPYSRC,HUT113_026                                                       HUT113
       *
       ** Program, module and procedure names for database error processing
       ** =================================================================

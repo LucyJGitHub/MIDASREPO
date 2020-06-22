@@ -1,0 +1,1122 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE SSI Authorisation Check')                     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  XX0109 - Midas SE SSI Authorisation Check                    *
+      *                                                               *
+      *  Function:  This program produces a report, for audit         *
+      *   (I/C)     purposes, of all standard settlement instructions *
+      *   (COB)     defined to the system.  The sequence of the       *
+      *             report is branch, customer number, currency,      *
+      *             investment type.                                  *
+      *                                                               *
+      *  Called By: 1) XXC0109 - Audit Reports - Input Cycle          *
+      *                                                               *
+      *             Frequency:                                        *
+      *             The report is available in 3 modes (I,A,L):       *
+      *             1) On request during I/C; an interim report       *
+      *                showing the latest status of standard          *
+      *                settlement instructions inserted, amended or   *
+      *                deleted during the day.                        *
+      *             2) During COB; a report of all standard           *
+      *                settlement instructions inserted, amended or   *
+      *                deleted during the day.                        *
+      *             3) On request; a report of all live standard      *
+      *                settlement instructions in the system          *
+      *                (ie. deleted items are not included).          *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. HUT109   *CREATE   Date 14Apr20               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  HUT109 - Partial upgrade of HUT020 to FBM 2.1 SP22           *
+      *           Additional Authorisation Steps in SE Module         *
+      *                                                               *
+      *****************************************************************
+      *
+     FXXXSEDV2IF  E           K        DISK                           UC
+     FXXXSEDPSIF  E           K        DISK                           UC
+     F            XXXSEDT0                          KRENAMEXXXSEDFX
+     FTABSE   IF  E           K        DISK
+     F            TABLETAF                          KIGNORE
+     F            TABTB10F                          KIGNORE
+     F            TABTB11F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     FCLINT   IF  E           K        DISK
+     F            CLINTCAF                          KIGNORE
+     F            CLINTCCF                          KIGNORE
+     F            CLINTC1F                          KIGNORE
+     F            CLINTSEF                          KIGNORE
+     FINVTP   IF  E           K        DISK
+     FSTDSEA  UF  E           K        DISK
+     FXX0109P1O   E                    PRINTER                        UC
+     F                                              KINFDS SPOOL
+     FXX0109AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU
+     F*
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   35       MULTIBRANCHING                                     *
+     F*   36       'NO DETAILS TO REPORT'                             *
+     F*   40       INPUT PARAMETER IS I (INPUT CYCLE MODE)            *
+     F*   41       INPUT PARAMETER IS A (AUDIT MODE)                  *
+     F*   42       INPUT PARAMETER IS L (FULL LIST MODE)              *
+     F*   50       END OF INPUT FILE / FILE READ ERROR                *
+     F*   51-53    PRINT AMD/INS/DEL LEGEND                           *
+     F*   56       NO INVTP RECORD                                    *
+     F*   58       CLINTCB RECORD MISSING                             *
+     F*   59       TABLE ENTRY MISSING                                *
+     F*   60       TABLETL RECORD MISSING                             *
+     F*   65       FEATURE CEU005 IS ON => OUTPUT NEW FIELDS          *
+     F*            SETTLEMENT CURRENCY AND 'INCLUDE ERI IN FIELD 72'  *
+     F*   80       OPEN/CLOSE PRINTER FILE XX0109P1                   *
+     F*   81       PRINT 'DIFFERENCE' LEGEND                          *
+     F*   82       DETAIL REPORT OPEN                                 *
+     F*                                                               *
+     F*   90-99    USED IN STANDARD SUB-ROUTINES                      *
+     F*                                                               *
+     F*   U7       DATABASE ERROR                                     *
+     F*   U8       DATABASE / CONTROL ERROR                           *
+     F*                                                               *
+     F*****************************************************************
+      /SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  ACCBR  - ACCESS BRANCH DETAILS                               *
+     F*  DBERR  - DATABASE ERROR CONTROL                              *
+     F*  RCFAU  - RCF PROCESSING FOR AUDIT REPORT                     *
+     F*  RCFP1  - RCF PROCESSING FOR P1 REPORT                        *
+     F*  *PSSR  - ERROR HANDLING                                      *
+     F*  ZDATE2 - DAYNO - DATE CONVERSION                             *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZDATE2Z1
+     E                    TABSET  5  11  2 0ATABLEG 14   ***********
+      /EJECT
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     ILDA         DS                            256
+     I                                      134 183 DBLOT
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I**
+     I**  EXTERNAL DS FOR BANK DETAILS
+     ISDBANK    E DSSDBANKPD
+     I              BJURPT                          TITL
+     I**
+     I**  EXTERNAL DS FOR BRANCH CODE DETAILS
+     ISDBRCH    E DSSDBRCHPD
+     I**
+     IRUNDT       DS
+     I                                        1   7 RUNA
+     I                                    P   8  100RUND
+     I                                       11  11 SSF
+     I                                       12  12 DATF
+     I                                       13  13 MBIN
+     I*  DS FOR LINE NO. TO HANDLE OVERFLOW
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+     I**
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+     I**
+     I** DATA STRUCTURE FOR ACCESS OBJECTS, SHORT DATA STRUCTURE
+     IDSFDY     E DSDSFDY
+     I**
+     I*
+     I           SDS
+     I                                      244 246 WSID
+     I                                      254 263 USID
+     I*
+     I* DATA STRUCTURE FOR FILE KEYS
+     I*
+     I            DS
+     I                                        1  12 TLKEY
+     I                                        1   2 TLRECT
+     I                                        3   7 TLZZ5
+     I                                        8  10 TLCYSI
+     I                                       11  12 TLSA2
+     I*
+     I* DATA STRUCTURE FOR PAY ACCOUNT FIELD
+     I*
+     I            DS
+     I                                        1  18 HSPAT
+     I                                        1   6 SPAT06
+     I                                        7  16 SPAT04
+     I                                       17  18 SPAT02
+     I*
+     I* DATA STRUCTURE FOR RECEIVE ACCOUNT FIELD
+     I*
+     I            DS
+     I                                        1  18 HSRAC
+     I                                        1   6 SRAC06
+     I                                        7  16 SRAC04
+     I                                       17  18 SRAC02
+      *
+     IDSSDY     E DSDSSDY
+      *
+     I*
+     C/EJECT
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+     C*
+     C*
+     C* DEFINE KEYLIST FOR CHAINING TO CLINTCB FILE
+     C*
+     C           CLICBK    KLIST
+     C                     KFLD           CBNUM   6
+     C                     KFLD           CBRCDT  1
+     C*
+     C* DEFINE KEYLIST FOR CHAINING TO INVTPD FILE
+      *
+     C           INVTPK    KLIST
+     C                     KFLD           HCYSI
+     C                     KFLD           HITSI
+      *
+      * DEFINE KEYLIST FOR CHAINING TO TABLETL FILE
+      *
+     C           TABTLK    KLIST
+     C                     KFLD           TLKEY
+      * PREPARE LDA
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+     C                     MOVEL*BLANK    DBLOT
+     C                     MOVEL'XX0109'  DBPGM
+     C                     OUT  LDA
+     C**
+     C** REGISTER SPOOL ENTRY FOR AU
+     C                     EXSR RCFAU
+     C**
+     C** IN THE DATAAREA RUNDAT
+     C           *NAMVAR   DEFN RUNDAT    RUNDT
+     C                     IN   RUNDT
+     C**
+     C**  TEST FOR MULTIBRANCHING
+     C           MBIN      IFEQ 'Y'
+     C                     SETON                     35
+     C                     END
+     C**
+     C** CHECK SYSTEM FORMAT DATE, DDMMYY OR MMDDYY(98 ON)
+     C           DATF      IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+     C**
+     C** INITIALISE VARIABLE
+     C                     MOVE *BLANKS   ZBRNM
+     C**
+      *
+      * INPUT PARAMETER :
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           MODE    1
+     C                     PARM           SEQ     5
+     C                     PARM           ENT     3
+      * DEFINE WORK FIELDS
+      *
+     C           *LIKE     DEFN HLCD      ZLCD
+     C           *LIKE     DEFN HCHTP     ZCHTP
+     C           *LIKE     DEFN HTNLU     ZTNLU
+     C           *LIKE     DEFN SINS      ZINS
+     C           *LIKE     DEFN SAMD      ZAMD
+     C           *LIKE     DEFN SDEL      ZDEL
+      *
+      *================================================================
+      *  FIRST TIME PROCESSING
+      *================================================================
+      *
+      * SET INDICATORS FOR REPORT HEADING & OPEN INPUT FILE
+     C           MODE      IFEQ 'I'
+     C                     SETON                     40
+     C                     ELSE
+     C           MODE      IFEQ 'A'
+     C                     SETON                     41
+     C                     ELSE
+     C                     SETON                     42
+     C                     END
+     C                     END
+      *
+     C**
+     C** INITIALISE OUTPUT ENTITY FIELDS BY INPUT PARAMETER
+     C                     MOVE ENT       HSBRA
+     C                     MOVE ENT       ZSBRA
+     C**
+     C**   ACCESS BANK DETAILS, FOR TITLE
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVEL@OPTN     DBKEY            ***************
+     C                     MOVEL@OPTN     DBOPTN  7        * DBERROR 001 *
+     C                     Z-ADD1         DBASE            ***************
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END
+     C*
+      **  Access SAR details file to see if EMU SE Settlement currency
+      **  conversion is installed.
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM '       ' @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C                     PARM 'CEU005'  @SARD   6
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       CEU005  1
+     C                     MOVE *ON       *IN65
+     C                     ELSE
+     C                     MOVE 'N'       CEU005
+     C                     MOVE *OFF      *IN65
+     C                     ENDIF
+      *
+      **  Access SAR details file to see if CSE023 is installed
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM '       ' @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C                     PARM 'CSE023'  @SARD   6
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       CSE023  1
+     C                     MOVE *ON       *IN69
+     C                     ELSE
+     C                     MOVE 'N'       CSE023
+     C                     MOVE *OFF      *IN69
+     C                     ENDIF
+      *
+      ** Check if CSE028 feature is installed
+      *
+     C                     MOVE 'N'       CSE028  1
+     C                     MOVE *OFF      *IN76
+     C                     CALL 'AOSARDR0'
+     C                     PARM '       ' @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C                     PARM 'CSE028'  @SARD
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           @RTCD     ANDNE'*NRF   '
+     C                     Z-ADD04        DBASE
+     C                     MOVEL'XX0109'  DBPGM
+     C                     MOVEL'SCSARDPD'DBFILE
+     C                     MOVEL@SARD     DBKEY
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       CSE028
+     C                     MOVE *ON       *IN76
+     C                     ENDIF
+      *
+      ** Check if CSW202 is switched on
+      *
+     C                     CALL 'SWIF2002'
+     C                     PARM *BLANKS   @RTCD
+      *
+     C           @RTCD     IFEQ 'CSW2002'
+     C                     MOVE 'Y'       CSW202  1
+     C                     ELSE
+     C                     MOVE 'N'       CSW202
+     C                     ENDIF
+      *
+      ** Check if CSE039 feature is installed
+      *
+     C                     MOVE 'N'       CSE039  1
+     C                     MOVE *OFF      *IN77
+     C                     CALL 'AOSARDR0'
+     C                     PARM '       ' @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C                     PARM 'CSE039'  @SARD
+      *
+     C           @RTCD     IFNE *BLANKS
+     C           @RTCD     ANDNE'*NRF   '
+     C                     Z-ADD04        DBASE
+     C                     MOVEL'XX0109'  DBPGM
+     C                     MOVEL'SCSARDPD'DBFILE
+     C                     MOVEL@SARD     DBKEY
+     C                     EXSR DBERR
+     C                     ENDIF
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE *ON       *IN77
+     C                     MOVE 'Y'       CSE039
+     C                     ENDIF
+      *
+     C   40                OPEN XXXSEDV2
+     C  N40                OPEN XXXSEDPS
+     C           CSE028    IFEQ 'N'
+     C                     Z-ADD4         MAXCNT  20
+     C                     ELSE
+     C                     Z-ADD3         MAXCNT
+     C                     ENDIF
+      *
+      *================================================================
+      *  M A I N   P R O C E S S I N G
+      *================================================================
+      *
+     C   40                READ XXXSEDV2                 50
+     C  N40                READ XXXSEDPS                 50
+     C*
+     C** CHECK FOR REQUESTED BRANCH FOR MULTIBRANCHING
+     C           MBIN      IFEQ 'Y'
+     C           ENT       IFNE 'ALL'
+     C           ENT       ANDNEHSBRA
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN80
+     C                     GOTO ENDSEL
+     C                     END
+     C                     END
+      *
+     C           *IN50     DOWNE'1'
+      *
+      * A RECORD HAS BEEN READ :-
+      *
+      * MOVE DATA INTO UNIQUE FIELDS
+      *
+     C                     Z-ADDHLCD      ZLCD
+     C                     MOVE HCHTP     ZCHTP
+     C                     Z-ADDHTNLU     ZTNLU
+      *
+      * IF PARM=I & LAST CHANGE DATE NOT = RUN DATE - IGNORE
+     C           MODE      IFEQ 'I'
+     C           ZLCD      IFNE RUND
+     C                     GOTO NEXT
+     C                     END
+     C                     END
+      *
+      * MAINTAIN COUNTS AS NECESSARY
+     C           MODE      IFEQ 'I'
+     C           MODE      OREQ 'A'
+      *
+      **  IF RUN DATE IS THE SAME AS LAST CHANGE DATE
+      *
+     C           ZLCD      IFEQ RUND
+      *
+      ** I OR A MODES - INCLUDE DELETED RECORDS
+      *
+     C           ZCHTP     IFEQ 'I'
+     C                     ADD  1         ZINS
+     C                     ELSE
+     C           ZCHTP     IFEQ 'A'
+     C                     ADD  1         ZAMD
+     C                     ELSE
+     C           ZCHTP     IFEQ 'D'
+     C                     ADD  1         ZDEL
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      * I MODE - COUNT OF RECORDS CHANGED TODAY
+     C           MODE      IFEQ 'I'
+     C           ZLCD      IFEQ RUND
+     C                     ADD  1         ZCHG
+     C                     ADD  1         ZCHGP1
+     C                     END
+     C                     ELSE
+      *
+      * A MODE -
+     C           MODE      IFEQ 'A'
+      *
+      * A MODE - COUNT OF RECORDS READ + LIVE RECORDS
+     C           HRECI     IFNE '*'
+     C                     ADD  1         ZLIVE
+     C                     END
+     C           ZLCD      IFEQ RUND
+     C                     ADD  1         ZCOUNT
+     C                     ELSE
+      *
+      * - IGNORE IF HLCDNOT EQUAL RUN DATE
+     C                     GOTO NEXT
+     C                     END
+      *
+     C                     ELSE
+      * L MODE - COUNT OF LIVE RECORDS
+     C           HRECI     IFNE '*'
+     C                     ADD  1         ZLIVE
+     C                     ADD  1         ZLIVP1
+     C                     ELSE
+      * L MODE - IGNORE IF DELETED RECORD
+     C                     GOTO NEXT
+     C                     END
+     C                     END
+     C                     END
+      *
+      ** RECORD TO BE PRINTED -
+      ** OPEN OUTPUT FILE IF REQUIRED FIRST TIME ONLY
+      *
+     C           *IN82     IFEQ '0'
+     C                     SETON                     82
+     C                     Z-ADD6         LINCNT  20
+     C                     OPEN XX0109P1
+     C                     EXSR RCFP1
+     C                     MOVE HSBRA     ZSBRA
+     C**
+     C                     SETOF                     80
+     C**
+     C** FOR MULTIBRANCHING, ACCESS BRANCH NAME WITH ACCESS OBJECT
+     C           MBIN      IFEQ 'Y'
+     C                     MOVE HSBRA     PENT    3
+     C                     EXSR ACCBRH
+     C                     END
+     C**
+     C                     ELSE
+      *
+      * OPEN OUTPUT FILE IF REQUIRED NEW BRANCH
+     C           *IN80     IFEQ '1'
+     C                     Z-ADD6         LINCNT
+     C                     Z-ADD0         PAGE
+     C                     OPEN XX0109P1
+     C                     EXSR RCFP1
+     C                     MOVE HSBRA     ZSBRA
+      *
+     C                     SETOF                     80
+     C**
+     C** FOR MULTIBRANCHING, ACCESS BRANCH NAME WITH ACCESS OBJECT
+     C           MBIN      IFEQ 'Y'
+     C                     MOVE HSBRA     PENT    3
+     C                     EXSR ACCBRH
+     C                     END
+     C**
+     C                     END
+     C                     END
+      *
+      * PRINT PAGE HEADINGS
+     C           LINCNT    IFGE MAXCNT
+     C                     Z-ADD0         LINCNT
+     C                     WRITEHEADP1
+     C                     END
+      *
+      * FORMAT OUTPUT & PRINT FOR PRINTER FILE
+      *
+      * FIRST COLUMN ***
+      * FORMAT  CUSTOMER REPORT NAME/TOWN FOR SETTLEMENT CUSTOMER NO.
+      *    READ CLINTCB FILE USING KEY
+      *    IF NO RECORD/RECORD DELETED/ - PRINT BLANK
+      *
+     C                     MOVE HCSTM     CBNUM
+     C                     MOVE 'A'       CBRCDT
+     C           CLICBK    CHAINCLINTCBF             58
+     C           *IN58     IFEQ '1'
+     C                     MOVE *BLANK    ZCRNM
+     C                     MOVE *BLANK    ZCTWN
+     C                     ELSE
+     C           HRECI     IFNE '*'
+     C                     MOVE CRNM      ZCRNM
+     C                     MOVE CTWN      ZCTWN
+     C                     ELSE
+     C                     MOVE *BLANK    ZCRNM
+     C                     MOVE *BLANK    ZCTWN
+     C                     END
+     C                     END
+      *
+      * SECOND COLUMN ***
+      * FORMAT  INVESTMENT NAME FOR THIS INVESTMENT TYPE & CURRENCY
+      *    READ INVTPD FILE USING KEY
+      *    IF NO RECORD/RECORD DELETED/ - PRINT BLANK
+      *
+     C           INVTPK    CHAININVTPDF              56
+     C           *IN56     IFEQ '1'
+     C                     MOVE *BLANK    ZINAM
+     C                     ELSE
+     C           HRECI     IFNE '*'
+     C                     MOVE INAM      ZINAM
+     C                     ELSE
+     C                     MOVE *BLANK    ZINAM
+     C                     END
+     C                     END
+      * THIRD COLUMN ***
+      * FORMAT PAY SETTLEMENT LEGEND
+     C                     SETOF                     59
+     C           HSPSM     LOKUPTABSET    TABLEG         59
+     C           *IN59     IFEQ '0'
+     C                     MOVE *BLANK    LSPSM  14
+     C                     ELSE
+     C                     MOVE TABLEG    LSPSM
+     C                     END
+      *
+      ** FORMAT PAY A/C DEPENDING ON SETTLEMENT METHOD
+     C                     MOVE *BLANK    ZSPA14 20
+     C                     MOVE *BLANK    ZSPA12 18
+      *
+      ** FORMAT NNNNNN-NN-NNNN FOR SETTLEMENT CODE 05
+     C           HSPSM     IFEQ 05
+     C                     MOVELSPAT06    ZSPA07  7
+     C                     MOVE '-'       ZSPA07
+      *
+     C                     MOVELSPAT04    ZSPA05 11
+     C                     MOVE '-'       ZSPA05
+      *
+     C                     MOVELZSPA07    ZSPA12
+     C                     MOVE ZSPA05    ZSPA12
+      *
+     C                     MOVELZSPA12    ZSPA14
+     C                     MOVE SPAT02    ZSPA14
+     C                     ELSE
+      *    FORMAT SETTLEMENT METHODS 01 02 07 08 12
+     C           HSPSM     IFEQ 01
+     C           HSPSM     OREQ 02
+     C           HSPSM     OREQ 07
+     C           HSPSM     OREQ 08
+     C           HSPSM     OREQ 12
+      *
+      **  TABLETL FILE USING KEY
+      **  IF NO RECORD/RECORD DELETED - PRINT HSPSMNOT SHORTNAME
+      *
+     C                     MOVE '70'      TLRECT
+     C                     MOVE HCYSI     TLCYSI
+     C                     MOVELHSPAT     TLSA2
+     C           TABTLK    CHAINTABLETLF             60
+     C           *IN60     IFEQ '1'
+     C                     MOVELHSPAT     ZSPA14
+     C                     ELSE
+     C           HRECI     IFEQ '*'
+     C                     MOVELHSPAT     ZSPA14
+     C                     ELSE
+      *
+      * FORMAT CUSTOMER SHORT NAME
+      *    READ CLINTCB FILE USING KEY
+      *    IF NO RECORD/RECORD DELETED/ - PRINT HSPATNOT SHORTNAME
+     C                     MOVE CNUM      CBNUM
+     C                     MOVE 'A'       CBRCDT
+     C           CLICBK    CHAINCLINTCBF             58
+     C           *IN58     IFEQ '1'
+     C                     MOVELHSPAT     ZSPA14
+     C                     ELSE
+     C           HRECI     IFEQ '*'
+     C                     MOVELHSPAT     ZSPA14
+     C                     ELSE
+     C                     MOVELTLSA2     ZSPA12
+     C                     MOVE CSNM      ZSPA12
+     C                     MOVELZSPA12    ZSPA14
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *    CATCH ALL - ANY OTHER SETTLEMENT CODES
+     C                     ELSE
+     C                     MOVELHSPAT     ZSPA14
+      *
+     C                     END
+     C                     END
+      * FOURTH COLUMN ***
+      * FORMAT RECEIVE SETTLEMENT LEGEND
+     C                     SETOF                     59
+     C           HSRSM     LOKUPTABSET    TABLEG         59
+     C           *IN59     IFEQ '0'
+     C                     MOVE *BLANK    LSRSM  14
+     C                     ELSE
+     C                     MOVE TABLEG    LSRSM
+     C                     END
+      *
+      * FORMAT RECEIVE A/C DEPENDING ON SETTLEMENT METHOD
+     C                     MOVE *BLANK    ZSRA14 20
+     C                     MOVE *BLANK    ZSRA12 18
+      *
+      *  FORMAT NNNNNN-NN-NNNN FOR SETTLEMENT CODE 05
+     C           HSRSM     IFEQ 05
+     C                     MOVELSRAC06    ZSRA07  7
+     C                     MOVE '-'       ZSRA07
+      *
+     C                     MOVELSRAC04    ZSRA05 11
+     C                     MOVE '-'       ZSRA05
+      *
+     C                     MOVELZSRA07    ZSRA12
+     C                     MOVE ZSRA05    ZSRA12
+      *
+     C                     MOVELZSRA12    ZSRA14
+     C                     MOVE SRAC02    ZSRA14
+     C                     ELSE
+      *  FORMAT SETTLEMENT METHODS 01 02 07 08 12 - CUST. SHORTNAME
+     C           HSRSM     IFEQ 01
+      *
+     C           HSRSM     OREQ 02
+      *
+     C           HSRSM     OREQ 07
+      *
+     C           HSRSM     OREQ 08
+      *
+     C           HSRSM     OREQ 12
+      *  TABLETL FILE USING KEY
+      *  IF NO RECORD/RECORD DELETED - PRINT HSRSMNOT SHORTNAME
+     C                     MOVE '70'      TLRECT
+     C                     MOVE HCYSI     TLCYSI
+     C                     MOVELHSRAC     TLSA2
+     C           TABTLK    CHAINTABLETLF             60
+     C           *IN60     IFEQ '1'
+     C                     MOVELHSRAC     ZSRA14
+     C                     ELSE
+     C           HRECI     IFEQ '*'
+     C                     MOVELHSRAC     ZSRA14
+     C                     ELSE
+      *
+      * FORMAT CUSTOMER SHORT NAME
+      *    READ CLINTCB FILE USING KEY
+      *    IF NO RECORD/RECORD DELETED/ - PRINT HSRACNOT SHORTNAME
+     C                     MOVE CNUM      CBNUM
+     C                     MOVE 'A'       CBRCDT
+     C           CLICBK    CHAINCLINTCBF             58
+     C           *IN58     IFEQ '1'
+     C                     MOVELHSRAC     ZSRA14
+     C                     ELSE
+     C           HRECI     IFEQ '*'
+     C                     MOVELHSRAC     ZSRA14
+     C                     ELSE
+     C                     MOVELTLSA2     ZSRA12
+     C                     MOVE CSNM      ZSRA12
+     C                     MOVELZSRA12    ZSRA14
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *
+      **  CATCH ALL - ANY OTHER SETTLEMENT CODES
+     C                     ELSE
+     C                     MOVELHSRAC     ZSRA14
+      *
+     C                     END
+     C                     END
+      *
+      * FORMAT DETAILS FOR PRINT OUTPUT
+      *
+     C                     SETOF                     515253
+     C           ZCHTP     IFEQ 'A'
+     C                     SETON                     51
+     C                     ELSE
+     C           ZCHTP     IFEQ 'I'
+     C                     SETON                     52
+     C                     ELSE
+     C           ZCHTP     IFEQ 'D'
+     C                     SETON                     53
+     C                     END
+     C                     END
+     C                     END
+      *
+      * FORMAT DATES FOR PRINT OUTPUT
+      *
+     C                     Z-ADDZLCD      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVE ZADATE    ZALCD
+     C           CEU005    IFEQ 'Y'
+     C                     MOVE HSCCY     RSCCY
+     C                     MOVE HERII     RERII
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   PSKAC
+     C           CSE023    IFEQ 'Y'
+     C                     MOVE HSKAC     PSKAC
+     C                     ENDIF
+      *
+      ** Move new fields introduced by CSE028 to report fields
+      *
+     C           CSE028    IFEQ 'Y'
+     C                     MOVE HSIBK     RSIBK
+     C                     MOVE HSPTFR    RPTFR
+     C           CSW202    IFEQ 'Y'
+     C                     MOVE *OFF      *IN25
+     C                     ELSE
+     C                     MOVE *ON       *IN25
+     C                     MOVE HSNEW     RSNEW
+     C                     ENDIF
+     C                     MOVE HSTFDM    RTFDM
+     C                     ENDIF
+      *
+     C           *IN77     IFEQ *ON
+     C                     MOVELHSASI     SASIN
+     C                     ENDIF
+      *
+     C                     ADD  1         LINCNT
+     C           CSE028    IFEQ 'N'
+     C                     WRITEDETAIL
+     C                     ELSE
+     C                     WRITEDETAIL2
+     C                     ENDIF
+      *
+      * HOLD DATA UNTIL NEXT STDSED READ
+     C                     MOVE HSBRA     ZSBRA   3
+      *
+     C*
+     C* NEXT
+     C           NEXT      TAG                             ** NEXT TAG  **
+     C   40                READ XXXSEDV2                 50
+     C  N40                READ XXXSEDPS                 50
+      *
+     C** CHECK FOR REQUESTED BRANCH FOR MULTIBRANCHING
+     C           MBIN      IFEQ 'Y'
+     C           ENT       IFNE 'ALL'
+     C           ENT       ANDNEHSBRA
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN80
+     C                     GOTO ENDSEL
+     C                     END
+     C                     END
+      *
+      * DETERMINE NEED TO CLOSE PRINTER FILE
+      *
+      * EOF OR 'L' MODE - DELETED RECORD OR 'I' MODE HLCDNOT EQUAL
+     C           *IN50     IFNE '1'
+     C           MODE      IFEQ 'L'
+     C           HRECI     ANDEQ'*'
+     C                     ELSE
+     C           MODE      IFEQ 'I'
+     C           HLCD      ANDNERUND
+     C                     ELSE
+      *
+      * BRANCH CHANGE
+     C           MBIN      IFEQ 'Y'
+     C           ZSBRA     IFNE HSBRA
+     C                     SETON                     80
+     C                     END
+     C                     END
+      *
+      * TOTAL OUTPUT - CLOSE XX0109P1-IF DETAIL RECORDS WRITTEN
+      *   BRANCH CHANGE
+      *
+     C           ENDSEL    TAG                             * E N D S E L *
+     C**
+     C           ZCOUNT    IFEQ 0
+     C           ZLIVP1    ANDEQ0
+     C           ZCHGP1    ANDEQ0
+     C                     ELSE
+      *
+     C           *IN80     IFEQ '1'
+     C                     WRITETOTAL
+     C                     WRITETRAILP1
+     C                     Z-ADD0         ZCOUNT
+     C                     Z-ADD0         ZLIVP1
+     C                     Z-ADD0         ZCHGP1
+     C                     CLOSEXX0109P1
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *
+      * END OF FILE - IF DETAIL RECORDS WRITTEN - WRITE TOTAL LINE
+      *
+     C           TOTALS    TAG                             ** TOTALS TAG**
+      *
+     C           ZCOUNT    IFEQ 0
+     C           ZLIVP1    ANDEQ0
+     C           ZCHGP1    ANDEQ0
+     C                     ELSE
+      *
+     C           *IN82     IFEQ '1'
+     C                     WRITETOTAL
+     C                     END
+     C                     END
+      *
+     C**
+     C** WRITE '*** NO DETAILS TO REPORT ***' LINE
+     C           *IN82     IFEQ '0'
+     C                     MOVE '1'       *IN36
+     C                     END
+      *================================================================
+      *  RUN CONTROL PROCESS
+      *================================================================
+      *
+      * READ AUDIT RECORD
+     C                     READ STDSEA                   50
+     C           *IN,50    IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD2         DBASE            **DB ERROR 02**
+     C                     MOVEL'STDSEA'  DBFILE
+     C                     MOVEL'AUDIT'   DBKEY
+     C                     OUT  LDA
+     C                     EXSR DBERR
+     C                     END
+      *
+      * 'I' MODE - PRINT REPORT
+     C           MODE      IFEQ 'I'
+     C                     WRITEHEADAU
+     C                     WRITECONTROLI
+      *
+      *
+      * 'A'/'L' MODE -
+     C                     ELSE
+      *
+      * 'A' MODE - DO RUN CONTROLS
+     C           MODE      IFEQ 'A'
+     C           SLRB      ADD  SINS      ZWORK
+     C           ZWORK     SUB  SDEL      ZWORK
+     C           ZWORK     IFNE ZLIVE
+     C           MBIN      IFEQ 'N'
+     C                     SETON                     U881
+     C                     ELSE
+     C           ENT       IFEQ 'ALL'
+     C                     SETON                     U881
+     C                     END
+     C                     END
+     C                     END
+      *
+      * - PRINT REPORT
+     C                     WRITEHEADAU
+     C                     WRITECONTROLA
+      *
+      * - UPDATE AUDIT RECORD
+     C           *INU8     IFEQ '0'
+     C                     Z-ADD0         SINS
+     C                     Z-ADD0         SAMD
+     C                     Z-ADD0         SDEL
+     C                     Z-ADDNORE      SLRB
+     C                     UPDATSTDSEAF
+     C                     END
+      *
+      * 'L' MODE - DO RUN CONTROLS
+     C                     ELSE
+     C           NORE      IFNE ZLIVE
+     C           MBIN      IFEQ 'N'
+     C                     SETON                     U881
+     C                     ELSE
+     C           ENT       IFEQ 'ALL'
+     C                     SETON                     U881
+     C                     END
+     C                     END
+     C                     END
+      *
+      *          - PRINT REPORT
+     C                     WRITEHEADAU
+     C                     WRITECONTROLL
+     C                     END
+     C                     END
+      *
+      *  IF NO OUTPUT - WRITE MESSAGE TO THIS EFFECT
+     C           *IN36     IFEQ '1'
+     C                     WRITENONE
+     C                     ELSE
+     C** WRITE P1 '*** END OF REPORT ***' LINE IF P1 OPENED
+     C           *IN82     IFNE '1'                        ***************
+     C           *IN82     OREQ '1'                        * P1 NOT OPEN *
+     C           *IN80     ANDEQ'1'                        ***************
+     C                     ELSE
+     C                     WRITETRAILP1
+     C                     END
+     C                     END
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *                                                               *
+     C           ENDPGM    TAG                             ** ENDPGM TAG**
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *                                                               *
+      *================================================================
+     C/EJECT
+     C********************************************************************
+     C**
+     C**   ACCBRH SR. - SR. TO ACCESS BRANCH DETAILS
+     C**
+     C********************************************************************
+     C**
+     C           ACCBRH    BEGSR                           * A C C B R H *
+     C**
+     C                     MOVE *BLANK    ZBRNM
+     C                     CALL 'AOBRCHR1'
+     C                     PARM '*MSG   ' @RTCD
+     C                     PARM '*KEY   ' @OPTN
+     C                     PARM PENT      @DSNB   3
+     C           SDBRCH    PARM SDBRCH    DSSDY
+     C**
+     C**  CHECK FOR DATABASE ERROR
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBRCHPD'DBFILE
+     C                     MOVELPENT      DBKEY
+     C                     MOVEL@OPTN     DBOPTN           ***************
+     C                     Z-ADD3         DBASE            * DB ERROR 03 *
+     C                     OUT  LDA                        ***************
+     C                     EXSR DBERR
+     C                     END
+     C                     MOVE A8BRNM    ZBRNM
+     C**
+     C                     ENDSR
+     C**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C**   DBERR SR.- DATABASE ERROR SUBROUTINE
+     C**
+     C********************************************************************
+     C*
+     C           DBERR     BEGSR                           ** DBERR SR **
+     C**
+     C**   DATABASE ERROR HANDLING , REPORT ETC.
+     C**
+     C** WRITE DB ERROR DETAILS TO P1
+     C           *IN82     IFNE '1'                        ***************
+     C           *IN82     OREQ '1'                        * P1 NOT OPEN *
+     C           *IN80     ANDEQ'1'                        ***************
+     C                     ELSE                            * P1 OPENED
+     C                     ADD  1         LINCNT
+     C           LINCNT    IFGT MAXCNT
+     C                     WRITEHEADP1
+     C                     END
+     C                     WRITEERRORP1
+     C                     WRITETRAILP1
+     C                     END
+     C**
+     C** OUTPUT RUN CONTROL DETAILS FOR AU
+     C                     WRITEHEADAU
+     C           MODE      IFEQ 'I'
+     C                     WRITECONTROLI
+     C                     ELSE
+     C           MODE      IFEQ 'A'
+     C                     WRITECONTROLA
+     C                     ELSE
+     C                     WRITECONTROLL
+     C                     END
+     C                     END
+     C**
+     C** OUTPUT DB ERROR DETAILS FOR AU
+     C                     WRITEERROR
+     C**
+     C                     SETON                     U7U8LR
+     C                     EXSR *PSSR
+     C**
+     C                     RETRN
+     C**
+     C                     ENDSR
+     C**
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF
+     C**
+     C********************************************************************
+     C*
+     C           RCFP1     BEGSR                            ** RCFP1 **
+     C*
+     C**      ENSURE REPORT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     MOVE *BLANKS   PSBRA   3
+     C           MBIN      IFEQ 'Y'
+     C           ENT       IFEQ 'ALL'
+     C           *IN36     IFEQ '0'
+     C                     MOVE HSBRA     PSBRA
+     C                     END
+     C                     ELSE
+     C                     MOVE ENT       PSBRA
+     C                     END
+     C                     END
+     C**
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C**
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM PSBRA     SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C********************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C** RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF
+     C**
+     C********************************************************************
+     C*
+     C           RCFAU     BEGSR                            ** RCFAU **
+     C*
+     C**      ENSURE AUDIT SPOOL FILE RECORDED BY RCF
+     C*
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+     C**
+     C                     CALL 'ZSFILE'
+     C                     PARM           SEQ     5
+     C                     PARM *BLANK    SENTY   3
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM           ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C**  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C**
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C**
+     C                     ENDSR
+      *
+     C********************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      *EJECT
+     C*/COPY*ZSRSRC,ZSYSTMZ1****
+      /EJECT
+      ***
+**  CPY@
+(c) Finastra International Limited 2001
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  SETTLEMENT METHOD/LEGEND TABLE
+01NOSTRO        02CHEQ.SENT     03COMPENS.SUSP. 04PRIME RET.A/C 05SPECIFIED A/C
+06COMPUTER SUSP.07CHIPS         08SWIFT         12CHEQ.COLLECTED14RETAIL A/C
+15NOMINATED A/C

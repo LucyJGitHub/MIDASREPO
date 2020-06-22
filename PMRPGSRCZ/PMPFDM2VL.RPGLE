@@ -14,12 +14,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. HUT113             Date 01Apr20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
       *                 CPB002             Date 13Dec99               *
@@ -28,6 +29,20 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  HUT113    - Upgrade HUT026 to FBM 2.1 SP 22                  *
+      *            - Full Private Banking Functionality in Midas      *
+      *            - Allow Portfolio Definitions Input in Midas       *
+      *            - Apply fix MD054548 + MD054322                    *
+      *              Addition of hooks HUT113_009 to HUT113_014       *
+      *              Amendment of core hooks PMPFDMV026, PMPFDMV032,  *
+      *                         PMPFDMV025 and PMPFDMV002             *
+      *  MD054548 - Error is found in Portfolio Definition Maintenance*
+      *             (Inconsistency on screen).                        *
+      *           - Display the new PB screen for customer either PM  *
+      *             or PB when HUT026 feature is ON.                  *
+      *  MD054322 - Portfolio Management - SE - Incorrect holdings for*
+      *             custody fee calculation report.                   *
+      *           - Allow portfolio definition for PB customer.       *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CPB002 - New Private Banking Customer Processing.            *
@@ -129,6 +144,8 @@
       ** DS for Access Programs - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
       *
+     D/COPY WNCPYSRC,HUT113_014                                                             HUT113
+      *
       ** The Investment Policy Indicators are input-capable only
       ** on the Screen Input (*SIN) function:
       ** - (DDIPIN) Instrument Investment Policy Indicator
@@ -154,6 +171,7 @@
       ** Index for arrays of warning messages
      D WIDX            S              3P 0
       *
+      *
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
@@ -178,160 +196,176 @@
       ** +------------------------------------------------------------+
       *
       /COPY WNCPYSRC,PMPFDMV003
- 
+
       ** Validate Date Closed.
- 
+
       /COPY WNCPYSRC,PMPFDMV004
- 
+
      C                   EXSR      SRVDPCL
- 
+
       /COPY WNCPYSRC,PMPFDMV005
- 
+
       ** Bypass remaining validation if action code is Closure.
- 
+
       /COPY WNCPYSRC,PMPFDMV006
- 
+
      C     DDACTN        IFEQ      'C'
      C                   RETURN
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,PMPFDMV007
- 
+
       ** Validate Portfolio Currency.
- 
+
       /COPY WNCPYSRC,PMPFDMV008
- 
+
      C                   EXSR      SRVPTCY
- 
+
       /COPY WNCPYSRC,PMPFDMV009
- 
+
       ** Validate Portfolio Narrative.
- 
+
       /COPY WNCPYSRC,PMPFDMV010
- 
+
      C                   EXSR      SRVPTFN
- 
+
       /COPY WNCPYSRC,PMPFDMV011
- 
+
       ** Validate Portfolio Type only if customer is a PM Customer.
- 
+
       /COPY WNCPYSRC,PMPFDMV012
- 
+
      C     PMCUST        IFEQ      'Y'
+
+     C/COPY WNCPYSRC,HUT113_009                                                             HUT113
+
      C                   EXSR      SRVPTFT
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,PMPFDMV013
- 
+
       ** Validate Portfolio Safe Custody Fee Group Code.
- 
+
       /COPY WNCPYSRC,PMPFDMV014
- 
+
      C     S01464        IFEQ      'Y'
      C     FBFGCP        ANDEQ     'Y'
       *
      C                   EXSR      SRVCFGC
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,PMPFDMV015
- 
+
       ** Validate Portfolio Managed Indicator only if customer is
       ** a PM Customer.
- 
+
       /COPY WNCPYSRC,PMPFDMV016
- 
+
      C     PMCUST        IFEQ      'Y'
+
+     C/COPY WNCPYSRC,HUT113_010                                                             HUT113
+
      C                   EXSR      SRVMNGI
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,PMPFDMV017
- 
+
       ** Validate Portfolio FF Margin Account Sequence.
- 
+
       /COPY WNCPYSRC,PMPFDMV018
- 
+
      C     BGFUOP        IFEQ      'Y'
+
+     C/COPY WNCPYSRC,HUT113_011                                                             HUT113
+
      C                   EXSR      SRVACSQ
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,PMPFDMV019
- 
+
       ** Validate Pledge Start and Finish Dates only if
       ** Portfolio Lending and customer is a PM Customer.
- 
+
       /COPY WNCPYSRC,PMPFDMV020
- 
+
      C     BGLMCR        IFEQ      'N'
      C     PMCUST        ANDEQ     'Y'
+
+     C/COPY WNCPYSRC,HUT113_012                                                             HUT113
+
      C                   EXSR      SRVPLEDGED
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,PMPFDMV021
- 
+
       ** Validate Profit Centre.
- 
+
       /COPY WNCPYSRC,PMPFDMV022
- 
+
      C     CAC003        IFEQ      'Y'
      C     BGN0ST        ANDEQ     'Y'
      C                   EXSR      SRVPRF2
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,PMPFDMV023
- 
+
       ** Continue validating other fields if customer is PM Customer.
- 
+
      C     PMCUST        IFEQ      'Y'
- 
+
+     C/COPY WNCPYSRC,HUT113_013                                                             HUT113
+
+
       ** Validate Valuation Frequency, Day in Month and
       ** Next Valuation Date.
- 
+
       /COPY WNCPYSRC,PMPFDMV024
- 
+
      C                   EXSR      SRVVALDATE
- 
+
       /COPY WNCPYSRC,PMPFDMV025
- 
+
       ** Validate Valuation Statement Section Indicators.
- 
+
       /COPY WNCPYSRC,PMPFDMV026
- 
+
+
      C                   EXSR      SRVVALSTMT
- 
+
       /COPY WNCPYSRC,PMPFDMV027
- 
+
       ** Validate Performance Report Requirements.
- 
+
       /COPY WNCPYSRC,PMPFDMV028
- 
+
      C                   EXSR      SRVPERFORM
- 
+
       /COPY WNCPYSRC,PMPFDMV029
- 
+
       ** Validate Cashflow Frequency, Day in Month and
       ** Next Report Date.
- 
+
       /COPY WNCPYSRC,PMPFDMV030
- 
+
      C                   EXSR      SRVCSHFLOW
- 
+
       /COPY WNCPYSRC,PMPFDMV031
- 
+
       ** Validate:
       ** - Portfolio Bank Investment Policy Code
       ** - Instrument Investment Policy Indicator
       ** - Currency Investment Policy Indicator
       ** - Country of Risk Investment Policy Indicator
       ** - Industry Investment Policy Indicator.
- 
+
       /COPY WNCPYSRC,PMPFDMV032
- 
+
      C                   EXSR      SRVINVEST
- 
+
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,PMPFDMV033
- 
+
      C                   RETURN
       *
       *****************************************************************

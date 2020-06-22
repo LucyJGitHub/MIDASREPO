@@ -13,8 +13,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
-/*       Last Amend No. CSD101             Date 07Dec18              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. HUT109             Date 14Apr20              */
+/*       Prev Amend No. CSD101             Date 07Dec18              */
+/*                      MD046248           Date 27Oct17              */
 /*                      CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -25,6 +26,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       HUT109 - Partial upgrade of HUT020 to FBM 2.1 SP22          */
+/*                Additional Authorisation Steps in SE Module        */
+/*                Added hooks: SDH00557,SDH00558,SDH00559            */
 /*       CSD101 - Password Encryption                                */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CCB020 - COB Restructure - Secondary COB Infrastructure     */
@@ -32,44 +36,44 @@
 /*       CSD012 - Standing Data Requiring Authorisation              */
 /*                                                                   */
 /*********************************************************************/
- 
+
              PGM        PARM(&SEQ &LEVEL &ENTITY)
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2003')
- 
+
              DCL        VAR(&SEQ) TYPE(*CHAR) LEN(5)
              DCL        VAR(&LEVEL) TYPE(*CHAR) LEN(1)
              DCL        VAR(&ENTITY) TYPE(*CHAR) LEN(3)
 /**********  DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)                                  */ /*CCB020*/
 /**********  DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(1)                                 */ /*CCB020*/
              DCL        VAR(&COBST) TYPE(*CHAR) LEN(4)                                    /*CCB020*/
- 
+
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)                                    /*CSD028*/
              DCL        VAR(&POPTN) TYPE(*CHAR) LEN(7)                                    /*CSD028*/
              DCL        VAR(&DSSDY) TYPE(*CHAR) LEN(800)                                  /*CSD028*/
              DCL        VAR(&CSD028) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CSD028*/
 /*/COPY WNCPYSRC,SDH00557                                            */
- 
- 
+
+
 /* Global monitor message */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              SNDPGMMSG  MSG('SDC4710 - Standing Data Authorisation +
                           Summary Report') TOMSGQ(MRUNQ)
- 
+
              CHGJOB     SWS(00000000)
- 
+
 /*  Check if I/C or COB  */
 /**********  RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)                                   */ /*CCB020*/
              CALL       PGM(CBC001001) PARM(&COBST)                                       /*CCB020*/
 /**********  IF         COND(&MPHAS *EQ 'A') THEN(DO)                                  */ /*CCB020*/
 /**********     CHGVAR     VAR(&MODE) VALUE('A')                                       */ /*CCB020*/
 /**********  ENDDO                                                                     */ /*CCB020*/
- 
+
 /** Check if CSD028 is installed */                                                       /*CSD028*/
              CHGVAR     VAR(&PRTCD) VALUE('       ')                                      /*CSD028*/
              CHGVAR     VAR(&POPTN) VALUE('*VERIFY')                                      /*CSD028*/
@@ -82,7 +86,7 @@
 /* Call program to produce report SD4710P1                           */
              CALL       PGM(SD4710) PARM(&SEQ &LEVEL &ENTITY)
              MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))
- 
+
 /* If CoB then clear authorisation log and all shadow files          */
 /**********  IF         COND(&MODE *NE 'A') THEN(DO)                                   */ /*CCB020*/
              IF         COND(&COBST *EQ '*YES') THEN(DO)                                  /*CCB020*/
@@ -113,22 +117,22 @@
              IF         COND(&CSD028 *EQ 'Y') THEN(CALL PGM(SD4711))                      /*CSD028*/
 /*/COPY WNCPYSRC,SDC4710001                                          */
              ENDDO
- 
+
              GOTO       CMDLBL(END)
- 
+
 /* Abnormal termination */
- 
+
  ABNOR:
              CHGJOB     SWS(XXXXXX11)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           SDC4710  ended abnormally - see job log') +
                           TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000 MCH0000)
              DMPCLPGM
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')

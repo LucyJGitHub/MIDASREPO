@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 233071             Date 28Mar12               *
+      *  Last Amend No. AR324886           Date 07Apr20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 233071             Date 28Mar12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -63,6 +64,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR324886 - Implement 4-eyes processing in Position           *
+      *             Settlement Maintenance.                           *
+      *             (Upgrade as required by HUT105)                   *
       *  MD046248 - Finastra Rebranding                               *
       *  233071 - Database error 106 in program AOTXBSR0 due to blank *
       *           tax basket.  Default tax basket with WK_TXBS only   *
@@ -166,7 +170,7 @@
       * *PSSR       Error processing                                  *
       *                                                               *
       *****************************************************************
- 
+
      FPOSET5    UF A E           K DISK
       ** Position Settlement
      F                                     RENAME(POSETDF:POSETUP)
@@ -175,6 +179,9 @@
       ** Position Settlement for output only
      F                                     RENAME(POSETDF:POSETUP2)
      F                                     PREFIX(Nw_)
+     FPSAUTD    O    E             DISK                                                     AR324886
+      ** SE Position Settlement Authorisation detail                                        AR324886
+      *                                                                                     AR324886
      FSECOALL4  IF   E           K DISK                                                       215575
       ** Corporate allocation Client - MC                                                     215575
      FSECTY     IF   E           K DISK
@@ -252,25 +259,25 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
      D InPoset       E DS                  EXTNAME(POSETD)
      D                                     PREFIX(In_)
- 
+
      D OutPoset      E DS                  EXTNAME(POSETD)
      D                                     PREFIX(Nw_)
- 
+
      D WrkPoset      E DS                  EXTNAME(POSETD)
      D                                     PREFIX(Wk_)
- 
+
      D P@DATA          DS           128
      D** Data structure for the parameter passed to and from SEZ010
      D P@CLAS                  1      1
@@ -288,37 +295,40 @@
      D P@FXMR                101    113  8
      D P@MAMT                114    126  0
      D P@TDTP                127    128
- 
+
       ** ICD/SD Data Structures
       ** ----------------------
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Customer file
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** Data Structure for Currency Details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** Data Structure for Branch Details                                      186001
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)                    186001
      D QQDFA1        E                     EXTFLD(QQDFAC)                                     CGL029
                                                                                 186001
       ** DS for Access Programs, Short DS
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
       *                                                                                       229342
       ** DS for access objects - long data structure                                          229342
      D DSLDY         E DS                  EXTNAME(DSLDY)                                     229342
- 
+     D SDSTAT        E DS                  EXTNAME(SDSTAT)                                  AR324886
+      ** SD data area                                                                       AR324886
+      *                                                                                     AR324886
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @AccAmtDue      S             13  0
      D @AccPosit       S             13  0
      D @Acccharge      S             13  0
@@ -384,12 +394,12 @@
      D @UnitIncome     S             13  9
      D Upd_Rounding    S              1                                         185604
      D @WhingTax       S                   LIKE(NW_PAMD)
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -403,7 +413,7 @@
       *
       ** Get Security Details
       *
- 
+
      C                   MOVE      IN_PSSH       @Secty
      C     IN_PSSH       CHAIN     SECTY                              21
      C     *IN21         IFEQ      '1'
@@ -429,7 +439,7 @@
      C                   EVAL      @TreatyTax = 'Y'
      C                   EVAL      Wk_CRTX = SE_CRTT
      C                   EVAL      Wk_ICTP = SE_INCT
- 
+
      C                   ENDIF
       *
       ** If Treaty Tax processing is needed
@@ -461,12 +471,12 @@
      C                   ELSE
      C                   EXSR      SRDepot
      C                   ENDIF
- 
+
      C                   ENDIF
       *
      C                   SETON                                        LR
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -478,9 +488,9 @@
       * Calls: SRCustInfo, SRWrtOrUpd, SRSingleRec, SRInter           *
       *                                                               *
       *****************************************************************
- 
+
      C     SRCust        BEGSR
- 
+
      C                   MOVE      ' '           @CallFrom                      186001
      C                   EXSR      SRCustInfo
       *
@@ -497,7 +507,7 @@
      C                   END                                                                  216556
       *                                                                                       216556
      C     @NoTax        IFEQ      'Y'
- 
+
      C                   EVAL      Wk_TASO = 0
      C                   EVAL      Wk_TAUS = 0
      C                   EVAL      Wk_TASR = 0
@@ -520,7 +530,7 @@
      C                   IF        LC_CDPT = *BLANKS                                          CSD027
      C                   MOVE      *BLANKS       Wk_DEPT
      C                   ENDIF
- 
+
      C                   EVAL      Wk_RPCD = WHRPCD                             185748
      C                   EXSR      SRWrtOrUpd
      C                   ENDIF
@@ -530,16 +540,16 @@
       ** Else calculate tax for Intermediary.
       *
      C     @NoTax        IFEQ      'N'
- 
+
      C                   IF        WHDCRC <> 'I'
      C                   EXSR      SRSingleRec
- 
+
      C                   ELSE
      C                   EXSR      SRInter
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -552,9 +562,9 @@
       * Calls:                                                        *
       *                                                               *
       *****************************************************************
- 
+
      C     SRCustInfo    BEGSR
- 
+
       ** Only Process this part if not call from Subroutine SRICInfo            186001
       *                                                                         186001
      C                   IF        @CallFrom <> 'U'                             186001
@@ -595,12 +605,12 @@
      C                   ENDIF                                                  185731
      C                   EVAL      @Discount = @CTotAmt -  @Cost
      C                   EVAL      In_DAMT = @Discount
- 
+
      C*************      ELSE
      C*************      EVAL      In_DAMT = 0
      C                   ENDIF
      C                   ENDIF                                                  185292
- 
+
      C                   ENDIF
       *
       ** Get Customer Country of residence
@@ -647,7 +657,7 @@
       *
      C                   MOVE      SE_SITP       @SITP
      C                   EVAL      @Loc = BBCOLC
- 
+
      C     Wt_TreatKy    CHAIN     SDWHTTL0                           31
       *
       ** If no record found, then check if there is a record for general use
@@ -728,9 +738,9 @@
       ** documentation is 'L'or 'Y', then it is exempt from Tax.
       *
      C                   IF        SE_APIE = 'Y'
- 
+
      C                   IF        WHDCRC = 'L' or WHDCRC = 'Y'
- 
+
      C                   IF        PROT = '1' OR PROT = '3' or PROT = '5'
      C                             OR PROT = '6' OR PROT = '8' or PROT = '9'
      C**********         EVAL      @NoTax = 'Y'                                               216559
@@ -753,7 +763,7 @@
      C                   EVAL      Wk_EXCD = WTEXPI
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
       *
@@ -775,13 +785,13 @@
       ** code from treaty detail.
       *
      C                   EVAL      @SetExCode = 'Y'
- 
+
      C                   IF        WHEXCD <> *BLANKS
      C                   EVAL      Wk_EXCD = WHEXCD
      C                   ELSE
      C                   EVAL      Wk_EXCD = WTEXCD
      C                   ENDIF
- 
+
      C                   ENDIF
       *                                                                         186303
       ** If OID = 'S', event = 'MT' and Documentation status is not 'U'         186303
@@ -797,9 +807,9 @@
      C                   EVAL      Wk_DAMT = 0                                  186303
      C                   EVAL      @SetExCode = 'Y'                             186303
      C                   ENDIF                                                  186303
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -813,13 +823,13 @@
       * Calls: SRCalTax, SRWrtOrUpd                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRSingleRec   BEGSR
       *
       ** Get Tax rate for Customer with no documentation.
       *
      C                   IF        WHDCRC = 'N' or @NoDoc = 'Y'
- 
+
      C                   EVAL      @TaxBasket = WTDBDC
       *
       ** If position settlement is for Maturity and OID indicator is 'S'        185292
@@ -830,7 +840,7 @@
      C                   IF        In_PEVT = 'MT' and SE_OIDI = 'S'             185292
      C                   EVAL      @TaxBasket = WTDRBW                          185292
      C                   ENDIF                                                  185292
- 
+
      C                   ELSE
       *
       ** Get Tax rate for Undeclared Customer - Backup withholding tax rate
@@ -869,9 +879,9 @@
      C                   ENDIF
      C                   EVAL      @SetExCode = 'Y'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** If Position Settlement is for Customer Position then
@@ -896,7 +906,7 @@
      C     COALRF        IFEQ      *BLANKS                                                    215575
      C     IN_CTYP       OREQ      'C'                                                        215575
      C                   EVAL      Wk_PNMP = @CTotNoml
- 
+
      C                   EVAL      Wk_PAMD = @CTotAmt
      C                   END                                                                  215575
      C                   EVAL      Wk_PCHA = @CTotChg
@@ -914,7 +924,7 @@
       *
      C                   EVAL      Wk_RPCD = WHRPCD                             185748
      C                   EXSR      SRWrtOrUpd
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -927,11 +937,11 @@
       * Calls:                                                        *
       *                                                               *
       *****************************************************************
- 
+
      C     SRCalTax      BEGSR
      C                   EVAL      @CountryTax = SE_CRTT
      C                   EVAL      @EffDate   = IN_PDUD
- 
+
      C                   CALL      'AOTXBSR0'
      C                   PARM                    @RtnCode          7
      C                   PARM      '*KEY   '     @OptionCode       7
@@ -940,7 +950,7 @@
      C                   PARM                    @EffDate          5 0
      C                   PARM                    @RtNarr          15
      C                   PARM                    @RtTaxRate        6 4
- 
+
      C                   IF        @RtnCode <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'AOTXBSR0'
@@ -970,7 +980,7 @@
      C                   EVAL      @TaxBasket = *BLANKS
      C                   EVAL      @RtNarr = *BLANKS
      C                   ENDIF
- 
+
      C                   IF        WTDTSU = 'S'
      C                   EVAL      Wk_TASO = @WhingTax
      C                   EVAL      Wk_TAUS = 0
@@ -978,7 +988,7 @@
      C                   EVAL      Wk_TAUS = @WhingTax
      C                   EVAL      Wk_TASO = 0
      C                   ENDIF
- 
+
      C                   EVAL      Wk_TASR = 0
       *
       ** To ensure taht the output Tax basket is the tax basket used for
@@ -986,7 +996,7 @@
       *
      C                   EVAL      Wk_TXBS = @TaxBasket
      C                   EVAL      Wk_TXBN = @RtNarr
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -999,7 +1009,7 @@
       * Calls: SRCalTax, SRWrtOrUpd, SRNDIFF                          *
       *                                                               *
       *****************************************************************
- 
+
      C     SRInter       BEGSR
       *
       ** Initialise cumulative fields
@@ -1022,17 +1032,17 @@
       *
       ** Get beneficial Holding by reading Intermediary detail until EOF.
       *
- 
+
      C     InterMlkey    SETLL     SDINTCLL1                          34
- 
+
      C     *IN34         DOUEQ     '1'
- 
+
      C                   IF        In_CTYP = 'C'
      C     InterMCkey    READE     SDINTCLL1                              34
      C                   ELSE
      C     InterMlkey    READE     SDINTCLL1                              34
      C                   ENDIF
- 
+
      C                   IF        *IN34 = '0'
      C                             AND INTOTH <> 0                              185756
       *
@@ -1060,7 +1070,7 @@
       ** Workout the total amount due to the beneficial owner
       *
      C                   EVAL      Wk_PAMD = @CTotAmt * Wk_PNMP / @CTotNoml
- 
+
      C************       IF        In_PEVT = 'MT' and SE_OIDI = 'Y'             185292
      C                   IF        In_PEVT = 'MT'                               185292
      C                   IF        SE_OIDI = 'Y' OR SE_OIDI = 'S'               185292
@@ -1099,16 +1109,16 @@
      C***********        EVAL      Wk_BNFO = *BLANKS                            186050
      C***********        EVAL      Wk_CTIN = *BLANKS                            186050
      C***********        ENDIF                                                  186050
- 
+
      C                   EXSR      SRWrtOrUpd
- 
+
      C                   IF        Wk_PNMP <> 0
      C                   EVAL      @AccAmtDue = @AccAmtDue + Wk_PAMD
      C                   EVAL      @AccPosit = @AccPosit + Wk_PNMP
      C                   EVAL      @AccCharge = @AccCharge + Wk_PCHA
      C                   EVAL      @AccComm = @AccComm + Wk_PCAM
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDDO
       *
@@ -1126,7 +1136,7 @@
      C                   IF        @NomlDiff <> 0
      C                   EXSR      SRNDIFF
      C                   END
- 
+
      C                   IF        @AmtDiff <> 0 or
      C                             @ChgDiff <> 0 or @CommDiff <> 0
       *
@@ -1157,19 +1167,19 @@
       *
       ** Else add the rounding to the last position settlement record.
       *
- 
+
      C                   EVAL      Wk_PAMD = @AmtDiff
      C*******************EVAL      Nw_PCHA = @ChgDiff                           185604
      C*******************EVAL      Nw_PCAM = @CommDiff                          185604
      C                   EVAL      Wk_PCHA = @ChgDiff                           185604
      C                   EVAL      Wk_PCAM = @CommDiff                          185604
- 
+
      C                   EXSR      SRWrtOrUpd
- 
+
      C                   EVAL      Upd_Rounding = 'N'                           185604
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1182,14 +1192,14 @@
       * Calls:                                                        *
       *                                                               *
       *****************************************************************
- 
+
      C     SRGetBenTax   BEGSR
       *
       ** Get Benefical Owners details - If Beneficial Owner Number is not
       ** equal to *BLANK
       *
      C                   IF        INBONO <> *BLANK
- 
+
      C                   EVAL      @INCNUM = INCNUM
      C                   EVAL      @INBONO = INBONO
      C                   EVAL      @HoldingDept = INDEPT
@@ -1214,10 +1224,10 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ELSE
      C                   MOVE      '1'           *IN33
- 
+
      C                   ENDIF
       *
       ** Initialise Exemption Code, Beneficial Number, and Tax Basket.
@@ -1230,7 +1240,7 @@
       ** If Beneficial Owner record found
       *
      C                   IF        *IN33 = '0'
- 
+
      C                   IF        BNDFRD = 'Y'
      C                   EVAL      @RoundingRec = 'Y'
      C                   ENDIF
@@ -1250,7 +1260,7 @@
      C                   IF        BNCTRS <> *BLANKS
      C                   MOVE      SE_SITP       @SITP
      C                   EVAL      @Loc = BNCTRS
- 
+
      C     Wt_TreatKy    CHAIN     SDWHTTL0                           31
       *
       ** If no record found, then check if there is a record for general use
@@ -1316,12 +1326,12 @@
       ** documentation is 'L'or 'Y', then it is exempt from Tax.
       *
      C                   IF        SE_APIE = 'Y'
- 
+
      C                   IF        BNDCRC = 'L' or BNDCRC = 'Y'
- 
+
      C                   IF        PROT = '1' OR PROT = '3' or PROT = '5'
      C                             OR PROT = '6' OR PROT = '8' or PROT = '9'
- 
+
      C                   EVAL      @NoTax = 'Y'
       *
       ** Tax basket = Default Portfolio Exemption Tax Basket
@@ -1339,7 +1349,7 @@
      C                   EVAL      Wk_EXCD = WTEXPI
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
       *
@@ -1361,13 +1371,13 @@
       ** code from treaty detail.
       *
      C                   EVAL      @SetExCode = 'Y'
- 
+
      C                   IF        BNEXCD <> *BLANKS
      C                   EVAL      Wk_EXCD = BNEXCD
      C                   ELSE
      C                   EVAL      Wk_EXCD = WTEXCD
      C                   ENDIF
- 
+
      C                   ENDIF
       *                                                                         186303
       ** If OID = 'S', event = 'MT' and Documentation status is not 'U'         186303
@@ -1382,7 +1392,7 @@
      C                   EVAL      Wk_DAMT = 0                                  186303
      C                   EVAL      @SetExCode = 'Y'                             186303
      C                   ENDIF                                                  186303
- 
+
       *                                                                         186303
       ** Get Tax Basket if tax calucaltion is needed                            186303
       *                                                                         186303
@@ -1391,7 +1401,7 @@
       ** Get Tax rate for Customer with no documentation.
       *
      C                   IF        BNDCRC = 'N' or @NoDoc = 'Y'
- 
+
      C                   EVAL      @TaxBasket = WTDBDC
       *                                                                         185292
       ** If position settlement is for Maturity and OID indicator is 'S'        185292
@@ -1402,7 +1412,7 @@
      C                   IF        In_PEVT = 'MT' and SE_OIDI = 'S'             185292
      C                   EVAL      @TaxBasket = WTDRBW                          185292
      C                   ENDIF                                                  185292
- 
+
      C                   ELSE
       *
       ** Get Tax rate for Undeclared Customer - Backup withholding tax rate
@@ -1440,13 +1450,13 @@
      C                   ENDIF
      C                   EVAL      @SetExCode = 'Y'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF                                                  187179
- 
+
      C                   IF        *IN33 = '1'
       *
       ** 1. No Docoumentation - use the no documentation basket
@@ -1458,12 +1468,12 @@
      C                   EVAL      Wk_EXCD = '  '
      C                   EVAL      @SetExCode = '  '
      C                   EVAL      @TaxBasket = WTDBDC
- 
+
      C                   ELSE
       ** CASE 2
      C                   IF        INTXBS <> *BLANK
      C                   EVAL      @TaxBasket = INTXBS
- 
+
      C                   ELSE
       ** CASE 3
      C                   EVAL      @TaxBasket = WTTXBS
@@ -1471,7 +1481,7 @@
      C                   EVAL      Wk_EXCD = WTEXCD
      C                   EVAL      @SetExCode = 'Y'
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
       *                                                                         187179
@@ -1485,9 +1495,9 @@
      C                   EVAL      Wk_DAMT = 0                                  187179
      C                   EVAL      @SetExCode = 'Y'                             187179
      C                   ENDIF                                                  187179
- 
+
      C                   ENDIF
- 
+
      C************       ENDIF                                           186303 187179
                                                                                 186303
      C                   ENDSR
@@ -1503,14 +1513,14 @@
       * Calls: SRSetlAmt                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRWrtOrUpd    BEGSR
       *
       ** Only output to file if holding is not equal 0.
       *
      C*******************IF        Wk_PNMP <> 0                                 185604
      C                   IF        Wk_PNMP <> 0 or Upd_Rounding = 'Y'           185604
- 
+
      C                   EVAL      *IN23 = '1'
       *
       ** Only if the Security is cover by the Treaty withholding Tax.
@@ -1528,7 +1538,7 @@
       *
      C                   IF        Wk_PNMP <> In_PNMP OR Wk_TASO <> 0
      C                             OR Wk_TAUS <> 0
- 
+
      C*******************IF        Wk_PNMP <> In_PNMP                           185604
      C     COALRF        IFEQ      *BLANKS                                                    215575
      C     IN_CTYP       OREQ      'C'                                                        215575
@@ -1538,7 +1548,7 @@
      C                   EVAL      Wk_PCAM = In_PCAM * Wk_PNMP / In_PNMP
      C                   ENDIF
      C                   END                                                                  215575
- 
+
      C                   EXSR      SRSetlAmt
      C                   ENDIF
       *
@@ -1572,27 +1582,28 @@
       ** Check if a record for this customer and tax basket already in file.
       *
      C     PosetKey      CHAIN     POSET5                             23
- 
+
      C                   ENDIF
       *
       ** If record not on file, write a new record.
       *
      C     *IN23         IFEQ      '1'
- 
+
      C                   EVAL      OutPoset = WrkPoset
      C     COALRF        IFNE      *BLANKS                                                    215575
      C                   EVAL      Wk_PAMD = 0                                                215575
      C                   END                                                                  215575
      C                   WRITE     POSETUP2
+     C                   EXSR      PSAUDT                                                   AR324886
      C                   ADD       1             NWrtn
- 
+
      C                   ELSE
       *
       ** If record found, and RECI is not equal to '*', then combine
       ** position holding, tax amount, settlement amount to file
       *
      C                   IF        Nw_RECI <> '*'
- 
+
      C                   EVAL      Nw_PNMP = Nw_PNMP + Wk_PNMP
      C                   EVAL      Nw_PAMD = Nw_PAMD + Wk_PAMD
      C                   EVAL      Nw_PCHA = Nw_PCHA + Wk_PCHA
@@ -1601,21 +1612,21 @@
      C                   EVAL      Nw_TASO = Nw_TASO + Wk_TASO
      C                   EVAL      Nw_TAUS = Nw_TAUS + Wk_TAUS
      C                   EVAL      Nw_DAMT = Nw_DAMT + Wk_DAMT
- 
+
      C                   ELSE
- 
+
      C                   EVAL      OutPoset = WrkPoset
      C     COALRF        IFNE      *BLANKS                                                    215575
      C                   EVAL      Wk_PAMD = 0                                                215575
      C                   END                                                                  215575
- 
+
      C                   ENDIF
- 
+
      C                   UPDATE    POSETUP
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1628,7 +1639,7 @@
       * Calls: SRUDPos, SRCPoset                                      *
       *                                                               *
       *****************************************************************
- 
+
      C     SRDepot       BEGSR
       *
       ** Get customer detail to check if they have a  SWIFT Address
@@ -1720,9 +1731,9 @@
      C                   EVAL      @Mket = LU_UDMK
      C     UdepHFKey     SETGT     UDEPH
      C     UdeppFKey     READPE    UDEPH                                  27
- 
+
      C                   ENDIF
- 
+
      C                   IF        *IN27 = '0'
       *
       ** For Coupon Event, if position date is less than the last coupon
@@ -1738,7 +1749,7 @@
      C                   EXSR      SRGetBkCost                                  186001
      C                   EVAL      @U_Cost = @U_Cost + ZCONS                    186001
      C                   ENDIF                                                  186001
- 
+
      C                   EVAL      @U_EXnml = @U_Exnml + LU_UECN
      C                   EVAL      @U_TDnml = @U_TDnml + LU_UDNT
      C                   EVAL      @U_VDnml = @U_VDnml + LU_UDNV
@@ -1758,7 +1769,7 @@
      C                   END                                                                  215575
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   IF        In_PEVT = 'CP'
      C                   EVAL      @U_VDnml = @U_VDnml - LU_UECN
      C                   ENDIF
@@ -1798,10 +1809,10 @@
       *
      C                   EVAL      Wk_EXCD = '  '
      C                   EVAL      @SetExCode = 'Y'
- 
+
      C                   EVAL      Wk_RPCD = *BLANKS                            185748
      C                   EXSR      SRWrtOrUpd
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT                                                                    186001
@@ -1983,9 +1994,9 @@
      C                   EVAL      @CustNo = LC_CDCN
      C     CdepHFKey     SETGT     CDEPH
      C     CdepHSKey     READPE    CDEPH                                  29
- 
+
      C                   ENDIF
- 
+
      C     *IN29         IFEQ      '0'
      C                   MOVE      LC_CDCN       @Cust
      C                   MOVE      @Cust         @HoldingCust
@@ -2005,7 +2016,7 @@
      C                   ELSE
      C                   EVAL      Wk_PNMP = LC_CDNV - LC_CECN
      C                   ENDIF
- 
+
       *                                                                                       215575
      C                   IF        IN_PEVT <> 'CP' and IN_PEVT <> 'MT' and                    215575
      C                             IN_PEVT <> 'DV' and IN_PEVT <> 'MR'                        215575
@@ -2040,7 +2051,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2062,7 +2073,7 @@
      C                   ELSE
      C                   MOVE      'D'           P@CLAS
      C                   END
- 
+
      C                   MOVEL     Wk_PPRE       P@PPRE
      C                   Z-ADD     Wk_PAMD       P@PAMD
      C                   Z-ADD     Wk_PCHA       P@PCHA
@@ -2073,13 +2084,13 @@
      C                   MOVEL     Wk_PMDI       P@PMDI
      C                   MOVEL     Wk_PNCY       P@PNCY
      C                   MOVEL     Wk_PSCU       P@PSCU
- 
+
      C                   IF        In_CTYP = 'D'
      C                   MOVE      'TS'          P@TDTP
      C                   ELSE
      C                   MOVE      'TP'          P@TDTP
      C                   ENDIF
- 
+
      C                   Z-ADD     0             P@FXMR
      C                   Z-ADD     0             P@MAMT
      C*
@@ -2101,7 +2112,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2141,7 +2152,7 @@
       *
      C                   EVAL      @TaxBasket = @CustNDTXBS
      C                   EVAL      Wk_EXCD = '  '
- 
+
      C                   EVAL      Wk_PNMP = @NomlDiff
      C                   EVAL      Wk_PAMD = @AmtDiff
      C                   EVAL      Wk_PCHA = @ChgDiff
@@ -2163,15 +2174,15 @@
       *
      C                   EVAL      Wk_BNFO = *BLANKS
      C                   EVAL      Wk_CTIN = *BLANKS
- 
+
      C                   EVAL      Wk_RPCD = WHRPCD                             185748
      C                   EXSR      SRWrtOrUpd
- 
+
      C                   EVAL      @NomlDiff = 0
      C                   EVAL      @AmtDiff = 0
      C                   EVAL      @ChgDiff = 0
      C                   EVAL      @CommDiff = 0
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2184,7 +2195,7 @@
       * Calls:                                                        *
       *                                                               *
       *****************************************************************
- 
+
      C     *InzSR        BEGSR
       *
       ** Key Lists for Withholding Tax Customer detail
@@ -2339,7 +2350,7 @@
      C                   KFLD                    LU_UDBK                        186001
      C                   KFLD                    LU_UDMK                        186001
      C                   KFLD                    @TVInd                         186001
- 
+
       ** Full Key Lists for Corporate allocation - SECOALL4                                   215575
       *  Book                                                                                 215575
      C     CorpabKey     KLIST                                                                215575
@@ -2420,7 +2431,7 @@
       *
      C                   EVAL      @RoundingRec = 'N'
      C                   EVAL      Upd_Rounding = 'N'                           185604
- 
+
      C                   EVAL      In_PSEQ =  001
      C                   EVAL      In_CTIN = *BLANKS
      C                   EVAL      In_PREF = '000000'
@@ -2441,11 +2452,11 @@
      C                   ELSE
      C                   EVAL      @PositDate = In_PSVL
      C                   ENDIF
- 
+
      C                   IF        In_PEVT = 'CP'
      C                   EVAL      @LCouponD = InDivDate
      C                   ENDIF
- 
+
      C                   MOVE      InPoset       WrkPoset
      C     COALRF        IFNE      *BLANKS                                                    215575
      C                   EVAL      Wk_PAMD = 0                                                215575
@@ -2454,9 +2465,33 @@
      C                   EVAL      Wk_TXNM = 0                                                236594
      C                   EVAL      Wk_TXST = 0                                                236594
      C                   EVAL      Wk_TAXA = 0                                                236594
- 
+     C     *DTAARA       DEFINE                  SDSTAT                                     AR324886
+     C                   IN        SDSTAT                                                   AR324886
+
      C                   ENDSR
       *****************************************************************
+      /EJECT                                                                                AR324886
+      *****************************************************************                     AR324886
+     C     PSAUDT        BEGSR                                                              AR324886
+      *                                                                                     AR324886
+     C                   EVAL      PARECI = Nw_RECI                                         AR324886
+     C                   EVAL      PAPBCA = Nw_PBCA                                         AR324886
+     C                   EVAL      PAPSSH = Nw_PSSH                                         AR324886
+     C                   EVAL      PAPCPY = Nw_PCPY                                         AR324886
+     C                   EVAL      PAPDUD = Nw_PDUD                                         AR324886
+     C                   EVAL      PAPEVT = Nw_PEVT                                         AR324886
+     C                   EVAL      PAPTFR = Nw_PTFR                                         AR324886
+     C                   EVAL      PATNLU = Nw_TNLU                                         AR324886
+     C                   EVAL      PATXBS = Nw_TXBS                                         AR324886
+     C                   EVAL      PABNFO = Nw_BNFO                                         AR324886
+     C                   EVAL      PAEXCD = Nw_EXCD                                         AR324886
+     C                   EVAL      PALUSR = LIBR + 'OWNER'                                  AR324886
+     C                   EVAL      PALCD  = Nw_LCD                                          AR324886
+     C                   EVAL      PALCTP = Nw_CHTP                                         AR324886
+     C                   WRITE     PSAUTDF                                                  AR324886
+      *                                                                                     AR324886
+     C                   ENDSR                                                              AR324886
+      *****************************************************************                     AR324886
       /EJECT
       *****************************************************************
       *                                                               *

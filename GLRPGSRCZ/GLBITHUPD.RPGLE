@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD053119           Date 02Dec19               *
-      *  Prev Amend No. MD054696           Date 29Oct19               *
+      *  Last Amend No. 248891             Date 01Jun20               *
+      *  Prev Amend No. 254657             Date 01Jun20               *
+      *                 MD053119           Date 02Dec19               *
+      *                 MD054696           Date 29Oct19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD052732           Date 12Mar19               *
       *                 249405             Date 09Mar18               *
@@ -84,6 +86,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  248891 - Journal Batch Entry has a Valid Status of 'No'.     *
+      *           Partially applied core fix#255331.                  *
+      *  255331 - Batch with Batch Header showing VALID = NO, when    *
+      *          all entries are valid.                               *
+      *  254657 - Front Office ID overridden with APCTRANVU*** when   *
+      *           user tries to amend/accept JE inserted via APIs     *
       *  MD053119 - Conditioned UPDPOST subroutine on CGL016 feature  *
       *  MD054696 - Journal Entries Avoid Shadow Postings Update.     *
       *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *
@@ -643,7 +651,7 @@
       *
      C                   MOVE      WVSUB1        WVSUB2
       *
-     C                   MOVE      B1FRNT        BRFRNT
+     C**********         MOVE      B1FRNT        BRFRNT                                       254657
      C                   MOVE      B1AFRT        BRAFRT
      C                   MOVE      B1TMST        BRTMST
      C**********         MOVE      B1BHAI        BRBHAI                                       239155
@@ -657,7 +665,10 @@
       ** If retail account access security is on....                                          237621
                                                                                               237621
      C     JAVAUSER      IFEQ      'Y'                                                        237621
-     C     CGL037        ANDEQ     'Y'                                                        237621
+     C*****CGL037        ANDEQ     'Y'                                                 237621 254657
+     C     BRFRNT        ANDEQ     *BLANKS                                                    254657
+     C                   MOVE      B1FRNT        BRFRNT                                       254657
+     C     CGL037        IFEQ      'Y'                                                        254657
                                                                                               237621
       ** ... find out what the menu option taken was and suffix the                           237621
       ** front office ID accordingly.                                                         237621
@@ -682,6 +693,7 @@
      C                   ENDIF                                                              MD046910
                                                                                               CSC054
      C                   EndIf                                                                237621
+     C                   ENDIF                                                                254657
       *                                                                                       CAP084
       ** Delete batch header record if B1BHAI is flagged as 'D'                               CAP084
       *                                                                                       CAP084
@@ -835,6 +847,25 @@
      C     B1VALI        IFEQ      'N'
      C                   MOVE      B1VALI        BRVALI
      C                   ENDIF
+      *                                                                                       255331
+      ** Determine if all batch items are valid.                                              255331
+      *                                                                                       255331
+     C                   MOVE      'Y'           JEVALI            1                          255331
+     C     B1BTNB        SETLL     GLJENPL1                                                   255331
+     C     B1BTNB        READE     GLJENPL1                               01                  255331
+     C                   DOW       *IN01 = *OFF AND JEVALI = 'Y'                              255331
+     C     BTVALI        IFEQ      'N'                                                        255331
+     C                   MOVE      'N'           JEVALI                                       255331
+     C                   ENDIF                                                                255331
+     C     B1BTNB        READE     GLJENPL1                               01                  255331
+     C                   ENDDO                                                                255331
+      *                                                                                       255331
+      ** If Valid Indicator and all batch item are valid, Set valid field to 'Y'              255331
+      *                                                                                       255331
+     C     B1VALI        IFEQ      'Y'                                                        255331
+     C     JEVALI        ANDEQ     'Y'                                                        255331
+     C                   MOVE      B1VALI        BRVALI                                       255331
+     C                   ENDIF                                                                255331
       *                                                                                      BUG3085
       ** If Security on Journal Entry is *ON, set Last Amend                                 BUG3085
       ** User field to system user.  Use correct user field if java user                     BUG3085

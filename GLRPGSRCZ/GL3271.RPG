@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CSD101             Date 07Dec18               *
+      *  Last Amend No. AR703901           Date 01Jun20               *      
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CSD101             Date 07Dec18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD034366           Date 09Sep15               *
       *                 MD034451C          Date 02Mar16               *
@@ -235,6 +236,9 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  AR703901 - User is able to see list of accounts that it's not*
+      *             authorised to. Check if user has authority to its *
+      *             branch before loading to subfile.(Child: AR703902)*      
       *  CER050 - Annualised Percentage Rate                          *
       *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
@@ -953,6 +957,9 @@
      FACCNTL6 IF  E           K        DISK                               CFT004
      F            ACCNTABF                          KRENAMEACCNT6         CFT004
      F                                              KINFSR *PSSR          CFT004
+     FMBRBS   IF  E           K        DISK         KINFSR *PSSR                            AR703901
+      ** Valid Booking Branches by User.                                                    AR703901
+      *                                                                                     AR703901
      FGLACNTL3IF  E           K        DISK         KINFSR *PSSR                              CAP205
      F*                                                                                       CRE101
      F/COPY OFCPYSRCZ,CRE101_074                                                              CRE101
@@ -1145,6 +1152,7 @@
      E                    ZA2        16  1               ZALIGN/ZEDIT ARRAY
      E** ARRAY FOR RATE AND BALANCE
      E                    RATN        6 11 0 BALN   15 0
+     E                    WWVBRX    900  3                                                  AR703901     
       ** Sum of weightings array                                                              CGL062
      E                    SUM        10  3 0                                                  CGL062
       ** Check Digit array                                                                    CGL062
@@ -3088,6 +3096,7 @@
      C                     END                                            074576
      C*                                                                   074576
      C           WFMT      DOUNE'F0'
+     C                     MOVE *BLANKS   ZAMSID                                            AR703901
      C                     WRITEGL3271C1
      C/COPY WNCPYSRC,GL3271C230
      C*                                                                   074576
@@ -3770,7 +3779,25 @@
      C                     WRITEGL3271S0
      C                     END
      C                     END
+      *                                                                                     AR703901
+      ** Check if user has authority in booking branch                                      AR703901
+      *                                                                                     AR703901
+     C                     MOVE 'Y'       WSHOW   1                                         AR703901
+     C           SUSER     CHAINMBRBS                80                                     AR703901
+     C           *IN80     IFEQ *OFF                                                        AR703901
+     C           RECI      ANDEQ'D'                                                         AR703901
+     C                     MOVEAVBRX      WWVBRX                                            AR703901
+     C           BRCA      LOKUPWWVBRX                   80                                 AR703901
+     C           *IN80     IFEQ *OFF                                                        AR703901
+     C                     MOVE 'N'       WSHOW                                             AR703901
+     C                     ENDIF                                                            AR703901
+     C                     ENDIF                                                            AR703901
+      *                                                                                     AR703901
+      ** If there is no record for either user or branch in MBRBS                           AR703901
+      ** if the branch is invalid, display it on the browser                                AR703901
+      *                                                                                     AR703901
      C           *IN23     IFEQ '0'                          B4
+     C           WSHOW     ANDEQ'Y'                                                         AR703901
      C*                                                                   S01408
      C/COPY WNCPYSRC,GL3271CP15                                           S01408
      C*                                                                   S01408

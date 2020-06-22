@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. 250665             Date 01Jun20               *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -42,6 +43,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  250665 - Nominal Decimal Places in Securities Input.         *
+      *           Allow input of NMDP for securities with processing  *
+      *           types 7 and 8.  If field is left blank, NMDP will   *
+      *           be equal to 4 and nominal ccy's NMDP for processing *
+      *           types 7 and 8 respectively.  Applied 235696.        *      
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -193,6 +199,11 @@
  
      C                   IF        OKNMDP <> 'N'
  
+     C                   IF        CEU018 = 'Y' AND                                           250665
+     C                             DDNMDP <> *BLANKS                                          250665
+     C                   MOVE      DDNMDP        S1NMDP                                       250665
+     C                   ELSE                                                                 250665
+      *                                                                                       250665
      C                   SELECT
       *
       ** If processing type is '7', field must be equal to '4'.
@@ -215,6 +226,8 @@
      C                   ENDIF
  
      C                   ENDSL
+                                                                                              250665
+     C                   ENDIF                                                                250665
  
      C                   ENDIF
  
@@ -238,21 +251,21 @@
       **  Nominal decimal places - 4  if processing type = 7                                  186556
       **       - Obtain from SDCURRPD if processing type = 8                                  186556
       *                                                                                       186556
-     C                   IF        PPROT = '7' OR
-     C                             PPROT = '8'
+     C**********         IF        PPROT = '7' OR                                             250665
+     C**********                   PPROT = '8'                                                250665
  
       ** If processing type is '7', field must be equal to '4'.                               186556
       *                                                                                       186556
-     C                   IF        PPROT = '7'                                                186556
-     C                   Z-ADD     4             S1NMDP                                       186556
-     C                   END                                                                  186556
+     C**********         IF        PPROT = '7'                                         186556 250665
+     C**********         Z-ADD     4             S1NMDP                                186556 250665
+     C**********         END                                                           186556 250665
       *                                                                                       186556
       ** If processing type is '8', field is equal to nominal ccy's                           186556
       ** number of decimal places.                                                            186556
       *                                                                                       186556
-     C                   IF        PPROT = '8'                                                186556
-     C                   Z-ADD     PNMDP         S1NMDP                                       186556
-     C                   END                                                                  186556
+     C**********         IF        PPROT = '8'                                         186556 250665
+     C**********         Z-ADD     PNMDP         S1NMDP                                186556 250665
+     C**********         END                                                           186556250665
                                                                                               186556
      C***********        IF        DDNMDP <> *BLANK AND                                       186556
      C***********                  DDACTN <> 'A'                                              186556
@@ -263,7 +276,7 @@
      C***********        ENDIF                                                                186556
       *
       ** else entry is optional and must be between 0 and 4.
-     C                   ELSE
+     C**********         ELSE                                                                 250665
  
      C                   IF        DDNMDP <> *BLANK
      C                   IF        DDNMDP < '0' OR
@@ -272,10 +285,11 @@
      C                   ADD       1             IDx
      C                   MOVEL     'DDNMDP'      FldNamXAr(IDx)
      C                   MOVEL     'SEA0140'     MsgIdXAr(IDx)
+     C                   MOVEL     DDNMDP        MsgDtaXAr(IDx)                               250665
      C                   ENDIF
      C                   ENDIF
  
-     C                   ENDIF
+     C**********         ENDIF                                                                250665
  
      C                   ENDSR
       *

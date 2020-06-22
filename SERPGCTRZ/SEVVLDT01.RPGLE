@@ -17,12 +17,13 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR1075401          Date 01Jun20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       * Midas Release 4.01 -------------------------------------------*
       *                 CSC011             Date 18Sep01               *
       * Midas Release 4 --------------- Base -------------------------*
@@ -32,15 +33,17 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1075401 - Increase QANOML and QAOTNM length in PMCPOSPD.   *
+      *              Recompiled. (Child: AR1075402)                   *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CSC011 - 24x7 Midas Availability                             *
       *  CAP060 - Midas APIs, Full Security Prices API                *
       *                                                               *
       *****************************************************************
- 
+
      FPMAPOSLL  IF   E           K DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -52,56 +55,56 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Rundat
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
- 
+
      D SDSTRD        E DS                  EXTNAME(SDSTRDPD)
       ** EXTERNAL DS FOR SECURITIES TRADING DETAILS
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CSC011
       ** Switchable features details                                                          CSC011
                                                                                               CSC011
@@ -113,21 +116,21 @@
                                                                                               CSC011
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Error flag passed back from ZDATE1
      D ErrorFlag       S              1A
- 
+
       ** Midas day number
      D ZDAYNO          S              5P 0
                                                                                               CSC011
@@ -152,9 +155,9 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   MOVE      *BLANK        RetCodeIn
      C                   MOVE      *BLANK        FldNamXAr
      C                   MOVE      *BLANK        MsgIDXAr
@@ -180,13 +183,13 @@
      C                   EVAL      MsgIDXAr(Idx) = 'MMA0816'
      C                   EVAL      DDVDTOK   = 'N'
      C                   ELSE
- 
+
      C                   CALLB     'ZDATE1'
      C                   PARM                    DATEA
      C                   PARM      *ZEROS        ZDAYNO
      C                   PARM                    BJDFIN
      C                   PARM                    ErrorFlag
- 
+
       **   - invalid format or not numeric
      C     ErrorFlag     IFEQ      'Y'
      C                   ADD       1             Idx
@@ -226,7 +229,7 @@
      C**********         Z-ADD     AGRDNB        PVDT                                         CSC011
      C                   Z-ADD     WRunday       PVDT                                         CSC011
      C                   ENDIF
- 
+
       * If portfolio management is on
      C                   IF        BGPFMG     = 'Y'
      C                   IF        DDPTFR <> *BLANKS
@@ -261,7 +264,7 @@
      C                             WPTFR <> QAPTFR OR
      C                             DDPSSN <> QATDSS OR
      C                             WTVDA <> QATVDA
- 
+
       * Error 202: Value Date entered is later than the run date
      C                   ADD       1             Idx
      C                   EVAL      FldNamXAr (Idx) = 'DDPVDT'
@@ -282,7 +285,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -325,7 +328,7 @@
      C                   PARM                    QATNMC            3
       ** Portfolio currency code
      C                   PARM                    QAPTCY            3
- 
+
       ** Value Date OK flag
      C                   PARM                    DDVDTOK           1
       *
@@ -365,7 +368,7 @@
                                                                                               CSC011
      C                   ENDIF                                                                CSC011
                                                                                               CSC011
- 
+
       * Access Installation Control Data record fo Securities Trading
       * (Database error handling done in access program).
       *
@@ -380,15 +383,15 @@
      C                   KFLD                    DDPSSN
      C                   KFLD                    WTVDA             1
      C                   KFLD                    PVDT              5 0
- 
+
       *
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

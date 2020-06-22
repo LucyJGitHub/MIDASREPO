@@ -9,7 +9,8 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD52377             Date 28Nov18             */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*       Prev Amend No. 095907             Date 14Jun04              */
@@ -33,6 +34,9 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD52377 -	After COB Component SEC1002 finished running the */
+/*                 journalfor file TRADSD is removed resulting      */
+/*                 to MSGW on SEC0304                               */
 /*       MD046248 - Finastra Rebranding                              */
 /*       095907 - CHANGE SE DROP PROCEDURE IF S01513 IS ON :        */
 /*                ----------------------------------------------    */
@@ -168,11 +172,13 @@
                 ENDJRNPF   FILE(HSTTRD HSTTRA SETLED SETLEA TRAUTD +
                              TRATXD) JRN(ICJRN)                       /*086486*/
              MONMSG     MSGID(CPF0000)                                /*095907*/
+                ENDJRNPF   FILE(TRADSD) JRN(ICJRN) /*MD52377 */
+                MONMSG     MSGID(CPF0000) /*MD52377 */
              ENDDO                                                    /*CCB009*/
 /*/COPY WNCPYSRC,SEC1002010                                          */
              ENDDO                                                    /*086486*/
-             ENDJRNPF   FILE(TRADSD) JRN(ICJRN)                       /*095907*/
-             MONMSG     MSGID(CPF0000)                                /*095907*/
+/*           ENDJRNPF   FILE(TRADSD) JRN(ICJRN)               /*095907 MD52377 */
+/*           MONMSG     MSGID(CPF0000)                        /*095907 MD52377 */
              IF COND(&S01401 *EQ 'Y') THEN(DO)
              ENDJRNPF   FILE(TRADSDX1 TRADSDX2) JRN(ICJRN)            /*095907*/
              MONMSG     MSGID(CPF0000)                                /*095907*/

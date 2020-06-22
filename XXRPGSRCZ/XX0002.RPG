@@ -1,0 +1,628 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas XX SE Month End Exchange Rates Maintenance')     *
+/*OVRF*: OVRDBF FILE(XXMEXRPX) TOFILE(XXMEXRPD) SHARE(*NO)          : *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading                                   *
+      *                                                               *
+      *  XX0002 - XX SE Month End Exchange Rates Maintenance          *
+      *                                                               *
+      *  Function:  This program allows input of monthly exchange     *
+      *             records.                                          *
+      *                                                               *
+      *  Called By: XXC0002 - XX SE Month End Exchange Rates Input    *
+      *                                                               *
+      *  Calls    : None                                              *
+      *                                                               *
+      *  (c) Finastra Technology, Inc. 2017                           *
+      *                                                               *
+      *  Last Amend No. MD052141           Date 17Oct18               *
+      *  Prev Amend No. DUG504 *CREATE     Date 07Sep17               *
+      *                 nnnnnn             Date ddmmmyy               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD052141 - Recompiled due to changed DSPF                    *
+      *  DUG504 - New Cost of Funds                                   *
+      *                                                               *
+      *****************************************************************
+     FXX0002DFCF  E                    WORKSTN
+     F                                        RRN   KSFILE SUBFLREC
+     FXXMEXRPDIF  E           K        DISK
+     FXXMEXRPXUF  E           K        DISK                      A
+     F            SEMEXRD0                          KRENAMEXXMEXRXX
+     E                    CYM        12  4 0
+     E                    ZEROS      20  1
+     E                    ERR     1  12 76
+     E                    NUM    10  10  1
+     E                    ZA1        16  1               ZALIGN SR. ARRAY
+     E                    ZA2        16  1               ZALIGN SR. ARRAY
+     E                    ZS1        15  1 0
+     E                    ZS2        21  1
+     E/COPY ZSRSRC,ZDATE2Z1
+     I            DS
+     I                                        1  150WORK15
+     I                                        1  150ZS1
+     I            DS
+     I                                        1  21 ZOUT21
+     I                                        6  21 ZOUT16
+     I            DS
+     I                                        1   40ZYM
+     I                                        1   20ZYEAR
+     I                                        1   2 ZYEARA
+     I                                        3   40ZMTH
+     I                                        3   4 ZMTHA
+      *
+      ** Error reporting data structure
+     ILDA         DS                            256
+     I                                      134 141 @DBFIL
+     I                                      142 170 @DBKEY
+     I                                      171 180 @DBPGM
+     I                                      181 1830@DBASE
+     I                                      134 183 @DBALL
+     IDATA      E DSXXMEXRPD
+     I              DMEYR                           ##YEAR
+     I              DMECY                           ##CCCY
+     I              DMEMN                           ##MNTH
+      *
+      ** First DS For Access Programs, Short Data Structure
+     IDSFDY     E DSDSFDY
+      *
+      ** First DS For Access Programs, Long Data Structure
+     IDSSDY     E DSDSSDY
+      *
+      ** External DS For Bank Details
+     ISDBANK    E DSSDBANKPD
+      *
+      ** External DS For Currency Detail
+     ISDCURR    E DSSDCURRPD
+      *
+     I           SDS
+     I                                      244 253 WSID
+     I                                      254 263 USIDX
+      *
+     C           *NAMVAR   DEFN           LDA
+     C           *LIKE     DEFN @DBALL    @DBSAV
+      *
+      ** Access LF/SDBANKL1
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C                     Z-ADD1         @DBASE           ***************
+     C                     MOVEL*BLANKS   @DBFIL           * DB ERROR 01 *
+     C                     MOVEL'SDBANKL1'@DBKEY           ***************
+     C                     EXSR *PSSR
+     C                     END                             - E1
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     MOVE '1'       *IN98
+     C                     END
+      *
+      ***  Determine Months & Years of current year (starting from LEOY + 1)
+      *
+     C                     EXSR DETMAY
+      *
+     C                     MOVE '0'       ZEROS
+     C                     Z-ADD18        #C      20
+     C                     SETON                     70    *  PROTECT SCREEN
+      *
+     C           SEMEXK    KLIST
+     C                     KFLD           DMEYR
+     C                     KFLD           DMECY
+     C                     KFLD           DMEMN
+      *
+     C                     MOVEL*BLANK    DMEYR
+     C                     MOVEL*BLANK    DMECY
+     C                     MOVEL*BLANK    DMEMN
+     C           *INKC     DOWEQ'0'
+     C                     EXSR INPUT
+     C  NKC                EXSR DSPLAY
+     C                     END
+      *
+     C                     SETON                     LR
+      *****************************************************************
+      *
+     C           INPUT     BEGSR
+      *
+      ** Access Record and Display Screen
+      *
+     C                     MOVELDMEYR     ##YEAR
+     C                     MOVELDMECY     ##CCCY
+     C                     MOVELDMEMN     ##MNTH
+     C                     Z-ADD*ZERO     DMERT
+     C           SEMEXK    CHAINSEMEXRD0             99    *
+     C           SEMEXK    CHAINXXMEXRXX             60    *
+     C                     EXSR CNVFLD
+     C                     WRITESCREEN
+     C                     WRITESCRMESS
+     C                     READ SCREEN                   99*
+     C                     MOVEL*BLANK    DDERR
+      *
+      ** Do While CK/3 Not Taken
+      *
+     C           *INKC     DOWEQ'0'
+     C           *INKG     ANDEQ'0'
+      *
+      ** Rolldown
+      *
+     C           *IN05     IFEQ '1'
+     C                     EXSR RDPFIL
+     C           *IN99     IFEQ '1'
+     C           *HIVAL    SETGTSEMEXRD0
+     C                     EXSR RDPFIL
+     C         99          EXSR BLKFLD
+     C                     MOVELERR,1     DDERR            *END OF FILE
+     C                     END
+     C                     END
+      *
+      ** RollUP
+      *
+     C           *IN06     IFEQ '1'
+     C                     EXSR RDFFIL
+     C           *IN99     IFEQ '1'
+     C           *LOVAL    SETLLSEMEXRD0
+     C                     EXSR RDFFIL
+     C         99          EXSR BLKFLD
+     C         99          MOVELERR,1     DDERR            *END OF FILE
+     C        N99          MOVELERR,2     DDERR            *START OF FILE
+     C                     END
+     C                     END
+      *
+      ** If Rolldown or Rollup
+      *
+     C           *IN05     IFEQ '1'
+     C           *IN06     OREQ '1'
+     C                     MOVELDMEYR     ##YEAR
+     C                     MOVELDMECY     ##CCCY
+     C                     MOVELDMEMN     ##MNTH
+     C                     Z-ADD*ZERO     DMERT
+     C           SEMEXK    CHAINXXMEXRXX             60    *
+     C   60                SETON                     70    *  PROTECT SCREEN
+     C   60                SETON                     21    *  POSN CURSOR
+     C  N60                SETOF                     70    *  ENABLE SCREEN
+     C  N60                SETON                     24    *  POSN CURSOR
+     C                     EXSR CNVFLD
+     C                     END
+      *
+      ** If no rolldown or rollup
+      *
+     C           *IN05     IFEQ '0'
+     C           *IN06     ANDEQ'0'
+      *
+      ** Validation of screen fields
+      *
+     C                     EXSR VALIDD
+      *
+      ** In no errors
+      *
+     C           *IN10     IFEQ '0'
+      *
+      ** If the key fields have changed
+      *
+     C           DMEYR     IFNE ##YEAR
+     C           DMECY     ORNE ##CCCY
+     C           DMEMN     ORNE ##MNTH
+      *
+     C                     MOVELDMEYR     ##YEAR
+     C                     MOVELDMECY     ##CCCY
+     C                     MOVELDMEMN     ##MNTH
+     C                     Z-ADD*ZERO     DMERT
+     C           SEMEXK    CHAINXXMEXRXX             60    *
+     C   60                MOVELERR,10    DDERR            * TO ADD
+     C  N60                MOVELERR,11    DDERR            * TO UPDATE
+     C                     EXSR CNVFLD
+     C                     SETOF                     70    *  ENABLE SCREEN
+     C                     SETON                     24    *  POSN CURSOR
+      *
+      ** Else, update file if key fields are unchanged
+      *
+     C                     ELSE
+     C                     EXSR UPDFIL
+     C                     EXSR BLKFLD
+     C                     SETON                     70    *  PROTECT SCREEN
+     C                     SETON                     21    *  POSN CURSOR
+     C                     END
+     C                     END
+     C                     END
+      *
+      ** Display Screen
+      *
+     C                     WRITESCREEN
+     C                     WRITESCRMESS
+     C                     READ SCREEN                   99*
+     C                     MOVEL*BLANK    DDERR
+     C                     MOVEAZEROS     *IN,10
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *
+     C           UPDFIL    BEGSR
+      *
+     C                     MOVELDMEYR     ZYEARA
+     C                     MOVELDMEMN     ZMTHA
+     C                     Z-ADD1         X
+     C           ZYM       LOKUPCYM,X                    99*
+     C           *IN99     IFEQ '1'
+     C           *INKJ     ANDEQ'1'
+     C                     MOVELERR,12    DDERR            *CANT BE DELETED
+     C                     ELSE
+     C   KJN60             DELETXXMEXRXX
+     C   KJN60             MOVELERR,7     DDERR            *DELETED
+     C  NKJN60             UPDATXXMEXRXX
+     C  NKJN60             MOVELERR,8     DDERR            *UPDATED
+     C  NKJ 60             WRITEXXMEXRXX
+     C  NKJ 60             MOVELERR,9     DDERR            *ADDED
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *
+     C           DSPLAY    BEGSR
+      *
+     C                     MOVEL'N'       EXIT    1
+     C           EXIT      DOWEQ'N'
+      *
+     C                     EXSR FILLSB
+      *
+     C                     EXSR CNVFLD
+     C                     WRITESUBFLCTL
+     C                     WRITESUBMESS
+     C                     READ SUBFLCTL                 99*
+     C                     MOVEL*BLANK    DDERR
+      *
+      ** CK3 or CK12, End
+      *
+     C           *INKC     IFEQ '1'
+     C           *INKL     OREQ '1'
+     C                     EXSR BLKFLD
+     C                     MOVEL'Y'       EXIT
+     C                     END
+      *
+      ** Rolldown
+      *
+     C           *IN05     IFEQ '1'
+     C                     EXSR ROLDWN
+     C                     END
+      *
+      ** Select
+      *
+     C           *IN,04    IFEQ '0'
+     C                     READCSUBFLREC                 99*RECORD CHANGED
+     C           *IN99     IFEQ '0'
+     C                     MOVEL'Y'       EXIT
+     C                     SETOF                     70    *  ENABLE SCREEN
+     C                     SETON                     24    *  POSN CURSOR
+     C                     END
+     C                     END
+      *
+     C                     END
+     C                     ENDSR
+      ********************************************************************
+      *
+     C           FILLSB    BEGSR
+      *
+     C                     MOVEA'000'     *IN,1
+     C                     MOVEA'1'       *IN,4
+     C                     Z-ADD*ZERO     RRN
+     C                     WRITESUBFLCTL                   *
+     C           SEMEXK    SETLLXXMEXRPD
+     C                     EXSR RDFFIL
+     C           *IN99     IFEQ '0'
+     C                     MOVELDMEYR     ##YEAR
+     C                     MOVELDMECY     ##CCCY
+     C                     MOVELDMEMN     ##MNTH
+     C                     ELSE
+     C                     MOVEL*BLANK    ##YEAR
+     C                     MOVEL*BLANK    ##CCCY
+     C                     MOVEL*BLANK    ##MNTH
+     C                     MOVEL*BLANK    DMEYR
+     C                     MOVEL*BLANK    DMECY
+     C                     MOVEL*BLANK    DMEMN
+     C           DDERR     IFEQ *BLANK
+     C                     MOVELERR,1     DDERR            *END OF FILE
+     C                     END
+     C                     END
+      *
+     C           *IN99     DOWEQ'0'
+     C                     ADD  1         RRN     40     04*
+     C                     EXSR CNVFLD
+     C                     WRITESUBFLREC
+     C           RRN       IFEQ #C
+     C                     EXSR RDFFIL
+     C           *IN99     IFEQ '1'
+     C                     MOVEL*BLANK    DMEYR
+     C                     MOVEL*BLANK    DMECY
+     C                     MOVEL*BLANK    DMEMN
+     C           DDERR     IFEQ *BLANK
+     C                     MOVELERR,1     DDERR            *END OF FILE
+     C                     END
+     C                     ELSE
+     C                     SETON                         99*
+     C                     END
+     C                     ELSE
+     C                     EXSR RDFFIL
+     C           *IN99     IFEQ '1'
+     C                     MOVEL*BLANK    DMEYR
+     C                     MOVEL*BLANK    DMECY
+     C                     MOVEL*BLANK    DMEMN
+     C           DDERR     IFEQ *BLANK
+     C                     MOVELERR,1     DDERR            *END OF FILE
+     C                     END
+     C                     END
+     C                     END
+     C                     END
+      *
+     C           *IN,4     IFEQ '1'
+     C                     MOVEA'010'     *IN,1
+     C                     ELSE
+     C                     MOVEA'111'     *IN,1
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *
+     C           ROLDWN    BEGSR
+      *
+     C                     Z-ADD*ZERO     RRN
+     C                     MOVEL##YEAR    DMEYR
+     C                     MOVEL##CCCY    DMECY
+     C                     MOVEL##MNTH    DMEMN
+     C           SEMEXK    SETGTXXMEXRPD
+     C                     EXSR RDPFIL
+      *
+     C           *IN99     DOWEQ'0'
+     C           RRN       ANDLT#C
+     C                     EXSR RDPFIL
+     C                     ADD  1         RRN
+     C                     END
+      *
+     C           *IN99     IFEQ '1'
+     C                     MOVEL*BLANK    DMEYR
+     C                     MOVEL*BLANK    DMECY
+     C                     MOVEL*BLANK    DMEMN
+     C                     MOVELERR,2     DDERR            *START OF FILE
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *
+     C           VALIDD    BEGSR
+      *
+      ** CK4 - Bypass Validation
+      *
+     C           *INKJ     CABEQ'1'       EVALID
+      *
+      ** Year
+      *
+     C                     MOVELDMEYR     TEST    1
+     C                     EXSR TSTNUM
+     C  N99N10             MOVELERR,3     DDERR
+     C  N99                SETON                     101121
+     C                     MOVE DMEYR     TEST
+     C                     EXSR TSTNUM
+     C  N99N10             MOVELERR,3     DDERR
+     C  N99                SETON                     101121
+      *
+      ** Access  Currency file
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*KEY'    P@OPTN
+     C                     PARM DMECY     P@KEY3  3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C                     MOVELERR,4     DDERR                        2 *
+     C                     SETON                     1012              ***
+     C                     END                             E1
+      *
+      ** Month
+      *
+     C                     MOVELDMEMN     TEST
+     C                     EXSR TSTNUM
+     C  N99N10             MOVELERR,5     DDERR
+     C  N99                SETON                     1013
+     C                     MOVE DMEMN     TEST
+     C                     EXSR TSTNUM
+     C  N99N10             MOVELERR,5     DDERR
+     C  N99                SETON                     1013
+     C           DMEMN     IFLT '01'
+     C           DMEMN     ORGT '12'
+     C     N10             MOVELERR,5     DDERR
+     C                     SETON                     1013
+     C                     END
+      *
+      ** Rate (If input enabled)
+      *
+     C           *IN70     IFEQ '0'
+     C                     MOVEL*BLANK    ZFIELD
+     C                     MOVELDEXRT     ZFIELD
+     C                     Z-ADD7         ZADIG
+     C                     Z-ADD8         ZADEC
+     C                     EXSR ZALIGN
+     C                     MOVE ZFIELD    DMERT
+     C           *IN99     IFEQ '1'
+     C           DMERT     OREQ 0
+     C           A6SPRT    OREQ 1
+     C           DMERT     ANDNE1
+     C  N10                MOVELERR,6     DDERR
+     C                     SETON                     101424
+     C                     END
+     C                     END
+      *
+     C           EVALID    TAG
+     C                     ENDSR
+      *****************************************************************
+      *
+     C           TSTNUM    BEGSR
+      *
+     C                     Z-ADD1         X       20
+     C           TEST      LOKUPNUM,X                    99*
+     C                     ENDSR
+      *****************************************************************
+      *
+     C           CNVFLD    BEGSR
+      *
+      ** Access  Currency file
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   P@RTCD
+     C                     PARM '*KEY'    P@OPTN
+     C                     PARM DMECY     P@KEY3  3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C           DMECY     OREQ *BLANK
+     C                     MOVEL*BLANK    DSPOT
+     C                     MOVEL*BLANK    DMDIN
+     C                     ELSE
+     C                     Z-ADD*ZERO     ZFLD15
+     C                     MOVE A6SPRT    ZFLD15
+     C                     Z-ADD8         ZDECS
+     C                     MOVE ' '       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVEL*BLANK    DSPOT
+     C                     MOVELZOUT16    DSPOT
+     C           A6MDIN    IFEQ 'M'
+     C                     MOVEL'M'       DMDIN
+     C                     ELSE
+     C                     MOVEL'D'       DMDIN
+     C                     END
+     C                     END
+      *
+      ** Echange Rate
+      *
+     C           DMERT     IFNE 0
+     C                     Z-ADD*ZERO     ZFLD15
+     C                     MOVE DMERT     ZFLD15
+     C                     Z-ADD8         ZDECS
+     C                     MOVE ' '       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVEL*BLANK    DEXRT
+     C**********           MOVELZOUT16    DEXRT                                              DUG504A
+     C                     MOVE ZOUT16    DEXRT                                              DUG504A
+     C                     ELSE
+     C                     MOVEL*BLANK    DEXRT
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *
+     C           RDFFIL    BEGSR
+      *
+     C                     READ SEMEXRD0                 99*
+     C                     EXSR SELCTN
+     C           SELT      DOWEQ'N'
+     C                     READ SEMEXRD0                 99*
+     C                     EXSR SELCTN
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *
+     C           RDPFIL    BEGSR
+      *
+     C                     READPSEMEXRD0                 99*
+     C                     EXSR SELCTN
+     C           SELT      DOWEQ'N'
+     C                     READPSEMEXRD0                 99*
+     C                     EXSR SELCTN
+     C                     END
+     C                     ENDSR
+      *****************************************************************
+      *
+     C           SELCTN    BEGSR
+      *
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'*'       SELT    1
+     C                     END
+     C           ESELCT    ENDSR
+      *****************************************************************
+      *
+     C           BLKFLD    BEGSR
+      *
+     C                     MOVEL*BLANK    DMEYR
+     C                     MOVEL*BLANK    DMECY
+     C                     MOVEL*BLANK    DMEMN
+     C                     MOVEL*BLANK    DEXRT
+     C                     MOVEL*BLANK    DSPOT
+     C                     MOVEL*BLANK    DMDIN
+     C                     MOVEL*BLANK    DATA
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  DETMAY - Determine Months & Years of Current Year            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DETMAY    BEGSR                           ** DETMAY *
+      *
+     C                     Z-ADD1         X       20
+     C           BJPEYD    ADD  1         ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZYM       CYM,X
+     C           X         DOWLT12
+     C                     ADD  1         X
+     C                     ADD  1         ZMTH
+     C           ZMTH      IFGT 12
+     C                     ADD  1         ZYEAR
+     C                     Z-ADD1         ZMTH
+     C                     END
+     C                     Z-ADDZYM       CYM,X
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C                     DUMP
+     C                     MOVEL@DBALL    @DBSAV
+     C           *LOCK     IN   LDA
+     C                     MOVEL@DBSAV    @DBALL
+     C                     MOVEL'XX0002'  @DBPGM                          58886
+     C                     OUT  LDA
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     END
+      *
+      ***  If *PSSR already run, then just end the program here.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+     C                     ENDSR
+      *****************************************************************
+     C/COPY ZSRSRC,ZALIGNZ2
+     C/COPY ZSRSRC,ZSEDITZ3
+     C/COPY ZSRSRC,ZDATE2Z2
+** ERR
+END OF FILE
+START OF FILE
+INVALID YEAR
+INVALID CURRENCY
+INVALID MONTH
+INVALID EXCHANGE RATE
+RECORD DELETED
+RECORD UPDATED
+RECORD ADDED
+PRESS ENTER TO ADD RECORD
+PRESS ENTER TO UPDATE RECORD (F10 TO DELETE IT)
+THIS RECORD CAN'T BE DELETED AS IT IS IN THE CURRENT PERIOD
+** NUM
+0123456789
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

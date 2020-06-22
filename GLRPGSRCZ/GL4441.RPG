@@ -10,8 +10,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD052570           Date 17Jul19               *
-      *  Prev Amend No. MD046592A          Date 24Sep18               *
+      *  Last Amend No. MD052490A          Date 18Jan19               *
+      *  Prev Amend No. MD052490           Date 03Jan19               *
+      *                 MD052570           Date 17Jul19               *
+      *                 MD046592A          Date 24Sep18               *
       *                 MD050886           Date 15May18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD044087           Date 14Feb17               *
@@ -112,6 +114,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052490A - Do not show postings from date account opened    *
+      *              when F5 (refresh) is pressed.                    *
+      *  MD052490 - Show postings from Last Statement Date of the     *
+      *             account when Posting Date is left blank.          *
+      *             Reverse fix GEMS209031.                           *
       *  MD052570 - Account details screen hangs when enquiring a     *
       *             closed account with customer already deleted.     *
       *             Do not issue DBASE Error if P@RTCD is '*CUSDEL'.  *
@@ -1694,7 +1701,24 @@
      C           *INKE     IFEQ *ON                                                           CGL131
      C           *LOVAL    SETLLRSACMTLD                                                      CGL131
      C**********           Z-ADD99999     POSDN                                      CGL131 MD024978
+     C           POSDA     IFNE *BLANKS                                                    MD052490A
+     C                     MOVE *BLANKS   ZFIELD                                           MD052490A
+     C                     MOVE POSDA     ZFIELD                                           MD052490A
+     C                     MOVE ZFIELD    ZDATE                                            MD052490A
+     C                     EXSR ZDATE1                                                     MD052490A
+     C                     Z-ADDZDAYNO    POSDN                                            MD052490A
+     C                     ELSE                                                            MD052490A
+     C           CGL131    IFEQ 'Y'                                                        MD052490A
      C                     Z-ADD0         POSDN                                             MD024978
+     C                     ELSE                                                            MD052490A
+     C                     Z-ADDLSTD      POSDN                                            MD052490A
+     C           CFSB      IFNE 0                                                          MD052490A
+     C           LSTP      ORNE 0                                                          MD052490A
+     C           DACO      ORNE LSTD                                                       MD052490A
+     C           LSTD      ADD  1         POSDN                                            MD052490A
+     C                     END                                                             MD052490A
+     C                     ENDIF                                                           MD052490A
+     C                     ENDIF                                                           MD052490A
      C                     ENDIF                                                              CGL131
       *                                                                                       CGL131
      C*                                                                   S01408
@@ -2292,7 +2316,8 @@
       *                                                                                       CGL131
      C*                                                                   S01408
      C**********           Z-ADDLSTD      POSDN                                        E21183 209031
-     C                     Z-ADD0         POSDN                                               209031
+     C**********           Z-ADD0         POSDN                                      209031 MD052490
+     C                     Z-ADDLSTD      POSDN                                             MD052490
      C*                                                                   S01408
      C/COPY WNCPYSRC,GL4441CP28                                           S01408
       *                                                                                       CGL131
@@ -2308,6 +2333,11 @@
      C********** DACO      ORNE LSTD                                                   049240 209031
      C********** LSTD      ADD  1         POSDN                                        049240 209031
      C**********           END                                                         049240 209031
+     C           CFSB      IFNE 0                                                           MD052490
+     C           LSTP      ORNE 0                                                           MD052490
+     C           DACO      ORNE LSTD                                                        MD052490
+     C           LSTD      ADD  1         POSDN                                             MD052490
+     C                     END                                                              MD052490
      C*                                                                   S01408
      C/COPY WNCPYSRC,GL4441CP42                                           S01408
       *                                                                                       CGL131

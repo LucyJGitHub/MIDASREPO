@@ -10,9 +10,10 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*                                                                   */
-/*       Last Amend No. MD045032           Date 07Apr18              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD055724           Date 29Apr20              */
+/*       Prev Amend No. MD052994           Date 25Nov19              */
+/*                      MD045032           Date 07Apr18              */
+/*                      MD046248           Date 27Oct17              */
 /*                      MD033997           Date 11May15              */
 /*                      MD027718           Date 23Sep14              */
 /*                      AR1097467          Date 02Apr13              */
@@ -39,6 +40,11 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD055724 - Reversal entries for previous facility posted    */
+/*                  twice on contingent facility account. Clear      */
+/*                  PF/LECLHIPD before every call to LER032.         */
+/*       MD052994 - CL Facility Event not Generated for Retail       */
+/*                  Account Debit Capitalised Interests              */
 /*       MD045032 - No reversal entries for previous facility.       */
 /*                  Clear CLE025 deleted history file.               */
 /*                  Applied for CLE169.                              */
@@ -316,6 +322,8 @@
            ENDDO                                                                          /*CLE134*/
   /* Call Generated Changes Extract Program */
  
+             IF         COND(&RERUN *NE 'INTCAP') THEN(DO)                              /*MD052994*/
+                                                                                        /*MD052994*/
 /**********  CALL LER031 */                                                               /*263413*/
              CALL       PGM(LER031) PARM(&RERUN)                                          /*263413*/
      IF COND(%SWITCH(XXXXXX11)) THEN(GOTO ERROR)
@@ -355,6 +363,8 @@
                           GOTO       CMDLBL(ERROR)                                        /*CLE147*/
              ENDDO                                                                        /*CLE147*/
              ENDDO                                                                        /*CLE147*/
+                                                                                        /*MD052994*/
+             ENDDO                                                                      /*MD052994*/
  
 /*/COPY WNCPYSRC,LERC30A001                                          */
   /* Call Update Extract Program */
@@ -365,14 +375,18 @@
              OVRDBF     FILE(HISUPD1) TOFILE(LEHISAL3) SHARE(*NO)                         /*CLE134*/
              ENDDO
              ELSE       CMD(DO)                                                           /*CLE134*/
-             CLRPFM     FILE(LECLHIPD)                                                  /*MD045032*/
+/**********  CLRPFM     FILE(LECLHIPD)                                         /*MD045032 MD055724*/
              OVRDBF     FILE(HISUPD1) TOFILE(HISUPD) SHARE(*NO)                           /*246032*/
              OVRDBF     FILE(HISUPD) SHARE(*NO)                                           /*246032*/
              ENDDO                                                                        /*CLE134*/
+                                                                                        /*MD055724*/
+             CLRPFM     FILE(LECLHIPD)                                                  /*MD055724*/
  /********** CALL LER032  */                                                            /*AR398038*/
              CALL       PGM(LER032) PARM(&RERUN)                                        /*AR398038*/
              DLTOVR     FILE(HISUPD1 HISUPD)                                              /*246032*/
-             IF         COND(&RERUN *EQ '      ') THEN(DO)                                /*CLE134*/
+/**********  IF         COND(&RERUN *EQ '      ') THEN(DO)           */      /*CLE134*/ /*MD052994*/
+             IF         COND((&RERUN *EQ '      ') *OR +
+                          (&RERUN *EQ 'INTCAP')) THEN(DO)                               /*MD052994*/
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                           CMDLBL(ERROR))                              /*157759*/
              ENDDO                                                                        /*CLE134*/

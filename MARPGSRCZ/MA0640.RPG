@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD024520           Date 24Jan14               *
+      *  Last Amend No. MD054200           Date 11Jun20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD024520           Date 24Jan14               *
       *                 MD021155           Date 08Jul13               *
       *                 CCB020             Date 06Aug12               *
       *                 AR787620           Date 10Jun11               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054200 - The dates on the StorQm reports are wrong         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD024520 - Archiving job SCC0420 is looping. Producing a     *
       *             lot of dumps.                                     *
@@ -82,6 +84,38 @@
      ILDA       E DSLDA                         256
      I***SDBNK**   E DSSDBANKPD                                                      CCB020 MD021155
      ISDSBNK    E DSSDSBNKTD                                                                MD021155
+      *                                                                                     MD054200
+     ISDBANK    E DSSDBANKPD                                                                MD054200
+     I              BJBANK                          CJBANK                                  MD054200
+     I              BJCNCD                          CJCNCD                                  MD054200
+     I              BJCYCD                          CJCYCD                                  MD054200
+     I              BJHOCY                          CJHOCY                                  MD054200
+     I              BJLCCY                          CJLCCY                                  MD054200
+     I              BJSBRC                          CJSBRC                                  MD054200
+     I              BJCUST                          CJCUST                                  MD054200
+     I              BJSLCD                          CJSLCD                                  MD054200
+     I              BJRDNB                          CJRDNB                                  MD054200
+     I              BJLCD                           CJLCD                                   MD054200
+     I              BJTYLC                          CJTYLC                                  MD054200
+     I              BJSUC                           CJSUC                                   MD054200
+     I              BJDFIN                          CJDFIN                                  MD054200
+     I              BJMRDT                          CJMRDT                                  MD054200
+     I              BJDNWD                          CJDNWD                                  MD054200
+     I              BJEYD                           CJEYD                                   MD054200
+     I              BJPEYD                          CJPEYD                                  MD054200
+     I              BJBVPD                          CJBVPD                                  MD054200
+     I              BJURPT                          CJURPT                                  MD054200
+     I              BJPCFU                          CJPCFU                                  MD054200
+     I              BJPCFQ                          CJPCFQ                                  MD054200
+     I              BJMDEL                          CJMDEL                                  MD054200
+     I              BJMODT                          CJMODT                                  MD054200
+     I              BJEFMT                          CJEFMT                                  MD054200
+     I              BJZONE                          CJZONE                                  MD054200
+      *                                                                                     MD054200
+      ** Data structure to check MPHAS for Close of Business                                MD054200
+      *                                                                                     MD054200
+     IMPHAS       DS                                                                        MD054200
+     I                                        1   1 STATUS                                  MD054200
       *
       ** Internal header record data structure.
       *
@@ -194,6 +228,13 @@
       ** Define local data area
       *
      C           *NAMVAR   DEFN           LDA
+      *                                                                                     MD054200
+      ** Setup MPHAS dataarea                                                               MD054200
+      *                                                                                     MD054200
+     C           *NAMVAR   DEFN           MPHAS                                             MD054200
+     C           *LOCK     IN   MPHAS                                                       MD054200
+     C                     MOVE STATUS    COBSTS  1                                         MD054200
+     C                     OUT  MPHAS                                                       MD054200
       *
       ** Internal header record initialisation.
       *
@@ -308,12 +349,49 @@
      C                     ELSE                                                               CCB020
      C                     EXSR *PSSR                                                         CCB020
      C                     ENDIF                                                              CCB020
+      *                                                                                     MD054200
+      ** Get Midas Run date from SDBANKPD                                                   MD054200
+      *                                                                                     MD054200
+     C                     CALL 'AOBANKR0'                                                  MD054200
+     C                     PARM '*MSG   ' @RTCD   7                                         MD054200
+     C                     PARM '*FIRST ' @OPTN   7                                         MD054200
+     C           SDBANK    PARM SDBANK    DSSDY                                             MD054200
+      *                                                                                     MD054200
+     C           @RTCD     IFNE *BLANKS                                                     MD054200
+     C           *LOCK     IN   LDA                                                         MD054200
+     C                     MOVEL'SDBANKPD'DBFILE                                            MD054200
+     C                     Z-ADD2         DBASE                                             MD054200
+     C                     MOVEL'MA0640'  DBPGM                                             MD054200
+     C                     MOVE *BLANKS   DBKEY                                             MD054200
+     C                     OUT  LDA                                                         MD054200
+     C                     EXSR *PSSR                                                       MD054200
+     C                     END                                                              MD054200
+      *                                                                                     MD054200
+     C                     Z-ADD*ZEROS    SRUND   50                                        MD054200
+      *                                                                                     MD054200
+     C           @RTCD     IFEQ *BLANKS                                                     MD054200
+     C                     MOVE CJRDNB    SRUND                                             MD054200
+     C                     ELSE                                                             MD054200
+     C                     EXSR *PSSR                                                       MD054200
+     C                     ENDIF                                                            MD054200
       *
       ** Move Midas day information to data structure.
       *
      C***********          MOVE BJRDNB    MRUN                            064177
      C***********          MOVE BJMRDT    MDATE                           064177
+      *                                                                                     MD054200
+     C                     Z-ADD*ZEROS    ZRUND   50                                        MD054200
+      *                                                                                     MD054200
+     C           JOBI      IFEQ 'SCC0420'                                                   MD054200
+     C           COBSTS    OREQ 'G'                                                         MD054200
      C                     MOVE PRUND     MRUN                            064177
+     C                     Z-ADDPRUND     ZRUND                                             MD054200
+      *                                                                                     MD054200
+     C                     ELSE                                                             MD054200
+     C                     MOVE SRUND     MRUN                                              MD054200
+     C                     Z-ADDSRUND     ZRUND                                             MD054200
+     C                     ENDIF                                                            MD054200
+      *                                                                                     MD054200
      C***********                                                         064177
      C***Convert*Midas*date*to*DD/MM/YY*format.************************   064177
      C***********                                                         064177
@@ -322,7 +400,8 @@
      C*                                                                   064177
      C                     CALL 'ZDATE2'
      C***********          PARM           BJRDNB                          064177
-     C                     PARM PRUND     WQ0002  50                      064177
+     C**********           PARM PRUND     WQ0002  50                                 064177 MD054200
+     C                     PARM ZRUND     WQ0002  50                                        MD054200
      C                     PARM           BLANK   1
      C                     PARM           RTNVAL  60
      C***********          PARM           BLANKS  7                       064177

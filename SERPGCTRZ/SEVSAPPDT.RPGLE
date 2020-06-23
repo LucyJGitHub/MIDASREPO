@@ -21,6 +21,7 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
+      *  Last Amend No. 261824             Date 01Jun20               *
       *  Last Amend No. MD046248           Date 27Oct17               *
       *  Prev Amend No. AR875871           Date 06Dec11               *
       *                 CRE073             Date 06Dec10               *
@@ -36,6 +37,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  261824 - Error messages appear which should not be as field  *
+      *           being validate is valid when compare to the input - *
+      *           Maturity Date. Fix is to make sure that field will  *
+      *           be validated only if Maturity Date is non-zero.     *      
       *  MD046248 - Finastra Rebranding                               *
       *  AR875871 - Cannot insert in FRN info tab when base rate is   *
       *             blank and contractual spread is non-blank         *
@@ -328,6 +333,7 @@
       *
      C                   IF        ZDAYNO <= S1ITLD OR
      C                             ZDAYNO > S1MATY
+     C                             and S1MATY <> *ZEROS                                       261824
      C                   ADD       1             IDx
      C                   EXSR      SRApplcdErr
      C                   MOVE      'SEA0506'     MsgIDXAr(IDx)

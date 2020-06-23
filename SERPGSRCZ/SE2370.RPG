@@ -32,8 +32,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 260331             Date 31Mar16               *
+      *  Last Amend No. 248698             Date 01Jun20               *
+      *  Prev Amend No. 248184             Date 01Jun20               *
+      *                 MD046248           Date 27Oct17               *
+      *                 260331             Date 31Mar16               *
       *                 215959             Date 21Mar16               *
       *                 AR1067108          Date 11Dec12               *
       *                 AR1001183A         Date 20Nov12               *
@@ -184,6 +186,11 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  248698 - Rounding discrepancies on some SE reports. Applied  *
+      *           fix 228682.                                         *
+      *  228682 - Recompiled due to ZCNSDZ1 changes. Applied 176594.  *     
+      *  248184 - Wrong security withholding tax calculation.  If     *
+      *           S01496, use 4 dec places for tax rate else use 2.   *
       *  MD046248 - Finastra Rebranding                               *
       *  260331 - Incorrect posting created due to a deleted diary    *
       *           event. Applied fix 255857.                          *
@@ -6146,13 +6153,23 @@
       *                                                                   S01447
       *** calculate amount deducted at source                             S01447
       *                                                                   S01447
+     C           S01496    IFEQ 'Y'                                                           248184
+     C           PAMD      MULT UTXRSR    WTASO  204                                          248184
+     C           WTASO     DIV  100       TASO      H                                         248184
+     C                     ELSE                                                               248184
      C           UTXRSR    DIV  100       URATE   54                      S01447
      C           PAMD      MULT URATE     TASO      H                     S01447
+     C                     ENDIF                                                              248184
       *                                                                   S01447
       *** calculate amount deducted refundable                            S01447
       *                                                                   S01447
+     C           S01496    IFEQ 'Y'                                                           248184
+     C           PAMD      MULT UTXRRF    WTASR  204                                          248184
+     C           WTASR     DIV  100       TASR      H                                         248184
+     C                     ELSE                                                               248184
      C           UTXRRF    DIV  100       URATE                           S01447
      C           PAMD      MULT URATE     TASR      H                     S01447
+     C                     ENDIF                                                              248184
       *                                                                   S01447
       *** Amount deducted by user is set to zero, as this is a depot      S01447
       *** position.                                                       S01447
@@ -6912,6 +6929,19 @@ AW   C                     Z-ADDDEC,1     WHASHD
      C                     EXSR *PSSR                                                       AR853119
      C                     ENDIF                                                            AR853119
       *                                                                                     AR853119
+      ** Check if S01496 - Private Banking Securities Trading Enhancements                    248184
+      *                                                                                       248184
+     C                     CALL 'AOSARDR0'                                                    248184
+     C                     PARM *BLANKS   @RTCD                                               248184
+     C                     PARM '*VERIFY' @OPTN                                               248184
+     C                     PARM 'S01496'  @SARD                                               248184
+      *                                                                                       248184
+     C           @RTCD     IFEQ *BLANK                                                        248184
+     C                     MOVE 'Y'       S01496  1                                           248184
+     C                     ELSE                                                               248184
+     C                     MOVE 'N'       S01496                                              248184
+     C                     END                                                                248184
+      *                                                                                       248184
      C                     ENDSR
       *****************************************************************                     AR853119
       /EJECT                                                                                AR853119

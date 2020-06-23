@@ -17,18 +17,24 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  Last Amend No. 248698             Date 01Jun20               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
-      *  LAST AMEND NO. 052254             DATE 07JAN94               *
-      *  PREV AMEND NO. S01117             DATE 22JAN91               *
+      *  Prev AMEND NO. 052254             DATE 07JAN94               *
+      *                 S01117             DATE 22JAN91               *
       *                 E20232             DATE 13DEC89               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  248698 - Rounding Discrepancies on some SE reports. Apply    *
+      *           fix 228682.                                         *
+      *  228682 - Incorrect round up/dwn of amounts due to SR/ZCONS   *
+      *           not storing decimal values which results to inaccu- *
+      *           rate profit/lose amounts of. Applied fix 176594.    *      
       *  052254 - CURRENT FACTOR amended from 9,8 to 10,9. ZPRC       *
       *           increased to 16,9 to handle change.                 *
       *  S01117 - New SD file changes (Release 10 Multibranching).    *
@@ -48,6 +54,8 @@
      C                     Z-ADDZPRC      ZPRC   169                      052254
      C                     Z-ADDZCDP      ZCDP    10                      S01117
      C                     Z-ADD0         WDIF   150
+     C                     Z-ADD0         ZCONS0 249                                          228682
+     C                     Z-ADD0         WDIF0  249                                          228682
      C*
      C*     Convert Nominal Dec places to Currency Dec. Places
      C*
@@ -59,15 +67,35 @@
      C*
      C* Check for rounding errors
      C*
+     C           ZCDP      IFEQ *ZERO                                                         228682
+      *                                                                                       228682
+     C           ZNOMLC    DIV  POWER8,DC WDIF0     H                                         228682
+     C           ZNOML     SUB  WDIF0     WDIF0                                               228682
+     C           WDIF0     MULT ZPRC      WDIF0     H                                         228682
+     C           WDIF0     MULT POWER8,DC WDIF0     H                                         228682
+      *                                                                                       228682
+     C                     ELSE                                                               228682
+      *                                                                                       228682
      C           ZNOMLC    DIV  POWER8,DC WDIF      H
      C           ZNOML     SUB  WDIF      WDIF
      C           WDIF      MULT ZPRC      WDIF      H
      C           WDIF      MULT POWER8,DC WDIF      H
+      *                                                                                       228682
+     C                     END                                                                228682
      C*
      C* Calculate consideration = face value(=nominal) x trade price
      C*
+     C           ZCDP      IFEQ *ZERO                                                         228682
+      *                                                                                       228682
+     C           ZNOMLC    MULT ZPRC      ZCONS0    H                                         228682
+     C           ZCONS0    ADD  WDIF0     ZCONS     H                                         228682
+      *                                                                                       228682
+     C                     ELSE                                                               228682
+      *                                                                                       228682
      C           ZNOMLC    MULT ZPRC      ZCONS     H
      C                     ADD  WDIF      ZCONS
+      *                                                                                       228682
+     C                     END                                                                228682
      C*
      C*     If price basis is P, divide consideration by 100
      C*

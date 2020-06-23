@@ -41,8 +41,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 226449             Date 24Jun15               *
+      *  Last Amend No. 248698             Date 01Jun20               *
+      *  Prev Amend No. 261507             Date 22May20               *
+      *                 MD046248           Date 27Oct17               *
+      *                 226449             Date 24Jun15               *
       *                 MD034776           Date 08Jul15               *
       *                 AR1067108          Date 11Dec12               *
       *                 AR1001183A         Date 20Nov12               *
@@ -180,6 +182,14 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  248698 - Rounding discrepancies on some SE reports. Applied  *
+      *           fix 228682.                                         *
+      *  228682 - Recompiled due to ZCNSDZ1 changes. Applied 176594.  *
+      *  261507 - Truncation of Average Price in display screen.      *
+      *           Introduced new field BKPRR with length 23 with 8    *
+      *           decimal places to be used as a result field when    *
+      *           computing the average price to avoid truncation of  *
+      *           the value.                                          *      
       *  MD046248 - Finastra Rebranding                               *
       *  226449 - Recompiled over changes made in /COPY ZDYYRZ3.      *
       *         - Applied for MD034387.                               *
@@ -2739,13 +2749,15 @@
      C           ZNNOMP    ANDGT0
       *                                                                   E32164
      C           ZNNOMP    IFEQ 0
-     C                     Z-ADD0         BKPR
+     C**********           Z-ADD0         BKPR                                                261507
+     C                     Z-ADD0         BKPRR  238H                                         261507
      C                     ELSE
      C***********ZZAPC     ADD  ZZAPP     WBKPR  150                      E34849
      C***********WBKPR     DIV  ZNNOMP    BKPR      H                     E34849
      C           ZNOMP     ADD  ZZSAL     NBKPR  150                      E34849
      C           ZZAPC     ADD  ZZAPS     WBKPR  150                      E34849
-     C           WBKPR     DIV  NBKPR     BKPR      H                     E34849
+     C********** WBKPR     DIV  NBKPR     BKPR      H                                  E34849 261507
+     C           WBKPR     DIV  NBKPR     BKPRR     H                                         261507
      C                     END
       *                                                                   E32164
      C                     END
@@ -2758,15 +2770,19 @@
      C           ZNNOMP    ANDLT0
       *                                                                   E32164
      C           ZNNOMP    IFEQ 0
-     C                     Z-ADD0         BKPR
+     C**********           Z-ADD0         BKPR                                                261507
+     C                     Z-ADD0         BKPRR                                               261507
      C                     ELSE
      C***********ZZAPC     ADD  ZZAPS     WBKPR                           E34849
      C***********WBKPR     DIV  ZNNOMP    BKPR      H                     E34849
      C           ZNOMP     ADD  ZZPUR     NBKPR                           E34849
      C           ZZAPC     ADD  ZZAPP     WBKPR                           E34849
-     C           WBKPR     DIV  NBKPR     BKPR      H                     E34849
-     C           BKPR      IFLT 0
-     C           BKPR      MULT -1        BKPR
+     C********** WBKPR     DIV  NBKPR     BKPR      H                                  E34849 261507
+     C********** BKPR      IFLT 0                                                             261507
+     C********** BKPR      MULT -1        BKPR                                                261507
+     C           WBKPR     DIV  NBKPR     BKPRR     H                                         261507
+     C           BKPRR     IFLT 0                                                             261507
+     C           BKPRR     MULT -1        BKPRR                                               261507
      C                     END
      C                     END
       *                                                                   E32164
@@ -2779,9 +2795,11 @@
      C           ZNNOMP    ANDLT0
       *                                                                   E32164
      C           ZZPUR     IFEQ 0
-     C                     Z-ADD0         BKPR
+     C**********           Z-ADD0         BKPR                                                261507
+     C                     Z-ADD0         BKPRR                                               261507
      C                     ELSE
-     C           ZZAPP     DIV  ZZPUR     BKPR      H
+     C********** ZZAPP     DIV  ZZPUR     BKPR      H                                         261507
+     C           ZZAPP     DIV  ZZPUR     BKPRR     H                                         261507
      C                     END
       *                                                                   E32164
      C                     END
@@ -2793,9 +2811,11 @@
      C           ZNNOMP    ANDGT0
       *                                                                   E32164
      C           ZZSAL     IFEQ 0
-     C                     Z-ADD0         BKPR
+     C**********           Z-ADD0         BKPR                                                261507
+     C                     Z-ADD0         BKPRR                                               261507
      C                     ELSE
-     C           ZZAPS     DIV  ZZSAL     BKPR      H
+     C********** ZZAPS     DIV  ZZSAL     BKPR      H                                         261507
+     C           ZZAPS     DIV  ZZSAL     BKPRR     H                                         261507
      C                     END
       *                                                                   E32164
      C                     END
@@ -2804,13 +2824,15 @@
      C**  AP = 0
      C**
      C           ZNNOMP    IFEQ 0
-     C                     Z-ADD0         BKPR
+     C**********           Z-ADD0         BKPR                                                261507
+     C                     Z-ADD0         BKPRR                                               261507
      C                     END
      C*
      C* If price basis 'P', multiply by 100 to fetch true price           E19918
      C*                                                                   E19918
      C           SPBS      IFEQ 'P'                                       E19918
-     C                     MULT 100       BKPR                            E19918
+     C**********           MULT 100       BKPR                                         E19918 261507
+     C                     MULT 100       BKPRR                                               261507
      C                     END                                            E19918
      C*
      C*
@@ -2821,7 +2843,8 @@
      C***********5         ADD  XNMCDP    XY      10               E16825 E20327
      C           5         ADD  NMCDP     XY      10                      E20327
      C                     SUB  NMDP      XY
-     C           BKPR      DIV  POWER8,XY BKPR
+     C********** BKPR      DIV  POWER8,XY BKPR                                                261507
+     C           BKPRR     DIV  POWER8,XY BKPR                                                261507
      C*
      C**If*price*basis*'P',*multiply*by*100*to*fetch*true*price********   E19918
      C***********                                                         E19918

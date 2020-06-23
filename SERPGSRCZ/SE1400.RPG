@@ -26,8 +26,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER049             Date 06Dec10               *
+      *  Last Amend No. MD048883           Date 01Jun20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER049             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -71,6 +72,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048883 - Incorrect warning message that the account has    *
+      *             insufficient funds and will be overdrawn due to   *
+      *             extra shadow posting on the account.              *
+      *           - Pattern fix from AR677686.                        *
       *  MD046248 - Finastra Rebranding                               *
       *  CER049 - Stamp Tax                                           *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -289,6 +294,12 @@
      I           SDS
      I                                      244 246 WSID
      I                                      254 263 USID
+     ISDDTA       DS                                                                        MD048883
+     I                                        1 256 SDDATA                                  MD048883
+     I                                      116 116 ACCR                                    MD048883
+     ISEDTA       DS                                                                        MD048883
+     I                                        1 133 SEDATA                                  MD048883
+     I                                       56  600EOPT                                    MD048883     
      I/COPY WNCPYSRC,SE1400I001
      C/EJECT
       *================================================================
@@ -477,6 +488,12 @@
       *
      C                     END
      C                     END
+      *                                                                                     MD048883
+     C           *NAMVAR   DEFN SDSTAT    SDDTA                                             MD048883
+     C           *NAMVAR   DEFN SESTAT    SEDTA                                             MD048883
+     C                     IN   SDDTA                                                       MD048883
+     C                     IN   SEDTA                                                       MD048883
+      *                                                                                     MD048883     
      C/COPY WNCPYSRC,SE1400C001
      C                     END
      C/COPY WNCPYSRC,SE1400C003
@@ -523,6 +540,30 @@
      C           TRECI     IFNE '*'
      C                     ADD  1         TRCNT   50
      C                     END
+      *                                                                                     MD048883
+     C           *IN40     IFEQ '1'                                                         MD048883
+     C           TRECI     ANDNE'S'                                                         MD048883
+     C           TRECI     ANDNE'*'                                                         MD048883
+     C           TRECI     ANDNE'C'                                                         MD048883
+     C           TINC      ANDEQ'C'                                                         MD048883
+     C           TRECI     ANDNE'L'                                                         MD048883
+     C           TRECI     ANDNE'P'                                                         MD048883
+      *                                                                                     MD048883
+      ** If ACCR = '3' then bypass all the TRADES to be settled by                          MD048883
+      ** SEC0602D seq 00002.                                                                MD048883
+      *                                                                                     MD048883
+     C                     TESTB'1'       TACI           20                                 MD048883
+      *                                                                                     MD048883
+     C           *IN20     IFEQ '0'                                                         MD048883
+     C           AUTS      ANDEQ'Y'                                                         MD048883
+     C           ACCR      ANDEQ'3'                                                         MD048883
+     C           TRVD      ANDGTEOPT                                                        MD048883
+     C           TRVD      ANDLTBJDNWD                                                      MD048883
+     C           BKANWD    ANDNE'2'                                                         MD048883
+     C                     GOTO NEXT                                                        MD048883
+     C                     ENDIF                                                            MD048883
+      *                                                                                     MD048883
+     C                     ENDIF                                                            MD048883     
       *                                                                                       CER049
      C           CER049    IFEQ 'Y'                                                           CER049
      C           TRTR      CHAINTRADSQL0             21                                       CER049
@@ -1018,6 +1059,7 @@
      C                     END
      C                     END
      C                     END
+     C           NEXT      TAG                                                              MD048883     
       *
       *================================================================
       *  E N D   O F   P R O G R A M                                  *

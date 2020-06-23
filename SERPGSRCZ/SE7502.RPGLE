@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. AR960855           Date 01Jun20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       *                 CER059             Date 19Jul10               *
       *                 CER020             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -56,6 +57,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR960855 - Allocation Effective Date should have no effect   *
+      *              on Payment Date if AUA014 is on                  *
+      *           - Condition 259086 fix to AUA014 = off              *      
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CER059 - German Feature Upgrade to Delhi                     *

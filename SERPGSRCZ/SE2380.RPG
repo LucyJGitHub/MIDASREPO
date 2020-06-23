@@ -40,8 +40,11 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 260331             Date 31Mar16               *
+      *  Last Amend No. 248698             Date 01Jun20               *
+      *  Prev Amend No. 248184             Date 01Jun20               *
+      *                 263929             Date 01Jun20               *
+      *                 MD046248           Date 27Oct17               *
+      *                 260331             Date 31Mar16               *
       *                 215959             Date 21Mar16               *
       *                 226449             Date 24Jun15               *
       *                 AR1067108          Date 11Dec12               *
@@ -206,6 +209,18 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  248698 - Rounding discrepancies on some SE reports. Applied  *
+      *           fix 228682.                                         *
+      *  228682 - Recompiled due to ZCNSDZ1 changes. Applied 176594.  *
+      *  248184 - Wrong security withholding tax calculation.  If     *
+      *           S01496, use 4 dec places for tax rate else use 2.   *
+      *  263929 - Maturity position settlement with 0 nominal         *
+      *           position and 0 amount due was generated.            *
+      *           Applied fix of 238137. Does not include reopen fix. *
+      *           Check if Amount Due is zero for none-generation of  *
+      *           record.                                             *
+      *           Do not write maturity position settlement for PM    *
+      *           customer having a position of zero.                 *
       *  MD046248 - Finastra Rebranding                               *
       *  260331 - Incorrect posting created due to a deleted diary    *
       *           event. Applied fix 255857.                          *
@@ -5109,20 +5124,20 @@
      C/COPY WNCPYSRC,SE2380C049
      C*
      C** DO NOT OUPUT RECORDS IF AMOUNT DUE IS ZERO
-     C           BGPFMG    IFNE 'Y'                                       S01486
-     C           BGN4ST    ANDNE'Y'                                       CPB002
+     C********** BGPFMG    IFNE 'Y'                                                    S01486 263929
+     C********** BGN4ST    ANDNE'Y'                                                    CPB002 263929
      C*
      C           PAMD      CABEQ0         ENDW02
-     C                     END                                            S01486
+     C**********           END                                                         S01486 263929
      C*                                                                   S01486
-     C           PAMD      IFEQ 0                                         S01486
-     C           PEVT      ANDNE'MT'                                      S01486
-     C           BGPFMG    ANDEQ'Y'                                       S01486
-     C           PAMD      OREQ 0                                         CPB002
-     C           PEVT      ANDNE'MT'                                      CPB002
-     C           BGN4ST    ANDEQ'Y'                                       CPB002
-     C                     GOTO ENDW02                                    S01486
-     C                     END                                            S01486
+     C********** PAMD      IFEQ 0                                                      S01486 263929
+     C********** PEVT      ANDNE'MT'                                                   S01486 263929
+     C********** BGPFMG    ANDEQ'Y'                                                    S01486 263929
+     C********** PAMD      OREQ 0                                                      CPB002 263929
+     C********** PEVT      ANDNE'MT'                                                   CPB002 263929
+     C********** BGN4ST    ANDEQ'Y'                                                    CPB002 263929
+     C**********           GOTO ENDW02                                                 S01486 263929
+     C**********           END                                                         S01486 263929
      C/COPY WNCPYSRC,SE2380C050
      C*
      C* COUNT RECORDS WRITTEN
@@ -6690,13 +6705,23 @@
       *                                                                   S01447
       *** calculate amount deducted at source                             S01447
       *                                                                   S01447
+     C           S01496    IFEQ 'Y'                                                           248184
+     C           PAMD      MULT UTXRSR    WTASO  204                                          248184
+     C           WTASO     DIV  100       TASO      H                                         248184
+     C                     ELSE                                                               248184      
      C           UTXRSR    DIV  100       URATE   54                      S01447
      C           PAMD      MULT URATE     TASO      H                     S01447
+     C                     ENDIF                                                              248184
       *                                                                   S01447
       *** calculate amount deducted at source - refundable                S01447
       *                                                                   S01447
+     C           S01496    IFEQ 'Y'                                                           248184
+     C           PAMD      MULT UTXRRF    WTASR  204                                          248184
+     C           WTASR     DIV  100       TASR      H                                         248184
+     C                     ELSE                                                               248184      
      C           UTXRRF    DIV  100       URATE                           S01447
      C           PAMD      MULT URATE     TASR      H                     S01447
+     C                     ENDIF                                                              248184
       *                                                                   S01447
       *** calculate amount deducted by user: ONLY if deduct for local     S01447
       *** residents is 'Y', or deduct for local residents is 'N' and      S01447
@@ -6724,10 +6749,16 @@
      C           UDLOR     IFEQ 'Y'                        *B2            S01447
      C           CLOC      ORNE UBRLOC                                    S01447
       *                                                                   S01447
+     C           S01496    IFEQ 'Y'                                                           248184
+     C           PAMD      MULT UTXRUS    WTAUS  204                                          248184
+     C           WTAUS     DIV  100       TAUS      H                                         248184
+     C                     ELSE                                                               248184
+      *                                                                                       248184      
      C           UTXRUS    DIV  100       URATE                           S01447
      C/COPY WNCPYSRC,SE2380C053
      C           PAMD      MULT URATE     TAUS      H                     S01447
      C/COPY WNCPYSRC,SE2380C054
+     C                     ENDIF                                                              248184
      C                     END                             *E2            S01447
       *                                                                   S01447
      C                     END                             *E1            S01447

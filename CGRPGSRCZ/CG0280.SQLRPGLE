@@ -20,8 +20,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054955           Date 16Dec19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055928           Date 02Jun20               *
+      *  Prev Amend No. MD054955           Date 16Dec19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER047             Date 19May08               *
@@ -59,6 +60,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD055928 - Schedule cannot be inserted for Primary recipient.*
       *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
@@ -192,6 +194,7 @@
      D*@1DBRC***     E DS                  EXTNAME(CGCSCHL0)                                MD054955
      D @1DBRC        E DS                  EXTNAME(CGCSHJW0)                                MD054955
      D                                     PREFIX(X)                                        MD054955
+     D Found           S              5  0                                                  MD055928
       * UPD : Correspondent Schedule    Update index
       * Current/previous master file format fields for change control
       *
@@ -2711,15 +2714,35 @@
      C                   KFLD                    CPSEQN                         Sequence Number
       * Check for duplicate primary key
      C*****KLCRSA        SETLL     @CSCHL0                                90    *           MD054955
-     C/EXEC SQL                                                                             MD054955
-     C+ SELECT *                                                                            MD054955
-     C+ into :CGCSCH                                                                        MD054955
-     C+ from CGCSHJW0                                                                       MD054955
-     C+ where CPPCOR = :CPCORR and CPPTYP = :CPPTYP and CPPSTP = :CPPSTP                    MD054955
-     C+ and CPSEQN = :CPSEQN                                                                MD054955
-     C/END-EXEC                                                                             MD054955
+     C*EXEC*SQL*                                                                   MD054955 MD055928
+     C**SELECT**                                                                   MD054955 MD055928
+     C**into**CGCSCH                                                               MD054955 MD055928
+     C**from*CGCSHJW0                                                              MD054955 MD055928
+     C**where*CPPCOR = :CPCORR and CPPTYP = :CPPTYP and CPPSTP = :CPPSTP           MD054955 MD055928
+     C**and*CPSEQN = :CPSEQN                                                       MD054955 MD055928
+     C*END-EXEC*                                                                   MD054955 MD055928
+     C/EXEC SQL                                                                             MD055928
+     C+ declare BCursor insensitive scroll cursor for                                       MD055928
+     C+ select * from CGCSHJW0                                                              MD055928
+     C+ where CPCORR = :CPCORR and CPPTYP = :CPPTYP and CPPSTP = :CPPSTP                    MD055928
+     C+ and CPSEQN = :CPSEQN                                                                MD055928
+     C/END-EXEC                                                                             MD055928
+                                                                                            MD055928
+     C/EXEC SQL                                                                             MD055928
+     C+ open BCursor                                                                        MD055928
+     C/END-EXEC                                                                             MD055928
+                                                                                            MD055928
+     C/EXEC SQL                                                                             MD055928
+     C+ get diagnostics :Found = DB2_NUMBER_ROWS                                            MD055928
+     C/END-EXEC                                                                             MD055928
+                                                                                            MD055928
+     C/EXEC SQL                                                                             MD055928
+     C+ close BCursor                                                                       MD055928
+     C/END-EXEC                                                                             MD055928
+
      C                   SETOFF                                       90                    MD054955
-     C                   If        SQLCODE = 0                                              MD054955
+     C**********         If        SQLCODE = 0                                     MD054955 MD055928
+     C                   If        Found > 0                                                MD055928
      C                   SETON                                        90                    MD054955
      C                   ENDIF                                                              MD054955
                                                                                             MD054955
@@ -2915,7 +2938,8 @@
      C+ )                                                                                   MD054955
      C/END-EXEC                                                                             MD054955
       *
-     C     *IN91         IFEQ      '1'
+     C******IN91*        IFEQ      '1'                                                      MD055928
+     C                   IF        SQLCODE <> 0                                             MD055928
       * Write error detected
      C                   MOVEL     'Y2U0004'     W0RTN             7
      C                   ELSE
@@ -2944,7 +2968,8 @@
      C+ SELECT *                                                                            MD054955
      C+ into :CGCSCH                                                                        MD054955
      C+ from CGCSHJW0                                                                       MD054955
-     C+ where CPPCOR = :CPCORR and CPPTYP = :CPPTYP and CPPSTP = :CPPSTP                    MD054955
+     C**where*CPPCOR = :CPCORR and CPPTYP = :CPPTYP and CPPSTP = :CPPSTP           MD054955 MD055928
+     C+ where CPCORR = :CPCORR and CPPTYP = :CPPTYP and CPPSTP = :CPPSTP                    MD055928
      C+ and CPSEQN = :CPSEQN                                                                MD054955
      C/END-EXEC                                                                             MD054955
      C                   SETOFF                                       9091                  MD054955
@@ -3046,7 +3071,8 @@
      C+ , CPACCD = :CPACCD                                                                  MD054955
      C+ , CPMACT = :CPMACT                                                                  MD054955
      C+ , CPCACT = :CPCACT                                                                  MD054955
-     C+ where CPPCOR = :CPCORR and CPPTYP = :CPPTYP and CPPSTP = :CPPSTP                    MD054955
+     C**where*CPPCOR = :CPCORR and CPPTYP = :CPPTYP and CPPSTP = :CPPSTP           MD054955 MD055928
+     C+ where CPCORR = :CPCORR and CPPTYP = :CPPTYP and CPPSTP = :CPPSTP                    MD055928
      C+ and CPSEQN = :CPSEQN                                                                MD054955
      C/END-EXEC                                                                             MD054955
      C******IN91*        IFEQ      '1'                                                      MD054955

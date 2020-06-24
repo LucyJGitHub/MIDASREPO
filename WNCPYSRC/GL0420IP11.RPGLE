@@ -4,7 +4,7 @@
       *                                                               *
       *  GL0420IP11 - BALANCE STATEMENTS (A/C FORMATS)                *
       *                                                               *
-      *  Last Amend No. MD055507 *AMEND    Date 16Jun20               *
+      *  Last Amend No. MD055507           Date 16Jun20               *
       *  Prev Amend No. LUC133   *CREATE   Date 01Aug19               *
       *                                                               *
       *---------------------------------------------------------------*

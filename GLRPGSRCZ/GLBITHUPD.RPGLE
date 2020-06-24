@@ -75,7 +75,7 @@
       *                                                               *
       *  MD055854 - When deleting a batch or batch item from frontend *
       *             the narratives in XXJENPX0 file is not deleted    *
-      *             Amend to delete corresponding rec in XXJENPX0     *
+      *             Amend to delete corresponding rec in XXJENPX0.    *
       *  MD033630A - Corrected discrepancy in MD033630 codes.         *
       *  MD036967 - Conflict betwen CAP207 and CRE023. Update files   *
       *             for Credit after accept when both feat are ON.    *

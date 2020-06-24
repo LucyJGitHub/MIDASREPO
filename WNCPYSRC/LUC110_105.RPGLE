@@ -8,7 +8,7 @@
       *                                                               *
       *  MD055854 - When deleting a batch or batch item from frontend *
       *             the narratives in XXJENPX0 file is not deleted    *
-      *             Amend to delete corresponding rec in XXJENPX0     *
+      *             Amend to delete corresponding rec in XXJENPX0.    *
       *                                                               *
       *****************************************************************
       *                                                                                     MD055854

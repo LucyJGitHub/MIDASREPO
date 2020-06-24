@@ -154,7 +154,7 @@
       *  254109 - Introduce new err msgs; one for the 'D' action code *
       *           and another one for 'C' and 'R' action codes ( when *
       *           CSD007 feauture is switched on) just to indicate the*
-      *           reason why action code is invalid.                  *      
+      *           reason why action code is invalid.                  *
       *  MD048748 - Error Authorising Release of a Closed Customer    *
       *             with Parent Defined                               *
       *  MD052297 - Meaningless error message displayed when closing  *
@@ -2266,7 +2266,7 @@
      C                   ADD       1             Ix
      C                   MOVEL     'DDACTN'      FldNameArr(Ix)
      C**********         MOVEL     'USR0553'     MsgIdArr(Ix)                                 254109
-     C                   MOVEL     'USR9921'     MsgIdArr(Ix)                                 254109
+     C                   MOVEL     '5049396'     MsgIdArr(Ix)                                 254109
      C                   GOTO      EVAL
       *
      C                   ENDIF
@@ -2276,7 +2276,7 @@
      C                   MOVEL     'N'           OKACTN                                       254109
      C                   ADD       1             Ix                                           254109
      C                   MOVEL     'DDACTN'      FldNameArr(Ix)                               254109
-     C                   MOVEL     'USR9920'     MsgIdArr(Ix)                                 254109
+     C                   MOVEL     '5049395'     MsgIdArr(Ix)                                 254109
      C                   GOTO      EVAL                                                       254109
       *                                                                                       254109
      C                   ENDIF                                                                254109

@@ -9,8 +9,8 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD52377             Date 28Nov18             */
-/*       Prev Amend No. MD046248            Date 27Oct17             */
+/*       Last Amend No. MD52377            Date 28Nov18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      095907             Date 14Jun04              */

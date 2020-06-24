@@ -11,7 +11,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 248891             Date 01Jun20               *
+      *  Last Amend No. 248891             Date 04Mar09               *
       *  Prev Amend No. 254657             Date 01Jun20               *
       *                 MD053119           Date 02Dec19               *
       *                 MD054696           Date 29Oct19               *
@@ -87,11 +87,11 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  248891 - Journal Batch Entry has a Valid Status of 'No'.     *
-      *           Partially applied core fix#255331.                  *
+      *           Applied core fix#255331.                            *
       *  255331 - Batch with Batch Header showing VALID = NO, when    *
       *          all entries are valid.                               *
       *  254657 - Front Office ID overridden with APCTRANVU*** when   *
-      *           user tries to amend/accept JE inserted via APIs     *
+      *           user tries to amend/accept JE inserted via APIs     *      
       *  MD053119 - Conditioned UPDPOST subroutine on CGL016 feature  *
       *  MD054696 - Journal Entries Avoid Shadow Postings Update.     *
       *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *
@@ -865,7 +865,7 @@
      C     B1VALI        IFEQ      'Y'                                                        255331
      C     JEVALI        ANDEQ     'Y'                                                        255331
      C                   MOVE      B1VALI        BRVALI                                       255331
-     C                   ENDIF                                                                255331
+     C                   ENDIF                                                                255331     
       *                                                                                      BUG3085
       ** If Security on Journal Entry is *ON, set Last Amend                                 BUG3085
       ** User field to system user.  Use correct user field if java user                     BUG3085

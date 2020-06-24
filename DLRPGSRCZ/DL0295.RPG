@@ -10,8 +10,9 @@
 0006 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 248968             Date 01Jun20               *
-      *  Prev Amend No. MD053762           Date 16Jun19               *
+      *  Last Amend No. 258482             Date 01Jun20               *
+      *  Prev Amend No. 248968             Date 01Jun20               *
+      *                 MD053762           Date 16Jun19               *
       *                 MD049950           Date 08Mar18               *
       *                 MD048795           Date 30Jan18               *
       *                 MD048346           Date 20Dec17               *
@@ -190,6 +191,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  258482 - Incorrect postings for withholding tax in foreign   *
+      *           currency. Debit the tax from the settlement account *
+      *           for tax account keys with posting reference '2' and *
+      *           do not convert to Base Ccy. Applied fix 241675.     *
       *  248968 - Make sure that field TRAT is being populated by the *
       *           correct value for TAX postings generated during     *
       *           interest and maturity events.                       *
@@ -3221,6 +3226,20 @@
 0609 C   34                EXSR PREF1
      C/COPY WNCPYSRC,DL0295C077
 0610 C**
+      ** Fix for Withholding Tax.                                                             241675
+      ** If this is a tax key and the posting reference is 2 then the                         241675
+      ** account key is trying to post the tax to the settlement                              241675
+      ** account and it should therefore be in Event currency and not                         241675
+      ** Base.  There is therefore no need for the additional postings                        241675
+      ** to Spot and Trade Equivalent accounts.                                               241675
+      ** All this gets solved if we don't treat this key as a tax key.                        241675
+      *                                                                                       241675
+     C           *IN60     IFEQ '1'                                                           241675
+     C           *IN35     ANDEQ'1'                                                           241675
+     C                     MOVE 'Y'       TAXWK   1                                           241675
+     C                     MOVE '0'       *IN60                                               241675
+     C                     ENDIF                                                              241675
+      *                                                                                       241675
 0611 C*    ADDITIONAL PROCESSING FOR POSTING REFERENCE 2.
 0612 C   35                EXSR PREF2
      C   70 35             EXSR EXTRA
@@ -3699,6 +3718,15 @@
 0630 C                     SETOF                     122933
 0631 C                     SETOF                     37
      C                     SETOF                     70
+      *                                                                                       241675
+      ** If the key was set to non taxable, reset to its original                             241675
+      ** value.                                                                               241675
+      *                                                                                       241675
+     C           TAXWK     IFEQ 'Y'                                                           241675
+     C                     MOVE 'N'       TAXWK                                               241675
+     C                     MOVE '1'       *IN60                                               241675
+     C                     ENDIF                                                              241675
+      *                                                                                       241675     
      C/COPY WNCPYSRC,DL0295C078
      C                     MOVE '0'       *IN11                           E38199
      C*                                                                   E25203
@@ -4283,7 +4311,7 @@
       *                                                                                       248968
      C                     MOVE '98100'   TRAT                                                248968
       *                                                                                       248968
-     C                     ENDIF                                                              248968
+     C                     ENDIF                                                              248968     
      C*                                                                   084058
      C/COPY WNCPYSRC,DL0295C022
       *                                                                   CRE009

@@ -177,8 +177,8 @@
              ENDDO                                                    /*CCB009*/
 /*/COPY WNCPYSRC,SEC1002010                                          */
              ENDDO                                                    /*086486*/
-/**********  ENDJRNPF   FILE(TRADSD) JRN(ICJRN)                 095907 MD52377 */
-/**********  MONMSG     MSGID(CPF0000)                          095907 MD52377 */
+/**********  ENDJRNPF   FILE(TRADSD) JRN(ICJRN)             */ /*095907 MD52377*/
+/**********  MONMSG     MSGID(CPF0000)                      */ /*095907 MD52377*/
              IF COND(&S01401 *EQ 'Y') THEN(DO)
              ENDJRNPF   FILE(TRADSDX1 TRADSDX2) JRN(ICJRN)            /*095907*/
              MONMSG     MSGID(CPF0000)                                /*095907*/

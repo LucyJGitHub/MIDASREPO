@@ -160,13 +160,14 @@ b2   C                   IF        *IN71 = *on
       *
       ** If record not found, then write record
      C                   EXSR      #PWRIT
-yb   C                   ELSE
-yb   C     MQMSID        CHAIN     ZATRNLOGL7                         72
-yb   C                   IF        *IN72 = *OFF
-yb   C                   MOVEL     'E'           APSTAT
-yb   C*************      ELSE
-yb   C*************      MOVEL     'P'           APSTAT
-yb   C                   ENDIF
+     C                   ELSE
+     C     MQMSIA        CHAIN     ZATRNLOGL7                         72
+     C                   IF        *IN72 = *OFF
+     C                   MOVEL     'E'           APSTAT
+     C                   UPDATE    API24X7SD0
+     C*************      ELSE
+     C*************      MOVEL     'P'           APSTAT
+     C                   ENDIF
      C                   ENDIF
      C                   ENDIF
       *

@@ -40,7 +40,7 @@
       *  261824 - Error messages appear which should not be as field  *
       *           being validate is valid when compare to the input - *
       *           Maturity Date. Fix is to make sure that field will  *
-      *           be validated only if Maturity Date is non-zero.     *
+      *           be validated only if Maturity Date is non-zero.     *      
       *  MD046248 - Finastra Rebranding                               *
       *  AR875871 - Cannot insert in FRN info tab when base rate is   *
       *             blank and contractual spread is non-blank         *
@@ -246,17 +246,17 @@
      C                             OKAD05 <> 'Y' OR OKAD06 <> 'Y' OR
      C                             OKAD07 <> 'Y' OR OKAD08 <> 'Y' OR
      C                             OKAD09 <> 'Y' OR OKAD10 <> 'Y'
-
+ 
      C                   EVAL      RetCodeIn = 'ERROR'
-
+ 
      C                   ENDIF
-
+ 
      C                   IF        OKAD01 <> 'N' AND  OKAD02 <> 'N' AND
      C                             OKAD03 <> 'N' AND  OKAD04 <> 'N' AND
      C                             OKAD05 <> 'N' AND  OKAD06 <> 'N' AND
      C                             OKAD07 <> 'N' AND  OKAD08 <> 'N' AND
      C                             OKAD09 <> 'N' AND  OKAD10 <> 'N'
-
+ 
      C                   MOVE      DDAD01        S1AD01
      C                   MOVE      DDAD02        S1AD02
      C                   MOVE      DDAD03        S1AD03
@@ -267,11 +267,11 @@
      C                   MOVE      DDAD08        S1AD08
      C                   MOVE      DDAD09        S1AD09
      C                   MOVE      DDAD10        S1AD10
-
+ 
      C                   ENDIF
-
+ 
      C                   RETURN
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -279,7 +279,7 @@
       *  SRVALAPPCDT - Validation Applicable Date                     *
       *                                                               *
       *****************************************************************
-
+ 
      C     SRValAppcDt   BEGSR
       *
      C                   DOW       Wx <= 10
@@ -309,7 +309,7 @@
      C                   PARM                    ZFIELD           16
      C                   PARM      0             ZADEC             1 0
      C                   PARM      6             ZADIG             2 0
-
+ 
      C     ZALIGNok      IFEQ      'Y'
      C                   MOVE      ZFIELD        ZDATEI
      C                   CALLB     'ZDATE1'

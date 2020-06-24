@@ -1,3 +1,2553 @@
+<<<<<<< HEAD
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Extract todays cust avg. prices')             *
+     F*****************************************************************
+     F*                                                               *
+     F*  Midas - Securities Trading Module
+     F*                                                               *
+     F*  SE2405  - EXTRACT TODAY'S CUSTOMER AVERAGE PRICES            *
+     F*                                                               *
+     F*  Function: Data is extracted from transaction input or due    *
+     F*   (COB)    today, which affects customer average price.       *
+     F*            Details of changes are extracted from the trade    *
+     F*            actions file, the customer depot movements file    *
+     F*            and the prices file and are written to the Customer*
+     F*            Average Prices file with a record ID of 'D'.       *
+     F*            Details written depend on the movement type        *
+     F*            eg for trades - the trade nominal, price, charges, *
+     F*            commissions etc.                                   *
+     F*                                                               *
+     F*            For back-valued customer positions, records with an*
+     F*            action date greater than the earliest back-value   *
+     F*            date are read from CAPRHD and record ID changed    *
+     F*            from 'H' to 'A'. This primes CAPRHD ready for      *
+     F*            The resulting set of actions (record IDs A & D)    *
+     F*            will be used to calculate or recalculate average   *
+     F*            prices on current and historic customer positions. *
+     F*                                                               *
+     F*  Called by: SEC0606H - Update Customer Average Prices         *
+     F*                                                               *
+      *  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+      *  Last Amend No. 248698             Date 01Jun20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 226449             Date 24Jun15               *
+      *                 MD034776           Date 09Jul15               *
+      *                 250227             Date 01Feb13               *
+      *                 AR1067108          Date 11Dec12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 AR1001183A         Date 20Nov12               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG9775            Date 25Jan06               *
+      *                 CGL031             Date 05Jul04               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSW037A            Date 02May05               *
+      *                 229857             Date 07Oct04               *
+      *                 226570             Date 27Jun04               *
+      *                 217621             Date 18Aug05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 CAS006             Date 21Jan03               *
+      *                 211407             Date 07Jan03               *
+      *                 194370             Date 12Jul01               *
+      *                 207543             Date 17Jul02               *
+      *                 180056             Date 18Oct00               *
+      *                 CSE037             Date 29Apr02               *
+      *                 CSE035             Date 22Apr02               *
+      *                 206316             Date 19Jul02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CPK015             Date 17Jun01               *
+      *                 CSD010             Date 03May02               *
+      *                 CSE031             Date 09Nov01               *
+      *                 180707             Date 25Jul00               *
+      *                 188670             Date 22Sep01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 179580             Date 11Jul01               *
+      *                 188683             Date 18Jun01               *
+      *                 186555             Date 15May01               *
+      * Midas DBA 3.05 -----------------------------------------------*
+      *                 CSD006             Date 16May01               *
+      * Midas DBA 3.03 -----------------------------------------------*
+      *                 178439             Date 02May00               *
+      *                 CSE018             Date 20Apr00               *
+      * Midas DBA 3.02 -----------------------------------------------*
+      *                 CSE017             Date 20Oct99               *
+     F*                 CPB001             DATE 06Aug99               *
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+     F*                 130862             Date 18Oct98               *
+      *                 151945             DATE 06Jan99               *
+     F*                 CEU017             Date 07Apr98               *
+     F*                 CSE007             Date 17Mar98               *
+     F*                 108185             DATE 24FEB98               *
+     F*                 123197             DATE 23FEB98               *
+     F*                 CSE005             DATE 04FEB97               *
+     F*                 084704             DATE 01AUG96               *
+     F*                 083039             DATE 01AUG96               *
+     F*                 059110             DATE 25JUL96               *
+     F*                 088047             DATE 27JUN96               *
+     F*                 100228             DATE 31MAY96               *
+     F*                 099886             DATE 18APR96               *
+     F*                 100017             DATE 18APR96               *
+     F*                 095720             DATE 18JAN96               *
+     F*                 092961             DATE 04OCT95               *
+     F*                 091254             DATE 20OCT95               *
+     F*                 086491             DATE 15JUN95               *
+     F*                 S01486  LV         DATE 18OCT94               *
+     F*                 052254             DATE 10JAN94               *
+     F*                 S01401             DATE 16JUN93               *
+     F*                 S01397             DATE 10SEP92               *
+     F*                 E36104             DATE 25JUN92               *
+     F*                 E37527             DATE 31MAR92               *
+     F*                 E35436             DATE 11FEB92               *
+     F*                 E29170             DATE 07NOV91               *
+     F*                 S01117             DATE 07JUN91               *
+     F*                 S01269             DATE 31JUL90               *
+     F*                 E20651             DATE 05FEB90               *
+     F*                 E20235             DATE 20NOV89               *
+     F*                 E19332             DATE 29AUG89               *
+     F*                 E17876             DATE 11/04/89              *
+     F*                 E17704             DATE 31/03/89              *
+     F*                 E17303             DATE 31/03/89              *
+     F*                 E16849             DATE 08/02/89              *
+     F*                 E14838             DATE 03/11/88              *
+     F*                 S01158             DATE 18/05/88              *
+     F*                 S01158             DATE 06/05/88              *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*                                                               *
+      *  248698 - Rounding discrepancies on some SE reports. Applied  *
+      *           fix 228682.                                         *
+      *  228682 - Recompiled due to ZCNSDZ1 changes. Applied 176594.  *     
+      *  MD046248 - Finastra Rebranding                               *
+      *  226449 - Recompiled over changes made in /COPY ZDYYRZ3.      *
+      *         - Applied for MD034387.                               *
+      *  MD034776 - Reverse AR1001183A to allow negative interest     *
+      *             rate. (Recompile)                                 *
+      *  250227 - Preventive fix to ensure that customer yield rate   *
+      *           calculation will be executed only for yield based   *
+      *           securities. Applied for AR1067108A.                 *
+      *  AR1067108 - PMC1140 Component failed during Clean COB        *
+      *              Applied fix AR1001883A                           *
+      *  AR1001183A - Coupon rate was still used in computation of    *
+      *              interest instead of using the details in FRN tab *
+      *              (Reopen) (Recompile)                             *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG9775 - Events created with date greater than rundate.     *
+      *  CGL031 - Taxation of Savings Income                          *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  229857 - Recompiled due to change in ZYLDZ2.                 *
+      *  226570 - Recompiled due to change in ZYLDZ2.                 *
+      *  217621 - FOOB in SE2410                                      *
+      *           (Ensure RECI = 'C' not counted in all cases).       *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  CAS006 - Hedge Accounting Phase B (Recompile)                *
+      *  211407 - Recompile after change on copy sources ZYLDZ2,      *
+      *           ZACCRZ1 and ZYCEZ1 for NX/NNX processing.           *
+      *           The change was to call subroutine ZLCD1 instead     *
+      *           of ZLCD in retrieving the PERIOD for NNX processing *
+      *           and ZNCD1 is called instead of ZNCD in retrieving   *
+      *           the WBENCD for NNX processing. Also rewrite tests   *
+      *           for identifying if position is NX,NNX or CUM.       *
+      *  194370 - Recompile after change on copy sources ZYLDZ2,      *
+      *           For securities with divisor basis = '5' and first   *
+      *           coupon date > valuation date (rundate + 1), set     *
+      *           event control date to first coupon date before      *
+      *           processing SR/ZDYYR. This is to ensure that the     *
+      *           correct hypothetical last and next coupon dates are *
+      *           used in deriving the price/yield rate.              *
+      *  207543 - CEU018 not working on a price basis.                *
+      *           Recompile over changed ZYLDZ2.                      *
+      *  180056 - Recompiled over changed in ZDYYRZ3.                 *
+      *  CSE037 - Bond Pricing - 3 Decimal Places in Trades Input     *
+      *  CSE035 - NX/NNX Coupon Payment Processing.                   *
+      *           Recompile over changed ZACCRZ1/ZYLDZ2/ZYCEZ1
+      *  206316 - Recompiled over changed ZLCDZ1.                     *
+      *  CPK015 - Conversion of ZYIELD from PLI to RPG.               *
+      *           Recompile over changed ZYLDZ2.                      *
+      *  CSD010 - Collateralised Lending (Securities and FX Pricing)  *
+      *  CSE031 - Coupon Fixing for Floating Rate Notes.              *
+      *           (recompilation due to change to ZNCD/ZLCD)          *
+      *  180707 - No Position Settlements generated. Recompile over   *
+      *           changes in /COPY ZNCDZ3.                            *
+      *  188670 - Message error issued by system during input of      *
+      *           price was due to incosistency of PF/PRICED and      *
+      *           PF/SEPRICPD.  Fix is to update SEPRICPD everytime   *
+      *           PRICED is being updated.                            *
+      *  179580 - Field other date (OTHD) in CAPRHD must be correctly *
+      *           setted for depot movements. It must contain the     *
+      *           value date of the depot movement.                   *
+      *  188683 - U4 is not used anymore : change condition to update *
+      *           PMTI and PMVI values                                *
+      *  186555   Incorrect rounding of countervalue during a Name    *
+      *           Change of Security. Average Price computed without  *
+      *           half adjust. Add H for half adjust in computation.  *
+     F*  CSD006 - Market Data Feed (Recompile)                        *
+     F*  178439 - Incorrect processing of Walkin and Walkout when     *
+     F*           CSE015 present.                                     *
+     F*  CSE018 - Deletion of Walk-in and Walk-out depot movement     *
+     F*           after passed movement date.                         *
+     F*  CSE017 - Cum/Ex Indicator on Depot Movements (Recompile)     *
+     F*  CPB001 - 'Private Banking' Module                            *
+     F*  130862 - Recompiled over ZLCDZ1 & ZDAYSZ2 changes.           *
+     F*  151945 - Recompiled Over changed ZDYYRZ3 .                   *
+     F*  CEU017 - Securities Redenomination Euro Changes              *
+     F*           Just recompile                                      *
+     F*  CSE007 - Corporate Actions - Just recompile                  *
+     F*  108185 - If portfolio management is installed and trade      *
+     F*           action, 'PMTI' and 'PMVI' must contain 'D' to       *
+     F*           update/add records in file PMCPOSPP.                *
+     F*  123197 - SUPPRESS CUMULATION OF COMMISSIONS/CHARGES IN       *
+     F*           AVERAGE PRICE. BECAUSE THIS IS ALREADY DONE IN      *
+     F*           SE2290 (IN /COPY ZSRSRC,ZCONPRZ1 S01117 : SD NEW    *
+     F*           FILE SDSTRDPD. IN SE2405 THIS IS BASED ON OLD FILE  *
+     F*           TABTB36 WHICH OCCURS A DOUBLE CUMULATION            *
+     F*  CSE005 - Effect of holidays on FRN Coupon Dates              *
+     F*           (recompilation due to change to ZNCD/ZLCD)          *
+     F*  084704 - RECOMPILE OVER CHANGED ZYLDZ2 SUB.                  *
+     F*  083039 - RECOMPILE OVER CHANGED ZYLDZ2 SUB.                  *
+     F*  059110 - Recompile over changed ZYLDZ2 sub.                  *
+     F*  088047 - RECOMPILE over change SR/ZYLDZ2.                    *
+     F*  100228 - RECOMPILE OVER CHANGED ZDYYRZ3, ZLCDZ1 & ZNCDZ3.    *
+     F*  099886 - Rounding problem for partly paid securities.        *
+     F*           Fix applied is the same as in ZACCZ subroutine.     *
+     F*  100017 - Position settlement unable to pick up day adjustment*
+     F*           on SECTYD. Therefore subroutine ZDAYSZ2 changed to  *
+     F*           use indicator DADJN to not apply interest rate      *
+     F*           adjustment for amortisation if set to 'N'.          *
+     F*  095720 - FOOB in SE0345 file PRICED because only a part of   *
+     F*           E36104 was incorporated.                            *
+     F*  092961 - Recompile over ZDAYSZ2 which was amended by 086491  *
+     F*           (Wrong number of days calculated for day basis 1    *
+     F*           when start or end day is last day of February)      *
+     F*  091254 - RECOMPILE OVER CHANGED ZLCDZ1 & ZNCDZ3              *
+     F*  086491 - Wrong nbr of days calculated for day basis 1        *
+     F*           when start or end day is last day of February       *
+     F*           Recompiled for ZSRSRC/ZDAYSZ2 changes.              *
+     F*  S01486 - PM ENHANC. INCORPORATION (S01235 AND THE FOLLOWING  *
+     F*           AMENDS TO IT : R0659,R0568,R05596,R05738,B07814,    *
+     F*                          B07948,B08000,B08125,36723,46081,    *
+     F*                          49213,056550)                        *
+     F*  052254 - RECOMPILED as CURRENT FACTOR amended from 9,8       *
+     F*           to 10,9                                             *
+     F*  S01401 - MT5xx SWIFT Messages Feature:                       *
+     F*          - Recompiled due to changes to files.                *
+     F*  S01397 - Rel 10 Incorporation of BNZ SARs A46008 and A46013. *
+     F*          - Recompiled due to changes to files.                *
+     F*  E36104 - System allows deletion of Actioned Customer Average *
+     F*           Prices.                                             *
+     F*         - Change RECI to '*' instead of 'A' as in other pro-  *
+     F*           cessed Price Changes.                               *
+     F*  E37527 - Recompiled for corrections to Audit Print File.     *
+     F*  E35436  - Average Price corrupted on customer positions if   *
+     F*            back-valuation or deletion.(CAPRHD recs not dropped)
+     F*          - Write a record with RECI of 'C' for a reversal of  *
+     F*            a trade to drive reversal processing in SE2405     *
+     F*  E29170  - Report Control Facility changes                    *
+     F*  S01117  - Multibranching                                     *
+     F*  S01269  - TRADE AUTHORISATION: RECOMPILED FOR CHANGE TO      *
+     F*            FILE TABSE                                         *
+     F*  E20651  - DB ERROR NUMBERS USED IN MORE THAN ONE PLACE.      *   E20651
+     F*            NEW ERROR NUMBERS AS FOLLOWS:                      *   E20651
+     F*            DB ERROR 01 -> 08                                  *   E20651
+     F*            DB ERROR 01 -> 09                                  *   E20651
+     F*            DB ERROR 04 -> 10                                  *   E20651
+     F*            DB ERROR 04 -> 11                                  *   E20651
+     F*  E20235  - Should use CNTP rather than TRPR.                  *   E20235
+     F*  E19332  - 1) DO NOT WRITE DEPOT MOVEMENT REVERSALS TO CAPRHD.*   E19332
+     F*            2) RECORDS FLAGGED FOR DELETION GET RE-ACTIONED.   *   E19332
+     F*  E17876 - REMOVE E17704, CAUSES SE2100 LOOP IN ALL TEST SYS'S.*   E17876
+     F*  E17704  - RECOMPILE PROGRAM OVER CHANGED ZNCDZ3 SR           *   E17704
+     F*  E17303  - RECOMPILE PROGRAM OVER CHANGED ZDYYRZ3 ZYLDZ1 ZYLDZ*   E17303
+     F*  E16849  - CHANGE RECI TO 'C' IF PROCESSING A REVERSAL RECORD *   E16849
+     F*            TO UPDATE THE POSITION WITH THE CANCELLATION.      *   E16849
+     F*  E14838  - AVERAGE PRICE = 0 PROBLEM  - CHECK FOR ACTION      *   E14838
+     F*            TYPE 'A' AND ADJUST AVERAGE PRICE CALCULATIONS.    *   E14838
+     F*            ALSO INCLUDED IN THIS FIX, ARE :-                  *   E14838
+     F*            1.  AVERAGE PRICE DOES NOT TAKE ACCOUNT OF         *   E14838
+     F*                SECURITIES WITH A PRICE BASIS OF 'P'.          *   E14838
+     F*            2.  CHARGES/COMMISSION  (IF INCLUDED IN AVERAGE    *   E14838
+     F*                PRICE) ARE DIVIDED BY 100 IF PRICE BASIS IS 'P'*   E14838
+     F*  S01158 - POST INCORPORATION DEVELOPMENT FIXES INCLUDING      *   S01158
+     F*           - PROCESSING FOR SETTLEMENT ACTIONS FOR PORTFOLIO   *   S01158
+     F*            CUSTOMERS                                          *   S01158
+     F*                                                               *
+     F*****************************************************************
+     F*
+     FCAPRHA  UF  E                    DISK         KINFDS CAPRDS
+     F                                              KINFSR CAPRSR
+     FTABSE   IF  E           K        DISK
+     F* ICD 1     TABTB10F                          KIGNORE
+     F* ICD 2     TABTB11F                          KIGNORE
+     F* TAB36     TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F*** CCY     TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F*********** TABLETJF                          KIGNORE               S01117
+     F            TABLETLF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETAF                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     FSE2405AUO   E                    PRINTER
+     F*                                                                   S01486
+     F**- Portfolio management ----------------------------------------   S01486
+     FPMPORTPDIF  E           K        DISK                               S01486
+     F** PREFIX 'PN'                                                      S01486
+     FSEDEV   IF  E           K        DISK                               S01486
+     F*----------------------------------------------------------------   S01486
+     F/COPY WNCPYSRC,SE2405F001
+     FSECTY   IF  E           K        DISK
+     FINVTP   IF  E           K        DISK                               S01486
+     FTRDCP   IF  E           K        DISK
+     FDPMCP   IF  E           K        DISK
+     FPRCCP   UF  E           K        DISK
+     FSEPRICL2UF  E           K        DISK                               188670
+     FSETCP   IF  E           K        DISK                               S01158
+     FCAPRH   UF  E           K        DISK         KINFDS CAPHDSA
+     F                                              KINFSR CAPHSR
+     FSECEO   IF  E           K        DISK                               S01486
+     F            SEDEVDF                           KRENAMESEDEVDO        S01486
+     F            SNDEVDF                           KRENAMESNDEVDO        S01486
+     FPRICEA  UF  E                    DISK         KINFDS PRADS          095720
+     F                                              KINFSR PRASR          095720
+     F***TRDACA  IF  E           K        DISK
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*   21 - NOMINAL CURRENCY DEC. PLACES 0                         *
+     F*   22 - NOMINAL CURRENCY DEC. PLACES 1                         *
+     F*   23 - NOMINAL CURRENCY DEC. PLACES 2                         *
+     F*   24 - NOMINAL CURRENCY DEC. PLACES 3                         *
+     F*   77 - END OF FILE ON READE OR RECORD EXISTS ON SETLL         *
+     F*   79 -  FILES ACCESS INDICATOR                                    S01486
+     F*   80 - END OF TRADE ACTIONS - CUSTOMER AVERAGE PRICE          *
+     F*   81 - END OF DEPOT MOVEMENTS - CUSTOMER AVERAGE PRICE        *
+     F*   82 - END OF PRICES - CUSTOMER AVERAGE PRICE                 *
+     F*   83 - END OF SETTLEMENT ACTIONS - CUSTOMER AVERAGE PRICE     *   S01158
+     F*   87 - EXCEPTION ERROR ON UPDATED FILE - PRINTS STATUS/AUDIT  *
+     F*   U7 - DATABASE ERROR                                         *
+     F*   U8 - DATABASE ERROR                                         *
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  I N D E X   T O   S U B R O U T I N E S                      *
+     F*                                                               *
+     F*   FIRST  - ACCESSES ICD INFORMATION                           *
+     F*   W01    - WRITE EXTRACTED RECORD                             *
+     F*   APNUM  - CALCULATE CHANGE TO AVERAGE PRICE NUMERATOR        *
+     F*                                                                   S01486
+     F**- Portfolio management ----------------------------------------   S01486
+     F*  PMTDC  - CALCULATE CHANGE TO FX AP NUMERATOR                     S01486
+     F*  PMDMC  - CALCULATE CHANGE TO FX AP NUMERATOR                     S01486
+     F*  PORDET - GET PORTFOLIO DETAILS                                   S01486
+     F*  ZCCYXR - CONVERT AN AMOUNT FROM ONE CURRENCY TO ANOTHER          S01486
+     F*  ZCCYCN - CONVERT AN AMOUNT FROM ONE CURRENCY TO ANOTHER          S01486
+     F*  ZFXAVP - CALCULATE THE CUSTOMER FX RATE                          S01486
+     F*  ZYLDO  - OUTPUT PRICE AS PRICE/DISCOUNT/YIELD                    S01486
+     F*  ZYLD   - OUTPUT PRICE AS PRICE/DISCOUNT/YIELD                    S01486
+     F**---------------------------------------------------------------   S01486
+     F*   FIRST  - INITIALISE & CALL ZICDSE AND CALL ZSYSTEM          *
+     F*   ZSYSTM - GET TABTB10 ICD                                    *
+     F*   ZICDSE - GET TABTB36 ICD                                    *
+     F*   ZDATE1 -  Validate dates submitted and convert to a number  *
+     F*   ZDATE2 - Convert a day number to date format                *
+     F*   ZEVCD  - Determine event control date                       *
+     F*   ZDAYS  - Calculate no. of days between two dates for        *
+     F*   ZDYYR  - Calculate no. of days in interest year             *
+     F*   ZICD2  - Access ICD record 2 for securities trading         *
+     F*   ZNCD   - Determine next coupon date                         *
+     F*   AUDIT  - OUTPUTS AUDIT RECORD CAPRHA AND CONTROL REPORT     *
+     F*   CAPRSR - ERROR HANDLING FOR CAPRHA                          *
+     F*   CAPHSR - ERROR HANDLING FOR CAPRH                           *
+     F*   *PSSR  - Error handling                                     *   S01117
+     F*                                                               *
+     F*****************************************************************
+      /EJECT
+     E**    TABLES AND ARRAYS    **
+     E/COPY ZSRSRC,ZPOWER8Z1
+     E*                                                                   S01486
+     E**- Portfolio management ----------------------------------------   S01486
+     E                    POWER   1   7  7 3             POWER ARRAY      S01486
+     E**---------------------------------------------------------------   S01486
+     E/COPY ZSRSRC,ZDAYSZ1
+     E/COPY ZSRSRC,ZNCDZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZACCRZ0                                                S01486
+     E                    CPY@    1   1 80
+     E*
+      /EJECT
+     I*                                                                   S01486
+     I**- Portfolio management ----------------------------------------   S01486
+     I*                                                                   S01486
+     I**   Rename portfolio reference field (in TRDCP)                    S01486
+     ITRDACDF                                                             S01486
+     I              PTFR                            TPTFR                 S01486
+     I              SPXR                            TSPXR                 S01486
+     I              SPMD                            TSPMD                 S01486
+     ICDPMVDF                                                             S01486
+     I              PTFR                            DPTFR                 S01486
+     I              CYLD                            DCYLD                 S01486
+     IPRICEDF                                                             S01486
+     I              PTFR                            PPTFR                 S01486
+     ISEPRICD0                                                            188670
+     I              RECI                            SRECI                 188670
+      *                                                                                       CSE037
+     IINVTPDF                                                                                 CSE037
+     I              SFLG                            ISFLG                                     CSE037
+      *                                                                                       CSE037
+     I*----------------------------------------------------------------   S01486
+     I*
+     ITABLKY      DS
+     I*
+     I*  TABTB10 TABLE KEY FIELD DATA STRUCTURE FOR DB ERROR
+     I*
+     I                                        1  12 TABKEY
+     I                                        1   20RECT
+     I                                        3  10 ZZ008
+     I                                       11  120RCDE
+     I*
+     ICAPHDS      DS                            366
+     I*
+     I*  CUSTOMER AVERAGE PRICE ACTIONS ERROR EXCEPTION  DATA STRUCT.
+     I*
+     I                                     *STATUS  STSCAP
+     I*
+     ICAPRDS      DS                            366
+     I*
+     I*  CUST.AVG. PRICE AUDIT FILE ERROR EXCEPTION  DATA STRUCT.
+     I*
+     I                                     *STATUS  STSCPR
+     IPRADS       DS                                                      095720
+     I                                     *STATUS  STSPRA                095720
+     I*                                                                   S01486
+     I**- Portfolio management ----------------------------------------   S01486
+     I*                                                                   S01486
+     I**   Portfolio key redifined                                        S01486
+     IPORTDS      DS                                                      S01486
+     I                                        1  10 PORKEY                S01486
+     I**********                              1   60CSCN                               S01486 CSD027
+     I                                        1   6 CSCN                                      CSD027
+     I                                        7  10 PTFR                  S01486
+     I*
+     ILDA         DS                            256                       S01117
+     I* PREVIOUS POSITION KEYS - CUSTOMER/BRANCH/SECURITY
+     I*
+     I*
+     I                                      134 183 DBLOT                 S01117
+     I                                      134 141 DBFILE                S01117
+     I                                      142 170 DBKEY                 S01117
+     I                                      171 180 DBPGM                 S01117
+     I                                      181 1830DBASE                 S01117
+     I*LDA******* UDS                            256                      S01117
+     I***********                           134 177 DBLOT                 S01117
+     I***********                           134 138 DBFILE                S01117
+     I***********                           139 167 DBKEY                 S01117
+     I***********                           168 175 DBPGM                 S01117
+     I***********                           176 1770DBASE                 S01117
+     I*
+     I/COPY ZSRSRC,ZNCDZ2
+     I/COPY ZSRSRC,ZYLDZ1                                                 S01486
+     I*
+     ICPYR@#      DS
+     I*
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     I*
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     I*                                                                   S01486
+     I** PORTFOLIO MANAGEMENT CUSTOMERS                                   S01486
+     ISDPLCS    E DSSDPLCSPD                                              S01486
+     I*                                                                   S01486
+     ISDMMOD    E DSSDMMODPD                                              S01486
+     I**  Data structure for module details                               S01486
+     I*                                                                   S01486
+     ISDCUST    E DSSDCUSTPD                                              CPB001
+     I** Customer details                                                 CPB001
+     I** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE               S01486
+     I*                                                                   S01486
+     ISCSARD    E DSSCSARDPD                                                                  CSD010
+      ** External Data Structure for SAR Details                                              CSD010
+      *                                                                                       CSD010
+     IDSFDY     E DSDSFDY                                                 S01486
+     I*                                                                   S01486
+     I** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE               S01486
+     I*                                                                   S01486
+     IDSSDY     E DSDSSDY                                                 S01486
+     I*                                                                   CPB001
+     I** THIRD DS FOR ACCESS PROGRAMS, VERY LONG DATA STRUCTURE           CPB001
+     I*                                                                   CPB001
+     IDSLDY     E DSDSLDY                                                 CPB001
+     I/COPY WNCPYSRC,SE2405I001
+      /EJECT
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C*
+     C* KEYLISTS FOR CHAINING TO FILES
+     C*
+     C* CUSTOMER AVERAGE PRICE ACTIONS LF/CAPRH
+     C*
+     C           CPKEY     KLIST
+     C                     KFLD           WCSCN
+     C***********          KFLD           WCSBR                           S01117
+     C                     KFLD           WCSBA                           S01117
+     C                     KFLD           WCSSC
+     C                     KFLD           WCSDA
+     C/COPY WNCPYSRC,SE2405C002
+     C*
+     C* CUSTOMER AVERAGE PRICE ACTIONS LF/CAPRH
+     C*
+     C           CPKEY1    KLIST
+     C                     KFLD           WCSCN
+     C***********          KFLD           WCSBR                           S01117
+     C                     KFLD           WCSBA                           S01117
+     C                     KFLD           WCSSC
+     C*
+     C* SECURITIES LF/SECTY
+     C*
+     C           SECTKY    KLIST
+     C                     KFLD           CSSC
+     C*                                                                   S01486
+     C**- Portfolio management ----------------------------------------   S01486
+     C* INVESTMENT TYPES                         LF/INVTP                 S01486
+     C*                                                                   S01486
+     C           KINVT     KLIST                                          S01486
+     C                     KFLD           NMCY                            S01486
+     C                     KFLD           SITP                            S01486
+     C*                                                                   S01486
+     C*                                                                   S01486
+     C* PORTFOLIO DEFINITION DETAILS                        PF/PMPORTPD   S01486
+     C*                                                                   S01486
+     C           PORTKY    KLIST                                          S01486
+     C                     KFLD           CSCN                            S01486
+     C                     KFLD           PTFR                            S01486
+      *                                                                   188670
+     C           KEY1      KLIST                                          188670
+     C                     KFLD           PSSN                            188670
+     C                     KFLD           PCNM                            188670
+     C                     KFLD           PMKT                            188670
+     C                     KFLD           PBRA                            188670
+     C                     KFLD           PBOK                            188670
+     C                     KFLD           PPRT                            188670
+     C                     KFLD           PTFR                            188670
+     C*                                                                   S01486
+     C*----------------------------------------------------------------   S01486
+     C*
+     C* ACCESS ICD INFORMATION IN SUBROUTINE FIRST
+     C*
+     C           *NAMVAR   DEFN           LDA                             S01117
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE *BLANK    DBLOT
+     C                     Z-ADD0         DBASE
+     C                     MOVE 'SE2405  'DBPGM
+     C                     OUT  LDA                                       S01117
+     C                     EXSR FIRST
+     C*
+     C* CHECK FOR DATABASE ERRORS
+     C*
+     C           *IN99     IFEQ '1'
+     C                     GOTO EAUDIT
+     C                     END
+     C*
+     C* DEFINE AND CLEAR WORK FIELDS
+     C*
+     C           *LIKE     DEFN CSCN      WCSCN
+     C************LIKE     DEFN CSBR      WCSBR                           S01117
+     C           *LIKE     DEFN CSBA      WCSBA                           S01117
+     C           *LIKE     DEFN CSSC      WCSSC
+     C           *LIKE     DEFN CSDA      WCSDA
+     C           *LIKE     DEFN CSOA      WCSOA
+     C           *LIKE     DEFN CSCP      WCSCP                           S01158
+     C/COPY WNCPYSRC,SE2405C003
+     C*
+     C* LOOP ROUND PROCESSING FOR EACH ACTION RECORD READ LF/TRDCP
+     C*
+     C           *IN80     DOWEQ'0'
+     C*
+     C* READ ACTION FILE OF CUSTOMER AVERAGE PRICE ACTIONS
+     C*
+     C                     READ TRDCP                    80
+     C*
+     C* IF ACTION RECORD DELETED GOTO END OF LOOP FOR NEXT ACTION
+     C*
+     C  N80      RECI      CABEQ'*'       ENDLP1
+     C*
+     C* AT END OF FILE -
+     C*
+     C           *IN80     CABEQ'1'       ENDLP1
+     C*
+     C* Do not write record if action date is equal to date of next
+     C* working day
+     C*
+     C********** EVTD      CABEQDNWD      ENDLP1                                             BUG9775
+     C           EVTD      CABGEDNWD      ENDLP1                                             BUG9775
+     C*
+     C** ADD TO COUNTER FOR EACH RECORD READ FOR TRADE ACTION
+     C*
+     C                     ADD  1         WTYPET  50
+     C*                                                                   E14838
+     C** DETERMINE SOURCE OF ACTION FOR TRADE ACTION                      E14838
+     C*                                                                   E14838
+     C           PRSL      IFEQ 'P'                                       E14838
+     C                     MOVEL'TP'      SOATD   2                       E14838
+     C                     ELSE                                           E14838
+     C                     MOVEL'TS'      SOATD                           E14838
+     C                     END                                            E14838
+     C*
+     C** UPDATE ACTIONS GREATER THAN OR EQUAL TO THIS TRADE ACTION TO
+     C** RECORD ID 'A' FOR SUBSEQUENT ACTION
+     C*
+     C                     MOVE TRCP      WCSCN
+     C***********          MOVE TDBR      WCSBR                           S01117
+     C                     MOVE TDBA      WCSBA                           S01117
+     C                     MOVE TDSS      WCSSC
+     C                     MOVE EVTD      WCSDA
+     C*
+     C           CPKEY     SETLLCAPRH                    77
+     C                     MOVE '0'       *IN77
+     C           *IN77     DOWEQ'0'
+     C           CPKEY1    READECAPRH                    77
+     C*
+     C           *IN77     IFNE '1'
+     C           RECI      IFNE 'D'
+     C***********RECI      ANDNE'A'                                       E14838
+     C           RECI      ANDNE'*'                                       E14838
+     C           RECI      ANDNE'C'                                       E19332
+     C*                                                                   E14838
+     C** IF REVERSED TRADE,THEN DELETE ORIGINAL ACTION IF/WHEN FOUND      E14838
+     C****MATCH****SOURCE****ACTION*****TRADE REF.)FLAGRECIWITH'*'  E14838E16849
+     C** (MATCH ON SOURCE OF ACTION AND TRADE REF.) - FLAG RECI WITH 'C'  E16849
+     C** OTHERWISE FLAG PRICE ACTION FOR REWORKING WITH RECI OF 'A'       E14838
+     C*                                                                   E14838
+     C           RVLI      IFEQ 'Y'                                       E14838
+     C           SOATD     ANDEQCSOA                                      E14838
+     C           TDRF      ANDEQCSRF                                      E14838
+     C           RECI      IFEQ 'A'                                       E14838
+     C                     SUB  1         WUPDAT                          E14838
+     C                     END                                            E14838
+     C**********           MOVE '*'       RECI                      E14838E16849
+     C                     MOVE 'C'       RECI                            E16849
+     C*                                                                   S01486
+     C**- Portfolio management ----------------------------------------   S01486
+     C**- Or Private Banking ------------------------------------------   CPB001
+     C           BGPFMG    IFEQ 'Y'                                       S01486
+     C           BGN4ST    OREQ 'Y'                                       CPB001
+     C*                                                                   S01486
+     C**   If change to average price numerator trade basis non zero,     S01486
+     C**   set up PM trade date record ID to 'C'                          S01486
+     C           PMTI      IFEQ 'H'                        B5             S01486
+     C           PMTI      OREQ 'A'                        B5             S01486
+     C                     MOVE 'C'       PMTI                            S01486
+     C                     END                             E5             S01486
+     C*                                                                   S01486
+     C**   If change to average price numerator value basis non zero,     S01486
+     C**   set up PM value date record ID to 'C'                          S01486
+     C           PMVI      IFEQ 'H'                        B5             S01486
+     C           PMVI      OREQ 'A'                        B5             S01486
+     C                     MOVE 'C'       PMVI                            S01486
+     C                     END                             E5             S01486
+     C*                                                                   S01486
+     C                     END                                            S01486
+     C*----------------------------------------------------------------   S01486
+     C                     ELSE                                           E14838
+     C           RECI      IFNE 'A'                                       E14838
+     C                     MOVE 'A'       RECI
+     C*                                                                   S01486
+     C**- Portfolio management ----------------------------------------   S01486
+     C**- Or Private Banking ------------------------------------------   CPB001
+     C           BGPFMG    IFEQ 'Y'                                       S01486
+     C           BGN4ST    OREQ 'Y'                                       CPB001
+     C*                                                                   S01486
+     C**   If change to average price numerator trade basis non zero,     S01486
+     C**   set up PM trade date record ID to 'C'                          S01486
+     C           PMTI      IFEQ 'H'                        B5             S01486
+     C                     MOVE 'A'       PMTI                            S01486
+     C                     END                             E6             S01486
+     C*                                                                   S01486
+     C**   If change to average price numerator value basis non zero,     S01486
+     C**   set up PM value date record ID to 'C'                          S01486
+     C           PMVI      IFEQ 'H'                        B5             S01486
+     C                     MOVE 'A'       PMVI                            S01486
+     C                     END                             E6             S01486
+     C*                                                                   S01486
+     C                     END                                            S01486
+     C*----------------------------------------------------------------   S01486
+     C                     ADD  1         WUPDAT  50                      E14838
+     C                     END                                            E14838
+     C                     END                                            E14838
+     C**********           UPDATCAPRHDF                                   E14838
+     C           BGPFMG    IFEQ 'Y'                                       S01486
+     C           BGN4ST    OREQ 'Y'                                       CPB001
+     C                     Z-ADDOTRD      OTHD                            S01486
+     C                     END                                            S01486
+     C                     EXCPTCAPRID                                    E14838
+     C**********           ADD  1         WUPDAT  50                      E14838
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C** WRITE EXTRACTED RECORD
+     C** IF NOT REVERSAL                                                  E14838
+     C*
+     C           RVLI      IFNE 'Y'                                       E14838
+     C           BGPFMG    IFEQ 'Y'                                       S01486
+     C           BGN4ST    OREQ 'Y'                                       CPB001
+     C                     Z-ADDOTRD      OTHD                            S01486
+     C                     END                                            S01486
+     C                     MOVE '1'       WTRADE  1
+     C                     EXSR W01
+     C                     MOVE '0'       WTRADE
+     C                     END                                            E14838
+     C*
+     C           ENDLP1    TAG                             ** ENDLP1**
+     C*
+     C                     END
+     C*
+     C* LOOP ROUND PROCESSING FOR EACH ACTION RECORD READ LF/DPMCP
+     C*
+     C* READ ACTION FILE OF CUSTOMER AVERAGE PRICE ACTIONS                E14838
+     C*                                                                   E14838
+     C                     READ DPMCP                    81               E14838
+      *                                                                                      BUG9775
+      ** Do not write record if Date is greater or equal to the Next Working Day             BUG9775
+      *                                                                                      BUG9775
+     C           CADA      CABGEDNWD      ENDLP2                                             BUG9775
+     C*                                                                   E14838
+     C           *IN81     DOWEQ'0'
+     C*
+     C**READ*ACTION*FILE*OF*CUSTOMER*AVERAGE*PRICE*ACTIONS**********      E14838
+     C*
+     C*********************READ DPMCP                    81               E14838
+     C*
+     C* IF ACTION RECORD DELETED GOTO END OF LOOP FOR NEXT ACTION
+     C*
+     C**N81******RECI      CABEQ'*'       ENDLP2                          E14838
+     C           RECI      CABEQ'*'       ENDLP2                          E14838
+     C*
+     C**AT*END*OF*FILE*-******************                                E14838
+     C*
+     C************IN81     CABEQ'1'       ENDLP2                          E14838
+     C*
+     C*
+     C** ADD TO COUNTER FOR EACH RECORD READ FOR TYPE A AND TYPE D
+     C*
+     C                     ADD  1         WTYPED  50
+     C*
+     C** UPDATE ACTIONS GREATER THAN OR EQUAL TO THIS DEPOT MOVEMENT
+     C** RECORD ID 'A' FOR SUBSEQUENT ACTION
+     C*
+     C                     MOVE CCRT      WCSCN
+     C***********          MOVE CPBC      WCSBR                           S01117
+     C                     MOVE CPBA      WCSBA                           S01117
+     C                     MOVE CPSS      WCSSC
+     C                     MOVE CADA      WCSDA
+     C*
+     C           CPKEY     SETLLCAPRH                    77
+     C                     MOVE '0'       *IN77
+     C           *IN77     DOWEQ'0'
+     C           CPKEY1    READECAPRH                    77
+     C*
+     C           *IN77     IFNE '1'
+     C           RECI      IFNE 'D'
+     C           RECI      ANDNE'A'
+     C           RECI      ANDNE'*'                                       E14838
+     C           RECI      ANDNE'C'                                       E19332
+     C           CDMR      OREQ CSRF                                      CSE018
+     C           RECI      ANDNE'*'                                       CSE018
+     C           RECI      ANDNE'C'                                       CSE018
+     C           RECI      ANDNE'D'                                       CSE018
+     C*                                                                   E16849
+     C** IF REVERSAL, UPDATE RECI AS 'C'                                  E16849
+     C** Only flag record to be deleted if the depot movement refer is    CSE018
+     C** the same.                                                        CSE018
+     C*                                                                   E16849
+     C           CRIN      IFEQ 'Y'                                       E16849
+     C           CDMR      ANDEQCSRF                                      CSE018
+     C*                                                                   CSE018
+     C           RECI      IFEQ 'A'                                       CSE018
+     C                     SUB  1         WUPDAT                          CSE018
+     C                     END                                            CSE018
+     C*                                                                   CSE018
+     C                     MOVE 'C'       RECI                            E16849
+     C*                                                                   S01486
+     C**- Portfolio management ----------------------------------------   S01486
+     C**- Or Private Banking ------------------------------------------   CPB001
+     C           BGPFMG    IFEQ 'Y'                                       S01486
+     C           BGN4ST    OREQ 'Y'                                       CPB001
+     C*                                                                   S01486
+     C**   If change to average price numerator trade basis non zero,     S01486
+     C**   set up PM trade date record ID to 'C'                          S01486
+     C           PMTI      IFEQ 'H'                        B5             S01486
+     C           PMTI      OREQ 'A'                        B5             S01486
+     C                     MOVE 'C'       PMTI                            S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C**   If change to average price numerator value basis non zero,     S01486
+     C**   set up PM value date record ID to 'C'                          S01486
+     C           PMVI      IFEQ 'H'                        B5             S01486
+     C           PMVI      OREQ 'A'                        B5             S01486
+     C                     MOVE 'C'       PMVI                            S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     END                                            S01486
+     C*----------------------------------------------------------------   S01486
+     C*                                                                   E16849
+     C** ELSE RE-ACTION RECORD                                            E16849
+     C*                                                                   E16849
+     C                     ELSE                                           E16849
+     C*                                                                   E16849
+     C           RECI      IFNE 'A'                                                           217621
+     C                     MOVE 'A'       RECI
+     C*                                                                   S01486
+     C**- Portfolio management ----------------------------------------   S01486
+     C**- Or Private Banking ------------------------------------------   CPB001
+     C           BGPFMG    IFEQ 'Y'                                       S01486
+     C           BGN4ST    OREQ 'Y'                                       CPB001
+     C*                                                                   S01486
+     C**   If change to average price numerator trade basis non zero,     S01486
+     C**   set up PM trade date record ID to 'C'                          S01486
+     C           PMTI      IFEQ 'H'                        B5             S01486
+     C                     MOVE 'A'       PMTI                            S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C**   If change to average price numerator value basis non zero,     S01486
+     C**   set up PM value date record ID to 'C'                          S01486
+     C           PMVI      IFEQ 'H'                        B5             S01486
+     C                     MOVE 'A'       PMVI                            S01486
+     C                     END                                            S01486
+     C**********           ADD  1         WUPDAT  50                                   S01486 217621
+     C*                                                                   S01486
+     C                     END                                            S01486
+     C*----------------------------------------------------------------   S01486
+     C                     ADD  1         WUPDAT  50                                          217621
+     C                     END                                                                217621
+     C                     END                                            E16849
+     C**********           UPDATCAPRHDF                                   E14838
+     C           BGPFMG    IFEQ 'Y'                                       179580
+     C                     Z-ADDCADA      OTHD                            179580
+     C                     END                                            179580
+     C                     EXCPTCAPRID                                    E14838
+     C********** BGPFMG    IFNE 'Y'                                                    S01486 217621
+     C********** BGN4ST    ANDNE'Y'                                                    CPB001 217621
+     C**********           ADD  1         WUPDAT  50                                          217621
+     C**********           END                                                         S01486 217621
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C** WRITE EXTRACTED RECORD
+     C** IF NOT REVERSAL                                                  E19332
+     C*
+     C           CRIN      IFNE 'Y'                                       E19332
+     C           BGPFMG    IFEQ 'Y'                                       179580
+     C                     Z-ADDCADA      OTHD                            179580
+     C                     END                                            179580
+     C                     MOVE '1'       WDEPOT  1
+     C                     EXSR W01
+     C                     MOVE '0'       WDEPOT
+     C                     END                                            E19332
+     C*                                                                   E14838
+     C* READ ACTION FILE OF CUSTOMER AVERAGE PRICE ACTIONS                E14838
+     C*                                                                   E14838
+     C                     READ DPMCP                    81               E14838
+     C*
+     C           ENDLP2    TAG                             ** ENDLP2**
+     C*
+     C                     END
+     C*
+     C* LOOP ROUND PROCESSING FOR EACH ACTION RECORD READ LF/TRDCP
+     C*
+     C           *IN82     DOWEQ'0'
+     C*
+     C* READ ACTION FILE OF CUSTOMER AVERAGE PRICE ACTIONS
+     C*
+     C                     READ PRCCP                    82
+      *                                                                                      BUG9775
+      ** Do not write record if Date is greater or equal to the Date of Next Working Date    BUG9775
+      *                                                                                      BUG9775
+     C           PVDT      CABGEDNWD      ENDLP3                                             BUG9775
+     C*
+     C* AT END OF FILE -
+     C*
+     C           *IN82     IFNE '1'
+     C           RECI      ANDNE'*'
+     C           RECI      ANDNE'A'
+     C*
+     C* IF ACTION RECORD DELETED GOTO END OF LOOP FOR NEXT ACTION
+     C*
+     C**N82***** RECI      CABEQ'*'       ENDLP3
+      *
+      ****FLAG*PRICE*RECORD*AS*BEING*ACTIONED**************************   E36104
+      **  FLAG PRICE RECORD AS * TO PREVENT SE0080 FROM DELETING IT       E36104
+      *                                                                   E36104
+     C***********          MOVE 'A'       RECI                            E36104
+     C                     MOVE '*'       RECI                            E36104
+      *                                                                                       CSD010
+      ** If CSD010 is installed, Mid-price will be overwritten with the                       CSD010
+      ** Closing Price                                                                        CSD010
+      *                                                                                       CSD010
+     C           CSD010    IFEQ 'Y'                                                           CSD010
+     C                     Z-ADDPRCLPR    PPRC                                                CSD010
+     C                     ENDIF                                                              CSD010
+      *                                                                                       CSD010
+     C                     UPDATPRICEDF
+      *                                                                   188670
+     C           CAC005    IFEQ 'Y'                                       188670
+     C           KEY1      CHAINSEPRICD0             40                   188670
+     C                     MOVE '*'       SRECI                           188670
+     C                     UPDATSEPRICD0                                  188670
+     C                     ENDIF                                          188670
+     C*
+     C** ADD TO COUNTER FOR EACH RECORD READ FOR PRICE TYPE
+     C*
+     C                     ADD  1         WTYPEP  50
+     C*
+     C** UPDATE ACTIONS GREATER THAN OR EQUAL TO THIS PRICE ACTION TO
+     C** RECORD ID 'A' FOR SUBSEQUENT ACTION
+     C*
+     C                     MOVE PCNM      WCSCN
+     C***********          MOVE PBRC      WCSBR                           S01117
+     C                     MOVE PBRA      WCSBA                           S01117
+     C                     MOVE PSSN      WCSSC
+     C                     MOVE PVDT      WCSDA
+     C*
+     C           CPKEY     SETLLCAPRH                    77
+     C                     MOVE '0'       *IN77
+     C           *IN77     DOWEQ'0'
+     C           CPKEY1    READECAPRH                    77
+     C*
+     C           *IN77     IFNE '1'
+     C           RECI      IFNE 'D'
+     C           RECI      ANDNE'A'
+     C           RECI      ANDNE'*'                                       E14838
+     C           RECI      ANDNE'C'                                       E19332
+     C*                                                                   E16849
+     C** IF REVERSAL, UPDATE RECI AS 'C'                                  E16849
+     C*                                                                   E16849
+     C           CRIN      IFEQ 'Y'                                       E16849
+     C*                                                                   CSE018
+     C           RECI      IFEQ 'A'                                       CSE018
+     C                     SUB  1         WUPDAT                          CSE018
+     C                     END                                            CSE018
+     C*                                                                   CSE018
+     C                     MOVE 'C'       RECI                            E16849
+     C*                                                                   S01486
+     C**- Portfolio management ----------------------------------------   S01486
+     C**- Or Private Banking ------------------------------------------   CPB001
+     C           BGPFMG    IFEQ 'Y'                                       S01486
+     C           BGN4ST    OREQ 'Y'                                       CPB001
+     C*                                                                   S01486
+     C**   If change to average price numerator trade basis non zero,     S01486
+     C**   set up PM trade date record ID to 'C'                          S01486
+     C           PMTI      IFEQ 'H'                                       S01486
+     C           PMTI      OREQ 'A'                                       S01486
+     C                     MOVE 'C'       PMTI                            S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C**   If change to average price numerator value basis non zero,     S01486
+     C**   set up PM value date record ID to 'C'                          S01486
+     C           PMVI      IFEQ 'H'                                       S01486
+     C           PMVI      OREQ 'A'                                       S01486
+     C                     MOVE 'C'       PMVI                            S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     END                                            S01486
+     C*----------------------------------------------------------------   S01486
+     C*                                                                   E16849
+     C** ELSE RE-ACTION RECORD                                            E16849
+     C*                                                                   E16849
+     C                     ELSE                                           E16849
+     C*                                                                   E16849
+     C                     MOVE 'A'       RECI
+     C*                                                                   S01486
+     C**- Portfolio management ----------------------------------------   S01486
+     C**- Or Private Banking ------------------------------------------   CPB001
+     C           BGPFMG    IFEQ 'Y'                                       S01486
+     C           BGN4ST    OREQ 'Y'                                       CPB001
+     C*                                                                   S01486
+     C**   If change to average price numerator trade basis non zero,     S01486
+     C**   set up PM trade date record ID to 'A'                          S01486
+     C           PMTI      IFEQ 'H'                                       S01486
+     C                     MOVE 'A'       PMTI                            S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C**   If change to average price numerator value basis non zero,     S01486
+     C**   set up PM value date record ID to 'C'                          S01486
+     C           PMVI      IFEQ 'H'                                       S01486
+     C                     MOVE 'A'       PMVI                            S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     END                                            S01486
+     C*----------------------------------------------------------------   S01486
+     C                     ADD  1         WUPDAT  50                                          217621
+     C                     END                                            E16849
+     C**********           UPDATCAPRHDF                                   E14838
+     C                     EXCPTCAPRID                                    E14838
+     C**********           ADD  1         WUPDAT  50                                          217621
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C** WRITE EXTRACTED RECORD
+     C*
+     C                     MOVE '1'       WPRICE  1
+     C                     EXSR W01
+     C                     MOVE '0'       WPRICE
+     C                     END
+     C*
+     C           ENDLP3    TAG                             ** ENDLP3**
+     C*
+     C                     END
+     C*                                                                   S01158
+     C* LOOP ROUND PROCESSING FOR EACH ACTION RECORD READ LF/SETCP        S01158
+     C*                                                                   S01158
+     C           *IN83     DOWEQ'0'                                       S01158
+     C*                                                                   S01158
+     C* READ SETTLEMENT ACTION FILE OF CUSTOMER AVERAGE PRICE ACTIONS     S01158
+     C*                                                                   S01158
+     C                     READ SETCP                    83               S01158
+      *                                                                                      BUG9775
+      ** Do not write record if Date is greater or equal to the Date of Next Working Day     BUG9775
+      *                                                                                      BUG9775
+     C           SEDE      CABGEDNWD      ENDLP4                                             BUG9775
+      *                                                                                      BUG9775
+     C*                                                                   S01158
+     C* IF ACTION RECORD DELETED GOTO END OF LOOP FOR NEXT ACTION         S01158
+     C*                                                                   S01158
+     C  N83      RECI      CABEQ'*'       ENDLP4                          S01158
+     C*                                                                   S01158
+     C* AT END OF FILE -                                                  S01158
+     C*                                                                   S01158
+     C           *IN83     CABEQ'1'       ENDLP4                          S01158
+     C*                                                                   S01158
+     C** ADD TO COUNTER FOR EACH RECORD READ FOR TRADE ACTION             S01158
+     C*                                                                   S01158
+     C                     ADD  1         WTYPES  50                      S01158
+     C*                                                                   S01158
+     C** UPDATE ACTIONS GREATER THAN OR EQUAL TO THIS TRADE ACTION TO     S01158
+     C** RECORD ID 'A' FOR SUBSEQUENT ACTION                              S01158
+     C*                                                                   S01158
+     C                     MOVE SCPT      WCSCN                           S01158
+     C***********          MOVE SBCD      WCSBR                    S01158 S01117
+     C                     MOVE SBCA      WCSBA                           S01117
+     C                     MOVE SSSN      WCSSC                           S01158
+     C                     MOVE SEDE      WCSDA                           S01158
+     C*                                                                   S01158
+     C* Fetch price from previous record                                  S01158
+     C*                                                                   S01158
+     C           CPKEY     SETLLCAPRH                                     S01158
+     C                     READPCAPRH                    77               S01158
+     C                     Z-ADDCSCP      WCSCP                           S01158
+     C*                                                                   S01158
+     C           CPKEY     SETLLCAPRH                    77               S01158
+     C                     MOVE '0'       *IN77                           S01158
+     C           *IN77     DOWEQ'0'                                       S01158
+     C           CPKEY1    READECAPRH                    77               S01158
+     C*                                                                   S01158
+     C           *IN77     IFNE '1'                                       S01158
+     C           RECI      IFNE 'D'                                       S01158
+     C***********RECI      ANDNE'A'                                S01158 E14838
+     C           RECI      ANDNE'*'                                       E14838
+     C           RECI      ANDNE'C'                                       E35436
+     C*                                                                   E14838
+     C** IF REVERSED SETTLEMENT,THEN DELETE ORIGINAL ACTION IF/WHEN FOUND E14838
+     C****MATCH****SOURCE****ACTION*****TRADE*REFFLAGRECIWITH '* '  E14838E16849
+     C** (MATCH ON SOURCE OF ACTION AND TRADE REF.) - FLAG RECI WITH 'C'  E16849
+     C** OTHERWISE FLAG PRICE ACTION FOR REWORKING WITH RECI OF 'A'       E14838
+     C*                                                                   E14838
+     C           SRIN      IFEQ 'Y'                                       E14838
+     C           CSOA      ANDEQ*BLANK                                    E14838
+     C           STDR      ANDEQCSRF                                      E14838
+     C           RECI      IFEQ 'A'                                       E14838
+     C                     SUB  1         WUPDAT                          E14838
+     C                     END                                            E14838
+     C**********           MOVE '*'       RECI                      E14838E16849
+     C                     MOVE 'C'       RECI                            E16849
+     C                     ELSE                                           E14838
+     C           RECI      IFNE 'A'                                       E14838
+     C                     MOVE 'A'       RECI                            S01158
+     C                     ADD  1         WUPDAT  50                      E14838
+     C                     END                                            E14838
+     C                     END                                            E14838
+     C**********           UPDATCAPRHDF                            S01158 E14838
+     C                     EXCPTCAPRID                                    E14838
+     C**********           ADD  1         WUPDAT  50               S01158 E14838
+     C                     END                                            S01158
+     C                     END                                            S01158
+     C                     END                                            S01158
+     C*                                                                   S01158
+     C** WRITE EXTRACTED RECORD                                           S01158
+     C** IF NOT REVERSAL                                                  E14838
+     C*                                                                   S01158
+     C***********SRIN      IFNE 'Y'                                E14838 E35436
+     C                     MOVE '1'       WSETTL  1                       S01158
+     C                     EXSR W01                                       S01158
+     C                     MOVE '0'       WSETTL                          S01158
+     C***********          END                                     E14838 E35436
+     C*                                                                   S01158
+     C           ENDLP4    TAG                             ** ENDLP4**    S01158
+     C*                                                                   S01158
+     C                     END                                            S01158
+     C*
+     C           EAUDIT    TAG                             ** EAUDIT **
+     C*
+     C* OUTPUT RUN CONTROL REPORT
+     C*
+     C                     EXSR AUDIT
+     C*
+     C                     SETON                     LR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* W01      - WRITE EXTRACTED RECORD                             *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           W01       BEGSR                           ** W01    **
+     C*
+     C*   RECORDS ARE WRITTEN FROM TRADE,DEPOT OR PRICE EVENTS FILES
+     C*   FLAGS WTRADE,WDEPOT AND WPRICE ARE SET TO 1 IF TRADE,DEPOT
+     C*   OR PRICE RECORD RESPECTIVELY.
+     C*
+     C                     Z-ADD0         CSTB
+     C                     Z-ADD0         CSVB
+     C                     Z-ADD0         CSAP
+     C                     Z-ADD0         CSCP
+     C                     Z-ADD0         CSNL
+      *                                                                                       CGL031
+      ** Initialised these fields when CGL031 feature is on.                                  CGL031
+      *                                                                                       CGL031
+     C           CGL031    IFEQ 'Y'                                                           CGL031
+     C                     Z-ADD0         CSTF                                                CGL031
+     C                     Z-ADD0         CSVF                                                CGL031
+     C                     ENDIF                                                              CGL031
+     C*
+     C*  TRADE ACTION
+     C*
+     C           WTRADE    IFEQ '1'
+     C                     MOVE TRCP      CSCN
+     C***********          MOVE TDBR      CSBR                            S01117
+     C                     MOVE TDBA      CSBA                            S01117
+     C                     MOVE TDSS      CSSC
+     C                     MOVE '1'       CSSE
+     C           PRSL      IFEQ 'P'
+     C                     MOVE 'TP'      CSOA
+     C                     END
+     C           PRSL      IFEQ 'S'
+     C                     MOVE 'TS'      CSOA
+     C                     END
+     C                     Z-ADDNOML      CSNL
+     C                     Z-ADD0         CSAP
+     C                     MOVE TDRF      CSRF
+     C*                                                                   S01486
+     C**- Portfolio management ----------------------------------------   S01486
+     C**- Or Private Banking ------------------------------------------   CPB001
+     C           BGPFMG    IFEQ 'Y'                                       S01486
+     C           BGN4ST    OREQ 'Y'                                       CPB001
+     C                     MOVE TPTFR     PTFR                            S01486
+     C                     MOVE TSPXR     SPXR                            S01486
+     C                     MOVE TSPMD     SPMD                            S01486
+     C                     MOVE ACRI      ACIN                            S01486
+     C                     Z-ADDPCHI      ITRA                            S01486
+     C                     Z-ADD*ZEROS    CAVR                            S01486
+     C                     END                                            S01486
+     C*-------------------------------------------------------------------S01486
+     C*
+     C*   CALCULATE AVERAGE PRICE NUMERATOR CHANGE
+     C*
+     C                     EXSR APNUM
+     C                     MOVE 'D'       RECI                            E35436
+     C*
+     C                     END
+     C*
+     C*  DEPOT MOVEMENT
+     C*
+     C           WDEPOT    IFEQ '1'
+     C                     MOVE CCRT      CSCN
+     C***********          MOVE CPBC      CSBR                            S01117
+     C                     MOVE CPBA      CSBA                            S01117
+     C                     MOVE CPSS      CSSC
+     C                     MOVE '3'       CSSE
+     C                     MOVE CPMV      CSOA
+     C                     Z-ADDCMNA      CSNL
+     C                     Z-ADD0         CSAP
+     C                     Z-ADD0         CSCP
+     C                     MOVE CDMR      CSRF
+     C*                                                                   S01486
+     C**- Portfolio management ----------------------------------------   S01486
+     C**- Or Private Banking ------------------------------------------   CPB001
+     C           BGPFMG    IFEQ 'Y'                                       S01486
+     C           BGN4ST    OREQ 'Y'                                       CPB001
+     C                     MOVE DPTFR     PTFR                            S01486
+     C                     MOVE *BLANK    ACIN                            S01486
+     C                     Z-ADD*ZEROS    ITRA                            S01486
+     C                     Z-ADD*ZEROS    CAVR                            S01486
+     C                     END                                            S01486
+     C*-------------------------------------------------------------------S01486
+     C/COPY WNCPYSRC,SE2405C004
+     C*
+     C*   CALCULATE AVERAGE PRICE NUMERATOR CHANGE
+     C*
+     C                     EXSR APNUM
+     C                     MOVE 'D'       RECI                            E35436
+     C*
+     C                     END
+     C*
+     C*  PRICE EVENT
+     C*
+     C           WPRICE    IFEQ '1'
+     C                     MOVE PCNM      CSCN
+     C***********          MOVE PBRC      CSBR                            S01117
+     C                     MOVE PBRA      CSBA                            S01117
+     C                     MOVE PSSN      CSSC
+     C                     MOVE '4'       CSSE
+     C                     MOVE PPRT      CSOA
+     C                     Z-ADD0         CSNL
+     C                     Z-ADD0         CSCP
+     C                     Z-ADDPPRC      CSAP
+     C                     MOVE '      '  CSRF
+     C                     Z-ADD0         CSVB
+     C                     Z-ADD0         CSTB
+     C                     MOVE 'D'       RECI                            E35436
+     C*                                                                   S01486
+     C**- Portfolio management ----------------------------------------   S01486
+     C**- Or Private Banking ------------------------------------------   CPB001
+     C           BGPFMG    IFEQ 'Y'                                       S01486
+     C           BGN4ST    OREQ 'Y'                                       CPB001
+     C*                                                                   S01486
+     C           PPTFR     IFNE *BLANKS                                   S01486
+     C           PPRT      IFEQ 'CT'                                      S01486
+     C                     MOVE 'XT'      CSOA                            S01486
+     C                     ELSE                                           S01486
+     C                     MOVE 'XV'      CSOA                            S01486
+     C                     END                                            S01486
+     C                     MOVE '5'       CSSE                            S01486
+     C                     END                                            S01486
+     C                     MOVE PPTFR     PTFR                            S01486
+     C                     Z-ADDNPXR      CAVR                            S01486
+     C                     MOVE *BLANK    ACIN                            S01486
+     C                     Z-ADD*ZEROS    ITRA                            S01486
+     C                     Z-ADD*ZERO     CYLD                            S01486
+     C                     Z-ADD*ZEROS    CFAP                            S01486
+     C                     Z-ADD*ZEROS    CFXR                            S01486
+     C*                                                                   S01486
+     C                     END                                            S01486
+     C*-------------------------------------------------------------------S01486
+     C*
+     C                     END
+     C*                                                                   S01158
+     C*  SETTLEMENT ACTION                                                S01158
+     C*                                                                   S01158
+     C           WSETTL    IFEQ '1'                                       S01158
+     C                     MOVE 'D'       RECI                            E35436
+     C           SRIN      IFEQ 'Y'                                       E35436
+     C                     MOVE 'C'       RECI                            E35436
+     C                     END                                            E35436
+     C                     MOVE SCPT      CSCN                            S01158
+     C***********          MOVE SBCD      CSBR                     S01158 S01117
+     C                     MOVE SBCA      CSBA                            S01117
+     C                     MOVE SSSN      CSSC                            S01158
+     C                     MOVE '0'       CSSE                            S01158
+     C                     MOVE '  '      CSOA                            S01158
+     C                     Z-ADDSNMS      CSNL                            S01158
+     C                     Z-ADD0         CSAP                            S01158
+     C                     MOVE STDR      CSRF                            S01158
+     C                     Z-ADD0         CSTB                            S01158
+     C                     Z-ADD0         CSVB                            S01158
+     C                     Z-ADDWCSCP     CSCP                            S01158
+     C*                                                                   S01486
+     C**- Portfolio management ----------------------------------------   S01486
+     C**- Or Private Banking ------------------------------------------   CPB001
+     C           BGPFMG    IFEQ 'Y'                                       S01486
+     C           BGN4ST    OREQ 'Y'                                       CPB001
+     C                     MOVE *BLANKS   PTFR                            S01486
+     C                     MOVE *BLANK    ACIN                            S01486
+     C                     Z-ADD*ZEROS    ITRA                            S01486
+     C                     Z-ADD*ZERO     CYLD                            S01486
+     C                     Z-ADD*ZEROS    CFAP                            S01486
+     C                     Z-ADD*ZEROS    CAVR                            S01486
+     C                     Z-ADD*ZEROS    CFXR                            S01486
+     C                     END                                            S01486
+     C*-------------------------------------------------------------------S01486
+     C*                                                                   S01158
+     C                     END                                            S01158
+     C*                                                                   S01486
+     C**- Portfolio management ----------------------------------------   S01486
+     C**- Or Private Banking ------------------------------------------   CPB001
+     C           BGPFMG    IFEQ 'Y'                                       S01486
+     C           BGN4ST    OREQ 'Y'                                       CPB001
+     C*                                                                   S01486
+     C**   Set up PM trade and value dates record ID according to the     S01486
+     C**   sort sequence                                                  S01486
+     C           CSSE      IFEQ '0'                                       S01486
+     C           CSSE      OREQ '4'                                       S01486
+     C                     MOVE '*'       PMTI                            S01486
+     C                     MOVE '*'       PMVI                            S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C**   Set up PM trade and value dates record ID according to the     S01486
+     C**   sort sequence and change to average price numerator            S01486
+     C           CSSE      IFEQ '1'                                       S01486
+     C           CSSE      OREQ '3'                                       S01486
+     C*                                                                   S01486
+     C           CSTB      IFNE *ZEROS                                    S01486
+     C           CSSE      OREQ '3'                                       S01486
+     C           CDBA      ANDEQ'A'                                       178439
+     C                     MOVE 'D'       PMTI                            S01486
+     C                     ELSE                                           S01486
+     C                     MOVE '*'       PMTI                            S01486
+     C                     END                                            S01486
+     C*                                                                   108185
+     C* If portfolio management is installed and trade action,            108185
+     C* or private banking installed and trade action,                    188683
+     C* PMTI must contain 'D' to write/update PMCPOSPP                    108185
+     C*                                                                   108185
+     C********** *INU4     IFEQ '1'                                108185 188683
+     C           BGPFMG    IFEQ 'Y'                                       188683
+     C           TVDA      ANDEQ'T'                                       108185
+     C           CSSE      ANDEQ'1'                                       108185
+     C           CSTB      ANDEQ0                                         108185
+     C           BGN4ST    OREQ 'Y'                                       188683
+     C           TVDA      ANDEQ'T'                                       188683
+     C           CSSE      ANDEQ'1'                                       188683
+     C           CSTB      ANDEQ0                                         188683
+     C                     MOVE 'D'       PMTI                            108185
+     C                     MOVE '*'       PMVI                            108185
+     C                     END                                            108185
+     C*                                                                   S01486
+     C           CSVB      IFNE *ZEROS                                    S01486
+     C           CSSE      OREQ '3'                                       S01486
+     C           CDBA      ANDEQ'A'                                       178439
+     C                     MOVE 'D'       PMVI                            S01486
+     C                     ELSE                                           S01486
+     C                     MOVE '*'       PMVI                            S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C* If portfolio management is installed and trade action,            108185
+     C* or private banking installed and trade action,                    188683
+     C* PMVI must contain 'D' to write/update PMCPOSPP                    108185
+     C*                                                                   108185
+     C********** *INU4     IFEQ '1'                                108185 188683
+     C           BGPFMG    IFEQ 'Y'                                       188683
+     C           TVDA      ANDEQ'V'                                       108185
+     C           CSSE      ANDEQ'1'                                       108185
+     C           CSVB      ANDEQ0                                         108185
+     C           BGN4ST    OREQ 'Y'                                       188683
+     C           TVDA      ANDEQ'V'                                       188683
+     C           CSSE      ANDEQ'1'                                       188683
+     C           CSVB      ANDEQ0                                         188683
+     C                     MOVE '*'       PMTI                            108185
+     C                     MOVE 'D'       PMVI                            108185
+     C                     END                                            108185
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C**   Set up PM trade and value dates record ID according to the     S01486
+     C**   sort sequence and source of action                             S01486
+     C           CSSE      IFEQ '5'                                       S01486
+     C*                                                                   S01486
+     C           CSOA      IFEQ 'XT'                                      S01486
+     C                     MOVE 'D'       PMTI                            S01486
+     C                     ELSE                                           S01486
+     C                     MOVE '*'       PMTI                            S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C           CSOA      IFEQ 'XV'                                      S01486
+     C                     MOVE 'D'       PMVI                            S01486
+     C                     ELSE                                           S01486
+     C                     MOVE '*'       PMVI                            S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     END                                            S01486
+     C*-------------------------------------------------------------------S01486
+     C*
+     C***********          MOVE 'D'       RECI                            E35436
+     C                     Z-ADDRUND      CSGD
+     C                     Z-ADDWCSDA     CSDA
+     C*
+     C                     WRITECAPRHDF
+     C           RECI      IFEQ 'D'                                       E35436
+     C                     ADD  1         WRITEN  50
+     C                     END                                            E35436
+     C*
+     C           ENDW01    ENDSR                            **ENDW01**
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* APNUM - CALCULATE AVERAGE PRICE NUMERATOR                     *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           APNUM     BEGSR                           ** APNUM  **
+     C*
+     C** CALCULATE CHANGE TO AVERAGE PRICE NUMERATOR
+     C*
+     C* Fetch nominal and nominal currency decimal places
+     C*
+     C                     EXSR SECTIN
+     C*
+     C                     MOVEL'20      'TKEY   12
+     C                     MOVELNMCY      ZWK4    4
+     C                     MOVE 1         ZWK4
+     C                     MOVE ZWK4      TKEY
+     C           TKEY      CHAINTABTG10F             25
+     C  N25      RECI      COMP '*'                      25
+     C           *IN25     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SE2405'  DBPGM            ************
+     C                     MOVELTKEY      DBKEY            * DATABASE *
+     C***********          MOVE 'TABLE'   DBFILE           **ERROR*04**   E20651
+     C                     MOVE 'TABLE'   DBFILE           * ERROR 10 *   E20651
+     C***********          Z-ADD04        DBASE            ************   E20651
+     C                     Z-ADD10        DBASE                           E20651
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                       U7U8
+     C                     END
+     C*                                                                   S01486
+     C**- Portfolio management ----------------------------------------   S01486
+     C**- Or Private Banking ------------------------------------------   CPB001
+     C           BGPFMG    IFEQ 'Y'                                       S01486
+     C           BGN4ST    OREQ 'Y'                                       CPB001
+     C*                                                                   S01486
+     C                     Z-ADDCDP       WWNCDP  10                      S01486
+     C           MDIN      IFEQ 1                                         S01486
+     C                     MOVE 'M'       WWNMDI  1                       S01486
+     C                     ELSE                                           S01486
+     C                     MOVE 'D'       WWNMDI                          S01486
+     C                     END                                            S01486
+     C                     Z-ADDSPOT      WWNSPO 138                      S01486
+     C*                                                                   S01486
+     C                     END                                            S01486
+     C*-------------------------------------------------------------------S01486
+     C*
+     C                     Z-ADD*ZEROS    WRK150 150
+     C                     Z-ADD*ZEROS    WRK151 151
+     C                     Z-ADD*ZEROS    WRK152 152
+     C                     Z-ADD*ZEROS    WRK153 153
+     C                     MOVEA'0000'    *IN,21
+     C           21        ADD  CDP       J       20
+     C                     MOVEA'1'       *IN,J
+     C*
+     C*   TRADE ACTION CALCULATION
+     C*
+     C           WTRADE    IFEQ '1'
+     C********** RCAP      IFEQ 'N'
+     C********** CCAP      ANDEQ'N'
+     C********** COCP      ANDEQ'N'
+     C**********           Z-ADDTRPR      CSCP
+     C********** NOML      MULT TRPR      WRK156 156
+     C********** WRK156    DIV  1         WRK150 150H
+     C********** TVDA      IFEQ 'T'
+     C**********           Z-ADDWRK150    CSTB
+     C**********           END
+     C********** TVDA      IFEQ 'V'
+     C**********           Z-ADDWRK150    CSVB
+     C**********           END
+     C**********           ELSE
+     C*
+     C**  TRADE ACTION BUT NOT ALL TABTB36 FLAGS SET OFF
+     C*
+     C********** NOML      MULT TRPR      WRK155 155
+     C********** NOML      MULT TRPR      WRK150 150H
+     C*
+     C***21***** NOML      MULT TRPR      WRK150    H                     E20235
+     C***22***** NOML      MULT TRPR      WRK151    H                     E20235
+     C***23***** NOML      MULT TRPR      WRK152    H                     E20235
+     C***24***** NOML      MULT TRPR      WRK153    H                     E20235
+     C   21      NOML      MULT CNTP      WRK150    H                     E20235
+     C   22      NOML      MULT CNTP      WRK151    H                     E20235
+     C   23      NOML      MULT CNTP      WRK152    H                     E20235
+     C   24      NOML      MULT CNTP      WRK153    H                     E20235
+     C*
+     C   22                MOVE WRK151    WRK150
+     C   23                MOVE WRK152    WRK150
+     C   24                MOVE WRK153    WRK150
+     C*
+     C           RCAP      IFEQ 'Y'
+     C**********           ADD  RALL      WRK155
+     C********** NOML      MULT RALL      WORK15 150H
+     C**********           ADD  WORK15    WRK150
+     C                     Z-ADDRALL      WDRALL 158
+     C*
+     C*   . if Discount
+     C*
+     C           STBS      IFEQ 'D'
+     C           RALL      ANDNE0
+     C                     Z-ADDDNWD      ZZDNWD                          S01117
+     C                     Z-ADDAPDA      ZZAPDT                          S01117
+     C                     EXSR ZEVCD
+     C                     EXSR ZNCD
+     C                     Z-ADDEVTD      ZSDATE
+     C                     Z-ADDMATY      ZEDATE
+     C                     MOVE 'N'       DADJN                           100017
+     C                     EXSR ZDAYS
+     C                     MOVE ' '       DADJN                           100017
+     C                     Z-ADDZDDAYS    #DDAYS  50
+     C                     EXSR ZDYYR
+     C           ZINTDD    IFNE 0
+     C           RALL      MULT #DDAYS    WRKPRC 158
+     C           WRKPRC    DIV  ZINTDD    WCRALL    H
+     C*
+     C           WCRALL    IFGE 0
+     C           1         SUB  WCRALL    WDRALL 158
+     C                     ELSE
+     C                     Z-SUBWCRALL    WCRALL 158
+     C           1         SUB  WCRALL    WDRALL
+     C                     Z-SUBWDRALL    WDRALL
+     C                     END
+     C*
+     C                     ELSE
+     C                     Z-ADD*ZEROS    WDRALL
+     C                     END
+     C                     END
+     C*
+     C   21      NOML      MULT WDRALL    WORK15 150H
+     C   22      NOML      MULT WDRALL    WRK151    H
+     C   23      NOML      MULT WDRALL    WRK152    H
+     C   24      NOML      MULT WDRALL    WRK153    H
+     C*
+     C   22                MOVE WRK151    WORK15
+     C   23                MOVE WRK152    WORK15
+     C   24                MOVE WRK153    WORK15
+     C*
+     C                     ADD  WORK15    WRK150
+     C*
+     C                     END
+     C*
+     C           SPBS      IFEQ 'P'                                       E14838
+     C**********           DIV  100       WRK150                   E14838 186555
+     C                     DIV  100       WRK150    H                     186555
+     C                     END                                            E14838
+     C*                                                                   E14838
+     C           5         SUB  NMDP      DC      10                      E14838
+     C**********           MULT POWER8,DC WRK150                   E14838 186555
+     C                     MULT POWER8,DC WRK150    H                     186555
+     C*                                                                   E14838
+     C********** CCAP      IFEQ 'Y'                                       123197
+     C**********           ADD  CCTL      WRK155
+     C**********           ADD  CCTL      WRK150                          123197
+     C**********           END                                            123197
+     C*
+     C********** COCP      IFEQ 'Y'                                       123197
+     C**********           ADD  CCCT      WRK155
+     C**********           ADD  CCCT      WRK150                          123197
+     C**********           END                                            123197
+     C*
+     C**********           EXSR SECTIN
+     C*
+     C********** SPBS      IFEQ 'P'                                       S01158
+     C********** WRK155    MULT 100       WRK155
+     C**********           MULT 100       WRK150
+     C**********           DIV  100       WRK150                          S01158
+     C**********           END                                            S01158
+     C*
+     C********** WRK155    DIV  NOML      WRK158 158H
+     C********** WRK158    DIV  1         CSCP      H
+     C           WRK150    DIV  NOML      CSCP      H
+     C***********5*********SUB  CDP       DC      10             S01158   E14838
+     C*********************MULT POWER8,DC CSCP                   S01158   E14838
+     C*********************                                      S01158   E14838
+     C***********SPBS******IFEQ 'P'                              S01158   E14838
+     C*********************DIV  100       WRK150                 S01158   E14838
+     C*********************END                                   S01158   E14838
+     C           SPBS      IFEQ 'P'                                       E14838
+     C                     MULT 100       CSCP                            E14838
+     C                     END                                            E14838
+     C*
+     C           5         SUB  NMDP      DC      10                      E14838
+     C                     ADD  CDP       DC      10                      E14838
+     C                     DIV  POWER8,DC CSCP                            E14838
+     C*
+     C           TVDA      IFEQ 'T'
+     C********** CSCP      MULT NOML      CSTB      H
+     C***********5         SUB  NMDP      DC      10                      E14838
+     C**********           ADD  CDP       DC                              S01158
+     C***********WRK150    MULT POWER8,DC CSTB                            E14838
+     C                     Z-ADDWRK150    CSTB                            E14838
+     C                     END
+     C*
+     C           TVDA      IFEQ 'V'
+     C********** CSCP      MULT NOML      CSVB      H
+     C***********5         SUB  NMDP      DC      10                      E14838
+     C**********           ADD  CDP       DC                              S01158
+     C***********WRK150    MULT POWER8,DC CSVB                            E14838
+     C                     Z-ADDWRK150    CSVB                            E14838
+     C                     END
+     C*                                                                   S01486
+     C**- Portfolio management ----------------------------------------   S01486
+     C*                                                                   S01486
+     C**   If portfolio management module is present, calculate           S01486
+     C**   the change to FX AP numerator and the customer FX rate         S01486
+     C**   for the trade                                                  S01486
+     C           BGPFMG    IFEQ 'Y'                                       S01486
+     C           BGN4ST    OREQ 'Y'                                       CPB001
+     C                     MOVE 'N'       WWEXC   1                       CPB001
+     C*                                                                   CPB001
+     C           BGPFMG    IFEQ 'Y'                                       CPB001
+     C                     MOVE CSCN      CSCNA   6                       S01486
+     C                     CALL 'AOPLCSR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD  7                       S01486
+     C                     PARM '*KEY'    P@OPTN  7                       S01486
+     C                     PARM CSCNA     P@KEY1 10                       S01486
+     C           SDPLCS    PARM SDPLCS    DSSDY                           S01486
+     C*                                                                   S01486
+     C           P@RTCD    IFEQ *BLANKS                                   S01486
+     C           QBRECI    ANDEQ'D'                                       S01486
+     C                     MOVE 'Y'       WWEXC                           CPB001
+     C                     ENDIF                                          CPB001
+     C                     ENDIF                                          CPB001
+     C*                                                                   CPB001
+     C           BGN4ST    IFEQ 'Y'                                       CPB001
+     C                     MOVE CSCN      CSCNA   6                       CPB001
+     C                     CALL 'AOCUSTR1'                                CPB001
+     C                     PARM *BLANKS   P@RTCD                          CPB001
+     C                     PARM '*KEY   ' P@OPTN                          CPB001
+     C                     PARM CSCNA     P@KEY1                          CPB001
+     C                     PARM           P@KEY7  7                       CPB001
+     C           SDCUST    PARM SDCUST    DSLDY                           CPB001
+     C*                                                                   CPB001
+     C           P@RTCD    IFEQ *BLANKS                                   CPB001
+     C           BBPRBA    ANDEQ'Y'                                       CPB001
+     C                     MOVE 'Y'       WWEXC                           CPB001
+     C                     ENDIF                                          CPB001
+     C                     ENDIF                                          CPB001
+     C*                                                                   CPB001
+     C           WWEXC     IFEQ 'Y'                                       CPB001
+     C                     EXSR PMTDC                                     S01486
+     C                     ENDIF                                          S01486
+     C                     ENDIF                                          S01486
+     C*-------------------------------------------------------------------S01486
+     C**********           END
+     C                     END
+     C*
+     C*   DEPOT MOVEMENT CALCULATION
+     C*
+     C           WDEPOT    IFEQ '1'
+     C   21      CMNA      MULT CPRC      WRK150    H
+     C   22      CMNA      MULT CPRC      WRK151    H
+     C   23      CMNA      MULT CPRC      WRK152    H
+     C   24      CMNA      MULT CPRC      WRK153    H
+     C*
+     C   22                MOVE WRK151    WRK150
+     C   23                MOVE WRK152    WRK150
+     C   24                MOVE WRK153    WRK150
+     C*                                                                   S01486
+     C           BGPFMG    IFEQ 'Y'                                       S01486
+     C           BGN4ST    OREQ 'Y'                                       CPB001
+     C                     Z-ADDCPRC      CSCP                            S01486
+     C                     END                                            S01486
+     C*
+     C           CDBA      IFEQ 'T'
+     C           CDBA      OREQ 'A'                                       E14838
+     C********** CMNA      MULT CPRC      WRK156
+     C********** WRK156    DIV  1         CSTB      H
+     C           5         SUB  NMDP      DC      10
+     C*********************ADD  CDP       DC                              E14838
+     C********** WRK150    MULT POWER8,DC CSTB                            186555
+     C           WRK150    MULT POWER8,DC CSTB      H                     186555
+     C*                                                                   E14838
+     C           SPBS      IFEQ 'P'                                       E14838
+     C**********           DIV  100       CSTB                     E14838 186555
+     C                     DIV  100       CSTB      H                     186555
+     C                     END                                            E14838
+     C                     END
+     C*
+     C           CDBA      IFEQ 'V'
+     C           CDBA      OREQ 'A'                                       E14838
+     C           CDBA      OREQ 'C'                                       178439
+     C********** CMNA      MULT CPRC      WRK156
+     C********** WRK156    DIV  1         CSVB      H
+     C           5         SUB  NMDP      DC      10
+     C*********************ADD  CDP       DC                              E14838
+     C********** WRK150    MULT POWER8,DC CSVB                            186555
+     C           WRK150    MULT POWER8,DC CSVB      H                     186555
+     C*                                                                   E14838
+     C           SPBS      IFEQ 'P'                                       E14838
+     C**********           DIV  100       CSVB                     E14838 186555
+     C                     DIV  100       CSVB      H                     186555
+     C                     END                                            E14838
+     C*                                                                   E14838
+     C                     END
+     C*                                                                   S01486
+     C**- Portfolio management ----------------------------------------   S01486
+     C**- Or Private Banking ------------------------------------------   CPB001
+     C*                                                                   S01486
+     C**   If portfolio management module is present, calculate           S01486
+     C**   the change to FX AP numerator and the customer FX rate         S01486
+     C**   for the trade                                                  S01486
+     C           BGPFMG    IFEQ 'Y'                                       S01486
+     C           BGN4ST    OREQ 'Y'                                       CPB001
+     C           *IN30     IFEQ '0'                                       S01486
+     C                     EXSR PMDMC                                     S01486
+     C                     END                                            S01486
+     C                     END                                            S01486
+     C*-------------------------------------------------------------------S01486
+     C                     END
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT                                                              S01486
+     C********************************************************************S01486
+     C**- Portfolio management ----------------------------------------   S01486
+     C**                                                                  S01486
+     C**   PMTDC            - To calculate change to FX AP numerator      S01486
+     C**                      /FX rate (trade)                            S01486
+     C**                                                                  S01486
+     C**   CALLED BY APNUM  - Calculate change to AP numerator            S01486
+     C**                                                                  S01486
+     C**   CALLS     PORDET - To get Portfolio details                    S01486
+     C**                                                                  S01486
+     C**             ZCCYXR - To convert an amount from a currency        S01486
+     C**                      to another                                  S01486
+     C**                                                                  S01486
+     C**             ZFXAVP - To calculate the customer FX rate           S01486
+     C**                                                                  S01486
+     C*================================================================   S01486
+     C*                                                                   S01486
+     C           PMTDC     BEGSR                           ** PMTDC **    S01486
+     C*                                                                   S01486
+     C** CALCULATE YIELD FROM THE TRADE PRICE                             S01486
+     C*                                                                   S01486
+     C                     Z-ADD*ZERO     CYLD                            S01486
+     C           PROT      IFEQ '1'                        B1             S01486
+     C           PROT      OREQ '3'                                       S01486
+     C           PROT      OREQ '5'                                       S01486
+     C           PROT      OREQ '6'                                       S01486
+     C           PROT      OREQ '8'                                       S01486
+     C           PROT      OREQ '9'                                       S01486
+     C*                                                                   S01486
+     C           MATY      IFNE *ZERO                      B2             S01486
+     C           SPBS      ANDNE'U'                                       S01486
+     C           TRPR      ANDGT1                                         S01486
+     C*                                                                   S01486
+     C** IF THE SECURITY IS INTEREST BEARING,USE AIBD METHOD,ELSE DISCOUNTS01486
+     C*                                                                   S01486
+     C           CD01      IFNE *ZERO                      B3             S01486
+     C           DYBS      ANDNE'4'                                       S01486
+     C                     MOVEL'A '      SYBS                            S01486
+     C                     ELSE                            X3             S01486
+     C                     MOVEL'DA'      SYBS                            S01486
+     C                     END                             E3             S01486
+     C*                                                                   S01486
+     C           DYBS      IFEQ '4'                        B3             S01486
+     C                     MOVE '3'       DYBS                            S01486
+     C                     MOVE '1'       DVBS                            S01486
+     C                     END                             E3             S01486
+     C*                                                                   S01486
+     C*                                                                   S01486
+     C** PRICE TO BE USED IN CALCULATION OF AVERAGE YIELD IS BOOK PRICE   S01486
+     C** THIS IS CALCULATED VIA SR/ZAVPRC                                 S01486
+     C                     Z-ADDNOML      ZNOML                           S01486
+     C*                                                                   S01486
+     C           CSTB      IFNE 0                                         S01486
+     C                     Z-ADDCSTB      ZVALU                           S01486
+     C                     ELSE                                           S01486
+     C                     Z-ADDCSVB      ZVALU                           S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     Z-ADDNMDP      ZNMDP                           S01486
+     C                     Z-ADDWWNCDP    ZNMCD                           S01486
+     C                     MOVE SPBS      ZPRCB                           S01486
+     C*                                                                   S01486
+     C                     EXSR ZAVPRC                                    S01486
+     C                     Z-ADDTRPR      ZPRICE 158                      S01486
+     C           TVDA      IFEQ 'V'                        B3             S01486
+     C                     Z-ADDEVTD      ZFDATE  50                      S01486
+     C                     ELSE                            X3             S01486
+     C                     Z-ADDOTRD      ZFDATE                          S01486
+     C                     END                             E3             S01486
+     C           STBS      IFEQ 'Y'                                                           250227
+     C                     EXSR ZYLDO                                     S01486
+     C                     Z-ADDZYLDOT    CYLD                            S01486
+     C                     ENDIF                                                              250227
+     C                     END                             E2             S01486
+     C*                                                                   S01486
+     C                     END                             E1             S01486
+     C*                                                                   S01486
+     C**   Set the change to FX AP numerator and customer FX rate to zero S01486
+     C*                                                                   S01486
+     C                     Z-ADD0         CFAP                            S01486
+     C                     Z-ADD0         CFXR                            S01486
+     C*                                                                   S01486
+     C**   Bypass processing if portfolio reference is blank              S01486
+     C*                                                                   S01486
+     C           PTFR      CABEQ*BLANKS   PMTDC9                          S01486
+     C*                                                                   S01486
+     C**   When change of portfolio ref. or customer, access portfolio    S01486
+     C**   details file                                                   S01486
+     C           PTFR      IFNE WWPTFR                                    S01486
+     C           CSCN      ORNE WWCSCN                                    S01486
+     C                     MOVE PTFR      WWPTFR  4                       S01486
+     C**********           Z-ADDCSCN      WWCSCN  60                                   S01486 CSD027
+     C                     MOVE CSCN      WWCSCN  6                                           CSD027
+     C                     EXSR PORDET                                    S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C**   If the settlement currency is equal to the portfolio           S01486
+     C**   currency, set the change to FX AP to the settlement amount     S01486
+     C*                                                                   S01486
+     C           SETCY     IFEQ PNPTCY                                    S01486
+     C                     Z-ADDSETAM     CFAP                            S01486
+     C*                                                                   S01486
+     C**   Otherwise access currency master file with the settlement      S01486
+     C**   currency code for the settlement currency decimal places       S01486
+     C*                                                                   S01486
+     C                     ELSE                                           S01486
+     C                     MOVELSETCY     ZWK4                            S01486
+     C                     MOVE ZWK4      TKEY                            S01486
+     C           TKEY      CHAINTABTG10F             79                   S01486
+     C  N79      RECI      COMP 'D'                  7979                 S01486
+     C*                                                                   S01486
+     C**   If no record found, perform database error processing          S01486
+     C           *IN79     IFEQ '1'                                       S01486
+     C                     MOVELTKEY      DBKEY            ************   S01486
+     C                     MOVE 'TABLE'   DBFILE           * DATABASE *   S01486
+     C                     Z-ADD11        DBASE            * ERROR 11 *   S01486
+     C                     MOVE '1'       *INU7            ************   S01486
+     C                     MOVE '1'       *INU8                           S01486
+     C                     MOVE '1'       *INLR                           S01486
+     C                     EXSR AUDIT                                     S01486
+     C                     RETRN                                          S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C**   Convert the settlement amount from settlement currency         S01486
+     C**   to portfolio currency using SR/ZCCYXR                          S01486
+     C*                                                                   S01486
+     C                     Z-ADDSETAM     ZAMTF                           S01486
+     C                     Z-ADDSPXR      ZCRSRT                          S01486
+     C                     MOVE SPMD      ZCRSMD                          S01486
+     C                     Z-ADDCDP       ZCDPF                           S01486
+     C                     Z-ADDPNPCDP    ZCDPT                           S01486
+     C                     EXSR ZCCYXR                                    S01486
+     C                     Z-ADDZAMTT     CFAP                            S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C**   Calculate the customer FX rate using SR/ZFXAVP subroutine      S01486
+     C           CSTB      IFNE *ZERO                                     S01486
+     C                     Z-ADDCSTB      ZAPNM                           S01486
+     C                     ELSE                                           S01486
+     C                     Z-ADDCSVB      ZAPNM                           S01486
+     C                     END                                            S01486
+     C                     Z-ADDCFAP      ZFXAP                           S01486
+     C                     Z-ADDWWNCDP    ZNMCD                           S01486
+     C                     Z-ADDPNPCDP    ZPTCD                           S01486
+     C                     EXSR ZFXAVP                                    S01486
+     C                     Z-ADDZAVFX     CFXR                            S01486
+     C*                                                                   S01486
+     C           PMTDC9    ENDSR                                          S01486
+     C*                                                                   S01486
+     C********************************************************************S01486
+      /EJECT                                                              S01486
+     C********************************************************************S01486
+     C**                                                                  S01486
+     C**   PMDMC            - To calculate change to FX AP numerator      S01486
+     C**                      /FX rate (Depot movement)                   S01486
+     C**                                                                  S01486
+     C**   CALLED BY APNUM  - Calculate change to AP numerator            S01486
+     C**                                                                  S01486
+     C**   CALLS     PORDET - To get Portfolio details                    S01486
+     C**                                                                  S01486
+     C**                                                                  S01486
+     C**             ZCCYCN - To convert an amount from a currency        S01486
+     C**                      to another                                  S01486
+     C**                                                                  S01486
+     C**             ZFXAVP - To calculate the customer FX rate           S01486
+     C**                                                                  S01486
+     C*================================================================   S01486
+     C*                                                                   S01486
+     C           PMDMC     BEGSR                           ** PMDMC **    S01486
+     C*                                                                   S01486
+     C** CALCULATE THE YIELD FROM THE DEPOT MOVEMENT PRICE                S01486
+     C*                                                                   S01486
+     C           DCYLD     IFEQ 0                          B1             S01486
+     C                     Z-ADD*ZERO     CYLD                            S01486
+     C           PROT      IFEQ '1'                        B2             S01486
+     C           PROT      OREQ '3'                                       S01486
+     C           PROT      OREQ '5'                                       S01486
+     C           PROT      OREQ '6'                                       S01486
+     C           PROT      OREQ '8'                                       S01486
+     C           PROT      OREQ '9'                                       S01486
+     C*                                                                   S01486
+     C           MATY      IFNE *ZERO                      B3             S01486
+     C           SPBS      ANDNE'U'                                       S01486
+     C           CPRC      ANDGT1                                         S01486
+     C*                                                                   S01486
+     C** IF THE SECURITY IS INTEREST BEARING,USE AIBD METHOD,ELSE DISCOUNTS01486
+     C*                                                                   S01486
+     C           CD01      IFNE *ZERO                      B4             S01486
+     C           DYBS      ANDNE'4'                                       S01486
+     C                     MOVEL'A '      SYBS                            S01486
+     C                     ELSE                            X4             S01486
+     C                     MOVEL'DA'      SYBS                            S01486
+     C                     END                             E4             S01486
+     C*                                                                   S01486
+     C           DYBS      IFEQ '4'                        B4             S01486
+     C                     MOVE '3'       DYBS                            S01486
+     C                     MOVE '1'       DVBS                            S01486
+     C                     END                             E4             S01486
+     C*                                                                   S01486
+     C                     Z-ADDCPRC      ZPRICE 158                      S01486
+     C                     Z-ADDCADA      ZFDATE  50                      S01486
+     C           STBS      IFEQ 'Y'                                                           250227
+     C                     EXSR ZYLDO                                     S01486
+     C                     Z-ADDZYLDOT    CYLD                            S01486
+     C                     ENDIF                                                              250227
+     C                     END                             E3             S01486
+     C*                                                                   S01486
+     C                     END                             E2             S01486
+     C*                                                                   S01486
+     C                     ELSE                            X1             S01486
+     C                     Z-ADDDCYLD     CYLD                            S01486
+     C                     END                             E1             S01486
+     C*                                                                   S01486
+     C**   Set the change to FX AP numerator and customer FX rate to zero S01486
+     C*                                                                   S01486
+     C                     Z-ADD0         CFAP                            S01486
+     C                     Z-ADD0         CFXR                            S01486
+     C*                                                                   S01486
+     C**   Bypass processing if portfolio reference is blank              S01486
+     C*                                                                   S01486
+     C           PTFR      CABEQ*BLANKS   PMDMC9                          S01486
+     C*                                                                   S01486
+     C**   When change of portfolio ref. or customer, access portfolio    S01486
+     C**   details file                                                   S01486
+     C*                                                                   S01486
+     C           PTFR      IFNE WWPTFR                                    S01486
+     C           CSCN      ORNE WWCSCN                                    S01486
+     C                     MOVE PTFR      WWPTFR  4                       S01486
+     C**********           Z-ADDCSCN      WWCSCN  60                                   S01486 CSD027
+     C                     MOVE CSCN      WWCSCN  6                                           CSD027
+     C                     EXSR PORDET                                    S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C**   Determine Customer Book cost in Nominal Currency               S01486
+     C           CSTB      IFNE *ZERO                                     S01486
+     C                     Z-ADDCSTB      WWCBOK 150                      S01486
+     C                     ELSE                                           S01486
+     C                     Z-ADDCSVB      WWCBOK                          S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C**   If the nominal currency is equal to the portfolio currency,    S01486
+     C**   set the change to FX AP numerator to the customer book cost    S01486
+     C**   in nominal currency                                            S01486
+     C*                                                                   S01486
+     C           NMCY      IFEQ PNPTCY                                    S01486
+     C                     Z-ADDWWCBOK    CFAP                            S01486
+     C*                                                                   S01486
+     C**   Otherwise convert the customer book cost from nominal          S01486
+     C**   currency to portfolio currency                                 S01486
+     C                     ELSE                                           S01486
+     C*                                                                   S01486
+     C**   Determine the spot rate and multiply/divide indicator          S01486
+     C**   for the nominal currency on the depot movement date            S01486
+     C*                                                                   S01486
+     C**   Convert the customer book cost in nominal currency to          S01486
+     C**   portfolio currency using SR/ZCCYXR subroutine                  S01486
+     C*                                                                   S01486
+     C                     Z-ADDWWCBOK    ZAMTF                           S01486
+     C                     Z-ADDSPXR      ZCRSRT                          S01486
+     C                     MOVE SPMD      ZCRSMD                          S01486
+     C                     Z-ADDWWNCDP    ZCDPF                           S01486
+     C                     Z-ADDPNPCDP    ZCDPT                           S01486
+     C                     EXSR ZCCYXR                                    S01486
+     C                     Z-ADDZAMTT     CFAP                            S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C**   Calculate the customer FX rate using SR/ZFXAVP subroutine      S01486
+     C                     Z-ADDWWCBOK    ZAPNM                           S01486
+     C                     Z-ADDCFAP      ZFXAP                           S01486
+     C                     Z-ADDWWNCDP    ZNMCD                           S01486
+     C                     Z-ADDPNPCDP    ZPTCD                           S01486
+     C                     EXSR ZFXAVP                                    S01486
+     C                     Z-ADDZAVFX     CFXR                            S01486
+     C*                                                                   S01486
+     C           PMDMC9    ENDSR                                          S01486
+     C*                                                                   S01486
+     C********************************************************************S01486
+      /EJECT                                                              S01486
+     C********************************************************************S01486
+     C**                                                                  S01486
+     C**   PORDET           - To get Portfolio details                    S01486
+     C**                      (portfolio currency & exchange rate)        S01486
+     C**                                                                  S01486
+     C**   CALLED BY PMDMC - To calculate change to FX AP numerator       S01486
+     C**                      /FX rate (trade)                            S01486
+     C**             PMTDC - To calculate change to FX AP numerator       S01486
+     C**                      /FX rate (Depot movement)                   S01486
+     C**                                                                  S01486
+     C**   CALLS                                                          S01486
+     C**                                                                  S01486
+     C*================================================================   S01486
+     C*                                                                   S01486
+     C           PORDET    BEGSR                           ** PORDET **   S01486
+     C*                                                                   S01486
+     C**   If portfolio movement,get portfolio currency & dec.places      S01486
+     C*                                                                   S01486
+     C           WWPTFR    IFNE '9997'                                    S01486
+     C           PORTKY    CHAINPMPORTP0             79                   S01486
+     C  N79      PNRECI    COMP 'D'                  7979                 S01486
+     C*                                                                   S01486
+     C**   If no record found, perform database error processing          S01486
+     C           *IN79     IFEQ '1'                                       S01486
+     C                     MOVELPORKEY    DBKEY            ************   S01486
+     C                     MOVE 'PMPOR'   DBFILE           * DATABASE *   S01486
+     C                     Z-ADD8         DBASE            * ERROR 08 *   S01486
+     C                     MOVE '1'       *INU7            ************   S01486
+     C                     MOVE '1'       *INU8                           S01486
+     C                     MOVE '1'       *INLR                           S01486
+     C                     EXSR AUDIT                                     S01486
+     C                     RETRN                                          S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C**   If non-portfolio movement,get customer base currency           S01486
+     C*                                                                   S01486
+     C                     ELSE                                           S01486
+     C                     MOVE WWCSCN    WCNUM   6                       S01486
+     C                     CALL 'AOPLCSR0'                                S01486
+     C                     PARM *BLANKS   P@RTCD  7                       S01486
+     C                     PARM '*KEY'    P@OPTN  7                       S01486
+     C                     PARM WCNUM     P@KEY1 10                       S01486
+1    C           SDPLCS    PARM SDPLCS    DSSDY                           S01486
+     C*                                                                   S01486
+     C*                                                                   S01486
+     C**   If no record found, perform database error processing          S01486
+     C           P@RTCD    IFNE *BLANKS                                   S01486
+     C           QBRECI    ORNE 'D'                                       S01486
+     C                     MOVELWWCSCN    DBKEY            ************   S01486
+     C                     MOVE 'SDPLCSPD'DBFILE           * DATABASE *   S01486
+     C                     Z-ADD9         DBASE            * ERROR 09 *   S01486
+     C                     MOVE '1'       *INU7            ************   S01486
+     C                     MOVE '1'       *INU8                           S01486
+     C                     MOVE '1'       *INLR                           S01486
+     C                     EXSR AUDIT                                     S01486
+     C                     RETRN                                          S01486
+     C                     END                                            S01486
+     C                     MOVELQBCSBY    PNPTCY                          S01486
+     C                     Z-ADDQBBYDP    PNPCDP                          S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C**   Access currency master file with the portfolio currency        S01486
+     C                     MOVELPNPTCY    ZWK4                            S01486
+     C                     MOVE ZWK4      TKEY                            S01486
+     C           TKEY      CHAINTABTG10F             79                   S01486
+     C  N79      RECI      COMP 'D'                  7979                 S01486
+     C*                                                                   S01486
+     C**   If no record found, perform database error processing          S01486
+     C           *IN79     IFEQ '1'                                       S01486
+     C                     MOVELTKEY      DBKEY            ************   S01486
+     C                     MOVE 'TABLE'   DBFILE           * DATABASE *   S01486
+     C                     Z-ADD10        DBASE            * ERROR 10 *   S01486
+     C                     MOVE '1'       *INU7            ************   S01486
+     C                     MOVE '1'       *INU8                           S01486
+     C                     MOVE '1'       *INLR                           S01486
+     C                     EXSR AUDIT                                     S01486
+     C                     RETRN                                          S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C**   Store Portfolio Currency values                                S01486
+     C*                                                                   S01486
+     C           MDIN      IFEQ 1                                         S01486
+     C                     MOVE 'M'       WWPMDI  1                       S01486
+     C                     ELSE                                           S01486
+     C                     MOVE 'D'       WWPMDI                          S01486
+     C                     END                                            S01486
+     C                     Z-ADDSPOT      WWPSPO 138                      S01486
+     C*                                                                   S01486
+     C           PORDT9    ENDSR                                          S01486
+     C*                                                                   S01486
+     C********************************************************************S01486
+     C/COPY ZSRSRC,ZYLDOZ1                                                S01486
+     C/COPY ZSRSRC,ZYLDZ2                                                 S01486
+     C/COPY ZSRSRC,ZACCZZ1                                                S01486
+     C/COPY ZSRSRC,ZACCRZ1                                                S01486
+     C/COPY ZSRSRC,ZRATEZ1                                                S01486
+     C/COPY ZSRSRC,ZCALCD                                                 S01486
+     C/COPY ZSRSRC,ZCNSDZ1                                                S01486
+     C/COPY ZSRSRC,ZCCYXR                                                 S01486
+     C/COPY ZSRSRC,ZFXAVP                                                 S01486
+     C********************************************************************S01486
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C* SECTIN   - GET SECURITY RECORD                                *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           SECTIN    BEGSR                           ** SECTIN **
+     C*
+     C** CHAIN FOR SECURITY RECORD AND DATA BASE ERROR
+     C*
+     C           SECTKY    CHAINSECTY                79
+     C           *IN79     IFNE '1'
+     C           RECI      COMP '*'                      79
+     C                     END
+     C           *IN79     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'SECTY'   DBFILE           *****************
+     C                     MOVELCSSC      DBKEY            ** DB ERROR 03 **
+     C                     Z-ADD3         DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     GOTO EAUDIT
+     C                     END
+     C*                                                                   S01486
+     C** CHAIN FOR INVESTMENT TYPE FOR PROCESSING TYPE                    S01486
+     C*                                                                   S01486
+     C           KINVT     CHAININVTP                79                   S01486
+     C           *IN79     IFNE '1'                                       S01486
+     C           RECI      COMP '*'                      79               S01486
+     C                     END                                            S01486
+     C           *IN79     IFEQ '1'                                       S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVEL'INVTP'   DBFILE                          S01486
+     C                     MOVELSITP      WK6     6        ***************S01486
+     C                     MOVE NMCY      WK6              ** DB ERROR 04 S01486
+     C                     MOVELWK6       DBKEY            ***************S01486
+     C                     Z-ADD4         DBASE                           S01486
+     C                     OUT  LDA                                       S01486
+     C                     GOTO EAUDIT                                    S01486
+     C                     END                                            S01486
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  AUDIT                                                        *
+     C*                                                               *
+     C*****************************************************************
+     C*                                                               *
+     C           AUDIT     BEGSR                           ** AUDIT **
+     C*
+     C** COMPARE COUNT OF ACTIONS TO AUDIT FILE ACTIONS
+     C*
+     C           *INU8     IFNE '1'
+     C                     READ CAPRHA                   79
+     C*
+     C* DATA BASE ERROR
+     C*
+     C           *IN79     IFEQ '1'
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'CAPRHA'  DBFILE           *****************
+     C***********          MOVEL'AUDIT'   DBKEY            ***DB*ERROR*04*E20651
+     C                     MOVEL'AUDIT'   DBKEY            ** DB ERROR 11 E20651
+     C***********          Z-ADD4         DBASE            ***************E20651
+     C                     Z-ADD11        DBASE                           E20651
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     SETON                       U7U8
+     C                     ELSE
+     C                     Z-ADDNORE      WCNORE  50
+     C*
+     C* CALCULATE NO OF RECORDS ON FILE NOW  AND UPDATE AUDIT FILE
+     C*
+     C           WCNORE    ADD  WRITEN    WNNORE  50
+     C                     Z-ADDWNNORE    NORE
+     C**********           ADD  WRITEN    SINS
+     C**********           ADD  WUPDAT    SAMD
+     C                     Z-ADDWRITEN    SINS
+     C                     Z-ADDWUPDAT    SAMD
+     C                     UPDATCAPRHAF
+     C                     END
+     C*
+     C* READ PRICE AUDIT RECORD IF NOT THERE DATABASE ERROR               095720
+     C*                                                                   095720
+     C                     READ PRICEAF                  16               095720
+     C           *IN16     IFEQ '1'                                       095720
+     C                     SETON                     U7U8                 095720
+     C                     MOVE 'PRICE'   DBFILE           ***************095720
+     C                     MOVEL'AUDIT'   DBKEY            **DB ERROR 05**095720
+     C                     MOVE '05'      DBASE            ***************095720
+     C                     END                                            095720
+     C*                                                                   095720
+     C* SUBTRACT DELETE COUNT FROM RECORDS ON AUDIT FILE                  095720
+     C*     AND UPDATE AUDIT FILE                                         095720
+     C*                                                                   095720
+     C           NORE      SUB  WTYPEP    NNORE   50                      095720
+     C                     Z-ADDNNORE     NORE                            095720
+     C                     Z-ADDNNORE     SLRB                            095720
+     C                     UPDATPRICEAF                                   095720
+     C***************      READ TRDACA                   79
+     C*
+     C* DATA BASE ERROR
+     C*
+     C********** *IN79     IFEQ '1'
+     C**********           MOVEL'TRDACA'  DBFILE           *****************
+     C**********           MOVEL'AUDIT'   DBKEY            ** DB ERROR 05 **
+     C**********           Z-ADD5         DBASE            *****************
+     C**********           SETON                       U7U8
+     C**********           ELSE
+     C**********           Z-ADDNORT      WONORE  50
+     C**********           END
+     C                     END
+     C*
+     C* OUTPUT CONTROL REPORT
+     C*
+     C                     WRITEHEADAU
+     C           *INU7     IFEQ '1'
+     C                     WRITEERROR
+     C                     ELSE
+     C***********WTYPET    ADD  WTYPED    WTYPAL  50                      E29170
+     C***********WTYPEP    ADD  WTYPAL    WTYPAL                          E29170
+     C***********WTYPAL    IFEQ 0                                         E29170
+     C***********          WRITENONE                                      E29170
+     C***********          ELSE                                           E29170
+     C                     WRITECONTROL
+     C*
+     C***********          END                                            E29170
+     C                     END
+     C***********                                                         E29170
+     C***********          WRITETRAILAU                                   E29170
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /EJECT
+     C*****************************************************************
+     C*                                                               *
+     C*  CAPHSR  - SUBROUTINE FOR ERROR HANDLING OF LF/CAPRH          *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           CAPHSR    BEGSR                            ** CAPHSR **
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVEL'CAPRH '  DBFILE           *****************
+     C                     MOVELWCSSC     DBKEY            ** DB ERROR 06 **
+     C                     Z-ADD006       DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE STSCAP    DBSTAT
+     C                     MOVE '1'       *IN87
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /SPACE 3
+     C*****************************************************************
+     C*                                                               *
+     C*  CAPRSR  - SUBROUTINE FOR ERROR HANDLING OF PF/CAPRHA AUDIT   *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           CAPRSR    BEGSR                            **CAPRSR**
+     C*
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'CAPRHA'  DBFILE           *****************
+     C                     MOVEL'AUDIT'   DBKEY            ** DB ERROR 07 **
+     C                     Z-ADD007       DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     MOVE STSCPR    DBSTAT
+     C                     MOVE '1'       *IN87
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+      /SPACE 3
+     C*****************************************************************   095720
+     C*                                                                   095720
+     C*   PRASR  - SUBROUTINE FOR ERROR HANDLING OF PRICES FILE           095720
+     C*               AUDIT RECORD                                        095720
+     C*                                                                   095720
+     C           PRASR     BEGSR                                          095720
+     C*                                                                   095720
+     C                     MOVE 'PRICE'   DBFILE                          095720
+     C                     MOVEL'AUDIT'   DBKEY                           095720
+     C                     MOVE '92'      DBASE                           095720
+     C                     MOVE STSPRA    DBSTAT                          095720
+     C                     MOVE '1'       *IN87                           095720
+     C                     SETON                     LRU7U8               095720
+     C                     GOTO EAUDIT                                    095720
+     C*                                                                   095720
+     C                     ENDSR                                          095720
+     C*                                                                   095720
+     C*****************************************************************   095720
+     C*****************************************************************
+     C*                                                               *
+     C* FIRST - SUBROUTINE TO ACCESS ICD INFORMATION                  *
+     C*                                                               *
+     C*****************************************************************
+     C*
+     C           FIRST     BEGSR                           ** FIRST **
+     C*
+     C/COPY WNCPYSRC,SE2405C001
+     C* ACCESS ICD TABTB10
+     C*
+     C                     EXSR ZSYSTM
+     C           *IN99     IFEQ '1'
+     C                     MOVE '1'       *INU7
+     C                     MOVE '1'       *INU8
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C***********          MOVELZTABKY    DBKEY            ***DB*ERROR*01*E20651
+     C                     MOVELZTABKY    DBKEY            ** DB ERROR 08 E20651
+     C***********          Z-ADD1         DBASE            ***************E20651
+     C                     Z-ADD8         DBASE                           E20651
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE
+     C*
+     C* ACCESS ICDSE TABTB36
+     C*
+     C                     EXSR ZICDSE
+     C           *INU7     IFEQ '1'
+     C                     MOVE '1'       *IN99
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVELZTABKY    DBKEY            ** DB ERROR 02 **
+     C                     Z-ADD2         DBASE            *****************
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE
+     C*
+     C* ACCESS ICD TABTB10
+     C*
+     C                     EXSR ZICD2
+     C           *INU7     IFEQ '1'
+     C                     MOVE '1'       *IN99
+     C           *LOCK     IN   LDA                                       S01117
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C***********          MOVELZTABKY    DBKEY            ***DB*ERROR*01*E20651
+     C                     MOVELZTABKY    DBKEY            ** DB ERROR 09 E20651
+     C***********          Z-ADD1         DBASE            ***************E20651
+     C                     Z-ADD9         DBASE                           E20651
+     C                     OUT  LDA                                       S01117
+     C                     EXSR *PSSR                                     S01117
+     C                     ELSE                                           S01486
+     C*                                                                   S01486
+     C**  Get module details using access object                          S01486
+     C*                                                                   S01486
+     C                     CALL 'AOMMODR0'                                S01486
+     C                     PARM *BLANKS   WLRTCD  7                       S01486
+     C                     PARM '*FIRST'  WLOPTN  7                       S01486
+     C           SDMMOD    PARM SDMMOD    DSFDY                           S01486
+     C*                                                                   S01486
+     C           WLRTCD    IFNE *BLANK                                    S01486
+     C           *LOCK     IN   LDA                                       S01486
+     C                     MOVE 'SDMMODPD'DBFILE           ***************S01486
+     C                     MOVELWLOPTN    DBKEY            * DB ERROR 20 *S01486
+     C                     Z-ADD20        DBASE            ***************S01486
+     C                     OUT  LDA                                       S01486
+     C                     MOVE '1'       *IN99                           S01486
+     C                     SETON                     U7U8LR               S01486
+     C                     EXSR *PSSR                                     S01486
+     C                     END                                            S01486
+     C*                                                                   S01486
+     C                     END
+     C                     END
+     C                     END
+     C*
+      *                                                                   188670
+      ***  Check if CAC005 is on                                          188670
+      *                                                                   188670
+     C                     CALL 'AOSARDR0'                                188670
+     C                     PARM *BLANKS   PRTCD   7                       188670
+     C                     PARM '*VERIFY' POPTN   7                       188670
+     C                     PARM 'CAC005'  PSARD   6                       188670
+      *                                                                   188670
+     C           PRTCD     IFEQ *BLANKS                                   188670
+     C                     MOVE 'Y'       CAC005  1                       188670
+     C                     ELSE                                           188670
+     C                     MOVE 'N'       CAC005                          188670
+     C                     ENDIF                                          188670
+      *                                                                                       CSD010
+      **  Access SAR details file to see if CSD010 is installed.                              CSD010
+      *                                                                                       CSD010
+     C                     CALL 'AOSARDR0'                                                    CSD010
+     C                     PARM *BLANKS   PRTCD                                               CSD010
+     C                     PARM '*VERIFY' POPTN                                               CSD010
+     C                     PARM 'CSD010'  PSARD                                               CSD010
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSD010
+      *                                                                                       CSD010
+     C           PRTCD     IFNE *BLANKS                                                       CSD010
+     C           PRTCD     ANDNE'*NRF    '                                                    CSD010
+     C           *LOCK     IN   LDA                                                           CSD010
+     C                     MOVE 'SCSARDPD'DBFILE                                              CSD010
+     C                     Z-ADD46        DBASE                                               CSD010
+     C                     MOVEL'CSD010'  DBKEY                                               CSD010
+     C                     MOVE *ON       *IN99                                               CSD010
+     C                     MOVE *ON       *INU7                                               CSD010
+     C                     MOVE *ON       *INU8                                               CSD010
+     C                     OUT  LDA                                                           CSD010
+     C                     EXSR *PSSR                                                         CSD010
+     C                     ENDIF                                                              CSD010
+      *                                                                                       CSD010
+     C           PRTCD     IFEQ *BLANKS                                                       CSD010
+     C                     MOVE 'Y'       CSD010  1                                           CSD010
+     C                     ELSE                                                               CSD010
+     C                     MOVE 'N'       CSD010                                              CSD010
+     C                     ENDIF                                                              CSD010
+      *                                                                   188670
+      *                                                                                       CSE035
+      ** Access SAR details file to see if CSE035 is installed                                CSE035
+      *                                                                                       CSE035
+     C                     CALL 'AOSARDR0'                                                    CSE035
+     C                     PARM *BLANKS   @RTCD   7                                           CSE035
+     C                     PARM '*VERIFY' @OPTN   7                                           CSE035
+     C                     PARM 'CSE035'  WSARD   6                                           CSE035
+      *                                                                                       CSE035
+     C           @RTCD     IFEQ *BLANK                                                        CSE035
+     C                     MOVE 'Y'       CSE035  1                                           CSE035
+     C                     ELSE                                                               CSE035
+     C                     MOVE 'N'       CSE035                                              CSE035
+     C                     ENDIF                                                              CSE035
+      *                                                                                       207543
+      ** Access SAR details file to see if CEU018 is installed                                207543
+      *                                                                                       207543
+     C                     CALL 'AOSARDR0'                                                    207543
+     C                     PARM *BLANKS   @RTCD                                               207543
+     C                     PARM '*VERIFY' @OPTN                                               207543
+     C                     PARM 'CEU018'  WSARD                                               207543
+      *                                                                                       207543
+     C           @RTCD     IFEQ *BLANK                                                        207543
+     C                     MOVE 'Y'       CEU018  1                                           207543
+     C                     ELSE                                                               207543
+     C                     MOVE 'N'       CEU018                                              207543
+     C                     ENDIF                                                              207543
+      *                                                                                       CGL031
+      **  Access SAR details file to see if CGL031 is installed.                              CGL031
+      *                                                                                       CGL031
+     C                     CALL 'AOSARDR0'                                                    CGL031
+     C                     PARM *BLANKS   PRTCD                                               CGL031
+     C                     PARM '*VERIFY' POPTN                                               CGL031
+     C                     PARM 'CGL031'  PSARD                                               CGL031
+     C           SCSARD    PARM SCSARD    DSFDY                                               CGL031
+      *                                                                                       CGL031
+     C           PRTCD     IFNE *BLANKS                                                       CGL031
+     C           PRTCD     ANDNE'*NRF    '                                                    CGL031
+     C           *LOCK     IN   LDA                                                           CGL031
+     C                     MOVE 'SCSARDPD'DBFILE                                              CGL031
+     C                     Z-ADD47        DBASE                                               CGL031
+     C                     MOVEL'CGL031'  DBKEY                                               CGL031
+     C                     MOVE *ON       *IN99                                               CGL031
+     C                     MOVE *ON       *INU7                                               CGL031
+     C                     MOVE *ON       *INU8                                               CGL031
+     C                     OUT  LDA                                                           CGL031
+     C                     EXSR *PSSR                                                         CGL031
+     C                     ENDIF                                                              CGL031
+      *                                                                                       CGL031
+     C           PRTCD     IFEQ *BLANKS                                                       CGL031
+     C                     MOVE 'Y'       CGL031  1                                           CGL031
+     C                     ELSE                                                               CGL031
+     C                     MOVE 'N'       CGL031                                              CGL031
+     C                     ENDIF                                                              CGL031
+      *                                                                                       CSE035
+     C                     ENDSR
+     C*
+      *****************************************************************   S01117
+      /EJECT                                                              S01117
+      *****************************************************************   S01117
+      *                                                               *   S01117
+      *  *PSSR  - Error control subroutine                            *   S01117
+      *                                                               *   S01117
+      *****************************************************************   S01117
+      *                                                                   S01117
+     C           *PSSR     BEGSR                           ** *PSSR **    S01117
+     C**                                                                  S01117
+     C           @RUN      IFEQ *BLANKS                                   S01117
+     C                     MOVE 'Y'       @RUN    1                       S01117
+     C                     DUMP                                           S01117
+     C                     END                                            S01117
+     C**                                                                  S01117
+     C                     ENDSR                                          S01117
+      *                                                                   S01117
+     C*****************************************************************
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      /EJECT
+     C/COPY ZSRSRC,ZDAYSZ2
+      /EJECT
+     C/COPY ZSRSRC,ZDYYRZ3
+      /EJECT
+     C/COPY ZSRSRC,ZEVCDZ1
+      /EJECT
+     C/COPY ZSRSRC,ZICD2Z1
+      /EJECT
+     C/COPY ZSRSRC,ZICDSEZ1
+      /EJECT
+     C/COPY ZSRSRC,ZNCDZ3
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+      /EJECT                                                              S01486
+     C/COPY ZSRSRC,ZLCDZ1                                                 S01486
+      /EJECT                                                              S01486
+     C/COPY ZSRSRC,ZAVPRC                                                 S01486
+     O/EJECT
+     OCAPRHDF E                CAPRID                                     E14838
+     O                         RECI                                       E14838
+     O                         PMTI                                       S01486
+     O                         PMVI                                       S01486
+     O                         OTHD                                       S01486
+      /EJECT
+      ***
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION                       S01486
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**  CPY@
+(c) Finastra International Limited 2001
+=======
      H        1
       *****************************************************************
 /*STD *  RPGBASE                                                      *
@@ -2546,3 +5096,4 @@
 JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
 **  CPY@
 (c) Finastra International Limited 2001
+>>>>>>> branch 'bugfix/MDSC-32160' of http://blrvslalm0006:7990/scm/md/midasrpg.git

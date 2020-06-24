@@ -154,13 +154,13 @@
       *  254109 - Introduce new err msgs; one for the 'D' action code *
       *           and another one for 'C' and 'R' action codes ( when *
       *           CSD007 feauture is switched on) just to indicate the*
-      *           reason why action code is invalid.                  *
+      *           reason why action code is invalid.                  *      
       *  MD048748 - Error Authorising Release of a Closed Customer    *
       *             with Parent Defined                               *
       *  MD052297 - Meaningless error message displayed when closing  *
       *             customer.                                         *
-      *  MD053634 - Requested Customer Authority Holders Link Report *
-      *             for KWG$24c not generated.                       *
+      *  MD053634 - Requested Customer Authority Holders Link Report  *
+      *             for KWG$24c  not generated.                       *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD052425 - COB Failure re New Customer Closure feature CSD007*
       *  MD050457 - Customer deletion: Issue detailed error message   *

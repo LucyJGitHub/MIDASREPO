@@ -18,13 +18,13 @@
 /*       DUG431 - Amendments to 'Events by Value Date' Report        */
 /*                                                                   */
 /*********************************************************************/
-/*  Start of DUG431  */                                               /*DUG431*/
-             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSPRE)          /*DUG431*/
-/*           CHGVAR     VAR(&LIB) VALUE(&SYSPRE *CAT 'DMLIB') /*DUG431 MD52452*/
-             CHGVAR     VAR(&LIB) VALUE(&SYSPRE *CAT 'DPLIB') /*MD52452*/
-             DLTF       FILE(CUSEXCE_BK)                              /*DUG431*/
-             MONMSG     MSGID(CPF0000)                                /*DUG431*/
+/*  Start of DUG431  */                                                                   /*DUG431*/
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSPRE)                              /*DUG431*/
+/*           CHGVAR     VAR(&LIB) VALUE(&SYSPRE *CAT 'DMLIB')                     /*DUG431 MD52452*/
+             CHGVAR     VAR(&LIB) VALUE(&SYSPRE *CAT 'DPLIB')                            /*MD52452*/
+             DLTF       FILE(CUSEXCE_BK)                                                  /*DUG431*/
+             MONMSG     MSGID(CPF0000)                                                    /*DUG431*/
              CPYF       FROMFILE(CUSEXCE) TOFILE(&LIB/CUSEXCE_BK) +
-                          MBROPT(*REPLACE) CRTFILE(*YES)              /*DUG431*/
-             MONMSG     MSGID(CPF0000)                                /*DUG431*/
-/*  End of DUG431  */                                                 /*DUG431*/ 
+                          MBROPT(*REPLACE) CRTFILE(*YES)                                  /*DUG431*/
+             MONMSG     MSGID(CPF0000)                                                    /*DUG431*/
+/*  End of DUG431  */                                                                     /*DUG431*/

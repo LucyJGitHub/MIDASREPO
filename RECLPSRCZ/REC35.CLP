@@ -9,8 +9,10 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD031950           Date 17Jun15              */
+/*       Last Amend No. MD52452            Date 12Dec18              */
+/*       Prev Amend No. DUG503             Date 12Feb18              */
+/*                      MD046248           Date 27Oct17              */
+/*                      MD031950           Date 17Jun15              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -23,6 +25,12 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD52452 -  COB Reopen Fails                                */
+/*               -  back up the file CUSEXCE_BK to DPLIB instead of */
+/*                  DMLIB                                           */
+/*               -  Recompile due to changes in cpysrc REC35002     */
+/*       DUG431  -  Amendments to 'Events by Value Date' Report     */
+/*                  Use REC35002                                    */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD031950 - Recompiled due to changed PF/CUSEXZ1.           */
 /*       LN0316  - PROGRAM TRIES TO DELETE AN OVERRIDE THAT         */

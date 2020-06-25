@@ -1,0 +1,524 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SD Additional Book Code Details Window')         *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Standing Data Module                                 *
+      *                                                               *
+      *  XX0310W0 - Additional Book Code Details Window               *
+      *                                                               *
+      *  Function:  This program is a new window program to allow     *
+      *             maintenance of the new Default Acc Seq Number     *
+      *            Field.                                             *
+      *                                                               *
+      *  (c) Finastra International Banking Systems Ltd. 2017         *
+      *                                                               *
+      *  Last Amend No. MD052141           Date 17Oct18               *
+      *  Prev Amend No. DUG501  *CREATE    Date 23Aug17               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  MD052141 - Recompiled due to changed DSPF                    *
+      *  DUG501 - Accounts split for Realised P&L and Account Seq     *
+      *           by Book                                             *
+      *                                                               *
+      *****************************************************************
+      *
+      * ID F  C  H  L    FUNCTION OF INDICATORS
+      *
+      *       03      F3 PRESSED EXIT PROGRAM
+      *       05      F5 PRESSED REDISPLAY THE SCREEN
+      *       12      F12 PRESSED GOTO PREVIOUS SCREEN
+      *       20      PROTECT FIELDS IN ENQUIRE MODE
+      *       30      REDISPLAY THE SCREEN
+      *       35      ENABLE F5
+      *       50      Default Account Sequence Number FIELD ERROR
+      *       51      ERROR IN INSERT
+      *       81      Account Sequence Number Field Numeric
+      *       83      CALL TO AOSARDR0 FAILED
+      *       84      CHAIN TO SDBOOKY1 FAILED
+      *       85      CHAIN TO SDBOOKY0 FAILED
+      *       86      Default Acc Sequence exists for another Book Code
+      *
+      *****************************************************************
+     FXXBOOKY1UF  E           K        DISK         KINFSR *PSSR A
+      ** Extension File (under Commitment Control)
+      *
+     F                                              KCOMIT
+     FXXBOOKY0IF  E           K        DISK         KINFSR *PSSR
+     F            XXBOOKD0                          KRENAMEXXBOOKD2
+      ** Extension File for READ
+      *
+     FXXBOOKY2IF  E           K        DISK         KINFSR *PSSR
+     F            XXBOOKD0                          KRENAMEXXBOOKD3
+      *
+      ** Extension File for READ
+     FXX0310#0CF  E                    WORKSTN      KINFSR *PSSR
+      ** Display File for Window
+      *
+      *****************************************************************
+      /EJECT
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZALIGNZ1
+     E/COPY ZSRSRC,ZSEDITZ1
+      *
+      ** Array containing Copyright statement
+      *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+     IA@CPY       DS
+     I* Copyright array
+     I                                        1  80 CPY@
+     ILDA       E DSLDA                         256
+     I              SPARE                           W24
+      *
+      ** Local data area for database error details
+      ** *LOCK IN LDA immediately before and OUT LDA immediately
+      ** after each database error handling.
+      **
+      **                                    134 141 DBFILE
+      **       Defines:                     142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IPSDS       SDS
+      *
+      ** Program Status Data Structure - gives Job/Workstation name and
+      ** User ID
+      *
+     I                                     *PROGRAM PGMNAM
+     I                                      244 253 JOB
+     I                                      244 246 WSID
+     I                                      254 263 USER
+     ISCSARD    E DSSCSARDPD
+      *
+      ** Switchable Features File
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** Short Data Structure
+      *
+     I/COPY QWINDSRC,SD0310GDTA
+      ** Data member for Main Program
+      *
+     I/COPY ZSRSRC,ZSEDITZ2
+      *
+      *****************************************************************
+     C/EJECT
+      *****************************************************************
+      *
+      **   Standard parameter list for window manager
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ACTN    1
+     C                     PARM           DATA
+     C                     PARM           W0RTN   7
+     C                     PARM           WLEN    30
+     C                     PARM           WWID    30
+     C                     PARM           SROW    30
+     C                     PARM           SCOL    30
+     C                     PARM           TITLE   7
+     C                     PARM           SPARE 256
+      *
+      *****************************************************************
+      *
+      *                M A I N  P R O C E S S I N G
+      *
+      *****************************************************************
+      *
+      ** Initialise data
+      *
+     C                     EXSR INIT
+     C                     WRITEXX0310F1
+      *
+      ** Continue to redisplay the screen if *IN30 remains off
+      *
+     C           *IN30     DOUEQ*ON
+      *
+      **   If error write messages
+      *
+     C           *IN50     IFEQ *ON
+     C                     WRITEXX0310F3
+     C                     ENDIF
+      *
+     C                     EXFMTXX0310F0
+     C                     EXSR CLEAR
+      *
+     C           *IN03     CASEQ*ON       EXIT
+     C           *IN05     CASEQ*ON       RESET
+     C           *IN12     CASEQ*ON       PREV
+     C                     CAS            VALID
+     C                     ENDCS
+     C                     ENDDO
+      *
+      **   Exit from program
+      *
+     C                     EXSR END
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * CLEAR MESSAGE FILE
+      *****************************************************************
+     C           CLEAR     BEGSR
+     C                     CALL 'Y2CLMSC'
+     C                     PARM PGMNAM    ZAPGMQ 10
+     C                     PARM '*SAME'   ZAPGRL  5
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * DELETE RECORD
+      *****************************************************************
+     C           DELETE    BEGSR
+      *
+      ** Delete record or logically delete record
+      *
+     C           K@BOOK    CHAINXXBOOKY1             84
+      *
+     C           *IN84     IFEQ *OFF
+     C                     DELETXXBOOKD0
+     C                     EXSR END
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * EXIT FROM PROGRAM
+      *****************************************************************
+     C           END       BEGSR
+     C                     MOVE '1'       *INLR
+     C                     RETRN
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * EXIT FROM PROGRAM IF F3 HAS BEEN PRESSED
+      *****************************************************************
+     C           EXIT      BEGSR
+     C                     MOVE 'Y2U9999' W0RTN
+     C                     EXSR END
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * INITIALISE FIELDS
+      *****************************************************************
+      *
+     C           INIT      BEGSR
+      *
+      **   Only do first time through
+      *
+     C           *IN01     IFEQ *OFF
+      *
+      **   Define the LDA for error handling
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      ** SAR switched on check - Standard Functions  *
+      *
+     C                     CALL 'AOSARDR0'             83  SAR switched on
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'DUG501'  @KEY6   6
+     C           SCSARD    PARM SCSARD    DSFDY
+      *
+     C           @RTCD     IFEQ '*NRF   '
+     C                     EXSR END
+     C                     END
+      *
+     C           *IN83     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'DUG501'  DBKEY            ************
+     C                     MOVE 'SCSARDPD'DBFILE           * DBERR 01 *
+     C                     Z-ADD01        DBASE            ************
+     C                     OUT  LDA
+     C                     MOVE 'USR0567' W0RTN
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **   Define window position
+      *
+     C                     Z-ADDSROW      SWROW
+     C                     Z-ADDSCOL      SWCOL
+      *
+      **   Retrieve title for window
+      *
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+     C                     CALL 'SDRTVTXT'
+     C                     PARM           TITLE
+     C                     PARM           ZAMSGF
+     C                     PARM           TEXT  132
+     C                     MOVELTEXT      STITL
+      *
+      **   Protect input fields if enquiry and enable command keys
+      *
+     C           ACTN      IFEQ 'E'
+     C                     MOVE '1'       *IN20
+     C                     ELSE
+     C                     MOVE '1'       *IN35
+     C                     ENDIF
+      *
+     C                     MOVE '1'       *IN01
+     C                     ENDIF
+      *
+      ** Set up KLIST and move in key from DATA
+      *
+     C                     MOVELDATA      K@BOOK  2
+      *
+      ** If delete does not require window to be displayed, do here
+      *
+     C           ACTN      IFEQ 'D'
+     C                     EXSR DELETE
+     C                     ENDIF
+      *
+     C           K@BOOK    CHAINXXBOOKY0             85
+      *
+     C           ACTN      IFEQ 'A'
+     C           ACTN      OREQ 'E'
+     C           ACTN      OREQ 'D'
+      *
+      ** Record not found, error
+      *
+     C           *IN85     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVELPGMNAM    DBPGM
+     C                     MOVELK@BOOK    DBKEY            ************
+     C                     MOVE 'XXBOOKY0'DBFILE           * DBERR 02 *
+     C                     Z-ADD02        DBASE            ************
+     C                     OUT  LDA
+     C                     MOVE 'USR0567' W0RTN
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     MOVE ERDACS    SADACS
+      *
+     C           ACTN      IFEQ 'I'
+      *
+      ** Record found, error
+      *
+     C           *IN85     IFEQ *OFF
+     C                     MOVEL'XXX0001' ZAMSID
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '1'       *IN51
+     C                     MOVE '1'       *IN50
+     C                     MOVE '1'       *IN20
+     C                     MOVE '0'       *IN35
+     C                     ELSE
+     C                     MOVEL*BLANKS   SADACS
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      *    EXIT FROM PROGRAM IF F12 HAS BEEN PRESSED
+      *
+      *****************************************************************
+      *
+     C           PREV      BEGSR
+      *
+      **   Set F12 return code and end program
+      *
+     C                     MOVE 'USR0790' W0RTN
+     C                     EXSR END
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * RESET/REFRESH THE SCREEN IF F5 IS PRESSED
+      *****************************************************************
+     C           RESET     BEGSR
+      *
+      **   Clear the program message queue and call SR/INIT to retrieve
+      **   the last committed data from the extension file.
+      *
+     C                     EXSR CLEAR
+     C                     WRITEXX0310F3
+     C                     EXSR INIT
+      *
+      **   Reset all error indicators
+      *
+     C                     MOVE '0'       *IN50
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * UPDATE THE EXTENSION FILE
+      *****************************************************************
+      *
+     C           UPDAT     BEGSR
+      *
+     C           K@BOOK    CHAINXXBOOKY1             84
+      *
+      ** Database Error has occurred
+      *
+     C           *IN84     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVELPGMNAM    DBPGM
+     C                     MOVELK@BOOK    DBKEY            ************
+     C                     MOVE 'XXBOOKY1'DBFILE           * DBERR 03 *
+     C                     Z-ADD03        DBASE            ************
+     C                     OUT  LDA
+     C                     MOVE 'USR0567' W0RTN
+     C                     EXSR *PSSR
+      *
+     C                     ELSE
+      *
+     C                     MOVELK@BOOK    ERBOOK
+     C                     MOVE SADACS    ERDACS
+     C                     UPDATXXBOOKD0
+     C                     ENDIF
+      *
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+      *****************************************************************
+      * INSERT NEW RECORD TO EXTENSION FILE
+      *****************************************************************
+      *
+     C           INSERT    BEGSR
+      *
+     C                     MOVELK@BOOK    ERBOOK
+     C                     MOVELSADACS    ERDACS
+     C                     WRITEXXBOOKD0
+     C                     COMIT
+      *
+     C                     ENDSR
+     C*****************************************************************
+      /EJECT
+      *****************************************************************
+      * VALIDATE THE SCREEN
+      *****************************************************************
+     C           VALID     BEGSR
+      *
+     C                     MOVE '1'       *IN30
+     C                     MOVE '0'       *IN50
+      *
+      ** IF THE ACTION CODE IS ENQUIRE THEN SIMPLY EXIT FROM PROGRAM
+      *
+     C           ACTN      IFEQ 'E'
+     C           *IN51     OREQ *ON
+     C                     EXSR END
+     C                     ENDIF
+      ****
+      ** Validate Default Account Sequence Number  Field
+      ****
+      *
+      ** Default Acc Seq Num is Mandatory
+      *
+     C           SADACS    IFEQ *BLANKS                    IF1
+     C                     MOVEL'XXX0002' ZAMSID
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '0'       *IN30
+     C                     MOVE '1'       *IN50
+     C                     ELSE                            ELSE1
+      ** Default Acc Seq Num Must Be Numeric and Greater than Zero
+      *
+     C                     TESTN          SADACS     81
+     C                     MOVE SADACS    @TEST   1
+     C                     TESTZ          @TEST          82
+      *
+     C           SADACS    IFEQ *ZERO                      IF2
+     C           *IN81     OREQ *OFF
+     C           *IN82     OREQ *OFF
+      *
+     C                     MOVEL'XXX0003' ZAMSID
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '0'       *IN30
+     C                     MOVE '1'       *IN50
+     C                     ELSE                            ELSE2
+      ** Default Acc Seq Num Must not exist on any other Book Code
+      *
+     C                     MOVE SADACS    K@DACS  20
+     C           K@DACS    CHAINXXBOOKY2             86
+      *
+     C           *IN86     IFEQ *OFF
+     C           K@BOOK    ANDNEERBOOK
+     C                     MOVEL'XXX0004' ZAMSID
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+     C                     EXSR ZASNMS
+     C                     MOVE '0'       *IN30
+     C                     MOVE '1'       *IN50
+     C                     ENDIF
+      *
+     C                     ENDIF                           ENDIF2
+      *
+     C                     ENDIF                           ENDIF1
+      *
+      ** NO ERRORS SO UPDATE THE EXTENSION FILE
+      *
+     C           *IN30     IFEQ *ON
+     C           ACTN      IFEQ 'A'
+     C                     EXSR UPDAT
+     C                     ELSE
+     C                     EXSR INSERT
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           VAEXIT    ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      * Send message to program's message queue.
+      *****************************************************************
+      *
+     C           ZASNMS    BEGSR
+      *
+     C           ZAPGMQ    IFEQ *BLANK
+     C                     MOVELPGMNAM    ZAPGMQ
+     C                     END
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGMQ 10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message file.
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+     C           ZAEXIT    ENDSR
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR  **
+      *
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *
+      ********************************************************************
+     C/COPY ZSRSRC,ZALIGNZ2
+     C/COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+** CPY@
+(C) Copyright Finastra International Banking Systems Ltd. 2017

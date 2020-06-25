@@ -13,12 +13,18 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD055469             Date 13Mar20             *
-      *  Prev Amend No. MD054605             Date 17Oct19             *
+      *  Last Amend No. MD055832             Date 14May20             *
+      *  Prev Amend No. MD055829             Date 12May20             *
+      *                 MD055469             Date 13Mar20             *
+      *                 MD054605             Date 17Oct19             *
       *                 MD054209   *CREATE   Date 07Sep19             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055832 - Avoid deletion of bespoke records in extension    *
+      *             table                                             *
+      *  MD055829 - GPWIPBTD field WC_BOACAU should not be updated as *
+      *             it is linked to LE ICD configuration.             *
       *  MD055469 - Global APIs have WC_ZONE set to blank.            *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD054209 - Deliverable Data Split for T_WIPCF                *
@@ -31,11 +37,14 @@
      D KXINDEX         S             10A
      D KXSCHEMA        S             10A
      D KMSCHEMA        S             10A                                                    MD054605
+     D BINDEX          S             10A                                                    MD055832
+     D BSCHEMA         S             10A                                                    MD055832
      D KColumn         S             10A
      D KOrdinal        S              9  0
      D KeyArr          S             10A   DIM(12)
      D WIdx            S              3P 0
      D KeyFld          S            200A
+     D WHEREX          S            300A                                                    MD055832
      D WHERE           S            300A
      D PINSERT         S            300A
      D PSELECT         S            300A
@@ -61,6 +70,7 @@
      C                   exsr      SR_RtvKeys
 
       * Delete from extension file if not found in core file
+      * and not found in bespoke file                                                       MD055832
      C                   exsr      SR_DltExt
 
       * Add missing record in extension file if found in core file but not in the extension
@@ -132,17 +142,25 @@
      C                   If        XINDEX <> 'GPWIPCTD'
 
      C                   eval      EXTINDEX = %SUBST(XINDEX:1:5) + 'XTD'
+     C                   eval      BINDEX = %SUBST(XINDEX:1:5) + 'BTD'                      MD055832
      C                   eval      WIdx = 1
      C                   eval      WHERE = *BLANKS
+     C                   eval      WHEREX = *BLANKS                                         MD055832
      C                   eval      WHERE = ' WHERE A.' + %trimr(KeyArr(WIdx)) +
      C                             ' = B.' + %trimr(KeyArr(WIdx))
+     C                   eval      WHEREX= ' WHERE A.' + %trimr(KeyArr(WIdx)) +             MD055832
+     C                             ' = X.' + %trimr(KeyArr(WIdx))                           MD055832
      C                   eval      WIdx = WIdx + 1
+     C                   eval      BSCHEMA = %subst(XSCHEMA:1:3) + 'MLIB'                   MD055832
 
      C     KeyArr(WIdx)  DOWNE     *BLANKS
      C     WIdx          ANDLT     13
      C                   eval      WHERE = %trimr(WHERE) + ' and A.' +
      C                             %trimr(KeyArr(WIdx)) +
      C                             ' = B.' + %trimr(KeyArr(WIdx))
+     C                   eval      WHEREX = %trimr(WHERE) + ' and A.' +                     MD055832
+     C                             %trimr(KeyArr(WIdx)) +                                   MD055832
+     C                             ' = X.' + %trimr(KeyArr(WIdx))                           MD055832
      C                   eval      WIdx = WIdx + 1
      C                   ENDDO
 
@@ -150,7 +168,11 @@
      C                   eval      SQLDynStmt = 'delete from ' + EXTINDEX +
      C                             ' A where not exists (select * from ' +
      C                             %trimr(XSCHEMA) + '/' + XINDEX +
-     C                             ' B ' +  %trimr(WHERE) + ')'
+     C**********                   ' B ' +  %trimr(WHERE) + ')'                             MD055832
+     C                             ' B ' +  %trimr(WHERE) + ') and ' +                      MD055832
+     C                             '  not exists (select * from ' +                         MD055832
+     C                             %trimr(BSCHEMA) + '/' + BINDEX +                         MD055832
+     C                             ' X ' +  %trimr(WHEREX) + ')'                            MD055832
 
      C/EXEC SQL
      C+ prepare DynSQLStmnt
@@ -373,12 +395,14 @@
      C+ update GPWIPBTD b
      C+ set
      C+ (b.WC_CAT, b.WC_BOAC, b.WC_BOACNE,
-     C+ b.WC_BOACAM, b.WC_BOACAU, b.WC_BOACCL, b.WC_BOACDE, b.WC_BOACRE,
+     C**b.WC_BOACAM,*b.WC_BOACAU,*b.WC_BOACCL,*b.WC_BOACDE,*b.WC_BOACRE,                    MD055829
+     C+ b.WC_BOACAM, b.WC_BOACCL, b.WC_BOACDE, b.WC_BOACRE,                                 MD055829
      C+ b.WC_BOACCH, b.WC_AUTOA,
      C+ b.WC_SYSTEM, b.WC_BOFLD1, b.WC_BOFLD2, b.WC_BOFLD3, b.WC_BOFLD4,
      C+ b.WC_BOFLD5) =
      C+ (select c.WC_CAT, c.WC_BOAC, c.WC_BOACNE,
-     C+ c.WC_BOACAM, c.WC_BOACAU, c.WC_BOACCL, c.WC_BOACDE, c.WC_BOACRE,
+     C**c.WC_BOACAM,*c.WC_BOACAU,*c.WC_BOACCL,*c.WC_BOACDE,*c.WC_BOACRE,                    MD055829
+     C+ c.WC_BOACAM, c.WC_BOACCL, c.WC_BOACDE, c.WC_BOACRE,                                 MD055829
      C+ c.WC_BOACCH, c.WC_AUTOA,
      C+ c.WC_SYSTEM, c.WC_BOFLD1, c.WC_BOFLD2, c.WC_BOFLD3, c.WC_BOFLD4,
      C+ c.WC_BOFLD5 from GPWIPCTD c where c.WC_API = b.WC_API

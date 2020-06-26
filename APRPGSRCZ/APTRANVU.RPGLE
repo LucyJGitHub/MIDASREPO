@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054696           Date 29Oct19               *
-      *  Prev Amend No. MD054538           Date 08Oct19               *
+      *  Last Amend No. 260173             Date 22May20               *
+      *  Prev Amend No. MD054696           Date 29Oct19               *
+      *                 MD054538           Date 08Oct19               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD052075           Date 07Jun19               *
@@ -222,6 +223,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260173 - Introduce new parameter in DEAM API to be used in   *
+      *           the validation of action code during reversal       *
+      *           authorization. Apply fix 258724. (Recompile)        *
       *  MD054696 - Journal Entries Avoid Shadow Postings Update.     *
       *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *
       *  MD054538 - Buffer issue on Rollover Maintenance              *
@@ -2266,6 +2270,9 @@ RGC  D RPIF4LN         S              4  0                                      
       **  Send Loan/Deposit indicator for settlement tab conditioning.                       BUG6534
      C     1             SUBST     BUFFER:Bfp    LONDEP                                      BUG6534
      C                   ADD       1             Bfp                                         BUG6534
+      **  Restore Authorise Reversal Action Code                                              260173
+     C     1             SUBST     BUFFER:Bfp    @ACTRV                                       260173
+     C                   ADD       1             Bfp                                          260173
      C     20            SUBST     BUFFER:Bfp    DDFOID                                       239400
      C                   ADD       20            Bfp                                          239400
      C     ESSRLn        SUBST     BUFFER:Bfp    RecSttmt
@@ -2301,6 +2308,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    @TimeStamp                                  BUG4146
      C                   PARM                    LONDEP                                      BUG6534
      C                   PARM                    DDFOID                                       239400
+     C                   PARM                    @ACTRV                                       260173
                                                                                               CRE020
      C                   IF        CRE020 = 'Y'                                               CRE020
      C                   EVAL      WrkPgm = 'MMDEAMUPD'                                       CRE020

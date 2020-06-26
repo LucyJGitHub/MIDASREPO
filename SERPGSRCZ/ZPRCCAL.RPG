@@ -1,7 +1,8 @@
+<<<<<<< HEAD
      H        1
       *****************************************************************
 /*STD *: RPGBASE                                                      *
-/*EXI *  TEXT('Midas SE Price calculation')
+/*EXI *  TEXT('Midas SE Price calculation')                           *
       *****************************************************************
       *                                                               *
       *  Midas - Securities Trading Module                            *
@@ -14,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 226449             Date 24Jun15               *
+      *  Last Amend No. 248698             Date 01Jun20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 226449             Date 24Jun15               *
       *                 MD034776           Date 09Jul15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -30,6 +32,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  248698 - Rounding discrepancies on some SE reports. Applied  *
+      *           fix 228682.                                         *
+      *  228682 - Recompiled due to ZCNSDZ1 changes. Applied 176594.  *      
       *  MD046248 - Finastra Rebranding                               *
       *  226449 - Recompiled over changes made in /COPY ZDYYRZ3.      *
       *         - Applied for MD034387.                               *
@@ -292,3 +297,303 @@ JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
 0006001521029820444305904073650882610287117481320914670161311759219053
 2051421975234362489726358278192928030741322023366335124365853804639507
 40968424294389045351
+=======
+     H        1
+      *****************************************************************
+/*STD *: RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Price calculation')                           *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  ZPRCCAL- Calculate a price                                   *
+      *                                                               *
+      *  Function: This program enables the price/yield calculations  *
+      *   (I/C)    to be perfomed by other programs without needing   *
+      *            to know so much about SE.                          *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. 248698             Date 01Jun20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 226449             Date 24Jun15               *
+      *                 MD034776           Date 09Jul15               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CSE035  *CREATE    Date 22Apr02               *
+      *                 XXXXXX             Date DDMmmYY               *
+      *                                                               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  248698 - Rounding discrepancies on some SE reports. Applied  *
+      *           fix 228682.                                         *
+      *  228682 - Recompiled due to ZCNSDZ1 changes. Applied 176594.  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  226449 - Recompiled over changes made in /COPY ZDYYRZ3.      *
+      *         - Applied for MD034387.                               *
+      *  MD034776 - Reverse AR1001183A to allow negative interest     *
+      *             rate. (Recompile)                                 *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CSE035 - NX/NNX Coupon Payment Processing.                   *
+      *           Recompile over changed ZACCRZ1/ZYLDZ2/ZYCEZ1
+      *                                                               *
+      *****************************************************************
+      *
+     FSECTY   IF  E           K        DISK
+     FINVTP   IF  E           K        DISK
+     FSEDEV   IF  E           K        DISK
+     FSECEO   IF  E           K        DISK
+     F            SEDEVDF                           KRENAMESEDEVDO
+     F            SNDEVDF                           KRENAMESNDEVDO
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *  80 -  Database error                                         *
+      *****************************************************************
+     E                    XCCY       25  3
+     E/COPY ZSRSRC,ZPOWER8Z1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZDAYSZ1
+     E/COPY ZSRSRC,ZNCDZ1
+     E/COPY ZSRSRC,ZHOLE
+     I/COPY ZSRSRC,ZHOLI
+     I/COPY ZSRSRC,ZNCDZ2
+     I/COPY ZSRSRC,ZYLDZ1
+     I*
+     IDSSDY     E DSDSSDY
+      *
+      * Second DS for Access Programs, Long Data Structure
+      *   Parameters, keys and definitions
+      *
+      ** Currency Details
+     ISDCURR    E DSSDCURRPD
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ZSECTY 10
+     C                     PARM           ZPRCIN 158
+     C                     PARM           ZFDATE  50
+     C                     PARM           ZMODE   1
+     C                     PARM           ZPRCOT 158
+     C                     PARM           ZRTCDE 10
+     C                     PARM           ANOML  150
+     C                     PARM           DEBUG   1
+      *
+     C           KLINVT    KLIST
+     C                     KFLD           NMCY
+     C                     KFLD           SITP
+      *
+      *  Access SAR details file to see if AUS042 is installed
+      *
+     C           CSE035    IFEQ *BLANKS
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C                     PARM 'CSE035'  @SARD   6
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       CSE035  1
+     C                     ELSE
+     C                     MOVE 'N'       CSE035
+     C                     END
+     C                     END
+      *
+      ** Access SAR details file to see if CEU018 is installed
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD
+     C                     PARM '*VERIFY' @OPTN
+     C                     PARM 'CEU018'  @SARD
+      *
+     C           @RTCD     IFEQ *BLANK
+     C                     MOVE 'Y'       CEU018  1
+     C                     ELSE
+     C                     MOVE 'N'       CEU018
+     C                     END
+      *
+      *   Access security values
+      *
+     C           ZSECTY    CHAINSECTY                80
+     C           *IN80     IFEQ '1'
+     C                     CLEARZRTCDE
+     C                     MOVEL'*DBERR'  ZRTCDE
+     C                     MOVE 'SECT'    ZRTCDE
+     C                     RETRN
+     C                     ENDIF
+      *
+      *   Access investment values
+      *
+     C           KLINVT    CHAININVTP                81
+     C           *IN81     IFEQ '1'
+     C                     CLEARZRTCDE
+     C                     MOVEL'*DBERR'  ZRTCDE
+     C                     MOVE 'INVT'    ZRTCDE
+     C                     RETRN
+     C                     ENDIF
+      *
+      ** Access currency file SDCURRPD
+      *
+     C           NMCY      IFNE A6CYCD
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*DBERR'  @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM NMCY      @AJCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+     C           @RTCD     IFNE *BLANKS
+     C                     CLEARZRTCDE
+     C                     MOVEL@RTCD     ZRTCDE
+     C                     RETRN
+     C                     ENDIF
+     C                     END
+      *
+      ** Map Q and Z back to P and Y
+      *
+     C                     MOVE 'N'       EXDEX   1
+     C           ZMODE     IFEQ 'Q'
+     C                     MOVE 'P'       ZMODE
+     C                     MOVE 'Y'       EXDEX
+     C                     ENDIF
+      *
+     C           ZMODE     IFEQ 'Z'
+     C                     MOVE 'Y'       ZMODE
+     C                     MOVE 'Y'       EXDEX
+     C                     ENDIF
+      *
+      ***  Ensure that CDP for Standard Subroutines is initialised.
+      *
+     C                     Z-ADDA6NBDP    ZCDP
+      *
+     C           STBS      IFEQ 'D'
+     C           STBS      OREQ 'Y'
+     C*
+     C*     determine next coupon date
+     C*
+     C                     Z-ADD*ZERO     ECD     50
+     C                     Z-ADDZFDATE    ECD     50
+     C                     EXSR ZNCD
+     C*
+     C*     determine last coupon date
+     C*
+     C                     Z-ADDZFDATE    ZECD    50
+     C                     EXSR ZLCD
+     C*
+     C*     set up cum/ex parameter - used for Australian yields
+     C*
+     C                     Z-ADDZFDATE    WRKD    50
+     C                     Z-ADDANOML     ZAMT
+     C                     EXSR ZYCE
+     C                     MOVELSCUMEX    CUMEXF
+      *
+      ** If exclude Ex effect in mode was Q or Z
+      *
+     C           CUMEXF    IFNE 'C'
+     C           EXDEX     ANDEQ'Y'
+     C                     MOVE 'C'       CUMEXF
+     C                     MOVE 'C'       SCUMEX
+     C                     ENDIF
+     C*
+     C*     calculate accrued interest
+     C*
+     C           STBS      IFEQ 'Y'
+     C           SYBS      ANDEQ'AU'
+     C           STBS      OREQ 'Y'
+     C           SYBS      ANDEQ'IA'
+     C                     Z-ADDZZLCD     ZDCSDT
+     C                     Z-ADDZFDATE    ZDCEDT
+     C                     Z-ADDANOML     ZNOML
+     C                     EXSR ZACCZ
+     C           ANOML     IFEQ 0
+     C                     Z-ADDZDCINT    WRKPI
+     C                     ELSE
+     C           ZDCINT    DIV  ANOML     WRKPI     H
+     C                     ENDIF
+     C           DEBUG     IFEQ 'Y'
+     C                     DUMP
+     C                     ENDIF
+     C                     Z-ADDZFDATE    WRKD    50
+     C*
+     C*      Recalc interest if ex-interest
+     C*
+     C           SCUMEX    IFEQ 'X'
+     C                     Z-ADDZZLCD     ZDCSDT
+     C                     Z-ADDNCD       ZDCEDT
+     C                     EXSR ZACCZ
+     C           ANOML     IFEQ 0
+     C                     Z-ADDZDCINT    WKWPI
+     C                     ELSE
+     C           ZDCINT    DIV  ANOML     WKWPI  159H
+     C                     ENDIF
+     C           WRKPI     SUB  WKWPI     WRKPI
+     C                     END
+     C                     ELSE
+     C                     Z-ADD0         WRKPI
+     C                     MOVE 'C'       SCUMEX
+     C                     ENDIF
+     C                     Z-ADDZFDATE    VDATE
+     C*
+     C*   Mode 'P' = Yield to price
+     C*
+     C           ZMODE     IFEQ 'P'
+     C                     EXSR ZPRCI
+     C                     ELSE
+     C*
+     C*   Mode 'Y' = PRice tp yield
+     C*
+     C                     Z-ADDZPRCIN    ZPRICE
+     C                     EXSR ZPRCO
+     C                     END
+     C                     ELSE
+     C                     Z-ADDZPRCIN    ZPRCOT
+     C                     ENDIF
+     C           DEBUG     IFEQ 'Y'
+     C                     DUMP
+     C                     ENDIF
+     C                     MOVE '1'       *INLR
+     C/COPY ZSRSRC,ZACCRZ1
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/COPY ZSRSRC,ZDATE2Z4
+     C/COPY ZSRSRC,ZDAYSZ2
+     C/COPY ZSRSRC,ZLCDZ1
+     C/COPY ZSRSRC,ZNCDZ3
+     C/COPY ZSRSRC,ZPRCIZ1
+     C/COPY ZSRSRC,ZYLDIZ1
+     C/COPY ZSRSRC,ZYLDOZ1
+     C/COPY ZSRSRC,ZYLDZ2
+     C/COPY ZSRSRC,ZYCEZ1
+     C/COPY ZSRSRC,ZACCZZ1
+     C/COPY ZSRSRC,ZRATEZ1
+     C/COPY ZSRSRC,ZDYYRZ3
+     C/COPY ZSRSRC,ZPRCOZ1
+     C/COPY ZSRSRC,ZBKDT
+     C/COPY ZSRSRC,ZACCH
+     C/COPY ZSRSRC,ZCNSDZ1
+     C/COPY ZSRSRC,ZCALCD
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+>>>>>>> branch 'bugfix/MDSC-32160' of http://blrvslalm0006:7990/scm/md/midasrpg.git

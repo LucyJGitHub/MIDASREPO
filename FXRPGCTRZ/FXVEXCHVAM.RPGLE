@@ -17,8 +17,10 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR703547           Date 25May16               *
+      *  Last Amend No. 251863             Date 22May20               *
+      *  Prev Amend No. 248024             Date 22May20               *
+      *                 MD046248           Date 27Oct17               *
+      *                 AR703547           Date 25May16               *
       *                 AR808714           Date 04Jun15               *
       *                 258321             Date 19Aug14               *
       *                 256537             Date 15Mar13               *
@@ -69,6 +71,18 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  248024 - Change in processing to determine 'Normally Quoted  *
+      *           Decimal Places' for Forward Points. Applied fix     *
+      *           242105.                                             *
+      *  251863 - Applied fixes 240038 and 238023.                    *
+      *  240038 - Ensure margin rate functionalities are catered.     *
+      *           Enhanced fix 238023 and patterned to SR/#ZICA.      *
+      *  238023 - Incorrect exchange rate written on file. Ensure     *
+      *           that buy/sell currencies with different decimal     *
+      *           places are catered in margin rate functionalities.  *
+      *           Exchange rate and amounts do not agree is shown.    *
+      *           Program was amended such that validation of margin  *
+      *           follow its functionality.                           *
       *  MD046248 - Finastra Rebranding                               *
       *  AR703547 - Different validation when Buy/Sell=Deal ccy and if*
       *             buy/sell<>deal ccy. @Round ind. is being checked  *
@@ -155,7 +169,7 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -174,66 +188,66 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the FX standard declares
      D*/COPY*FXCPYSRC,STDDECLARE***                                                           209009
      D/COPY ZACPYSRC,STDDECLARE                                                               209009
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
      D/COPY WNCPYSRC,FXH00012
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of Fields with warnings.
      D WFldNmXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of warning message IDs
      D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of warning message data.
      D WMsgDtXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
                                                                                               CER043
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CER043
       ** EXTERNAL DS FOR SAR DETAILS                                                          CER043
@@ -249,82 +263,82 @@
      D  RelDAM2               25     39  0                                                    CER043
      D  RelDXRT               88    100  8                                                 BUG23050A
      D  RelOSRT              101    113  8                                                 BUG23050A
- 
+
      D @@AY            S             10  0 DIM(10) CTDATA PERRCD(1)
      D @SF             S             10  0 DIM(10) CTDATA PERRCD(1)
      D @AD             S              9  0 DIM(8) CTDATA PERRCD(1)              Adjust Decimal
      D POW             S              7  3 DIM(7) CTDATA PERRCD(1)
- 
- 
+
+
      D                 DS
      D  @Y                     1     16
      D                                     DIM(16) ASCEND                       #ZICC  Amt.char.
      D  W@AMTP                 1     16
      D  W@AMTD                 1     17
- 
- 
+
+
      D                 DS
      D  @P                     1     15  0
      D                                     DIM(15)                              #ZICC  Amt.num.
      D  W@AMNT                 1     15  0
      D  W@AMTR                 3     15  8
- 
- 
+
+
      D                 DS
      D  W@1150                 1     15  0
      D  W@1151                 1     15  1
      D  W@1152                 1     15  2
      D  W@1153                 1     15  3
- 
- 
+
+
      D                 DS
      D  W@2150                 1     15  0
      D  W@2151                 1     15  1
      D  W@2152                 1     15  2
      D  W@2153                 1     15  3
- 
- 
+
+
      D                 DS
      D  W@3150                 1     15  0
      D  W@3151                 1     15  1
      D  W@3152                 1     15  2
      D  W@3153                 1     15  3
- 
- 
+
+
      D                 DS
      D  W@4150                 1     15  0
      D  W@4151                 1     15  1
      D  W@4152                 1     15  2
      D  W@4153                 1     15  3
- 
- 
+
+
      D M@MGDA          DS
      D  M@0145                 1     45
      D  M@0115                 1     15
      D  M@1630                16     30
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       **   First scaling exponent
      D     @@SXP1      S              1S 0
       **   Second scaling exponent
      D     @@SXP2      S                   LIKE(@@SXP1)
- 
- 
+
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIx             S              3P 0
- 
+
      D UseRate2        S              1                                         186377
                                                                                 186377
                                                                                               CER043
@@ -392,11 +406,11 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   MOVE      *BLANK        RetCodeIn
- 
+
      C                   MOVE      *BLANK        FldNamXAr
      C                   MOVE      *BLANK        MsgIDXAr
      C                   MOVE      *BLANK        MsgDtaXAr
@@ -405,7 +419,7 @@
      C                   MOVE      *BLANK        WMsgIDXAr
      C                   MOVE      *BLANK        WMsgDtXAr
      C                   Z-ADD     0             WIx
- 
+
      C                   MOVE      *BLANK        F3DMD1                         mult/div ind
      C                   Z-ADD     *ZERO         F3DXRT                         exch rate
      C                   Z-ADD     *ZERO         @SRATE                         Descaled exch rt
@@ -908,6 +922,24 @@
      C                   END                                                    175229
      C                   END                                                    175229
       *
+      *                                                                                       238023
+     C     AMTOK         IFNE      'Y'                                                        238023
+     C     @AMT7         MULT(H)   @KRATE        @WPROD2          15 0                        238023
+     C     @AMT7         DIV(H)    @KRATE        @WQUOT2          15 0                        238023
+     C     @WPROD2       IFEQ      @AMT8                                                      238023
+     C     @WQUOT2       OREQ      @AMT8                                                      238023
+     C                   MOVE      'Y'           AMTOK                                        238023
+     C                   END                                                                  238023
+     C                   END                                                                  238023
+      *                                                                                       238023
+     C     AMTOK         IFNE      'Y'                                                        238023
+     C     @AMT7         MULT(H)   W@INRT        @WPROD           15 0                        238023
+     C     @AMT7         DIV(H)    W@INRT        @WQUOT           15 0                        238023
+     C     @WPROD        IFEQ      @AMT8                                                      238023
+     C     @WQUOT        OREQ      @AMT8                                                      238023
+     C                   MOVE      'Y'           AMTOK                                        238023
+     C                   END                                                                  238023
+     C                   END                                                                  238023
       * SEND MESSAGE:
       * "** WARNING ** THE RATE IS NOT WITHIN THE SPECIFIED TOLERANCE"
       *
@@ -1007,6 +1039,7 @@
      C* this process will calculate it
      C*
      C     W@MDIN        IFNE      'D'
+     C     W@MDIN        ANDNE     'M'                                                        238023
      C                   MOVE      'X'           W@MDIN
      C                   END
       *
@@ -1029,6 +1062,7 @@
       *** If invalid, force validation to continue
       *
      C     W@MDIN        IFNE      'M'
+     C     W@MDIN        ANDNE     'D'                                                        238023
      C                   MOVE      'X'           W@MDIN
      C                   END
      C                   ENDSR
@@ -1084,11 +1118,20 @@
      C* Descale margin + forward points
      c*
      C                   DIV       @SF(W@SFAC)   @RRATE
+      *                                                                                       240038
+     C                   Z-ADD     @RRATE        @RATEA           13 8                        240038
+     C                   Z-ADD     @RRATE        @RATEB           13 8                        240038
+     C                   Z-ADD     @RRATE        @RATEV           13 8                        240038
+     C     @RATEV        IFLT      0                                                          240038
+     C                   MULT      -1            @RATEV                                       240038
+     C                   ENDIF                                                                240038
      C*
      C* Add descaled exchange rate to descaled margin + forward points
      C* to get the outright descaled rate
      C*
      C                   ADD       @SRATE        @RRATE           13 8
+     C     @SRATE        ADD       @RATEA        @RATEC           13 8                        240038
+     C     @SRATE        SUB       @RATEB        @RATED           13 8                        240038
       *                                                                                     BUG23668
      C**********         IF        CER043 = 'Y' AND DDREIN = 'Y'                   BUG23668 BUG25418
      C**********         EVAL(H)   @RRATE = 1/@RRATE                               BUG23668 BUG25418
@@ -1226,6 +1269,767 @@
      C                   ELSE                                                                  DT001
      C                   Z-ADD     @@DAM2        W@2150                           15,0 N/B Amt DT001
      C                   END                                                                   DT001
+      *                                                                                       240038
+      ** If the margin buy/sell indicator is "B" and buy currency is                          240038
+      ** equal to the dealing base currency.                                                  240038
+      *                                                                                       240038
+     C     F3MGBS        IFEQ      'B'                                                        240038
+     C     DDBCCY        ANDEQ     BNCYDL                                                     240038
+      *                                                                                       240038
+      ** Divide buy amount in different decimal places against +rate and store value          240038
+      ** to a variable with zero decimal place.                                               240038
+      *                                                                                       240038
+     C     W@1150        DIV(H)    @RATEC        W@6150           15 0                        240038
+     C     W@1151        DIV(H)    @RATEC        W@6151           15 0                        240038
+     C     W@1152        DIV(H)    @RATEC        W@6152           15 0                        240038
+     C     W@1153        DIV(H)    @RATEC        W@6153           15 0                        240038
+      *                                                                                       240038
+     C                   SELECT                                                               240038
+     C     @@CDP2        WHENEQ    1                                                          240038
+     C                   MULT      10            W@6150                                       240038
+     C                   MULT      10            W@6151                                       240038
+     C                   MULT      10            W@6152                                       240038
+     C                   MULT      10            W@6153                                       240038
+     C     @@CDP2        WHENEQ    2                                                          240038
+     C                   MULT      100           W@6150                                       240038
+     C                   MULT      100           W@6151                                       240038
+     C                   MULT      100           W@6152                                       240038
+     C                   MULT      100           W@6153                                       240038
+     C     @@CDP2        WHENEQ    3                                                          240038
+     C                   MULT      1000          W@6150                                       240038
+     C                   MULT      1000          W@6151                                       240038
+     C                   MULT      1000          W@6152                                       240038
+     C                   MULT      1000          W@6153                                       240038
+     C                   ENDSL                                                                240038
+      *                                                                                       240038
+      ** Divide buy amount in different decimal places against +rate and store value          240038
+      ** to a variable with one  decimal place.                                               240038
+      *                                                                                       240038
+     C     W@1150        DIV(H)    @RATEC        W@6154           15 1                        240038
+     C     W@1151        DIV(H)    @RATEC        W@6155           15 1                        240038
+     C     W@1152        DIV(H)    @RATEC        W@6156           15 1                        240038
+     C     W@1153        DIV(H)    @RATEC        W@6157           15 1                        240038
+      *                                                                                       240038
+     C                   SELECT                                                               240038
+     C     @@CDP2        WHENEQ    1                                                          240038
+     C                   MULT      10            W@6154                                       240038
+     C                   MULT      10            W@6155                                       240038
+     C                   MULT      10            W@6156                                       240038
+     C                   MULT      10            W@6157                                       240038
+     C     @@CDP2        WHENEQ    2                                                          240038
+     C                   MULT      100           W@6154                                       240038
+     C                   MULT      100           W@6155                                       240038
+     C                   MULT      100           W@6156                                       240038
+     C                   MULT      100           W@6157                                       240038
+     C     @@CDP2        WHENEQ    3                                                          240038
+     C                   MULT      1000          W@6154                                       240038
+     C                   MULT      1000          W@6155                                       240038
+     C                   MULT      1000          W@6156                                       240038
+     C                   MULT      1000          W@6157                                       240038
+     C                   ENDSL                                                                240038
+      *                                                                                       240038
+      ** Divide buy amount in different decimal places against +rate and store value          240038
+      ** to a variable with two  decimal place.                                               240038
+      *                                                                                       240038
+     C     W@1150        DIV(H)    @RATEC        W@6158           15 2                        240038
+     C     W@1151        DIV(H)    @RATEC        W@6159           15 2                        240038
+     C     W@1152        DIV(H)    @RATEC        W@6160           15 2                        240038
+     C     W@1153        DIV(H)    @RATEC        W@6161           15 2                        240038
+      *                                                                                       240038
+     C                   SELECT                                                               240038
+     C     @@CDP2        WHENEQ    1                                                          240038
+     C                   MULT      10            W@6158                                       240038
+     C                   MULT      10            W@6159                                       240038
+     C                   MULT      10            W@6160                                       240038
+     C                   MULT      10            W@6161                                       240038
+     C     @@CDP2        WHENEQ    2                                                          240038
+     C                   MULT      100           W@6158                                       240038
+     C                   MULT      100           W@6159                                       240038
+     C                   MULT      100           W@6160                                       240038
+     C                   MULT      100           W@6161                                       240038
+     C     @@CDP2        WHENEQ    3                                                          240038
+     C                   MULT      1000          W@6158                                       240038
+     C                   MULT      1000          W@6159                                       240038
+     C                   MULT      1000          W@6160                                       240038
+     C                   MULT      1000          W@6161                                       240038
+     C                   ENDSL                                                                240038
+      *                                                                                       240038
+      ** Divide buy amount in different decimal places against +rate and store value          240038
+      ** to a variable with three decimal place.                                              240038
+      *                                                                                       240038
+     C     W@1150        DIV(H)    @RATEC        W@6162           15 3                        240038
+     C     W@1151        DIV(H)    @RATEC        W@6163           15 3                        240038
+     C     W@1152        DIV(H)    @RATEC        W@6164           15 3                        240038
+     C     W@1153        DIV(H)    @RATEC        W@6165           15 3                        240038
+      *                                                                                       240038
+     C                   SELECT                                                               240038
+     C     @@CDP2        WHENEQ    1                                                          240038
+     C                   MULT      10            W@6162                                       240038
+     C                   MULT      10            W@6163                                       240038
+     C                   MULT      10            W@6164                                       240038
+     C                   MULT      10            W@6165                                       240038
+     C     @@CDP2        WHENEQ    2                                                          240038
+     C                   MULT      100           W@6162                                       240038
+     C                   MULT      100           W@6163                                       240038
+     C                   MULT      100           W@6164                                       240038
+     C                   MULT      100           W@6165                                       240038
+     C     @@CDP2        WHENEQ    3                                                          240038
+     C                   MULT      1000          W@6162                                       240038
+     C                   MULT      1000          W@6163                                       240038
+     C                   MULT      1000          W@6164                                       240038
+     C                   MULT      1000          W@6165                                       240038
+     C                   ENDSL                                                                240038
+      *                                                                                       240038
+      ** Check if one of the above calculations satisfied the suppose sell amount and if it   240038
+      ** is then assign a Divide rate to W@MDIN.                                              240038
+      *                                                                                       240038
+     C     W@6150        IFEQ      W@2150                                                     240038
+     C     W@6151        OREQ      W@2150                                                     240038
+     C     W@6152        OREQ      W@2150                                                     240038
+     C     W@6153        OREQ      W@2150                                                     240038
+     C     W@6154        OREQ      W@2150                                                     240038
+     C     W@6155        OREQ      W@2150                                                     240038
+     C     W@6156        OREQ      W@2150                                                     240038
+     C     W@6157        OREQ      W@2150                                                     240038
+     C     W@6158        OREQ      W@2150                                                     240038
+     C     W@6159        OREQ      W@2150                                                     240038
+     C     W@6160        OREQ      W@2150                                                     240038
+     C     W@6161        OREQ      W@2150                                                     240038
+     C     W@6162        OREQ      W@2150                                                     240038
+     C     W@6163        OREQ      W@2150                                                     240038
+     C     W@6164        OREQ      W@2150                                                     240038
+     C     W@6165        OREQ      W@2150                                                     240038
+     C                   MOVE      'D'           W@MDIN                                       240038
+     C     @SRATE        ADD       @RATEV        @RRATE                                       240038
+     C                   ELSE                                                                 240038
+      *                                                                                       240038
+      ** Multiply the buy amount with different decimal places against -rate and store        240038
+      ** value to variable with zero decimal place.                                           240038
+      *                                                                                       240038
+     C     W@1150        MULT(H)   @RATED        W@7150           15 0                        240038
+     C     W@1151        MULT(H)   @RATED        W@7151           15 0                        240038
+     C     W@1152        MULT(H)   @RATED        W@7152           15 0                        240038
+     C     W@1153        MULT(H)   @RATED        W@7153           15 0                        240038
+      *                                                                                       240038
+      ** Multiply the buy amount with different decimal places against -rate and store        240038
+      ** value to variable with one decimal place.                                            240038
+      *                                                                                       240038
+     C     W@1150        MULT(H)   @RATED        W@7154           15 1                        240038
+     C     W@1151        MULT(H)   @RATED        W@7155           15 1                        240038
+     C     W@1152        MULT(H)   @RATED        W@7156           15 1                        240038
+     C     W@1153        MULT(H)   @RATED        W@7157           15 1                        240038
+      *                                                                                       240038
+      ** Multiply the buy amount with different decimal places against -rate and store        240038
+      ** value to variable with two decimal place.                                            240038
+      *                                                                                       240038
+     C     W@1150        MULT(H)   @RATED        W@7158           15 2                        240038
+     C     W@1151        MULT(H)   @RATED        W@7159           15 2                        240038
+     C     W@1152        MULT(H)   @RATED        W@7160           15 2                        240038
+     C     W@1153        MULT(H)   @RATED        W@7161           15 2                        240038
+      *                                                                                       240038
+      ** Multiply the buy amount with different decimal places against -rate and store        240038
+      ** value to variable with three decimal place.                                          240038
+      *                                                                                       240038
+     C     W@1150        MULT(H)   @RATED        W@7162           15 3                        240038
+     C     W@1151        MULT(H)   @RATED        W@7163           15 3                        240038
+     C     W@1152        MULT(H)   @RATED        W@7164           15 3                        240038
+     C     W@1153        MULT(H)   @RATED        W@7165           15 3                        240038
+      *                                                                                       240038
+      ** Check if one of the above calculations satisfied the suppose sell amount and if it   240038
+      ** is then assign a Multiply rate to W@MDIN.                                            240038
+      *                                                                                       240038
+     C     W@7150        IFEQ      W@2150                                                     240038
+     C     W@7151        OREQ      W@2150                                                     240038
+     C     W@7152        OREQ      W@2150                                                     240038
+     C     W@7153        OREQ      W@2150                                                     240038
+     C     W@7154        OREQ      W@2150                                                     240038
+     C     W@7155        OREQ      W@2150                                                     240038
+     C     W@7156        OREQ      W@2150                                                     240038
+     C     W@7157        OREQ      W@2150                                                     240038
+     C     W@7158        OREQ      W@2150                                                     240038
+     C     W@7159        OREQ      W@2150                                                     240038
+     C     W@7160        OREQ      W@2150                                                     240038
+     C     W@7161        OREQ      W@2150                                                     240038
+     C     W@7162        OREQ      W@2150                                                     240038
+     C     W@7163        OREQ      W@2150                                                     240038
+     C     W@7164        OREQ      W@2150                                                     240038
+     C     W@7165        OREQ      W@2150                                                     240038
+     C                   MOVE      'M'           W@MDIN                                       240038
+     C     @SRATE        SUB       @RATEV        @RRATE                                       240038
+     C                   ENDIF                                                                240038
+     C                   ENDIF                                                                240038
+     C                   ENDIF                                                                240038
+      *                                                                                       240038
+      ** If the margin buy/sell indicator is "B" and sell currency is                         240038
+      ** equal to the dealing base currency.                                                  240038
+      *                                                                                       240038
+     C     F3MGBS        IFEQ      'B'                                                        240038
+     C     DDSCCY        ANDEQ     BNCYDL                                                     240038
+      *                                                                                       240038
+      ** Divide buy amount in different decimal places against +rate and store value          240038
+      ** to a variable with zero decimal place.                                               240038
+      *                                                                                       240038
+     C     W@2150        DIV(H)    @RATEC        W@6150                                       240038
+     C     W@2151        DIV(H)    @RATEC        W@6151                                       240038
+     C     W@2152        DIV(H)    @RATEC        W@6152                                       240038
+     C     W@2153        DIV(H)    @RATEC        W@6153                                       240038
+      *                                                                                       240038
+     C                   SELECT                                                               240038
+     C     @@CDP1        WHENEQ    1                                                          240038
+     C                   MULT      10            W@6150                                       240038
+     C                   MULT      10            W@6151                                       240038
+     C                   MULT      10            W@6152                                       240038
+     C                   MULT      10            W@6153                                       240038
+     C     @@CDP1        WHENEQ    2                                                          240038
+     C                   MULT      100           W@6150                                       240038
+     C                   MULT      100           W@6151                                       240038
+     C                   MULT      100           W@6152                                       240038
+     C                   MULT      100           W@6153                                       240038
+     C     @@CDP1        WHENEQ    3                                                          240038
+     C                   MULT      1000          W@6150                                       240038
+     C                   MULT      1000          W@6151                                       240038
+     C                   MULT      1000          W@6152                                       240038
+     C                   MULT      1000          W@6153                                       240038
+     C                   ENDSL                                                                240038
+      *                                                                                       240038
+      ** Divide buy amount in different decimal places against +rate and store value          240038
+      ** to a variable with one  decimal place.                                               240038
+      *                                                                                       240038
+     C     W@2150        DIV(H)    @RATEC        W@6154                                       240038
+     C     W@2151        DIV(H)    @RATEC        W@6155                                       240038
+     C     W@2152        DIV(H)    @RATEC        W@6156                                       240038
+     C     W@2153        DIV(H)    @RATEC        W@6157                                       240038
+      *                                                                                       240038
+     C                   SELECT                                                               240038
+     C     @@CDP1        WHENEQ    1                                                          240038
+     C                   MULT      10            W@6154                                       240038
+     C                   MULT      10            W@6155                                       240038
+     C                   MULT      10            W@6156                                       240038
+     C                   MULT      10            W@6157                                       240038
+     C     @@CDP1        WHENEQ    2                                                          240038
+     C                   MULT      100           W@6154                                       240038
+     C                   MULT      100           W@6155                                       240038
+     C                   MULT      100           W@6156                                       240038
+     C                   MULT      100           W@6157                                       240038
+     C     @@CDP1        WHENEQ    3                                                          240038
+     C                   MULT      1000          W@6154                                       240038
+     C                   MULT      1000          W@6155                                       240038
+     C                   MULT      1000          W@6156                                       240038
+     C                   MULT      1000          W@6157                                       240038
+     C                   ENDSL                                                                240038
+      *                                                                                       240038
+      ** Divide buy amount in different decimal places against +rate and store value          240038
+      ** to a variable with two  decimal place.                                               240038
+      *                                                                                       240038
+     C     W@2150        DIV(H)    @RATEC        W@6158                                       240038
+     C     W@2151        DIV(H)    @RATEC        W@6159                                       240038
+     C     W@2152        DIV(H)    @RATEC        W@6160                                       240038
+     C     W@2153        DIV(H)    @RATEC        W@6161                                       240038
+      *                                                                                       240038
+     C                   SELECT                                                               240038
+     C     @@CDP1        WHENEQ    1                                                          240038
+     C                   MULT      10            W@6158                                       240038
+     C                   MULT      10            W@6159                                       240038
+     C                   MULT      10            W@6160                                       240038
+     C                   MULT      10            W@6161                                       240038
+     C     @@CDP1        WHENEQ    2                                                          240038
+     C                   MULT      100           W@6158                                       240038
+     C                   MULT      100           W@6159                                       240038
+     C                   MULT      100           W@6160                                       240038
+     C                   MULT      100           W@6161                                       240038
+     C     @@CDP1        WHENEQ    3                                                          240038
+     C                   MULT      1000          W@6158                                       240038
+     C                   MULT      1000          W@6159                                       240038
+     C                   MULT      1000          W@6160                                       240038
+     C                   MULT      1000          W@6161                                       240038
+     C                   ENDSL                                                                240038
+      *                                                                                       240038
+      ** Divide buy amount in different decimal places against +rate and store value          240038
+      ** to a variable with three decimal place.                                              240038
+      *                                                                                       240038
+     C     W@2150        DIV(H)    @RATEC        W@6162                                       240038
+     C     W@2151        DIV(H)    @RATEC        W@6163                                       240038
+     C     W@2152        DIV(H)    @RATEC        W@6164                                       240038
+     C     W@2153        DIV(H)    @RATEC        W@6165                                       240038
+      *                                                                                       240038
+     C                   SELECT                                                               240038
+     C     @@CDP1        WHENEQ    1                                                          240038
+     C                   MULT      10            W@6162                                       240038
+     C                   MULT      10            W@6163                                       240038
+     C                   MULT      10            W@6164                                       240038
+     C                   MULT      10            W@6165                                       240038
+     C     @@CDP1        WHENEQ    2                                                          240038
+     C                   MULT      100           W@6162                                       240038
+     C                   MULT      100           W@6163                                       240038
+     C                   MULT      100           W@6164                                       240038
+     C                   MULT      100           W@6165                                       240038
+     C     @@CDP1        WHENEQ    3                                                          240038
+     C                   MULT      1000          W@6162                                       240038
+     C                   MULT      1000          W@6163                                       240038
+     C                   MULT      1000          W@6164                                       240038
+     C                   MULT      1000          W@6165                                       240038
+     C                   ENDSL                                                                240038
+      *                                                                                       240038
+      ** Check if one of the above calculations satisfied the suppose sell amount and if it   240038
+      ** is then assign a Divide rate to W@MDIN.                                              240038
+      *                                                                                       240038
+     C     W@6150        IFEQ      W@1150                                                     240038
+     C     W@6151        OREQ      W@1150                                                     240038
+     C     W@6152        OREQ      W@1150                                                     240038
+     C     W@6153        OREQ      W@1150                                                     240038
+     C     W@6154        OREQ      W@1150                                                     240038
+     C     W@6155        OREQ      W@1150                                                     240038
+     C     W@6156        OREQ      W@1150                                                     240038
+     C     W@6157        OREQ      W@1150                                                     240038
+     C     W@6158        OREQ      W@1150                                                     240038
+     C     W@6159        OREQ      W@1150                                                     240038
+     C     W@6160        OREQ      W@1150                                                     240038
+     C     W@6161        OREQ      W@1150                                                     240038
+     C     W@6162        OREQ      W@1150                                                     240038
+     C     W@6163        OREQ      W@1150                                                     240038
+     C     W@6164        OREQ      W@1150                                                     240038
+     C     W@6165        OREQ      W@1150                                                     240038
+     C                   MOVE      'D'           W@MDIN                                       240038
+     C     @SRATE        ADD       @RATEV        @RRATE                                       240038
+     C                   ELSE                                                                 240038
+      *                                                                                       240038
+      ** Multiply the buy amount with different decimal places against -rate and store        240038
+      ** value to variable with zero decimal place.                                           240038
+      *                                                                                       240038
+     C     W@2150        MULT(H)   @RATED        W@7150                                       240038
+     C     W@2151        MULT(H)   @RATED        W@7151                                       240038
+     C     W@2152        MULT(H)   @RATED        W@7152                                       240038
+     C     W@2153        MULT(H)   @RATED        W@7153                                       240038
+      *                                                                                       240038
+      ** Multiply the buy amount with different decimal places against -rate and store        240038
+      ** value to variable with one decimal place.                                            240038
+      *                                                                                       240038
+     C     W@2150        MULT(H)   @RATED        W@7154                                       240038
+     C     W@2151        MULT(H)   @RATED        W@7155                                       240038
+     C     W@2152        MULT(H)   @RATED        W@7156                                       240038
+     C     W@2153        MULT(H)   @RATED        W@7157                                       240038
+      *                                                                                       240038
+      ** Multiply the buy amount with different decimal places against -rate and store        240038
+      ** value to variable with two decimal place.                                            240038
+      *                                                                                       240038
+     C     W@2150        MULT(H)   @RATED        W@7158                                       240038
+     C     W@2151        MULT(H)   @RATED        W@7159                                       240038
+     C     W@2152        MULT(H)   @RATED        W@7160                                       240038
+     C     W@2153        MULT(H)   @RATED        W@7161                                       240038
+      *                                                                                       240038
+      ** Multiply the buy amount with different decimal places against -rate and store        240038
+      ** value to variable with three decimal place.                                          240038
+      *                                                                                       240038
+     C     W@2150        MULT(H)   @RATED        W@7162                                       240038
+     C     W@2151        MULT(H)   @RATED        W@7163                                       240038
+     C     W@2152        MULT(H)   @RATED        W@7164                                       240038
+     C     W@2153        MULT(H)   @RATED        W@7165                                       240038
+      *                                                                                       240038
+      ** Check if one of the above calculations satisfied the suppose sell amount and if it   240038
+      ** is then assign a Multiply rate to W@MDIN.                                            240038
+      *                                                                                       240038
+     C     W@7150        IFEQ      W@1150                                                     240038
+     C     W@7151        OREQ      W@1150                                                     240038
+     C     W@7152        OREQ      W@1150                                                     240038
+     C     W@7153        OREQ      W@1150                                                     240038
+     C     W@7154        OREQ      W@1150                                                     240038
+     C     W@7155        OREQ      W@1150                                                     240038
+     C     W@7156        OREQ      W@1150                                                     240038
+     C     W@7157        OREQ      W@1150                                                     240038
+     C     W@7158        OREQ      W@1150                                                     240038
+     C     W@7159        OREQ      W@1150                                                     240038
+     C     W@7160        OREQ      W@1150                                                     240038
+     C     W@7161        OREQ      W@1150                                                     240038
+     C     W@7162        OREQ      W@1150                                                     240038
+     C     W@7163        OREQ      W@1150                                                     240038
+     C     W@7164        OREQ      W@1150                                                     240038
+     C     W@7165        OREQ      W@1150                                                     240038
+     C                   MOVE      'M'           W@MDIN                                       240038
+     C     @SRATE        SUB       @RATEV        @RRATE                                       240038
+     C                   ENDIF                                                                240038
+     C                   ENDIF                                                                240038
+     C                   ENDIF                                                                240038
+      *                                                                                       240038
+      ** If the margin buy/sell indicator used is "S" and buy currency                        240038
+      ** is equal to the dealing base currency.                                               240038
+      *                                                                                       240038
+     C     F3MGBS        IFEQ      'S'                                                        240038
+     C     DDBCCY        ANDEQ     BNCYDL                                                     240038
+      *                                                                                       240038
+      ** Divide sell amount in different decimal places against +rate and store value         240038
+      ** to a variable with zero decimal place.                                               240038
+      *                                                                                       240038
+     C     W@2150        DIV(H)    @RATEC        W@6250           15 0                        240038
+     C     W@2151        DIV(H)    @RATEC        W@6251           15 0                        240038
+     C     W@2152        DIV(H)    @RATEC        W@6252           15 0                        240038
+     C     W@2153        DIV(H)    @RATEC        W@6253           15 0                        240038
+      *                                                                                       240038
+     C                   SELECT                                                               240038
+     C     @@CDP1        WHENEQ    1                                                          240038
+     C                   MULT      10            W@6250                                       240038
+     C                   MULT      10            W@6251                                       240038
+     C                   MULT      10            W@6252                                       240038
+     C                   MULT      10            W@6253                                       240038
+     C     @@CDP1        WHENEQ    2                                                          240038
+     C                   MULT      100           W@6250                                       240038
+     C                   MULT      100           W@6251                                       240038
+     C                   MULT      100           W@6252                                       240038
+     C                   MULT      100           W@6253                                       240038
+     C     @@CDP1        WHENEQ    3                                                          240038
+     C                   MULT      1000          W@6250                                       240038
+     C                   MULT      1000          W@6251                                       240038
+     C                   MULT      1000          W@6252                                       240038
+     C                   MULT      1000          W@6253                                       240038
+     C                   ENDSL                                                                240038
+      *                                                                                       240038
+      ** Divide sell amount in different decimal places against +rate and store value         240038
+      ** to a variable with one  decimal place.                                               240038
+      *                                                                                       240038
+     C     W@2150        DIV(H)    @RATEC        W@6254           15 1                        240038
+     C     W@2151        DIV(H)    @RATEC        W@6255           15 1                        240038
+     C     W@2152        DIV(H)    @RATEC        W@6256           15 1                        240038
+     C     W@2153        DIV(H)    @RATEC        W@6257           15 1                        240038
+      *                                                                                       240038
+     C                   SELECT                                                               240038
+     C     @@CDP1        WHENEQ    1                                                          240038
+     C                   MULT      10            W@6254                                       240038
+     C                   MULT      10            W@6255                                       240038
+     C                   MULT      10            W@6256                                       240038
+     C                   MULT      10            W@6257                                       240038
+     C     @@CDP1        WHENEQ    2                                                          240038
+     C                   MULT      100           W@6254                                       240038
+     C                   MULT      100           W@6255                                       240038
+     C                   MULT      100           W@6256                                       240038
+     C                   MULT      100           W@6257                                       240038
+     C     @@CDP1        WHENEQ    3                                                          240038
+     C                   MULT      1000          W@6254                                       240038
+     C                   MULT      1000          W@6255                                       240038
+     C                   MULT      1000          W@6256                                       240038
+     C                   MULT      1000          W@6257                                       240038
+     C                   ENDSL                                                                240038
+      *                                                                                       240038
+      ** Divide sell amount in different decimal places against +rate and store value         240038
+      ** to a variable with two  decimal place.                                               240038
+      *                                                                                       240038
+     C     W@2150        DIV(H)    @RATEC        W@6258           15 2                        240038
+     C     W@2151        DIV(H)    @RATEC        W@6259           15 2                        240038
+     C     W@2152        DIV(H)    @RATEC        W@6260           15 2                        240038
+     C     W@2153        DIV(H)    @RATEC        W@6261           15 2                        240038
+      *                                                                                       240038
+     C                   SELECT                                                               240038
+     C     @@CDP1        WHENEQ    1                                                          240038
+     C                   MULT      10            W@6258                                       240038
+     C                   MULT      10            W@6259                                       240038
+     C                   MULT      10            W@6260                                       240038
+     C                   MULT      10            W@6261                                       240038
+     C     @@CDP1        WHENEQ    2                                                          240038
+     C                   MULT      100           W@6258                                       240038
+     C                   MULT      100           W@6259                                       240038
+     C                   MULT      100           W@6260                                       240038
+     C                   MULT      100           W@6261                                       240038
+     C     @@CDP1        WHENEQ    3                                                          240038
+     C                   MULT      1000          W@6258                                       240038
+     C                   MULT      1000          W@6259                                       240038
+     C                   MULT      1000          W@6260                                       240038
+     C                   MULT      1000          W@6261                                       240038
+     C                   ENDSL                                                                240038
+      *                                                                                       240038
+      ** Divide sell amount in different decimal places against +rate and store value         240038
+      ** to a variable with three decimal place.                                              240038
+      *                                                                                       240038
+     C     W@2150        DIV(H)    @RATEC        W@6262           15 3                        240038
+     C     W@2151        DIV(H)    @RATEC        W@6263           15 3                        240038
+     C     W@2152        DIV(H)    @RATEC        W@6264           15 3                        240038
+     C     W@2153        DIV(H)    @RATEC        W@6265           15 3                        240038
+      *                                                                                       240038
+     C                   SELECT                                                               240038
+     C     @@CDP1        WHENEQ    1                                                          240038
+     C                   MULT      10            W@6262                                       240038
+     C                   MULT      10            W@6263                                       240038
+     C                   MULT      10            W@6264                                       240038
+     C                   MULT      10            W@6265                                       240038
+     C     @@CDP1        WHENEQ    2                                                          240038
+     C                   MULT      100           W@6262                                       240038
+     C                   MULT      100           W@6263                                       240038
+     C                   MULT      100           W@6264                                       240038
+     C                   MULT      100           W@6265                                       240038
+     C     @@CDP1        WHENEQ    3                                                          240038
+     C                   MULT      1000          W@6262                                       240038
+     C                   MULT      1000          W@6263                                       240038
+     C                   MULT      1000          W@6264                                       240038
+     C                   MULT      1000          W@6265                                       240038
+     C                   ENDSL                                                                240038
+      *                                                                                       240038
+      ** Check if one of the above calculations satisfied the suppose buy amount and if it    240038
+      ** is then assign a Multiply rate to W@MDIN.                                            240038
+      *                                                                                       240038
+     C     W@6250        IFEQ      W@1150                                                     240038
+     C     W@6251        OREQ      W@1150                                                     240038
+     C     W@6252        OREQ      W@1150                                                     240038
+     C     W@6253        OREQ      W@1150                                                     240038
+     C     W@6254        OREQ      W@1150                                                     240038
+     C     W@6255        OREQ      W@1150                                                     240038
+     C     W@6256        OREQ      W@1150                                                     240038
+     C     W@6257        OREQ      W@1150                                                     240038
+     C     W@6258        OREQ      W@1150                                                     240038
+     C     W@6259        OREQ      W@1150                                                     240038
+     C     W@6260        OREQ      W@1150                                                     240038
+     C     W@6261        OREQ      W@1150                                                     240038
+     C     W@6262        OREQ      W@1150                                                     240038
+     C     W@6263        OREQ      W@1150                                                     240038
+     C     W@6264        OREQ      W@1150                                                     240038
+     C     W@6265        OREQ      W@1150                                                     240038
+     C                   MOVE      'D'           W@MDIN                                       240038
+     C     @SRATE        ADD       @RATEV        @RRATE                                       240038
+     C                   ELSE                                                                 240038
+      *                                                                                       240038
+      ** Multiply the sell amount with different decimal places against -rate and store       240038
+      ** value to variable with zero decimal place.                                           240038
+      *                                                                                       240038
+     C     W@2150        MULT(H)   @RATED        W@7250           15 0                        240038
+     C     W@2151        MULT(H)   @RATED        W@7251           15 0                        240038
+     C     W@2152        MULT(H)   @RATED        W@7252           15 0                        240038
+     C     W@2153        MULT(H)   @RATED        W@7253           15 0                        240038
+      *                                                                                       240038
+      ** Multiply the sell amount with different decimal places against -rate and store       240038
+      ** value to variable with one decimal place.                                            240038
+      *                                                                                       240038
+     C     W@2150        MULT(H)   @RATED        W@7254           15 1                        240038
+     C     W@2151        MULT(H)   @RATED        W@7255           15 1                        240038
+     C     W@2152        MULT(H)   @RATED        W@7256           15 1                        240038
+     C     W@2153        MULT(H)   @RATED        W@7257           15 1                        240038
+      *                                                                                       240038
+      ** Multiply the sell amount with different decimal places against -rate and store       240038
+      ** value to variable with two decimal place.                                            240038
+      *                                                                                       240038
+     C     W@2150        MULT(H)   @RATED        W@7258           15 2                        240038
+     C     W@2151        MULT(H)   @RATED        W@7259           15 2                        240038
+     C     W@2152        MULT(H)   @RATED        W@7260           15 2                        240038
+     C     W@2153        MULT(H)   @RATED        W@7261           15 2                        240038
+      *                                                                                       240038
+      ** Multiply the sell amount with different decimal places against -rate and store       240038
+      ** value to variable with thre decimal place.                                           240038
+      *                                                                                       240038
+     C     W@2150        MULT(H)   @RATED        W@7262           15 3                        240038
+     C     W@2151        MULT(H)   @RATED        W@7263           15 3                        240038
+     C     W@2152        MULT(H)   @RATED        W@7264           15 3                        240038
+     C     W@2153        MULT(H)   @RATED        W@7265           15 3                        240038
+      *                                                                                       240038
+      ** Check if one of the above calculations satisfied the suppose buy amount and if it    240038
+      ** is then assign a Multiply rate to W@MDIN.                                            240038
+      *                                                                                       240038
+     C     W@7250        IFEQ      W@1150                                                     240038
+     C     W@7251        OREQ      W@1150                                                     240038
+     C     W@7252        OREQ      W@1150                                                     240038
+     C     W@7253        OREQ      W@1150                                                     240038
+     C     W@7254        OREQ      W@1150                                                     240038
+     C     W@7255        OREQ      W@1150                                                     240038
+     C     W@7256        OREQ      W@1150                                                     240038
+     C     W@7257        OREQ      W@1150                                                     240038
+     C     W@7258        OREQ      W@1150                                                     240038
+     C     W@7259        OREQ      W@1150                                                     240038
+     C     W@7260        OREQ      W@1150                                                     240038
+     C     W@7261        OREQ      W@1150                                                     240038
+     C     W@7262        OREQ      W@1150                                                     240038
+     C     W@7263        OREQ      W@1150                                                     240038
+     C     W@7264        OREQ      W@1150                                                     240038
+     C     W@7265        OREQ      W@1150                                                     240038
+     C                   MOVE      'M'           W@MDIN                                       240038
+     C     @SRATE        SUB       @RATEV        @RRATE                                       240038
+     C                   ENDIF                                                                240038
+     C                   ENDIF                                                                240038
+     C                   ENDIF                                                                240038
+      *                                                                                       240038
+      ** If the margin buy/sell indicator used is "S" sell currency is                        240038
+      ** equal to the dealing base currency.                                                  240038
+      *                                                                                       240038
+     C     F3MGBS        IFEQ      'S'                                                        240038
+     C     DDSCCY        ANDEQ     BNCYDL                                                     240038
+      *                                                                                       240038
+      ** Divide sell amount in different decimal places against +rate and store value         240038
+      ** to a variable with zero decimal place.                                               240038
+      *                                                                                       240038
+     C     W@1150        DIV(H)    @RATEC        W@6250                                       240038
+     C     W@1151        DIV(H)    @RATEC        W@6251                                       240038
+     C     W@1152        DIV(H)    @RATEC        W@6252                                       240038
+     C     W@1153        DIV(H)    @RATEC        W@6253                                       240038
+      *                                                                                       240038
+     C                   SELECT                                                               240038
+     C     @@CDP2        WHENEQ    1                                                          240038
+     C                   MULT      10            W@6250                                       240038
+     C                   MULT      10            W@6251                                       240038
+     C                   MULT      10            W@6252                                       240038
+     C                   MULT      10            W@6253                                       240038
+     C     @@CDP2        WHENEQ    2                                                          240038
+     C                   MULT      100           W@6250                                       240038
+     C                   MULT      100           W@6251                                       240038
+     C                   MULT      100           W@6252                                       240038
+     C                   MULT      100           W@6253                                       240038
+     C     @@CDP2        WHENEQ    3                                                          240038
+     C                   MULT      1000          W@6250                                       240038
+     C                   MULT      1000          W@6251                                       240038
+     C                   MULT      1000          W@6252                                       240038
+     C                   MULT      1000          W@6253                                       240038
+     C                   ENDSL                                                                240038
+      *                                                                                       240038
+      ** Divide sell amount in different decimal places against +rate and store value         240038
+      ** to a variable with one  decimal place.                                               240038
+      *                                                                                       240038
+     C     W@1150        DIV(H)    @RATEC        W@6254                                       240038
+     C     W@1151        DIV(H)    @RATEC        W@6255                                       240038
+     C     W@1152        DIV(H)    @RATEC        W@6256                                       240038
+     C     W@1153        DIV(H)    @RATEC        W@6257                                       240038
+      *                                                                                       240038
+     C                   SELECT                                                               240038
+     C     @@CDP2        WHENEQ    1                                                          240038
+     C                   MULT      10            W@6254                                       240038
+     C                   MULT      10            W@6255                                       240038
+     C                   MULT      10            W@6256                                       240038
+     C                   MULT      10            W@6257                                       240038
+     C     @@CDP2        WHENEQ    2                                                          240038
+     C                   MULT      100           W@6254                                       240038
+     C                   MULT      100           W@6255                                       240038
+     C                   MULT      100           W@6256                                       240038
+     C                   MULT      100           W@6257                                       240038
+     C     @@CDP2        WHENEQ    3                                                          240038
+     C                   MULT      1000          W@6254                                       240038
+     C                   MULT      1000          W@6255                                       240038
+     C                   MULT      1000          W@6256                                       240038
+     C                   MULT      1000          W@6257                                       240038
+     C                   ENDSL                                                                240038
+      *                                                                                       240038
+      ** Divide sell amount in different decimal places against +rate and store value         240038
+      ** to a variable with two  decimal place.                                               240038
+      *                                                                                       240038
+     C     W@1150        DIV(H)    @RATEC        W@6258                                       240038
+     C     W@1151        DIV(H)    @RATEC        W@6259                                       240038
+     C     W@1152        DIV(H)    @RATEC        W@6260                                       240038
+     C     W@1153        DIV(H)    @RATEC        W@6261                                       240038
+      *                                                                                       240038
+     C                   SELECT                                                               240038
+     C     @@CDP2        WHENEQ    1                                                          240038
+     C                   MULT      10            W@6258                                       240038
+     C                   MULT      10            W@6259                                       240038
+     C                   MULT      10            W@6260                                       240038
+     C                   MULT      10            W@6261                                       240038
+     C     @@CDP2        WHENEQ    2                                                          240038
+     C                   MULT      100           W@6258                                       240038
+     C                   MULT      100           W@6259                                       240038
+     C                   MULT      100           W@6260                                       240038
+     C                   MULT      100           W@6261                                       240038
+     C     @@CDP2        WHENEQ    3                                                          240038
+     C                   MULT      1000          W@6258                                       240038
+     C                   MULT      1000          W@6259                                       240038
+     C                   MULT      1000          W@6260                                       240038
+     C                   MULT      1000          W@6261                                       240038
+     C                   ENDSL                                                                240038
+      *                                                                                       240038
+      ** Divide sell amount in different decimal places against +rate and store value         240038
+      ** to a variable with three decimal place.                                              240038
+      *                                                                                       240038
+     C     W@1150        DIV(H)    @RATEC        W@6262                                       240038
+     C     W@1151        DIV(H)    @RATEC        W@6263                                       240038
+     C     W@1152        DIV(H)    @RATEC        W@6264                                       240038
+     C     W@1153        DIV(H)    @RATEC        W@6265                                       240038
+      *                                                                                       240038
+     C                   SELECT                                                               240038
+     C     @@CDP2        WHENEQ    1                                                          240038
+     C                   MULT      10            W@6262                                       240038
+     C                   MULT      10            W@6263                                       240038
+     C                   MULT      10            W@6264                                       240038
+     C                   MULT      10            W@6265                                       240038
+     C     @@CDP2        WHENEQ    2                                                          240038
+     C                   MULT      100           W@6262                                       240038
+     C                   MULT      100           W@6263                                       240038
+     C                   MULT      100           W@6264                                       240038
+     C                   MULT      100           W@6265                                       240038
+     C     @@CDP2        WHENEQ    3                                                          240038
+     C                   MULT      1000          W@6262                                       240038
+     C                   MULT      1000          W@6263                                       240038
+     C                   MULT      1000          W@6264                                       240038
+     C                   MULT      1000          W@6265                                       240038
+     C                   ENDSL                                                                240038
+      *                                                                                       240038
+      ** Check if one of the above calculations satisfied the suppose buy amount and if it    240038
+      ** is then assign a Multiply rate to W@MDIN.                                            240038
+      *                                                                                       240038
+     C     W@6250        IFEQ      W@2150                                                     240038
+     C     W@6251        OREQ      W@2150                                                     240038
+     C     W@6252        OREQ      W@2150                                                     240038
+     C     W@6253        OREQ      W@2150                                                     240038
+     C     W@6254        OREQ      W@2150                                                     240038
+     C     W@6255        OREQ      W@2150                                                     240038
+     C     W@6256        OREQ      W@2150                                                     240038
+     C     W@6257        OREQ      W@2150                                                     240038
+     C     W@6258        OREQ      W@2150                                                     240038
+     C     W@6259        OREQ      W@2150                                                     240038
+     C     W@6260        OREQ      W@2150                                                     240038
+     C     W@6261        OREQ      W@2150                                                     240038
+     C     W@6262        OREQ      W@2150                                                     240038
+     C     W@6263        OREQ      W@2150                                                     240038
+     C     W@6264        OREQ      W@2150                                                     240038
+     C     W@6265        OREQ      W@2150                                                     240038
+     C                   MOVE      'D'           W@MDIN                                       240038
+     C     @SRATE        ADD       @RATEV        @RRATE                                       240038
+     C                   ELSE                                                                 240038
+      *                                                                                       240038
+      ** Multiply the sell amount with different decimal places against -rate and store       240038
+      ** value to variable with zero decimal place.                                           240038
+      *                                                                                       240038
+     C     W@1150        MULT(H)   @RATED        W@7250                                       240038
+     C     W@1151        MULT(H)   @RATED        W@7251                                       240038
+     C     W@1152        MULT(H)   @RATED        W@7252                                       240038
+     C     W@1153        MULT(H)   @RATED        W@7253                                       240038
+      *                                                                                       240038
+      ** Multiply the sell amount with different decimal places against -rate and store       240038
+      ** value to variable with one decimal place.                                            240038
+      *                                                                                       240038
+     C     W@1150        MULT(H)   @RATED        W@7254                                       240038
+     C     W@1151        MULT(H)   @RATED        W@7255                                       240038
+     C     W@1152        MULT(H)   @RATED        W@7256                                       240038
+     C     W@1153        MULT(H)   @RATED        W@7257                                       240038
+      *                                                                                       240038
+      ** Multiply the sell amount with different decimal places against -rate and store       240038
+      ** value to variable with two decimal place.                                            240038
+      *                                                                                       240038
+     C     W@1150        MULT(H)   @RATED        W@7258                                       240038
+     C     W@1151        MULT(H)   @RATED        W@7259                                       240038
+     C     W@1152        MULT(H)   @RATED        W@7260                                       240038
+     C     W@1153        MULT(H)   @RATED        W@7261                                       240038
+      *                                                                                       240038
+      ** Multiply the sell amount with different decimal places against -rate and store       240038
+      ** value to variable with thre decimal place.                                           240038
+      *                                                                                       240038
+     C     W@1150        MULT(H)   @RATED        W@7262                                       240038
+     C     W@1151        MULT(H)   @RATED        W@7263                                       240038
+     C     W@1152        MULT(H)   @RATED        W@7264                                       240038
+     C     W@1153        MULT(H)   @RATED        W@7265                                       240038
+      *                                                                                       240038
+      ** Check if one of the above calculations satisfied the suppose buy amount and if it    240038
+      ** is then assign a Multiply rate to W@MDIN.                                            240038
+      *                                                                                       240038
+     C     W@7250        IFEQ      W@2150                                                     240038
+     C     W@7251        OREQ      W@2150                                                     240038
+     C     W@7252        OREQ      W@2150                                                     240038
+     C     W@7253        OREQ      W@2150                                                     240038
+     C     W@7254        OREQ      W@2150                                                     240038
+     C     W@7255        OREQ      W@2150                                                     240038
+     C     W@7256        OREQ      W@2150                                                     240038
+     C     W@7257        OREQ      W@2150                                                     240038
+     C     W@7258        OREQ      W@2150                                                     240038
+     C     W@7259        OREQ      W@2150                                                     240038
+     C     W@7260        OREQ      W@2150                                                     240038
+     C     W@7261        OREQ      W@2150                                                     240038
+     C     W@7262        OREQ      W@2150                                                     240038
+     C     W@7263        OREQ      W@2150                                                     240038
+     C     W@7264        OREQ      W@2150                                                     240038
+     C     W@7265        OREQ      W@2150                                                     240038
+     C                   MOVE      'M'           W@MDIN                                       240038
+     C     @SRATE        SUB       @RATEV        @RRATE                                       240038
+     C                   ENDIF                                                                240038
+     C                   ENDIF                                                                240038
+     C                   ENDIF                                                                240038
+     C*
      C*
      C** SET UP RATES TO BE VALIDATED ACCORDING TO METHOD 1, 2, OR 3
      C** (1 = OUTRIGHT RATE, 2 = RATE + 0.0000005, 3 = RATE - 0.00000005)
@@ -1914,6 +2718,403 @@
      C                   ADD       @SMGPT        @RRATE                         Margin+Fwd/Pts
      C                   END
      C                   END
+      *                                                                                       238023
+     C                   Z-ADD     @RRATE        @RATE1           13 8                        238023
+     C                   Z-ADD     @RRATE        @RATE2           13 8                        238023
+     C                   Z-ADD     @RRATE        @RATEV           13 8                        240038
+     C     @RATEV        IFLT      0                                                          240038
+     C                   MULT      -1            @RATEV                                       240038
+     C                   ENDIF                                                                240038
+     C     W@INRT        ADD       @RATE1        @RATE3           13 8                        238023
+     C     W@INRT        SUB       @RATE2        @RATE4           13 8                        238023
+      *                                                                                       238023
+      ** If the margin buy/sell indicator is "B".                                             238023
+      *                                                                                       238023
+     C     F3MGBS        IFEQ      'B'                                                        238023
+      *                                                                                       238023
+      ** Divide buy amount in different decimal places against +rate and store value          238023
+      ** to a variable with zero decimal place.                                               238023
+      *                                                                                       238023
+     C     W@1150        DIV(H)    @RATE3        W@8150           15 0                        238023
+     C     W@1151        DIV(H)    @RATE3        W@8151           15 0                        238023
+     C     W@1152        DIV(H)    @RATE3        W@8152           15 0                        238023
+     C     W@1153        DIV(H)    @RATE3        W@8153           15 0                        238023
+      *                                                                                       240038
+     C                   SELECT                                                               240038
+     C     @CDP2         WHENEQ    1                                                          240038
+     C                   MULT      10            W@8150                                       240038
+     C                   MULT      10            W@8151                                       240038
+     C                   MULT      10            W@8152                                       240038
+     C                   MULT      10            W@8153                                       240038
+     C     @CDP2         WHENEQ    2                                                          240038
+     C                   MULT      100           W@8150                                       240038
+     C                   MULT      100           W@8151                                       240038
+     C                   MULT      100           W@8152                                       240038
+     C                   MULT      100           W@8153                                       240038
+     C     @CDP2         WHENEQ    3                                                          240038
+     C                   MULT      1000          W@8150                                       240038
+     C                   MULT      1000          W@8151                                       240038
+     C                   MULT      1000          W@8152                                       240038
+     C                   MULT      1000          W@8153                                       240038
+     C                   ENDSL                                                                240038
+      *                                                                                       238023
+      ** Divide buy amount in different decimal places against +rate and store value          238023
+      ** to a variable with one  decimal place.                                               238023
+      *                                                                                       238023
+     C     W@1150        DIV(H)    @RATE3        W@8154           15 1                        238023
+     C     W@1151        DIV(H)    @RATE3        W@8155           15 1                        238023
+     C     W@1152        DIV(H)    @RATE3        W@8156           15 1                        238023
+     C     W@1153        DIV(H)    @RATE3        W@8157           15 1                        238023
+      *                                                                                       240038
+     C                   SELECT                                                               240038
+     C     @CDP2         WHENEQ    1                                                          240038
+     C                   MULT      10            W@8154                                       240038
+     C                   MULT      10            W@8155                                       240038
+     C                   MULT      10            W@8156                                       240038
+     C                   MULT      10            W@8157                                       240038
+     C     @CDP2         WHENEQ    2                                                          240038
+     C                   MULT      100           W@8154                                       240038
+     C                   MULT      100           W@8155                                       240038
+     C                   MULT      100           W@8156                                       240038
+     C                   MULT      100           W@8157                                       240038
+     C     @CDP2         WHENEQ    3                                                          240038
+     C                   MULT      1000          W@8154                                       240038
+     C                   MULT      1000          W@8155                                       240038
+     C                   MULT      1000          W@8156                                       240038
+     C                   MULT      1000          W@8157                                       240038
+     C                   ENDSL                                                                240038
+      *                                                                                       238023
+      ** Divide buy amount in different decimal places against +rate and store value          238023
+      ** to a variable with two  decimal place.                                               238023
+      *                                                                                       238023
+     C     W@1150        DIV(H)    @RATE3        W@8158           15 2                        238023
+     C     W@1151        DIV(H)    @RATE3        W@8159           15 2                        238023
+     C     W@1152        DIV(H)    @RATE3        W@8160           15 2                        238023
+     C     W@1153        DIV(H)    @RATE3        W@8161           15 2                        238023
+      *                                                                                       240038
+     C                   SELECT                                                               240038
+     C     @CDP2         WHENEQ    1                                                          240038
+     C                   MULT      10            W@8158                                       240038
+     C                   MULT      10            W@8159                                       240038
+     C                   MULT      10            W@8160                                       240038
+     C                   MULT      10            W@8161                                       240038
+     C     @CDP2         WHENEQ    2                                                          240038
+     C                   MULT      100           W@8158                                       240038
+     C                   MULT      100           W@8159                                       240038
+     C                   MULT      100           W@8160                                       240038
+     C                   MULT      100           W@8161                                       240038
+     C     @CDP2         WHENEQ    3                                                          240038
+     C                   MULT      1000          W@8158                                       240038
+     C                   MULT      1000          W@8159                                       240038
+     C                   MULT      1000          W@8160                                       240038
+     C                   MULT      1000          W@8161                                       240038
+     C                   ENDSL                                                                240038
+      *                                                                                       238023
+      ** Divide buy amount in different decimal places against +rate and store value          238023
+      ** to a variable with three decimal place.                                              238023
+      *                                                                                       238023
+     C     W@1150        DIV(H)    @RATE3        W@8162           15 3                        238023
+     C     W@1151        DIV(H)    @RATE3        W@8163           15 3                        238023
+     C     W@1152        DIV(H)    @RATE3        W@8164           15 3                        238023
+     C     W@1153        DIV(H)    @RATE3        W@8165           15 3                        238023
+      *                                                                                       240038
+     C                   SELECT                                                               240038
+     C     @CDP2         WHENEQ    1                                                          240038
+     C                   MULT      10            W@8162                                       240038
+     C                   MULT      10            W@8163                                       240038
+     C                   MULT      10            W@8164                                       240038
+     C                   MULT      10            W@8165                                       240038
+     C     @CDP2         WHENEQ    2                                                          240038
+     C                   MULT      100           W@8162                                       240038
+     C                   MULT      100           W@8163                                       240038
+     C                   MULT      100           W@8164                                       240038
+     C                   MULT      100           W@8165                                       240038
+     C     @CDP2         WHENEQ    3                                                          240038
+     C                   MULT      1000          W@8162                                       240038
+     C                   MULT      1000          W@8163                                       240038
+     C                   MULT      1000          W@8164                                       240038
+     C                   MULT      1000          W@8165                                       240038
+     C                   ENDSL                                                                240038
+      *                                                                                       238023
+      ** Check if one of the above calculations satisfied the suppose sell amount and if it   238023
+      ** is then assign a Divide rate to W@MDIN.                                              238023
+      *                                                                                       238023
+     C     W@8150        IFEQ      W@2150                                                     238023
+     C     W@8151        OREQ      W@2150                                                     238023
+     C     W@8152        OREQ      W@2150                                                     238023
+     C     W@8153        OREQ      W@2150                                                     238023
+     C     W@8154        OREQ      W@2150                                                     238023
+     C     W@8155        OREQ      W@2150                                                     238023
+     C     W@8156        OREQ      W@2150                                                     238023
+     C     W@8157        OREQ      W@2150                                                     238023
+     C     W@8158        OREQ      W@2150                                                     238023
+     C     W@8159        OREQ      W@2150                                                     238023
+     C     W@8160        OREQ      W@2150                                                     238023
+     C     W@8161        OREQ      W@2150                                                     238023
+     C     W@8162        OREQ      W@2150                                                     238023
+     C     W@8163        OREQ      W@2150                                                     238023
+     C     W@8164        OREQ      W@2150                                                     238023
+     C     W@8165        OREQ      W@2150                                                     238023
+     C                   MOVE      'D'           W@MDIN                                       238023
+     C**********         Z-ADD     @RATE3        @RRATE                                238023 240038
+     C     W@INRT        ADD       @RATEV        @RRATE                                       240038
+     C                   ELSE                                                                 238023
+      *                                                                                       238023
+      ** Multiply the buy amount with different decimal places against -rate and store        238023
+      ** value to variable with zero decimal place.                                           238023
+      *                                                                                       238023
+     C     W@1150        MULT(H)   @RATE4        W@9150           15 0                        238023
+     C     W@1151        MULT(H)   @RATE4        W@9151           15 0                        238023
+     C     W@1152        MULT(H)   @RATE4        W@9152           15 0                        238023
+     C     W@1153        MULT(H)   @RATE4        W@9153           15 0                        238023
+      *                                                                                       238023
+      ** Multiply the buy amount with different decimal places against -rate and store        238023
+      ** value to variable with one decimal place.                                            238023
+      *                                                                                       238023
+     C     W@1150        MULT(H)   @RATE4        W@9154           15 1                        238023
+     C     W@1151        MULT(H)   @RATE4        W@9155           15 1                        238023
+     C     W@1152        MULT(H)   @RATE4        W@9156           15 1                        238023
+     C     W@1153        MULT(H)   @RATE4        W@9157           15 1                        238023
+      *                                                                                       238023
+      ** Multiply the buy amount with different decimal places against -rate and store        238023
+      ** value to variable with two decimal place.                                            238023
+      *                                                                                       238023
+     C     W@1150        MULT(H)   @RATE4        W@9158           15 2                        238023
+     C     W@1151        MULT(H)   @RATE4        W@9159           15 2                        238023
+     C     W@1152        MULT(H)   @RATE4        W@9160           15 2                        238023
+     C     W@1153        MULT(H)   @RATE4        W@9161           15 2                        238023
+      *                                                                                       238023
+      ** Multiply the buy amount with different decimal places against -rate and store        238023
+      ** value to variable with three decimal place.                                          238023
+      *                                                                                       238023
+     C     W@1150        MULT(H)   @RATE4        W@9162           15 3                        238023
+     C     W@1151        MULT(H)   @RATE4        W@9163           15 3                        238023
+     C     W@1152        MULT(H)   @RATE4        W@9164           15 3                        238023
+     C     W@1153        MULT(H)   @RATE4        W@9165           15 3                        238023
+      *                                                                                       238023
+      ** Check if one of the above calculations satisfied the suppose sell amount and if it   238023
+      ** is then assign a Multiply rate to W@MDIN.                                            238023
+      *                                                                                       238023
+     C     W@9150        IFEQ      W@2150                                                     238023
+     C     W@9151        OREQ      W@2150                                                     238023
+     C     W@9152        OREQ      W@2150                                                     238023
+     C     W@9153        OREQ      W@2150                                                     238023
+     C     W@9154        OREQ      W@2150                                                     238023
+     C     W@9155        OREQ      W@2150                                                     238023
+     C     W@9156        OREQ      W@2150                                                     238023
+     C     W@9157        OREQ      W@2150                                                     238023
+     C     W@9158        OREQ      W@2150                                                     238023
+     C     W@9159        OREQ      W@2150                                                     238023
+     C     W@9160        OREQ      W@2150                                                     238023
+     C     W@9161        OREQ      W@2150                                                     238023
+     C     W@9162        OREQ      W@2150                                                     238023
+     C     W@9163        OREQ      W@2150                                                     238023
+     C     W@9164        OREQ      W@2150                                                     238023
+     C     W@9165        OREQ      W@2150                                                     238023
+     C                   MOVE      'M'           W@MDIN                                       238023
+     C**********         Z-ADD     @RATE4        @RRATE                                238023 240038
+     C     W@INRT        SUB       @RATEV        @RRATE                                       240038
+     C                   ENDIF                                                                238023
+     C                   ENDIF                                                                238023
+     C                   ENDIF                                                                238023
+      *                                                                                       238023
+      ** If the margin buy/sell indicator used is "S".                                        238023
+      *                                                                                       238023
+     C     F3MGBS        IFEQ      'S'                                                        238023
+      *                                                                                       238023
+      ** Divide sell amount in different decimal places against +rate and store value         238023
+      ** to a variable with zero decimal place.                                               238023
+      *                                                                                       238023
+     C     W@2150        DIV(H)    @RATE3        W@8250           15 0                        238023
+     C     W@2151        DIV(H)    @RATE3        W@8251           15 0                        238023
+     C     W@2152        DIV(H)    @RATE3        W@8252           15 0                        238023
+     C     W@2153        DIV(H)    @RATE3        W@8253           15 0                        238023
+      *                                                                                       240038
+     C                   SELECT                                                               240038
+     C     @CDP1         WHENEQ    1                                                          240038
+     C                   MULT      10            W@8250                                       240038
+     C                   MULT      10            W@8251                                       240038
+     C                   MULT      10            W@8252                                       240038
+     C                   MULT      10            W@8253                                       240038
+     C     @CDP1         WHENEQ    2                                                          240038
+     C                   MULT      100           W@8250                                       240038
+     C                   MULT      100           W@8251                                       240038
+     C                   MULT      100           W@8252                                       240038
+     C                   MULT      100           W@8253                                       240038
+     C     @CDP1         WHENEQ    3                                                          240038
+     C                   MULT      1000          W@8250                                       240038
+     C                   MULT      1000          W@8251                                       240038
+     C                   MULT      1000          W@8252                                       240038
+     C                   MULT      1000          W@8253                                       240038
+     C                   ENDSL                                                                240038
+      *                                                                                       238023
+      ** Divide sell amount in different decimal places against +rate and store value         238023
+      ** to a variable with one  decimal place.                                               238023
+      *                                                                                       238023
+     C     W@2150        DIV(H)    @RATE3        W@8254           15 1                        238023
+     C     W@2151        DIV(H)    @RATE3        W@8255           15 1                        238023
+     C     W@2152        DIV(H)    @RATE3        W@8256           15 1                        238023
+     C     W@2153        DIV(H)    @RATE3        W@8257           15 1                        238023
+      *                                                                                       240038
+     C                   SELECT                                                               240038
+     C     @CDP1         WHENEQ    1                                                          240038
+     C                   MULT      10            W@8254                                       240038
+     C                   MULT      10            W@8255                                       240038
+     C                   MULT      10            W@8256                                       240038
+     C                   MULT      10            W@8257                                       240038
+     C     @CDP1         WHENEQ    2                                                          240038
+     C                   MULT      100           W@8254                                       240038
+     C                   MULT      100           W@8255                                       240038
+     C                   MULT      100           W@8256                                       240038
+     C                   MULT      100           W@8257                                       240038
+     C     @CDP1         WHENEQ    3                                                          240038
+     C                   MULT      1000          W@8254                                       240038
+     C                   MULT      1000          W@8255                                       240038
+     C                   MULT      1000          W@8256                                       240038
+     C                   MULT      1000          W@8257                                       240038
+     C                   ENDSL                                                                240038
+      *                                                                                       238023
+      ** Divide sell amount in different decimal places against +rate and store value         238023
+      ** to a variable with two  decimal place.                                               238023
+      *                                                                                       238023
+     C     W@2150        DIV(H)    @RATE3        W@8258           15 2                        238023
+     C     W@2151        DIV(H)    @RATE3        W@8259           15 2                        238023
+     C     W@2152        DIV(H)    @RATE3        W@8260           15 2                        238023
+     C     W@2153        DIV(H)    @RATE3        W@8261           15 2                        238023
+      *                                                                                       240038
+     C                   SELECT                                                               240038
+     C     @CDP1         WHENEQ    1                                                          240038
+     C                   MULT      10            W@8258                                       240038
+     C                   MULT      10            W@8259                                       240038
+     C                   MULT      10            W@8260                                       240038
+     C                   MULT      10            W@8261                                       240038
+     C     @CDP1         WHENEQ    2                                                          240038
+     C                   MULT      100           W@8258                                       240038
+     C                   MULT      100           W@8259                                       240038
+     C                   MULT      100           W@8260                                       240038
+     C                   MULT      100           W@8261                                       240038
+     C     @CDP1         WHENEQ    3                                                          240038
+     C                   MULT      1000          W@8258                                       240038
+     C                   MULT      1000          W@8259                                       240038
+     C                   MULT      1000          W@8260                                       240038
+     C                   MULT      1000          W@8261                                       240038
+     C                   ENDSL                                                                240038
+      *                                                                                       238023
+      ** Divide sell amount in different decimal places against +rate and store value         238023
+      ** to a variable with three decimal place.                                              238023
+      *                                                                                       238023
+     C     W@2150        DIV(H)    @RATE3        W@8262           15 3                        238023
+     C     W@2151        DIV(H)    @RATE3        W@8263           15 3                        238023
+     C     W@2152        DIV(H)    @RATE3        W@8264           15 3                        238023
+     C     W@2153        DIV(H)    @RATE3        W@8265           15 3                        238023
+      *                                                                                       240038
+     C                   SELECT                                                               240038
+     C     @CDP1         WHENEQ    1                                                          240038
+     C                   MULT      10            W@8262                                       240038
+     C                   MULT      10            W@8263                                       240038
+     C                   MULT      10            W@8264                                       240038
+     C                   MULT      10            W@8265                                       240038
+     C     @CDP1         WHENEQ    2                                                          240038
+     C                   MULT      100           W@8262                                       240038
+     C                   MULT      100           W@8263                                       240038
+     C                   MULT      100           W@8264                                       240038
+     C                   MULT      100           W@8265                                       240038
+     C     @CDP1         WHENEQ    3                                                          240038
+     C                   MULT      1000          W@8262                                       240038
+     C                   MULT      1000          W@8263                                       240038
+     C                   MULT      1000          W@8264                                       240038
+     C                   MULT      1000          W@8265                                       240038
+     C                   ENDSL                                                                240038
+      *                                                                                       238023
+      ** Check if one of the above calculations satisfied the suppose buy amount and if it    238023
+      ** is then assign a Multiply rate to W@MDIN.                                            238023
+      *                                                                                       238023
+     C     W@8250        IFEQ      W@1150                                                     238023
+     C     W@8251        OREQ      W@1150                                                     238023
+     C     W@8252        OREQ      W@1150                                                     238023
+     C     W@8253        OREQ      W@1150                                                     238023
+     C     W@8254        OREQ      W@1150                                                     238023
+     C     W@8255        OREQ      W@1150                                                     238023
+     C     W@8256        OREQ      W@1150                                                     238023
+     C     W@8257        OREQ      W@1150                                                     238023
+     C     W@8258        OREQ      W@1150                                                     238023
+     C     W@8259        OREQ      W@1150                                                     238023
+     C     W@8260        OREQ      W@1150                                                     238023
+     C     W@8261        OREQ      W@1150                                                     238023
+     C     W@8262        OREQ      W@1150                                                     238023
+     C     W@8263        OREQ      W@1150                                                     238023
+     C     W@8264        OREQ      W@1150                                                     238023
+     C     W@8265        OREQ      W@1150                                                     238023
+     C                   MOVE      'D'           W@MDIN                                       238023
+     C**********         Z-ADD     @RATE3        @RRATE                                238023 240038
+     C     W@INRT        ADD       @RATEV        @RRATE                                       240038
+     C                   ELSE                                                                 238023
+      *                                                                                       238023
+      ** Multiply the sell amount with different decimal places against -rate and store       238023
+      ** value to variable with zero decimal place.                                           238023
+      *                                                                                       238023
+     C     W@2150        MULT(H)   @RATE4        W@9250           15 0                        238023
+     C     W@2151        MULT(H)   @RATE4        W@9251           15 0                        238023
+     C     W@2152        MULT(H)   @RATE4        W@9252           15 0                        238023
+     C     W@2153        MULT(H)   @RATE4        W@9253           15 0                        238023
+      *                                                                                       238023
+      ** Multiply the sell amount with different decimal places against -rate and store       238023
+      ** value to variable with one decimal place.                                            238023
+      *                                                                                       238023
+     C     W@2150        MULT(H)   @RATE4        W@9254           15 1                        238023
+     C     W@2151        MULT(H)   @RATE4        W@9255           15 1                        238023
+     C     W@2152        MULT(H)   @RATE4        W@9256           15 1                        238023
+     C     W@2153        MULT(H)   @RATE4        W@9257           15 1                        238023
+      *                                                                                       238023
+      ** Multiply the sell amount with different decimal places against -rate and store       238023
+      ** value to variable with two decimal place.                                            238023
+      *                                                                                       238023
+     C     W@2150        MULT(H)   @RATE4        W@9258           15 2                        238023
+     C     W@2151        MULT(H)   @RATE4        W@9259           15 2                        238023
+     C     W@2152        MULT(H)   @RATE4        W@9260           15 2                        238023
+     C     W@2153        MULT(H)   @RATE4        W@9261           15 2                        238023
+      *                                                                                       238023
+      ** Multiply the sell amount with different decimal places against -rate and store       238023
+      ** value to variable with thre decimal place.                                           238023
+      *                                                                                       238023
+     C     W@2150        MULT(H)   @RATE4        W@9262           15 3                        238023
+     C     W@2151        MULT(H)   @RATE4        W@9263           15 3                        238023
+     C     W@2152        MULT(H)   @RATE4        W@9264           15 3                        238023
+     C     W@2153        MULT(H)   @RATE4        W@9265           15 3                        238023
+      *                                                                                       238023
+      ** Check if one of the above calculations satisfied the suppose buy amount and if it    238023
+      ** is then assign a Multiply rate to W@MDIN.                                            238023
+      *                                                                                       238023
+     C     W@9250        IFEQ      W@1150                                                     238023
+     C     W@9251        OREQ      W@1150                                                     238023
+     C     W@9252        OREQ      W@1150                                                     238023
+     C     W@9253        OREQ      W@1150                                                     238023
+     C     W@9254        OREQ      W@1150                                                     238023
+     C     W@9255        OREQ      W@1150                                                     238023
+     C     W@9256        OREQ      W@1150                                                     238023
+     C     W@9257        OREQ      W@1150                                                     238023
+     C     W@9258        OREQ      W@1150                                                     238023
+     C     W@9259        OREQ      W@1150                                                     238023
+     C     W@9260        OREQ      W@1150                                                     238023
+     C     W@9261        OREQ      W@1150                                                     238023
+     C     W@9262        OREQ      W@1150                                                     238023
+     C     W@9263        OREQ      W@1150                                                     238023
+     C     W@9264        OREQ      W@1150                                                     238023
+     C     W@9265        OREQ      W@1150                                                     238023
+     C                   MOVE      'M'           W@MDIN                                       238023
+     C**********         Z-ADD     @RATE4        @RRATE                                238023 240038
+     C     W@INRT        SUB       @RATEV        @RRATE                                       240038
+     C                   ENDIF                                                                238023
+     C                   ENDIF                                                                238023
+     C                   ENDIF                                                                238023
+     C*
+     C**Add*exchange*rate*to*margin*+*forward*points***************************************** 238023
+     C**to*get*the*outright*rate************************************************************* 238023
+     C*                                                                                       238023
+     C     F3MGBS        IFEQ      ' '                                                        240038
+     C**********         ADD       W@INRT        @RRATE           13 8          Outright Rate 238023
+     C                   ADD       W@INRT        @RRATE           13 8                        240038
+     C                   ENDIF                                                                240038
      C*
      C* Add exchange rate to margin + forward points
      C* to get the outright rate
@@ -1951,6 +3152,10 @@
      C*
      C*----------------------------------------------------------------
      C*
+      **  Once value of the W@MDIN field still "X", meaning that margin functionality is not  238023
+      **  satisfied. Then check the tolerance unit of calculated amounts in a divide/mult rate238023
+      *                                                                                       238023
+     C     W@MDIN        IFEQ      'X'                                                        238023
       ** Determine differences between actual 'other' currency amount
       ** and calculated 'other' currency amount (amount x or / rate)
       ** and by so doing determine the multiply/divide indicator
@@ -2200,6 +3405,7 @@
      C                   END
      C                   END
      C                   END
+     C                   ENDIF                                                                238023
      C*
      C     #ZICB8        TAG
      C                   Z-ADD     W@INRT        @SRATE                         Descaled rate
@@ -2272,7 +3478,28 @@
      C                   Z-ADD     5             @@NDP             1 0
      C                   GOTO      ZA0799
      C                   END
-      *
+      *                                                                                       248024
+      ** Compare normally-quoted decimal places of both currencies invovled;                  248024
+      ** If both are the same, use either value as NQD...                                     248024
+      *                                                                                       248024
+     C     @@NDP1        IFEQ      @@NDP2                                                     248024
+     C                   Z-ADD     @@NDP1        @@NDP                                        248024
+     C                   GOTO      ZA0799                                                     248024
+     C                   ENDIF                                                                248024
+      *                                                                                       248024
+      ** If they are not the same, use the lesser value of the two...                         248024
+      *                                                                                       248024
+     C     @@NDP1        IFNE      @@NDP2                                                     248024
+     C     @@NDP1        IFLT      @@NDP2                                                     248024
+     C                   Z-ADD     @@NDP1        @@NDP                                        248024
+     C                   ELSE                                                                 248024
+     C     @@NDP2        IFLT      @@NDP1                                                     248024
+     C                   Z-ADD     @@NDP2        @@NDP                                        248024
+     C                   ENDIF                                                                248024
+     C                   ENDIF                                                                248024
+     C                   GOTO      ZA0799                                                     248024
+     C                   ENDIF                                                                248024
+     C*
      C     @@IRAT        IFGE      100
      C                   Z-ADD     2             @@NDP
      C                   ELSE
@@ -2803,7 +4030,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -2847,6 +4074,8 @@
      C                   PARM                    @@SXP2                         scaling exponent
      C                   PARM                    @@MDF2            1            mult/div ind
      C                   PARM                    @NEXRT2           5 2                     BUG23050A
+      *                                                                                       238023
+     C                   PARM                    F3MGBS            1            marg indicator238023
       *                                                                                       CER043
       ** Reciprocal rate indicator, exchange rate                                             CER043
       *                                                                                       CER043
@@ -2934,9 +4163,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

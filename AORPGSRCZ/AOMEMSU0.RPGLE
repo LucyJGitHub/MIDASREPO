@@ -10,9 +10,10 @@
      F*     AOMEMSU0 - Update Memos file                                 *
      F*                                                                  *
       *  (c) Finastra International Limited 2001                      *
-     F*                                                                  *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR868380           Date 10Jun13               *
+     F*                                                               *
+      *  Last Amend No. 251029             Date 22May20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR868380           Date 10Jun13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -32,6 +33,8 @@
      F*                                                                  *
      F*------------------------------------------------------------------*
      F*                                                                  *
+      *  251029 - Applied fix 231306.                                 *
+      *  231306 - Handle file locking properly.                       *
       *  MD046248 - Finastra Rebranding                               *
       *  AR868380 - APISERVER on LCKW status. Return *RECLCK to       *
       *             calling program if file locking occurred on       *

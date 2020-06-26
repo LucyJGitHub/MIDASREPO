@@ -1,3 +1,4 @@
+<<<<<<< HEAD
      H        1
       *****************************************************************
 /*STD *  RPGBASE                                                      *
@@ -16,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 226449             Date 24Jun15               *
+      *  Last Amend No. 248698             Date 01Jun20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 226449             Date 24Jun15               *
       *                 MD034776           Date 08Jul15               *
       *                 AR1067108          Date 11Dec12               *
       *                 AR1001183A         Date 20Nov12               *
@@ -52,6 +54,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  248698 - Rounding discrepancies on some SE reports. Applied  *
+      *           fix 228682.                                         *
+      *  228682 - Recompiled due to ZCNSDZ1 changes. Applied 176594.  *      
       *  MD046248 - Finastra Rebranding                               *
       *  226449 - Recompiled over changes made in /COPY ZDYYRZ3.      *
       *         - Applied for MD034387.                               *
@@ -1977,3 +1982,1988 @@ JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
 ** CLSTAG                                                                                     CSD015
 </Depot in>                                                                                   CSD015
 </Depot out>                                                                                  CSD015
+=======
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Depot transfers processing')                  *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE0076 - Depots transfers processing                         *
+      *                                                               *
+      *  Function:  This program manage basic processing and file     *
+      *  (I/C)      update required for WI/WO/DT depot position       *
+      *             transfer.                                         *
+      *                                                               *
+      *  Called By: SE0075 - Depot transfer input/enquiry             *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. 248698             Date 01Jun20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 226449             Date 24Jun15               *
+      *                 MD034776           Date 08Jul15               *
+      *                 AR1067108          Date 11Dec12               *
+      *                 AR1001183A         Date 20Nov12               *
+      *                 CSW210             Date 04May10               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
+      *                 BUG8884            Date 05Oct05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 229857             Date 07Oct04               *
+      *                 216805             Date 16Apr03               *
+      *                 226570             Date 27Jun04               *
+      *                 CSW037A            Date 02May05               *
+      *                 CSD025             Date 11Jan05               *
+      *                 CSW037             Date 15Dec04               *
+      *                 CSW036             Date 15Dec04               *
+      *                 CLE025             Date 20Oct03               *
+      *                 222727             Date 05Nov03               *
+      *                 194370             Date 12Jul01               *
+      *                 CSD015             Date 14Oct02               *
+      * Midas Release 4.01.02 ----------------------------------------*
+      *                 203605             Date 17Mar02               *
+      * Midas Release 4.01.01 ----------------------------------------*
+      *                 207006             Date 18Jun02               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CPK015             Date 17Jun01               *
+      * Midas Release 4 --------------- Base -------------------------*
+      *                 CSE027  *CREATE    Date 29Jan01               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  248698 - Rounding discrepancies on some SE reports. Applied  *
+      *           fix 228682.                                         *
+      *  228682 - Recompiled due to ZCNSDZ1 changes. Applied 176594.  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  226449 - Recompiled over changes made in /COPY ZDYYRZ3.      *
+      *         - Applied for MD034387.                               *
+      *  MD034776 - Reverse AR1001183A to allow negative interest     *
+      *             rate. (Recompile)                                 *
+      *  AR1067108 - PMC1140 Component failed during Clean COB        *
+      *              Applied fix AR1001183A                           *
+      *  AR1001183A - Coupon rate was still used in computation of    *
+      *              interest instead of using the details in FRN tab *
+      *              (Reopen) (Recompile)                             *
+      *  CSW210 - SWIFT 2010 Changes (Recompile)                      *
+      *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  BUG8884- CSE071 holidays currencies not defined              *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  229857 - Recompiled due to change in ZYLDZ2.                 *
+      *  216805 - Movement Subtype field not included. Fix is to      *
+      *           include field if Correspondence Manager or Private  *
+      *           Banking module is on.                               *
+      *  226570 - Recompiled due to change in ZYLDZ2.                 *
+      *  CSW037A- Additional Field extended to 40 chars (recompile)   *
+      *  CSD025 - Customer De-Activation                              *
+      *  CSW037 - Additional Field Data on MT300/MT320                *
+      *  CSW036 - Dual SWIFT BIC held on Client Details               *
+      *  CLE025 - Credit Lines (Recompile)                            *
+      *  222727 - Release 5.0 errors  (Recompile)                     *
+      *  194370 - Recompile after change on copy sources ZYLDZ2,      *
+      *           For securities with divisor basis = '5' and first   *
+      *           coupon date > valuation date (rundate + 1), set     *
+      *           event control date to first coupon date before      *
+      *           processing SR/ZDYYR. This is to ensure that the     *
+      *           correct hypothetical last and next coupon dates are *
+      *           used in deriving the price/yield rate.              *
+      *  CSD015 - Midas Compliance Watch - Watch List Checking        *
+      *  203605 - Setup the timestamp field (based on module          *
+      *           ZAGENTMSTM). Replaces CPK015.                       *
+      *           (Timestamp array introduced by CPK015 removed)      *
+      *  207006 - Add Counterparty & Market Centre to SSI             *
+      *  CPK015 - Release 4.01 Packaging:                             *
+      *           - A default timestamp string is required for WRITE. *
+      *         - Conversion of ZYIELD from PLI to RPG.               *
+      *           Recompile over changed ZYLDZ2.                      *
+      *  CSE027 - Bulk Depot Transfer.                                *
+      *                                                               *
+      *****************************************************************
+      *
+      ** SE Depot Movements details
+     FDPTMVD  O   E           K        DISK         KINFSR *PSSR
+     F                                              KCOMIT
+      *
+      ** SE Depot movements audit
+     FDPTMVA  UF  E                    DISK         KINFSR *PSSR
+     F                                              KCOMIT
+      *
+      ** SE Depot movements extended files
+     FDPTMVDX1O   E           K        DISK         KCOMIT
+      *
+      ** SE Depot movements extended files
+     FDPTMVDX2O   E           K        DISK         KCOMIT
+      *
+     FSECDEPL3UF  E           K        DISK         KCOMIT       A
+     FCDEPPA  UF  E                    DISK         KCOMIT
+     FCPOSN   UF  E           K        DISK         KCOMIT       A
+     FCPOSNA  UF  E                    DISK         KCOMIT
+     FSEPCCD  UF  E           K        DISK         KCOMIT       A
+     FSEPCA   UF  E                    DISK         KCOMIT
+     FUDEPP   UF  E           K        DISK         KCOMIT       A
+     FUDEPPA  UF  E                    DISK         KCOMIT
+      *
+      * Depot Movements -to retrieve next depot number
+     FDPTMVR  IF  E           K        DISK         KINFSR *PSSR
+     F            DPTMVDF                           KRENAMEDPTMVDF2
+      *
+      * PM Live Portfolio Definition Details
+     FPMPORTLLIF  E           K        DISK         KINFSR *PSSR
+      *
+     FSEDEV   IF  E           K        DISK
+     FSECEO   IF  E           K        DISK
+     F            SEDEVDF                           KRENAMESEDEVDO
+     F            SNDEVDF                           KRENAMESNDEVDO
+      *
+      * Book position
+     FBKPSO   IF  E           K        DISK         KINFSR *PSSR
+     E/COPY ZSRSRC,ZALIGNZ1
+     E/COPY ZSRSRC,ZHOLE
+     E/COPY ZSRSRC,ZNCDZ1
+      *
+      *  C o m p i l e - T i m e   T a b l e s
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZDAYSZ1
+     E/COPY ZSRSRC,ZPOWERZ1
+     E/COPY ZSRSRC,ZPOWER8Z1
+     E**********          STAMP   1   1 26                                             CPK015 203605
+      ***Array*containing dummy timestamp                                              CPK015 203605
+     E                    CPY@    1   1 80
+      *                                                                                       CSD015
+      ** Arrays containing the tags used for the XML parameter                                CSD015
+      *                                                                                       CSD015
+     E                    OPNTAG  1   2 12                                                    CSD015
+     E                    CLSTAG  1   2 12                                                    CSD015
+      * Rename portfolio reference
+     ISEPCCDF
+     I              PTFR                            PTFRPC
+      *
+     IDPTMVDF2
+     I              RECI                            RNRECI
+     I              DPSS                            RNDPSS
+     I              DPRN                            RNDPRN
+     I              DPMV                            RNDPMV
+     I              DPID                            RNDPID
+     I              DPMD                            RNDPMD
+     I              DPOD                            RNDPOD
+     I              DPDO                            RNDPDO
+     I              DPBA                            RNDPBA
+     I              ORBR                            RNORBR
+     I              DPBK                            RNDPBK
+     I              DPMK                            RNDPMK
+     I              DPBN                            RNDPBN
+     I              DPNA                            RNDPNA
+     I              DPNR                            RNDPNR
+     I              MKTP                            RNMKTP
+     I              DPAD                            RNDPAD
+     I              SWRF                            RNSWRF
+     I              SIOI                            RNSIOI
+     I              DPMS                            RNDPMS
+     I              DCFR                            RNDCFR
+     I              TACI                            RNTACI
+     I              DPR1                            RNDPR1
+     I              DPR2                            RNDPR2
+     I              ORED                            RNORED
+     I              LCD                             RNLCD
+     I              CHTP                            RNCHTP
+     I              TNLU                            RNTNLU
+     I              RPIN                            RNRPIN
+     I              DPPC                            RNDPPC
+     I              DCHC                            RNDCHC
+     I              DCCE                            RNDCCE
+     I              DCHA                            RNDCHA
+     I              DCSE                            RNDCSE
+     I              DCAB                            RNDCAB
+     I              DCAT                            RNDCAT
+     I              DPVD                            RNDPVD
+     I              SPXR                            RNSPXR
+     I              SPMD                            RNSPMD
+     I              PTFR                            RNPTFR
+     I              CYLD                            RNCYLD
+     I              CWDI                            RNCWDI
+     I              DMTD                            RNDMTD
+     I/COPY ZSRSRC,ZHOLI
+     I/COPY ZSRSRC,ZTNLU1Z1
+     I/COPY ZSRSRC,ZYLDZ1
+     I/COPY ZSRSRC,ZNCDZ2
+      *
+      * parameter received from SE0075
+     IPARAM       DS
+     I                                        1   3 DTBR
+     I                                        4  13 DTSS
+     I                                       14  19 PCUBO
+     I                                       20  20 PMK
+     I                                       21  24 PPTFR
+     I**********                             25  300DTID                                      CSD027
+     I                                       25  30 DTID                                      CSD027
+     I                                       31  350DTDI
+     I**********                             36  410DTOD                                      CSD027
+     I                                       36  41 DTOD                                      CSD027
+     I                                       42  460DTDO
+     I                                    P  47  520DTNA
+     I                                       53  87 DTNR
+      * Transaction No of last update
+     I                                       88  900PTNLU
+      * Next depot number (In & Out Parameter)
+     I                                       91  960WWNTR2
+      * S01401 (MT5xx processing -Switchable feature)
+     I                                       97  97 S01401
+      * Luxemburg return
+     I                                       98  98 BGLRIN
+      * Profit centre used
+     I                                       99  99 BKPRCU
+      * Default Portfolio Book (SDSTRDPD)
+     I                                      100 101 BVDPBC
+      * From Security SECTYD
+      * Nominal currency of security
+     I                                      102 104 PNMCY
+      * Spot rate of Nominal currency
+     I                                    P 105 1108PSPRT
+      * M/D indicator of Nominal currency
+     I                                      111 111 PMDIN
+      * ULU001 (European reporting as feature)
+     I                                      112 112 ULU001
+      *  Analytical Accounting
+     I                                      113 113 BGN0ST
+      *  SE Profit centre
+     I                                      114 114 BVSEPC
+      * Profit centre default used
+     I                                      115 115 BKPCDU
+      * From Investment type INVTP
+      * Processing type
+     I                                      118 118 PROT
+      * From Security SECTYD
+      * Nominal decimal places
+     I                                      119 1190NMDP
+      * Partly Paid Indicator
+     I                                      120 120 PPDI
+      * Ex Date Default
+     I                                      121 123 EDFT
+      * Last Coupon Date
+     I                                    P 124 1260LCPN
+      * Coupon Rate
+     I                                    P 127 1327CPNR
+      * Maturity Date
+     I                                    P 133 1350MATY
+      * Day basis
+     I                                      136 136 DYBS
+      * Divisor Basis
+     I                                      137 137 DVBS
+      * Interest Adjustment
+     I                                    P 138 1390IADJ
+      * Initial Date
+     I                                    P 140 1420ITLD
+      * First Coupon Date
+     I                                    P 143 1450FCPN
+      * Price Basis
+     I                                      146 146 SPBS
+      * Trade Basis
+     I                                      147 147 STBS
+      * Yield Basis
+     I                                      148 149 SYBS
+      * Fully Paid Price
+     I                                    P 150 1570SFPP
+      * Issue Date
+     I                                    P 158 1600ISSD
+      * Current Partly Paid Price
+     I                                    P 161 1680CPDP
+      * Compunding frequency
+     I                                    P 169 1700CMFQ
+      * Discount basis
+     I                                      171 171 DSLC
+      * Discount last coupon
+     I                                      172 172 DSCB
+      * Current Factor
+     I                                    P 173 1789CFCT
+      * Security Market Price
+     I                                    P 179 1868MKPR
+      * From branch
+      *------------
+      * Branch internal customer
+     I**********                            187 1920XBICN                                     CSD027
+     I                                      187 192 XBICN                                     CSD027
+      * From Customer/Book position
+      *----------------------------
+      * Nominal available
+     I                                      193 2070WNOMA
+      * Global selection
+     I                                      208 208 IN75
+      * From Midas SE security diary
+      * ----------------------------
+      * Amount per unit
+     I                                    P 209 2158SDVA
+      * Redemption/conversion Price
+     I                                    P 216 2238SDRP
+      * Trade/Value Date Valuatn (BVTVDV/SDSTRDPD)
+     I                                      224 224 BVTVDV
+     I                                      225 227 SITP
+     I                                      228 228 BCNV
+      * CSE017 (Switchable feature)
+     I                                      229 229 CSE017
+      * CSE015 (Switchable feature)
+     I                                      230 230 CSE015
+      ** Counterparty                                                                         207006
+     I**********                            231 2360BVCOTC                             207006 CSD027
+     I                                      231 236 BVCOTC                                    CSD027
+      ** Market Centre                                                                        207006
+     I                                      237 238 SMCC                                      207006
+      ** CSE029 Indicator                                                                     207006
+     I                                      239 239 CSE029                                    207006
+      ** Movement Subtype                                                                     216805
+     I                                      240 241 DTMS                                      216805
+      ** Holiday Currencies                                                                  BUG8884
+     I                                      242 244 HCCY1                                    BUG8884
+     I                                      245 247 HCCY2                                    BUG8884
+     I                                      248 250 HCCY3                                    BUG8884
+     I                                      251 253 HCCY4                                    BUG8884
+     I                                      254 256 HCCY5                                    BUG8884
+     I                                      257 259 HCCY6                                    BUG8884
+     I                                      260 262 HCCY7                                    BUG8884
+     I                                      263 265 HCCY8                                    BUG8884
+     I                                      266 268 HCCY9                                    BUG8884
+     IOUTDAT      DS                                                      203605
+     I                                        1   4 APIYR                 203605
+     I                                        5   6 APIMTH                203605
+     I                                        7   8 APIDAY                203605
+     I                                        9  10 APIHR                 203605
+     I                                       11  12 APIMN                 203605
+     I                                       13  14 APISEC                203605
+     I                                       15  17 APIMIL                203605
+      *                                                                   203605
+     ITMSTDS      DS                                                      203605
+     I                                        1   4 RETYR                 203605
+     I                                        5   5 TMST1                 203605
+     I                                        6   7 RETMTH                203605
+     I                                        8   8 TMST2                 203605
+     I                                        9  10 RETDAY                203605
+     I                                       11  11 TMST3                 203605
+     I                                       12  13 RETHR                 203605
+     I                                       14  14 TMST4                 203605
+     I                                       15  16 RETMN                 203605
+     I                                       17  17 TMST5                 203605
+     I                                       18  19 RETSEC                203605
+     I                                       20  20 TMST6                 203605
+     I                                       21  23 RETMIL                203605
+     I                                       24  26 RETMIC                203605
+      *
+     I** Dummy record format for access to PM Special Customer Details
+     I@PLCS     E DSSDPLCSPD
+     I** Dummy record format for access to Currency Details
+     I@CURR     E DSSDCURRPD
+      *
+     ILDA       E DSLDA                         256
+      ***  Local data area
+      *
+     IRUNDAT    E DSRUNDAT
+      ***  Data Area giving Installation Control Details
+     I              AGRDNB                          RUND
+      *
+      ***  Program Status Data Structure
+     IPSDS       SDS
+     I                                     *PROGRAM ##PGM
+     I                                      244 246 WSID
+     I                                      254 263 USID
+     IDSSDY     E DSDSSDY
+      ***  DS 800 char Long to pass Access Object Details
+      *                                                                                       CSD015
+      ** Data Structure for Watch List Configuration Data file                                CSD015
+     ISDCWCD    E DSSDCWCDPD                                                                  CSD015
+      *                                                                                       CSD015
+      ** Data Structure used as parameter for the Compliance Engine                           CSD015
+     IPDSWLT    E DSSDWLTOPD                                                                  CSD015
+     IPDSXML      DS                           9999                                           CSD015
+      *                                                                                       CSD015
+      ** Data Structure for Watch List Checking Details                                       CSD015
+     ISDWLCC    E DSSDWLCCPD                                                                  CSD015
+      *                                                                                       CSD015
+      ** Customer Details Data Structure                                                      CSD015
+     ISDCUST    E DSSDCUSTPD                                                                  CSD015
+      *                                                                                       CSD015
+      ** DS for accessing enhancement file                                                    CSD015
+     ISCSARD    E DSSCSARDPD                                                                  CSD015
+     IDSFDY     E DSDSFDY                                                                     CSD015
+      *                                                                                       CSD015
+      ** DS for getting the system prefix if CSC011 is not installed                          CSD015
+     ISDSTAT    E DSSDSTAT                                                                    CSD015
+      *                                                                                       CSD015
+      ** DS for getting the system prefix if CSC011 is installed                              CSD015
+     ISC24X7    E DSSC24X7                                                                    CSD015
+      *                                                               *
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  SRGEWI - Subroutine to generate walk in depot.               *
+      *  SRGEWO - Subroutine to generate walk out depot.              *
+      *  SRGEDT - Subroutine to generate depot transfer.              *
+      *  SRDPOS - Subroutine to update Depot Position files.          *
+      *  SRUPOS - Subroutine to calculate Book Position values.       *
+      *  SRWTCH - Subroutine to call the Compliance Engine            *                       CSD015
+      *
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PARAM
+      *
+      ** Access SAR Details to see if Compliance Watch is installed                           CSD015
+      *                                                                                       CSD015
+     C                     MOVE 'N'       CSD015  1                                           CSD015
+     C                     CALL 'AOSARDR0'                                                    CSD015
+     C                     PARM *BLANKS   PRTCD   7                                           CSD015
+     C                     PARM '*VERIFY 'POPTN   7                                           CSD015
+     C                     PARM 'CSD015'  PSARD   6                                           CSD015
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSD015
+      *                                                                                       CSD015
+     C           PRTCD     IFNE *BLANKS                                                       CSD015
+     C           PRTCD     ANDNE'*NRF   '                                                     CSD015
+     C           *LOCK     IN   LDA                                                           CSD015
+     C                     MOVEL'CSD015'  DBKEY                                               CSD015
+     C                     MOVEL'SCSARDPD'DBFILE                                              CSD015
+     C                     Z-ADD7         DBASE                                               CSD015
+     C                     OUT  LDA                                                           CSD015
+     C                     EXSR *PSSR                                                         CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+      ** If enhancement CSD015 is installed, access SDWLCCPD to                               CSD015
+      ** see if function code is being monitored by the compliance watch                      CSD015
+      *                                                                                       CSD015
+     C           PRTCD     IFEQ *BLANKS                                                       CSD015
+      *                                                                                       CSD015
+     C                     MOVE 'Y'       CSD015                                              CSD015
+      *                                                                                       CSD015
+     C                     CALL 'AOWLCCR0'                                                    CSD015
+     C                     PARM *BLANKS   PRTCD                                               CSD015
+     C                     PARM '*KEY    'POPTN                                               CSD015
+     C                     PARM 'SECTTRAD'PFNCCD  8                                           CSD015
+     C           SDWLCC    PARM SDWLCC    DSFDY                                               CSD015
+      *                                                                                       CSD015
+     C           PRTCD     IFNE *BLANKS                                                       CSD015
+     C           PRTCD     ANDNE'*NRF'                                                        CSD015
+     C           *LOCK     IN   LDA                                                           CSD015
+     C                     MOVEL'SECTTRAD'DBKEY                                               CSD015
+     C                     MOVEL'SDWLCCPD'DBFILE                                              CSD015
+     C                     Z-ADD8         DBASE                                               CSD015
+     C                     OUT  LDA                                                           CSD015
+     C                     EXSR *PSSR                                                         CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+      ** Access SDCWCDPD to get the 5 'Private Customer Industry Code'                        CSD015
+      *                                                                                       CSD015
+     C                     CALL 'AOCWCDR0'                                                    CSD015
+     C                     PARM *BLANKS   PRTCD                                               CSD015
+     C                     PARM '*FIRST ' POPTN                                               CSD015
+     C           SDCWCD    PARM SDCWCD    DSSDY                                               CSD015
+      *                                                                                       CSD015
+     C           PRTCD     IFNE *BLANKS                                                       CSD015
+     C           PRTCD     ANDNE'*NRF   '                                                     CSD015
+     C           *LOCK     IN   LDA                                                           CSD015
+     C                     MOVELPOPTN     DBKEY                                               CSD015
+     C                     MOVEL'SDCWCDPD'DBFILE                                              CSD015
+     C                     Z-ADD11        DBASE                                               CSD015
+     C                     OUT  LDA                                                           CSD015
+     C                     EXSR *PSSR                                                         CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+      ** Determine if enhancement CSC011 is installed                                         CSD015
+      *                                                                                       CSD015
+     C                     MOVE 'N'       CSC011  1                                           CSD015
+     C                     CALL 'AOSARDR0'                                                    CSD015
+     C                     PARM *BLANKS   PRTCD                                               CSD015
+     C                     PARM '*VERIFY 'POPTN                                               CSD015
+     C                     PARM 'CSC011'  PSARD                                               CSD015
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSD015
+      *                                                                                       CSD015
+     C           PRTCD     IFNE *BLANKS                                                       CSD015
+     C           PRTCD     ANDNE'*NRF   '                                                     CSD015
+     C           *LOCK     IN   LDA                                                           CSD015
+     C                     MOVEL'CSC011'  DBKEY                                               CSD015
+     C                     MOVEL'SCSARDPD'DBFILE                                              CSD015
+     C                     Z-ADD9         DBASE                                               CSD015
+     C                     OUT  LDA                                                           CSD015
+     C                     EXSR *PSSR                                                         CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C           PRTCD     IFEQ *BLANKS                                                       CSD015
+     C                     MOVE 'Y'       CSC011                                              CSD015
+     C           *NAMVAR   DEFN           SC24X7                                              CSD015
+     C                     IN   SC24X7                                                        CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C           *NAMVAR   DEFN           SDSTAT                                              CSD015
+     C                     IN   SDSTAT                                                        CSD015
+      *                                                                                       CSD015
+      ** Determine if enhancement CCF001 is installed                                         CSD015
+      *                                                                                       CSD015
+     C                     MOVE 'N'       CCF001  1                                           CSD015
+     C                     CALL 'AOSARDR0'                                                    CSD015
+     C                     PARM *BLANKS   PRTCD                                               CSD015
+     C                     PARM '*VERIFY 'POPTN                                               CSD015
+     C                     PARM 'CCF001'  PSARD                                               CSD015
+     C           SCSARD    PARM SCSARD    DSFDY                                               CSD015
+      *                                                                                       CSD015
+     C           PRTCD     IFNE *BLANKS                                                       CSD015
+     C           PRTCD     ANDNE'*NRF   '                                                     CSD015
+     C           *LOCK     IN   LDA                                                           CSD015
+     C                     MOVEL'CCF001'  DBKEY                                               CSD015
+     C                     MOVEL'SCSARDPD'DBFILE                                              CSD015
+     C                     Z-ADD10        DBASE                                               CSD015
+     C                     OUT  LDA                                                           CSD015
+     C                     EXSR *PSSR                                                         CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C           PRTCD     IFEQ *BLANKS                                                       CSD015
+     C                     MOVE 'Y'       CCF001                                              CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C                     MOVEACPY@      CPY2@  80
+      *
+     C           *NAMVAR   DEFN           LDA
+      *
+      **  Read in Installation Data
+     C           *NAMVAR   DEFN           RUNDAT
+     C                     IN   RUNDAT
+      *
+      **  Key to access PMPORTLL
+     C           KEY4      KLIST
+     C                     KFLD           NCUBO
+     C                     KFLD           PPTFR
+      *
+      **  Key  to access Client depots
+     C           CDEPKA    KLIST
+     C                     KFLD           DPBA
+     C                     KFLD           DPBN
+     C                     KFLD           PPTFR
+     C                     KFLD           DPSS
+     C**********           KFLD           DEPOT   60                                          CSD027
+     C                     KFLD           DEPOT   6                                           CSD027
+     C                     KFLD           DPMK
+      *
+      **  Key  to access User depots
+     C           UDEPKA    KLIST
+     C                     KFLD           DPBA
+     C                     KFLD           DPSS
+     C                     KFLD           DEPOT
+     C                     KFLD           DPBK
+     C                     KFLD           DPMK
+      *
+      **  Key  to access Customer positions
+     C           CPOSKA    KLIST
+     C                     KFLD           DPBA
+     C                     KFLD           DPSS
+     C                     KFLD           DPBN
+      *
+      ** Key to access Customer position profit centre
+     C           SEPCCK    KLIST
+     C                     KFLD           DPBN
+     C                     KFLD           DPBA
+     C                     KFLD           DPSS
+      *
+      **  Key  to access Book     positions
+     C           BKPOK     KLIST
+     C                     KFLD           DPSS
+     C                     KFLD           DPBA
+     C                     KFLD           DPBK
+     C                     KFLD           DPMK
+     C                     KFLD           BVTVDV
+     C                     KFLD           XDATE   50
+      *---------------------------------------------------
+      *  initialized common field between WI and WO and DT
+      *---------------------------------------------------
+      *
+     C           S01401    IFEQ 'Y'
+     C                     MOVE 'N'       DPCONG
+     C                     MOVE 'N'       DPRCDG
+     C                     Z-ADD0         DPLSWS
+     C                     Z-ADD0         DPLSSC
+     C                     MOVE *ZEROS    DPTIME
+     C                     Z-ADDRUND      DPLCD
+     C                     MOVE 'N'       DPGMES
+     C                     MOVE *BLANKS   DPINST
+     C                     MOVE *BLANKS   DPINSS
+     C                     MOVE *BLANKS   DPEUCL
+     C                     MOVE *BLANKS   DPSAFA
+     C                     MOVE *BLANKS   DPRPTY
+     C                     MOVE 'F'       DPFIND
+     C                     MOVE 'N'       DPGMEC
+     C                     TIME           ZONE6   60
+     C                     MOVELZONE6     DPTRTT
+     C                     MOVE *BLANKS   DPGDEL
+     C                     MOVE *BLANKS   DPFCOD
+     C                     MOVE *BLANKS   DPSROL
+     C                     MOVE 'Y'       DPSCMG
+     C                     MOVE 'S'       DPWHEN
+     C                     MOVE *ZEROS    DPPRIC
+     C                     MOVE *ZEROS    DPACND
+     C                     MOVE *ZEROS    DPITRA
+     C                     MOVE *ZEROS    DPTDER
+     C                     END
+      *
+     C                     MOVE 'S'       D2WHEN
+     C                     MOVE 'S'       DPWHEN
+      *
+     C           CSE017    IFEQ 'Y'
+     C                     MOVE 'Y'       DPAP
+     C                     MOVE 'C'       DPIN
+     C                     MOVE *BLANKS   DPNR2
+     C                     MOVE *BLANKS   DPNR3
+     C                     MOVE *BLANKS   DPNR4
+     C                     MOVE *BLANKS   DPNR5
+     C                     ENDIF
+      *
+      ** .. Security
+     C                     MOVE DTSS      DPSS
+      ** .. Branch
+     C                     MOVE DTBR      DPBA
+      ** .. Originating branch
+     C                     MOVE DTBR      ORBR
+      ** .. Market Indicator
+     C                     MOVE PMK       DPMK
+      *
+      ** .. Nominal amount
+     C           DTNA      IFEQ *HIVAL
+     C           IN75      OREQ '1'
+     C                     Z-ADDWNOMA     DTNA
+     C           WNOMA     IFGE 0
+     C                     Z-ADDDTNA      DPNA
+     C                     ELSE
+     C                     Z-SUBDTNA      DPNA
+     C                     ENDIF
+     C                     ELSE
+     C                     Z-ADDDTNA      DPNA
+     C                     ENDIF
+     C** .. Narrative
+     C                     MOVE DTNR      DPNR
+     C** .. Market Price
+     C           MKPR      IFNE 0
+     C                     Z-ADDMKPR      MKTP
+     C                     ELSE
+     C                     Z-ADD0.00000001MKTP
+     C                     ENDIF
+     C** .. Associated deal number
+     C                     Z-ADD0         DPAD
+     C** .. Switch reference
+     C                     MOVE *BLANKS   SWRF
+     C** .. Switch In/On Indicator
+     C                     MOVE *BLANKS   SIOI
+     C** .. Message Indicator
+     C                     BITOF'0'       DPMS
+     C** .. Confirmation Required
+     C                     MOVE 'N'       DCFR
+     C** .. Accounting Indicator
+     C                     BITOF'01'      TACI
+     C** .. Depot Required 1
+     C                     MOVE 'N'       DPR1
+     C** .. Depot Required 2
+     C                     MOVE 'N'       DPR2
+     C** .. Original Entry Date
+     C                     Z-ADDRUND      ORED
+     C** .. Last Change Date
+     C                     Z-ADDRUND      LCD
+     C** .. Type of last change
+     C                     MOVE 'I'       CHTP
+     C                     Z-ADDPTNLU     TNLU
+     C** .. Repo/Pledge Indicator
+     C                     MOVE *BLANKS   RPIN
+     C                     MOVE *BLANKS   DCHC
+     C                     MOVE *BLANKS   DCCE
+     C                     MOVE *ZEROS    DCHA
+     C                     MOVE *ZEROS    DCSE
+     C                     MOVE *BLANKS   DCAB
+     C                     MOVE *BLANKS   DCAT
+     C                     Z-ADDRUND      DPVD
+     C                     MOVE PPTFR     PTFR
+     C                     MOVE *ZEROS    CYLD
+     C                     MOVE 'N'       CWDI
+      *                                                                                       216805
+      ** Movement Subtype                                                                     216805
+      *                                                                                       216805
+     C                     MOVE DTMS      MSTP                                                216805
+     C** .. Echange Rate (Settle - Port)
+     C                     Z-ADD0         SPXR
+     C** .. Spot Rate Mult/Div Indicator
+     C                     MOVE *BLANKS   SPMD
+      *                                                                                       207006
+     C           CSE029    IFEQ 'Y'                                                           207006
+     C                     MOVE BVCOTC    CPTY                                                207006
+     C                     MOVE SMCC      MRKT                                                207006
+     C                     ENDIF                                                              207006
+      * NB For book PPTFR = Blank
+     C           PPTFR     IFNE *BLANKS
+     C                     Z-ADD1         ZAMTF
+     C                     MOVE PNMCY     ZCCYF
+     C                     MOVE PSPRT     ZRATEF
+     C                     MOVE PMDIN     ZMDINF
+      *
+      ***  Retrieve From Currency Decimal Places.
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM ZCCYF     @CYCD   3
+     C           @CURR     PARM @CURR     DSSDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     Z-ADD191       DBASE            ***************
+     C                     MOVELZCCYF     DBKEY            * DBERROR 191 *
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     MOVEL'SE0755  'DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     MOVE A6NBDP    ZCDPF
+     C* Keep number of decimal places of nom ccy to calculate average price
+     C                     MOVE A6NBDP    NMDPN   10
+     C*
+     C           PPTFR     IFEQ '9997'
+     C                     MOVE PCUBO     WWCNUM  6
+     C*
+     C                     CALL 'AOPLCSR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM WWCNUM    @CUST  10
+     C           @PLCS     PARM @PLCS     DSSDY
+     C*
+     C                     MOVE QBCSBY    ZCCYT
+     C                     ELSE
+     C**********           MOVE PCUBO     NCUBO   60                                          CSD027
+     C                     MOVE PCUBO     NCUBO   6                                           CSD027
+     C           KEY4      CHAINPMPORTLL             89
+     C           *IN89     IFEQ *OFF
+     C                     MOVE PNPTCY    ZCCYT
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** RETRIEVE BASE CURRENCY SPOT, M/D INDICATOR, DEC.PLACES
+     C           ZCCYT     IFNE *BLANKS
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*KEY   ' @OPTN   7
+     C                     PARM ZCCYT     @CYCD   3
+     C           @CURR     PARM @CURR     DSSDY
+     C*
+     C           @RTCD     IFNE *BLANK
+     C           *LOCK     IN   LDA
+     C                     Z-ADD001       DBASE            ***************
+     C                     MOVELZCCYT     DBKEY            * DBERROR 001 *
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     MOVEL'SE0075  'DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C*
+     C                     MOVE A6SPRT    ZRATET
+     C                     MOVE A6MDIN    ZMDINT
+     C                     MOVE A6NBDP    ZCDPT
+     C                     EXSR ZCCYCN
+     C                     Z-ADDZCRSRT    SPXR
+     C                     MOVE ZCRSMD    SPMD
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     MOVE '    '    DPPC
+      *-------------------------------------------------------------------
+      * IF only the first 2 positions of PCUBO are filled --> Book
+      *              THEN Movement type 'DT' generated
+      * ELSE                                              --> Customer
+      *              THEN Movement type 'WI'and 'WO'  generated
+      *-------------------------------------------------------------------
+     C                     MOVE PCUBO     WLEN4   4
+     C           WLEN4     IFEQ *BLANK
+      ** .. Book
+     C                     MOVELPCUBO     DPBK
+      ** .. Beneficial Customer
+     C**********           Z-ADDXBICN     DPBN                                                CSD027
+     C                     MOVE XBICN     DPBN                                                CSD027
+     C*
+     C                     MOVE *HIVAL    XDATE
+     C           BKPOK     SETLLBKPSO
+     C                     READ BKPSO                    46
+     C                     Z-ADDAPPB      MKTP
+      *
+      **
+     C           BKPRCU    IFEQ 'Y'
+      ** ..Profit center
+     C           BKPCDU    IFEQ 'Y'
+     C                     MOVELDPBN      @CNUM
+     C                     CALL 'AOPRFMR0'
+     C                     PARM *BLANKS   @RTC1   1
+     C                     PARM DPBK      @BOOK   2
+     C                     PARM *BLANKS   @TRTP   5
+     C                     PARM *BLANKS   @SUTP   2
+     C                     PARM DPBA      @BRAN   3
+     C                     PARM *BLANKS   @DEPT   3
+     C                     PARM USID      @USER  10
+     C                     PARM *BLANKS   @ACOF   2
+     C                     PARM           @CNUM   6
+     C                     PARM *BLANKS   @PRFC   4
+      *
+     C           @RTC1     IFEQ '0'
+     C                     MOVEL@PRFC     DPPC
+     C                     ENDIF
+     C                     ENDIF
+     C           BGN0ST    IFEQ 'Y'
+     C           DPPC      ANDEQ*BLANK
+     C                     MOVELBVSEPC    DPPC
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     EXSR SRGEDT
+     C                     ADD  1         WWNTR2
+      *
+     C                     ELSE
+      ** .. Book
+     C                     MOVE BVDPBC    DPBK
+      ** .. Beneficial Customer
+     C                     MOVELPCUBO     DPBN
+     C*
+     C* RETRIEVE AVERAGE PRICE FROM CPOSND
+     C*
+     C           CPOSKA    CHAINCPOSNDF              45
+     C           *IN45     IFEQ '0'
+      *
+     C           BVTVDV    IFEQ 'T'
+     C           CSNT      ANDEQ0
+     C           BVTVDV    OREQ 'V'
+     C           CSNV      ANDEQ0
+     C                     Z-ADD0         WAVPR
+     C                     ELSE
+      *
+     C           BVTVDV    IFEQ 'T'
+     C           CSPT      DIV  CSNT      WAVPR  158H
+     C                     ELSE
+     C           CSPV      DIV  CSNV      WAVPR  158H
+     C                     ENDIF
+     C           SPBS      IFEQ 'P'
+     C                     MULT 100       WAVPR
+     C                     ENDIF
+     C           5         ADD  NMDPN     XY      10
+     C                     SUB  NMDP      XY
+     C           WAVPR     DIV  POWER8,XY WAVPR
+     C                     Z-ADDWAVPR     MKTP
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C*
+     C           BKPRCU    IFEQ 'Y'
+      *
+      ** ..Profit center
+     C           SEPCCK    CHAINSEPCCDF             N89
+     C           *IN89     IFEQ '0'
+     C                     MOVELPCCU      DPPC
+     C                     ELSE
+     C           BKPCDU    IFEQ 'Y'
+     C                     MOVELDPBN      @CNUM
+     C                     CALL 'AOPRFMR0'
+     C                     PARM *BLANKS   @RTC1   1
+     C                     PARM DPBK      @BOOK   2
+     C                     PARM *BLANKS   @TRTP   5
+     C                     PARM *BLANKS   @SUTP   2
+     C                     PARM DPBA      @BRAN   3
+     C                     PARM *BLANKS   @DEPT   3
+     C                     PARM USID      @USER  10
+     C                     PARM *BLANKS   @ACOF   2
+     C                     PARM           @CNUM   6
+     C                     PARM *BLANKS   @PRFC   4
+      *
+     C           @RTC1     IFEQ '0'
+     C                     MOVEL@PRFC     DPPC
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     EXSR SRGEWI
+     C                     ADD  1         WWNTR2
+     C                     EXSR SRGEWO
+     C                     ADD  1         WWNTR2
+      *
+     C                     ENDIF
+      *
+     C                     SETON                     LR
+      *****************************************************************
+      *  GENWI  - WI generation                                       *
+      *****************************************************************
+     C           SRGEWI    BEGSR
+      *
+      ** .. Reference
+     C                     MOVE WWNTR2    WWNTRC  6
+     C           WWNTRC    CHAINDPTMVR               89
+     C           *IN89     DOWEQ'0'
+     C                     ADD  1         WWNTR2
+     C                     MOVE WWNTR2    WWNTRC  6
+     C           WWNTRC    CHAINDPTMVR               89
+     C                     ENDDO
+     C                     MOVE WWNTRC    DPRN
+      *
+     C                     MOVE 'WI'      DPMV
+     C           WNOMA     IFGE 0
+     C                     MOVE DTID      DPID
+     C                     ELSE
+     C                     MOVE DTOD      DPID
+     C                     ENDIF
+     C                     MOVE DTDI      DPMD
+     C**********           MOVE *ZEROS    DPOD                                                CSD027
+     C                     MOVE *BLANKS   DPOD                                                CSD027
+     C                     MOVE *ZEROS    DPDO
+      *---------------------------
+      *  WI Depot movement- DPTMVD
+      *---------------------------
+     C                     Z-ADD*ZEROS    DMTD
+     C           CSE015    IFEQ 'Y'
+     C                     Z-ADDRUND      DMTD
+     C                     ENDIF
+      *
+     C                     MOVE 'D'       RECI
+     C                     Z-ADDRUND      ORED
+     C                     Z-ADDRUND      LCD
+     C                     MOVE 'I'       CHTP
+     C**********           MOVEASTAMP,1   DMTMST           Default Timestamp           CPK015 203605
+      *                                                                   203605
+      ** Timestamp                                                        203605
+      *                                                                   203605
+     C                     EXSR TMSTST                                    203605
+     C                     MOVELTMSTDS    DMTMST                          203605
+      *                                                                                       CSD015
+      ** If watch list checking is applied                                                    CSD015
+      *                                                                                       CSD015
+     C           CSD015    IFEQ 'Y'                                                           CSD015
+     C           W1EWLC    ANDEQ'Y'                                                           CSD015
+      *                                                                                       CSD015
+      ** If user is in the main system                                                        CSD015
+      *                                                                                       CSD015
+     C           CSC011    IFEQ 'N'                                                           CSD015
+     C           S1MAIN    OREQ LIBR                                                          CSD015
+      *                                                                                       CSD015
+      ** If any of the watch list fields have been entered                                    CSD015
+      *                                                                                       CSD015
+     C********** DTID      IFNE *ZERO                                                  CSD015 CSD027
+     C********** DTOD      ORNE *ZERO                                                  CSD015 CSD027
+     C           DTID      IFNE *BLANKS                                                       CSD027
+     C           DTOD      ORNE *BLANKS                                                       CSD027
+      *                                                                                       CSD015
+     C                     EXSR SRWTCH                                                        CSD015
+      *                                                                                       CSD015
+     C                     ENDIF                                                              CSD015
+     C                     ENDIF                                                              CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                   203605
+     C                     WRITEDPTMVDF
+      *
+      *-------------------------
+      *  WI Trailer file- DPTMVA
+      *-------------------------
+     C           1         CHAINDPTMVAF              99
+     C           *IN99     IFEQ '0'
+     C                     ADD  1         SINS
+     C                     ADD  1         NORE
+     C                     Z-ADDPTNLU     TNLU
+      *
+     C                     UPDATDPTMVAF
+      *
+     C                     ENDIF
+      *-----------------------------
+      *  WI Extension file- DPTMVDX1
+      *-----------------------------
+     C           S01401    IFEQ 'Y'
+     C                     MOVE DPSS      DPDPSS
+     C                     MOVE DPRN      DPDPRN
+      *
+     C                     WRITEDPTMVDD1
+      *
+     C                     MOVE DPSS      D2DPSS
+     C                     MOVE DPRN      D2DPRN
+     C                     WRITEDPTMVDD2
+      *
+     C                     ENDIF
+      *
+      *  Calculate Book Position values: VALUE
+     C                     EXSR SRUPOS
+      *
+      *---------------------------------------------------------------------------
+      * WI  Update of the positions in CDEPPD, CDEPPA, CPOSND, CPOSNA, SEPCCD, SEPCCA
+      *---------------------------------------------------------------------------
+     C                     EXSR SRDPOS
+      *
+     C                     ENDSR
+      *****************************************************************
+      *  GENWO  - WO generation                                       *
+      *****************************************************************
+     C           SRGEWO    BEGSR
+      *
+      *  reference
+     C                     MOVE WWNTR2    WWNTRC  6
+     C           WWNTRC    CHAINDPTMVR               89
+     C           *IN89     DOWEQ'0'
+     C                     ADD  1         WWNTR2
+     C                     MOVE WWNTR2    WWNTRC  6
+     C           WWNTRC    CHAINDPTMVR               89
+     C                     ENDDO
+     C                     MOVE WWNTRC    DPRN
+     C                     MOVE 'WO'      DPMV
+     C           WNOMA     IFGE 0
+     C                     MOVE DTOD      DPOD
+     C                     ELSE
+     C                     MOVE DTID      DPOD
+     C                     ENDIF
+     C                     MOVE DTDO      DPDO
+     C**********           MOVE *ZEROS    DPID                                                CSD027
+     C                     MOVE *BLANKS   DPID                                                CSD027
+     C                     MOVE *ZEROS    DPMD
+     C                     MOVE 'D'       RECI
+     C                     Z-ADDRUND      ORED
+     C                     Z-ADDRUND      LCD
+     C                     MOVE 'I'       CHTP
+      *
+     C                     Z-ADD*ZEROS    DMTD
+     C           CSE015    IFEQ 'Y'
+     C                     Z-ADDRUND      DMTD
+     C                     ENDIF
+      *---------------------------
+      *  WO Depot movement- DPTMVD
+      *---------------------------
+     C**********           MOVEASTAMP,1   DMTMST           Default Timestamp           CPK015 203605
+      *                                                                   203605
+      ** Timestamp                                                        203605
+      *                                                                   203605
+     C                     EXSR TMSTST                                    203605
+     C                     MOVELTMSTDS    DMTMST                          203605
+      *                                                                                       CSD015
+      ** If watch list checking is applied                                                    CSD015
+      *                                                                                       CSD015
+     C           CSD015    IFEQ 'Y'                                                           CSD015
+     C           W1EWLC    ANDEQ'Y'                                                           CSD015
+      *                                                                                       CSD015
+      ** If user is in the main system                                                        CSD015
+      *                                                                                       CSD015
+     C           CSC011    IFEQ 'N'                                                           CSD015
+     C           S1MAIN    OREQ LIBR                                                          CSD015
+      *                                                                                       CSD015
+      ** If any of the watch list fields have been entered                                    CSD015
+      *                                                                                       CSD015
+     C********** DTID      IFNE *ZERO                                                  CSD015 CSD027
+     C********** DTOD      ORNE *ZERO                                                  CSD015 CSD027
+     C           DTID      IFNE *BLANKS                                                       CSD027
+     C           DTOD      ORNE *BLANKS                                                       CSD027
+      *                                                                                       CSD015
+     C                     EXSR SRWTCH                                                        CSD015
+      *                                                                                       CSD015
+     C                     ENDIF                                                              CSD015
+     C                     ENDIF                                                              CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                   203605
+     C                     WRITEDPTMVDF
+      *
+      *-------------------------
+      *  WO Trailer file- DPTMVA
+      *-------------------------
+     C           1         CHAINDPTMVAF              99
+     C           *IN99     IFEQ '0'
+     C                     ADD  1         SINS
+     C                     ADD  1         NORE
+     C                     Z-ADDPTNLU     TNLU
+      *
+     C                     UPDATDPTMVAF
+      *
+     C                     ENDIF
+      *-----------------------------
+      *  WO extension file- DPTMVDX1
+      *-----------------------------
+     C           S01401    IFEQ 'Y'
+     C                     MOVE DPSS      DPDPSS
+     C                     MOVE DPRN      DPDPRN
+      *
+     C                     WRITEDPTMVDD1
+      *
+     C                     MOVE DPSS      D2DPSS
+     C                     MOVE DPRN      D2DPRN
+     C                     WRITEDPTMVDD2
+      *
+     C                     ENDIF
+      *
+      *  Calculate Book Position values: VALUE
+     C                     EXSR SRUPOS
+      *
+      *---------------------------------------------------------------------------
+      *  WO  Update of the positions in CDEPPD, CDEPPA, CPOSND, CPOSNA, SEPCCD, SEPCCA
+      *---------------------------------------------------------------------------
+     C                     EXSR SRDPOS
+      *
+     C                     ENDSR
+      *****************************************************************
+      *  GENDT  - DT generation                                       *
+      *****************************************************************
+     C           SRGEDT    BEGSR
+      *
+      *  reference
+     C                     MOVE WWNTR2    WWNTRC  6
+     C           WWNTRC    CHAINDPTMVR               89
+     C           *IN89     DOWEQ'0'
+     C                     ADD  1         WWNTR2
+     C                     MOVE WWNTR2    WWNTRC  6
+     C           WWNTRC    CHAINDPTMVR               89
+     C                     ENDDO
+     C                     MOVE WWNTRC    DPRN
+     C                     MOVE 'DT'      DPMV
+     C           WNOMA     IFGE 0
+     C                     MOVE DTID      DPID
+     C                     MOVE DTDI      DPMD
+     C                     MOVE DTOD      DPOD
+     C                     MOVE *ZEROS    DPDO
+     C                     ELSE
+     C                     MOVE DTOD      DPID
+     C                     MOVE DTDI      DPMD
+     C                     MOVE DTID      DPOD
+     C                     MOVE *ZEROS    DPDO
+     C                     ENDIF
+      *
+     C                     Z-ADD*ZEROS    DMTD
+     C           CSE015    IFEQ 'Y'
+     C                     Z-ADDRUND      DMTD
+     C                     ENDIF
+      *
+     C                     MOVE 'D'       RECI
+     C                     Z-ADDRUND      ORED
+     C                     Z-ADDRUND      LCD
+     C                     MOVE 'I'       CHTP
+      *---------------------------
+      *  DT Depot movement- DPTMVD
+      *---------------------------
+     C**********           MOVEASTAMP,1   DMTMST           Default Timestamp           CPK015 203605
+      *                                                                   203605
+      ** Timestamp                                                        203605
+      *                                                                   203605
+     C                     EXSR TMSTST                                    203605
+     C                     MOVELTMSTDS    DMTMST                          203605
+      *                                                                                       CSD015
+      ** If watch list checking is applied                                                    CSD015
+      *                                                                                       CSD015
+     C           CSD015    IFEQ 'Y'                                                           CSD015
+     C           W1EWLC    ANDEQ'Y'                                                           CSD015
+      *                                                                                       CSD015
+      ** If user is in the main system                                                        CSD015
+      *                                                                                       CSD015
+     C           CSC011    IFEQ 'N'                                                           CSD015
+     C           S1MAIN    OREQ LIBR                                                          CSD015
+      *                                                                                       CSD015
+      ** If any of the watch list fields have been entered                                    CSD015
+      *                                                                                       CSD015
+     C********** DTID      IFNE *ZERO                                                  CSD015 CSD027
+     C********** DTOD      ORNE *ZERO                                                  CSD015 CSD027
+     C           DTID      IFNE *BLANKS                                                       CSD027
+     C           DTOD      ORNE *BLANKS                                                       CSD027
+      *                                                                                       CSD015
+     C                     EXSR SRWTCH                                                        CSD015
+      *                                                                                       CSD015
+     C                     ENDIF                                                              CSD015
+     C                     ENDIF                                                              CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+      *                                                                   203605
+     C                     WRITEDPTMVDF
+      *
+      *-------------------------
+      *  DT Trailer file- DPTMVA
+      *-------------------------
+     C           1         CHAINDPTMVAF              99
+     C           *IN99     IFEQ '0'
+     C                     ADD  1         SINS
+     C                     ADD  1         NORE
+     C                     Z-ADDPTNLU     TNLU
+      *
+     C                     UPDATDPTMVAF
+      *
+     C                     ENDIF
+      *-----------------------------
+      *  DT extension file- DPTMVDX1
+      *-----------------------------
+     C           S01401    IFEQ 'Y'
+     C                     MOVE DPSS      DPDPSS
+     C                     MOVE DPRN      DPDPRN
+      *
+     C                     WRITEDPTMVDD1
+      *
+     C                     MOVE DPSS      D2DPSS
+     C                     MOVE DPRN      D2DPRN
+     C                     WRITEDPTMVDD2
+      *
+     C                     ENDIF
+      *
+      *-----------------------------------------------
+      *  DT  Update of the positions in UDEPPD, UDEPPA
+      *-----------------------------------------------
+     C                     EXSR SRDPOS
+      *
+     C                     ENDSR
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  DEPPOS - Subroutine to Update Depot Position Files -       . *
+      *                                                               *
+      *****************************************************************
+      *
+     C           SRDPOS    BEGSR                           *** SRDPOS ***
+      *
+     C           DPMV      IFEQ 'WI'
+     C           DPMV      OREQ 'WO'
+      *
+     C           DPMV      IFEQ 'WI'
+     C                     MOVE DPID      DEPOT
+     C                     ELSE
+     C                     MOVE DPOD      DEPOT
+     C                     ENDIF
+     C           CDEPKA    CHAINSECDEPL3             33                   124749
+      *
+     C           *IN33     IFEQ *OFF
+     C           RECI      COMP '*'                      34
+     C                     ENDIF
+     C*
+     C* Not found, set up record
+     C*
+      *
+     C           *IN33     IFEQ *ON
+     C           *IN33     OREQ *OFF
+     C           *IN34     ANDEQ*ON
+      *
+     C                     DO
+     C                     MOVE 'D'       RECI
+     C                     MOVE DPBA      CDPA
+     C                     MOVE DPBN      CDCN
+     C                     MOVE DPSS      CDSN
+     C                     MOVE DEPOT     CDPT
+     C                     MOVE DPMK      CDMK
+     C                     MOVE PPTFR     PTFR
+     C*
+     C           DPMV      IFEQ 'WI'
+     C                     Z-ADDDPMD      DDTE
+     C                     ELSE
+     C                     Z-ADDDPDO      DDTE
+     C                     ENDIF
+     C*
+     C                     Z-ADD*ZEROS    CECN
+     C                     Z-ADD*ZEROS    CDNT
+     C                     Z-ADD*ZEROS    CDNV
+     C                     Z-ADD*ZEROS    SNPT
+     C                     Z-ADD*ZEROS    CDST
+     C                     Z-ADD*ZEROS    CDNS
+     C                     Z-ADD*ZEROS    SAPP
+     C                     Z-ADD*ZEROS    SAPS
+     C                     Z-ADD*ZEROS    CNPV
+     C                     Z-ADD*ZEROS    CNSV
+     C                     Z-ADD*ZEROS    SAPV
+     C                     Z-ADD*ZEROS    SPSV
+     C                     Z-ADD*ZEROS    CNSI
+     C                     ENDDO
+      *
+     C                     ENDIF
+     C*
+     C           DPMV      IFEQ 'WI'
+     C                     ADD  DPNA      CDST
+     C                     ADD  VALUE     SAPS
+     C                     Z-ADDDPMD      MOVDAT
+      *
+     C           DPMD      IFLE RUND
+     C                     ADD  DPNA      CNSV
+     C                     ADD  VALUE     SPSV
+     C                     ADD  DPNA      CNSI
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     SUB  DPNA      SNPT
+     C                     ADD  VALUE     SAPP
+     C                     Z-ADDDPDO      MOVDAT
+      *
+     C           DPDO      IFLE RUND
+     C                     SUB  DPNA      CNPV
+     C                     ADD  VALUE     SAPV
+     C                     SUB  DPNA      CNSI
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C*
+     C                     MOVELPTNLU     TNLU
+      *
+     C           *IN33     IFEQ *ON
+     C                     WRITECDEPPDF
+     C                     ELSE
+     C                     UPDATCDEPPDF
+     C                     ENDIF
+     C*
+     C* Update audit file
+     C*
+     C           *IN33     IFEQ '1'
+     C           1         CHAINCDEPPAF              U8
+     C           *INU8     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD002       DBASE            ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DBERROR 002 *
+     C                     MOVEL'CDEPP'   DBFILE           ***************
+     C                     MOVEL'SE0075  'DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C*
+     C                     ADD  1         NORE
+     C                     MOVELPTNLU     TNLU
+     C                     UPDATCDEPPAF
+     C                     ENDIF
+     C                     ENDIF
+      *
+      * If movement date LT date, update Customer position
+      *
+     C           MOVDAT    IFLE DDTE
+     C           CPOSKA    CHAINCPOSNDF              33
+      *
+     C           *IN33     IFEQ *OFF
+     C           RECI      COMP '*'                      34
+     C                     ENDIF
+     C*
+     C* If no record found, create new
+     C*
+     C           *IN33     IFEQ '1'
+     C                     MOVE 'D'       RECI
+     C                     MOVE DPBA      CSBA
+     C                     MOVE DPSS      CSSC
+     C                     MOVE DPBN      CSCN
+     C                     Z-ADDMOVDAT    CSDA
+     C                     Z-ADD*ZEROS    CSNT
+     C                     Z-ADD*ZEROS    CSNV
+     C                     Z-ADD*ZEROS    CSNS
+     C                     Z-ADD*ZEROS    CSEX
+     C                     Z-ADD*ZEROS    CSPT
+     C                     Z-ADD*ZEROS    CSPV
+     C                     MOVE 'N'       CSBT
+     C                     MOVE 'N'       CSBV
+     C                     Z-ADD*ZEROS    CSCT
+     C                     Z-ADD*ZEROS    CSCV
+     C                     MOVELPTNLU     TNLU
+     C                     WRITECPOSNDF
+     C*
+     C* Update audit file
+     C*
+     C           1         CHAINCPOSNAF              U8
+     C           *INU8     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD003       DBASE            ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DBERROR 003 *
+     C                     MOVEL'CPOSN   'DBFILE           ***************
+     C                     MOVEL'SE0075  'DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C*
+     C                     ADD  1         NORE
+     C                     MOVELPTNLU     TNLU
+     C                     UPDATCPOSNAF
+     C                     ENDIF
+     C                     ELSE
+     C*
+     C* If movement date before either Last Position Change date,
+     C* update corresponding flag
+     C*
+     C           MOVDAT    IFLT CSCT
+      *
+     C           *IN34     IFEQ *ON
+     C                     MOVE 'D'       RECI
+     C                     ENDIF
+      *
+     C                     MOVE 'Y'       CSBT
+     C                     MOVELPTNLU     TNLU
+     C                     ENDIF
+     C*
+     C           MOVDAT    IFLT CSCV
+      *
+     C           *IN34     IFEQ *ON
+     C                     MOVE 'D'       RECI
+     C                     ENDIF
+      *
+     C                     MOVE 'Y'       CSBV
+     C                     MOVELPTNLU     TNLU
+     C                     ENDIF
+     C*
+     C                     UPDATCPOSNDF
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C** IF NO RECORD ON CUSTOMER POSITIONS PROFIT CENTRE FILE
+     C** NEED TO ADD ONE AND AMEND THE AUDIT FILE
+     C*
+     C           BKPRCU    IFEQ 'Y'
+     C           SEPCCK    CHAINSEPCCD               33
+     C           *IN33     IFEQ '1'
+     C                     MOVEL'D'       RECI
+     C                     MOVELDPBN      CNUM
+     C                     MOVELDPBA      BRCA
+     C                     MOVELDPSS      SESN
+     C                     MOVELDPPC      PCCU
+     C                     MOVELRUND      LCD
+     C                     MOVEL'I'       CHTP
+     C                     MOVELPTNLU     TNLU
+     C                     WRITESEPCCDF
+     C*
+     C           1         CHAINSEPCAF               33
+     C           *IN33     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD004       DBASE            ***************
+     C                     MOVEL'SEPCA'   DBFILE           * DBERROR 004 *
+     C                     MOVEL'AUDIT'   DBKEY            ***************
+     C                     MOVEL'SE0075  'DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C                     ADD  1         NORE
+     C                     ADD  1         SINS
+     C                     UPDATSEPCAF
+     C                     ENDIF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ELSE                                           case DT
+      *
+     C                     Z-ADDDPMD      MOVDAT  50
+     C* Update User In depot - value fields only updated if movement date
+     C* not after run date
+     C                     MOVE DPID      DEPOT
+     C           UDEPKA    CHAINUDEPPDF              33
+      *
+     C           *IN33     IFEQ *OFF
+     C           RECI      COMP '*'                      34
+     C                     ENDIF
+     C*
+     C* Not found, create new record
+     C*
+      *
+     C           *IN33     IFEQ *ON
+     C           *IN33     OREQ *OFF
+     C           *IN34     ANDEQ*ON
+      *
+     C                     DO
+     C                     MOVE 'D'       RECI
+     C                     MOVE DPBA      UDBA
+     C                     MOVE DPSS      UDSN
+     C                     MOVE DPID      UDPT
+     C                     MOVE DPBK      UDBK
+     C                     MOVE DPMK      UDMK
+     C                     Z-ADDRUND      UDDT
+     C                     Z-ADD*ZEROS    UECN
+     C                     Z-ADD*ZEROS    UDNT
+     C                     Z-ADD*ZEROS    UDNV
+     C                     Z-ADD*ZEROS    UDNS
+     C                     Z-ADD*ZEROS    UNRT
+     C                     Z-ADD*ZEROS    UNRV
+     C                     Z-ADD*ZEROS    UDTP
+     C                     Z-ADD*ZEROS    UDPV
+     C                     Z-ADD*ZEROS    UDTS
+     C                     Z-ADD*ZEROS    UDSV
+     C                     Z-ADD*ZEROS    USNT
+     C                     Z-ADD*ZEROS    USNR
+     C                     Z-ADD*ZEROS    USNV
+     C                     Z-ADD*ZEROS    USRV
+     C                     Z-ADD*ZEROS    UNSI
+     C                     ENDDO
+      *
+     C                     ENDIF
+     C*
+     C           DPMV      IFEQ 'DT'
+     C                     ADD  DPNA      UDTP
+     C           MOVDAT    IFLE RUND
+     C                     ADD  DPNA      UNSI
+     C                     ADD  DPNA      UDPV
+     C                     ENDIF
+     C                     ENDIF
+     C*
+     C                     MOVELPTNLU     TNLU
+     C*
+     C           *IN33     IFEQ '1'
+     C                     WRITEUDEPPDF
+     C*
+     C* Update audit record
+     C*
+     C           1         CHAINUDEPPAF              U8
+     C           *INU8     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD005       DBASE            ***************
+     C                     MOVEL'UDEPP'   DBFILE           * DBERROR 005 *
+     C                     MOVEL'AUDIT'   DBKEY            **************
+     C                     MOVEL'SE0075  'DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C*
+     C                     ADD  1         NORE
+     C                     MOVELPTNLU     TNLU
+     C                     UPDATUDEPPAF
+     C                     ENDIF
+     C                     ELSE
+     C*
+     C                     UPDATUDEPPDF
+     C                     ENDIF
+     C*
+     C* Update User Out depot - value fields only updated if movement
+     C* date not after run date.
+     C*
+     C           DPMV      IFEQ 'DT'
+     C                     MOVE DPOD      DEPOT
+     C           UDEPKA    CHAINUDEPPDF              33
+      *
+     C           *IN33     IFEQ *OFF
+     C           RECI      COMP '*'                      34
+     C                     ENDIF
+     C*
+     C* Not found, create new record
+     C*
+      *
+     C           *IN33     IFEQ *ON
+     C           *IN33     OREQ *OFF
+     C           *IN34     ANDEQ*ON
+      *
+     C                     DO
+     C                     MOVE 'D'       RECI
+     C                     MOVE DPBA      UDBA
+     C                     MOVE DPSS      UDSN
+     C                     MOVE DPOD      UDPT
+     C                     MOVE DPBK      UDBK
+     C                     MOVE DPMK      UDMK
+     C                     Z-ADDRUND      UDDT
+     C                     Z-ADD*ZEROS    UDDT
+     C                     Z-ADD*ZEROS    UECN
+     C                     Z-ADD*ZEROS    UDNT
+     C                     Z-ADD*ZEROS    UDNV
+     C                     Z-ADD*ZEROS    UDNS
+     C                     Z-ADD*ZEROS    UNRT
+     C                     Z-ADD*ZEROS    UNRV
+     C                     Z-ADD*ZEROS    UDTP
+     C                     Z-ADD*ZEROS    UDPV
+     C                     Z-ADD*ZEROS    UDTS
+     C                     Z-ADD*ZEROS    UDSV
+     C                     Z-ADD*ZEROS    USNT
+     C                     Z-ADD*ZEROS    USNR
+     C                     Z-ADD*ZEROS    USNV
+     C                     Z-ADD*ZEROS    USRV
+     C                     Z-ADD*ZEROS    UNSI
+     C                     ENDDO
+      *
+     C                     ENDIF
+     C*
+     C                     SUB  DPNA      UDTS
+     C           MOVDAT    IFLE RUND
+     C                     SUB  DPNA      UNSI
+     C                     SUB  DPNA      UDSV
+     C                     ENDIF
+     C*
+     C                     MOVELPTNLU     TNLU
+     C*
+     C           *IN33     IFEQ '1'
+     C                     WRITEUDEPPDF
+     C*
+     C* Update audit record
+     C*
+     C           1         CHAINUDEPPAF              U8
+     C           *INU8     IFEQ '1'
+     C           *LOCK     IN   LDA
+     C                     Z-ADD006       DBASE            ***************
+     C                     MOVEL'UDEPP'   DBFILE           * DBERROR 006 *
+     C                     MOVEL'AUDIT'   DBKEY            ***************
+     C                     MOVEL'SE0075  'DBPGM
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ELSE
+     C*
+     C                     ADD  1         NORE
+     C                     MOVELPTNLU     TNLU
+     C                     UPDATUDEPPAF
+     C                     ENDIF
+     C                     ELSE
+     C*
+     C                     UPDATUDEPPDF
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C*
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  UPDPOS - Subroutine to calculate Book Position values.       *
+      *                                   VALUE                       *
+      *****************************************************************
+      *
+     C           SRUPOS    BEGSR                           *** SRUPOS ***
+      *
+      *  CALCULATE CONSIDERATION FOR AP NUMERATOR
+      *
+     C                     Z-ADDDPNA      ZNOML
+     C                     Z-ADDMKTP      ZPRCIN
+     C                     Z-ADDDPMD      ZFDATE
+     C*
+     C*     Set up parameters for Australian Yields mod
+     C*
+     C           STBS      IFEQ 'Y'
+     C           SYBS      ANDEQ'AU'
+     C                     Z-ADDDPMD      ZECD
+     C                     EXSR ZLCD
+     C                     Z-ADDDPMD      ECD     50
+     C                     EXSR ZNCD
+     C                     Z-ADDZZLCD     ZDCSDT
+     C                     Z-ADDDPMD      ZDCEDT
+     C                     Z-ADDZNOML     ZAMT
+     C                     Z-ADDNMDP      ZCDP
+     C                     EXSR ZACCZ
+     C                     Z-ADDDPMD      WRKD    50
+     C           ZDCINT    DIV  ZNOML     WRKPI
+     C                     EXSR ZYCE
+     C*
+     C*          IF EX-COUPON THEN PI PASSED IS THE REMAINING INTEREST
+     C*          TILL NCD AND IS NEGATIVE
+     C*
+     C           SCUMEX    IFEQ 'X'
+     C                     Z-ADDZZLCD     ZDCSDT
+     C                     Z-ADDNCD       ZDCEDT
+     C                     Z-ADDNMDP      ZCDP
+     C                     EXSR ZACCZ
+     C           ZDCINT    DIV  ZNOML     WKWPI  159
+     C           WRKPI     SUB  WKWPI     WRKPI
+     C                     ENDIF
+     C                     ELSE
+     C                     MOVE 'C'       SCUMEX  1
+     C                     Z-ADD0         WRKPI
+     C                     ENDIF
+     C*
+     C                     EXSR ZPRCI
+     C                     Z-ADDZPRCOT    ZPRC
+     C                     Z-ADDNMDPN     ZCDP
+     C                     EXSR ZCNSD
+     C                     Z-ADDZCONS     VALUE  150
+     C*
+     C           PROT      IFEQ '8'
+     C                     MULT CFCT      VALUE     H
+     C                     ENDIF
+     C*
+     C                     ENDSR
+      *                                                                   203605
+      *****************************************************************   203605
+      *                                                               *   203605
+      *  TMSTST - Time stamp setup                                    *   203605
+      *                                                               *   203605
+      *****************************************************************   203605
+      *                                                                   203605
+     C           TMSTST    BEGSR                           *** TMSTST *** 203605
+      *                                                                   203605
+     C                     MOVE *BLANKS   INFMT  10                       203605
+     C                     MOVEL'*CURRENT'INFMT                           203605
+     C                     MOVE *BLANKS   INVAR   1                       203605
+     C                     MOVE *BLANKS   OUTFMT 10                       203605
+     C                     MOVEL'*YYMD'   OUTFMT                          203605
+      *                                                                   203605
+     C                     CALL 'QWCCVTDT'                                203605
+      *                                                                   203605
+      ** Input format                                                     203605
+      *                                                                   203605
+     C                     PARM           INFMT                           203605
+      *                                                                   203605
+      ** Input variable                                                   203605
+      *                                                                   203605
+     C                     PARM           INVAR                           203605
+      *                                                                   203605
+      ** Output format                                                    203605
+      *                                                                   203605
+     C                     PARM           OUTFMT                          203605
+      *                                                                   203605
+      ** Date/time returned                                               203605
+      *                                                                   203605
+     C                     PARM           OUTDAT                          203605
+      *                                                                   203605
+      ** Error structure                                                  203605
+      *                                                                   203605
+     C                     PARM           QUSEC  32                       203605
+      *                                                                   203605
+     C                     MOVE '-'       TMST1                           203605
+     C                     MOVE '-'       TMST2                           203605
+     C                     MOVE '-'       TMST3                           203605
+     C                     MOVE '.'       TMST4                           203605
+     C                     MOVE '.'       TMST5                           203605
+     C                     MOVE '.'       TMST6                           203605
+      *                                                                   203605
+      ** The OutDate field returned from the API and TimeStamp fiel       203605
+      ** returned from this procedure have been broken down by data       203605
+      ** structures.  Copy the data from one to the other and exit.       203605
+      *                                                                   203605
+     C                     MOVE APIYR     RETYR                           203605
+     C                     MOVE APIMTH    RETMTH                          203605
+     C                     MOVE APIDAY    RETDAY                          203605
+     C                     MOVE APIHR     RETHR                           203605
+     C                     MOVE APIMN     RETMN                           203605
+     C                     MOVE APISEC    RETSEC                          203605
+     C                     MOVE APIMIL    RETMIL                          203605
+      *                                                                   203605
+     C                     MOVELTMSTDS    TMST                            203605
+      *                                                                   203605
+     C                     ENDSR                                          203605
+     C*
+      *****************************************************************
+      *                                                               *
+      * *PSSR  - Program exception error routine                      *
+      *          Called automatically if a program error occurs,      *
+      *          or directly by the program code using EXSR.          *
+      *          This subroutine DUMPs the program just once.         *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR                           ** *PSSR SR **
+     C           @RUN      IFEQ *BLANK
+     C                     MOVE 'Y'       @RUN    1
+     C                     SETON                     U7U8LR
+     C                     DUMP
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     ENDIF
+     C                     ENDSR
+      *****************************************************************                       CSD015
+      /EJECT                                                                                  CSD015
+      *****************************************************************                       CSD015
+      *                                                               *                       CSD015
+      * SRWTCH - Subroutine that will call the watch list checking    *                       CSD015
+      *          engine.                                              *                       CSD015
+      * Called by: SRGEWI (before updating DPTMVD)                    *                       CSD015
+      *            SRGEWO (before updating DPTMVD)                    *                       CSD015
+      *            SRGEDT (before updating DPTMVD)                    *                       CSD015
+      * Calls    : SRFMT                                              *                       CSD015
+      *                                                               *                       CSD015
+      *****************************************************************                       CSD015
+     C           SRWTCH    BEGSR                                                              CSD015
+      *                                                                                       CSD015
+      ** Set-up first parameter                                                               CSD015
+      *                                                                                       CSD015
+     C                     MOVE *BLANKS   PDSWLT                                              CSD015
+      *                                                                                       CSD015
+      ** Format date fields                                                                   CSD015
+      *                                                                                       CSD015
+     C                     Z-ADDDMTD      WWDDAT  50                                          CSD015
+     C                     MOVE WWDDAT    W4DDAT                                              CSD015
+     C                     Z-ADDDPVD      WWVDAT  50                                          CSD015
+     C                     MOVE WWVDAT    W4VDAT                                              CSD015
+     C                     Z-ADD0         WWMDAT  50                                          CSD015
+     C                     MOVE WWMDAT    W4MDAT                                              CSD015
+      *                                                                                       CSD015
+      ** Format amounts fields                                                                CSD015
+      *                                                                                       CSD015
+     C                     Z-ADDDPNA      W4AMT1                                              CSD015
+     C                     Z-ADD0         W4AMT2                                              CSD015
+      *                                                                                       CSD015
+      ** Set item code depending on the depot movement type                                   CSD015
+      *                                                                                       CSD015
+     C                     SELEC                                                              CSD015
+     C           DPMV      WHEQ 'WI'                                                          CSD015
+     C                     MOVEL'SEWKIN'  W4ITEM                                              CSD015
+     C           DPMV      WHEQ 'WO'                                                          CSD015
+     C                     MOVEL'SEWKOT'  W4ITEM                                              CSD015
+     C                     OTHER                                                              CSD015
+     C                     MOVEL'SEDPOT'  W4ITEM                                              CSD015
+     C                     ENDSL                                                              CSD015
+      *                                                                                       CSD015
+     C                     MOVELDPRN      W4IDEN                                              CSD015
+     C                     MOVELDPBA      W4BRCH                                              CSD015
+     C                     MOVEL'DPTMVD'  W4FUNT                                              CSD015
+      *                                                                                       CSD015
+      ** Get System Prefix from SC24X7 if enhancement CSC011 is installed                     CSD015
+      *                                                                                       CSD015
+     C           CSC011    IFEQ 'Y'                                                           CSD015
+     C                     MOVE S1MAIN    W4SYSM                                              CSD015
+     C                     ELSE                                                               CSD015
+      *                                                                                       CSD015
+      ** Else, get it from SDSTAT                                                             CSD015
+      *                                                                                       CSD015
+     C                     MOVE LIBR      W4SYSM                                              CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+      ** Access SDCUSTPD using 'DPBN' for Counter Party Name                                  CSD015
+      *                                                                                       CSD015
+     C                     MOVELDPBN      WDPBN  10                                           CSD015
+     C                     CALL 'AOCUSTR0'                                                    CSD015
+     C                     PARM *BLANKS   PRTCD                                               CSD015
+     C                     PARM '*KEY'    POPTN                                               CSD015
+     C                     PARM WDPBN     PCUST  10                                           CSD015
+     C                     PARM *BLANKS   PSTKEY  7                                           CSD015
+     C           SDCUST    PARM SDCUST    DSSDY                                               CSD015
+      *                                                                                       CSD015
+     C           BBCRNM    CAT  BBCRTN    W4CUST                                              CSD015
+     C                     MOVE DPBN      W4CNUM                                              CSD015
+      *                                                                                       CSD015
+      ** Get counterparty type depending on CCF001                                            CSD015
+      *                                                                                       CSD015
+     C           CCF001    IFEQ 'Y'                                                           CSD015
+      *                                                                                       CSD015
+     C           BBCRPC    IFEQ 'Y'                                                           CSD015
+     C                     MOVE 'C'       W4CTYP                                              CSD015
+     C                     ELSE                                                               CSD015
+     C                     MOVE 'I'       W4CTYP                                              CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C                     ELSE                                                               CSD015
+      *                                                                                       CSD015
+     C           BBLICD    IFNE *BLANKS                                                       CSD015
+     C           BBLICD    ANDNEW1IND1                                                        CSD015
+     C           BBLICD    ANDNEW1IND2                                                        CSD015
+     C           BBLICD    ANDNEW1IND3                                                        CSD015
+     C           BBLICD    ANDNEW1IND4                                                        CSD015
+     C           BBLICD    ANDNEW1IND5                                                        CSD015
+     C                     MOVE 'C'       W4CTYP                                              CSD015
+     C                     ELSE                                                               CSD015
+     C                     MOVE 'I'       W4CTYP                                              CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+      ** Set-up second parameter (Depot in)                                                   CSD015
+      *                                                                                       CSD015
+     C                     MOVE *BLANKS   PDSXML                                              CSD015
+     C                     MOVE *BLANKS   WDEPOT  6                                           CSD015
+     C                     MOVELDPID      WDEPOT                                              CSD015
+     C                     EXSR SRFMT                                                         CSD015
+     C           POUTPT    IFNE *BLANKS                                                       CSD015
+     C                     CAT  OPNTAG,1:0PDSXML                                              CSD015
+     C                     CAT  POUTPT:0  PDSXML                                              CSD015
+     C                     CAT  CLSTAG,1:0PDSXML                                              CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+      ** Set-up second parameter (Depot out)                                                  CSD015
+      *                                                                                       CSD015
+     C                     MOVE *BLANKS   WDEPOT                                              CSD015
+     C                     MOVELDPOD      WDEPOT                                              CSD015
+     C                     EXSR SRFMT                                                         CSD015
+     C           POUTPT    IFNE *BLANKS                                                       CSD015
+     C                     CAT  OPNTAG,2:0PDSXML                                              CSD015
+     C                     CAT  POUTPT:0  PDSXML                                              CSD015
+     C                     CAT  CLSTAG,2:0PDSXML                                              CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+      ** Call Watch List Engine Program                                                       CSD015
+      *                                                                                       CSD015
+     C           PDSXML    IFNE *BLANKS                                                       CSD015
+     C                     CALL 'SDWLCLOP'                                                    CSD015
+     C                     PARM           PDSWLT                                              CSD015
+     C                     PARM           PDSXML                                              CSD015
+     C                     ENDIF                                                              CSD015
+      *                                                                                       CSD015
+     C                     ENDSR                                                              CSD015
+      *****************************************************************                       CSD015
+      /EJECT                                                                                  CSD015
+      *****************************************************************                       CSD015
+      *                                                               *                       CSD015
+      * SRFMT  - Convert Settlement details to Customer               *                       CSD015
+      *          name and address                                     *                       CSD015
+      * Called by: SRWTCH                                             *                       CSD015
+      *                                                               *                       CSD015
+      *****************************************************************                       CSD015
+     C           SRFMT     BEGSR                                                              CSD015
+      *                                                                                       CSD015
+     C                     MOVE *BLANKS   POUTPT216                                           CSD015
+     C                     MOVE *BLANKS   PINPT1 35                                           CSD015
+      *                                                                                       CSD015
+     C                     CALL 'SDCWLFMT'                                                    CSD015
+     C                     PARM *BLANKS   PRTCD                                               CSD015
+     C                     PARM WDEPOT    PINPT1 35                                           CSD015
+     C                     PARM           PINPT2 35                                           CSD015
+     C                     PARM           PINPT3 35                                           CSD015
+     C                     PARM           PINPT4 35                                           CSD015
+     C                     PARM           PINPT5 35                                           CSD015
+     C                     PARM           PINPT6 35                                           CSD015
+     C                     PARM PNMCY     PWCCY   3                                           CSD015
+     C                     PARM           POUTPT                                              CSD015
+     C                     PARM           POUTP2  6                                           CSD015
+      *                                                                                       CSD015
+     C                     ENDSR                                                              CSD015
+      *****************************************************************                       CSD015
+      /EJECT                                                                                  CSD015
+     C/COPY ZSRSRC,ZEDITZ2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      /EJECT
+     C/COPY ZSRSRC,ZLCDZ1
+      /EJECT
+     C/COPY ZSRSRC,ZNCDZ3
+      /EJECT
+     C/COPY ZSRSRC,ZACCZZ1
+      /EJECT
+     C/COPY ZSRSRC,ZRATEZ1
+      /EJECT
+     C/COPY ZSRSRC,ZACCRZ1
+      /EJECT
+     C/COPY ZSRSRC,ZDAYSZ2
+      /EJECT
+     C/COPY ZSRSRC,ZDYYRZ3
+      /EJECT
+     C/COPY ZSRSRC,ZYCEZ1
+      /EJECT
+     C/COPY ZSRSRC,ZBKDT
+      /EJECT
+     C/COPY ZSRSRC,ZACCH
+      /EJECT
+     C/COPY ZSRSRC,ZCNSDZ1
+      /EJECT
+     C/COPY ZSRSRC,ZYLDIZ1
+      /EJECT
+     C/COPY ZSRSRC,ZYLDZ2
+      /EJECT
+     C/COPY ZSRSRC,ZPRCIZ1
+      /EJECT
+     C/COPY ZSRSRC,ZTNLU1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZCCYCN
+      /EJECT
+     C/COPY ZSRSRC,ZCALCD
+      /EJECT
+     C/COPY ZSRSRC,ZALIGNZ2
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**  POWER8 - ARRAY OF POWERS FOR NOMINAL DP TO CURRENCY DP CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000
+**  CPY@
+(c) Finastra International Limited 2001
+** OPNTAG                                                                                     CSD015
+<Depot in>                                                                                    CSD015
+<Depot out>                                                                                   CSD015
+** CLSTAG                                                                                     CSD015
+</Depot in>                                                                                   CSD015
+</Depot out>                                                                                  CSD015
+>>>>>>> branch 'bugfix/MDSC-32160' of http://blrvslalm0006:7990/scm/md/midasrpg.git

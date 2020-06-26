@@ -2,7 +2,7 @@
      H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas SE: Validate Nominal Amount')
+/*EXI *  TEXT('Midas SE: Validate Nominal Amount')                    *
       *****************************************************************
       *                                                               *
       *    Midas SE - Midas Security Trading validation module.       *
@@ -25,12 +25,13 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR1075401          Date 01Jun20               *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CSE071             Date 19Jul05               *
       *                 227267             Date 10Jun04               *
       * Midas Release 4 --------------- Base -------------------------*
@@ -43,6 +44,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1075401 - Increase parameter field @PNOPO of SE6710/SE7570.*
+      *              (Child: AR1075402)                               *      
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CSE071 - Multiple Holidays Re Securities (recompile)         *
@@ -178,7 +181,8 @@
      D @PBRCD          S              3A
      D @PCNUM          S              6A
      D @PNOBL          S             13A
-     D @PNOPO          S             13A
+     D*@PNOPO***       S             13A                                                   AR1075401
+     D @PNOPO          S             15A                                                   AR1075401
      D @POBPO          S              1A
      D @PPGB           S              1A
      D @PSGB           S              1A
@@ -187,7 +191,8 @@
      D @PSESN          S             10A
      D WWFONO          S             13P 0
      D WWNOBL          S             13P 0
-     D WWNOPO          S             13P 0
+     D*WWNOPO***       S             13P 0                                                 AR1075401
+     D WWNOPO          S             15P 0                                                 AR1075401
  
       * Parameters for ZALIGN
      D ZFIELD          S             16A

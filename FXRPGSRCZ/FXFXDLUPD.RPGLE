@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. 251029             Date 22May20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 247151A            Date 29Jun17               *
       *                 MD030956           Date 09Oct14               *
       *                 CDL094             Date 01Sep14               *
@@ -69,6 +70,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  251029 - Applied fix 231306.                                 *
+      *  231306 - Handle file locking properly.                       *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date                                    *
       *  247151A- Initialise flag introduced for RecSd and PaySd      *
@@ -429,7 +432,12 @@
      C     F3DTYP        OREQ      'S'                                                        242477
       *
      C                   MOVE      F3DADN        DLNO
-     C     DLNO          CHAIN     DEALSDBF                           99
+     C*****DLNO*         CHAIN     DEALSDBF                           99                      231306
+     C     DLNO          CHAIN     DEALSDBF                           9998                    231306
+      *                                                                                       231306
+     C     *IN98         IFEQ      *ON                                                        231306
+     C                   EXSR      SRERR                                                      231306
+     C                   ENDIF                                                                231306
       *
       ** IF THE ASSOCIATED DEAL IS FOUND
       *
@@ -964,7 +972,13 @@
       *
       * ACCESS DEAL
       *
-     C     F3DN38        CHAIN     DEALSDBF                           99
+     C*****F3DN38        CHAIN     DEALSDBF                           99                      231306
+     C     F3DN38        CHAIN     DEALSDBF                           9998                    231306
+      *                                                                                       231306
+     C     *IN98         IFEQ      *ON                                                        231306
+     C                   EXSR      SRERR                                                      231306
+     C                   ENDIF                                                                231306
+      *                                                                                       231306
       *
       ** DATABASE ERROR
       *
@@ -1203,7 +1217,12 @@
      C     F3BROK        OREQ      'SWAP'
       *
      C                   MOVE      F3DADN        DLNO
-     C     DLNO          CHAIN     DEALSDBF                           99
+     C*****DLNO          CHAIN     DEALSDBF                           99                      231306
+     C     DLNO          CHAIN     DEALSDBF                           9998                    231306
+      *                                                                                       231306
+     C     *IN98         IFEQ      *ON                                                        231306
+     C                   EXSR      SRERR                                                      231306
+     C                   ENDIF                                                                231306
       *
       ** IF THE ASSOCIATED DEAL IS FOUND
       *
@@ -1240,7 +1259,12 @@
       *
       * ACCESS DEAL
       *
-     C     F3DN38        CHAIN     DEALSDBF                           99
+     C*****F3DN38        CHAIN     DEALSDBF                           99                      231306
+     C     F3DN38        CHAIN     DEALSDBF                           9998                    231306
+      *                                                                                       231306
+     C     *IN98         IFEQ      *ON                                                        231306
+     C                   EXSR      SRERR                                                      231306
+     C                   ENDIF                                                                231306
       *
       ** DATABASE ERROR IF DEAL IS NOT A SWAP
       *
@@ -1980,7 +2004,12 @@
       ** Access the header record
       *
      C                   Z-ADD     *ZERO         DXDLNO
-     C     DXDLNO        CHAIN     DTRIXHF                            99
+     C*****DXDLNO        CHAIN     DTRIXHF                            99                      231306
+     C     DXDLNO        CHAIN     DTRIXHF                            9998                    231306
+      *                                                                                       231306
+     C     *IN98         IFEQ      *ON                                                        231306
+     C                   EXSR      SRERR                                                      231306
+     C                   ENDIF                                                                231306
       *
       ** DATABASE ERROR
       *
@@ -2553,12 +2582,17 @@
      C****************************************************************
      C     SRERR         BEGSR
      C*
+     C     *IN98         IFEQ      *ON                                                        231306
+     C                   MOVEL     '*RECLCK'     @@RTCD                                       231306
+     C                   SETON                                        LR                      231306
+     C                   ELSE                                                                 231306
      C                   MOVEL     '*ERROR '     @@RTCD
      C                   MOVEL     'FXFXDLUPD'   DBPGM
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
      C                   MOVE      '1'           *INLR
      C                   DUMP
+     C                   ENDIF                                                                231306
      C*
      C**  TERMINATE THE PROGRAM
      C*

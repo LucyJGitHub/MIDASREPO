@@ -33,8 +33,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD050928           Date 15May18               *
+      *  Last Amend No. 259696             Date 22May20               *
+      *  Prev Amend No. 257943             Date 22May20               *
+      *                 CSD102             Date 08Jan19               *
+      *                 MD050928           Date 15May18               *
       *                 MD047369A          Date 24Jan18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD042042           Date 14Feb17               *
@@ -100,6 +102,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  252696 - Ensure that field Swift Reference field is save in  *
+      *           in INPAYDD file for MidasPlus.                      *
+      *  257943 - Using the CANCEL button after routing MT103 to an   *
+      *           incoming message, does not release the MT103 to be  *
+      *           routed again. Ensure that a selected message is     *
+      *           released if the transaction is cancelled.           *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD050928 - SP15_MQ: Unclear error message - Error validating *
       *              'Stamp Tax Amount' : Invalid Numeric Value       *
@@ -222,6 +230,10 @@
 
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
 
+     FMEINCRL2  IF   E           K DISK    INFSR(*PSSR)                                       252696
+     FMEINCRL3  IF   E           K DISK    INFSR(*PSSR)                                       257943
+     FMEINMPL1  IF   E           K DISK    INFSR(*PSSR)                                       252696
+     FINPAYLL   IF   E           K DISK    INFSR(*PSSR)                                       252696
       ** Hook to enable non-core files to be included
       /COPY WNCPYSRC,FTIPAYV001
 
@@ -1056,6 +1068,23 @@
       *                                                                                      BUG1282
       ** Delete reserved messages if user presses cancel                                     BUG1282
       *                                                                                      BUG1282
+     C                   MOVEL     DDSEQNO       WSEQNO                                       257943
+                                                                                              257943
+     C     WSEQNO        IFEQ      0                                                          257943
+     C                   Z-ADD     1             PKPRT                                        257943
+     C                   ELSE                                                                 257943
+     C                   Z-ADD     WSEQNO        PKPRT                                        257943
+     C                   ENDIF                                                                257943
+     C     DDSWTN        CHAIN     @INCRL2                                                    257943
+     C                   IF        %FOUND (MEINCRL2)                                          257943
+     C                   EVAL      PMSGR = CRMSGR                                             257943
+     C                   ELSE                                                                 257943
+     C     DDSWTN        CHAIN     @INCRL3                                                    257943
+     C                   IF        %FOUND (MEINCRL3)                                          257943
+     C                   EVAL      PMSGR = CRMSGR                                             257943
+     C                   ENDIF                                                                257943
+     C                   ENDIF                                                                257943
+                                                                                              257943
      C                   EXSR      DlRsMsg                                                   BUG1282
      C                   EVAL      *INLR = *ON                                               BUG1282
      C                   RETURN                                                              BUG1282
@@ -6866,6 +6895,46 @@
 
      C     UpdateDB      BEGSR
 
+      *                                                                                       252696
+     C                   IF        IPMIR = *Blanks  and                                       252696
+     C                             DDSWFLG  = 'Y'                                             252696
+     C                   MOVEL     DDSWTN        IPMIR                                        252696
+     C                   MOVEL     DDSWTN        MIR@             28                          252696
+     C     MIR@          CHAIN     INPAYLL                            92                      252696
+     C                   IF        *IN92 = '0'                                                252696
+     C                   GOTO      EMUpd                                                      252696
+     C                   ENDIF                                                                252696
+     C     IPMIR         CHAIN     MEINCRL2                           93                      252696
+     C                   IF        *IN93 = '1'                                                252696
+     C                   MOVEL     'Y'           WErr                                         252696
+     C                   MOVEL     'MIN0100'     PErrMs                                       252696
+     C                   EXSR      SRSndM                                                     252696
+     C                   MOVE      'N'           OKSWTN                                       252696
+     C                   GOTO      EMUpd                                                      252696
+     C                   ENDIF                                                                252696
+     C                   IF        *IN93 = '0'                                                252696
+     C                   MOVEL     CRMSGR        IPINMSGR                                     252696
+     C                   MOVEL     CRMTPY        IPINMTPY                                     252696
+     C                   MOVEL     CRNPRT        WWISEQ            3 0                        252696
+     C                   Z-ADD     WWISEQ        IPINKPRT                                     252696
+      *                                                                                       252696
+     C     KEYMP         CHAIN     MEINMPL1                           94                      252696
+     C                   IF        *IN94 = '0'                                                252696
+     C                   MOVEL     MPTRNO        IPINTRNO                                     252696
+     C                   ENDIF                                                                252696
+     C                   ENDIF                                                                252696
+      *                                                                                       252696
+     C                   ENDIF                                                                252696
+      *                                                                                       252696
+     C                   IF        IPINLVL1  = 'Y' and                                        252696
+     C                             IPINLVL2  = 'Y'                                            252696
+     C                   IF        IPAUP1    = *Blanks  and                                   252696
+     C                             IPAUP1    = *Blanks                                        252696
+     C                   MOVEL     PUSRID        IPAUP1                                       252696
+     C                   MOVEL     PUSRID        IPAUP2                                       252696
+     C                   MOVEL     'Y'           IPAUIN                                       252696
+     C                   ENDIF                                                                252696
+     C                   ENDIF                                                                252696
       ** Update files.
 
      C                   CALLB     'FTIPAYUPD'
@@ -7021,7 +7090,8 @@
                                                                                               CER001
      C                   ENDIF                                                                CER001
                                                                                               CER001
-     C                   ENDSR
+     C**********         ENDSR                                                                252696
+     C     EMUpd         ENDSR                                                                252696
 
       *****************************************************************
       /EJECT
@@ -7712,6 +7782,10 @@
      C                   KFLD                    PCNUM                                      MD034973
      C                   KFLD                    PPYTY                                      MD034973
      C                   KFLD                    PPYST                                      MD034973
+      *                                                                                       252696
+     C     KEYMP         KLIST                                                                252696
+     C                   KFLD                    IPINMSGR                                     252696
+     C                   KFLD                    IPINKPRT                                     252696
 
      C     *LIKE         DEFINE    DDSMCY        WRCHCY
      C     *LIKE         DEFINE    DDSMAM        WRCHAM

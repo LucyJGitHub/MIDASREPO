@@ -33,12 +33,13 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR324888           Date 22May20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CSE071             Date 19Jul05               *
       *                 CGL029             Date 01Sep03               *
@@ -79,6 +80,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  AR324888 - Include user names on Position Settlement audit.  *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -151,6 +153,9 @@
       *
      F**POSET***IF  E           K        DISK                           UC178530
      FPOSET1  IF  E           K        DISK                           UC  178530
+     FPSAUT   IF  E           K        DISK                                                 AR324888
+      ** SE Position Settlement Authorisation detail                                        AR324888
+      *                                                                                     AR324888
      FTABSE   IF  E           K        DISK
      F            TABTB10F                          KIGNORE               S01117
      F            TABLETAF                          KIGNORE
@@ -375,6 +380,9 @@
       *                                                                                       CGL029
      IDSSDY     E DSDSSDY                                                                     CGL029
       *                                                                                       CGL029
+     IDSAUTH    E DSPSAUTD                                                                  AR324888
+      ** PSAUTD Data Structure                                                              AR324888
+      *                                                                                     AR324888
      I*
      C/EJECT
      C*================================================================
@@ -426,6 +434,18 @@
      C                     KFLD           PCPY                            S01401
      C                     KFLD           PDUD                            S01401
      C                     KFLD           PEVT                            S01401
+      *                                                                                     AR324888
+     C           PSAUTH    KLIST                                                            AR324888
+     C                     KFLD           PBCA                                              AR324888
+     C                     KFLD           PSSH                                              AR324888
+     C                     KFLD           PCPY                                              AR324888
+     C                     KFLD           PDUD                                              AR324888
+     C                     KFLD           PEVT                                              AR324888
+     C                     KFLD           PTFR                                              AR324888
+     C                     KFLD           TNLU                                              AR324888
+     C                     KFLD           TXBS                                              AR324888
+     C                     KFLD           BNFO                                              AR324888
+     C                     KFLD           EXCD                                              AR324888
      C/COPY WNCPYSRC,SE0335C001
       *                                                                   S01486
       * DEFINE KEYLIST FOR CHAINING TO PMPORTPD FILE                      S01486
@@ -732,6 +752,50 @@
      C                     END                                            S01117
       *
      C           *IN50     DOWNE'1'
+      *                                                                                     AR324888
+     C                     MOVEA'00000000'*IN,72                                            AR324888
+     C                     CLEARDSAUTH                                                      AR324888
+     C                     Z-ADD*ZERO     ZLCD                                              AR324888
+     C                     MOVE *BLANK    ZCHTP                                             AR324888
+      *                                                                                     AR324888
+     C           PSAUTH    CHAINPSAUT                88                                     AR324888
+      *                                                                                     AR324888
+     C           *IN88     IFEQ *OFF                                                        AR324888
+      *                                                                                     AR324888
+     C           PAUUSR    IFNE *BLANK                                                      AR324888
+     C           PAPCTP    ANDNE'U'                                                         AR324888
+     C           PALCTP    ANDNE'U'                                                         AR324888
+     C                     MOVE *ON       *IN72                                             AR324888
+     C                     Z-ADDPALUD     ZDAYNO                                            AR324888
+     C                     EXSR ZDATE2                                                      AR324888
+     C                     MOVE ZADATE    ZRLCD                                             AR324888
+     C                     ENDIF                                                            AR324888
+      *                                                                                     AR324888
+     C           PAPUSR    IFNE *BLANK                                                      AR324888
+     C                     MOVE *ON       *IN73                                             AR324888
+     C                     Z-ADDPAPCD     ZDAYNO                                            AR324888
+     C                     EXSR ZDATE2                                                      AR324888
+     C                     MOVE ZADATE    ZPLCD                                             AR324888
+      *                                                                                     AR324888
+     C                     SELEC                                                            AR324888
+     C           PAPCTP    WHEQ 'I'                                                         AR324888
+     C                     MOVE *ON       *IN74                                             AR324888
+     C           PAPCTP    WHEQ 'A'                                                         AR324888
+     C                     MOVE *ON       *IN75                                             AR324888
+     C           PAPCTP    WHEQ 'D'                                                         AR324888
+     C                     MOVE *ON       *IN76                                             AR324888
+     C           PAPCTP    WHEQ 'Y'                                                         AR324888
+     C                     MOVE *ON       *IN77                                             AR324888
+     C           PAPCTP    WHEQ 'U'                                                         AR324888
+     C                     MOVE *ON       *IN78                                             AR324888
+     C           PAPCTP    WHEQ 'R'                                                         AR324888
+     C                     MOVE *ON       *IN79                                             AR324888
+     C                     ENDSL                                                            AR324888
+     C                     ENDIF                                                            AR324888
+      *                                                                                     AR324888
+     C                     Z-ADDPALCD     ZLCD                                              AR324888
+     C                     MOVE PALCTP    ZCHTP                                             AR324888
+     C                     ELSE                                                             AR324888
       *
       * A RECORD HAS BEEN READ :-
       *
@@ -739,6 +803,7 @@
       *
      C                     Z-ADDLCD       ZLCD
      C                     MOVE CHTP      ZCHTP
+     C                     ENDIF                                                            AR324888
      C                     Z-ADDTNLU      ZTNLU
       *
       * IF PARM=I & LAST CHANGE DATE NOT = RUN DATE - IGNORE
@@ -1433,6 +1498,8 @@
      C***********          SETOF                     54                   S01486
      C                     SETOF                     5456                 S01486
      C   70                SETOF                     69                   S01496
+     C                     MOVE *OFF      *IN87                                             AR324888
+     C           *IN88     IFEQ *OFF                                                        AR324888
      C           ZCHTP     IFEQ 'A'
      C                     SETON                     51
      C                     ELSE
@@ -1452,11 +1519,16 @@
      C           CEU017    OREQ 'Y'                                       CEU017
      C           ZCHTP     ANDEQ'R'                                       CEU017
      C                     SETON                     69                   S01496
+     C                     ELSE                                                             AR324888
+     C           ZCHTP     IFEQ 'U'                                                         AR324888
+     C                     MOVE *ON       *IN87                                             AR324888
+     C                     ENDIF                                                            AR324888
      C                     END                                            S01496
      C                     END
      C                     END
      C                     END
      C                     END
+     C                     ENDIF                                                            AR324888
       *                                                                   S01486
       * SETUP PORTFOLIO REFERENCE DETAILS                                 S01486
       *                                                                   S01486

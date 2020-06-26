@@ -30,8 +30,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD048748           Date 16Dec19               *
-      *  Prev Amend No. MD052297           Date 14Nov19               *
+      *  Last Amend No. 254109             Date 01Jun20               *
+      *  Prev Amend No. MD048748           Date 16Dec19               *
+      *                 MD052297           Date 14Nov19               *
       *                 MD053634           Date 21Oct19               *
       *                 CER050             Date 16Jun19               *
       *                 MD052425           Date 22Aug19               *
@@ -150,12 +151,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  254109 - Introduce new err msgs; one for the 'D' action code *
+      *           and another one for 'C' and 'R' action codes ( when *
+      *           CSD007 feauture is switched on) just to indicate the*
+      *           reason why action code is invalid.                  *      
       *  MD048748 - Error Authorising Release of a Closed Customer    *
       *             with Parent Defined                               *
       *  MD052297 - Meaningless error message displayed when closing  *
       *             customer.                                         *
-      *  MD053634 - Requested Customer “Authority Holders Link Report *
-      *             for KWG$24c” not generated.                       *
+      *  MD053634 - Requested Customer Authority Holders Link Report  *
+      *             for KWG$24c  not generated.                       *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD052425 - COB Failure re New Customer Closure feature CSD007*
       *  MD050457 - Customer deletion: Issue detailed error message   *
@@ -2255,16 +2260,27 @@
      C*****DDACTN        ANDEQ     'D'                                                        CSD007
      C     DDACTN        IFEQ      'C'                                                        CSD007
      C     DDACTN        OREQ      'R'                                                        CSD007
-     C     DDACTN        OREQ      'D'                                                        CSD007
-      *  Delete Action is not allowed
+     C*****DDACTN        OREQ      'D'                                                 CSD007 254109
+      ***Delete*Action*is*not*allowed**********************************                       254109
      C                   MOVEL     'N'           OKACTN
      C                   ADD       1             Ix
      C                   MOVEL     'DDACTN'      FldNameArr(Ix)
-     C                   MOVEL     'USR0553'     MsgIdArr(Ix)
+     C**********         MOVEL     'USR0553'     MsgIdArr(Ix)                                 254109
+     C                   MOVEL     'USR9921'     MsgIdArr(Ix)                                 254109
      C                   GOTO      EVAL
       *
      C                   ENDIF
       *                                                                                       CSD007
+     C     DDACTN        IFEQ      'D'                                                        254109
+      *                                                                                       254109
+     C                   MOVEL     'N'           OKACTN                                       254109
+     C                   ADD       1             Ix                                           254109
+     C                   MOVEL     'DDACTN'      FldNameArr(Ix)                               254109
+     C                   MOVEL     'USR9920'     MsgIdArr(Ix)                                 254109
+     C                   GOTO      EVAL                                                       254109
+      *                                                                                       254109
+     C                   ENDIF                                                                254109
+      *                                                                                       254109
      C                   ENDIF                                                                CSD007
       *                                                                                       CSD012
       * If Authorisation check is on,                                                         CSD012

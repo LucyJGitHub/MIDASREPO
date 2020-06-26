@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL184             Date 07Dec16               *
+      *  Last Amend No. 250822             Date 22May20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL184             Date 07Dec16               *
       *                 AR702741           Date 02Feb11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -24,6 +25,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  250822 - Used the day number from ToF and ensure that        *
+      *           ZFREQB2 is called. Applied fix 210058.              *
+      *  210058 - Next Debit Cap Date is still incorrect.             *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL184 - New Frequencies for Account Statements              *
       *  AR702741 - Include location as parameter in ZFREQB to        *
@@ -38,7 +42,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -57,71 +61,71 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -136,9 +140,9 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   Movel     *Blanks       RetCodeIn
      C                   Movel     *Blanks       FldNamXAr
      C                   Movel     *Blanks       MsgIDXAr
@@ -162,9 +166,9 @@
       *  SrNStD - Default Next Statement Date                         *
       *****************************************************************
      C     SrNStD        BEGSR
- 
+
      C     DDNStD        Ifeq      *Blanks
- 
+
      C     DDStFq        Ifeq      'D'
      C     CGL184        Andeq     'N'                                                        CGL184
      C     DDStFq        Orne      'D'                                                        CGL184
@@ -174,8 +178,9 @@
      C                   Else
      C                   Z-add     *zeros        ZMDAY
      C                   Endif
- 
-     C                   CallB     'ZFREQB'
+
+     C**********         CallB     'ZFREQB'                                                   210058
+     C                   CallB     'ZFREQB2'                                                  210058
      C                   Parm      *blanks       RetCodeIn
      C                   Parm      DDStFq        ZFREQ             1
      C                   Parm      BJRDNB        ZDAYNO            5 0
@@ -184,7 +189,7 @@
      C                   Parm                    ZMDAY             2 0
      C                   Parm                    BJDFIN
      C                   Parm      SDGELR        SDGELR
- 
+
      C     RetCodeIn     Ifeq      *blanks
      C     ZdayNo        Andne     *zeros
 3676  *
@@ -194,10 +199,10 @@
      C                   parm                    BJDFIN
      C                   parm                    ZNDATE            6 0
      C                   parm                    ZADATE            7
- 
+
      C                   movel     ZNDATE        DDNStd
      C                   Endif
- 
+
      C                   Move      *blanks       RetCodeIn
      C                   Endif
       *
@@ -208,7 +213,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *Entry        Plist
       *
       ** INPUTS
@@ -243,9 +248,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

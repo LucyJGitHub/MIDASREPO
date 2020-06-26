@@ -15,8 +15,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. CSW218             Date 19Mar18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+     F*  Last Amend No. 253970             Date 22May20               *
+      *  Prev Amend No. CSW218             Date 19Mar18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CFT135             Date 20Feb13               *
       *                 AR845802           Date 14Nov12               *
       *                 CSW212             Date 03May12               *
@@ -55,6 +56,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *   253970 - If delimiter for block data in block 4 cannot be   *
+      *            found, use an alternative delimiter (CR/LF) format *
+      *            that is sometimes found in iSeries SWIFT messages. *
       *  CSW218 - SWIFT Changes 2018                                  *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT135 - MT100 MultiCash Interface                           *
@@ -1543,6 +1547,33 @@
      C           FS3:3     SCAN DSSWD:E   F3
      C           FS4:3     SCAN DSSWD:E   F4
      C                     ENDIF                                          CFT014
+      *                                                                                       253970
+      * Use alternative delimiter if block delimiter cannot be found.                         253970
+      *                                                                                       253970
+     C           F3        IFEQ 0                                                             253970
+     C           F4        OREQ 0                                                             253970
+      *                                                                                       253970
+      *  Begin search after end position of the Block Tag No.                                 253970
+      *                                                                                       253970
+     C                     MOVE ALTFS3    FS3                                                 253970
+     C                     MOVE ALTFS4    FS4                                                 253970
+     C                     MOVE ALTCS2    CS2                                                 253970
+     C           CFT014    IFEQ 'Y'                                                           253970
+     C                     MOVELFS3       P@FCT1                                              253970
+     C                     Z-ADD3         P@LEN1                                              253970
+     C                     Z-ADDE         P@LEN2                                              253970
+     C                     EXSR SCNARR                                                        253970
+     C                     Z-ADDWRN05     F3                                                  253970
+     C                     MOVELFS4       P@FCT1                                              253970
+     C                     Z-ADD3         P@LEN1                                              253970
+     C                     Z-ADDE         P@LEN2                                              253970
+     C                     EXSR SCNARR                                                        253970
+     C                     Z-ADDWRN05     F4                                                  253970
+     C                     ELSE                                                               253970
+     C           FS3:3     SCAN DSSWD:E   F3                                                  253970
+     C           FS4:3     SCAN DSSWD:E   F4                                                  253970
+     C                     ENDIF                                                              253970
+     C                     ENDIF                                                              253970
       *
      C                     Z-ADDE         F
      C                     EXSR SRC2
@@ -3778,6 +3809,25 @@
       *
      C                     MOVE '-'       CLN
      C                     MOVELCRLFC     FS4     3
+      *                                                                                       253970
+      * Setup alternative delimiters                                                          253970
+      *                                                                                       253970
+     C                     BITOF'2'       BTB                                                 253970
+     C                     BITON'3'       BTB                                                 253970
+      *                                                                                       253970
+      * Setup delimiter FS2/FS3 - start of tag within message block                           253970
+      *                                                                                       253970
+     C                     MOVE ':'       CLN                                                 253970
+     C                     MOVELCRLFC     ALTFS3  3                                           253970
+      *                                                                                       253970
+      * Setup delimiter CS2 - start of new line within tag                                    253970
+      *                                                                                       253970
+     C                     MOVELCRLFC     ALTCS2  2                                           253970
+      *                                                                                       253970
+      * Setup delimiter FS4 - end of Block 4:                                                 253970
+      *                                                                                       253970
+     C                     MOVE '-'       CLN                                                 253970
+     C                     MOVELCRLFC     ALTFS4  3                                           253970
       *
       * Setup Block 5 delimiters
       *

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. HUT113             Date 01Apr20               *
-      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *  Last Amend No. 252069             Date 22May20               *
+      *  Prev Amend No. HUT113             Date 01Apr20               *      
+      *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 LLN022A            Date 03Jun15               *
@@ -104,18 +105,20 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  252069 - Database error message occurs when there is a       *
+      *           record locking issue.                               *
       *  HUT113 - Full PB Functionality at FM 2.1                     *
       *           (Upgrade HUT026 to FM2.1 SP22)                      *
       *           Apply fix MD054322 MD052193                         *
       *           Addition of hooks HUT113_114 to HUT113_131          *
       *           Amendment of core hooks SDCUSDSC06, SDCUSDSC14,     *
       *           SDH00729 and SDH00736.                              *
-      *    MD054322 - Portfolio Management - SE - Incorrect holdings  *
+      *  MD054322 - Portfolio Management - SE - Incorrect holdings    *
       *               for custody fee calculation report.             *
       *             - Portfolio Management should not be allowed for  *
       *               PB customer.                                    *
-      *    MD052193 - Private Banking Customer Field is always        *
-      *               defaulting to N even if user input is Y         *
+      *  MD052193 - Private Banking Customer Field is always          *
+      *               defaulting to N even if user input is Y         *      
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -4236,7 +4239,13 @@
       *
      C     @RTCD         IFNE      *BLANK
      C                   ROLBK
+     C     @RTCD         IFEQ      '*LOCKED'                                                  252069
+     C                   ADD       1             Idx                                          252069
+     C                   EVAL      FldNameArr(Idx) = 'DDACTN'                                 252069
+     C                   EVAL      MsgIdArr(Idx) = 'USR0001'                                  252069
+     C                   ELSE                                                                 252069
      C                   EXSR      *PSSR
+     C                   ENDIF                                                                252069
      C                   ELSE
       *                                                                                       CER001
      C**********         IF        ULX043 = 'Y'                                      CER001 BUG10817

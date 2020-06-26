@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. 260173             Date 22May20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -85,6 +86,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260173 - Synchronize parameter in MMDEAMRTV to avoid         *
+      *           parameter mismatch. Apply fix 258724.               *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
@@ -176,7 +179,7 @@
                                                                                               CSD015
       ** Compliance Watch Hit List                                                            CSD015
      FSDCWHTL1  IF   E           K DISK    INFSR(SRERR)                                       CSD015
- 
+
      FREADVCL2  UF   E           K DISK    INFSR(SRERR)                                       CRE020
      F                                     USROPN                                             CRE020
       ** Midas RE Settled Transaction Index File by Ref No/Pgm Ref/Seq No                     CRE020
@@ -200,19 +203,19 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **------------------------------------------------------------------------CAP006 -------------
       ** The following /COPY line includes the definitions for error and        CAP006
       ** warning message arrays.                                                CAP006
@@ -223,14 +226,14 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
- 
+
       ** DEFINE FIELDS FOR ZDATE9
      D @DAYN           S              5P 0
      D @YMD            S              8S 0
      D @RETN           S              1A
- 
+
       ** Timestamp for the transaction                                          CAP006
      D TimeStamp       S               Z                                        CAP006
                                                                                 CAP006
@@ -246,7 +249,7 @@
      D  @IGPY1               369    574
      D  @IGPY2               575    717
      D  @IGPY3               718    927
- 
+
       **  DEAMS FILE - DEAL AMENDMENTS
      D MMDEAM        E DS                  EXTNAME(MMDEAMPP)
      D MMDEAMDORI    E                     EXTFLD(QQDORI)                                     CGL029
@@ -262,7 +265,7 @@
      D  @HNPY1               369    574
      D  @HNPY2               575    717
      D  @HNPY3               718    927
- 
+
       **  DEALS FILE - LOANS/DEPOSITS & NAS ISSUED
      D MMDELD        E DS                  EXTNAME(MMDELDPP)
      D MMDELDDORI    E                     EXTFLD(QQDORI)                                     CGL029
@@ -272,12 +275,12 @@
      D MMDELDRONS    E                     EXTFLD(QQRONS)                                     CGL029
      D MMDELDPONS    E                     EXTFLD(QQPONS)                                     CGL029
      D  @HKVDY                50     57  0
- 
+
      D/COPY WNCPYSRC,MMH00171
       **  DEALS FILE - NEGOTIABLE ASSETS BOUGHT
      D MMDENB        E DS                  EXTNAME(MMDENBPP)
      D  @HLVDY                50     57  0
- 
+
      D ChkDealFmt    E DS                  EXTNAME(MMDEAMPP)                    CAP006
       ** Rename fields for Timestamp checking                                   CAP006
      D                                     PREFIX(CH)                           CAP006
@@ -291,22 +294,22 @@
      D Z#ASTS        E DS                  EXTNAME(Z#AST)
      D Z#WSTS        E DS                  EXTNAME(Z#WST)
      D DLDLQD        E DS                  EXTNAME(DLSTMPPD)                                  CER049
- 
+
       ** FILE STATUS DATA STRUCTURE - RECORD FORMAT
      D FDS             DS
      D  ##FORM           *RECORD
- 
+
       * DATA STRUCTURES FOR USE WITH ACCESS PROGRAMS
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       * DATA STRUCTURE FOR BANK DETAILS
- 
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
       * DATA STRUCTURE FOR DEAL DATA CODES
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       * DATA STRUCTURE FOR MODULE DETAILS
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                    CAP051
       * DATA STRUCTURE FOR SWITCHABLE FEATURE DETAILS                           CAP051
                                                                                 CAP051
@@ -346,7 +349,7 @@
                                                                                               CSD015
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CSD015
       * Long DS for Access Programs                                                           CSD015
- 
+
      D InvRp         E DS                  EXTNAME(MMIDEAMPD)                                 208884
      D                                     PREFIX(R:2)                                        208884
                                                                                               208884
@@ -356,7 +359,7 @@
      D #FRECF        E DS                  EXTNAME(SDFSFRPD)                                AR821086
       ** File - Receive Further Settlement Instructions                                     AR821086
       * RUN DATE & MULTI-BRANCHING INDICATOR
- 
+
      D RUNDAT          DS
      D  @DLUP                  1      2  0
      D  @MLUP                  3      5
@@ -1759,6 +1762,8 @@
       *
       * Deal Amendment Type
      C                   PARM      IGMTYP        DDMTYP            2
+      * Action Code (Reversal transaction)                                                    260173
+     C                   PARM      *BLANK        @ACTRV            1                          260173
       *
       * OUTPUTS                                                                 CAP006
       *                                                                         CAP006

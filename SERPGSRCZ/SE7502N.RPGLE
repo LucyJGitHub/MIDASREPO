@@ -1566,7 +1566,7 @@
      C                   MOVEL     'CO00367'     ZAMSID
      C                   EXSR      ZASNMS
      C                   ENDIF
- 
+
       *
      C                   ENDIF
      C                   ENDIF

@@ -22,8 +22,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 217131             Date 02Apr12               *
+     F*  Last Amend No. 254290             Date 22May20               *
+     F*  PREV Amend No. 251887             Date 22May20               *
+      *                 MD046248           Date 27Oct17               *
+      *                 217131             Date 02Apr12               *
       *                 CSW210             Date 04May10               *
       *                 CER059             Date 19Jul10               *
       *                 BUG23967           Date 14May09               *
@@ -67,6 +69,12 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  254290 - Amend 251887 changes. Delete from TRADSDX2 when     *
+      *           T2WHEN = 'B'.                                       *
+      *  251887 - Unable to insert trade due to the trade reference   *
+      *           no. used which is already existing in TRADSDX1.     *
+      *           Applied fix 223696 to drop records in extension     *
+      *           files whenever TRADSD record is deleted.            *
       *  MD046248 - Finastra Rebranding                               *
       *  217131 - Prevent extension file records being deleted when   *
       *           security linked to trade has not yet matured.       *
@@ -141,10 +149,13 @@
      F*****************************************************************
      F*
      FHSTTR   UP  E           K        DISK
+     FHSTTTR  IF  E           K        DISK                                                   251887
+     F            HSTTRDF                           KRENAMEHISTRAD                            251887
      FSETLT   UF  E           K        DISK
      FPMCHTVPDUF  E           K        DISK                      A        S01486
      FTRADSDY1UF  E           K        DISK                                                   202689
      FTRADSDY2UF  E           K        DISK                                                   202689
+     FTRADSD10IF  E           K        DISK                                                   251887
      FSECTY   IF  E           K        DISK
      FINVTP   IF  E           K        DISK                               S01486
      FHSTTRA  UF  E                    DISK
@@ -821,6 +832,87 @@
      CLR                   CLOSESETRX1PD                                                      CER001
      CLR                   ENDIF                                                              CER001
       *                                                                                       CER001
+      *                                                                                       251887
+      ** If S01401 is on and CSW003 is off, delete 1 record each from                         251887
+      ** files TRADSDX1 and TRADSDX2.                                                         251887
+      *                                                                                       251887
+     CLR         S01401    IFEQ 'Y'                                                           251887
+     CLR         CSW003    ANDEQ'N'                                                           251887
+     CLR                   MOVE '0'       *IN28                                               251887
+     CLR                   MOVE '0'       *IN34                                               251887
+     CLR                   READ TRADSD10                 28                                   251887
+      *                                                                                       251887
+     CLR         *IN28     DOWEQ'0'                                                           251887
+      *                                                                                       251887
+     CLR         KEY1      CHAINHISTRAD              35                                       251887
+      *                                                                                       251887
+      ** Delete records from TRADSDX1 and TRADSDX2 if no record found                         251887
+      ** in PF/HSTTRD.                                                                        251887
+      *                                                                                       251887
+     CLR         *IN35     IFEQ '1'                                                           251887
+     CLR         RECIX     OREQ '*'                                                           251887
+     CLR         KEY1      CHAINTRADSDY1             34                                       251887
+     CLR         *IN34     IFEQ '0'                                                           251887
+     CLR                   DELETTRADSDD1                                                      251887
+     CLR                   ENDIF                                                              251887
+     CLR         KEY1      CHAINTRADSDY2             34                                       251887
+     CLR         *IN34     IFEQ '0'                                                           251887
+     CLR                   DELETTRADSDD2                                                      251887
+     CLR                   ENDIF                                                              251887
+     CLR                   ENDIF                                                              251887
+      *                                                                                       251887
+     CLR                   READ TRADSD10                 28                                   251887
+     CLR                   ENDDO                                                              251887
+     CLR                   ENDIF                                                              251887
+      *                                                                                       251887
+      ** If S01401 is on and CSW003 is off, delete 2 records each from                        251887
+      ** files TRADSDX1 and TRADSDX2, if they exist.                                          251887
+      *                                                                                       251887
+     CLR         S01401    IFEQ 'Y'                                                           251887
+     CLR         CSW003    ANDEQ'Y'                                                           251887
+     CLR                   MOVE '0'       *IN28                                               251887
+     CLR                   MOVE '0'       *IN34                                               251887
+     CLR                   READ TRADSD10                 28                                   251887
+      *                                                                                       251887
+     CLR         *IN28     DOWEQ'0'                                                           251887
+      *                                                                                       251887
+     CLR         KEY1      CHAINHISTRAD              35                                       251887
+      *                                                                                       251887
+      ** Delete records from TRADSDX1 and TRADSDX2 if no record found                         251887
+      ** in PF/HSTTRD.                                                                        251887
+      *                                                                                       251887
+     CLR         *IN35     IFEQ '1'                                                           251887
+     CLR         RECIX     OREQ '*'                                                           251887
+     CLR                   MOVELTDRF      W#TDRF                                              251887
+     CLR                   MOVE 'A'       W#WHEN                                              251887
+      *                                                                                       251887
+     CLR         DY1KY     CHAINTRADSDY1             34                                       251887
+     CLR         *IN34     IFEQ '0'                                                           251887
+     CLR                   DELETTRADSDD1                                                      251887
+     CLR                   MOVE 'B'       W#WHEN                                              251887
+     CLR         DY1KY     CHAINTRADSDY1             34                                       251887
+     CLR         *IN34     IFEQ '0'                                                           251887
+     CLR                   DELETTRADSDD1                                                      251887
+     CLR                   ENDIF                                                              251887
+     CLR                   ENDIF                                                              251887
+      *                                                                                       251887
+     CLR                   MOVE 'A'       W#WHEN                                              251887
+     CLR         DY1KY     CHAINTRADSDY2             34                                       251887
+     CLR         *IN34     IFEQ '0'                                                           251887
+     CLR                   DELETTRADSDD2                                                      251887
+     CLR                   MOVE 'B'       W#WHEN                                              251887
+     CLR         DY1KY     CHAINTRADSDY2             34                                       251887
+     CLR         *IN34     IFEQ '0'                                                           251887
+     C*LR*******           DELETTRADSDD1                                               251887 254290
+     CLR                   DELETTRADSDD2                                                      254290
+     CLR                   ENDIF                                                              251887
+     CLR                   ENDIF                                                              251887
+     CLR                   ENDIF                                                              251887
+      *                                                                                       251887
+     CLR                   READ TRADSD10                 28                                   251887
+     CLR                   ENDDO                                                              251887
+     CLR                   ENDIF                                                              251887
+     C*
      CLR                   END
      C*
      C*****************************************************************
@@ -882,6 +974,7 @@
       *                                                                                       202689
       ** If both features are on, more than one record must be                                202689
       ** deleted from file TRADSDX1                                                           202689
+      ** and TRADSDX2.                                                                        251887
       *                                                                                       202689
      C           S01401    IFEQ 'Y'                        IF*1                               202689
      C           CSW003    ANDEQ'Y'                                                           202689
@@ -906,6 +999,17 @@
      C                     ENDIF                           FI*3                               202689
      C*                                                                                       202689
      C                     ENDIF                           FI*2                               202689
+     C                     MOVE 'A'       W#WHEN                                              251887
+     C           DY1KY     CHAINTRADSDY2             40                                       251887
+     C           *IN40     IFEQ '0'                                                           251887
+     C                     DELETTRADSDD2                                                      251887
+     C                     MOVE 'B'       W#WHEN                                              251887
+     C           DY1KY     CHAINTRADSDY2             40                                       251887
+     C           *IN40     IFEQ '0'                                                           251887
+     C**********           DELETTRADSDD1                                               251887 254290
+     C                     DELETTRADSDD2                                                      254290
+     C                     ENDIF                                                              251887
+     C                     ENDIF                                                              251887
      C*                                                                                       202689
      C                     ENDIF                           FI*1                               202689
      C*

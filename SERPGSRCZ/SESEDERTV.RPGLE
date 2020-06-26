@@ -21,8 +21,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD038918           Date 31May16               *
+      *  Last Amend No. 260191A            Date 22May20               *
+      *  Prev Amend No. 260191             Date 22May20               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD038918           Date 31May16               *
       *                 260331             Date 31Mar16               *
       *                 MD000091           Date 17May13               *
       *                 CRE073             Date 06Dec10               *
@@ -47,6 +49,18 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260191A- System should not allow deletion of LIVE/MATURED    *
+      *           security diary event if ALL generated position      *
+      *           settlements are still unsettled/live records.       *
+      *           Hence, system will not generate reversal position   *
+      *           settlements.                                        *
+      *  260191 - System should not allow deletion of a security diary*
+      *           event if atleast one live position exists for the   *
+      *           event. This validation is only valid if the diary   *
+      *           event being deleted is still live record. Applied   *
+      *           fix 247625.                                         *
+      *  259978 - System does not allow to do Event type "Conversions"*
+      *           in Security diary Input function.                   *
       *  MD046248 - Finastra Rebranding                               *
       *  MD038918 - Rate reset in Bank Fusion. Allow insertion of IR  *
       *             event for an FRN security with event date equal   *
@@ -363,7 +377,7 @@
      C                             OKSDED = 'N' OR OKSDET = 'N'
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Validate action code and key fields.
@@ -376,7 +390,7 @@
      C                             OKSDED = 'N' OR OKSDET = 'N'
      C                   RETURN
      C                   ENDIF
- 
+
      C                   SELECT
       *
       ** Additional validation for Insert.
@@ -398,7 +412,7 @@
       *
      C                   WHEN      DDACTN = 'E'
      C                   EXSR      SRValEnq
- 
+
      C                   ENDSL
       *
       ** No further validation if errors occurred.
@@ -436,7 +450,7 @@
       ** Return.
       *
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -470,7 +484,7 @@
      C                   Z-ADD     0             CrSCRS                                       CAS006
      C                   Z-ADD     0             CrSLQP                                       CAS006
      C                   Z-ADD     0             CrSDNN                                       CAS006
- 
+
      C                   CLEAR                   SEDEFmt
      C                   Z-ADD     0             SDED
      C                   Z-ADD     0             SDVA
@@ -493,7 +507,7 @@
      C                   Z-ADD     0             SCRS                                         CAS006
      C                   Z-ADD     0             SLQP                                         CAS006
      C                   Z-ADD     0             SDNN                                         CAS006
- 
+
      C                   CLEAR                   PSectyd
      C                   Z-ADD     0             F1NMDP
      C                   Z-ADD     0             F1SIDY
@@ -561,7 +575,7 @@
      C                   EVAL      F1PPAG = *BLANKS                                           CSD027
      C                   EVAL      F1GUAR = *BLANKS                                           CSD027
      C                   Z-ADD     0             F1WEIC
- 
+
      C                   CLEAR                   PInvtpd
      C**********         Z-ADD     0             D1SDC1                                       CSD027
      C**********         Z-ADD     0             D1SDC2                                       CSD027
@@ -576,8 +590,8 @@
      C                   Z-ADD     0             D1TNLU
      C                   Z-ADD     0             D1DCMF
      C                   Z-ADD     0             D1PRTO
- 
- 
+
+
      C                   MOVEL     'Y'           OKACTN
      C                   MOVEL     'Y'           OKSDSN
      C                   MOVEL     'Y'           OKSDED
@@ -587,7 +601,7 @@
       *
      C                   Z-ADD     0             WEvtDNo
      C                   Z-ADD     0             WEvtDat
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -597,7 +611,7 @@
       *              Interface                                        *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValFrnt     BEGSR
       *
       ** Error if action code is not I(Insert), A(Amend), D(Delete) or
@@ -664,7 +678,7 @@
       *
      C                   MOVEL     SDSN          DDSDSN
      C                   MOVEL     SDET          DDSDET
- 
+
      C                   IF        SDED = 99999
      C                   MOVE      '999999'      DDSDED
      C                   ELSE
@@ -672,11 +686,11 @@
      C                   EXSR      SrZDATE2
      C                   MOVE      PDateOut      DDSDED
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     EValFrnt      ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -684,7 +698,7 @@
       *  SRValAct - Routine to validate Action Code and Key fields    *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValAct      BEGSR
       *
       ** Error if action code is not I(Insert), A(Amend), D(Delete)
@@ -702,7 +716,7 @@
       ** Check Security Shortname and call Securities Selection.
       *
      C     '?'           SCAN      DDSDSN                                 01
- 
+
      C                   IF        CSE010 = 'Y' AND
      C                             PMODE <> '*FRONT' AND *IN01
      C                   CALL      'SE0043'
@@ -746,7 +760,7 @@
      C                   EVAL      FldNameArr(Idx) = 'DDSDSN'
      C                   EVAL      MsgIdArr(Idx) = 'SEA0444'
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Validate event date. If the event date is blank, it is an
@@ -762,16 +776,16 @@
       ** Convert event date into day number for key.
       *
      C                   IF        DDSDED <> *ALL'9'
- 
+
      C                   TESTN                   DDSDED               01
- 
+
      C                   IF        *IN01 = *OFF
      C                   MOVE      'N'           OKSDED
      C                   ADD       1             IDx
      C                   EVAL      FldNameArr(Idx) = 'DDSDED'
      C                   EVAL      MsgIdArr(Idx) = 'SEA0315'
      C                   ELSE
- 
+
      C                   EVAL      PADateIn = DDSDED
      C                   EXSR      SrZDATE1
      C                   IF        PErrorFlag = 'Y'
@@ -788,7 +802,7 @@
      C                   ELSE
      C                   Z-ADD     99999         WEvtDNo
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Validate event type. If the event type is blank, it is
@@ -824,7 +838,7 @@
      C                   EVAL      MsgIdArr(Idx) = 'SEA0567'                                  CSE065
      C                   ENDIF                                                                CSE065
      C                   ENDIF
- 
+
      C     EValAct       ENDSR
       *****************************************************************
       /EJECT
@@ -833,7 +847,7 @@
       *  SRValIns - Routine to validate Action Code 'I'               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValIns      BEGSR
       *
       ** An active Diary Events with a duplicate key must not already
@@ -846,9 +860,9 @@
      C                   EVAL      FldNameArr(Idx) = 'DDSDSN'
      C                   EVAL      MsgIdArr(Idx) = 'SEA0316'
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -856,7 +870,7 @@
       *  SRValAmd - Routine to validate Action Code 'A'               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValAmd      BEGSR
       *
       ** Diary Events must exist as live on file
@@ -868,9 +882,9 @@
      C                   EVAL      FldNameArr(Idx) = 'DDSDSN'
      C                   EVAL      MsgIdArr(Idx) = 'SEA0318'
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -878,7 +892,7 @@
       *  SRValDel - Routine to validate Action Code 'D'               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValDel      BEGSR
       *
       ** Diary Events must exist as live on file
@@ -892,6 +906,12 @@
      C                   EVAL      MsgIdArr(Idx) = 'SEA0318'
      C                   GOTO      EValDel
      C                   ENDIF
+      *                                                                                      260191A
+      ** Use temporary variables to determine if all position settlements                    260191A
+      ** are settled or not.                                                                 260191A
+      *                                                                                      260191A
+     C                   MOVE      'N'           NOTALL            1                         260191A
+     C                   MOVE      'N'           LIVREC            1                         260191A
       *
       ** If there are any live position settlements for this security
       ** event, output message to screen, and prevent deletion.
@@ -899,6 +919,7 @@
      C     SDSN          SETLL     POSETDF
      C     SDSN          READE     POSETDF                                02
      C                   DOW       NOT *IN02
+
       *                                                                                       260331
      C     SDET          IFEQ      'MP'                                                       260331
      C     SDET          OREQ      'DV'                                                       260331
@@ -910,19 +931,35 @@
       *                                                                                       260331
      C**********         IF        F3RECI= 'D' AND SDED = F3PDUD                              260331
      C**********                   AND SDET = F3PEVT                                          260331
-     C                   IF        F3RECI = 'D' AND WWPDUD = F3PDUD                           260331
-     C                             AND SDET = F3PEVT AND RECI = 'D'                           260331
+     C**********         IF        F3RECI = 'D' AND WWPDUD = F3PDUD                   260191 260191A
+     C**********                   AND SDET = F3PEVT AND RECI = 'D'                   260191 260191A
+      *                                                                                      260191A
+      ** System should not allow deletion of Live/Matured security                           260191A
+      ** diary event if generated position settlements are still                             260191A
+      ** live/unsettled.                                                                     260191A
+      *                                                                                      260191A
+     C                   IF        WWPDUD = F3PDUD AND SDET = F3PEVT                         260191A
+     C                   IF        F3RECI = 'M'                                              260191A
+     C                   EVAL      NOTALL = 'Y'                                              260191A
+     C                   ELSEIF    F3RECI = 'D'                                              260191A
+     C                   EVAL      LIVREC = 'Y'                                              260191A
+     C                   ENDIF                                                               260191A
+     C                   ENDIF                                                               260191A
+     C     SDSN          READE     POSETDF                                02                 260191A
+     C                   ENDDO                                                               260191A
+      *                                                                                      260191A
+     C                   IF        NOTALL = 'N' and LIVREC = 'Y'                             260191A
      C                   MOVE      'N'           OKSDSN
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDSDSN'
      C                   EVAL      MsgIdArr(Idx) = 'SEA0357'
-     C                   LEAVE
+     C**********         LEAVE                                                               260191A
      C                   ENDIF
-     C     SDSN          READE     POSETDF                                02
-     C                   ENDDO
- 
+     C*****SDSN*         READE     POSETDF                                02                 260191A
+     C**********         ENDDO                                                               260191A
+
      C     EValDel       ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -930,7 +967,7 @@
       *  SRValEnq - Routine to validate Action Code 'E'               *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValEnq      BEGSR
       *
       ** Diary Events must exist on file
@@ -942,9 +979,9 @@
      C                   EVAL      FldNameArr(Idx) = 'DDSDSN'
      C                   EVAL      MsgIdArr(Idx) = 'SEA0318'
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -952,7 +989,7 @@
       *  SREvtDate - Extra validation for Event Date                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SREvtDate     BEGSR
       *
       ** If Date is Backvalued, check that it does not go past the
@@ -984,11 +1021,11 @@
      C                   ELSE
      C                   EVAL      PZCcy = F1NMCY
      C                   ENDIF
- 
+
      C                   Z-ADD     WEvtDNo       PZDayNoIn
      C                   EVAL      PZLoc = *BLANKS
      C                   EXSR      SrZChkH
- 
+
      C                   IF        PZHolInd = 'H'
      C                   MOVE      'W'           OKSDED
      C                   ADD       1             WIdx
@@ -1021,10 +1058,10 @@
       *
      C                   IF        DDSDET = 'IR' AND
      C                             F1RCFQ = *BLANKS
- 
+
      C                   Z-ADD     *ZEROS        WDat
      C                   Z-ADD     1             WIx
- 
+
      C                   Z-ADD     F1CD01        WCD(1)
      C                   Z-ADD     F1CD02        WCD(2)
      C                   Z-ADD     F1CD03        WCD(3)
@@ -1049,7 +1086,7 @@
      C                   EVAL      WCR(10) = F1CR10
      C                   EVAL      WCR(11) = F1CR11
      C                   EVAL      WCR(12) = F1CR12
- 
+
      C                   DO        12            WIx
      C     WCD(WIx)      IFNE      *ZEROS
      C                   IF        BJDFIN = 'M'
@@ -1098,22 +1135,22 @@
      C                   ELSE
      C                   Z-ADD     WMYr          WMYrC
      C                   ENDIF
- 
+
      C                   IF        WIYr < 72
      C     WIYr          ADD       100           WIYrC
      C                   ELSE
      C                   Z-ADD     WIYr          WIYrC
      C                   ENDIF
- 
+
      C                   EVAL      WESC = 'N'
      C                   DOW       WIYrC <= WMYrC AND WESC = 'N'
      C                   Z-ADD     1             WIx
      C                   MOVE      *OFF          *IN34
- 
+
      C                   DO        12            WIx
      C                   IF        WDat(WIx) <> *ZEROS
      C                   MOVEL     WIYr          WDat(WIx)
- 
+
      C                   IF        WEvtDat = WDat(WIx)
      C                   IF        WCR(WIx) = 'R' OR WCR(WIx) = 'C'
      C                   IF        F1RCFQ = *BLANKS
@@ -1176,14 +1213,14 @@
      C                   ENDIF                                                              MD038918
      C                   ENDIF                                                              MD038918
                                                                                             MD038918
- 
+
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   IF        WESC = 'Y'
      C                   ITER
      C                   ENDIF
- 
+
      C                   IF        WIYr = 99
      C                   Z-ADD     0             WIYr
      C                   ADD       1             WIYrC
@@ -1191,24 +1228,24 @@
      C                   ADD       1             WIYr
      C                   ADD       1             WIYrC
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   IF        NOT *IN34
      C                   MOVE      'N'           OKSDED
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDSDED'
      C                   EVAL      MsgIdArr(Idx) = 'SEA0333'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** If Event type 'IR', validate Input and Amend modes.
       *
      C                   IF        DDSDET = 'IR'
- 
+
      C                   IF        (DDACTN = 'I' OR DDACTN = 'A')
      C                             AND WEvtDNo < BJRDNB
       *
@@ -1263,9 +1300,9 @@
       *
      C                   READP     SEDEVDF                                01
      C                   ENDDO
- 
+
      C                   EVAL      SEDEFmt = WSEDE
- 
+
      C                   ENDIF
       *
       ** If Rate change frequency is 'W', Check if date not equal to or a
@@ -1282,7 +1319,7 @@
      C                   EVAL      WFldNamArr(WIdx) = 'DDSDED'
      C                   EVAL      WMsgIdArr(WIdx) = 'SEA0336'
      C                   ENDIF
- 
+
      C     WEvtDNo       SUB       F1NCHD        Work5N
      C     Work5N        DIV       7             Work5N
      C                   MVR                     Work1N               01
@@ -1293,9 +1330,9 @@
      C                   EVAL      FldNameArr(Idx) = 'DDSDED'
      C                   EVAL      MsgIdArr(Idx) = 'SEA0337'
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   IF        WEvtDNo > F1NCHD
      C                   MOVE      'W'           OKSDED
      C                   ADD       1             WIdx
@@ -1306,14 +1343,14 @@
      C     WEvtDNo       SUB       F1NCHD        Work5N
      C     Work5N        DIV       7             Work5N
      C                   MVR                     Work1N               01
- 
+
      C                   IF        *IN01
      C                   MOVE      'N'           OKSDED
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDSDED'
      C                   EVAL      MsgIdArr(Idx) = 'SEA0337'
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
       *
@@ -1334,43 +1371,43 @@
      C     WEvtDNo       SUB       F1NCHD        Work5N
      C     Work5N        DIV       14            Work5N
      C                   MVR                     Work2N               01
- 
+
      C                   IF        *IN01
      C                   MOVE      'N'           OKSDED
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDSDED'
      C                   EVAL      MsgIdArr(Idx) = 'SEA0339'
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   IF        WEvtDNo > F1NCHD
      C                   MOVE      'W'           OKSDED
      C                   ADD       1             WIdx
      C                   EVAL      WFldNamArr(WIdx) = 'DDSDED'
      C                   EVAL      WMsgIdArr(WIdx) = 'SEA0338'
      C                   ENDIF
- 
+
      C     WEvtDNo       SUB       F1NCHD        Work5N
      C     Work5N        DIV       14            Work5N
      C                   MVR                     Work2N               01
- 
+
      C                   IF        *IN01
      C                   MOVE      'N'           OKSDED
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDSDED'
      C                   EVAL      MsgIdArr(Idx) = 'SEA0339'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** If Rate change frequency is 'M', Check if date is not the same day
       ** of the month as the Next change date.
       *
      C                   IF        F1RCFQ = 'M' AND WEvtDNo <> F1NCHD
- 
+
      C                   Z-ADD     WEvtDNo       PDateIn
      C                   EXSR      SrZDATE2
      C                   MOVE      PDateOut      WEYear
@@ -1382,7 +1419,7 @@
      C                   MOVEL     PDateOut      WEDay
      C                   MOVE      WNum4         WEMth
      C                   ENDIF
- 
+
      C                   Z-ADD     F1NCHD        PDateIn
      C                   EXSR      SrZDATE2
      C                   MOVE      PDateOut      WZYear
@@ -1399,7 +1436,7 @@
       ** Change Day.
       *
      C                   EXSR      SRNchDay
- 
+
      C                   ENDIF
      C                   ENDIF
       *
@@ -1461,9 +1498,9 @@
       *
      C                   READP     SEDEVDF                                01
      C                   ENDDO
- 
+
      C                   EVAL      SEDEFmt = WSEDE
- 
+
      C                   ENDIF
       *
       ** Event date cannot be before run date for following codes.
@@ -1472,7 +1509,7 @@
      C                             OR DDSDET = 'CV' OR DDSDET = 'BI'
      C                             OR DDSDET = 'RI' OR DDSDET = 'CR'
      C                             OR DDSDET = 'OC'
- 
+
      C                   IF        (DDACTN = 'I' OR DDACTN = 'A')
      C                             AND WEvtDNo < BJRDNB
      C                   MOVE      'N'           OKSDED
@@ -1481,9 +1518,9 @@
      C                   EVAL      MsgIdArr(Idx) = 'SEA0330'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1509,26 +1546,26 @@
      C                   ELSE
      C                   EVAL      PZCcy = F1NMCY
      C                   ENDIF
- 
+
      C                   EVAL      PZLoc = *BLANKS
      C                   EXSR      SrZChkH
       *
       ** If it wasn't a holiday, check to see if the two days are at the
       **  ends of their months.
      C                   IF        PZHolInd <> 'H'
- 
+
      C     WZMth         LOOKUP    TABMTH        TABDAY                   01
- 
+
      C     WZDay         IFNE      TABDAY
      C                   MOVE      'N'           OKSDED
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDSDED'
      C                   EVAL      MsgIdArr(Idx) = 'SEA0340'
      C                   ELSE
- 
+
      C     WEMth         LOOKUP    TABMTH        TABDAY                   01
      C                   Z-ADD     TABDAY        WEOMDay
- 
+
      C                   IF        WEMth = 2
      C     WEYear        DIV       4             Work2N
      C                   MVR                     Work1N                   01
@@ -1536,21 +1573,21 @@
      C                   ADD       1             WEOMDay
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        WEDay <> WEOMDay
      C                   MOVE      'N'           OKSDED
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDSDED'
      C                   EVAL      MsgIdArr(Idx) = 'SEA0340'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1558,7 +1595,7 @@
       *  SREvtType - Routine to further validate event type.          *
       *                                                               *
       *****************************************************************
- 
+
      C     SREvtType     BEGSR
       *
       ** Access investment type details via access object.
@@ -1658,7 +1695,8 @@
       *
       ** If entry 'CV', check for Convertible indicator.
       *
-     C                   IF        DDSDET = 'CV' AND D1CNVI <> 'Y'
+     C**********         IF        DDSDET = 'CV' AND D1CNVI <> 'Y'                            259978
+     C                   IF        DDSDET = 'CV' AND F1SCVI <> 'Y'                            259978
      C                   MOVE      'N'           OKSDET
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDSDET'
@@ -1677,9 +1715,9 @@
      C                   EVAL      FldNameArr(Idx) = 'DDSDET'                                 CSE065
      C                   EVAL      MsgIdArr(Idx) = 'SEA0560'                                  CSE065
      C                   ENDIF                                                                CSE065
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1688,15 +1726,15 @@
       *                                                               *
       *****************************************************************
      C     SRZDate1      BEGSR
- 
+
      C                   CALLB     'ZDATE1'
      C                   PARM                    PADateIn
      C                   PARM      *ZERO         PDaynoOut
      C                   PARM                    BJDFIN
      C                   PARM      *BLANK        PErrorFlag
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1704,13 +1742,13 @@
       *  SRAcsSec - Access Security Checking                          *
       *                                                               *
       *****************************************************************
- 
+
      C     SRAcsSec      BEGSR
       *
       ** If not multi-branching, check authority to only action code.
       *
      C                   IF        BJSBRC <> *BLANK
- 
+
      C                   CALL      'ZVACTU'
      C                   PARM      DDACTN        PActn
      C                   PARM                    PError
@@ -1720,7 +1758,7 @@
      C                   EVAL      FldNameArr(Idx) = 'DDACTN'
      C                   MOVEL     'SEA0304'     MsgIdArr(Idx)
      C                   ENDIF
- 
+
      C                   ELSE
       *
       ** If multi-branching, check authority to user's default branch.
@@ -1729,25 +1767,25 @@
      C                   PARM      DDACTN        PActn
      C                   PARM      PDBRN         PBrc
      C                   PARM                    PError
- 
+
      C                   IF        PError = 1
      C                   MOVE      'N'           OKACTN
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDACTN'
      C                   MOVEL     'SEA0305'     MsgIdArr(Idx)
      C                   ENDIF
- 
+
      C                   IF        PError = 2
      C                   MOVE      'N'           OKACTN
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDACTN'
      C                   MOVEL     'SEA0306'     MsgIdArr(Idx)
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1756,13 +1794,13 @@
       *                                                               *
       *****************************************************************
      C     SRZDate2      BEGSR
- 
+
      C                   CALLB     'ZDATE2'
      C                   PARM                    PDateIn
      C                   PARM                    BJDFIN
      C                   PARM      *ZERO         PDateOut
      C                   PARM      *BLANKS       PADateOut
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1772,13 +1810,13 @@
       *                                                               *
       *****************************************************************
      C     SRZChkH       BEGSR
- 
+
      C                   CALLB     'ZCHKH'
      C                   PARM                    PZDayNoIn
      C                   PARM                    PZCcy
      C                   PARM                    PZLoc
      C                   PARM      *BLANK        PZHolInd
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1789,9 +1827,9 @@
       *           initialisation.                                     *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT
@@ -1928,7 +1966,7 @@
       ** The following /COPY sets these values.
       *
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1938,7 +1976,7 @@
       ** subroutine, including a bound call to the DBERRCTL module.
       *
       /COPY ZACPYSRC,PSSR_ILE
- 
+
       *****************************************************************
       *
 **  CPY@

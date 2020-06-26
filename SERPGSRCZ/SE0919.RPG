@@ -1,3 +1,4 @@
+<<<<<<< HEAD
      H        1
       *****************************************************************
 /*STD *  RPGBASE                                                      *
@@ -30,8 +31,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 226449             Date 24Jun15               *
+      *  Last Amend No. 248698             Date 01Jun20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 226449             Date 24Jun15               *
       *                 MD034776           Date 09Jul15               *
       *                 AR1067108          Date 11Dec12               *
       *                 AR1001183A         Date 20Nov12               *
@@ -49,6 +51,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  248698 - Rounding discrepancies on some SE reports. Applied  *
+      *           fix 228682.                                         *
+      *  228682 - Recompiled due to ZCNSDZ1 changes. Applied 176594.  *      
       *  MD046248 - Finastra Rebranding                               *
       *  226449 - Recompiled over changes made in /COPY ZDYYRZ3.      *
       *         - Applied for MD034387.                               *
@@ -1827,3 +1832,1838 @@ JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
 00100000
 01000000
 10000000
+=======
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Delayed Unrealised P/L Using N-T-P.Report')   *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  SE0919 - Midas SE Delayed Unrealised Profit and Loss Using - *
+      *           Net Treasury-Prices Analysis Report.                *
+      *                                                               *
+      *  Function: This program generates a report that shows the     *
+      *   (COB)    Delayed Unrealised Profit and Loss outstanding on  *
+      *            all non-zero Nominal Positions. For each Security, *
+      *            the Current Holding is shown with its related      *
+      *            Average and Market Prices. Unrealised Profit       *
+      *            and Loss are also reported accordingly. If there   *
+      *            has been no Market Price input for a Security,     *
+      *            the Market Value is shown as zero and no           *
+      *            Unrealised Profit and Loss calculations are        *
+      *            executed. The report can be generated for either   *
+      *            Trade or Value Date Positions.                     *
+      *                                                               *
+      *  Called by: SEC0912 - Midas SE Unrealised Profit and Loss     *
+      *                       Using Net-Treasury-Prices Analysis      *
+      *                                                               *
+      *            Frequency:                                         *
+      *            - On user request during COB                       *
+      *            - Automatically at EOM COB on Value Date basis     *
+      *                                                               *
+      *  (c) Finastra International Limited 2004                      *
+      *                                                               *
+      *  Last Amend No. 248698             Date 01Jun20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 226449             Date 24Jun15               *
+      *                 MD034776           Date 09Jul15               *
+      *                 AR1067108          Date 11Dec12               *
+      *                 AR1001183A         Date 20Nov12               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CAS011             Date 16May05               *
+      *                 CSE071             Date 19Jul05               *
+      *                 CAS010             Date 09Feb05               *
+      *                 228948             Date 27Sep04               *
+      *                 229177             Date 02Sep04               *
+      *                 CAS008  *CREATE    Date 11May04               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  248698 - Rounding discrepancies on some SE reports. Applied  *
+      *           fix 228682.                                         *
+      *  228682 - Recompiled due to ZCNSDZ1 changes. Applied 176594.  *
+      *  MD046248 - Finastra Rebranding                               *
+      *  226449 - Recompiled over changes made in /COPY ZDYYRZ3.      *
+      *         - Applied for MD034387.                               *
+      *  MD034776 - Reverse AR1001183A to allow negative interest     *
+      *             rate. (Recompile)                                 *
+      *  AR1067108 - PMC1140 Component failed during Clean COB        *
+      *              Applied fix AR1001183A                           *
+      *  AR1001183A - Coupon rate was still used in computation of    *
+      *              interest instead of using the details in FRN tab *
+      *              (Reopen) (Recompile)                             *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CAS011 - EIR/AC Accounting Upgrade to MP1                    *
+      *  CSE071 - Multiple Holidays Re Securities (recompile)         *
+      *  CAS010 - IAS + PB Enhancements Upgrade to Midasplus          *
+      *  228948 - Add 'Exclude Accrued Interest in Unrealized Profit  *
+      *           or Loss'.                                           *
+      *  229177 - No RETRN command issued after processing, hence     *
+      *           program loops.                                      *
+      *  CAS008 - Delayed Hedge Assessment                            *
+      *                                                               *
+      *****************************************************************
+      *
+      ** +--------------------------------------+
+      ** ¦ F-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+      *
+     FUPLHX   IF  E           K        DISK         KINFSR *PSSR
+      ** Midas SE Unrealised P/L Using N-T-P Extract
+      *
+     FSECEO   IF  E           K        DISK         KINFSR *PSSR
+     F            SEDEVDF                           KRENAMESEDEVDO
+     F            SNDEVDF                           KRENAMESNDEVDO
+      ** Midas SE Securities Events
+      *
+     FTABSE   IF  E           K        DISK         KINFSR *PSSR
+     F            TABTB40F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETAF                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F            TABLETLF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+      ** Midas SD Securities Trading Table
+      *
+     FSECTY   IF  E           K        DISK         KINFSR *PSSR
+      ** Midas SE Securities
+      *
+     FSEDEV   IF  E           K        DISK         KINFSR *PSSR
+      ** Midas SE Security Diary Events
+      *
+     FINVTP   IF  E           K        DISK         KINFSR *PSSR
+      ** Midas SE Investment Types
+      *
+     FPRICED  IF  E           K        DISK         KINFSR *PSSR
+      ** Midas SE Prices Detail
+      *
+     FPRICM1  IF  E           K        DISK         KINFSR *PSSR
+     F            PRICEDF                           KRENAMEPRICDDF
+      *
+     FBOOKD   IF  E           K        DISK         KINFSR *PSSR
+      ** Midas SD Book Details
+      *
+     FSNDEVDL1IF  E           K        DISK         KINFSR *PSSR
+      ** Midas SE Securities
+      *
+     F***SDHEDGPDIF  E                    DISK         KINFSR *PSSR                           CAS011
+     FSEMKVDL0UF  E           K        DISK         KINFSR *PSSR A
+      ** Midas SE Market Values Using Net-Treasury-Prices
+      *
+     FSE0919P1O   E                    PRINTER      KINFDS SPOOL      UC
+      ** Midas SE Unrealised P/L Using N-T-P Ana. Report Printer File
+      *
+     FSE0919AUO   E                    PRINTER      KINFDS SPOOLU
+      ** Midas SE Unrealised P/L Using N-T-P Ana. Audit Printer File
+      *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   01  - Investment Type Control Indicator                     *
+      *   02  - Market Control Indicator                              *
+      *   03  - Currency Control Indicator                            *
+      *   04  - Book Control Indicator                                *
+      *   05  - Branch of Position Control Indicator                  *
+      *   06  - Branch of Position Control Indicator                  *
+      *   20  - Profit Centre Accounting Indicator                    *
+      *   21  - Trade/Value Date Basis Indicator                      *
+      *   22  - Security Search (CHAIN) Indicator                     *
+      *   24  - 1P Heading Indicator                                  *
+      *   25  - Combines with *IN24 to print headings only once       *
+      *   26  - Market Type = 'G'                                     *
+      *   27  - Market Type = 'P'                                     *
+      *   28  - Market Type = 'S'                                     *
+      *   29  - Printed Headings Indicator                            *
+      *   30  - UPLEXA EOF Indicator                                  *
+      *   31  - INVTPD Search (CHAIN) Indicator                       *
+      *   32  - BOOKDD Search (CHAIN) Indicator                       *
+      *   35  - Nominal Currency Decimal Places = 0                   *
+      *   36  - Nominal Currency Decimal Places = 1                   *
+      *   37  - Nominal Currency Decimal Places = 2                   *
+      *   38  - Nominal Currency Decimal Places = 3                   *
+      *   39  - Record not found on chain to SEDEVD                   *
+      *   41  - Australian Yield Traded Security                      *
+      *   42  - Multibranching Indicator                              *
+      *   51  - PRICED EOF Indicator                                  *
+      *   52  - A Price record exists for a Security                  *
+      *                                                               *
+      * 90-99 - Used in Standard Subroutines.                         *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  *INZSR - Program Initialisation Subroutine.                  *
+      *  *PSSR  - Program Exception Subroutine.                       *
+      *  SRCBP  - Control Break Processing Subroutine.                *
+      *  SRLRP  - Last Record Processing Subroutine.                  *
+      *  SRRP1  - Registers the Report Printer File via RCF.          *
+      *  SRRAU  - Registers the Audit Printer File via RCF.           *
+      *  SRAU   - Writes the Audit Report.                            *
+      *  SRCHCY - Handles change in Currency processing.              *
+      *  SRCHBR - Handles change in Branch processing.                *
+      *  SRHEAD - Prints new page headings.                           *
+      *  SRPITT - Prints Investment Type totals.                      *
+      *  SRPMKT - Prints Market totals.                               *
+      *  SRPCYT - Prints Currency totals.                             *
+      *  SRPRPT - Prints the report.                                  *
+      *  SRFCTR - Calculates a Factored Nominal.                      *
+      *                                                               *
+      *  ZBKDT  - Calculates Business Days backwards.                 *
+      *  ZACCR  - Calculates Interest Accrued.                        *
+      *  ZACCZ  - Calculates Accrued Interest between two Dates.      *
+      *  ZDATE1 - Converts Date to Days.                              *
+      *  ZDATE2 - Converts Days to Date.                              *
+      *  ZDAYS  - Calculates the No. of Days between two Dates.       *
+      *  ZDYYR  - Calculates the No. of Days in the Interest Year.    *
+      *  ZD5DYS - Calculates No. of Days in Int. Year for DVBS = 5.   *
+      *  ZEVCD  - Determines the Event Control Date.                  *
+      *  ZICDSE - Retrieves the Securities Trading ICD Record.        *
+      *  ZICD2  - Retrieves the ICD2 record.                          *
+      *  ZLCD   - Calculates Last Coupon Date.                        *
+      *  ZNCD   - Calculates Next Coupon Date.                        *
+      *  ZPRCI  - Outputs Price as Percentage Price.                  *
+      *  ZRATE  - Calculates the Effective Interest Rate.             *
+      *  ZSDESC - Formats Security Descriptions.                      *
+      *  ZSEDIT - Formats numeric fields for output.                  *
+      *  ZYCE   - Sets up Cum/Ex parameter for Australian Yields.     *
+      *  ZYLDI  - Outputs Yield as Percentage Price.                  *
+      *  ZCALCD - Calculates the Long Term CD Price from Input Yield. *
+      *  ZCNSD  - Calculates the Consideration.                       *
+      *                                                               *
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** +--------------------------------------+
+      ** ¦ E-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+      *
+     E                    CPY@    1   1 80
+      ** Copyright Statement Array
+      *
+     E                    CCF         5  3
+     E                    PCF         5  3
+      ** Control Field Arrays
+      *
+     E/COPY ZSRSRC,ZNCDZ1
+     E/COPY ZSRSRC,ZSDESCZ1
+     E/COPY ZSRSRC,ZDAYSZ1
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZHOLE
+     E/COPY ZSRSRC,ZSEDITZ1
+     E/COPY ZSRSRC,ZPOWER8Z1
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** +--------------------------------------+
+      ** ¦ I-specs                              ¦
+      ** ¦ =======                              ¦
+      ** +--------------------------------------+
+      *
+     IUPLHXDF
+     I              ERNP                            URNP
+      ** UPLHXDF Record Format
+      *
+     IINVTPDF                                                                                 CAS010
+     I              SFLG                            SFLG2                                     CAS010
+     ILDA       E DSLDA                         256
+      ** Local Data Area for Database Error Details
+      *
+      **       Defines:                     134 141 DBFILE
+      **                                    142 170 DBKEY
+      **                                    171 180 DBPGM
+      **                                    181 1830DBASE
+      *
+     IRUNDAT    E DSRUNDAT
+      ** Midas SD Run Date Data Area
+      *
+     ISPOOL       DS
+     I                                       83  92 SFILE
+     I                                    B 123 1240SFNUM
+      ** P1 Spool File Name Data Structure
+      *
+     ISPOOLU      DS
+     I                                       83  92 SFILEU
+     I                                    B 123 1240SFNUMU
+      ** AU Spool File Name Data Structure
+      *
+     I            DS
+     I                                        1  12 TABKEY
+     I                                        1   20RECT
+     I                                        3  10 ZZ008
+     I                                       11  120RCDE
+     I                                        3   8 ZZ006
+     I                                        9  11 RCCY
+     I                                       12  12 ZZ001
+      ** TABKEY Data Structure
+      *
+     ISDBANK    E DSSDBANKPD
+      ** Bank Details Data Structure
+      *
+     ISCSARD    E DSSCSARDPD
+      ** Switchable Feature Details Data Structure
+      *
+     ISDPRFC    E DSSDPRFCPD
+      ** Profit Centre Details Data Structure
+      *
+     ISDHEDG    E DSSDHEDGPD                                                                  CAS011
+      ** Hedging ICD file                                                                     CAS011
+      *                                                                                       CAS011
+     IDSFDY     E DSDSFDY
+      ** Short Access Object Data Structure
+      *
+     IDSSDY     E DSDSSDY
+      ** Long Access Object Data Structure
+      *
+     I/COPY ZSRSRC,ZNCDZ2
+     I/COPY ZSRSRC,ZHOLI
+     I/COPY ZSRSRC,ZSDESCZ2
+     I/COPY ZSRSRC,ZSEDITZ2
+     I/COPY ZSRSRC,ZYLDZ1
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *
+      ** +--------------- Start of Main Processing -------------------+
+      ** ¦                                                            ¦
+      ** ¦  *INZSR is automatically executed at program activation.   ¦
+      ** ¦                                                            ¦
+      ** +------------------------------------------------------------+
+      *
+      ** Read an Unrealised P/L Using N-T-P Extract record.
+      *
+     C           FSNDDP    IFNE 0
+     C                     READ UPLHX                    06
+      *
+     C           *IN06     DOWEQ*OFF
+      *
+     C                     MOVE URSS      APSSN
+      *
+     C           AKEY      CHAINPRICM1               07
+      *
+     C                     Z-ADD0         CNDTA   50
+     C                     Z-ADD0         CEFDT   50
+      *
+     C                     Z-ADDNDTA      ZDAYNO
+     C                     Z-ADDFSNDDP    ZNRDYS
+     C                     MOVE BJCYCD    ZCCY
+     C                     MOVE *BLANK    ZLOC
+     C                     EXSR ZFWDT
+     C                     Z-ADDZDYNBR    CNDTA
+      *
+     C                     Z-ADDEFDT      ZDAYNO
+     C                     Z-ADDFSNDDP    ZNRDYS
+     C                     MOVE BJCYCD    ZCCY
+     C                     MOVE *BLANK    ZLOC
+     C                     EXSR ZFWDT
+     C                     Z-ADDZDYNBR    CEFDT
+      *
+     C           NDTA      IFLT LCD
+     C           NDTA      ANDEQPVDT
+     C           BJRDNB    ANDEQLCD
+     C           *IN07     ANDEQ'0'
+      *
+     C           CNDTA     OREQ BJRDNB
+     C           PVDT      ANDLENDTA
+      *
+     C           EFDT      ORLT LCD
+     C           EFDT      ANDEQPVDT
+     C           BJRDNB    ANDEQLCD
+     C           NDTA      ANDEQ0
+     C           *IN07     ANDEQ'0'
+      *
+     C           CEFDT     OREQ BJRDNB
+     C           NDTA      ANDEQ0
+     C                     EXSR SRCBP
+      *
+      ** Calculate the date to which discounts have been amortised so
+      ** that SR/ZPRCI can use the correct date in converting market
+      ** prices.
+      *
+     C           ACLD      IFEQ 'Y'
+     C                     Z-ADDEFDT      ACDT    50
+     C                     ELSE
+     C           EFDT      ADD  1         ACDT    50
+     C                     ENDIF
+      *
+      ** Increment the Rec. Count and retrieve the Sec. File Record.
+      *
+     C                     ADD  1         INCNT   50
+     C           URSS      CHAINSECTY                22
+     C                     EXSR ZNCD
+      *
+     C                     Z-ADD0         DLDT
+     C           LPRU      IFGT EFDT
+     C           NDTA      ANDEQ0
+     C                     Z-ADDEFDT      DLDT
+     C                     ENDIF
+      *
+     C           LPRU      IFGT NDTA
+     C           NDTA      ANDNE0
+     C                     Z-ADDNDTA      DLDT
+     C                     ENDIF
+      *
+     C           DLDT      IFNE 0
+      *
+     C           KDLYPR    SETLLSNDEVDL1             23
+     C           URSS      READESNDEVDL1                 23
+      *
+     C           *IN23     DOWEQ'0'
+     C                     Z-ADDSNPR      MKPR
+     C                     Z-ADDSNPN      MKPN
+     C           URSS      READESNDEVDL1                 23
+     C           DLDT      IFNE SNDT
+     C                     MOVE '1'       *IN23
+     C                     ENDIF
+     C                     ENDDO
+      *
+     C                     ENDIF
+      *
+      ** Set the Australian Yield Indicator.
+      *
+     C           STBS      IFEQ 'Y'
+     C           SYBS      ANDEQ'AU'
+     C                     MOVE *ON       *IN41
+     C                     ELSE
+     C                     MOVE *OFF      *IN41
+     C                     ENDIF
+      *
+      ** Print the report if necessary.
+      *
+     C           PENT      IFEQ 'ALL'
+     C           PENT      OREQ URBA
+     C           *IN42     OREQ *OFF
+     C                     EXSR SRPRPT
+     C                     ELSE
+     C                     LEAVE
+     C                     ENDIF
+      *
+     C                     ENDIF
+     C                     READ UPLHX                    06
+      *
+     C                     ENDDO
+      *
+     C                     MOVE *ON       *INLR
+      *
+     C                     EXSR SRLRP
+     C                     ENDIF
+     C                     RETRN                                                              229177
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPRPT - Prints the report.                                  *
+      *                                                               *
+      *****************************************************************
+     C           SRPRPT    BEGSR
+      *
+      ** Set the Printed Headings Indicator.
+      *
+     C           *IN24     IFEQ *OFF
+     C                     MOVE *ON       *IN25
+     C                     ELSE
+     C           *IN25     IFEQ *ON
+     C                     MOVE *OFF      *IN25
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Investment Type Totals
+      ** ======================
+      *
+     C           *IN01     IFEQ *ON
+     C           *IN24     ANDEQ*ON
+     C                     EXSR SRPITT
+     C                     ENDIF
+      *
+      ** Market Totals
+      ** =============
+      *
+     C           *IN02     IFEQ *ON
+     C           *IN24     ANDEQ*ON
+     C                     EXSR SRPMKT
+     C                     ENDIF
+      *
+      ** Currency Totals
+      ** ===============
+      *
+     C           *IN03     IFEQ *ON
+     C           *IN24     ANDEQ*ON
+     C                     EXSR SRPCYT
+     C                     ENDIF
+      *
+     C           *IN04     IFEQ *ON
+     C                     MOVE URBK      @URBK   2
+     C                     ENDIF
+      *
+     C           *IN05     IFEQ *ON
+     C                     MOVE URBA      @URBA   3
+     C                     ENDIF
+      *
+      ** Access Book Code and Profit Centre Details if CAC005 is
+      ** enabled.
+      *
+     C           CAC005    IFEQ 'Y'
+     C           *IN04     ANDEQ*ON
+      *
+     C                     CALL 'AOBKPCR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*USER  ' POPTN
+     C                     PARM           PBKCD   2
+     C                     PARM           PPRFC   4
+     C                     PARM URBK      PPSBK   2
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           PRTCD     ANDNE'   *NRF'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBKPCPD'DBFILE
+     C                     MOVELPPSBK     DBKEY
+     C                     Z-ADD6         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           PRTCD     IFEQ *BLANKS
+      *
+     C                     MOVE PBKCD     @URBK
+     C                     MOVE PPRFC     PRFC    4
+      *
+     C                     CALL 'AOPRFCR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*KEY   ' POPTN
+     C                     PARM PRFC      PPCCD   4
+     C           SDPRFC    PARM SDPRFC    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           PRTCD     ANDNE'*NRF'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDPRFCPD'DBFILE
+     C                     MOVELPPCCD     DBKEY
+     C                     Z-ADD7         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVELDSPCDS    PRFN
+     C                     ELSE
+     C                     MOVE *BLANKS   PRFN
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     MOVE *BLANKS   PRFC
+     C                     MOVE *BLANKS   PRFN
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Retrieve new information.
+      *
+     C           *IN01     IFEQ *ON
+     C           ITKEY     CHAININVTPDF              31
+     C                     ENDIF
+      *
+      ** Set the proper Market Type indicator.
+      *
+     C           *IN02     IFEQ *ON
+     C                     MOVE *OFF      *IN26
+     C                     MOVE *OFF      *IN27
+     C                     MOVE *OFF      *IN28
+     C                     SELEC
+     C           URMK      WHEQ 'G'
+     C                     MOVE *ON       *IN26
+     C           URMK      WHEQ 'P'
+     C                     MOVE *ON       *IN27
+     C           URMK      WHEQ 'S'
+     C                     MOVE *ON       *IN28
+     C                     ENDSL
+     C                     ENDIF
+      *
+      ** Is there a change in Currency?
+      *
+     C           *IN03     IFEQ *ON
+     C                     EXSR SRCHCY
+     C                     ENDIF
+      *
+     C           *IN04     IFEQ *ON
+     C           @URBK     CHAINBOOKDDF              32
+     C           *IN32     IFEQ *OFF
+     C                     MOVE URBK      URBK1   2
+     C                     ENDIF
+     C                     ENDIF
+      *
+      ** Is there a change in Branch?
+      *
+     C           *IN05     IFEQ *ON
+     C                     EXSR SRCHBR
+     C                     ENDIF
+      *
+      ** Print new page headings if necessary.
+      *
+     C           *IN24     IFEQ *OFF
+     C           *IN03     OREQ *ON
+     C           *IN04     OREQ *ON
+     C           *IN05     OREQ *ON
+     C                     EXSR SRHEAD
+     C                     ENDIF
+      *
+      ** Print an intermediate heading if necessary.
+      *
+     C           *IN01     IFEQ *ON
+     C           *IN29     ANDEQ*OFF
+     C           *IN02     OREQ *ON
+     C           *IN29     ANDEQ*OFF
+      *
+     C           LINCNT    IFGE 55
+      *
+     C           *IN04     IFEQ *OFF
+     C                     MOVE URBK1     URBK
+     C                     ENDIF
+     C                     EXSR SRHEAD
+      *
+     C                     ELSE
+     C                     WRITEHEAD2                  10
+     C                     ADD  3         LINCNT  20
+      *
+     C           CAC005    IFEQ 'Y'
+     C                     ADD  1         LINCNT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Get the Report Name from SR/ZSDESC.
+      *
+     C                     MOVE SRPN      ZSRPN
+     C                     MOVE RSFD      ZRSFD
+     C                     EXSR ZSDESC
+     C                     MOVE ZRNME     SECNM  41
+     C                     MOVE SESN      SECSN
+      *
+     C                     MOVE *BLANKS   REVDT
+     C                     Z-ADDPVDT      ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    REVDT
+      *
+     C           CAS002    IFEQ 'Y'
+      *
+     C           KSEMKV    CHAINSEMKVDL0             88
+      *
+     C           *IN88     IFEQ *OFF
+     C                     Z-ADDSEURPL    SEPUPL
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Set decimal places to the Nominal Decimal Places.
+      *
+     C                     MOVE NMDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+      *
+      ** Nominal Position
+      ** ================
+      *
+     C                     Z-ADDURNP      ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    NPOUT
+      *
+     C           CAS002    IFEQ 'Y'
+     C                     Z-ADDURNP      SENAMT
+     C                     ENDIF
+      *
+      ** For Asset-Backed Securities, multiply the Nominal by the
+      ** Latest Current Factor. For ease of reading and to reduce
+      ** IF statements, default the factor to '1' and use a work
+      ** Nominal field (FURNP) for the Value calculations.
+      *
+     C                     EXSR SRFCTR
+      *
+      ** Formatting of Average Price moved to accommodate Yield calcs.
+      *
+      ** Book Cost
+      ** =========
+      *
+     C                     Z-ADD*ZEROS    BKCT   290
+     C                     Z-ADD*ZEROS    BKCT0  290
+     C                     Z-ADD*ZEROS    BKCT1  291
+     C                     Z-ADD*ZEROS    BKCT2  292
+     C                     Z-ADD*ZEROS    BKCT3  293
+     C                     MOVE *OFF      *IN35
+     C                     MOVE *OFF      *IN36
+     C                     MOVE *OFF      *IN37
+     C                     MOVE *OFF      *IN38
+     C           35        ADD  CDP       J       20
+     C                     MOVE *ON       *IN,J
+     C                     Z-ADDCDP       NCDP    10
+      *
+      ** Multiply by the Factored Nominal.
+      *
+     C                     SELEC
+     C           *IN35     WHEQ *ON
+     C           FURNP     MULT URAP      BKCT0
+     C           *IN36     WHEQ *ON
+     C           FURNP     MULT URAP      BKCT1
+     C           *IN37     WHEQ *ON
+     C           FURNP     MULT URAP      BKCT2
+     C           *IN38     WHEQ *ON
+     C           FURNP     MULT URAP      BKCT3
+     C                     ENDSL
+      *
+      ** If Price Basis = 'P', divide it by 100. We also need to apply
+      ** half adjustment so that figures for P/L are consistent with
+      ** other programs such as SE0925.
+      *
+     C           SPBS      IFEQ 'P'
+     C                     SELEC
+     C           *IN35     WHEQ *ON
+     C                     DIV  100       BKCT0     H
+     C           *IN36     WHEQ *ON
+     C                     DIV  100       BKCT1     H
+     C           *IN37     WHEQ *ON
+     C                     DIV  100       BKCT2     H
+     C           *IN38     WHEQ *ON
+     C                     DIV  100       BKCT3     H
+     C                     ENDSL
+     C                     ENDIF
+      *
+     C                     SELEC
+     C           *IN35     WHEQ *ON
+     C                     MOVE BKCT0     BKCT
+     C           *IN36     WHEQ *ON
+     C                     MOVE BKCT1     BKCT
+     C           *IN37     WHEQ *ON
+     C                     MOVE BKCT2     BKCT
+     C           *IN38     WHEQ *ON
+     C                     MOVE BKCT3     BKCT
+     C                     ENDSL
+      *
+      ** Allow for Nominal Decimal Places.
+      *
+     C           5         SUB  NMDP      DC      10
+     C           BKCT      MULT POWER8,DC BKCT
+      *
+     C                     MOVE 'J'       ZECODE
+     C                     Z-ADDCDP       ZDECS
+     C                     Z-ADDBKCT      ZFLD15
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    BKOUT
+      *
+     C           CAS002    IFEQ 'Y'
+     C                     Z-ADDBKCT      SEBKCT
+     C                     ENDIF
+      *
+      ** Market Price
+      ** ============
+      *
+      ** If Market Price has been calculated in SE0916, use it.
+      *
+     C           ADMP      IFNE *ZERO
+     C                     Z-ADDADMP      ZPRCOT
+     C                     ELSE
+      *
+      ** If Market Price equals zero, CHAIN to PRICED if a Price
+      ** exists.
+      *
+     C           MKPN      IFEQ *ZEROS
+      *
+     C                     MOVE *OFF      *IN52
+     C                     MOVE SESN      PSSN
+     C                     MOVE 'V '      PPRT
+     C                     Z-ADDEFDT      PVDT
+      *
+     C           PKEY      SETGTPRICED
+     C                     READPPRICED                   51
+      *
+     C           *IN51     IFEQ *OFF
+     C           PSSN      ANDEQSESN
+     C           PPRT      ANDEQ'V '
+     C           PPRC      ANDEQ*ZERO
+     C                     MOVE *ON       *IN52
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           MKPN      IFNE *ZEROS
+     C           MKPN      OREQ *ZEROS
+     C           *IN52     ANDEQ*ON
+     C                     Z-ADDMKPN      ZPRCIN
+      *
+     C                     Z-ADDACDT      ZFDATE
+     C                     Z-ADDACDT      ZECD
+     C                     EXSR ZLCD
+     C                     Z-ADDZZLCD     LCOUP   50
+      *
+      ** Set up Australian Yield parameters.
+      *
+     C           *IN41     IFEQ *ON
+     C           URNP      ANDNE*ZERO
+     C                     Z-ADDLCOUP     ZDCSDT
+     C                     Z-ADDACDT      ZDCEDT
+     C                     Z-ADDURNP      ZAMT
+     C                     Z-ADDCDP       ZCDP
+     C                     EXSR ZACCZ
+     C           ZDCINT    DIV  URNP      WRKPI
+     C                     Z-ADDACDT      WRKD    50
+     C                     EXSR ZYCE
+      *
+      ** If Ex-Coupon, then Purchased Interest is the remaining
+      ** negative interest until the Next Coupon Date.
+      *
+     C           SCUMEX    IFEQ 'X'
+     C                     Z-ADDLCOUP     ZDCSDT
+     C                     Z-ADDNCD       ZDCEDT
+     C                     EXSR ZACCZ
+     C           ZDCINT    DIV  URNP      WKWPI  159
+     C           WRKPI     SUB  WKWPI     WRKPI
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     Z-ADD*ZERO     WRKPI
+     C                     MOVE 'C'       SCUMEX
+     C                     ENDIF
+      *
+     C                     Z-ADDURNP      ZNOML
+      *
+     C                     EXSR ZPRCI
+      *
+     C                     ELSE
+     C                     Z-ADD*ZEROS    ZPRCOT
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C           CAS002    IFEQ 'Y'
+      *
+     C                     MOVE *BLANKS   ZFLD15
+      *
+     C           PRTYPE    IFEQ 'Y'
+     C           STBS      ANDEQ'Y'
+     C                     MOVE MKPN      ZFLD15
+     C                     ELSE
+     C                     MOVE ZPRCOT    ZFLD15
+     C                     ENDIF
+      *
+     C           ZFLD15    DIV  100000000 SEMKTP
+      *
+     C                     ENDIF
+      *
+     C                     MOVE *BLANKS   ZFLD15
+      *
+      ** For yield-based instruments, the user may request percentage
+      ** or yield.
+      *
+      ** If yields were requested and the Security is yield-based,
+      ** simply print the Market Yield Rate from the Security.
+      *
+     C           PRTYPE    IFEQ 'Y'
+     C           STBS      ANDEQ'Y'
+     C                     MOVE MKPN      ZFLD15
+     C                     ELSE
+     C                     MOVE ZPRCOT    ZFLD15
+     C                     ENDIF
+      *
+     C                     MOVE 8         ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    MPOUT
+      *
+      ** Market Value
+      ** ============
+      *
+     C           ZPRCOT    IFNE *ZEROS
+      *
+     C                     Z-ADD*ZEROS    MKVL   290
+     C                     Z-ADD*ZEROS    MKVL0  290
+     C                     Z-ADD*ZEROS    MKVL1  291
+     C                     Z-ADD*ZEROS    MKVL2  292
+     C                     Z-ADD*ZEROS    MKVL3  293
+      *
+      ** Multiply by the Factored Nominal.
+      *
+     C                     SELEC
+     C           *IN35     WHEQ *ON
+     C           FURNP     MULT ZPRCOT    MKVL0
+     C           *IN36     WHEQ *ON
+     C           FURNP     MULT ZPRCOT    MKVL1
+     C           *IN37     WHEQ *ON
+     C           FURNP     MULT ZPRCOT    MKVL2
+     C           *IN38     WHEQ *ON
+     C           FURNP     MULT ZPRCOT    MKVL3
+     C                     ENDSL
+      *
+      ** If Price Basis = 'P', divide it by 100.
+      *
+     C           SPBS      IFEQ 'P'
+     C                     SELEC
+     C           *IN35     WHEQ *ON
+     C                     DIV  100       MKVL0     H
+     C           *IN36     WHEQ *ON
+     C                     DIV  100       MKVL1     H
+     C           *IN37     WHEQ *ON
+     C                     DIV  100       MKVL2     H
+     C           *IN38     WHEQ *ON
+     C                     DIV  100       MKVL3     H
+     C                     ENDSL
+     C                     ENDIF
+      *
+     C                     SELEC
+     C           *IN35     WHEQ *ON
+     C                     MOVE MKVL0     MKVL
+     C           *IN36     WHEQ *ON
+     C                     MOVE MKVL1     MKVL
+     C           *IN37     WHEQ *ON
+     C                     MOVE MKVL2     MKVL
+     C           *IN38     WHEQ *ON
+     C                     MOVE MKVL3     MKVL
+     C                     ENDSL
+      *
+      ** Allow for Nominal Decimal Places.
+      *
+     C           5         SUB  NMDP      DC      10
+     C           MKVL      MULT POWER8,DC MKVL
+      *
+     C                     ELSE
+     C                     Z-ADD*ZEROS    MKVL
+     C                     ENDIF
+      *
+     C                     Z-ADDMKVL      ZFLD15
+     C                     MOVE CDP       ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    MKOUT
+      *
+     C           CAS002    IFEQ 'Y'
+     C                     Z-ADDMKVL      SEMVAL
+     C                     ENDIF
+      *
+      ** Format the Book Price (moved here to accommodate Yield calcs).
+      *
+     C                     MOVE *BLANKS   ZFLD15
+      *
+      ** For yield-based instruments, the user may request percentage
+      ** or yield.
+      *
+      ** If yields were requested and the Security is yield-based,
+      ** reformat the Book Price as a Yield Rate.
+      *
+     C           PRTYPE    IFEQ 'Y'
+     C           STBS      ANDEQ'Y'
+     C                     Z-ADDURAP      ZPRICE
+     C                     MOVE PRDT      ZFDATE
+     C                     Z-ADDPRDT      ZECD
+     C                     EXSR ZLCD
+     C                     Z-ADDZZLCD     LCOUP   50
+      *
+      ** Set Australian Yield parameters.
+      *
+     C           *IN41     IFEQ *ON
+     C           URNP      ANDNE*ZERO
+     C                     Z-ADDLCOUP     ZDCSDT
+     C                     Z-ADDPRDT      ZDCEDT
+     C                     Z-ADDURNP      ZAMT
+     C                     EXSR ZACCZ
+     C           ZDCINT    DIV  URNP      WRKPI
+     C                     Z-ADDPRDT      WRKD    50
+     C                     EXSR ZYCE
+      *
+      ** If Ex-Coupon, then Purchased Interest is the remaining
+      ** negative interest until the Next Coupon Date.
+      *
+     C           SCUMEX    IFEQ 'X'
+     C                     Z-ADDLCOUP     ZDCSDT
+     C                     Z-ADDNCD       ZDCEDT
+     C                     EXSR ZACCZ
+     C           ZDCINT    DIV  URNP      WKWPI  159
+     C           WRKPI     SUB  WKWPI     WRKPI
+     C                     ENDIF
+      *
+     C                     ELSE
+     C                     Z-ADD*ZERO     WRKPI
+     C                     MOVE 'C'       SCUMEX
+     C                     ENDIF
+     C                     Z-ADDURNP      ZNOML
+      *
+     C                     EXSR ZPRCO
+     C                     Z-ADDZPRCOT    @ZFLD  158
+     C                     Z-ADD1         WRND   103
+     C                     MULT @ZFLD     WRND      H
+     C                     Z-ADDWRND      @ZFLD
+     C                     MOVE @ZFLD     ZFLD15
+      *
+     C                     ELSE
+      *
+      ** Otherwise, use the Book Price from the Extract File.
+      *
+     C                     MOVE URAP      ZFLD15
+     C                     ENDIF
+      *
+     C                     Z-ADD8         ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    APOUT
+      *
+      ** Accrued Interest
+      ** ================
+      *
+     C           PTYPE     IFEQ 'V'
+     C                     Z-ADDIARC      ZFLD15
+     C                     ELSE
+     C                     Z-ADD0         ZFLD15
+     C                     ENDIF
+      *
+     C                     MOVE CDP       ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    AIOUT
+      *
+      ** Unrealized Profit/Loss
+      ** ======================
+      *
+      ** Show the Unrealised P/L if the price went down to zero.
+      *
+     C           MKVL      IFNE *ZERO
+     C           MKVL      OREQ *ZERO
+     C           *IN52     ANDEQ*ON
+     C           MKVL      SUB  BKCT      URPL   150
+      *
+     C           PTYPE     IFEQ 'V'
+     C           URPL      ANDNE0
+     C           FSEXRL    ANDEQ'Y'                                                           228948
+     C                     ADD  IARC      URPL
+     C                     ENDIF
+      *
+     C                     Z-ADDURPL      ZFLD15
+     C                     MOVE CDP       ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    PLOUT
+      *
+     C                     ADD  URPL      L1TOT  150
+      *
+     C                     ELSE
+     C                     MOVE *BLANKS   PLOUT
+     C                     MOVE '***'     PLOUT
+     C                     ENDIF
+      *
+     C           CAS002    IFEQ 'Y'
+      *
+     C                     MOVE *BLANKS   ZFLD15
+      *
+     C           PRTYPE    IFEQ 'Y'
+     C           STBS      ANDEQ'Y'
+     C                     MOVE @ZFLD     ZFLD15
+     C                     ELSE
+     C                     MOVE URAP      ZFLD15
+     C                     ENDIF
+      *
+     C           ZFLD15    DIV  100000000 SEAVPR
+      *
+     C           MKVL      IFNE *ZERO
+     C           MKVL      OREQ *ZERO
+     C           *IN52     ANDEQ*ON
+     C                     Z-ADDURPL      SEURPL
+     C                     ELSE
+     C                     Z-ADD*ZERO     SEURPL
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Should we print headings?
+      *
+     C           LINCNT    IFGE 55
+     C           *IN04     IFEQ *OFF
+     C                     MOVE URBK1     URBK
+     C                     ENDIF
+     C                     EXSR SRHEAD
+     C                     ENDIF
+      *
+      ** Write a Detail Line to the report.
+      *
+     C                     WRITEDETAIL                 10
+      *
+     C           CAS002    IFEQ 'Y'
+      *
+     C           *IN88     IFEQ *OFF
+     C                     Z-ADDSEURPL    SETUPL
+     C                     UPDATSEMKVDD0
+     C                     ELSE
+     C                     MOVE SESN      SESESN
+     C                     MOVE @URBA     SEBRCA
+     C                     MOVE @URBK     SEBOKC
+     C                     MOVE URMK      SEMKTI
+     C                     MOVE PTYPE     SEBHTV
+     C                     MOVE RCCY      SECCY
+     C                     MOVE INVT      SESITP
+     C                     Z-ADD*ZEROS    SEPUPL
+     C                     Z-ADDSEURPL    SETUPL
+     C                     Z-ADD*ZEROS    SEYUPL
+     C                     Z-ADDHGID      SEHGID
+     C                     Z-ADDEFDT      SEEFFD
+     C                     Z-ADDNDTA      SENDTA
+     C                     MOVE DTTP      SEDTTP
+     C                     WRITESEMKVDD0
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ADD  2         LINCNT
+      *
+      ** Reset the Printed Headings Indicator.
+      *
+     C                     MOVE *OFF      *IN29
+     C           *IN25     IFEQ *ON
+     C                     MOVE *ON       *IN24
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPITT - Prints the Investment Type Totals.                  *
+      *                                                               *
+      *****************************************************************
+     C           SRPITT    BEGSR
+      *
+     C                     ADD  L1TOT     L2TOT  150
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE L1TOT     ZFLD15
+     C                     MOVE CDP       ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    L1OUT  21
+      *
+     C           LINCNT    IFGE 53
+     C           *IN04     IFEQ *OFF
+     C                     MOVE URBK1     URBK
+     C                     ENDIF
+     C                     EXSR SRHEAD
+     C                     ENDIF
+      *
+     C                     WRITEL1LIN                  10
+     C                     ADD  2         LINCNT
+     C                     Z-ADD*ZERO     L1TOT
+      *
+      ** Reset the Printed Headings Indicator.
+      *
+     C                     MOVE *OFF      *IN29
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPMKT - Prints the Market Totals.                           *
+      *                                                               *
+      *****************************************************************
+     C           SRPMKT    BEGSR
+      *
+     C                     ADD  L2TOT     L3TOT  150
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE L2TOT     ZFLD15
+     C                     MOVE CDP       ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    L2OUT  21
+      *
+      ** Should we print headings?
+      *
+     C           LINCNT    IFGE 55
+     C                     EXSR SRHEAD
+     C                     ENDIF
+      *
+     C                     WRITEL2LIN                  10
+     C                     ADD  2         LINCNT
+     C                     Z-ADD*ZERO     L2TOT
+      *
+      ** Reset the Printed Headings Indicator.
+      *
+     C                     MOVE *OFF      *IN29
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRPCYT - Prints the Currency Totals.                         *
+      *                                                               *
+      *****************************************************************
+     C           SRPCYT    BEGSR
+      *
+     C                     MOVE *BLANKS   ZFLD15
+     C                     MOVE L3TOT     ZFLD15
+     C                     MOVE CDP       ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    L3OUT  21
+      *
+      ** Should we print headings?
+      *
+     C           LINCNT    IFGE 55
+     C           *IN04     IFEQ *OFF
+     C                     MOVE URBK1     URBK
+     C                     ENDIF
+     C                     EXSR SRHEAD
+     C                     ENDIF
+      *
+     C                     WRITEL3LIN                  10
+     C                     ADD  2         LINCNT
+     C                     Z-ADD*ZERO     L3TOT
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCHCY - Handles change in Currency processing.              *
+      *                                                               *
+      *****************************************************************
+     C           SRCHCY    BEGSR
+      *
+     C                     MOVE *BLANK    ZZ006
+     C                     MOVE '20'      RECT
+     C                     MOVE 1         ZZ001
+     C                     MOVE URCY      RCCY
+      *
+     C           TABKEY    CHAINTABTG10F             99
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'TABLE'   DBFILE
+     C                     MOVELTABKEY    DBKEY
+     C                     Z-ADD8         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCHBR - Handles change in Branch processing.                *
+      *                                                               *
+      *****************************************************************
+     C           SRCHBR    BEGSR
+      *
+     C           *IN24     IFEQ *ON
+     C                     WRITETRAIL
+     C                     CLOSESE0919P1
+     C                     ENDIF
+      *
+     C                     OPEN SE0919P1
+      *
+      ** Register the Report Printer File via RCF.
+      *
+     C                     EXSR SRRP1
+      *
+     C                     MOVEL'10      'ZTABKY 12
+     C                     MOVE URBA      ZTABKY
+     C           ZTABKY    CHAINTABLETRF             99
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'TABLE'   DBFILE
+     C                     MOVELZTABKY    DBKEY
+     C                     Z-ADD9         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRFCTR - Calculates a Factored Nominal. If Asset-Backed      *
+      *           Security, use the Latest Current Factor.            *
+      *           Otherwise, default the Factor to '1'.               *
+      *                                                               *
+      *  INPUT  - URNP  (15,0) Nominal (from UPLEXD)                  *
+      *         - PROT  (1A)   Processing Type (from INVTPD)          *
+      *         - CFCT  (10,9) Current Factor (from SECTYD)           *
+      *         - SDCP  (10,9) Current Factor (from SEDEVD)           *
+      *                                                               *
+      *  OUTPUT - FURNP (19,4) Factored Nominal                       *
+      *                                                               *
+      *****************************************************************
+     C           SRFCTR    BEGSR
+      *
+      ** Define and initialize the Output Factored Nominal.
+      *
+     C                     Z-ADDURNP      FURNP  194
+      *
+      ** If Asset-Backed Security, execute Current Factor processing.
+      *
+     C           PROT      IFEQ '8'
+      *
+      ** Look for the Latest Current Factor change before the Run
+      ** Date on the Security Diary Events File.
+      *
+     C                     MOVE SESN      SDSN
+     C                     MOVE 'MP'      SDET
+     C                     Z-ADDEFDT      SDED
+      *
+      ** SECEO is in REVERSE DATE order. To get the Latest Current
+      ** Factor, we must SETLL and read forwards.
+      *
+     C           KZSDDO    SETLLSEDEVDO
+     C                     READ SEDEVDO                  39
+      *
+      ** If a Factor Change is found, use the Current Factor (MP) as
+      ** the Nominal multiplier. Otherwise, use the Current Factor
+      ** from the Security File.
+      *
+     C           *IN39     IFEQ *OFF
+     C           SDSN      ANDEQSESN
+     C           SDET      ANDEQ'MP'
+     C                     MULT SDCP      FURNP
+     C                     ELSE
+     C                     MULT CFCT      FURNP
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRHEAD - Prints new page headings.                           *
+      *                                                               *
+      *****************************************************************
+     C           SRHEAD    BEGSR
+      *
+     C                     WRITEHEAD1                  10
+     C                     WRITEHEAD2                  10
+     C                     WRITEHEAD3                  10
+     C                     Z-ADD16        LINCNT
+     C                     MOVE *ON       *IN29
+      *
+     C           CAC005    IFEQ 'Y'
+     C                     ADD  1         LINCNT
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRRP1 - Registers the Report Printer File via RCF.           *
+      *                                                               *
+      *****************************************************************
+     C           SRRP1     BEGSR
+      *
+      ** Make sure that the Report Spool File is recorded by RCF.
+      *
+     C                     Z-ADDSFNUM     ZSNUM   60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ    5
+     C                     PARM URBA      SENTY   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM           ZSERR   1
+      *
+      ** Return to the calling program if an error occurrs during
+      ** ZSFILE processing.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRRAU - Registers the Audit Printer File via RCF.            *
+      *                                                               *
+      *****************************************************************
+     C           SRRAU     BEGSR
+      *
+      ** Make sure that the Audit Spool File is recorded by RCF.
+      *
+     C                     Z-ADDSFNUMU    ZSNUMU  60
+      *
+     C                     CALL 'ZSFILE'
+     C                     PARM           PSEQ
+     C                     PARM *BLANKS   SENTY
+     C                     PARM           SFILEU
+     C                     PARM           ZSNUMU
+     C                     PARM *BLANK    ZSERR
+      *
+      ** Return to the calling program if an error occurrs during
+      ** ZSFILE processing.
+      *
+     C           ZSERR     IFEQ 'Y'
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+     C                     RETRN
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRAU - Writes the Audit Report.                              *
+      *                                                               *
+      *****************************************************************
+     C           SRAU      BEGSR
+      *
+      ** Write the Report Header Record Format.
+      *
+     C                     WRITEHEADER
+      *
+      ** If there is a DB exception, write the DB Error Information.
+      *
+     C           *INU7     IFEQ *ON
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ** If no records were read, write the "No Details" message.
+      ** Otherwise, write the Control Record Format.
+      *
+     C           INCNT     IFEQ *ZERO
+     C                     WRITENODTLS
+     C                     ELSE
+     C                     WRITECONTROL
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRLRP - Last Record Processing Subroutine.                   *
+      *                                                               *
+      *****************************************************************
+     C           SRLRP     BEGSR
+      *
+      ** Print totals and generate the Audit Report.
+      *
+     C                     EXSR SRPITT
+     C                     EXSR SRPMKT
+     C                     EXSR SRPCYT
+      *
+     C                     EXSR SRAU
+      *
+     C           *IN24     IFEQ *ON
+     C                     WRITETRAIL
+     C                     ENDIF
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  SRCBP - Control Break Processing Subroutine.                 *
+      *                                                               *
+      *****************************************************************
+     C           SRCBP     BEGSR
+      *
+      ** Set the current Control Field Array.
+      *
+     C                     MOVEA*BLANKS   CCF
+     C                     MOVE URBA      CCF,5
+     C                     MOVE URBK      CCF,4
+     C                     MOVE URCY      CCF,3
+     C                     MOVE URMK      CCF,2
+     C                     MOVE URIT      CCF,1
+      *
+      ** Reset the relevant indicators.
+      *
+     C                     MOVE *OFF      *IN01
+     C                     MOVE *OFF      *IN02
+     C                     MOVE *OFF      *IN03
+     C                     MOVE *OFF      *IN04
+     C                     MOVE *OFF      *IN05
+      *
+      ** If the current and previous value of a Control Field are not
+      ** equal, switch on all indicators from the one associated with
+      ** this Control Field down to the first indicator.
+      *
+     C                     Z-ADD5         WX      10
+     C           WX        DOWGE1
+     C           CCF,WX    IFNE PCF,WX
+     C                     LEAVE
+     C                     ENDIF
+     C                     SUB  1         WX
+     C                     ENDDO
+      *
+     C           WX        DOWGE1
+     C                     MOVE *ON       *IN,WX
+     C                     SUB  1         WX
+     C                     ENDDO
+      *
+      ** Set the previous Control Field Array.
+      *
+     C                     MOVEA*BLANKS   PCF
+     C                     MOVE URBA      PCF,5
+     C                     MOVE URBK      PCF,4
+     C                     MOVE URCY      PCF,3
+     C                     MOVE URMK      PCF,2
+     C                     MOVE URIT      PCF,1
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *PSSR - Program Exception Subroutine.                        *
+      *                                                               *
+      *****************************************************************
+     C           *PSSR     BEGSR
+      *
+      ** Check if *PSSR has not been called already.
+      *
+     C           WRUN      IFEQ *BLANK
+      *
+     C                     MOVE 'Y'       WRUN    1
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+      *
+     C                     DUMP
+      *
+      ** Write the Audit Report.
+      *
+     C                     EXSR SRAU
+      *
+     C                     CALL 'DBERRCTL'
+      *
+     C                     ENDIF
+      *
+      ** Return to the calling program.
+      *
+     C                     MOVE *ON       *INU7
+     C                     MOVE *ON       *INU8
+     C                     MOVE *ON       *INLR
+      *
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  *INZSR - Program Initialisation Subroutine.                  *
+      *                                                               *
+      *****************************************************************
+     C           *INZSR    BEGSR
+      *
+      ** Begin Parameter List
+      ** ====================
+      *
+      ** Input Parameters:
+      *
+      ** Trade/Value Date Basis
+      ** Yield Indicator
+      ** Sequence Number
+      ** Entity
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           PTYPE   1
+     C                     PARM           PRTYPE  1
+     C                     PARM           PSEQ    5
+     C                     PARM           PENT    3
+      *
+      ** End Parameter List
+      ** ==================
+      *
+      ** Midas SE Investment Types Key List
+      *
+     C           ITKEY     KLIST
+     C                     KFLD           URCY
+     C                     KFLD           URIT
+      *
+      ** Midas SE Prices Detail Key List
+      *
+     C           PKEY      KLIST
+     C                     KFLD           PSSN
+     C                     KFLD           PPRT
+     C                     KFLD           PVDT
+      *
+     C           AKEY      KLIST
+     C                     KFLD           APSSN  10
+      *
+      ** Midas SE Securities Key List
+      *
+     C           KZSDDO    KLIST
+     C                     KFLD           SDSN
+     C                     KFLD           SDET
+     C                     KFLD           SDED
+      *
+     C           KDLYPR    KLIST
+     C                     KFLD           URSS
+     C                     KFLD           DLDT    50
+      *
+      ** Midas SE Revalued Security Positions Key List
+      *
+     C           KSEMKV    KLIST
+     C                     KFLD           SESN
+     C                     KFLD           @URBA
+     C                     KFLD           @URBK
+     C                     KFLD           URMK
+     C                     KFLD           PTYPE
+      *
+      ** Set the Copyright Array.
+      *
+     C                     MOVEACPY@      CPY2@  80
+      *
+      ** Define the RUNDAT and Local Data Areas.
+      *
+     C           *NAMVAR   DEFN           RUNDAT
+     C           *NAMVAR   DEFN           LDA
+     C           *LOCK     IN   LDA
+      *
+      ** Set the Database Program Name.
+      *
+     C                     MOVEL'SE0919'  DBPGM
+     C                     OUT  LDA
+      *
+      ** Access Bank Details.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' PRTCD   7
+     C                     PARM '*FIRST ' POPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           PRTCD     IFNE *BLANKS
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SDBANKPD'DBFILE
+     C                     MOVELPOPTN     DBKEY
+     C                     Z-ADD1         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Set the Multibranching Indicator.
+      *
+     C                     IN   RUNDAT
+     C           AGMBIN    IFEQ 'Y'
+     C                     MOVE *ON       *IN42
+     C                     ENDIF
+      *
+      ** Set the Trade/Value Date Basis Indicator.
+      *
+     C           PTYPE     IFEQ 'T'
+     C                     MOVE *ON       *IN21
+     C                     ENDIF
+      *
+      ** Register the Audit Printer File via RCF.
+      *
+     C                     EXSR SRRAU
+      *
+      ** Access the ICD2 record.
+      *
+     C                     EXSR ZICD2
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'TABLE'   DBFILE
+     C                     MOVELZTABKY    DBKEY
+     C                     Z-ADD2         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Access ICD-SE record.
+      *
+     C                     EXSR ZICDSE
+     C           *IN99     IFEQ *ON
+     C           *LOCK     IN   LDA
+     C                     MOVEL'TABLE'   DBFILE
+     C                     MOVELZTABKY    DBKEY
+     C                     Z-ADD3         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+      ** Check if CAC005 is enabled.
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*VERIFY' POPTN
+     C                     PARM 'CAC005'  PSARD   6
+     C           SCSARD    PARM SCSARD    DSFDY
+      *
+     C                     MOVE 'N'       CAC005  1
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       CAC005
+     C                     MOVE *ON       *IN20
+     C                     ELSE
+      *
+     C           PRTCD     IFNE '*NRF'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SCSARDPD'DBFILE
+     C                     MOVEL'CAC005'  DBKEY
+     C                     Z-ADD4         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Check if CAS002 is enabled.
+      *
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   PRTCD
+     C                     PARM '*VERIFY' POPTN
+     C                     PARM 'CAS002'  PSARD
+     C           SCSARD    PARM SCSARD    DSFDY
+      *
+     C                     MOVE 'N'       CAS002  1
+     C           PRTCD     IFEQ *BLANKS
+     C                     MOVE 'Y'       CAS002
+     C                     ELSE
+      *
+     C           PRTCD     IFNE '*NRF'
+     C           *LOCK     IN   LDA
+     C                     MOVEL'SCSARDPD'DBFILE
+     C                     MOVEL'CAS002'  DBKEY
+     C                     Z-ADD5         DBASE
+     C                     OUT  LDA
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+      ** Calculate the Event Control Date
+      *
+     C                     Z-ADDAPDA      ZZAPDT
+     C                     Z-ADDDNWD      ZZDNWD
+     C                     EXSR ZEVCD
+      *
+     C                     MOVE *BLANKS   REVCD
+     C                     Z-ADDECD       ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    REVCD
+      *
+     C**********           READ SDHEDGPD                 02                                   CAS011
+     C                     CALL 'AOHEDGR0'                                                    CAS011
+     C                     PARM *BLANKS   PRTCD                                               CAS011
+     C                     PARM '*FIRST ' POPTN                                               CAS011
+     C           SDHEDG    PARM SDHEDG    DSFDY                                               CAS011
+      *                                                                                       CAS011
+     C           PRTCD     IFNE *BLANKS                                                       CAS011
+     C                     MOVEL'SDHEDGPD'DBFILE                                              CAS011
+     C                     MOVELPOPTN     DBKEY                                               CAS011
+     C                     Z-ADD10        DBASE                                               CAS011
+     C                     EXSR *PSSR                                                         CAS011
+     C                     ENDIF                                                              CAS011
+      *                                                                                       228948
+     C                     MOVE '0'       *IN08                                               228948
+     C           FSEXRL    IFEQ 'Y'                                                           228948
+     C                     MOVE '1'       *IN08                                               228948
+     C                     ENDIF                                                              228948
+      *                                                                                       228948
+     C                     ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+     C/COPY ZSRSRC,ZACCH
+      /EJECT
+     C/COPY ZSRSRC,ZBKDT
+      /EJECT
+     C/COPY ZSRSRC,ZACCRZ1
+      /EJECT
+     C/COPY ZSRSRC,ZACCZZ1
+      /EJECT
+     C/COPY ZSRSRC,ZDATE1Z2
+      /EJECT
+     C/COPY ZSRSRC,ZDATE2Z4
+      /EJECT
+     C/COPY ZSRSRC,ZDAYSZ2
+      /EJECT
+     C/COPY ZSRSRC,ZDYYRZ3
+      /EJECT
+     C/COPY ZSRSRC,ZEVCDZ1
+      /EJECT
+     C/COPY ZSRSRC,ZICD2Z1
+      /EJECT
+     C/COPY ZSRSRC,ZICDSEZ1
+      /EJECT
+     C/COPY ZSRSRC,ZLCDZ1
+      /EJECT
+     C/COPY ZSRSRC,ZNCDZ3
+      /EJECT
+     C/COPY ZSRSRC,ZPRCIZ1
+      /EJECT
+     C/COPY ZSRSRC,ZRATEZ1
+      /EJECT
+     C/COPY ZSRSRC,ZSDESCZ3
+      /EJECT
+     C/COPY ZSRSRC,ZSEDITZ3
+      /EJECT
+     C/COPY ZSRSRC,ZSYSTMZ1
+      /EJECT
+     C/COPY ZSRSRC,ZYCEZ1
+      /EJECT
+     C/COPY ZSRSRC,ZYLDIZ1
+      /EJECT
+      **---------------------------------------------------------------
+      ** SR/ZPRCO and SR/ZYLDO are needed to convert Price to Yield.
+     C/COPY ZSRSRC,ZPRCOZ1
+      /EJECT
+     C/COPY ZSRSRC,ZYLDOZ1
+      /EJECT
+     C/COPY ZSRSRC,ZYLDZ2
+      **---------------------------------------------------------------
+      /EJECT
+     C/COPY ZSRSRC,ZCALCD
+      /EJECT
+     C/COPY ZSRSRC,ZCNSDZ1
+      /EJECT
+     C/COPY ZSRSRC,ZFWDT
+** CPY@
+(c) Finastra International Limited 2004
+** ZF29 - Day Nos. of Feb. 29 to 2096 (including 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+** ZYDY - Years in Days Cumulative, Four Year Span
+0366073110961461
+** ZMDY - Months in Days Cumulative Through Year
+000031059090120151181212243273304334365
+** ZMNM - Months in Short Names
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+** POWER8 - Array of Powres for Currency Conversion
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000
+>>>>>>> branch 'bugfix/MDSC-32160' of http://blrvslalm0006:7990/scm/md/midasrpg.git

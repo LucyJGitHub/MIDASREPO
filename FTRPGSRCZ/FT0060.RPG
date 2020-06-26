@@ -10,8 +10,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. HUT101             Date 27Mar20               *
-      *  Prev Amend No. MD054059           Date 28Nov19               *
+      *  Last Amend No. MD055849           Date 15May20               *
+      *  Prev Amend No. CSW220             Date 09Mar20               *
+      *                 HUT101             Date 27Mar20               *
+      *                 MD054059           Date 28Nov19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD043792           Date 07Feb17               *
       *                 CFT049             Date 20Feb15               *
@@ -161,6 +163,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055849 - Incoming Messages other than MT103 updates FTM199 *
+      *  CSW220 - SWIFT Changes 2020                                  *
       *  HUT101 - Upgrade CFT129 to FBM 2.1 SP22                      *
       *           Payment Authorisation for Funds Transfer            *
       *           (Include fix 261163)                                *
@@ -597,6 +601,10 @@
      I              'PROCESSED'           C         WKPROC                                    CFT158
      I              'AOSVALR0'            C         PGMA                                      CFT158
       *                                                                                       CFT158
+      ** Declare SWIFTACTV constant                                                           CSW220
+      *                                                                                       CSW220
+     I              'SWIFTACTV'           C         SWIFT                                     CSW220
+      *                                                                                       CSW220
      I/COPY WNCPYSRC,FTH00425
       *                                                                                       CRE020
       *                                                                                       CFT120
@@ -2415,6 +2423,18 @@
       *                                                                                       CFT158
      C                     ENDIF                                                              CFT158
       *                                                                                       CFT158
+      ** Determine if Swift 2020 is activated                                                 CSW220
+      *                                                                                       CSW220
+     C                     CALL SWIFT                                                         CSW220
+     C                     PARM 'CSW220'  PSWIFT  6                                           CSW220
+     C                     PARM *BLANKS   PRTCD   7                                           CSW220
+      *                                                                                       CSW220
+     C           PRTCD     IFEQ 'CSWACTV'                                                     CSW220
+     C                     MOVE 'Y'       CSW220  1                                           CSW220
+     C                     ELSE                                                               CSW220
+     C                     MOVE 'N'       CSW220                                              CSW220
+     C                     ENDIF                                                              CSW220
+      *                                                                                       CSW220
      C                     ENDSR
      C********************************************************************
      C* END OF INITIAL SUBROUTINE
@@ -9059,6 +9079,30 @@
      C                     MOVELW0FLAG    FTOTFG           Outgoing Flag  S01435
      C                     MOVELPREF      FTOPRF           Outg. Pay. Ref S01435
      C                     MOVEL'*FT OUT 'W2ACT                           S01435
+      *                                                                                       CSW220
+      ** Update MT199 flag if Outgoing payment and Transaction not on FIN                     CSW220
+      *                                                                                       CSW220
+     C           CSW220    IFEQ 'Y'                                                           CSW220
+      *                                                                                       CSW220
+     C           OPMSGR    IFNE *ZEROS                                                        CSW220
+     C           OPMTPY    ANDEQ'103'                                                       MD055849
+     C           AUIN      ANDEQ'Y'                                                           CSW220
+      *                                                                                       CSW220
+     C           OPSETM    IFNE '08'                                                          CSW220
+     C           OPSETM    ANDNE'01'                                                          CSW220
+      *                                                                                       CSW220
+     C                     MOVEL'T'       FTM199                                              CSW220
+      *                                                                                       CSW220
+      ** Else, update MT199 flat if transaction is on FIN                                     CSW220
+      *                                                                                       CSW220
+     C                     ELSE                                                               CSW220
+     C                     MOVEL'Z'       FTM199                                              CSW220
+     C                     ENDIF                                                              CSW220
+      *                                                                                       CSW220
+     C                     ENDIF                                                              CSW220
+      *                                                                                       CSW220
+     C                     ENDIF                                                              CSW220
+      *                                                                                       CSW220
      C                     ELSE                                           S01435
      C           ##OPIN    IFEQ 'IN'                                      S01435
      C                     Z-ADDINMSGR    FTMSGR           Unique Ref.    S01435
@@ -9066,6 +9110,15 @@
      C                     MOVELW0FLAG    FTINFG           Incoming Flag  S01435
      C                     MOVELPREF      FTIPRF           Incom. Pay. RefS01435
      C                     MOVEL'*FT INC 'W2ACT                           S01435
+      *                                                                                       CSW220
+      ** Update MT199 flag if Incoming payment and MT103                                      CSW220
+      *                                                                                       CSW220
+     C           CSW220    IFEQ 'Y'                                                           CSW220
+     C           INMTPY    ANDEQ'103'                                                         CSW220
+     C           INMSGR    ANDNE*ZEROS                                                        CSW220
+     C           AUIN      ANDEQ'Y'                                                           CSW220
+     C                     MOVEL'A'       FTM199                                              CSW220
+     C                     ENDIF                                                              CSW220
      C                     END                                            S01435
      C                     END                                            S01435
       *                                                                   S01435

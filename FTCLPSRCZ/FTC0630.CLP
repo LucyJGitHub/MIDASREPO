@@ -8,8 +8,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD037198           Date 26Apr16              */
+/*       Last Amend No. CSW220             Date 09Mar20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD037198           Date 26Apr16              */
 /*                      AR316373           Date 03Jun15              */
 /*                      MD023239           Date 27Mar14              */
 /*                      CCB023             Date 06Aug12              */
@@ -48,6 +49,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CSW220 - SWIFT Changes 2020                                 */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD037198 - Add OVRDBF for TABFP since FT0640 fails with     */
 /*                  DBASE 2 due to format TABTB11F not found.        */
@@ -150,9 +152,9 @@
 /************DCL********VAR(&FTUSRMSG) TYPE(*CHAR) LEN(10)     /*068078 CUT004*/
 /************DCL********VAR(&MEMSG) TYPE(*CHAR) LEN(10)        /*068078 CUT004*/
 /************DCL********VAR(&CGUSRMSG) TYPE(*CHAR) LEN(10)     /*S01522 CUT004*/
- 
+
 /*/COPY MLCPYSRC,MLCOVRDCL                                         */ /*CUT004*/
- 
+
              DCL        VAR(&SDATE) TYPE(*CHAR) LEN(6)                /*E40242*/
              DCL        VAR(&STIME) TYPE(*CHAR) LEN(6)                /*E40242*/
              DCL        VAR(&W0RTN) TYPE(*CHAR) LEN(7)                /*S01522*/
@@ -188,6 +190,11 @@
              DCL        VAR(&CMTJOB9) TYPE(*CHAR) LEN(10)                                 /*CSC022*/
              DCL        VAR(&CMTJOB10) TYPE(*CHAR) LEN(10)                                /*CSC022*/
              DCL        VAR(&CRSKIP) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CSC022*/
+             DCL        VAR(&PSWIFT) TYPE(*CHAR) LEN(6)                                   /*CSW220*/
+             DCL        VAR(&PCOB) TYPE(*CHAR) LEN(1) VALUE('N')                          /*CSW220*/
+             DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(4)                                    /*CSW220*/
+             DCL        VAR(&ZMUSER) TYPE(*CHAR) LEN(10)                                  /*CSW220*/
+             DCL        VAR(&ERRCOD) TYPE(*DEC) LEN(1)                                    /*CSW220*/
                                                                                           /*CSC022*/
              CHGVAR     VAR(&CSC022) VALUE('N')                                           /*CSC022*/
              CHGVAR     VAR(&CRSKIP) VALUE('N')                                           /*CSC022*/
@@ -196,7 +203,7 @@
              CHGVAR     VAR(&SAR) VALUE('CSC022')                                         /*CSC022*/
                                                                                           /*CSC022*/
 /*/COPY WNCPYSRC,FTC0630002                                          */
- 
+
 /* Global message monitor :                                     */    /*078314*/
                                                                       /*078314*/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
@@ -283,9 +290,9 @@
              ENDDO                                                                        /*CSC022*/
                                                                                           /*CSC022*/
              ENDDO                                                                        /*CSC022*/
- 
+
 /*/COPY WNCPYSRC,FTC0630004                                          */
- 
+
 /************RTVDTAARA**DTAARA(Y2MGFLA) RTNVAR(&Y2MGFLA10)     /*E32886 CUT004*/
 /************RTVDTAARA**DTAARA(MIMGFLA) RTNVAR(&MIMGFLA10)     /*E32886 CUT004*/
 /**/                                                                  /*S01117*/
@@ -296,9 +303,9 @@
              RTVJOBA USER(&USER10)                                    /*CUT004*/
 /**/
 /*/COPY WNCPYSRC,FTC0630009                                          */
- 
+
 /*/COPY MLCPYSRC,MLCOVROVR                                         */ /*CUT004*/
- 
+
 /************RTVDTAARA**DTAARA(Y2MGFLA) RTNVAR(&Y2MGFLA10)     /*E32886 CUT004*/
 /************RTVDTAARA**DTAARA(MIMGFLA) RTNVAR(&MIMGFLA10)     /*E32886 CUT004*/
 /***********************                                       /*078314 CUT004*/
@@ -345,7 +352,7 @@
 /************OVRMSGF****MSGF(FTUSRMSG) TOMSGF(&FTUSRMSG)       /*068078 CUT004*/
 /************OVRMSGF****MSGF(MEMSG) TOMSGF(&MEMSG)             /*068078 CUT004*/
 /************OVRMSGF****MSGF(CGUSRMSG) TOMSGF(&CGUSRMSG)       /*S01522 CUT004*/
- 
+
 /* TERMINATE IF USER NOT FOUND                                      */
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 /*     C O M P O N E N T   A C T I V E  ?                  */
@@ -506,7 +513,7 @@
              ENDDO                                                                        /*CCG015*/
                                                                                           /*CCG015*/
              ENDDO                                                    /*S01522*/
- 
+
 /*                    - - - - - - - - - - - -        */
 /**  Call Program    - - -  F T 0 6 4 0  - - -      **/
 /*                    - - - - - - - - - - - -        */
@@ -545,6 +552,59 @@
 /**  Check for Database Errors Trapped by Program  **/
 /**/
         IF COND(%SWITCH(XXXXXX11)) THEN(GOTO DBERR)
+/**/                                                                                      /*CSW220*/
+/**  Call FT000199  **/                                                                   /*CSW220*/
+/**/                                                                                      /*CSW220*/
+        CHGJOB     SWS(XXXXXX00)                                                          /*CSW220*/
+        CHGVAR     VAR(&RTCD) VALUE('       ')                                            /*CSW220*/
+        CHGVAR     VAR(&PSWIFT) VALUE('CSW220')                                           /*CSW220*/
+        CALL   PGM(SWIFTACTV) PARM(&PSWIFT &RTCD)                                         /*CSW220*/
+        IF     COND(&RTCD *EQ 'CSWACTV') THEN(DO)                                         /*CSW220*/
+/*  Check that ZMUSER dataarea has been set up in QTEMP, if not   */                      /*CSW220*/
+/*  create it here.                                               */                      /*CSW220*/
+                                                                                          /*CSW220*/
+             CHKOBJ     OBJ(QTEMP/ZMUSER) OBJTYPE(*DTAARA)                                /*CSW220*/
+                                                                                          /*CSW220*/
+             MONMSG     MSGID(CPF9815 CPF9801) EXEC(DO)                                   /*CSW220*/
+               CALL       PGM(ZMUSER) PARM(&ERRCOD &ZMUSER)                               /*CSW220*/
+               IF         COND(&ERRCOD *NE 0) THEN(DO)                                    /*CSW220*/
+                 SNDPGMMSG MSG('Default Branch or Department not valid') +
+                       TOPGMQ(*EXT) MSGTYPE(*INFO)                                        /*CSW220*/
+               ENDDO                                                                      /*CSW220*/
+             ENDDO                                                                        /*CSW220*/
+        CALL       PGM(CBC001001) PARM(&MPHAS)                                            /*CSW220*/
+        IF         COND(&MPHAS *EQ '*YES') THEN(DO)                                       /*CSW220*/
+        CHGVAR     VAR(&PCOB) VALUE('Y')                                                  /*CSW220*/
+        ENDDO                                                                             /*CSW220*/
+        CALL       PGM(FT000199) PARM(&PCOB &RTCD)                                        /*CSW220*/
+        MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(DO)                                /*CSW220*/
+ /**/                                                                                     /*CSW220*/
+ /** Execute rollback if SAR CSC022 is not enrolled or */                                 /*CSW220*/
+ /**   job is not currently running in batch mode */                                      /*CSW220*/
+ /**/                                                                                     /*CSW220*/
+             IF         COND(&CSC022 *EQ 'N') THEN(DO)                                    /*CSW220*/
+                   ROLLBACK                                                               /*CSW220*/
+             ENDDO                                                                        /*CSW220*/
+             ELSE       CMD(DO)                                                           /*CSW220*/
+             IF         COND(&CRSKIP *EQ 'N') THEN(DO)                                    /*CSW220*/
+                        ROLLBACK                                                          /*CSW220*/
+             ENDDO                                                                        /*CSW220*/
+             ELSE       DO                                                                /*CSW220*/
+                        CHGJOB     SWS(XXXXXX11)                                          /*CSW220*/
+             ENDDO                                                                        /*CSW220*/
+             ENDDO                                                                        /*CSW220*/
+                   SNDPGMMSG  MSG('Transaction Failed. +
+                                   Re-input Necessary. +
+                                   Press Enter to Continue.') +
+                              TOPGMQ(*EXT)                                                /*CSW220*/
+        CHGJOB     SWS(XXXXXXX1)                                                          /*CSW220*/
+                   GOTO END                                                               /*CSW220*/
+        ENDDO                                                                             /*CSW220*/
+        ENDDO                                                                             /*CSW220*/
+/**/                                                                                      /*CSW220*/
+/**  Check for Database Errors Trapped by Program  **/                                    /*CSW220*/
+/**/                                                                                      /*CSW220*/
+        IF COND(%SWITCH(XXXXXX11)) THEN(GOTO DBERR)                                       /*CSW220*/
 /*                    - - - - - - - - - - - -        */
 /**  Call Program    - - -  F T 0 6 4 5  - - -      **/
 /*                    - - - - - - - - - - - -        */
@@ -682,13 +742,13 @@
 /**  Check for Database Errors Trapped by Program  **/                /*CFT006*/
 /**/                                                                  /*CFT006*/
         IF COND(%SWITCH(XXXXXX11)) THEN(GOTO DBERR)                   /*CFT006*/
- 
+
         CHGVAR     VAR(&RTCD) VALUE('       ')                        /*CFT006*/
         CHGVAR     VAR(&SARD) VALUE('CFT006')                                             /*207984*/
         CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                        /*CFT006*/
- 
+
         CALL   PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD)                  /*CFT006*/
- 
+
         IF     COND(&RTCD *EQ '       ') THEN(DO)                     /*CFT006*/
 /*                                                   */               /*CFT006*/
 /* Call Program FT0657                               */               /*CFT006*/
@@ -882,7 +942,7 @@ ABNOR:                                                                /*078314*/
                 CHGVAR     VAR(&ACTION) VALUE('*CLEAR  ')                                 /*CCG015*/
                 CALL       PGM(CGC3605) PARM(&ACTION)                                     /*CCG015*/
              ENDDO                                                                        /*205448*/
- 
+
  /**/                                                                                     /*CSC022*/
  /** Execute rollback if SAR CSC022 is not enrolled or */                                 /*CSC022*/
  /**   job is not currently running in batch mode */                                      /*CSC022*/

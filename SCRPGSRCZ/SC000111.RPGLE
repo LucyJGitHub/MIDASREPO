@@ -16,11 +16,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSC054  *CREATE    Date 23Feb12               *
+      *  Last Amend No. AR1042300          Date 14Oct12               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSC054  *CREATE    Date 23Feb12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1042300 - PEA Restore of files in global layer required    *
+      *              (Child:AR1042301)                                *
       *  MD046248 - Finastra Rebranding                               *
       *  CSC054 - Period End Adjustments                              *
       *                                                               *
@@ -72,6 +75,15 @@
      C                             %Trim(ToLib) + '/' + %Trim(Object) +
      C                             '.savf'
      C                   WRITE     FTPCommand
+                                                                                          AR1042300
+      ** Send Global DBIC                                                                 AR1042300
+                                                                                          AR1042300
+     C                   EVAL      Object = 'DBICGM'                                      AR1042300
+     C                   EVAL      SRCDTA = 'PUT ' + %Trim(FromLib) +                     AR1042300
+     C                             '/' + %Trim(Object) + '.savf ' +                       AR1042300
+     C                             %Trim(ToLib) + '/' + %Trim(Object) +                   AR1042300
+     C                             '.savf'                                                AR1042300
+     C                   WRITE     FTPCommand                                             AR1042300
  
       ** Set Quit message
  

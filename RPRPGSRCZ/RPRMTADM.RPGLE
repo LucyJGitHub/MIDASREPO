@@ -17,18 +17,21 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD041126           Date 02Dec19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
-      *  Prev Amend No. CPB002  *CREATE    Date 01Jun99               *
+      *                 CPB002  *CREATE    Date 01Jun99               *
       *                                    Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
+      *           - Applied for MD-53992                              *
       *  MD046248 - Finastra Rebranding                               *
       *  CPB002 - Meridian DBA Middleware Replication Customization.  *
       *           Midas/TOF interface.                                *
@@ -55,23 +58,29 @@
       **  Declare MQI structures needed
  
       **  MQI Constants
-     D/COPY QMQM/QRPGLESRC,CMQR
+     D***/COPY*QMQM/QRPGLESRC,CMQR                                                          MD041126
+     D/COPY QMQM/QRPGLESRC,CMQG                                                             MD041126
       *      Object Descriptor
      D MQOD            DS
-     D/COPY QMQM/QRPGLESRC,CMQODR
+     D***/COPY*QMQM/QRPGLESRC,CMQODR                                                        MD041126
+     D/COPY QMQM/QRPGLESRC,CMQODG                                                           MD041126
       *      Message Descriptor
      D MQMD            DS
-     D/COPY QMQM/QRPGLESRC,CMQMDR
+     D***/COPY*QMQM/QRPGLESRC,CMQMDR                                                        MD041126
+     D/COPY QMQM/QRPGLESRC,CMQMDG                                                           MD041126
       *      Get message options
      D MQGMO           DS
-     D/COPY QMQM/QRPGLESRC,CMQGMOR
+     D***/COPY*QMQM/QRPGLESRC,CMQGMOR                                                       MD041126
+     D/COPY QMQM/QRPGLESRC,CMQGMOG                                                          MD041126
       *      Put message options
      D MQPMO           DS
-     D/COPY QMQM/QRPGLESRC,CMQPMOR
+     D***/COPY*QMQM/QRPGLESRC,CMQPMOR                                                       MD041126
+     D/COPY QMQM/QRPGLESRC,CMQPMOG                                                          MD041126
  
       **  Trigger message structure (character format)
      D MQTMCR          DS
-     D/COPY QMQM/QRPGLESRC,CMQTMCR
+     D***/COPY*QMQM/QRPGLESRC,CMQTMCR                                                       MD041126
+     D/COPY QMQM/QRPGLESRC,CMQTMCG                                                          MD041126
  
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
@@ -86,11 +95,13 @@
       ** +--------------------------------------+
  
       **  The following /COPY contains various standard declarations.
-     C/COPY RPCPYSRC,Std_Dcl
+     C***/COPY*RPCPYSRC,Std_Dcl                                                             MD041126
+     D/COPY RPCPYSRC,STD_DCL                                                                MD041126
       *
       ** The following /COPY contains the layout of the Meridian
       ** a data structure
-     D/COPY RPCPYSRC,Mdn_Hd_DS
+     D***/COPY*RPCPYSRC,Mdn_Hd_DS                                                           MD041126
+     D/COPY RPCPYSRC,MDN_HD_DS                                                              MD041126
  
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
@@ -131,6 +142,18 @@
  
       ** Alpha version of the MQSeries reason code
      D ReasonA         S              9A
+                                                                                            MD041126
+      ** MQ Parameters                                                                      MD041126
+     D QMGR            S             48A                                                    MD041126
+     D HANDLE          S             10I 0                                                  MD041126
+     D CCODE           S             10I 0                                                  MD041126
+     D REASON          S             10I 0                                                  MD041126
+     D HCONN           S             10I 0                                                  MD041126
+     D OPTS            S             10I 0                                                  MD041126
+     D HIN             S             10I 0                                                  MD041126
+     D OCODE           S             10I 0                                                  MD041126
+     D BUFLEN          S             10I 0                                                  MD041126
+     D MESLEN          S             10I 0                                                  MD041126
  
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -182,9 +205,60 @@
  
      C                   EXSR      CloseQueue
  
+
+      ** Disconnect from Queue Manager                                                      MD041126
+     C                   EXSR      MQDisconnect                                             MD041126
+                                                                                            MD041126
      C                   SETON                                        LR
  
      C                   RETURN
+                                                                                            MD041126
+      *****************************************************************                     MD041126
+      *                                                               *                     MD041126
+      *  Open connection to the queue manager                         *                     MD041126
+      *                                                               *                     MD041126
+      *****************************************************************                     MD041126
+     C     MQConnect     BEGSR                                                              MD041126
+                                                                                            MD041126
+      ** Attempt to CONNECT to the MQ Manager                                               MD041126
+     C                   MOVEL     *BLANKS       QMGR                                       MD041126
+     C                   Z-ADD     *ZERO         HANDLE                                     MD041126
+     C                   Z-ADD     *ZERO         CCODE                                      MD041126
+     C                   Z-ADD     *ZERO         REASON                                     MD041126
+     C                   CALLP     MQCONN( QMGR : HANDLE :                                  MD041126
+     C                                     CCODE : REASON )                                 MD041126
+                                                                                            MD041126
+      ** Error processing                                                                   MD041126
+     C     REASON        IFNE      RCNONE                                                   MD041126
+     C     REASON        ANDNE     RC2002                                                   MD041126
+                                                                                            MD041126
+     C                   MOVE      REASON        ReasonA                                    MD041126
+     C                   RETURN                                                             MD041126
+                                                                                            MD041126
+     C                   ENDIF                                                              MD041126
+                                                                                            MD041126
+     C                   ENDSR                                                              MD041126
+      *****************************************************************                     MD041126
+      *                                                               *                     MD041126
+      *  Disconnect from the queue manager                            *                     MD041126
+      *                                                               *                     MD041126
+      *****************************************************************                     MD041126
+     C     MQDisconnect  BEGSR                                                              MD041126
+                                                                                            MD041126
+      **  Attempt to DISCONNECT from the MQ Manager                                         MD041126
+     C                   Z-ADD     *ZERO         CCODE                                      MD041126
+     C                   Z-ADD     *ZERO         REASON                                     MD041126
+     C                   CALLP     MQDISC( HCONN : CCODE : REASON )                         MD041126
+                                                                                            MD041126
+      ** Error processing                                                                   MD041126
+     C     REASON        IFNE      RCNONE                                                   MD041126
+                                                                                            MD041126
+     C                   MOVE      REASON        ReasonA                                    MD041126
+     C                   RETURN                                                             MD041126
+                                                                                            MD041126
+     C                   ENDIF                                                              MD041126
+                                                                                            MD041126
+     C                   ENDSR                                                              MD041126
       ****************************************************************
       *                                                              *
       *  OpenQueue - Open receiving queue for input.                 *
@@ -203,15 +277,18 @@
      C     OOINPQ        ADD       OOFIQ         OPTS
  
       ** Open queue.
-     C                   Z-ADD     MQOPEN        CID
-     C                   CALL      'QMQM'
-     C                   PARM                    CID               9 0
-     C                   PARM                    HCONN             9 0
-     C                   PARM                    MQOD
-     C                   PARM                    OPTS              9 0
-     C                   PARM                    HIN               9 0
-     C                   PARM                    OCODE             9 0
-     C                   PARM                    REASON            9 0
+     C**********         Z-ADD     MQOPEN        CID                                        MD041126
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM                    CID               9 0                      MD041126
+     C**********         PARM                    HCONN             9 0                      MD041126
+     C**********         PARM                    MQOD                                       MD041126
+     C**********         PARM                    OPTS              9 0                      MD041126
+     C**********         PARM                    HIN               9 0                      MD041126
+     C**********         PARM                    OCODE             9 0                      MD041126
+     C**********         PARM                    REASON            9 0                      MD041126
+                                                                                            MD041126
+     C                   CALLP     MQOPEN( HCONN : MQOD : OPTS :                            MD041126
+     C                                     HIN : OCODE : REASON )                           MD041126
  
       ** Error processing
      C     REASON        IFNE      RCNONE
@@ -261,18 +338,22 @@
      C                   MOVEL     *BLANKS       BUFFER
  
       **  Get message.
-     C                   Z-ADD     MQGET         CID
-     C                   CALL      'QMQM'
-     C                   PARM                    CID               9 0
-     C                   PARM                    HCONN             9 0
-     C                   PARM                    HIN               9 0
-     C                   PARM                    MQMD
-     C                   PARM                    MQGMO
-     C                   PARM                    BUFLEN            9 0
-     C                   PARM                    BUFFER
-     C                   PARM                    MESLEN            9 0
-     C                   PARM                    CCODE             9 0
-     C                   PARM                    REASON            9 0
+     C**********         Z-ADD     MQGET         CID                                        MD041126
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM                    CID               9 0                      MD041126
+     C**********         PARM                    HCONN             9 0                      MD041126
+     C**********         PARM                    HIN               9 0                      MD041126
+     C**********         PARM                    MQMD                                       MD041126
+     C**********         PARM                    MQGMO                                      MD041126
+     C**********         PARM                    BUFLEN            9 0                      MD041126
+     C**********         PARM                    BUFFER                                     MD041126
+     C**********         PARM                    MESLEN            9 0                      MD041126
+     C**********         PARM                    CCODE             9 0                      MD041126
+     C**********         PARM                    REASON            9 0                      MD041126
+                                                                                            MD041126
+     C                   CALLP     MQGET( HCONN : HIN : MQMD : MQGMO :                      MD041126
+     C                                    BUFLEN : %ADDR(BUFFER) :                          MD041126
+     C                                    MESLEN : CCODE : REASON )                         MD041126
  
       **  Error processing.
      C                   If        Reason <> RCNONE AND Reason <> 2079
@@ -305,14 +386,17 @@
       *
       ** Close queue
       *
-     C                   Z-ADD     MQCLOS        CID
-     C                   CALL      'QMQM'
-     C                   PARM                    CID               9 0
-     C                   PARM                    HCONN             9 0
-     C                   PARM                    HIN               9 0
-     C                   PARM                    OPTS              9 0
-     C                   PARM                    CCODE             9 0
-     C                   PARM                    REASON            9 0
+     C**********         Z-ADD     MQCLOS        CID                                        MD041126
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM                    CID               9 0                      MD041126
+     C**********         PARM                    HCONN             9 0                      MD041126
+     C**********         PARM                    HIN               9 0                      MD041126
+     C**********         PARM                    OPTS              9 0                      MD041126
+     C**********         PARM                    CCODE             9 0                      MD041126
+     C**********         PARM                    REASON            9 0                      MD041126
+                                                                                            MD041126
+     C                   CALLP     MQCLOSE( HCONN : HIN : OPTS :                            MD041126
+     C                                      CCODE : REASON )                                MD041126
  
       ** Error processing
      C     REASON        IFNE      RCNONE
@@ -419,7 +503,10 @@
      C                   PARM                    STRING         2000
      C                   MOVEL     STRING        MQTMCR
  
- 
+      ** Connect to Queue Manager                                                           MD041126
+     C                   EXSR      MQConnect                                                MD041126
+     C                   Z-ADD     HANDLE        HCONN                                      MD041126
+                                                                                            MD041126
       ** Open MQSeries Transmission queue that is to be read
      C                   EXSR      OpenQueue
  

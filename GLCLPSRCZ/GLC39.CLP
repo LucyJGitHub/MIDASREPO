@@ -9,12 +9,13 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD044892           Date 12Sep17              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CGL023             Date 31Jul03              */
+/*                      CGL023             Date 31Jul03              */
 /*                      CSC020             Date 31Mar04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.05 ---------------------------------------------------*/
@@ -35,6 +36,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD044892 - Suppress Base CCY transfer posting in PEA.       */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CGL023 - Retention of Currency of Balance.                 */
 /*       CSC020 - Journaling changes for MidasPlus.                  */
@@ -91,6 +93,7 @@
 /* Declare parameters to AOSVALR0                                       CGL023*/
 /*                                                                      CGL023*/
              DCL        VAR(&CGL023) TYPE(*CHAR) LEN(1) VALUE('N')    /*CGL023*/
+             DCL        VAR(&M44892) TYPE(*CHAR) LEN(1) VALUE('N')                      /*MD044892*/
              DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7) VALUE('       +
                           ')                                          /*CGL023*/
              DCL        VAR(&POP01) TYPE(*CHAR) LEN(20) +
@@ -198,6 +201,31 @@
              CALL       PGM(AOSARDR0) PARM(&RTCD '*VERIFY' 'CMC001' +
                           &DSFDY)                                     /*CMC001*/
              IF         COND(&RTCD *EQ ' ') THEN(GOTO CMDLBL(ENDPGM)) /*CMC001*/
+/**/                                                                                    /*MD044892*/
+/** Check if the current setting of Suppress base ccy transfers is 'Y' **/              /*MD044892*/
+/**/                                                                                    /*MD044892*/
+             CHGVAR     VAR(&POP01) VALUE('SuppressBCcyTransfer')                       /*MD044892*/
+             CALL       PGM(AOSVALR0) PARM(&PRTCD &POP01 &PVL01 +
+                          &POP02 &PVL02 &POP03 &PVL03 &POP04 &PVL04 +
+                          &POP05 &PVL05 &POP06 &PVL06 &POP07 &PVL07 +
+                          &POP08 &PVL08 &POP09 &PVL09 &POP10 &PVL10)                    /*MD044892*/
+             IF         COND(&PRTCD *EQ '       ') THEN(DO)                             /*MD044892*/
+               CHGVAR     VAR(&M44892) VALUE(%SUBSTRING(&PVL01 1 1))                    /*MD044892*/
+             ENDDO                                                                      /*MD044892*/
+             ELSE       CMD(DO)                                                         /*MD044892*/
+               SNDPGMMSG  MSG('Database Error in File SDSVALPD, Key +
+                          SuppressBCcyTransfer') TOMSGQ(MRUNQ)                          /*MD044892*/
+               GOTO       CMDLBL(ABNOR)                                                 /*MD044892*/
+             ENDDO                                                                      /*MD044892*/
+/**/                                                                                    /*MD044892*/
+/** DO NOT process Base CCY Transfer if &M44892 is 'Y' **/                              /*MD044892*/
+/**/                                                                                    /*MD044892*/
+             IF         COND(&M44892 *EQ 'Y') THEN(DO)                                  /*MD044892*/
+               CLRPFM     FILE(GEXBHH)                                                  /*MD044892*/
+               CLRPFM     FILE(GEXBPD)                                                  /*MD044892*/
+               CLRPFM     FILE(GEXBZZ)                                                  /*MD044892*/
+               GOTO       CMDLBL(ENDPGM)                                                /*MD044892*/
+             ENDDO                                                                      /*MD044892*/
  
              SNDPGMMSG  MSG('GLC39 - Transfer of base ccy Income and +
                           Expense') TOMSGQ(MRUNQ)                     /*E15192*/

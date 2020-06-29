@@ -1,0 +1,769 @@
+     H        1
+     F*****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas XX SE Cost of Funds Extract')                    *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  XX0005 - XX Cost Of Funds Extract                            *
+      *                                                               *
+      *  Function: Extract details required for the Cost of Funds     *
+      *   (COB)    Report from Book Position Join File & Funding      *
+      *            Rates File - re-write of UGB SED005                *
+      *                                                               *
+      *  Called by: SEC0805 - Cost of Funds Report                    *
+      *                                                               *
+      *  (c) Finastra International Limited 2017                      *
+      *                                                               *
+      *****************************************************************
+      *                                                               *
+      *  Last Amend No. DUG504              Date 13Sep17              *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  DUG409 - Cost of Funds                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     FXXBKPHDJIF  E           K        DISK
+     FBKPOS   IF  E           K        DISK
+     FXXBPCHDLIF  E           K        DISK
+     FFUNDS   IF  E           K        DISK
+     F            FUNDSACF                          KIGNORE
+     FXXCOFEPDO   E                    DISK         KINFDS CFDDS
+     F                                              KINFSR CFDSR
+     FCOFEXA  O   E                    DISK         KINFDS CFADS
+     F                                              KINFSR CFASR
+     FXX0005AUO   E                    PRINTER
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *                                                               *
+      *   82  - Read Fail on LF/XXBPCHDL                              *
+      *   85  - Read Fail on LF/FUNDS                                 *
+      *   87  - Read Fail on LF/BKPOS                                 *
+      *   88  - End of File on LF/XXBKPHDJ                            *
+      *                                                               *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT   - Program Initialisation                              *
+      *  PROCES - Detail Processing                                   *
+      *  PRPOSN - Process all Book Positions for current Header       *
+      *  PRFUND - Process all Funding Rates for current Header        *
+      *                                                               *
+      *  AUDIT  - Produce Audit Report and End Program                *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *  CFDSR  - Handle Errors in Write to PF/COFEXD                 *
+      *  CFASR  - Handle Errors in Write to PF/COFEXA                 *
+      *                                                               *
+      *  ZCNSD  - Calculate Consideration                             *
+      *  ZCONV  - Convert Amount to Another Currency                  *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    CPY@    1   1 80
+     E/COPY ZSRSRC,ZPOWERZ1
+     E/COPY ZSRSRC,ZPOWER8Z1
+     I/SPACE 3
+      *
+     ICFDDS       DS
+      ***  Error Data Structure for PF/COFEXD.
+     I                                     *STATUS  STSCFD
+      *
+     ICFADS       DS
+      ***  Error Data Structure for PF/COFEXA.
+     I                                     *STATUS  STSCFA
+      *
+     IDBERR       DS                            256
+      ***  Local Data Area DS for Database Error Information.
+     I                                      134 177 DBLOT
+     I                                      134 138 DBFILE
+     I                                      139 167 DBKEY
+     I                                      168 175 DBPGM
+     I                                      176 1770DBASE
+      *
+     IWKCOFD      DS
+      ***  Data Structure to hold Key for PF/COFEXD in case of Error.
+     I                                        1   3 BHBA
+     I                                        4   5 BHBK
+     I                                        6   8 CCY
+     I                                    P   9  110BPPD
+     I                                       12  12 CEAR
+      *
+     IWKBKPO      DS
+      ***  Data Structure to hold Key for PF/BKPOSD in case of Error.
+     I                                        1  10 BHSC
+     I                                       11  13 WBHBA
+     I                                       14  15 WBHBK
+     I                                       16  16 BHMK
+     I                                       17  17 WBPTV
+     I                                    P  18  200WBPPD
+     ISDBANK    E DSSDBANKPD
+      ***  External data structures for Bank Details
+     ISDGELR    E DSSDGELRPD
+      ***  External data structures for GL Details
+     ISDCURR    E DSSDCURRPD
+      ***  External data structures for GL Details
+     IDSFDY     E DSDSFDY
+      ***  Short data structure for access objects
+      *
+     IDSSDY     E DSDSSDY
+      *** Long date structure for access objects
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+      *
+     C                     EXSR INIT
+      *
+      ***  Perform Detail Processing.
+      *
+     C                     EXSR PROCES
+      *
+      ***  Output Audit Report and End Program.
+      *
+     C                     EXSR AUDIT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  AOBANKR0 Access Program                                      *
+      *  AOCURRR0 Access Program                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR                           ***  INIT  ***
+      *
+      ***  Copyright Statement.
+      *
+     C                     MOVEACPY@      BIS@   80
+      *
+      ***  Define Keylists.
+      *
+      ***  Book Position Header Key.
+      *
+     C           KBKPHJ    KLIST
+     C                     KFLD           BHBA
+     C                     KFLD           BHBK
+     C                     KFLD           BHSC
+     C                     KFLD           BHMK
+      *
+      ***  Book Position Full Key.
+      *
+     C           KBKPO1    KLIST
+     C                     KFLD           BHSC
+     C                     KFLD           BHBA
+     C                     KFLD           BHBK
+     C                     KFLD           BHMK
+     C                     KFLD           WBPTV
+     C                     KFLD           WBPPD
+      *
+      ***  Book Position Partial Key.
+      *
+     C           KBKPO2    KLIST
+     C                     KFLD           BHSC
+     C                     KFLD           BHBA
+     C                     KFLD           BHBK
+     C                     KFLD           BHMK
+     C                     KFLD           WBPTV
+      *
+      ***  Book Position Action Full Key.
+      *
+     C           KBPCH1    KLIST
+     C                     KFLD           BHSC
+     C                     KFLD           BHBA
+     C                     KFLD           BHMK
+     C                     KFLD           BHBK
+     C                     KFLD           WBPTV
+     C                     KFLD           BCAS
+     C                     KFLD           BPPD
+      *
+      ***  Book Position Action Partial Key.
+      *
+     C           KBPCH2    KLIST
+     C                     KFLD           BHSC
+     C                     KFLD           BHBA
+     C                     KFLD           BHMK
+     C                     KFLD           BHBK
+     C                     KFLD           WBPTV
+     C                     KFLD           BCAS
+      *
+      ***  Only Value Date Positions are required.
+      *
+     C                     MOVE 'V'       WBPTV
+      *
+      ***  Funding Rates Full Key.
+      *
+     C           KFUND1    KLIST
+     C                     KFLD           CCY
+     C                     KFLD           ADAT
+      *
+      ***  Funding Rates Partial Key.
+      *
+     C           KFUND2    KLIST
+     C                     KFLD           CCY
+      *
+      ***  Initialise LDA field.
+      *
+     C                     MOVEL'XX0005'  DBPGM
+      *
+      ** Access bank details
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ***  Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVE 'SDBANKPD'DBFILE           ***************
+     C                     MOVEL'*FIRST'  DBKEY            * DB ERROR 01 *
+     C                     Z-ADD001       DBASE            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+      ** Access GL Details
+      *
+     C                     CALL 'AOGELRR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDGELR    PARM SDGELR    DSFDY
+      *
+      ***  Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVE 'SDGELRPD'DBFILE           ***************
+     C                     MOVEL'*FIRST'  DBKEY            * DB ERROR 01 *
+     C                     Z-ADD002       DBASE            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     Z-ADDBJDNWD    ZZDNWD
+     C                     Z-ADDBKAPDT    ZZAPDT
+      *
+      ** Calculate Report Control Date
+      *
+     C                     EXSR ZEVCD
+      *
+      ***  Define Program fields.
+      ***  Book Position work fields.
+      *
+     C           *LIKE     DEFN BPPD      WFBPPD
+      *
+      ***  Consideration work field.
+      *
+     C                     Z-ADD0         WCONS  300
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  AUDIT  - Produce Audit Report and End Program                *
+      *  PRPOSN - Process all Book Positions for current Header       *
+      *  PRFUND - Process all Funding Rates for current Header        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR                           *** PROCES ***
+      *
+      ***  Read the Book Position Header Join File.
+      *
+     C                     READ XXBKPHDJ                 88
+      *
+      ***  If End of Records, (*IN88), Perform: Audit Reporting (No
+      ***  Records).
+      *
+     C           *IN88     IFEQ '1'
+     C                     EXSR AUDIT
+     C                     END
+      *
+      ***  Do While valid records.
+      *
+     C           *IN88     DOWEQ'0'
+      *
+      ***  Count the record read.
+      *
+     C                     ADD  1         RCBKPH
+      *
+      ***  Access Currencies File for Nominal Currency Decimal Places.
+      *
+     C                     MOVE NCRY      CCY
+     C                     CALL 'AOCURRR0'
+      *
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY'    WOPTN
+     C                     PARM CCY       W@KEY3  3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVEL'CCY  '   DBFILE           ***************
+     C                     MOVELNCRY      DBKEY            * DB ERROR 03 *
+     C                     Z-ADD03        DBASE            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      ***  Process all Positions for this Header record.
+      *
+     C                     EXSR PRPOSN
+      *
+      ***  Process all Funding Rates for these Positions.
+      *
+     C                     EXSR PRFUND
+      *
+      ***  Read the Book Position Header Join File.
+      *
+     C                     READ XXBKPHDJ                 88
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  PRPOSN - Process all Book Position records Year-to-date for  *
+      *           the Book Position Header record just read.          *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls:                                                       *
+      *  ZCNSD  - Calculate Consideration                             *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PRPOSN    BEGSR                           *** PRPOSN ***
+      *
+      ***  Initialise Fields.
+      *
+     C                     MOVEL'D'       RECI
+     C                     Z-ADD*ZERO     CECP
+     C                     Z-ADD*ZERO     ERNR
+     C                     Z-ADD*ZERO     COFF
+     C                     Z-ADD*ZERO     FUDY
+     C                     Z-ADD*ZERO     FUDV
+     C                     MOVE 'A'       CEAR
+      *
+      ***  Obtain the position at the start of the year.
+      *
+     C           BJPEYD    ADD  1         WBPPD
+     C           KBKPO1    SETGTBKPOS
+     C           KBKPO2    REDPEBKPOS                    87
+      *
+      ***  If no position was found,
+      ***  get the first position of this year
+      *
+     C           *IN87     IFEQ '1'
+     C           KBKPO1    SETLLBKPOS
+     C           KBKPO2    READEBKPOS                    87
+     C                     END
+      *
+      ***  Database Error if a record is not found.
+      *
+     C           *IN87     IFEQ '1'
+     C                     MOVEL'BKPOS'   DBFILE
+     C                     MOVE BHBA      WBHBA
+     C                     MOVE BHBK      WBHBK            ***************
+     C                     MOVELWKBKPO    DBKEY            * DB ERROR 04 *
+     C                     Z-ADD04        DBASE            ***************
+     C                     EXSR *PSSR
+     C                     END
+      *
+      **   Reset First Effective Position Date
+      *
+     C                     Z-ADD*HIVAL    WFBPPD
+      *
+      **   No processing required if flat and latest position
+      **   or if security matured prior to the start of the year
+      *
+     C           BPPD      IFEQ LPSD
+     C           NPSN      ANDEQ*ZERO
+     C           MATY      ORLE BJPEYD
+     C           MATY      ANDNE*ZERO
+     C                     GOTO EPRPOS
+     C                     ELSE
+      *
+      *** Last Position Date, Position, Price for part payment extraction
+      *
+     C                     Z-ADDBPPD      LPOSDT  50
+     C                     Z-ADDNPSN      LNOMPS 110
+     C                     Z-ADDAPPB      LAVPRC 158
+      *
+      **   Report only from start of year
+      *
+     C           BPPD      IFLE BJPEYD
+      *
+      *** Get Year End Mark To Market Price (if present)
+      *
+     C                     MOVE '60'      BCAS
+     C           KBPCH1    SETLLBPACHDF
+     C           KBPCH2    READEBPACHDF                  82*
+     C  N82                Z-ADDBCPR      APPB
+     C  N82                Z-ADDBCAD      LPOSDT
+     C  N82                Z-ADDBCPR      LAVPRC
+      *
+     C           BJPEYD    ADD  1         BPPD
+      *
+     C                     END
+     C                     END
+      *
+      *--------------------------------------------------------------------*
+      *
+      ***  Extract Consideration using Book Positions up to Event Ctl Date
+      *
+     C           *IN87     DOWNE'1'
+     C           BPPD      ANDLEECD
+      *
+      ***  Count the record read.
+      *
+     C                     ADD  1         RCBKPO
+      *
+      ***  Update First Effective Position Date for SR/PRFUND.
+      *
+     C           WFBPPD    IFEQ *HIVAL
+     C           NPSN      ANDNE*ZERO
+     C                     Z-ADDBPPD      WFBPPD
+     C                     END
+      *
+      ***  Consideration
+      *
+     C                     Z-ADDA6NBDP    ZCDP
+     C                     Z-ADDNPSN      ZNOML
+     C                     Z-ADDAPPB      ZPRC
+     C                     EXSR ZCNSD
+     C                     Z-ADDZCONS     CECP
+      *
+      ***  Write the Position record to the Extract File.
+      *
+     C                     WRITECOFEXDF
+     C                     ADD  1         RCCOFE
+      *
+      ***  Extract part payments
+      *
+     C           PPDI      IFEQ 'Y'
+     C                     EXSR EXPART
+     C                     END
+      *
+      ***  Read the next Book Position record.
+      *
+     C           KBKPO2    READEBKPOS                    87
+      *
+     C                     END
+      *
+      ***  Extract part payments
+      *
+     C           PPDI      IFEQ 'Y'
+     C           ECD       ADD  1         BPPD
+     C                     EXSR EXPART
+     C                     END
+      *
+     C           EPRPOS    ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  EXPART - Extract part payments occurring between position    *
+      *           dates                                               *
+      *                                                               *
+      *  Called By: PRPOSN                                            *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           EXPART    BEGSR                           *** EXPART ***
+      *
+      *** Next Position Date for part payment extraction
+      *
+     C                     Z-ADDBPPD      NPOSDT  50
+      *
+     C                     MOVE '05'      BCAS
+     C                     Z-ADDLPOSDT    BPPD
+     C           KBPCH1    SETGTBPACHDF
+     C           KBPCH2    READEBPACHDF                  82*
+     C           *IN82     DOWEQ'0'
+     C           BCAD      ANDLTNPOSDT
+      *
+      ***  Update average price with part payment
+      *
+     C           PROT      IFNE '4'
+     C           BCCP      DIV  100000    ZPRC
+     C                     ELSE
+     C           BCCP      DIV  100000000 ZPRC
+     C                     END
+     C           SPBS      IFEQ 'P'
+     C                     MULT 100       ZPRC
+     C                     END
+     C                     ADD  ZPRC      LAVPRC
+      *
+      ***  Calculate new consideration
+      *
+     C                     Z-ADDA6NBDP    ZCDP
+     C                     Z-ADDLNOMPS    ZNOML
+     C                     Z-ADDLAVPRC    ZPRC
+     C                     EXSR ZCNSD
+     C                     Z-ADDZCONS     CECP
+      *
+      *** Effective position date
+      *
+     C                     Z-ADDBCAD      BPPD
+      *
+      ***  If position falls in this current year
+      *
+     C           BPPD      IFGT BJPEYD
+      *
+      ***  Update First Effective Position Date for SR/PRFUND.
+      *
+     C           WFBPPD    IFGT BPPD
+     C           LNOMPS    ANDNE*ZERO
+     C                     Z-ADDBPPD      WFBPPD
+     C                     END
+      *
+      ***  Write the Position record to the Extract File.
+      *
+     C                     WRITECOFEXDF
+     C                     ADD  1         RCCOFE
+     C                     END
+      *
+     C           KBPCH2    READEBPACHDF                  82*
+      *
+     C                     END
+      *
+      *** Last Position Date, Position, Price for part payment extraction
+      *
+     C                     Z-ADDNPOSDT    LPOSDT
+     C                     Z-ADDNPSN      LNOMPS
+     C                     Z-ADDAPPB      LAVPRC
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  PRFUND - Process all Funding records Year-to-date for the    *
+      *           current Book Position Header record.                *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls: None                                                  *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PRFUND    BEGSR                           *** PRFUND ***
+      *
+      ***  Access Funding Rates applicable to the First Effective
+      ***  Position. (Date saved in SR/PRPOSN).
+      *
+     C           WFBPPD    IFNE *HIVAL
+      *
+     C                     Z-ADDWFBPPD    ADAT
+     C           KFUND1    SETGTFUNDS
+     C           KFUND2    REDPEFUNDS                    85
+     C           *IN85     DOWEQ'0'                                       065727
+     C           RECI      ANDNE'D'                                       065727
+     C           KFUND2    REDPEFUNDS                    85               065727
+     C                     END                                            065727
+     C                     Z-ADDWFBPPD    ADAT
+      *
+      ***  Extract Funding Rates up to Event Ctl Date
+      *
+     C           *IN85     DOWNE'1'
+     C           ADAT      ANDLEECD
+      *
+      ***  Extract only live records
+      *
+     C           RECI      IFEQ 'D'
+      *
+      ***  Count the record read.
+      *
+     C                     ADD  1         RCFUND
+      *
+      ***  Write the Funding Rates to the Extract File.
+      *
+     C                     Z-ADDADAT      BPPD
+     C                     Z-ADD*ZERO     CECP
+     C                     Z-ADDEARR      ERNR
+     C                     Z-ADDFUNC      COFF
+     C                     Z-ADDDAYB      FUDY
+     C                     Z-ADDDIVB      FUDV
+     C                     MOVE 'R'       CEAR
+     C                     WRITECOFEXDF
+     C                     ADD  1         RCCOFE
+     C                     END
+      *
+      ***  Read the next Funding Rate.
+      *
+     C           KFUND2    READEFUNDS                    85
+      *
+     C                     END
+      *
+      ***  If maturity date has passed, ensure no further costing
+      *
+     C           MATY      IFLE ECD
+     C           MATY      ANDNE*ZERO
+     C                     MOVEL'D'       RECI
+     C                     Z-ADDMATY      BPPD
+     C                     Z-ADD*ZERO     CECP
+     C                     Z-ADD*ZERO     ERNR
+     C                     Z-ADD*ZERO     COFF
+     C                     Z-ADD*ZERO     FUDY
+     C                     Z-ADD*ZERO     FUDV
+     C                     MOVE 'A'       CEAR
+     C                     WRITECOFEXDF
+     C                     ADD  1         RCCOFE
+     C                     END
+      *
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - Subroutine to Output Audit report and End Program.  *
+      *                                                               *
+      *  Called By: Main Processing, PROCES, *PSSR                    *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           *** AUDIT  ***
+      *
+      ***  Update Audit File.
+      *
+     C                     Z-ADDRCCOFE    NORE
+     C                     WRITECOFEXAF
+      *
+      ***  Output Report Header and File Controls.
+      *
+     C                     WRITEHEADAU
+     C                     WRITECONTROL
+      *
+      ***  If there is a DB Error, Output the DB Error Information.
+      *
+     C           *INU7     IFEQ '1'
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ***  Or, if no valid records read, Output "No Details" message.
+      *
+     C           RCBKPH    IFEQ 0
+     C                     WRITENODTLS
+     C                     END
+     C                     END
+      *
+      ***  End Program and Return.
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Program Error Processing Subroutine.                *
+      *                                                               *
+      *  Called By: Various                                           *
+      *  Calls:                                                       *
+      *  AUDIT  - Produce Audit Report and End Program                *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           *** *PSSR  ***
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVELDBERR     WLDA
+     C                     OUT  WLDA
+      *
+     C                     SETON                     U7U8
+     C                     DUMP
+     C                     EXSR AUDIT
+     C                     END
+      *
+      ***  If *PSSR already run, then just end the program here.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  CFDSR  - Subroutine for fail on Write to PF/COFEXD.          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CFDSR     BEGSR                           *** CFDSR  ***
+      *
+     C                     MOVEL'COFEX'   DBFILE           ***************
+     C                     MOVELWKCOFD    DBKEY            * DB ERROR 05 *
+     C                     Z-ADD05        DBASE            ***************
+     C                     EXSR *PSSR
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  CFASR  - Subroutine for fail on Write to PF/COFEXA.          *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CFASR     BEGSR                           *** CFASR  ***
+      *
+     C                     MOVEL'COFEX'   DBFILE           ***************
+     C                     MOVEL'AUDIT'   DBKEY            * DB ERROR 06 *
+     C                     Z-ADD06        DBASE            ***************
+     C                     EXSR *PSSR
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/COPY ZSRSRC,ZEVCDZ1
+     C/COPY ZSRSRC,ZCNSDZ1
+     C/COPY ZSRSRC,ZCONVZ1
+      /EJECT
+      ***
+**   CPY@
+(c) Finastra Technology, Inc. 2017
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000

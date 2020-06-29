@@ -1,0 +1,1429 @@
+     H        1
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas XX SE Cost of Funds Report')                     *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  XX0006 - XX Cost of Funds Report                             *
+      *                                                               *
+      *  Function: This report enables an evaluation of the Cost of   *
+      *   (COB)    Funding the security trading business. The User's  *
+      *            Value Date Positions are reported from the Start   *
+      *            of the year to today together with the applicable  *
+      *            Rates. The Cost or Earnings that can be attributed *
+      *            to these Positions is shown.                       *
+      *            Monthly Totals and a final Total are shown for     *
+      *            each Currency within Branch and Book.              *
+      *            Re-write of SED006 for UGB                         *
+      *                                                               *
+      *  Called by: SEC0805 - Cost of Funds Report                    *
+      *                                                               *
+      *            Frequency:                                         *
+      *            - on request during COB                            *
+      *                                                               *
+      *  (c) Finastra International Limited 2017                      *
+      *                                                               *
+      *  Last Amend No. DUG504 *CREATE      Date 06Sep17              *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  DUG504 - Cost of Funds (Includes SC239304/233797)            *
+      *  239304 - Access month end exchange rates for currency only   *
+      *           upto the current month.                             *
+      *  233797 - Allow report to be included in the Report Control   *
+      *           Facility.                                           *
+      *                                                               *
+      *****************************************************************
+     FXXCOFEPDIF  E           K        DISK
+     FXXMEXRPDIF  E           K        DISK
+     FXX0006AUO   E                    PRINTER
+     F                                              KINFDS SPOOLU                             233797
+     F*SED006P1O***E                    PRINTER                                               233797
+     F**********                                     KINFDS SPOOL1                            233797
+     FXX0006P1O   E                    PRINTER      KINFDS SPOOL1     UC                      233797
+     FXXBKPSPDO   E                    DISK                           U2
+      /EJECT
+      *****************************************************************
+      *                                                               *
+      *  F U N C T I O N   O F   I N D I C A T O R S                  *
+      *                                                               *
+      *   37  - Multibranching ON                                     *
+      *                                                               *
+      *   60  - Work Indicator                                        *
+      *                                                               *
+      *   89  - End of File on PF/XXCOFEPD                            *
+      *                                                               *
+      *   98  - Date Format: DDMMYY (off); MMDDYY (on)                *
+      * 90-99 - Used by Standard Subroutines                          *
+      *                                                               *
+      * U7+U8 - Database Error                                        *
+      *                                                               *
+      *****************************************************************
+      /SPACE 3
+      *****************************************************************
+      *                                                               *
+      *  S U B R O U T I N E   I N D E X                              *
+      *                                                               *
+      *  INIT   - Program Initialisation                              *
+      *  PROCES - Detail Processing                                   *
+      *  REPORT - Process Report Lines                                *
+      *  CCOST  - Calculate the Cost/Earnings for a Position          *
+      *                                                               *
+      *  CHGKEY - Call Access Programs, etc. for Changed Details      *
+      *  WP1REC - Format and Write a Detail Record to the Report      *
+      *  WP1MTH - Format and Write a Monthly Total to the Report      *
+      *  WP1SEC - Format and Write a Security Total to the Report     *
+      *  WP1CCY - Format and Write a Currency Total to the Report     *
+      *  WP1BOK - Format and Write a Book Total to the Report         *
+      *  WP1END - Write End of Report                                 *
+      *                                                               *
+      *  AUDIT  - Produce Audit Report and End Program                *
+      *  *PSSR  - Program Error Processing Subroutine                 *
+      *                                                               *
+      *  ZDATE1 - Validate Date and Convert into Midas Day Number     *
+      *  ZDATE2 - Convert Midas Day Number into Date (DDMMYY/MMDDYY)  *
+      *  ZDAYS  - Calculation Number of Days between Two Dates        *
+      *  ZSEDIT - Edit an Amount                                      *
+      *                                                               *
+      *****************************************************************
+     E/EJECT
+     E                    RP      1   2 30
+     E                    CPY@    1   1 80
+     E                    CYM        12  4 0
+     E                    CER        12 13 8
+     E/COPY ZSRSRC,ZDATE2Z1
+     E/COPY ZSRSRC,ZDAYSZ1
+     E/COPY ZSRSRC,ZSEDITZ1
+     E/COPY ZSRSRC,ZPOWERZ1
+     I/EJECT
+      *
+     ISPOOL1      DS
+      ***  File Information Data Structure for SE1086P1.
+     I                                       83  92 SFILE                                     233797
+     I                                    B 123 1240SFNUM                                     233797
+     I                                    B 188 1890OFLLN1
+     I                                    B 367 3680PRTLN1
+      *
+     I/COPY ZSRSRC,ZSEDITZ2
+      *
+     IDBERR       DS                            256
+      ***  Local Data Area DS for Database Error Information.
+     I                                      134 177 DBLOT
+     I                                      134 138 DBFILE
+     I                                      139 167 DBKEY
+     I                                      168 175 DBPGM
+     I                                      176 1770DBASE
+      *
+     INEWKEY      DS
+      ***  Data Structure to hold Key of present record.
+     I                                        1   8 NEWKYP
+     I                                        1   5 NWBRBK
+     I                                        1   3 BHBA
+     I                                        4   5 BHBK
+     I                                        6   8 CCY
+     I                                        9  18 BHSC
+      *
+     IOLDKEY      DS
+      ***  Data Structure to hold Key of last record.
+     I                                        1   8 OLDKYP
+     I                                        1   5 OLBRBK
+     I                                        1   3 WOBHBA
+     I                                        4   5 WOBHBK
+     I                                        6   8 WOCCY
+     I                                        9  18 WOBHSC
+      *
+     I            DS
+      ***  Data Structure to hold Date, Used in SR/INIT.
+     I                                        1   60WDATE
+     I                                        1   20WMM
+     I                                        3   40WDD
+     I                                        5   60WYY
+     I            DS
+     I                                        1   7 RDATE
+     I                                        1   2 RDD
+     I            DS
+     I                                        1   40ZYM
+     I                                        1   20ZYEAR
+     I                                        1   2 ZYEARA
+     I                                        3   40ZMTH
+     I                                        3   4 ZMTHA
+      *                                                                                       233797
+     ISPOOLU      DS                                                                          233797
+     I                                       83  92 SFILEU                                    233797
+     I                                    B 123 1240SFNUMU                                    233797
+     IRUNDT       DS                                                                          233797
+      *                                                                                       233797
+      ** RUNDAT data area                                                                     233797
+      *                                                                                       233797
+     I                                        1   7 RUNA                                      233797
+     I                                    P   8  100RUND                                      233797
+     I                                       11  11 SSF                                       233797
+     I                                       12  12 DATF                                      233797
+     I                                       13  13 MBIN                                      233797
+      *                                                                                       233797
+      ***  Dummy Data Structures used by Access Programs.
+      *
+     ISDBANK    E DSSDBANKPD
+      ***  External data structures for Bank Details
+      *
+     ISDBOOK    E DSSDBOOKPD
+      ***  External data structures for Book Details
+     ISDCURR    E DSSDCURRPD
+      ***  External data structures for Currency Details
+     ISDGELR    E DSSDGELRPD
+      ***  External data structures for GL Details
+     ISDBRCH    E DSSDBRCHPD
+      ***  External data structures for Branch Details
+     IDSFDY     E DSDSFDY
+      ***  Short data structure for access objects
+      *
+     IDSSDY     E DSDSSDY
+      *** Long date structure for access objects
+      *================================================================
+      *  P R O G R A M   S T A R T                                    *
+      *================================================================
+      *
+      ***  Perform Initialisation.
+      *
+     C                     EXSR INIT
+      *
+      ***  Perform Detail Processing.
+      *
+     C                     EXSR PROCES
+      *
+      ***  Output Audit Report and End Program.
+      *
+     C                     EXSR AUDIT
+      *
+      *================================================================
+      *  P R O G R A M   E N D                                        *
+      *================================================================
+      *****************************************************************
+      *                                                               *
+      *  INIT   - Subroutine to do Program Initialisation.            *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  ZDAT   -
+      *  ZDAT   -
+      *  AOBANKR0 Access Program                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           INIT      BEGSR                           ***  INIT  ***
+      *
+      ***  REPORT TYPE
+     C           *ENTRY    PLIST
+     C                     PARM           REPT    1
+     C           REPT      IFEQ 'S'
+     C                     MOVELRP,1      REPTYP
+     C                     ELSE
+     C                     MOVELRP,2      REPTYP
+     C                     END
+      *
+      ***  Copyright Statement.
+     C                     MOVEACPY@      BIS@   80
+      *
+      ***  Initialise LDA field.
+      *
+     C                     MOVEL'XX0006'  DBPGM
+     C                     MOVE '0'       *IN12                                               233797
+     C*
+      ***  Call Access Program for Bank Details - Title, Run Date and
+      ***  Run Day Number.
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+      ***  Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVE 'SDBANKPD'DBFILE           ***************
+     C                     Z-ADD001       DBASE            * DB ERROR 01 *
+     C                     EXSR *PSSR                      ***************
+     C                     ENDIF
+      *
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+     C*
+      ***  Call Access Program for GL Details
+      *
+     C                     CALL 'AOGELRR0'
+     C                     PARM '*MSG   ' WRTCD   7
+     C                     PARM '*FIRST ' WOPTN   7
+     C           SDGELR    PARM SDGELR    DSFDY
+      *
+      ***  Handle Database Error.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVE 'SDGELRPD'DBFILE           ***************
+     C                     Z-ADD003       DBASE            * DB ERROR 03 *
+     C                     EXSR *PSSR                      ***************
+     C                     ENDIF
+      *
+      ***  Determine Months & Years of current year (starting from BJPEYD + 1)
+      *
+     C                     EXSR DETMAY
+      *
+      ***  Access Currency file for Base Currency Decimal Places.
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM BJCYCD    WCYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ***  Database Error if not found.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     MOVELBJCYCD    DBKEY            * DB ERROR 02 *
+     C                     Z-ADD002       DBASE            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+     C                     Z-ADDA6NBDP    BCDP    10
+      *
+     C                     Z-ADDBJDNWD    ZZDNWD
+     C                     Z-ADDBKAPDT    ZZAPDT
+     C*
+     C* CALCULATE REPORT CONTROL DATE
+     C*
+     C                     EXSR ZEVCD
+      *
+      ***  Add 1 day if First Day accruals
+      *
+     C           BKALDI    IFNE 'Y'
+     C                     ADD  1         ECD
+     C                     END
+      *
+      ***  Define fields.
+      *
+      ***  Date fields.
+     C           *LIKE     DEFN BPPD      WOBPPD
+     C           *LIKE     DEFN BPPD      WFRDAT
+     C           *LIKE     DEFN BPPD      WTODAT
+     C           *LIKE     DEFN BPPD      WENDAT
+      *
+      ***  Month fields.
+     C           *LIKE     DEFN ZMTH      WFRMM
+     C           *LIKE     DEFN ZMTH      WTOMM
+      *
+      ***  Year fields.
+     C           *LIKE     DEFN ZYEAR     WFRYY
+      *
+      ***  XXCOFEPD Work fields.
+     C           *LIKE     DEFN ERNR      WERNR
+     C           *LIKE     DEFN COFF      WCOFF
+     C           *LIKE     DEFN FUDY      WFUDY
+     C           *LIKE     DEFN FUDV      WFUDV
+      *
+      ***  Report Work and Total fields.
+     C           *LIKE     DEFN CECP      WCOST
+     C           *LIKE     DEFN CECP      WCOSTB
+     C           *LIKE     DEFN CECP      WMTOT
+     C           *LIKE     DEFN CECP      WMTOTB
+     C           *LIKE     DEFN CECP      WSTOT
+     C           *LIKE     DEFN CECP      WSTOTB
+     C           *LIKE     DEFN CECP      WCTOT
+     C           *LIKE     DEFN CECP      WCTOTB
+     C           *LIKE     DEFN CECP      WBTOTB
+     C                     Z-ADD0         WRATE  117
+     C                     Z-ADD0         RQDLN1  30
+     C                     Z-ADD0         DIFLN1  30
+      *
+      ***  Security fields used in SR/ZDAYS.
+     C                     MOVE *BLANK    DYBS    1
+     C                     Z-ADD0         LCPN    50
+     C                     Z-ADD0         ITLD    50
+     C                     Z-ADD0         IADJ    30
+      *
+      ** Added for new version of ZDAYS SR
+      *
+     C                     Z-ADD0         NCD     50
+     C                     Z-ADD0         CPNR   117
+     C                     Z-ADD0         MATY    50
+     C                     Z-ADD0         FCPN    50
+      *
+      ***  Initialise Program fields.
+      *                                                                                       233797
+      ** Read in RUNDAT data area                                                             233797
+      *                                                                                       233797
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                                               233797
+     C                     IN   RUNDT                                                         233797
+      *                                                                                       233797
+     C           MBIN      IFEQ 'Y'                                                           233797
+     C                     MOVE '1'       *IN30                                               233797
+     C                     ENDIF                                                              233797
+      *                                                                                       233797
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  PROCES - Subroutine to do the Detail Processing.             *
+      *                                                               *
+      *  Called By: Main Processing                                   *
+      *  Calls:                                                       *
+      *  AUDIT  - Produce Audit Report and End Program                *
+      *  CHGKEY - Call Access Programs, etc. for Changed Details      *
+      *  REPORT - Process Report Lines                                *
+      *  WP1MTH - Format and Write a Monthly Total to the Report      *
+      *  WP1SEC - Format and Write a Security Total to the Report     *
+      *  WP1CCY - Format and Write a Currency Total to the Report     *
+      *  WP1BOK - Format and Write a Book Total to the Report         *
+      *  WP1END - Write End of Report                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           PROCES    BEGSR                           *** PROCES ***
+      *
+      ***  Read first record from Extract File.
+      *
+     C                     READ XXCOFEPD                 89
+      *
+      ***  If End of Records, (*IN89), Perform: Audit Reporting (No
+      ***  Records).
+      *
+     C           *IN89     IFEQ '1'
+     C                     EXSR AUDIT
+     C                     END
+      *
+      ***  Obtain Branch, Book and Currency information.
+      *
+     C                     EXSR CHGKEY
+      *
+      ***  Do Until End of File.
+      *
+     C           *IN89     DOUEQ'1'
+      *                                                                                       233797
+     C           *IN12     IFEQ '0'                                                           233797
+     C                     SETON                     12                                       233797
+     C                     OPEN XX0006P1                                                      233797
+     C                     EXSR RCFP1                                                         233797
+     C                     ENDIF                                                              233797
+      *
+      ***  Count records read.
+      *
+     C                     ADD  1         RCOUNT
+      *
+      ***  Process change of Key or Date.
+      *
+     C           NEWKEY    IFNE OLDKEY
+     C           BPPD      ORNE WOBPPD
+      *
+      ***  Process Report Lines.
+      *
+     C                     EXSR REPORT
+      *
+      ***  Call Access Programs for changed Details.
+      *
+     C           NEWKEY    IFNE OLDKEY
+     C                     EXSR CHGKEY
+     C                     END
+      *
+     C                     END
+      *
+      ***  Process record just read.
+      *
+     C           CEAR      IFEQ 'A'
+      ***  Amount
+     C                     Z-ADDCECP      WPOSN
+     C                     ELSE
+      ***  Rate
+     C                     Z-ADDERNR      WERNR
+     C                     Z-ADDCOFF      WCOFF
+     C                     Z-ADDFUDY      WFUDY
+     C                     Z-ADDFUDV      WFUDV
+     C                     END
+      *
+      ***  Read next record.
+      *
+     C                     READ XXCOFEPD                 89
+      *
+      ***  End of Do Until End of Valid Records.
+     C                     END
+      *
+      ***  Write final records and Totals to Report.
+      ***  (Clear NEWKEY to force Write of records up to Run Date.)
+      *
+     C                     MOVEL*BLANK    NEWKEY
+     C                     EXSR REPORT
+     C                     EXSR WP1MTH
+     C                     EXSR WP1SEC
+     C                     EXSR WP1CCY
+     C                     EXSR WP1BOK
+     C                     EXSR WP1END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  REPORT - Process Report Lines.                               *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls:                                                       *
+      *  CCOST  - Calculate the Cost/Earnings for a Position          *
+      *  WP1REC - Format and Write a Detail Record to the Report      *
+      *  WP1MTH - Format and Write a Monthly Total to the Report      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           REPORT    BEGSR                           *** REPORT ***
+      *
+      ***  If record is a different Branch/Book/Currency/Security then End
+      ***  Date should be Run Date. Otherwise, the End Date is the Position
+      ***  Date of the record just read.
+      *
+     C           NEWKEY    IFNE OLDKEY
+     C                     Z-ADDECD       WENDAT
+     C                     ELSE
+     C                     Z-ADDBPPD      WENDAT
+     C                     END
+      *
+      ** Determine First Day in Next Month of From Date
+      *
+     C                     Z-ADDWFRDAT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    WFDATE  7
+     C                     Z-ADDZMTH      WFRMM
+     C                     Z-ADDZYEAR     WFRYY
+     C                     EXSR GETFDM
+      *
+      ** If first day in next month of from date is < than or = to the date
+      ** to calculate interest to, then calculate interest to that date
+      *
+     C           ZDAYNO    IFLE WENDAT
+     C           WFRMM     ADD  1         WTOMM
+     C                     Z-ADDZDAYNO    WTODAT
+     C                     ELSE
+     C                     Z-ADDWFRMM     WTOMM
+     C                     Z-ADDWENDAT    WTODAT
+     C                     END
+      *
+      ***  Calculate and Write records to Print File up to the End Date
+      *
+     C           WFRDAT    DOWLTWENDAT
+      *
+      ***  Calculate the Cost/Earnings from the From Date to the To Date.
+      *
+     C                     EXSR CCOST
+      *
+      ***  Write out the record.
+      *
+     C                     EXSR WP1REC
+      *
+      ***  If going across a Month End, need to Output Monthly Total.
+      *
+     C           WFRMM     IFNE WTOMM
+     C                     EXSR WP1MTH
+     C                     END
+      *
+      ***  Update the From Date
+      *
+     C                     Z-ADDWTODAT    WFRDAT
+      *
+      **   Advance the from date if the end date has not yet been reached
+      *
+     C           WFRDAT    IFLT WENDAT
+      *
+      ** Determine First Day in Next Month of From Date
+      *
+     C                     Z-ADDWFRDAT    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     MOVELZADATE    WFDATE
+     C                     Z-ADDZMTH      WFRMM
+     C                     Z-ADDZYEAR     WFRYY
+     C                     EXSR GETFDM
+      *
+      ** If first day in next month of from date is < than or = to the date
+      ** to calculate interest to, then calculate interest to that date
+      *
+     C           ZDAYNO    IFLE WENDAT
+     C           WFRMM     ADD  1         WTOMM
+     C                     Z-ADDZDAYNO    WTODAT
+     C                     ELSE
+     C                     Z-ADDWFRMM     WTOMM
+     C                     Z-ADDWENDAT    WTODAT
+     C                     END
+     C                     END
+      *
+     C                     END
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  CCOST  - Subroutine to Calculate the Cost/Earnings Amount    *
+      *           for the current Currency Position.                  *
+      *                                                               *
+      *  Called By: REPORT                                            *
+      *  Calls    :                                                   *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CCOST     BEGSR                           *** CCOST  ***
+      *
+      ***  Initialise the Rate. If Position is negative, use Earnings
+      ***  Rate, else use Funding Rate.
+      ***  (Note: Rates are held on File as 11,0 instead of 11,7 )
+      *
+     C           WPOSN     IFLT 0
+     C                     MOVE WERNR     WRATE
+     C                     ELSE
+     C                     MOVE WCOFF     WRATE
+     C                     END
+      *
+      ***  Calculate Number of Days in Period.
+      ***  (Note: Currently, only Day Bases 1, 2 and 3 are permitted.)
+      *
+     C                     Z-ADDWFRDAT    ZSDATE
+     C                     Z-ADDWTODAT    ZEDATE
+     C                     MOVE WFUDY     DYBS
+      *
+     C                     EXSR ZDAYS
+      *
+      ***  If the Position is zero then the Cost is also zero.
+      *
+     C           WPOSN     IFEQ 0
+     C                     Z-ADD*ZERO     WCOST
+     C                     ELSE
+      *
+      ***  Calculate Number of Days in the Interest Year.
+      ***  (Note: Currently, only Divisor Bases 1 and 2 are permitted.)
+      *
+     C           WFUDV     IFEQ 1
+     C                     Z-ADD36000     WDIV    50
+     C                     ELSE
+     C                     Z-ADD36500     WDIV
+     C                     END
+      *
+      ***  Calculate Cost/Earnings Amount:
+      ***  (Note Position value has already been multiplied by Price).
+      ***
+      ***   Position * Days in Period * Cost/Earnings Rate
+      ***  ------------------------------------------------
+      ***                 Days in Year * 100
+      *
+     C           WPOSN     MULT ZDDAYS    WCALC  307
+     C                     MULT WRATE     WCALC     H
+     C           WCALC     DIV  WDIV      WCOST     H
+      *
+      ***  End of If/Else Position zero.
+     C                     END
+      *
+      **  Determine Exchange Rate for From Year and From Month
+      *
+     C                     Z-ADD1         X
+     C                     Z-ADDWFRYY     ZYEAR
+     C                     Z-ADDWFRMM     ZMTH
+     C           ZYM       LOKUPCYM,X                    99*
+     C                     Z-ADDCER,X     CEXRT  138
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  CHGKEY - Call Access Programs for any changed details.       *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls:                                                       *
+      *  WP1MTH - Format and Write a Monthly Total to the Report      *
+      *  WP1SEC - Format and Write a Security Total to the Report     *
+      *  WP1CCY - Format and Write a Currency Total to the Report     *
+      *  WP1BOK - Format and Write a Book Total to the Report         *
+      *  AOBRCHR1 Access Program                                      *
+      *  AOBOOKR0 Access Program                                      *
+      *  AOCURRR0 Access Program                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           CHGKEY    BEGSR                           *** CHGKEY ***
+      *
+      ***  Unless first time through, must write Last Monthly Total and
+      ***  Security Total for previous Branch/Book/Currency/Security.
+      *
+     C           RCOUNT    IFNE 0
+     C                     EXSR WP1MTH
+     C                     EXSR WP1SEC
+     C           NEWKYP    IFNE OLDKYP
+     C                     EXSR WP1CCY
+     C           NWBRBK    IFNE OLBRBK
+     C                     EXSR WP1BOK
+     C                     END
+     C                     END
+     C                     END
+      *
+      ***  Check for change of Branch.
+      *
+     C           BHBA      IFNE WOBHBA
+      *
+      ***  Access Branch file for Branch Name.
+      *
+      *
+     C                     CALL 'AOBRCHR1'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM BHBA      WCYCD   3
+     C           SDBRCH    PARM SDBRCH    DSSDY
+      *
+      ***  Database Error if not found.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVEL'SDBRCHPD'DBFILE           ***************
+     C                     MOVELBHBA      DBKEY            * DB ERROR 04 *
+     C                     Z-ADD004       DBASE            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELBHBA      RBHBR
+      *
+     C                     END
+      *
+      ***  Check for change of Book.
+      *
+     C           BHBK      IFNE WOBHBK
+      *
+      *
+     C                     CALL 'AOBOOKR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM BHBK      WCYCD   3
+     C           SDBOOK    PARM SDBOOK    DSSDY
+      *
+      ***  Database Error if not found.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVEL'SDBOOKPD'DBFILE           ***************
+     C                     MOVELBHBA      DBKEY            * DB ERROR 05 *
+     C                     Z-ADD005       DBASE            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELBHBK      RBHBK
+      *
+     C                     END
+      *
+      ***  Check for change of Currency
+      *
+     C           CCY       IFNE WOCCY
+      *
+      ***  Access Currency file for Currency Name and Decimal Places.
+      *
+      *
+     C                     CALL 'AOCURRR0'
+     C                     PARM *BLANKS   WRTCD
+     C                     PARM '*KEY   ' WOPTN
+     C                     PARM CCY       WCYCD   3
+     C           SDCURR    PARM SDCURR    DSSDY
+      *
+      ***  Database Error if not found.
+      *
+     C           WRTCD     IFNE *BLANKS
+     C                     MOVEL'SDCURRPD'DBFILE           ***************
+     C                     MOVELCCY       DBKEY            * DB ERROR 06 *
+     C                     Z-ADD006       DBASE            ***************
+     C                     EXSR *PSSR
+     C                     ENDIF
+      *
+     C                     MOVELA6CYCD    RCCY
+     C                     MOVELA6CYNM    RCCNM  14
+     C           A6MDIN    IFEQ 'D'
+     C                     MOVEL'D'       CMDIN   1
+     C                     ELSE
+     C                     MOVEL'M'       CMDIN
+     C                     END
+     C                     Z-ADDA6NBDP    CCDP    10
+      *
+      ** Access the Month End exchange Rates for the Currency
+      *
+     C                     EXSR ACMEXR
+      *
+     C                     END
+      *
+      ***  Check for change of Security
+      *
+     C           BHSC      IFNE WOBHSC
+      *
+     C                     MOVELBHSC      RBHSC
+      *
+     C                     END
+      *
+      ***  If the primary key fields have changed, write out new header.
+      *
+     C           NEWKYP    IFNE OLDKYP
+      *                                                                                       233797
+     C           *IN12     IFEQ '0'                                                           233797
+     C                     MOVE '1'       *IN12                                               233797
+     C                     OPEN XX0006P1                                                      233797
+     C                     EXSR RCFP1                                                         233797
+     C                     ENDIF                                                              233797
+      *                                                                                       233797
+     C                     WRITEHEADP1
+     C                     END
+      *
+      ** RECONCILIATION FILE
+      *
+     C           NEWKEY    IFNE OLDKEY
+     C           *INU2     ANDEQ'1'
+     C                     MOVEL'S'       WOBHMK
+     C                     MOVEL'V'       WOBHTV
+     C                     WRITESEBKPSD0
+     C                     END
+      *
+      ***  Process the New Position Date.
+      *
+     C                     Z-ADDBPPD      WOBPPD
+      *
+     C                     Z-ADDBPPD      WFRDAT
+      *
+      ***  Save the New Key.
+      *
+     C                     MOVE NEWKEY    OLDKEY
+      *
+      ***  Clear Work fields.
+      *
+     C                     Z-ADD*ZERO     WPOSN
+     C                     Z-ADD*ZERO     WERNR
+     C                     Z-ADD*ZERO     WCOFF
+     C                     Z-ADD3         WFUDY
+     C                     Z-ADD1         WFUDV
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  WP1REC - Subroutine to Write a Detail record to the Report.  *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls:                                                       *
+      *  ZSFILE   Access Program                                      *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WP1REC    BEGSR                           *** WP1REC ***
+      *
+      ***  Determine Cost in Base Currency
+      *
+     C                     Z-ADDWCOST     ZAMTCI
+     C                     Z-ADDCEXRT     ZEXCH
+     C                     MOVE CMDIN     ZMD
+     C                     Z-ADDA6NBDP    ZCDPI
+     C                     Z-ADDBCDP      ZCDPO
+     C                     EXSR ZCONVN
+     C                     Z-ADDZAMTCO    WCOSTB
+      *
+      ***  Add Cost to Totals fields.
+      *
+     C                     ADD  WCOST     WMTOT
+     C                     ADD  WCOSTB    WMTOTB
+     C                     ADD  WCOST     WSTOT
+     C                     ADD  WCOSTB    WSTOTB
+     C                     ADD  WCOST     WCTOT
+     C                     ADD  WCOSTB    WCTOTB
+     C                     ADD  WCOSTB    WBTOTB
+      *
+      ***  Format fields to output to the Report.
+      *
+      ***  Position Date.
+      *
+     C                     MOVELWFDATE    RDATE
+      *
+      ***  Position (unsigned).
+      *
+     C           WPOSN     IFLT 0
+     C                     Z-SUBWPOSN     ZFLD15
+     C                     ELSE
+     C                     Z-ADDWPOSN     ZFLD15
+     C                     END
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RPOSN
+      *
+      ***  Narrative.
+      *
+     C           WPOSN     IFGT 0
+     C                     MOVE 'LONG '   RNARR
+     C                     ELSE
+     C           WPOSN     IFEQ 0
+     C                     MOVE 'FLAT '   RNARR
+     C                     ELSE
+     C                     MOVE 'SHORT'   RNARR
+     C                     END
+     C                     END
+      *
+      ***  Month End Exchange Rate
+      *
+     C                     Z-ADD*ZERO     ZFLD15
+     C                     MOVE CEXRT     ZFLD15
+     C                     Z-ADD8         ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    REXRT
+      *
+      ***  Cost/Earnings Rate.
+      *
+     C                     Z-ADD*ZERO     ZFLD15
+     C                     MOVE WRATE     ZFLD15
+     C                     Z-ADD7         ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RRATE
+      *
+      ***  Number of Days
+      *
+     C                     Z-ADD*ZERO     ZFLD15
+     C                     MOVE ZDDAYS    ZFLD15
+     C                     Z-ADD0         ZDECS
+     C                     MOVE 'L'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RDAYS
+      *
+      ***  Cost/Earnings Amount in nominal currency
+      *
+     C                     Z-ADDWCOST     ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RCOST
+      *
+      ***  Cost/Earnings Amount in base currency
+      *
+     C                     Z-ADDWCOSTB    ZFLD15
+     C                     Z-ADDBCDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RCOSTB
+      *
+      ** Don't output if from start of month and flat position
+      *
+     C           RDD       IFNE ' 1'
+     C           WPOSN     ORNE *ZERO
+     C           *INU1     OREQ '1'
+      *
+      ***  Check that sufficient lines remain for the Format. If not,
+      ***  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD1         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+      *                                                                                       233797
+     C           *IN12     IFEQ '0'                                                           233797
+     C                     MOVE '1'       *IN12                                               233797
+     C                     OPEN XX0006P1                                                      233797
+     C                     EXSR RCFP1                                                         233797
+     C                     ENDIF                                                              233797
+      *                                                                                       233797
+     C                     WRITEHEADP1
+     C                     END
+      *
+      ***  Write out Detail Record.
+      *
+     C                     WRITEDETAIL
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  WP1MTH - Subroutine to Write a Monthly Total to the Report.  *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WP1MTH    BEGSR                           *** WP1MTH ***
+      *
+      ***  Find the three character narrative for the Month.
+      *
+     C                     Z-ADDWFRMM     M       20
+     C                     MOVE ZMNM,M    RMONTH
+      *
+      ***  Format the Total Amounts.
+      *
+     C                     Z-ADDWMTOT     ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RMTOT
+      *
+     C                     Z-ADDWMTOTB    ZFLD15
+     C                     Z-ADDBCDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RMTOTB
+      *
+      ** Don't output if no cost/earnings
+      *
+     C           WMTOT     IFNE *ZERO
+     C           *INU1     OREQ '1'
+      *
+      ***  Check that sufficient lines remain for the Format. If not,
+      ***  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD1         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+      *                                                                                       233797
+     C           *IN12     IFEQ '0'                                                           233797
+     C                     MOVE '1'       *IN12                                               233797
+     C                     OPEN XX0006P1                                                      233797
+     C                     EXSR RCFP1                                                         233797
+     C                     ENDIF                                                              233797
+      *                                                                                       233797
+     C                     WRITEHEADP1
+     C                     END
+      *
+      ***  Write out Monthly Total Format.
+      *
+     C                     WRITEMTHTOT
+     C                     END
+      *
+      ***  Clear the Monthly Totals.
+      *
+     C                     Z-ADD*ZERO     WMTOT
+     C                     Z-ADD*ZERO     WMTOTB
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  WP1SEC - Subroutine to Write a Security Total to the Report. *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WP1SEC    BEGSR                           *** WP1SEC ***
+      *
+      ***  Format the Total Amounts.
+      *
+     C                     Z-ADDWSTOT     ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RSTOT
+      *
+     C                     Z-ADDWSTOTB    ZFLD15
+     C                     Z-ADDBCDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RSTOTB
+      *
+      ***  Check that sufficient lines remain for the Format. If not,
+      ***  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD3         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+      *                                                                                       233797
+     C           *IN12     IFEQ '0'                                                           233797
+     C                     MOVE '1'       *IN12                                               233797
+     C                     OPEN XX0006P1                                                      233797
+     C                     EXSR RCFP1                                                         233797
+     C                     ENDIF                                                              233797
+      *                                                                                       233797
+     C                     WRITEHEADP1
+     C                     END
+      *
+      ***  Write out Security Total Format.
+      *
+     C                     WRITESECTOT
+      *
+      ***  Clear the Security Totals.
+      *
+     C                     Z-ADD*ZERO     WSTOT
+     C                     Z-ADD*ZERO     WSTOTB
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  WP1CCY - Subroutine to Write a Currency Total to the Report. *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WP1CCY    BEGSR                           *** WP1CCY ***
+      *
+      ***  Format the Total Amounts.
+      *
+     C                     Z-ADDWCTOT     ZFLD15
+     C                     Z-ADDA6NBDP    ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RCTOT
+      *
+     C                     Z-ADDWCTOTB    ZFLD15
+     C                     Z-ADDBCDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RCTOTB
+      *
+      ***  Check that sufficient lines remain for the Format. If not,
+      ***  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD2         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+      *                                                                                       233797
+     C           *IN12     IFEQ '0'                                                           233797
+     C                     MOVE '1'       *IN12                                               233797
+     C                     OPEN XX0006P1                                                      233797
+     C                     EXSR RCFP1                                                         233797
+     C                     ENDIF                                                              233797
+      *                                                                                       233797
+     C                     WRITEHEADP1
+     C                     END
+      *
+      ***  Write out Currency Total Format.
+      *
+     C                     WRITECCYTOT
+      *
+      ***  Clear the Currency Totals.
+      *
+     C                     Z-ADD*ZERO     WCTOT
+     C                     Z-ADD*ZERO     WCTOTB
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  WP1BOK - Subroutine to Write a Book Total to the Report.     *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WP1BOK    BEGSR                           *** WP1BOK ***
+      *
+      ***  Format the Total Base Amount.
+      *
+     C                     Z-ADDWBTOTB    ZFLD15
+     C                     Z-ADDBCDP      ZDECS
+     C                     MOVE 'J'       ZECODE
+     C                     EXSR ZSEDIT
+     C                     MOVE ZOUT21    RBTOTB
+      *
+      ***  Check that sufficient lines remain for the Format. If not,
+      ***  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD3         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+      *                                                                                       233797
+     C           *IN12     IFEQ '0'                                                           233797
+     C                     MOVE '1'       *IN12                                               233797
+     C                     OPEN XX0006P1                                                      233797
+     C                     EXSR RCFP1                                                         233797
+     C                     ENDIF                                                              233797
+      *                                                                                       233797
+     C                     WRITEHEADP1
+     C                     END
+      *
+      ***  Write out Book Total Format.
+      *
+     C                     WRITEBOKTOT
+      *
+      ***  Clear the Book Total.
+      *
+     C                     Z-ADD*ZERO     WBTOTB
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  WP1MTH - Subroutine to Write End of Report.                  *
+      *                                                               *
+      *  Called By: PROCES                                            *
+      *  Calls    : None                                              *
+      *                                                               *
+      *****************************************************************
+      *
+     C           WP1END    BEGSR                           *** WP1END ***
+      *
+      ***  Check that sufficient lines remain for the Format. If not,
+      ***  write out the Main Headings on a new page.
+      *
+     C                     Z-ADD4         RQDLN1
+     C           OFLLN1    SUB  PRTLN1    DIFLN1
+     C           DIFLN1    IFLE RQDLN1
+      *                                                                                       233797
+     C           *IN12     IFEQ '0'                                                           233797
+     C                     MOVE '1'       *IN12                                               233797
+     C                     OPEN XX0006P1                                                      233797
+     C                     EXSR RCFP1                                                         233797
+     C                     ENDIF                                                              233797
+      *                                                                                       233797
+     C                     WRITEHEADP1
+     C                     END
+      *
+      ***  Write out Monthly Total Format.
+      *
+     C                     WRITETRAILP1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  GETFDM - Subroutine to Get First Day in Next Month           *
+      *                                                               *
+      *  Called By: REPORT                                            *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           GETFDM    BEGSR                           *** GETFDM ***
+      *
+      ***  Convert input day number to DD/MM/YY
+      *
+     C                     Z-ADDZDAYNO    ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZDAY      WDD
+     C                     Z-ADDZMTH      WMM
+     C                     Z-ADDZYEAR     WYY
+      *
+      ***  Set day to first day of next month
+      *
+     C                     Z-ADD1         WDD
+     C                     ADD  1         WMM
+     C           WMM       IFGT 12
+     C                     Z-ADD1         WMM
+     C                     ADD  1         WYY
+     C                     END
+      *
+      ***  Convert the new date back to a day number
+      *
+     C                     Z-ADDWDATE     ZDATE
+     C                     EXSR ZDATE1
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  AUDIT  - Subroutine to Output Audit report and End Program.  *
+      *                                                               *
+      *  Called By: Main Processing, PROCES, *PSSR                    *
+      *  Calls: None.                                                 *
+      *                                                               *
+      *****************************************************************
+      *
+     C           AUDIT     BEGSR                           *** AUDIT  ***
+      *                                                                                       233797
+     C                     EXSR RCFAU                                                         233797
+      *
+      ***  Output Report Header and File Controls.
+      *
+     C                     WRITEHEADAU
+     C                     WRITECONTROL
+      *
+      ***  If there is a DB Error, Output the DB Error Information.
+      *
+     C           *INU7     IFEQ '1'
+     C                     WRITEDBERROR
+     C                     ELSE
+      *
+      ***  Or, if no records read, Output "No Details" message.
+      *
+     C           RCOUNT    IFEQ 0
+     C                     WRITENODTLS
+     C                     END
+     C                     END
+      *
+      ***  End Program and Return.
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  ACMEXR - Access Month End Exchange Rates for Currency        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ACMEXR    BEGSR                           ** ACMEXR *
+      *
+     C           SEMEXK    KLIST
+     C                     KFLD           ZYEARA
+     C                     KFLD           RCCY
+     C                     KFLD           ZMTHA
+      *                                                                                       239304
+     C                     Z-ADDRUND      ZDAYNO                                              239304
+     C                     EXSR ZDATE2                                                        239304
+     C                     Z-ADDZMTH      CMTH    20                                          239304
+      *
+     C                     Z-ADD0         X
+     C********** X         DOWLT12                                                            239304
+     C           X         DOWLTCMTH                                                          239304
+     C                     ADD  1         X
+     C                     Z-ADDCYM,X     ZYM
+     C           SEMEXK    CHAINXXMEXRPD             99    *
+     C           *IN99     IFEQ '1'
+     C                     MOVEL'SEMEX'   DBFILE           ***************
+     C                     MOVELRCCY      DBKEY            * DB ERROR 06 *
+     C                     MOVE ZYM       DBKEY            ***************
+     C                     Z-ADD08        DBASE
+     C                     EXSR *PSSR
+     C                     END
+     C                     Z-ADDDMERT     CER,X
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  DETMAY - Determine Months & Years of Current Year            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DETMAY    BEGSR                           ** DETMAY *
+      *
+     C                     Z-ADD1         X       20
+     C           BJPEYD    ADD  1         ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZYM       CYM,X
+     C           X         DOWLT12
+     C                     ADD  1         X
+     C                     ADD  1         ZMTH
+     C           ZMTH      IFGT 12
+     C                     ADD  1         ZYEAR
+     C                     Z-ADD1         ZMTH
+     C                     END
+     C                     Z-ADDZYM       CYM,X
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+      ***  Check to see that *PSSR has not already been called.
+      *
+     C           WRUN      IFEQ *BLANK
+     C                     MOVE 'Y'       WRUN    1
+      *
+     C           *NAMVAR   DEFN LDA       WLDA  256
+     C           *LOCK     IN   WLDA
+     C                     MOVELDBERR     WLDA
+     C                     OUT  WLDA
+      *
+     C                     SETON                     U7U8LR
+     C                     DUMP
+     C                     EXSR AUDIT
+     C                     END
+      *
+      ***  If *PSSR already run, then just end the program here.
+      *
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************                       233797
+     C/EJECT                                                                                  233797
+      *****************************************************************                       233797
+      *                                                                                       233797
+      *  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF                              233797
+      *                                                                                       233797
+      *****************************************************************                       233797
+      *                                                                                       233797
+     C           RCFP1     BEGSR                            ** RCFP1 **                       233797
+      *                                                                                       233797
+      **      ENSURE REPORT SPOOL FILE RECORDED BY RCF                                        233797
+      *                                                                                       233797
+     C                     Z-ADDSFNUM     ZSNUM   60                                          233797
+      *                                                                                       233797
+     C                     CALL 'ZSFILE'                                                      233797
+     C                     PARM           SEQ     5                                           233797
+     C                     PARM           SENTY   3                                           233797
+     C                     PARM           SFILE                                               233797
+     C                     PARM           ZSNUM                                               233797
+     C                     PARM           ZSERR   1                                           233797
+      *                                                                                       233797
+     C           ZSERR     IFEQ 'Y'                                                           233797
+      *                                                                                       233797
+      **  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM                           233797
+      *                                                                                       233797
+     C                     SETON                     U7U8LR                                   233797
+     C                     RETRN                                                              233797
+     C                     ENDIF                                                              233797
+      *                                                                                       233797
+     C                     ENDSR                                                              233797
+      *                                                                                       233797
+      *****************************************************************                       233797
+     C/EJECT                                                                                  233797
+      *****************************************************************                       233797
+      *                                                                                       233797
+      *  RCFAU -- SUBROUTINE TO REGISTER AU PRINTER FILE VIA RCF                              233797
+      *                                                                                       233797
+      *****************************************************************                       233797
+      *                                                                                       233797
+     C           RCFAU     BEGSR                            ** RCFAU **                       233797
+      *                                                                                       233797
+      **      ENSURE AUDIT SPOOL FILE RECORDED BY RCF                                         233797
+      *                                                                                       233797
+     C                     Z-ADDSFNUMU    ZSNUMU  60                                          233797
+      *                                                                                       233797
+     C                     CALL 'ZSFILE'                                                      233797
+     C                     PARM           SEQ                                                 233797
+     C                     PARM *BLANKS   SENTY                                               233797
+     C                     PARM           SFILEU                                              233797
+     C                     PARM           ZSNUMU                                              233797
+     C                     PARM *BLANK    ZSERR                                               233797
+      *                                                                                       233797
+     C           ZSERR     IFEQ 'Y'                                                           233797
+      *                                                                                       233797
+      **  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM                           233797
+      *                                                                                       233797
+     C                     SETON                     U7U8LR                                   233797
+     C                     RETRN                                                              233797
+     C                     ENDIF                                                              233797
+      *                                                                                       233797
+     C                     ENDSR                                                              233797
+      *
+      *****************************************************************
+     C/COPY ZSRSRC,ZEVCDZ1
+     C/COPY ZSRSRC,ZDATE1Z2
+     C/COPY ZSRSRC,ZDATE2Z2
+     C/COPY ZSRSRC,ZDAYSZ2
+     C/COPY ZSRSRC,ZSEDITZ3
+     C/COPY ZSRSRC,ZCONVNZ1
+      /EJECT
+      ***
+**  RP
+ * COST OF FUNDS RATES *
+* COST TO TREASURY RATES *
+**  CPY@
+(c) COPYRIGHT BIS BANKING SYSTEMS INTERNATIONAL LTD. 1993.
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
+**   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
+0006001521029820444305904073650882610287117481320914670161311759219053
+2051421975234362489726358278192928030741322023366335124365853804639507
+40968424294389045351
+**  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION
+0000001
+0000010
+0000100
+0001000
+0010000
+0100000
+1000000

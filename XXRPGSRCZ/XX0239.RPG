@@ -1,0 +1,1106 @@
+     H        1
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Generate new A/C Keys and Posns Sttlement')   *
+/*OVRF*: OVRDBF FILE(POSETAX) TOFILE(POSETA) SHARE(*NO)             : *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading Module                            *
+      *                                                               *
+      *  XX0239 - Midas XX SE Generate new A/C Keys and Positions     *
+      *           Settlement                                          *
+      *                                                               *
+      *           Generate Account Keys and Position Settlements      *
+      *              User Depot Positions For Dividend Events         *
+      *                                                               *
+      *  (c) Finastra International Limited 2017                      *
+      *                                                               *
+      *  Last Amend No. DUG502 *CREATED     Date 07Dec17              *
+      *                 SGFIX               Date 06Apr05              *
+      *                 S20239              DATE 03NOV94              *
+      *                 S20249              DATE 25OCT94              *
+      *                 S20205              DATE 10DEC93              *
+      *                 BH0083              DATE 07NOV93              *
+      *                 BH0076              DATE 01OCT93              *
+      *                 S20072              DATE 25JUL93              *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  DUG502 - Security Event Enhancements                         *
+      *           Upgrade of R4/SED239 to FB/XX0239                   *
+      *  SGFIX  - Account keys generated without Profit Center.       *
+      *  S20239 - ONLY PROCESS DIVIDENDS IF BOOK CODE PRESENT         *
+      *  S20249 - OUTPUT SECURITY DIARY EVENT TYPE TO SEKEYD.         *
+      *  S20205 - DIVIDEND PROCESSING ERRORS                          *
+      *  BH0083 - DO NOT GENERATE POSITION SETTLEMENT IF REVERSAL     *
+      *  BH0076 - WRONG POSITION SOMETIMES USED                       *
+      *  S20072 - DIV.PAYMENTS SPLIT BY BOOK                          *
+      *                                                               *
+      *****************************************************************
+      *
+     FSECAC   IF  E           K        DISK
+     FSECACA  IF  E                    DISK
+     FSECTY   IF  E           K        DISK
+     FINVTP   IF  E           K        DISK
+     FUDEPS   IF  E           K        DISK
+     F            UDEPPDF                           KRENAMEUDEPPSS
+     FUDEPH   IF  E           K        DISK
+     F            UDEPPDF                           KRENAMEUDEPPHH
+     FSTDSED  IF  E           K        DISK
+     FCLINT   IF  E           K        DISK
+     F            CLINTCAF                          KIGNORE
+     F            CLINTCBF                          KIGNORE
+     F            CLINTCCF                          KIGNORE
+     F            CLINTC1F                          KIGNORE
+     FTABSE   IF  E           K        DISK
+     F* ICD 1     TABTB10F                          KIGNORE
+     F            TABTB10F                          KIGNORE                                  DUG502
+     F* ICD 2     TABTB11F                          KIGNORE
+     F*           TABTB36F                          KIGNORE
+     F            TABTB40F                          KIGNORE
+     F** CRCY     TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETHF                          KIGNORE
+     F***         TABLETJF                          KIGNORE                                   DUG502
+     F            TABLETLF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETXF                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET3F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     F            TABTE10F                          KIGNORE
+     F            TABLETNF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETAF                          KIGNORE
+     F            TABTE20F                          KIGNORE
+     FXX0239AUO   E                    PRINTER
+     FSEKEYD  O   E           K        DISK         KINFDS SEKDDS
+     F                                              KINFSR SEKDSR
+     FSEKEYA  UF  E                    DISK         KINFDS SEKADS
+     F                                              KINFSR SEKASR
+     FPOSETD  O   E           K        DISK         KINFDS POSDDS
+     F                                              KINFSR POSDSR
+     F****POSET1  UF  E           K        DISK                                        S20205 DUG502
+     F***           POSETDF                           KRENAMEPOSETDX                   S20205 DUG502
+     FXXPOSEY0UF  E           K        DISK                                                   DUG502
+     F            POSETDF                           KRENAMEPOSETDX                            DUG502
+     FPOSETA  UF  E                    DISK         KINFDS POSADS
+     F                                              KINFSR POSASR
+     FPOSETAX UF  E                    DISK                               S20205
+     F            POSETAF                           KRENAMEPOSETAY        S20205
+     F**********************************************************************
+     F*
+     F*  FUNCTION OF INDICATORS
+     F*
+     F*    90-99 - USED IN Z SUBROUTINES
+     F*    U7  -  DATABASE ERROR
+     F*    U8  -  DATABASE ERROR
+     F*
+     F*    I N D E X   T O   S U B R O U T I N E S
+     F*
+     F*  FIRST  - ACCESSES ICD INFORMATION
+     F*
+     F*  GETUDP - OBTAIN LATEST USER DEPOT POSITION
+     F*
+     F*  DIVIND - PRODUCE DIVIDEND A/C KEY &/OR POSITION SETTLEMENT
+     F*
+     F*  W01    - WRITE ACCOUNT KEY
+     F*
+     F*  W02    - WRITE POSITION SETTLEMENT
+     F*
+     F*  SECTIN - GET SECURITY DETAIL RECORD IN
+     F*
+     F*  INVTIN - GET INVESTMENT TYPE DETAIL RECORD IN
+     F*
+     F*  TG10   - GET TABTG10 RECORD FOR EACH CURRENCY AS REQUIRED
+     F*
+     F*  ZHASH  - HASH TOTALLING STD SUBROUTINE
+     F*  ZSYSTM - GET TABTB10 ICD
+     F*  ZICDSE - GET TABTB36 ICD
+     F*  ZICD2  - GET TABTB11 ICD
+     F*  AUDIT  - OUTPUTS AUDIT RECORD UDEPPA AND CONTROL REPORT
+     F*  SEKDSR - ERROR HANDLING FOR SEKEYD
+     F*  SEKASR - ERROR HANDLING FOR SEKEYA
+     F*  POSDSR - ERROR HANDLING FOR POSETD
+     F*  POSASR - ERROR HANDLING FOR POSETA
+     F*
+     F**********************************************************************
+     E**    TABLES AND ARRAYS    **
+     E*
+     E/COPY ZSRSRC,ZPOWER8Z1
+     E/COPY ZSRSRC,ZHASHZ1
+     E                    CPY@    1   1 80
+     I**********************************************************************
+      ** External DS for Bank Details                                                         DUG502
+      *                                                                                       DUG502
+     ISDBANK    E DSSDBANKPD                                                                  DUG502
+     I*
+     I*  TABTB11 TABLE KEY FIELD DATA STRUCTURE FOR DB ERROR
+     I*
+     ITABLKY      DS
+     I                                        1  12 TABKEY
+     I                                        1   20RECT
+     I                                        3  10 ZZ008
+     I                                       11  120RCDE
+     I*
+     I*  POSITION SETTLEMENTS  FILE ERROR EXCEPTION  DATA STRUCT.
+     I*
+     IPOSDDS      DS                            366
+     I                                     *STATUS  STSPSD
+     I*
+     I*  GENERATED ACCOUNT KEYS FILE ERROR EXCEPTION  DATA STRUCT.
+     I*
+     ISEKDDS      DS                            366
+     I                                     *STATUS  STSSKD
+     I*
+     I*  POSITION SETTLEMENTS  AUDIT FILE ERROR EXCEPTION  DATA STRUCT.
+     I*
+     IPOSADS      DS                            366
+     I                                     *STATUS  STSPSA
+     I*
+     I* GENERATED ACCOUNT KEYS AUDIT FILE ERROR EXCEPTION  DATA STRUCT.
+     I*
+     ISEKADS      DS                            366
+     I                                     *STATUS  STSSKA
+     I/COPY ZSRSRC,ZHASHZ2
+     I*
+     I* ACCOUNT KEY DATA STRUCTURE SEE SUBR W01
+     I*
+     IWACKEY      DS
+     I                                        1   3 WACITY
+     I                                        4   4 WACEVC
+     I                                        5   5 WACTRT
+     I                                        6   6 WACPFI
+     I                                        7   8 WACBKC
+     I                                        9  10 WACTST
+     I                                        9  10 WACPSB
+     I                                       11  12 WACCCC
+     I                                       13  13 WACMKT
+     I                                       14  14 WACCON
+     I                                       15  15 WACNEG
+     I                                       19  20 WACAMC
+     I*
+     I* INVESTMENT TYPE FILE KEY FOR DB ERROR PRINTOUT
+     I*
+     IINVKEY      DS
+     I                                        1   3 NMCY
+     I                                        4   6 SITP
+     ISDMMOD    E DSSDMMODPD                                              SGFIX
+     I**  DS FOR ACCESS TO MODULES FILE                                   SGFIX
+     I*                                                                   SGFIX
+     ISDSTRD    E DSSDSTRDPD                                              SGFIX
+     I**  SECURITIES TRADING DETAILS                                      SGFIX
+     I*                                                                   SGFIX
+     IDSFDY     E DSDSFDY                                                 SGFIX
+     I*  FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE               SGFIX
+     I*                                                                   SGFIX
+     IDSSDY     E DSDSSDY                                                 SGFIX
+     I*  SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE               SGFIX
+     I*                                                                   SGFIX
+     I*
+     ILDA        UDS                            256
+     I                                      134 177 DBLOT
+     I                                      134 138 DBFILE
+     I                                      139 167 DBKEY
+     I                                      168 175 DBPGM
+     I                                      176 1770DBASE
+     I*
+     I* FILE POSETD DB ERROR KEY - OUTPUT FILE
+     I*
+     IPOSDDB      DS
+     I***                                     1   30PBCH                                      DUG502
+     I                                        1   3 PBCA                                      DUG502
+     I                                        4  13 PSSH
+     I                                       14  19 PCPY
+     I                                       20  21 PBCD
+     I*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION
+     ICPYR@#      DS
+     I                                        1  80 CPY@
+     I                                        1  20 CPY@##
+     C*================================================================
+     C*  P R O G R A M     S T A R T
+     C*================================================================
+     C* KEYLISTS FOR ACCESING FILES
+     C*
+     C*
+     C* USER DEPOT POSITIONS - LF/UDEPS
+     C*
+     C           UDEPSK    KLIST
+     C                     KFLD           SASN
+     C                     KFLD           SABK
+     C*
+     C* USER DEPOT POSITIONS - LF/UDEPH
+     C*
+     C           UDEPHK    KLIST
+     C***                  KFLD           UDBR                                                DUG502
+     C                     KFLD           UDBA                                                DUG502
+     C                     KFLD           UDSN
+     C                     KFLD           UDPT
+     C                     KFLD           UDBK
+     C                     KFLD           UDMK
+     C                     KFLD           SAED
+     C*
+     C* USER DEPOT POSITIONS - LF/UDEPH
+     C*
+     C           UDPHPK    KLIST
+     C***                  KFLD           UDBR                                                DUG502
+     C                     KFLD           UDBA                                                DUG502
+     C                     KFLD           UDSN
+     C                     KFLD           UDPT
+     C                     KFLD           UDBK
+     C                     KFLD           UDMK
+     C*
+     C* DEPOT NAME INFORMATION - LF/CLINT (PF/CLINTSE)
+     C*
+     C           CLIKEY    KLIST
+     C                     KFLD           PCPY
+     C                     KFLD           WRECT   1
+     C*
+     C* SECURITES                                LF/SECTY
+     C*
+     C           SECTKY    KLIST
+     C                     KFLD           SASN
+     C*
+     C* INVESTMENT TYPES                         LF/INVTP
+     C*
+     C           INVTKY    KLIST
+     C                     KFLD           NMCY
+     C                     KFLD           SITP
+     C*
+     C* STANDARD SETTLEMENT INSTRUCTIONS         PF/STDSED
+     C*
+     C           STDSKY    KLIST
+     C**********           KFLD           SBRH                                                DUG502
+     C                     KFLD           SBRA                                                DUG502
+     C                     KFLD           CSTM
+     C                     KFLD           WBKCD   2                                           DUG502
+     C                     KFLD           CYSI
+     C                     KFLD           ITSI
+     C                     KFLD           WPTFR   4                                           DUG502
+      *
+      * DEFINE KEYLIST FOR CHAINING TO SECADY0 file to get Book Code
+      *
+     C           DEVKEY    KLIST
+     C                     KFLD           SASN
+     C                     KFLD           SAED
+     C                     KFLD           SAAT
+      *
+     C* ACCESS ICD INFORMATION IN SUBROUTINE FIRST
+     C*
+     C                     MOVE *BLANK    DBLOT
+     C                     Z-ADD0         DBASE
+     C                     MOVE 'XX0239  'DBPGM
+     C                     EXSR FIRST
+     C*
+     C* CHECK FOR DATABASE ERRORS
+     C*
+     C           *IN99     IFEQ '1'
+     C                     GOTO EAUDIT
+     C                     END
+     C*
+     C* READ ACTION FILE OF SECURITY ACTIONS
+     C*
+     C                     READ SECAC                    50*
+     C*
+     C* LOOP ROUND PROCESSING FOR EACH ACTION RECORD READ LF/SECAC
+     C*
+     C           *IN50     DOWEQ'0'
+     C*
+     C* SAVE RECORD ID FROM SECACD
+     C*
+     C           *LIKE     DEFN RECI      WSRECI
+     C                     MOVE RECI      WSRECI
+     C*
+     C* IF ACTION NOT FOR DIVIDEND EVENT GO TO END OF LOOP FOR NEXT ACTION
+     C* ONLY PROCESS IF BOOK CODE PRESENT                                 S20239
+     C*
+     C           SAAT      CABNE'DV'      ENDLP
+     C           SABK      CABEQ*BLANKS   ENDLP                           S20239
+     C*
+     C* IF ACTION RECORD DELETED GOTO END OF LOOP FOR NEXT ACTION
+     C*
+     C           RECI      CABEQ'*'       ENDLP
+     C*
+     C* ADD TO COUNT OF ACTIONS PROCESSED
+     C*
+     C                     ADD  1         WACTN   50
+     C*
+     C** EXECUTE SUBROUTINE SECTIN TO RETRIEVE SECURITY RECORD
+     C*
+     C                     EXSR SECTIN
+     C*
+     C** Execute Subroutine INVTIN to retrieve INVESTMENT Record
+     C*
+     C                     EXSR INVTIN
+     C*
+     C* GET EACH DEPOT POSITION WHERE THIS SECURITY/BOOK IS HELD
+     C*
+     C           UDEPSK    SETLLUDEPPSS
+     C                     EXSR GETUDP
+     C*
+     C* IND 60 IS SET ON WHEN NO MORE USER POSITIONS FOR THIS SECURITY
+     C*
+     C           *IN60     DOWEQ'0'
+     C*
+     C** PROCESS SELECTED SECURITY / BOOK / BRANCH/ DEPOT RECORD
+     C*
+     C           *IN70     IFEQ '1'
+     C*
+     C** CALCULATE CUM-COUPON VALUE
+     C*
+     C           UDNV      SUB  UECN      WCUMCP 150
+     C*
+     C** DO DIVIDEND PROCESING
+     C*
+     C                     EXSR DIVIDN
+     C                     END
+     C*
+     C** GET NEXT USER POSITION (SECURITY / BOOK / BRANCH / DEPOT)
+     C*
+     C                     EXSR GETUDP
+     C                     END
+     C*
+     C           ENDLP     TAG                             ** ENDLP **
+     C*
+     C                     READ SECAC                    50*
+     C*
+     C                     END
+     C*
+     C           EAUDIT    TAG                             ** EAUDIT **
+     C*
+     C* OUTPUT RUN CONTROL REPORT
+     C*
+     C                     EXSR AUDIT
+     C*
+     C                     SETON                     LR
+     C*
+     C**********************************************************************
+      /EJECT
+     C**********************************************************************
+     C*
+     C* GETUDP   - GET NEXT USER DEPOT POSITION RECORD
+     C*            FOR THIS SECURITY ACTION.
+     C*
+     C           GETUDP    BEGSR                           ** GETUDP **
+     C*          ******
+     C*
+     C** SET OFF INDICATOR SIGNIFYING THAT A POSITION HAS BEEN SELECTED
+     C*
+     C                     MOVE '0'       *IN70
+     C*
+     C** READ THE NEXT SECURITY/DEPOT/BRANCH/LAST POSITION DATE
+     C*
+     C           UDEPSK    READEUDEPPSS                  60
+     C           *IN60     DOWEQ'0'
+     C           UDMK      ANDNE'S'
+     C           UDEPSK    READEUDEPPSS                  60
+     C                     END
+     C*
+     C** NO MORE RECORDS
+     C*
+     C           *IN60     CABEQ'1'       ENDUDP
+     C*
+     C* SELECT THIS RECORD IF THE POSITION DATE (DDTE)
+     C* IS LESS THAN SECURITY ACTION DATE
+     C*
+     C           UDDT      IFLE SAED
+     C                     MOVE '1'       *IN70
+     C                     GOTO ENDUDP
+     C                     END
+     C*
+     C*  BACKVALUATIONS REMAIN TO BE PROCCESSED
+     C*  UDEPH IS ACCESSED TO GET THE POSITION AS AT THE ACTION DATE
+     C*
+     C***********UDEPHK    SETLLUDEPPHH                                   BH0076
+     C           UDEPHK    SETGTUDEPPHH                                   BH0076
+     C*
+     C** NOW READ RECORD FROM UDEPH FILE
+     C*
+     C           UDPHPK    REDPEUDEPPHH                  99
+     C           *IN99     DOWEQ'0'
+     C*
+     C* IF DATE IS LESS THAN ACTION DATE  SELECT IT
+     C*
+     C           UDDT      IFLE SAED
+     C                     MOVE '1'       *IN70
+     C                     GOTO ENDUDP
+     C                     END
+     C*
+     C           UDPHPK    REDPEUDEPPHH                  99
+     C                     END
+     C*
+     C           ENDUDP    ENDSR                            **ENDUDP**
+     C**********************************************************************
+      /EJECT
+     C**********************************************************************
+     C*
+     C* DIVIDN   - PRODUCE DIVIDEND A/C AND/OR POSITION SETTLEMENT
+     C*
+     C           DIVIDN    BEGSR                           ** DIVIDN **
+     C*
+     C* CALCULATE DIVIDEND DUE
+     C*
+     C                     MOVE NMCY      WCURR
+     C                     EXSR TG10
+     C*
+     C                     Z-ADDWCUMCP    ZNOML
+     C                     Z-ADDSDUN      ZPRC
+     C                     EXSR ZCNSD
+     C                     Z-ADDZCONS     WDIVDU 150
+     C*
+     C** IF ACCOUNT KEY REQUIRED WRITE A/C KEY IN W01
+     C*
+     C           AKRI      IFEQ 'Y'
+     C                     MOVE 'H'       WACEVC
+     C*
+     C** SET NEGATIVE IND TO N IF SPLIT NEG ACCRUAL IS NOT N AND
+     C** AND CUM-COUPON VALUE NOT GREATER THAN ZERO
+     C*
+     C           SNAC      IFEQ 'N'
+     C           WCUMCP    ORGT 0
+     C                     MOVE ' '       WACNEG
+     C                     ELSE
+     C                     MOVE 'N'       WACNEG
+     C                     END
+     C                     MOVE 'DI'      WACAMC
+     C                     Z-ADDWDIVDU    EVAM
+     C*
+     C** REVERSE SIGN ON OUTPUT FILE IF SPLIT NEG ACCRUAL IS Y AND
+     C** CUM-COUPON VALUE IS LESS THAN ZERO
+     C*
+     C           WCUMCP    IFLT 0
+     C           SNAC      ANDEQ'Y'
+     C                     Z-SUBEVAM      EVAM
+     C                     END
+     C                     EXSR W01
+     C                     END
+     C*
+     C*
+     C** IF POSITION SETTLEMENT REQUIRED WRITE POSN SETLL.IN SUBR W02
+     C*
+     C           PSRI      IFEQ 'Y'
+     C***********WSRECI    ANDNE'R'                                BH0083 S20205
+     C***********          MOVE 'DV'      PEVT                            S20205
+     C**********           Z-ADDWCUMCP    PNMP                            S20205
+     C***********WDIVDU    IFLT 0                                         S20205
+     C***********          Z-SUBWDIVDU    PAMD                            S20205
+     C***********          ELSE                                           S20205
+     C***********          Z-ADDWDIVDU    PAMD                            S20205
+     C***********          END                                            S20205
+     C***********WCUMCP    IFGT 0                                         S20205
+     C***********          MOVE 'R'       PPRE                            S20205
+     C***********          ELSE                                           S20205
+     C***********          MOVE 'P'       PPRE                            S20205
+     C***********          END                                            S20205
+     C                     EXSR W02
+     C                     END
+     C*
+     C           ENDDIV    ENDSR                           **ENDDIV**
+     C*
+     C**********************************************************************
+      /EJECT
+     C**********************************************************************
+     C*
+     C* W01      - WRITE ACCOUNT KEY
+     C*
+     C           W01       BEGSR                           **   W01  **
+     C*
+     C*
+     C** DO NOT OUPUT RECORDS IF AMOUNT DUE IS ZERO
+     C*
+     C           EVAM      CABEQ0         ENDW01
+     C*
+     C* COUNT RECORDS WRITTEN AND USE STD HASH SUBROUTINE
+     C*
+     C*
+     C                     ADD  1         W01CNT  50
+     C*
+     C**  EXECUTE HASH TOTALLING SUBROUTINE ONCE (Z=1) FOR FIRST
+     C*   ARRAY ELEMENTS (IND,S DEC,S) SO S=1 ,ACCUMULATING ZZAMT(15/3)
+     C*
+     C                     Z-ADD1         Z
+     C                     Z-ADD1         S
+     C                     Z-ADDEVAM      ZZAMT
+     C                     EXSR ZHASH
+     C*
+     C* BUILD OUTPUT RECORD
+     C*
+     C                     MOVE SITP      WACITY
+     C                     MOVE ' '       WACTRT
+     C                     MOVE 'X'       WACPFI
+     C                     MOVE '  '      WACBKC
+     C                     MOVE '  '      WACTST
+     C                     MOVE '  '      WACPSB
+     C                     MOVE '  '      WACCCC
+     C                     MOVE 'S'       WACMKT
+     C           CIAK      IFEQ 'Y'
+     C           SCVI      ANDEQ'Y'
+     C                     MOVE SCVI      WACCON
+     C                     ELSE
+     C                     MOVE ' '       WACCON
+     C                     END
+     C                     MOVE WACKEY    ACKY
+     C                     MOVE 'D'       RECI
+     C                     MOVE NMCY      EVCY
+     C                     MOVE *BLANK    STLA
+     C           WSRECI    IFEQ 'R'
+     C                     MOVE '1'       RVRS
+     C                     ELSE
+     C                     MOVE '0'       RVRS
+     C                     END
+     C                     MOVE UDSN      SESH
+     C                     Z-ADD0         TRFR
+     C                     MOVELUDPT      CSTN
+     C****                 MOVE UDBR      BRCH                                                DUG502
+     C                     MOVE UDBA      BRHA                                                DUG502
+     C                     Z-ADD00        ASQN
+     C                     Z-ADDSAED      EVDT
+     C                     Z-ADD0         KNCA
+     C                     Z-ADD0         KBCA
+     C                     MOVELUDPT      KCUST
+     C                     Z-ADD0         STLT
+     C                     MOVE NMCY      KCCY
+     C*                                                                   S20249
+     C* OUTPUT SECURITY DIARY EVENT TYPE TO SEKEYD                        S20249
+     C*                                                                   S20249
+     C***                  MOVE SAAT      KSDET                                        S20249 DUG502
+     C                     MOVE SAAT      PEV1                                                DUG502
+     C*                                                                   SGFIX
+     C**  ACCESS MIDAS MODULE DETAILS                                     SGFIX
+     C*                                                                   SGFIX
+     C                     CALL 'AOMMODR0'                                SGFIX
+     C                     PARM '*MSG   ' @RTCD   7                       SGFIX
+     C                     PARM '*FIRST ' @OPTN   7                       SGFIX
+     C           SDMMOD    PARM SDMMOD    DSFDY                           SGFIX
+     C*                                                                   SGFIX
+     C           @RTCD     IFNE *BLANKS                                   SGFIX
+     C           *LOCK     IN   LDA                                       SGFIX
+     C                     Z-ADD23        DBASE            ************   SGFIX
+     C                     MOVEL'SDMMODPD'DBFILE           * DBERR 23 *   SGFIX
+     C                     MOVEL@OPTN     DBKEY            ************   SGFIX
+     C                     SETON                     U7U899               SGFIX
+     C                     DUMP                                           SGFIX
+     C                     ENDIF                                          SGFIX
+     C*                                                                   SGFIX
+     C**  ACCESS SECURITIES TRADING DETAILS                               SGFIX
+     C*                                                                   SGFIX
+     C                     CALL 'AOSTRDR0'                                SGFIX
+     C                     PARM '*MSG   ' @RTCD                           SGFIX
+     C                     PARM '*FIRST ' @OPTN                           SGFIX
+     C           SDSTRD    PARM SDSTRD    DSSDY                           SGFIX
+     C*                                                                   SGFIX
+     C           @RTCD     IFNE *BLANKS                                   SGFIX
+     C           *LOCK     IN   LDA                                       SGFIX
+     C                     Z-ADD24        DBASE            ************   SGFIX
+     C                     MOVEL'SDSTRDPD'DBFILE           * DBERR 24 *   SGFIX
+     C                     MOVEL@OPTN     DBKEY            ************   SGFIX
+     C                     SETON                     U7U899               SGFIX
+     C                     DUMP                                           SGFIX
+     C                     ENDIF                                          SGFIX
+      *                                                                   SGFIX
+     C*                                                                   SGFIX
+     C** PROFIT CENTRES ARE NOT APPLICAABLE TO DEPOT POSITIONS            SGFIX
+     C** THEREFORE ENSURE THAT ANY DEPOT POSITION ACCOUNT KEYS HAVE       SGFIX
+     C** A BLANK PROFIT CENTRE                                            SGFIX
+     C*                                                                   SGFIX
+     C                     MOVE *BLANKS   PRFC                            SGFIX
+     C*                                                                   SGFIX
+     C**  IF ANALYTICAL ACCOUNTING IS INSTALLED, SET THE PROFIT CENTRE    SGFIX
+     C**  SE ICD DEFAULT PROFIT CENTRE.                                   SGFIX
+     C*                                                                   SGFIX
+     C           BGN0ST    IFEQ 'Y'                                       SGFIX
+     C                     MOVE BVSEPC    PRFC                            SGFIX
+     C                     ENDIF                                          SGFIX
+     C*
+     C*
+     C* WRITE GENERATED ACCOUNT KEY RECORD
+     C*
+     C                     WRITESEKEYDF
+     C*
+     C           ENDW01    ENDSR
+     C*
+     C**********************************************************************
+     C*
+      /EJECT
+     C**********************************************************************
+     C*
+     C* W02      - WRITE POSITION SETTLEMENT
+     C*
+     C           W02       BEGSR                           **   W02  **
+     C***********                                                         S20205
+     C***DO*NOT*OUPUT RECORDS IF AMOUNT DUE IS ZERO                       S20205
+     C***********                                                         S20205
+     C***********PAMD      CABEQ0         ENDW02                          S20205
+     C***********                                                         S20205
+     C**COUNT*RECORDS WRITTEN                                             S20205
+     C***********                                                         S20205
+     C***********          ADD  1         W02CNT  50                      S20205
+     C***********                                                         S20205
+     C***********          MOVE 'D'       RECI                            S20205
+     C***********          MOVE 'S'       PMAR                            S20205
+     C***                  MOVE UDBR      PBCH                                                DUG502
+     C                     MOVE UDBA      PBCA                                                DUG502
+     C                     MOVE UDSN      PSSH
+     C                     MOVELUDPT      PCPY
+     C                     Z-ADDSAOD      PDUD
+     C                     MOVE 'DV'      PEVT                            S20205
+     C                     MOVE UDBK      PBCD                            S20205
+     C*                                                                   S20205
+     C* DELETE IF POSITION SETTLEMENT ALREADY EXISTS.                     S20205
+     C* ADJUST NUMBER OF LIVE RECORDS, IF NECESSARY                       S20205
+     C*                                                                   S20205
+     C           POSETK    KLIST                                          S20205
+     C****                 KFLD           PBCH                                         S20205 DUG502
+     C                     KFLD           PBCA                                                DUG502
+     C                     KFLD           PSSH                            S20205
+     C                     KFLD           PCPY                            S20205
+     C                     KFLD           PDUD                            S20205
+     C                     KFLD           PEVT                            S20205
+     C                     KFLD           PBCD                            S20205
+     C           POSETK    CHAINPOSETDX              99    *              S20205
+     C           *IN99     IFEQ '0'                                       S20205
+     C                     DELETPOSETDX                                   S20205
+     C           RECI      IFEQ 'D'                                       S20205
+     C           1         CHAINPOSETAY              99    *              S20205
+     C           *IN99     IFEQ '0'                                       S20205
+     C                     SUB  1         NLRB                            S20205
+     C                     SUB  1         NORE                            S20205
+     C                     UPDATPOSETAY                                   S20205
+     C                     END                                            S20205
+     C                     END                                            S20205
+     C                     END                                            S20205
+     C*                                                                   S20205
+     C*  NOMINAL AND AMOUNT DUE                                           S20205
+     C*                                                                   S20205
+     C                     Z-ADDWCUMCP    PNMP                            S20205
+     C           WDIVDU    IFLT 0                                         S20205
+     C                     Z-SUBWDIVDU    PAMD                            S20205
+     C                     ELSE                                           S20205
+     C                     Z-ADDWDIVDU    PAMD                            S20205
+     C                     END                                            S20205
+     C           WCUMCP    IFGT 0                                         S20205
+     C                     MOVE 'R'       PPRE                            S20205
+     C                     ELSE                                           S20205
+     C                     MOVE 'P'       PPRE                            S20205
+     C                     END                                            S20205
+     C*                                                                   S20205
+     C** DO NOT OUTPUT RECORDS IF AMOUNT DUE IS ZERO                      S20205
+     C*                                                                   S20205
+     C           PAMD      CABEQ0         ENDW02                          S20205
+     C*                                                                   S20205
+     C** DO NOT OUTPUT RECORDS IF DIARY EVENT IS A REVERSAL               S20205
+     C*                                                                   S20205
+     C           WSRECI    CABEQ'R'       ENDW02                          S20205
+     C*                                                                   S20205
+     C* COUNT RECORDS WRITTEN                                             S20205
+     C*                                                                   S20205
+     C                     ADD  1         W02CNT  50                      S20205
+     C*                                                                   S20205
+     C                     MOVE 'D'       RECI                            S20205
+     C                     MOVE 'S'       PMAR                            S20205
+     C           APNS      IFEQ 'Y'
+     C                     MOVE 'Y'       PAUI
+     C                     ELSE
+     C                     MOVE ' '       PAUI
+     C                     END
+     C                     MOVE NMCY      PNCY
+     C*********************MOVE UDBK      PBCD                            S20205
+     C                     MOVE '0'       PYCUSD  1
+      *
+      ** Payment currency and settlement exchange rate are held on
+      ** SECTYD for straight, dual- and multi-currency securities.
+      ** Exchange rate=1 for straight securities.
+      *
+     C                     MOVE SPYC      PSCU
+     C                     Z-ADDSEXR      PSXR
+     C                     MOVE SMDI      PMDI
+     C*
+     C** BASIC CURR EXCHANGE RATE IS SPOT RATE FOR SETTLEMENT CURRCY
+     C*
+     C                     MOVE PSCU      WCURR   3
+     C                     EXSR TG10
+     C                     Z-ADDSPOT      PBRX
+     C*
+     C** ACCESS STANDARD SETTLEMENT INSTRUCTIONS FILE
+     C*
+     C****                 MOVE PBCH      SBRH                                                DUG502
+     C                     MOVE PBCA      SBRA                                                DUG502
+     C                     MOVELPCPY      CSTM
+     C                     MOVE PSCU      CYSI
+     C                     MOVE SITP      ITSI
+     C*
+     C                     Z-ADD0         PSMT
+     C                     MOVE *BLANK    PSEA
+     C                     MOVE *BLANK    PSEB
+     C                     MOVE *BLANK    PCPN
+     C                     MOVE *BLANK    PFAC
+     C                     MOVE *BLANK    PSPI
+      *
+      ***  First try chaining to STDSE with appropriate Investment Type
+     C           STDSKY    CHAINSTDSED               77
+      *
+     C                     MOVE '1'       WRECT
+     C           CLIKEY    CHAINCLINT                99
+     C           *IN99     IFEQ '0'
+     C           C1DI      ANDNE'M'
+      *
+      ***  If first chain to STDSED failed, retry with blank ITSI.
+     C           *IN77     ANDEQ'1'
+     C                     MOVE *BLANK    ITSI
+     C           STDSKY    CHAINSTDSED               77
+     C                     END
+      *
+     C           *IN77     IFNE '1'
+     C           RECI      ANDNE'*'
+     C*
+     C** USE RECEIVE FIELDS IF PAY/RECEIVE IND IS SET TO P
+     C*
+     C           PPRE      IFEQ 'P'
+     C                     MOVE SPSM      PSMT
+     C                     MOVE SPAT      PSEA
+     C***                  MOVE SPBR      PSEB                                                DUG502
+     C                     MOVE SPBA      PSEB                                                DUG502
+     C                     MOVE SPCB      PCPN
+     C                     MOVE SPFA      PFAC
+     C                     MOVE SPSI      PSPI
+     C                     ELSE
+     C*
+     C** USE PAY FIELDS IF PAY/RECEIVE IND IS SET TO R
+     C*
+     C           PPRE      IFEQ 'R'
+     C                     MOVE SRSM      PSMT
+     C                     MOVE SRAC      PSEA
+     C***                  MOVE SRBR      PSEB                                                DUG502
+     C                     MOVE SRAB      PSEB                                                DUG502
+     C                     MOVE SRCB      PCPN
+     C                     MOVE *BLANK    PFAC
+     C                     MOVE *BLANK    PSPI
+     C                     END
+     C                     END
+     C                     END
+     C*
+     C**********           Z-ADDRUND      PDTG                                                DUG502
+     C                     Z-ADDBJRDNB    PDTG                                                DUG502
+     C*
+     C* ZEROISE NUMERIC FIELDS WITH NO SPECIFIED VALUE
+     C*
+     C                     MOVEL*BLANK    PCHC                            S20205
+     C                     MOVEL*BLANK    PCCD                            S20205
+     C                     Z-ADD0         PCHA
+     C                     Z-ADD0         PCAM
+     C                     Z-ADD0         PSAT
+     C                     Z-ADD0         LCD
+     C                     Z-ADD0         TNLU
+     C                     MOVE 'I'       CHTP
+     C*
+     C* WRITE POSITION SETTLMENT RECORD
+     C*
+     C                     WRITEPOSETDF
+     C*
+     C           ENDW02    ENDSR
+     C*
+     C**********************************************************************
+      /EJECT
+     C**********************************************************************
+     C*
+     C* SECTIN   - GET SECURITY RECORD
+     C*
+     C           SECTIN    BEGSR                           ** SECTIN **
+     C*
+     C*
+     C** CHAIN FOR SECURITY RECORD AND DATA BASE ERROR
+     C*
+     C           SECTKY    CHAINSECTY                79
+     C  N79      RECI      COMP '*'                      79
+     C           *IN79     IFEQ '1'
+     C                     MOVEL'SECTY'   DBFILE           *****************
+     C                     MOVELSASN      DBKEY            ** DB ERROR 01 **
+     C                     Z-ADD1         DBASE            *****************
+     C                     GOTO EAUDIT
+     C                     END
+     C                     ENDSR
+      /EJECT
+     C**********************************************************************
+     C*
+     C* INVTIN   - GET INVESTMENT TYPE RECORD
+     C*
+     C           INVTIN    BEGSR                           ** INVTIN **
+     C*
+     C*
+     C** CHAIN FOR INVESTMENT TYPE RECORD AND DATA BASE ERROR
+     C*
+     C           INVTKY    CHAININVTP                79
+     C  N79      RECI      COMP '*'                      79
+     C           *IN79     IFEQ '1'
+     C                     MOVEL'INVTP'   DBFILE           *****************
+     C                     MOVELINVKEY    DBKEY            ** DB ERROR 02 **
+     C                     Z-ADD2         DBASE            *****************
+     C                     GOTO EAUDIT
+     C                     END
+     C                     ENDSR
+      /EJECT
+     C**********************************************************************
+     C*
+     C* TG10     - OBTAIN TABTG10 FOR SECURITY CURRENCY DECIMALS
+     C*
+     C           TG10      BEGSR                           ** TG10   **
+     C*
+     C*
+     C** CHAIN FOR CURRENCY RECORD IN TABLE TABTG10
+     C** FIELD WCURR CONTAINS THE CURRENCY WHEN THIS SUBROUTINE EXECUTED
+     C*
+     C*
+     C* IF WCURR IS EQUAL TO WLSTCY (LAST CCY TO ACCESS TABTG10) IGNORE
+     C*
+     C           WCURR     CABEQWLSTCY    ENDT10
+     C                     MOVE WCURR     WLSTCY  3
+     C*
+     C                     MOVEL'20      'ZTABKY 12
+     C                     MOVE '1'       WRK4    4
+     C                     MOVELWCURR     WRK4
+     C                     MOVE WRK4      ZTABKY
+     C**
+     C           ZTABKY    CHAINTABTG10F             99
+     C*
+     C* ERROR IF NO RECORD FOUND OR IF IT IS DELETED
+     C*
+     C           *IN99     IFEQ '1'
+     C                     SETON                     U7U8
+     C                     ELSE
+     C           RECI      IFEQ '*'
+     C                     SETON                     U7U8
+     C                     END
+     C                     END
+     C           *INU7     IFEQ '1'
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVELZTABKY    DBKEY            ** DB ERROR 03 **
+     C                     Z-ADD3         DBASE            *****************
+     C                     GOTO EAUDIT
+     C                     END
+     C*
+     C* Set up new Output parameter for use in SR.ZCNSD
+     C*
+     C                     Z-ADDCDP       ZCDP
+     C*
+     C           ENDT10    ENDSR
+     C*
+     C**********************************************************************
+     C*
+     C/EJECT
+     C**********************************************************************
+     C           AUDIT     BEGSR                           ** AUDIT **
+     C*
+     C** COMPARE COUNT OF ACTIONS TO AUDIT FILE ACTIONS
+     C*
+     C                     READ SECACA                   79
+     C*
+     C* DATA BASE ERROR
+     C*
+     C           *IN79     IFEQ '1'
+     C                     MOVEL'SECACA'  DBFILE           *****************
+     C                     MOVEL'AUDIT'   DBKEY            ** DB ERROR 04 **
+     C                     Z-ADD4         DBASE            *****************
+     C                     SETON                       U7U8
+     C                     ELSE
+     C                     Z-ADDNORE      SANORE  50
+     C                     END
+     C*
+     C** IF U8 NOT ON UPDATE GEN A/C KEYS AUDIT AND POSN.SETT.AUDIT FILES
+     C*
+     C           *INU8     IFNE '1'
+     C           1         CHAINSEKEYAF              99    *
+     C           *IN99     IFEQ '0'
+     C                     ADD  W01CNT    NORE
+     C                     ADD  INT,1     HRWN
+     C                     ADD  DEC,1     HRDC
+     C                     UPDATSEKEYAF
+     C                     END
+     C           1         CHAINPOSETAF              99    *
+     C           *IN99     IFEQ '0'
+     C                     ADD  W02CNT    NORE
+     C                     UPDATPOSETAF
+     C                     END
+     C                     END
+     C*
+     C* OUTPUT CONTROL REPORT
+     C*
+     C                     WRITEHEADAU
+     C           *INU7     IFEQ '1'
+     C                     WRITEERROR
+     C                     ELSE
+     C           WACTN     IFEQ 0
+     C                     WRITENONE
+     C                     ELSE
+     C                     Z-ADDINT,1     WHASHT
+     C                     Z-ADDDEC,1     WHASHD
+     C                     WRITECONTROL
+     C*
+     C                     END
+     C                     END
+     C*
+     C                     WRITETRAILAU
+     C*
+     C                     ENDSR
+     C*******************************************************************
+     C/EJECT
+     C********************************************************************
+     C**
+     C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.
+     C**
+     C*COPY*ZSRSRC*ZSYSTMZ1***                                                                DUG502
+     C**
+     C**
+     C*****************************************************************
+     C********************************************************************
+     C*    SUBROUTINE- ZICD2
+     C*    ACCESS ICD RECORD 2 FROM TABTB11 FOR SECURITIES TRADING
+     C*
+     C*  1.KLIST - TABKEY MUST EXIST IN PROGRAM (RECT/ZZ008/RCDE)
+     C*  2.TABTB11 MUST BE DECLARED IN THE PROGRAM
+     C*  3.ON RETURN FROM THIS S/R THE PROGRAM MUST CHECK U7/U8 -
+     C*    AND IF ON MUST EXECUTE STD DATABASE ERROR ROUTINE
+     C*  4.*IN99 IS USED
+     C*
+     C********************************************************************
+     C*
+     C/COPY ZSRSRC,ZICD2Z1
+     C*
+     C********************************************************************
+     C*
+     C********************************************************************
+     C*    SUBROUTINE- ZICDSE
+     C*    ACCESS ICD RECORD FROM TABTB36 FOR SECURITIES TRADING
+     C*
+     C*  1.TABTB36 MUST BE DECLARED IN THE PROGRAM
+     C*  2.ON RETURN FROM THIS S/R THE PROGRAM MUST CHECK U7/U8 -
+     C*    AND IF ON MUST EXECUTE STD DATABASE ERROR ROUTINE
+     C*  3.*IN99 IS USED
+     C*
+     C********************************************************************
+     C*
+     C/COPY ZSRSRC,ZICDSEZ1
+     C*
+     C/EJECT
+     C*****************************************************************
+     C*
+     C*  POSDSR  - SUBROUTINE FOR ERROR HANDLING OF PF/POSETD
+     C*
+     C           POSDSR    BEGSR                            ** POSDSR **
+     C*
+     C                     MOVE 'POSETD'  DBFILE           *****************
+     C                     MOVELPOSDDB    DBKEY            ** DB ERROR 05 **
+     C                     Z-ADD5         DBASE            *****************
+     C                     MOVE STSPSD    DBSTAT
+     C                     MOVE '1'       *IN87
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C*
+     C*  SEKDSR  - SUBROUTINE FOR ERROR HANDLING OF LF/SEKEYD
+     C*
+     C           SEKDSR    BEGSR                            **SEKDSR**
+     C*
+     C                     MOVE 'SEKEYD'  DBFILE           *****************
+     C                     MOVELACKY      DBKEY            ** DB ERROR 06 **
+     C                     Z-ADD6         DBASE            *****************
+     C                     MOVE STSSKD    DBSTAT
+     C                     MOVE '1'       *IN87
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C*
+     C*  POSASR  - SUBROUTINE FOR ERROR HANDLING OF PF/POSETA
+     C*
+     C           POSASR    BEGSR                              **POSASR**
+     C*
+     C                     MOVE 'POSETA'  DBFILE           *****************
+     C                     MOVEL'AUDIT'   DBKEY            ** DB ERROR 07 **
+     C                     Z-ADD7         DBASE            *****************
+     C                     MOVE STSPSA    DBSTAT
+     C                     MOVE '1'       *IN87
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C*
+     C*  SEKASR  - SUBROUTINE FOR ERROR HANDLING OF PF/SEKEYA
+     C*
+     C           SEKASR    BEGSR                             **SEKASR**
+     C*
+     C                     MOVE 'SEKEYA'  DBFILE           *****************
+     C                     MOVEL'AUDIT'   DBKEY            ** DB ERROR 08 **
+     C                     Z-ADD8         DBASE            *****************
+     C                     MOVE STSSKA    DBSTAT
+     C                     MOVE '1'       *IN87
+     C                     SETON                     99U7U8
+     C                     GOTO EAUDIT
+     C*
+     C                     ENDSR
+     C*
+     C*****************************************************************
+     C/COPY ZSRSRC,ZHASHZ3
+      /EJECT
+     C**********************************************************************
+     C*
+     C* FIRST - SUBROUTINE TO ACCESS ICD INFORMATION
+     C*
+     C*
+     C           FIRST     BEGSR                           ** FIRST **
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C*
+     C* ACCESS ICD    TABTB10
+     C*
+      *                                                                                       DUG502
+      ** Replace access to TABTB10 with SDBANKPD                                              DUG502
+      *                                                                                       DUG502
+     C**********           EXSR ZSYSTM                                                        DUG502
+      *                                                                                       DUG502
+     C                     CALL 'AOBANKR0'                                                    DUG502
+     C                     PARM *BLANK    @RTCD                                               DUG502
+     C                     PARM '*FIRST ' @OPTN                                               DUG502
+     C           SDBANK    PARM SDBANK    DSFDY                                               DUG502
+      **********                                                                              DUG502
+     C********** *IN99     IFEQ '1'                                                           DUG502
+     C**********           MOVE '1'       *INU7                                               DUG502
+     C**********           MOVE '1'       *INU8                                               DUG502
+     C**********           MOVE 'TABLE'   DBFILE           *****************                  DUG502
+     C**********           MOVELZTABKY    DBKEY            ** DB ERROR 11 **                  DUG502
+     C**********           Z-ADD11        DBASE            *****************                  DUG502
+     C**********           ELSE                                                               DUG502
+     C*
+     C* ACCESS ICD2   TABTB11
+     C*
+     C                     EXSR ZICD2
+     C           *INU7     IFEQ '1'
+     C                     MOVE '1'       *IN99
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVELTABKEY    DBKEY            ** DB ERROR 12 **
+     C                     Z-ADD12        DBASE            *****************
+     C                     ELSE
+     C*
+     C* ACCESS ICDSE  TABTB36
+     C*
+     C                     EXSR ZICDSE
+     C           *INU7     IFEQ '1'
+     C                     MOVE '1'       *IN99
+     C                     MOVE 'TABLE'   DBFILE           *****************
+     C                     MOVELZTABKY    DBKEY            ** DB ERROR 13 **
+     C                     Z-ADD13        DBASE            *****************
+     C                     END
+     C                     END
+     C**********           END                                                                DUG502
+     C*
+     C                     ENDSR
+     C*****************************************************************
+     C/COPY ZSRSRC,ZCNSDZ1
+      /EJECT
+     C**********************************************************************
+      /COPY ZSRSRC,ZPOWER8Z2
+**  CPY@
+(c) COPYRIGHT BIS BANKING SYSTEMS 1988. COMPANY CONFIDENTIAL.

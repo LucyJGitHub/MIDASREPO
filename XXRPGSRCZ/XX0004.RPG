@@ -1,0 +1,172 @@
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas XX SE Month End Exchange Rates Rebuild')         *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading                                   *
+      *                                                               *
+      *  XX0004 - XX SE Month End Exchange Rates Rebuild              *
+      *                                                               *
+      *  Function:  This program allows input of monthly exchange     *
+      *             records.                                          *
+      *                                                               *
+      *  Called By:                                                   *
+      *                                                               *
+      *  Calls    : None                                              *
+      *                                                               *
+      *  (c) Finastra International Limited 2017                      *
+      *                                                               *
+      *  Last Amend No. DUG504 *CREATE     Date 07Sep17               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  DUG504 - Cost of Funds                                       *
+      *                                                               *
+      *****************************************************************
+      *
+     FXXFUNTV0IF  E           K        DISK
+     F            FUNDSACF                          KRENAMEFUNDTACF
+     FXXFUNTPAO   E                    DISK                      A
+     FXXMEXRPDIF  E           K        DISK                      A
+     FSDCURRL0IF  E           K        DISK
+     E                    CYM        12  4 0
+     E/COPY ZSRSRC,ZDATE2Z1
+     I            DS
+     I                                        1  12 KEY
+     I                                        9  11 CCY
+     I            DS
+     I                                        1   40ZYM
+     I                                        1   20ZYEAR
+     I                                        1   2 ZYEARA
+     I                                        3   40ZMTH
+     I                                        3   4 ZMTHA
+      *
+     IDSFDY     E DSDSFDY
+      *
+      ** First DS for access programs, Long Data Structure
+     IDSSDY     E DSDSSDY
+      *
+      ** External DS for Bank Details
+     ISDBANK    E DSSDBANKPD
+      *
+      ** Access LF/SDBANKL1
+      *
+     C                     CALL 'AOBANKR0'
+     C                     PARM *BLANKS   P@RTCD  7
+     C                     PARM '*FIRST ' P@OPTN  7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C           P@RTCD    IFNE *BLANKS
+     C                     EXSR *PSSR
+     C                     END                             - E1
+      *
+     C                     SETOF                     98
+      *
+      ** Write Trailer record to XXFUNTPD
+      *
+     C                     MOVEL'T'       RECI
+     C                     MOVE '999'     CCY
+     C                     Z-ADD99999     ADAT
+     C                     Z-ADD0         NORE
+     C           FUNDTK    KLIST
+     C                     KFLD           CCY
+     C                     KFLD           ADAT
+     C           FUNDTK    CHAINFUNDTACF             99    *
+     C   99                EXCPTFUNDTO
+      *
+      ***  Determine Months & Years of current year (starting from LEOY + 1)
+      *
+     C                     EXSR DETMAY
+      *
+      ***  Access all currencies
+      *
+     C           *LOVAL    SETLLSDCURRL0
+     C                     READ SDCURRL0                 99*
+     C           *IN99     DOWEQ'0'
+      *
+      ** Access the Month End exchange Rates for the Currency
+      *
+     C           A6DLCI    IFEQ 'Y'
+     C                     EXSR ACMEXR
+     C                     END
+     C                     READ SDCURRL0                 99*
+     C                     END
+     C                     SETON                         LR
+      *****************************************************************
+      *                                                               *
+      *  ACMEXR - Access Month End Exchange Rates for Currency        *
+      *                                                               *
+      *****************************************************************
+      *
+     C           ACMEXR    BEGSR                           ** ACMEXR *
+      *
+     C           SEMEXK    KLIST
+     C                     KFLD           ZYEARA
+     C                     KFLD           CCY
+     C                     KFLD           ZMTHA
+      *
+     C                     Z-ADD0         X
+     C           X         DOWLT12
+     C                     ADD  1         X
+     C                     Z-ADDCYM,X     ZYM
+     C           SEMEXK    CHAINXXMEXRPD             99    *
+     C           *IN99     IFEQ '1'
+     C                     MOVELZYEARA    DMEYR
+     C                     MOVELA6CYCD    DMECY
+     C                     MOVELZMTHA     DMEMN
+     C                     Z-ADDA6SPRT    DMERT
+     C                     WRITESEMEXRD0
+     C                     END
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      *                                                               *
+      *  DETMAY - Determine Months & Years of Current Year            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           DETMAY    BEGSR                           ** DETMAY *
+      *
+     C                     Z-ADD1         X       20
+     C           BJPEYD    ADD  1         ZDAYNO
+     C                     EXSR ZDATE2
+     C                     Z-ADDZYM       CYM,X
+     C           X         DOWLT12
+     C                     ADD  1         X
+     C                     ADD  1         ZMTH
+     C           ZMTH      IFGT 12
+     C                     ADD  1         ZYEAR
+     C                     Z-ADD1         ZMTH
+     C                     END
+     C                     Z-ADDZYM       CYM,X
+     C                     END
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+      *                                                               *
+      *  *PSSR  - Error control subroutine                            *
+      *                                                               *
+      *****************************************************************
+      *
+     C           *PSSR     BEGSR                           ** *PSSR **
+      *
+      ***  End the program here.
+      *
+     C                     DUMP
+     C                     SETON                     U7U8LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *
+      *****************************************************************
+     C/COPY ZSRSRC,ZDATE2Z2
+     OFUNDSACFEADD             FUNDTO
+     O                         *ALL
+**   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
+0366073110961461
+**   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR
+000031059090120151181212243273304334365
+**   ZMNM - MONTHS SHORT NAMES
+JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

@@ -82,7 +82,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD052732 - 4-eyes principle for journal uploads not working  *
-      *             Validate by Insert User if Amend User = blank     *
+      *             Validate by Insert User if Amend User = blank.    *
       *           - Applied for MD-55406                              *
       *  249405 - Validate Batch In Use Flag field.                   *
       *         - Applied for MD-49830.                               *

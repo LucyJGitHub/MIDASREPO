@@ -11,15 +11,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. DUG502             Date 29Nov17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CGL031  *CREATE    Date 05Jul04               *
+      *                 CGL031  *CREATE    Date 05Jul04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  DUG502 - Security Diary enhancements (Recompile)             *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL031 - Taxation of Savings Income                          *
       *                                                               *

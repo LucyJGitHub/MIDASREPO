@@ -18,12 +18,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. DUG502             Date 05Dec17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CGL031             Date 05Jul04               *
       *                 CSE074             Date 30Aug05               *
       *                 BUG7029            Date 09Jun05               *
@@ -37,6 +38,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  DUG502 - Security Diary Enhancements                         *
+      *           Add hooks DUG502_113->_119                          *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CGL031 - Taxation on Savings Income (Recompile)              *
@@ -83,6 +86,7 @@
       ** Valid Security Diary Events by SESN/TMST
      FSEVSEDEL1 UF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SEVSEDED0:SEVSEDED1)
+     F/COPY WNCPYSRC,DUG502_114                                                               DUG502
       *
       ** Valid Security Diary Events error file
      FSEVESEDEPDO    E             DISK    INFSR(*PSSR)
@@ -340,6 +344,7 @@
      C                   EVAL      WEvtDate   = S2SDED
      C                   EVAL      WEvtType   = S2SDET
      C                   EVAL      WTimestamp = S2TMST
+     C/COPY WNCPYSRC,DUG502_115                                                               DUG502
       *
       /COPY WNCPYSRC,SESEDEU007
       *
@@ -445,11 +450,15 @@
      C                   IF        RetCodeOut = '*ERROR ' OR
      C                             RetCodeOut = '*RECUPD'
  
+     C/COPY WNCPYSRC,DUG502_116                                                               DUG502
      C     KSEVL1        CHAIN     SEVSEDEL1                          02
+     C/COPY WNCPYSRC,DUG502_117                                                               DUG502
       *
       ** Write details of record to error file (same format as SEVSEDEPD).
      C                   WRITE     SEVSEDEERR
+     C/COPY WNCPYSRC,DUG502_118                                                               DUG502
      C                   DELETE    SEVSEDED1
+     C/COPY WNCPYSRC,DUG502_119                                                               DUG502
       *
       ** Send message to system operator.
      C                   MOVEL     WDBerrUpd     PDBError
@@ -684,6 +693,7 @@
      C                   KFLD                    WEvtDate
      C                   KFLD                    WEvtType
      C                   KFLD                    WTimestamp
+     C/COPY WNCPYSRC,DUG502_113                                                               DUG502
       *
       ** Program, module and procedure names for database error processing
       ** =================================================================

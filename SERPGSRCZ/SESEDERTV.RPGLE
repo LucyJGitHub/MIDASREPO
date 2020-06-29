@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD038918           Date 31May16               *
+      *  Last Amend No. DUG502             Date 04Dec17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD038918           Date 31May16               *
       *                 260331             Date 31Mar16               *
       *                 MD000091           Date 17May13               *
       *                 CRE073             Date 06Dec10               *
@@ -47,6 +48,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  DUG502 - Security Diary Enhancements                         *
+      *           Add hooks DUG502_096->_112.                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD038918 - Rate reset in Bank Fusion. Allow insertion of IR  *
       *             event for an FRN security with event date equal   *
@@ -131,6 +134,7 @@
       ** Position Settlement by Security
      FPOSET3    IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(F3)
+     F/COPY WNCPYSRC,DUG502_096                                                               DUG502
       *
       *****************************************************************
       /EJECT
@@ -213,6 +217,7 @@
       *
       ** DS for Access Objects - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
+     D/COPY WNCPYSRC,DUG502_112                                                               DUG502
       *
       ** Indicator Array
      D Indicators      DS                  BASED(IndicatorP)
@@ -374,6 +379,7 @@
       *
      C                   IF        OKACTN = 'N' OR OKSDSN = 'N' OR
      C                             OKSDED = 'N' OR OKSDET = 'N'
+     C/COPY WNCPYSRC,DUG502_097                                                               DUG502
      C                   RETURN
      C                   ENDIF
  
@@ -582,6 +588,7 @@
      C                   MOVEL     'Y'           OKSDSN
      C                   MOVEL     'Y'           OKSDED
      C                   MOVEL     'Y'           OKSDET
+     C/COPY WNCPYSRC,DUG502_098                                                               DUG502
       *
       ** Initialise work variables.
       *
@@ -672,7 +679,7 @@
      C                   EXSR      SrZDATE2
      C                   MOVE      PDateOut      DDSDED
      C                   ENDIF
- 
+     C/COPY WNCPYSRC,DUG502_099                                                               DUG502
      C                   ENDIF
  
      C     EValFrnt      ENDSR
@@ -824,6 +831,7 @@
      C                   EVAL      MsgIdArr(Idx) = 'SEA0567'                                  CSE065
      C                   ENDIF                                                                CSE065
      C                   ENDIF
+     C/COPY WNCPYSRC,DUG502_100                                                               DUG502
  
      C     EValAct       ENDSR
       *****************************************************************
@@ -839,7 +847,9 @@
       ** An active Diary Events with a duplicate key must not already
       ** exist.
       *
+     C/COPY WNCPYSRC,DUG502_101                                                               DUG502
      C     KSEDEV        CHAIN     SEDEV                              70
+     C/COPY WNCPYSRC,DUG502_102                                                               DUG502
      C                   IF        RecNotFnd = False and RECI <> 'C'
      C                   MOVE      'N'           OKSDSN
      C                   ADD       1             Idx
@@ -861,7 +871,9 @@
       *
       ** Diary Events must exist as live on file
       *
+     C/COPY WNCPYSRC,DUG502_103                                                               DUG502
      C     KSEDEV        CHAIN     SEDEV                              70
+     C/COPY WNCPYSRC,DUG502_104                                                               DUG502
      C                   IF        RecNotFnd = True OR RECI <> 'D'
      C                   MOVE      'N'           OKSDSN
      C                   ADD       1             Idx
@@ -883,7 +895,9 @@
       *
       ** Diary Events must exist as live on file
       *
+     C/COPY WNCPYSRC,DUG502_105                                                               DUG502
      C     KSEDEV        CHAIN     SEDEV                              70
+     C/COPY WNCPYSRC,DUG502_106                                                               DUG502
      C                   IF        RecNotFnd = True OR
      C                             (RECI <> 'D' AND RECI <> 'M')
      C                   MOVE      'N'           OKSDSN
@@ -935,7 +949,9 @@
       *
       ** Diary Events must exist on file
       *
+     C/COPY WNCPYSRC,DUG502_107                                                               DUG502
      C     KSEDEV        CHAIN     SEDEV                              70
+     C/COPY WNCPYSRC,DUG502_108                                                               DUG502
      C                   IF        RecNotFnd = True
      C                   MOVE      'N'           OKSDSN
      C                   ADD       1             Idx
@@ -1823,6 +1839,7 @@
       *
       ** Event Type
      C                   PARM                    DDSDET
+     C/COPY WNCPYSRC,DUG502_109                                                               DUG502
       *
       ** STANDING DATA
       ** =============
@@ -1888,6 +1905,7 @@
       *
       ** OK Event Type
      C                   PARM                    OKSDET
+     C/COPY WNCPYSRC,DUG502_110                                                               DUG502
       *
       ** Security Diary Events retrieved from file - file format
      C                   PARM                    CrDEFilFmt
@@ -1922,6 +1940,7 @@
      C                   ELSE                                                                 260331
      C                   MOVE      'N'           S01512                                       260331
      C                   ENDIF                                                                260331
+     C/COPY WNCPYSRC,DUG502_111                                                               DUG502
       *
       ** Program, module and procedure names for database error processing
       ** =================================================================

@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. DUG502             Date 23Aug17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER020             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -62,6 +63,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  DUG502 - Security Diary Enhancements.                        *
+      *         - Add Hooks DUG502_002, DUG502_003, DUG502_004        *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding                              *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -954,9 +957,11 @@
      C                   IF        PPROT <> '4'
      C                   EVAL      PNDCP = 3
      C                   ELSE
+     C/COPY WNCPYSRC,DUG502_003                                                               DUG502
      C                   EVAL      PCurr = NMCY
      C                   EXSR      SRAOCurr
      C                   EVAL      PNDCP = A6NBDP
+     C/COPY WNCPYSRC,DUG502_004                                                               DUG502
      C                   ENDIF
  
      C                   ENDIF
@@ -2389,6 +2394,7 @@
      C                   ENDIF                                                                CRE073
      C                   ENDIF                                                                CRE073
       *
+     C/COPY WNCPYSRC,DUG502_002                                                               DUG502
       ** Program, module and procedure names for database error processing
       ** =================================================================
       ** The following /COPY sets these values.

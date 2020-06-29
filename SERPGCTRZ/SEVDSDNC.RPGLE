@@ -14,8 +14,9 @@
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel.                     *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1096042          Date 14Mar13               *
+      *  Last Amend No. DUG502             Date 29Nov17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1096042          Date 14Mar13               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  DUG502 - Security Diary enhancements (Recompile)             *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1096042 - Unable to delete Interest Rate Change when base  *
       *              rate value is 0                                  *

@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. DUG502             Date 05Dec17               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD037742           Date 03Apr16               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -45,6 +46,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  DUG502 - Security Diary Enhancements                         *
+      *           Add hooks DUG502_120->_148                          *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037742 - Security diary events - pool factor reversal.     *
@@ -364,8 +367,10 @@
      C                   IF        S2SDET = 'MP' OR  S2SDET = 'PP'
 
      C                   EVAL      EndOfFile = False
+     C/COPY WNCPYSRC,DUG502_120                                                               DUG502
      C     KSedev        SETGT     SEDEV
-
+     C/COPY WNCPYSRC,DUG502_121                                                               DUG502
+ 
      C                   DOW       EndOfFile = False
      C     S2SDSN        READE     SEDEV                                  02
 
@@ -522,7 +527,9 @@
       *
       ** Update totals.
       *
+     C/COPY WNCPYSRC,DUG502_122                                                               DUG502
      C     KSedev        SETLL     SEDEV
+     C/COPY WNCPYSRC,DUG502_123                                                               DUG502
      C                   READP     SEDEV                                  02
 
      C                   DOW       EndOfFile = False
@@ -698,6 +705,7 @@
       *
       ** Event Type
      C                   PARM      S2SDET        PSDET
+     C/COPY WNCPYSRC,DUG502_124                                                               DUG502
       *
       ** Standing data
       ** =============
@@ -764,6 +772,7 @@
       *
       ** OK Event Type
      C                   PARM                    OKSDET
+     C/COPY WNCPYSRC,DUG502_125                                                               DUG502
       *
       ** Security Diary Events retrieved from file - file format
      C                   PARM                    CrDEFilFmt
@@ -804,6 +813,7 @@
 
      C                   IF        OKACTN = 'N' OR OKSDSN = 'N' OR
      C                             OKSDED = 'N' OR OKSDET = 'N'
+     C/COPY WNCPYSRC,DUG502_126                                                               DUG502
      C                   MOVEL     '*RECUPD'     RetCodeIn
      C                   Z-ADD     1             Wc
 
@@ -841,13 +851,17 @@
       ** Check if record already exists in Security Diary Events file.
       ** Error if it already exists.
       *
+     C/COPY WNCPYSRC,DUG502_127                                                               DUG502
      C     KSedev        CHAIN     SEDEVDF                            01
-
+     C/COPY WNCPYSRC,DUG502_128                                                               DUG502
+ 
      C                   IF        RecNotFnd = False
 
      C     *LOCK         IN        LDA
      C                   MOVE      S2SDED        WSDED
+     C/COPY WNCPYSRC,DUG502_129                                                               DUG502
      C                   EVAL      DBKEY  = S2SDSN + WSDED + S2SDET
+     C/COPY WNCPYSRC,DUG502_130                                                               DUG502
      C                   EVAL      DBFILE = 'SEDEVD'
      C                   EVAL      DBASE  =  002
      C                   OUT       LDA
@@ -894,13 +908,15 @@
      C                   IF        *IN99 = *ON
      C     *LOCK         IN        LDA
      C                   MOVE      S2SDED        WSDED
+     C/COPY WNCPYSRC,DUG502_131                                                               DUG502
      C                   EVAL      DBKEY  = S2SDSN + WSDED + S2SDET
+     C/COPY WNCPYSRC,DUG502_132                                                               DUG502
      C                   EVAL      DBFILE = 'SEDEVD'
      C                   EVAL      DBASE  =  003
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C                   ENDSR
       *
       *****************************************************************
@@ -921,7 +937,9 @@
       ** Delete this Diary Event                                                              CSE031
       ** -----------------------                                                              CSE031
       *                                                                                       CSE031
+     C/COPY WNCPYSRC,DUG502_133                                                               DUG502
      C     KSedev        CHAIN     SEDEVDF                            01                      CSE031
+     C/COPY WNCPYSRC,DUG502_134                                                               DUG502
       *                                                                                       CSE031
       ** Generate Timestamp.                                                                  CSE031
      C                   CALLB     'ZAGENTMSTM'                                               CSE031
@@ -989,13 +1007,17 @@
       *
       ** Check if record already exists in Security Diary Events file.
       *
+     C/COPY WNCPYSRC,DUG502_135                                                               DUG502
      C     KSedev        CHAIN     SEDEVDF                            01
+     C/COPY WNCPYSRC,DUG502_136                                                               DUG502
       *
       ** Error if it does not exists.
      C                   IF        RecNotFnd = True
      C     *LOCK         IN        LDA
      C                   MOVE      S2SDED        WSDED
+     C/COPY WNCPYSRC,DUG502_137                                                               DUG502
      C                   EVAL      DBKEY  = S2SDSN + WSDED + S2SDET
+     C/COPY WNCPYSRC,DUG502_138                                                               DUG502
      C                   EVAL      DBFILE = 'SEDEVD'
      C                   EVAL      DBASE  =  004
      C                   OUT       LDA
@@ -1036,7 +1058,9 @@
      C                   IF        *IN99 = *ON
      C     *LOCK         IN        LDA
      C                   MOVE      S2SDED        WSDED
+     C/COPY WNCPYSRC,DUG502_139                                                               DUG502
      C                   EVAL      DBKEY  = S2SDSN + WSDED + S2SDET
+     C/COPY WNCPYSRC,DUG502_140                                                               DUG502
      C                   EVAL      DBFILE = 'SEDEVD'
      C                   EVAL      DBASE  =  005
      C                   OUT       LDA
@@ -1069,22 +1093,27 @@
      C                             S2SDET = F2PEVT AND
      C**********                   F2RECI = 'D'                                             MD037742
      C                             F2RECI = 'D' AND S2RECI = 'D'                            MD037742
+     C/COPY WNCPYSRC,DUG502_141                                                               DUG502
      C                   MOVEL     '*RECUPD'     RetCodeIn
      C                   RETURN
      C                   ENDIF
-
+ 
      C     S2SDSN        READE     POSETDF                                02
      C                   ENDDO
       *
       ** Check if record already exists in Security Diary Events file.
       *
+     C/COPY WNCPYSRC,DUG502_142                                                               DUG502
      C     KSedev        CHAIN     SEDEVDF                            01
+     C/COPY WNCPYSRC,DUG502_143                                                               DUG502
       *
       ** Error if it does not exists.
      C                   IF        RecNotFnd = True
      C     *LOCK         IN        LDA
      C                   MOVE      S2SDED        WSDED
+     C/COPY WNCPYSRC,DUG502_144                                                               DUG502
      C                   EVAL      DBKEY  = S2SDSN + WSDED + S2SDET
+     C/COPY WNCPYSRC,DUG502_145                                                               DUG502
      C                   EVAL      DBFILE = 'SEDEVD'
      C                   EVAL      DBASE  =  006
      C                   OUT       LDA
@@ -1125,7 +1154,9 @@
      C                   IF        *IN99 = *ON
      C     *LOCK         IN        LDA
      C                   MOVE      S2SDED        WSDED
+     C/COPY WNCPYSRC,DUG502_146                                                               DUG502
      C                   EVAL      DBKEY  = S2SDSN + WSDED + S2SDET
+     C/COPY WNCPYSRC,DUG502_147                                                               DUG502
      C                   EVAL      DBFILE = 'SEDEVD'
      C                   EVAL      DBASE  =  007
      C                   OUT       LDA
@@ -1327,6 +1358,7 @@
      C                   KFLD                    S2SDSN
      C                   KFLD                    S2SDED
      C                   KFLD                    S2SDET
+     C/COPY WNCPYSRC,DUG502_148                                                               DUG502
       *
       ** Program, module and procedure names for database error processing
       ** =================================================================

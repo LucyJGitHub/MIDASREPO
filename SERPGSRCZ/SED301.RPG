@@ -1,0 +1,451 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE Securities Trading Extract')                  *
+     F*****************************************************************
+     F*        MIDAS/SECURITIES TRADING                               *
+     F*                                                               *
+     F*    SED301 - SECURITIES TRADING EXTRACT                        *
+     F*                                                               *
+     F*  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+     F*  Last Amend No. MD046248           Date 27Oct17               *
+     F*  Prev Amend No. DUG507             Date 04Apr18               *
+     F*                 DUG420             DATE 02Sep04               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*  MD046248 - Finastra Rebranding                               *
+     F*  DUG507 - UGB FED CARS Upgrade                                *
+     F*         - incorporate from Midas R4                           *
+     F*  DUG420 - SE GL Reconciliation Report                         *
+     F*                                                               *
+     F*****************************************************************
+     FBKPHV   IF  E           K        DISK
+     FBKPOS   IF  E           K        DISK
+     FSECTY   IF  E           K        DISK
+     FINVTP   IF  E           K        DISK
+     FSEACKD  IF  E           K        DISK
+     FTABDLEE IF  E           K        DISK
+     F            TABLETAF                          KIGNORE
+     F            TABTB20F                          KIGNORE
+     F            TABTB70F                          KIGNORE
+     F            TABTG10F                          KIGNORE
+     F            TABTG20F                          KIGNORE
+     F            TABLETIF                          KIGNORE
+     F            TABLETKF                          KIGNORE
+     F            TABLETLF                          KIGNORE
+     F            TABLETMF                          KIGNORE
+     F            TABLETPF                          KIGNORE
+     F            TABLETRF                          KIGNORE
+     F            TABLETSF                          KIGNORE
+     F            TABLET1F                          KIGNORE
+     F            TABLET2F                          KIGNORE
+     F            TABLET5F                          KIGNORE
+     FTABTG10 IF  E           K        DISK
+     FSERECNPPO   E                    DISK
+     FSED301AUO   F     132            PRINTER      KINFDS SPOOL
+     E                    CCYA      150  3               CURRENCY CODES
+     E                    DPA       150  1 0             DECIMAL PLACES
+     E                    SPT       150 13 8             SPOT RATES
+     E                    MD        150  1 0             MULT/DIV INDS
+     E/COPY ZSRSRC,ZPOWER8Z1
+     ISECTYDF
+     I              ISSR                            ISSRX                 DUG507
+     ITABTG10F
+     I*    TABLE FILE - CURRENCIES RECORD 1.
+     I*
+     I              RECI                            RECIX
+     I              RECT                            RECTX
+     I              CCY                             CCYX
+     I              SREC                            SRECX
+     I              SPOT                            SPOTX
+     I              CDP                             CDPX
+     I              SRC1                            SRC1X
+     I              SRC2                            SRC2X
+     I              MDIN                            MDINX
+     ITABTB10F
+     I              SFLG                            SFLGX                 DUG507
+     I            DS
+     I                                        1  20 ACKE
+     I                                        1   3 INVTYP
+     I                                        4   4 EVTCOD
+     I                                        6   6 PFOIND
+     I                                        7   8 BOOKCD
+     I                                        9   9 UNRLTV
+     I                                       13  13 MARKET
+     I                                       14  14 CONVRT
+     I                                       15  15 NEGIND
+     I                                       19  20 AMTCOD
+      *
+      ***  Data Structure for Investment File Key.
+     I            DS
+     I                                        1   6 IKEY
+     I                                        1   3 NMCY
+     I                                        4   6 SITP
+      *
+     I            DS
+      ***  Data Structure for Book Position Key.
+     I                                        1  20 BPKEY
+     I                                        1  10 BHSC
+     I****                                   11  130BHBR
+     I                                       11  13 BHBA
+     I                                       14  15 BHBK
+     I                                       16  16 BHMK
+     I                                       17  17 BHTV
+     I                                    P  18  200LPSD
+     ISPOOL       DS                                                      S01117
+     I** FILE INFORMATION DATA STRUCTURE                                  S01117
+     I                                       83  92 SFILE                 S01117
+     I                                    B 123 1240SFNUM                 S01117
+     I                                    B 243 2460SWRIT                 S01117
+      *
+      ***  Book Position (with Position Date).
+      *
+     C           BKPKEY    KLIST
+     C                     KFLD           BHSC
+     C****                 KFLD           BHBR
+     C                     KFLD           BHBA
+     C                     KFLD           BHBK
+     C                     KFLD           BHMK
+     C                     KFLD           BHTV
+     C                     KFLD           LPSD
+      *
+      ***  Investment type key
+      *
+     C           INVTPK    KLIST
+     C                     KFLD           NMCY
+     C                     KFLD           SITP
+     C**
+     C**   SET UP CURRENCY DETAIL ARRAYS
+     C                     EXSR CCYARR
+     C**
+     C**   ACCESS INSTLLATION CONTROL DATA RECORD 1 TO DETERMINE
+     C**   RUN DATE, DATE FORMAT AND TITLE
+     C                     EXSR ZSYSTM
+     C   99                SETON                     U7LR
+     C   99                MOVE 'TABLE'   DBEFIL  5
+     C   99                MOVE ZTABKY    DBEKEY 12
+     C   99                Z-ADD1         DBASE   30
+     C   99                GOTO END
+     C**
+     C**   ACCESS INSTALLATION CONTROL DATA RECORD 5 TO DETERMINE
+     C**   U.S. DOLLAR CURRENCY CODE
+     C                     MOVEL'01    '  ICD5KY 12
+     C                     MOVE '    40'  ICD5KY
+     C           ICD5KY    CHAINTABDLEE              99
+     C  N99      RECI      COMP 'D'                  9999
+     C   99                SETON                     U7LR
+     C   99                MOVE 'TABLE'   DBEFIL
+     C   99                MOVE ICD5KY    DBEKEY
+     C   99                Z-ADD2         DBASE
+     C   99                GOTO END
+     C**
+     C**   DETERMINE U.S. DOLLAR CURRENCY DETAILS
+     C                     MOVE USCY      XCCY
+     C                     EXSR CCYINF
+     C                     Z-ADDXSPOT     USSPOT 138
+     C*
+     C* ACCESS POSITIONS
+     C*
+     C           *LOVAL    SETLLBKPHDDF
+     C                     READ BKPHDDF                  99*
+     C           *IN99     DOWEQ'0'
+     C**
+     C**   BYPASS IF DELETED
+     C**
+     C           RECI      IFEQ '*'
+     C                     GOTO BYPASS
+     C                     ENDIF
+     C**
+     C**   GET CURRENT POSITION
+     C**
+     C           BKPKEY    CHAINBKPOS                99
+     C           *IN99     IFEQ '1'
+     C                     SETON                     U7LR
+     C                     MOVE 'BKPOS'   DBEFIL
+     C                     MOVELBPKEY     DBEKEY
+     C                     Z-ADD3         DBASE
+     C                     GOTO END
+     C                     ENDIF
+     C**
+     C**   BYPASS IF FLAT POSITION
+     C**
+     C           NPSN      IFEQ 0
+     C                     GOTO BYPASS
+     C                     ENDIF
+     C**
+     C**   CHAIN TO SECTY ON CHANGE OF SECURITY
+     C**
+     C           BHSC      IFNE SBHSC
+     C           BHSC      CHAINSECTY                99
+     C           *IN99     IFEQ '1'
+     C                     SETON                     U7LR
+     C                     MOVE 'SECTY'   DBEFIL
+     C                     MOVELBHSC      DBEKEY
+     C                     Z-ADD4         DBASE
+     C                     GOTO END
+     C                     ENDIF
+     C                     MOVE BHSC      SBHSC  10
+     C**   CHAIN TO INVTP
+     C**
+     C           INVTPK    CHAININVTP                99
+     C           *IN99     IFEQ '1'
+     C                     SETON                     U7LR
+     C                     MOVE 'INVTP'   DBEFIL
+     C                     MOVELIKEY      DBEKEY
+     C                     Z-ADD5         DBASE
+     C                     GOTO END
+     C                     ENDIF
+     C*
+     C* GET A/C CODE
+     C*
+     C                     MOVELSITP      INVTYP
+     C                     MOVEL'T'       EVTCOD
+     C                     MOVEL'01'      BOOKCD
+     C                     MOVEL'S'       MARKET
+     C                     MOVEL'RL'      AMTCOD
+      *
+     C           ACKE      CHAINSEACKDF              90
+     C           *IN90     IFEQ '0'
+     C                     Z-ADDACD4      ACOD
+     C**
+     C**   DETERMINE DETAILS FOR THIS CURRENCY
+     C                     MOVE NMCY      XCCY
+     C                     EXSR CCYINF
+     C                     Z-ADDXSPOT     DSPOT  138
+     C                     Z-ADDXCDP      DCDP    10
+     C                     Z-ADDXCDP      CDP     10
+     C                     Z-ADDXMDIN     DMDIN   10
+     C**
+     C**   VALUE POSITION
+     C**
+     C                     Z-ADDCDP       ZCDP
+     C                     ENDIF
+     C                     ENDIF
+      *
+     C           *IN90     IFEQ '0'
+     C                     Z-ADDNPSN      ZNOML
+     C                     Z-ADDLAVP      ZPRC
+     C                     EXSR ZCNSD
+     C                     Z-ADDZCONS     PAMT   150
+     C**
+     C**   CONVERT THE AMOUNT INTO U.S. DOLLARS
+     C           NMCY      IFEQ USCY
+     C                     Z-ADDPAMT      USAMT  150
+     C                     ELSE
+     C                     Z-ADDPAMT      AMOUNT 150
+     C                     Z-ADDDSPOT     CSPOT
+     C                     Z-ADDDCDP      CCDP
+     C                     Z-ADDDMDIN     CMDIN
+     C                     EXSR CNVERT
+     C                     Z-ADDAMT1      USAMT
+     C                     ENDIF
+      *
+     C                     MOVE BHBA      BRANCH
+      *
+     C*
+     C*  WRITE TO EXTRACT FILE
+     C*
+     C                     WRITESERECNP0
+     C                     ENDIF
+     C*
+     C* READ NEXT
+     C*
+     C           BYPASS    TAG
+     C                     READ BKPHDDF                  99*
+     C                     ENDDO
+      *
+     C           END       TAG
+     C                     SETON                     LR
+     C********************************************************************
+     C**
+     C**   SUBROUTINE TO CONVERT AN AMOUNT TO U.S. DOLLARS
+     C**
+     C           CNVERT    BEGSR
+     C**
+     C                     Z-ADDCSPOT     CSPOT  138
+     C                     Z-ADDCMDIN     CMDIN   10
+     C                     Z-ADDCCDP      CCDP    10
+     C**
+     C**   CHECK MULT/DIV STATUS
+     C           CMDIN     COMP 0                    75  76*75-MULT 76-DIV
+     C**
+     C**   MULT/DIV AMOUNT
+     C   75      AMOUNT    MULT CSPOT     AMT1   150H
+     C   76      AMOUNT    DIV  CSPOT     AMT1      H
+     C**
+     C**   CONVERT TO U.S. DOLLARS BY MULT/DIV BY U.S. DOLLAR SPOT RATE
+     C   75      AMT1      MULT USSPOT    AMT1      H
+     C   76      AMT1      DIV  USSPOT    AMT1      H
+     C**
+     C**   DETERMINE DECIMAL PLACES OF CURRENCY TO BE CONVERTED
+     C                     SETOF                     404142
+     C                     SETOF                     43
+     C           CCDP      COMP 1                      4041
+     C  N40N41   CCDP      COMP 2                    43  42
+     C**
+     C**   ADJUST FOR DECIMAL PLACES
+     C   42                GOTO CVTEND
+     C**
+     C   40      AMT1      MULT 100       AMT1
+     C   41      AMT1      MULT 10        AMT1
+     C   43      AMT1      DIV  10        AMT1      H
+     C**
+     C           CVTEND    ENDSR
+     C**
+     C********************************************************************
+     C********************************************************************
+     C**
+     C**   SR. TO OBTAIN NO. OF DECIMAL PLACES, SPOT RATE,
+     C**   MULT/DIV INDICATOR IND. AND THE TWO STAT.RETURN CODES
+     C**
+     C           CCYINF    BEGSR                           *** CCYINF  ***
+     C**
+     C**   SET ARRAY INDEX TO ONE AND RESET ERROR INDICATOR
+     C                     Z-ADD1         X
+     C**
+     C**   INITIALISE INPUT-OUTPUT FIELDS
+     C                     Z-ADD0         XSPOT  138
+     C                     Z-ADD0         XMDIN   10
+     C                     Z-ADD0         XCDP    10
+     C                     MOVE XCCY      XCCY    3
+     C**
+     C**   LOOK UP NUMBER OF DECIMAL PLACES FOR CURRENCY.
+     C**   85 SET ON FOR INVALID CURRENCY
+     C           XCCY      LOKUPCCYA,X                   85
+     C   85                MOVE DPA,X     XCDP
+     C   85                MOVE SPT,X     XSPOT
+     C   85                MOVE MD,X      XMDIN
+     C**
+     C           CIEND     ENDSR
+     C**
+     C********************************************************************
+     C********************************************************************
+     C**
+     C**   SR. TO SET UP AN ARRAY OF CURRENCIES, AN ARRAY OF DECIMAL
+     C**   PLACES, AN ARRAY OF SPOT RATES, AN ARRAY OF MULT/DIV INDICATORS
+     C**   AND TWO ARRAYS OF STAT.RETURN CODES
+     C**
+     C           CCYARR    BEGSR                           ***  CCYARR ***
+     C**
+     C                     SETOF                     89
+     C**
+     C**   SET ARRAY INDEX TO ZERO
+     C                     Z-ADD0         X       20
+     C**
+     C**   SET UP KEY FOR CURRENCY TABLE
+     C                     MOVEL'20      'XCYKEY 12
+     C                     MOVE '    '    XCYKEY
+     C**
+     C**   LOOP TO READ CURRENCY RECORDS
+     C           XLOOP     TAG                             ** XLOOP TAG **
+     C                     READ TABTG10                  89
+     C  N89      RECTX     COMP 20                   8989
+     C**
+     C**   END IF ALL CURRENCY RECORDS PROCESSED
+     C   89                GOTO XEND
+     C**
+     C**   IGNORE DELETED RECORDS AND NON-SUBRECORD ONE
+     C           RECIX     COMP 'D'                  8787
+     C   87                GOTO XLOOP
+     C           SRECX     COMP 1                    8787
+     C   87                GOTO XLOOP
+     C**
+     C**   INCREMENT ARRAY INDEX
+     C           X         ADD  1         X
+     C**
+     C**   MOVE DATA INTO ARRAYS
+     C                     MOVE CCYX      CCYA,X
+     C                     MOVE CDPX      DPA,X
+     C                     Z-ADDSPOTX     SPT,X
+     C                     Z-ADDMDINX     MD,X
+     C**
+     C**   CHECK FOR FULL ARRAY 86 ON IF FULL
+     C           X         COMP 150                      86
+     C**
+     C**   GOTO NEXT RECORD
+     C  N86                GOTO XLOOP
+     C**
+     C           XEND      TAG                             ** XEND TAG  **
+     C                     ENDSR
+     C**
+     C********************************************************************
+     C********************************************************************
+     C**
+     C**   ZSYSTM SR. TO CHAIN TO THE INSTALLATION CONTROL DATA RECORD.
+     C**
+     C           ZSYSTM    BEGSR                           *** ZSYSTM ***
+     C**
+     C**   SET UP KEY FOR INSTALLATION CONTROL RECORD.
+     C                     MOVEL'01      'ZTABKY 12
+     C                     MOVE '  10'    ZTABKY
+     C**
+     C           ZTABKY    CHAINTABDLEE              99    ON NOT THERE
+     C  N99      RECI      COMP 'D'                  9999  ON, IS DELETED
+     C**
+     C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.
+     C           DATF      COMP 'M'                      98MMDDYY, 98 ON
+     C**
+     C                     ENDSR
+     C/COPY ZSRSRC,ZCNSDZ1
+      *****************************************************************
+     C           *INZSR    BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ZTYPE   2
+     C                     PARM           ZSEQ    5
+      *
+     C                     EXSR #ZSFIL
+      *
+     C                     ENDSR
+      *****************************************************************
+     C           #ZSFIL    BEGSR
+      *
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           ZSEQ    5
+     C                     PARM *BLANK    @PARM   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM *BLANK    ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8
+     C                     RETRN
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+      *****************************************************************
+     O**
+     O**   RUN CONTROLS REPORT
+     O**
+     OSED301AUT   03   LR
+     O                                   20 'REFERENCE  SED301'
+     O                         TITL      90
+     O                                  105 'DATE'
+     O                         RUNA     113
+     O                                  120 'PAGE'
+     O                         PAGE     125
+     O        T   05   LR
+     O                                   65 'SECURITIES EXTRACT'
+     O                                   79 ' FILE CONTROLS'
+     O        T   06   LR
+     O                                   65 '------------------'
+     O                                   79 '--------------'
+     O        T   41   U7 LR
+     O                                   66 '**  JOB TERMINATED - DAT'
+     O                                   84 'ABASE IN ERROR  **'
+     O                         DBEFIL    94
+     O                         DBEKEY   111
+     O        T   45   LRNU7
+     O                                   71 '*** END OF REPORT ***'
+**  POWER8 - ARRAY OF POWERS FOR CURRENCY CONVERSION
+00000001
+00000010
+00000100
+00001000
+00010000
+00100000
+01000000
+10000000

@@ -23,12 +23,13 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. DUG511             Date 28Sep17
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CSW037A            Date 02May05               *
       *                 CSD025             Date 11Jan05               *
@@ -46,6 +47,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  DUG511 - Suppress Validation of Deal Type against Customer   *
+      *           Addition of hooks DUG511_001, 002 and 003           *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -246,6 +249,7 @@
       *
       ** Check for bank/non bank and deal types
       *
+     C/COPY WNCPYSRC,DUG511_002
      C     BBBNBI        IFEQ      'Y'
       *
       ** Customer is a bank
@@ -264,7 +268,7 @@
      C                   MOVEL     'MMM1065'     Msgid2
      C                   END
      C                   END
- 
+     C/COPY WNCPYSRC,DUG511_003
      C                   END
       *
       **  If the customer is valid, update output fields
@@ -324,6 +328,8 @@
      C                   IF        PRtCd = *Blanks                                            CSD025
      C                   EVAL      CSD025 = 'Y'                                               CSD025
      C                   ENDIF                                                                CSD025
+      *
+     C/COPY WNCPYSRC,DUG511_001
                                                                                               CSD025
       ** Program, module and procedure names for database error processing.
       ** =================================================================

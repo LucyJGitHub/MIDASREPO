@@ -30,8 +30,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. DUG502             Date 29Nov17               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD037742           Date 01Apr16               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -53,6 +54,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  DUG502 - Security Diary enhancements                         *
+      *           New hooks: DUG502_050, DUG502_051, DUG502_052,      *
+      *                      DUG502_053, DUG502_054                   *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD037742 - Security diary events - pool factor reversal.     *
@@ -568,6 +572,7 @@
      C     OKSDSN        IFEQ      'Y'
      C     OKSDED        ANDEQ     'Y'
      C     OKSDET        ANDEQ     'Y'
+      /COPY WNCPYSRC,DUG502_050                                                              DUG502
      C                   EVAL      OKFLDS = 'Y'
      C                   ENDIF
 
@@ -668,6 +673,7 @@
       *
       ** Event Type
      C                   PARM                    DDSDET
+      /COPY WNCPYSRC,DUG502_051                                                               DUG502
       *
       ** STANDING DATA
       ** =============
@@ -735,6 +741,7 @@
       *
       ** OK Event Type
      C                   PARM                    OKSDET
+      /COPY WNCPYSRC,DUG502_052                                                              DUG502
       *
       ** Security Diary Events retrieved from file - file format
      C                   PARM                    SedeFilFmt
@@ -1237,6 +1244,7 @@
       *
       ** Event Date
      C                   EVAL      S2SDED = WEvtDno
+      /COPY WNCPYSRC,DUG502_053                                                              DUG502
       *
       ** Event Type
      C                   EVAL      S2SDET = DDSDET
@@ -1764,6 +1772,7 @@
                                                                                               CGL031
      C                   ENDIF                                                                CGL031
       *
+      /COPY WNCPYSRC,DUG502_054                                                               DUG502
       *
       ** Retrieve Midas Module Flag details
      C                   READ      MMODF                                  01

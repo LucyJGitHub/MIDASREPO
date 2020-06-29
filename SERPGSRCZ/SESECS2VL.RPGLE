@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD035962           Date 25May16               *
+      *  Last Amend No. DUG502             Date 23Aug17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD035962           Date 25May16               *
       *                 MD000091           Date 16May13               *
       *                 AR1077984          Date 17Jan13               *
       *                 AR750169           Date 17Sep12               *
@@ -61,6 +62,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  DUG502 - Security Diary Enhancements.                        *
+      *           Amend Core Hooks SESEC2V082,SESEC2V002,SESEC2V089.  *
+      *           Add Hook DUG502_001                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  MD035962 - NCD incorrectly defaulted to maturity date. Make  *
       *             sure next coupon date is defaulted first before   *
@@ -340,7 +344,7 @@
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       *
-      /COPY WNCPYSRC,SESEC2V002
+      /COPY WNCPYSRC,SESEC2V002                                                               DUG502
       *
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -966,7 +970,7 @@
       *
       ** Validate initial price
       *
-      /COPY WNCPYSRC,SESEC2V082
+      /COPY WNCPYSRC,SESEC2V082                                                               DUG502
  
      C                   EXSR      SRVIntlPrc
  
@@ -977,6 +981,7 @@
       /COPY WNCPYSRC,SESEC2V084
  
      C                   EXSR      SRVFulPrc
+      /COPY WNCPYSRC,DUG502_001                                                               DUG502
  
      C                   ELSE
      C                   EVAL      DDSINP = *BLANKS
@@ -4183,7 +4188,7 @@
       *
       /COPY ZACPYSRC,DBFIELDS
       *
-      /COPY WNCPYSRC,SESEC2V089
+      /COPY WNCPYSRC,SESEC2V089                                                               DUG502
       *
      C                   ENDSR
       *

@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. DUG502             Date 05Dec17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -36,6 +37,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  DUG502 - Security Diary Enhancements                         *
+      *           Add hooks DUG502_149->_154.                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -164,6 +167,7 @@
       *
       ** DS for access objects - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
+     D/COPY WNCPYSRC,DUG502_154                                                               DUG502
       *
       ** Indicator Array
      D Indicators      DS                  BASED(IndicatorP)
@@ -258,8 +262,10 @@
       *
      C                   MOVE      D1NMCY        PCyCd
      C                   EXSR      SRAOCurr
+     C/COPY WNCPYSRC,DUG502_150                                                               DUG502
      C     15            SUB       A6NBDP        ZADIG
      C                   Z-ADD     A6NBDP        ZADEC
+     C/COPY WNCPYSRC,DUG502_151                                                               DUG502
       *
       ** Check for valid number.
       *
@@ -274,8 +280,10 @@
      C                   EVAL      MsgIdXAr(IDx) = 'SEA0359'
      C                   GOTO      ESRCalAmt
      C                   ENDIF
+     C/COPY WNCPYSRC,DUG502_152                                                               DUG502
  
      C                   MOVE      ZFIELD        WAmount
+     C/COPY WNCPYSRC,DUG502_153                                                               DUG502
       *
       ** If action is amend, get the original call amount.
       *
@@ -426,6 +434,7 @@
       *
       ** SE Diary Events for file update - file format
      C                   PARM                    NwDEFilFmt
+     C/COPY WNCPYSRC,DUG502_149                                                               DUG502
       *
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================

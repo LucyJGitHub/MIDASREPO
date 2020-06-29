@@ -9,7 +9,8 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. DUG504             Date 07Sep17              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -36,6 +37,9 @@
 /*                                                                 */
 /*-----------------------------------------------------------------*/
 /*                                                                 */
+/*       DUG504 - Cost of Funds                                      */
+/*                Added hooks DUG504_014, DUG504_015, DUG504_016 and */
+/*                DUG504_017.                                        */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CSE039 - Automatic Settlements of Trades                    */
 /*       CSE041 - DVP/RVP Processing                                 */
@@ -87,6 +91,7 @@
              DCL        VAR(&TRADE) TYPE(*CHAR) LEN(6)                /*CSE039*/
              DCL        VAR(&DEPMV) TYPE(*CHAR) LEN(6)                /*CSE039*/
              DCL        VAR(&ALL) TYPE(*CHAR) LEN(1)                  /*CSE039*/
+/*/COPY WNCPYSRC,DUG504_014                                          */                   /*DUG504*/
              CHGVAR  VAR(&ALL) VALUE('X')                             /*CSE039*/
 /*/COPY WNCPYSRC,SEC0302006                                          */
 /**/                                                                  /*S01117*/
@@ -122,6 +127,7 @@
              CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &FMT)    /*CSE039*/
              IF         COND(&RTCD *EQ '       ') THEN(CHGVAR +
                           VAR(&CSE039) VALUE('Y'))                    /*CSE039*/
+/*/COPY WNCPYSRC,DUG504_015                                          */                   /*DUG504*/
 /**/
 /* SET UP PGM MESSAGE */
 /**/
@@ -504,6 +510,7 @@
                           VAR(&MSG) VALUE('SEC0302 - MOVEMENTS +
                           STATUS AUDIT LIST'))                     /*CSE039*/
 /*/COPY WNCPYSRC,SEC0302004                                          */
+/*/COPY WNCPYSRC,DUG504_016                                          */                   /*DUG504*/
 /**/
 /* SEND PGM MESSAGE */
 /**/
@@ -526,6 +533,7 @@
 /************             THEN(CALL PGM(&PRM01))                       *S01117*/
 /************ELSE       CMD(CALL PGM(&PRM01) PARM('L'))                *S01117*/
 /**/                                                                  /*S01117*/
+/*/COPY WNCPYSRC,DUG504_017                                          */                   /*DUG504*/
              IF         COND(&PRM01 *EQ 'SE0351' *OR +
                              &PRM01 *EQ 'SE0352' *OR +
                              &PRM01 *EQ 'SE0353' *OR +

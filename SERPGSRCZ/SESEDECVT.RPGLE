@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. DUG502             Date 04Dec17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -41,6 +42,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  DUG502 - Security Diary Enhancements                         *
+      *           Add hooks DUG502_020->_027                          *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -161,6 +164,7 @@
       *
       ** Externally described DS for currency details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
+     D/COPY WNCPYSRC,DUG502_020                                                               DUG502
       *
       ** DS for access objects - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
@@ -172,6 +176,7 @@
       *
       ** Work variables
      D WCPRI           S              7A
+      /COPY WNCPYSRC,DUG502_021                                                               DUG502
       *
       ** Work parameters
      D RMFL            S              1A
@@ -255,6 +260,7 @@
      C                   EVAL      DDACTN = PACTN
      C                   EVAL      DDSDSN = SDSN
      C                   EVAL      DDSDET = SDET
+      /COPY WNCPYSRC,DUG502_022                                                               DUG502
  
      C                   IF        SDED <> *ZEROS
      C                   IF        SDED = 99999
@@ -309,9 +315,13 @@
      C                   MOVE      D1NMCY        PCyCd
      C                   EXSR      SRAOCurr
  
+      /COPY WNCPYSRC,DUG502_023                                                               DUG502
      C                   Z-ADD     A6NBDP        ZADec
+      /COPY WNCPYSRC,DUG502_024                                                               DUG502
      C                   MOVE      *BLANKS       ZField
+      /COPY WNCPYSRC,DUG502_025                                                               DUG502
      C                   MOVE      SDPP          ZField
+      /COPY WNCPYSRC,DUG502_026                                                               DUG502
      C                   EXSR      SRFmtAmt
  
      C                   MOVE      ZField        DDCAMT
@@ -780,6 +790,7 @@
       ** SE Diary events screen details from incoming transaction
       ** - screen format
      C                   PARM                    CrDE1ScnFmt
+      /COPY WNCPYSRC,DUG502_027                                                               DUG502
       *
       ** Program, module and procedure names for database error processing
       ** =================================================================

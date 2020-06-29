@@ -48,7 +48,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
-/*       MD055683 - SWIFT jobs will now run based on configurations  */
+/*       MD055683 - SWIFT jobs will now run based on configurations. */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD031644 - SP7 Build issue (Rework of CFT158 Return         */
 /*                  Status of Interfaced FT Payments). Unable        */

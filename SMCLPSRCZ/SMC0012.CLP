@@ -23,7 +23,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
-/*       MD055749 - Bridge menu CHDT ends in error                   */
+/*       MD055749 - Bridge menu CHDT ends in error.                  */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CUP034 - Reduce size of implementation library.             */
 /*       CUP033 - Removal of System Value /COPYs.                    */

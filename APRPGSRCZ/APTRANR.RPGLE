@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054906           Date 15Jan20               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. DUG502             Date 04Dec17               *
+      *  Prev Amend No. MD054906           Date 15Jan20               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD052550           Date 07Jan19               *
       *                 MD044880           Date 15Jan18               *
       *               . MD046248           Date 27Oct17               *
@@ -81,6 +82,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  DUG502 - Security Diary enhancements                         *
+      *           Add hooks DUG502_018->_019                          *
       *  MD054906 - CBS-2882 fix extenstion for Principal Change      *
       *             Schedule                                          *
       *           - Passed ACTRJ to IRSIRSR and IRCIRSR to match      *
@@ -1438,12 +1441,14 @@
      C                   EVAL      DDSDED_IN = %SUBST(TransID:11:6)                          BUG1055
      C                   EVAL      DDSDET_IN = %SUBST(TransID:17:2)                          BUG1055
                                                                                              BUG1055
+     C/COPY WNCPYSRC,DUG502_018                                                               DUG502
      C                   CALL      'SESEDER'                                                 BUG1055
      C                   PARM                    AuthComp                                    BUG1055
      C                   PARM                    FwdBck                                      BUG1055
      C                   PARM                    DDSDSN_In        10                         BUG1055
      C                   PARM                    DDSDED_In         6                         BUG1055
      C                   PARM                    DDSDET_In         2                         BUG1055
+     C/COPY WNCPYSRC,DUG502_019                                                               DUG502
      C                   PARM                    Buffer                                      BUG1055
      C                   PARM                    FldNameArr                                  BUG1055
      C                   PARM                    MsgIDArr                                    BUG1055

@@ -161,7 +161,7 @@
 0013 F*---------------------------------------------------------------*
       *                                                               *
       *  LRI100 - Additional info. entries not statemented since      *
-      *           exists on history file.                             *
+      *           exists on history file                              *
       *  LRI100 - Statement Format Changes                            *
       *         - Upgrade CARs LRI009/LRI010 to FB Midas.             *
       *  CGL188 - COB Optimisation of GL0420                          *

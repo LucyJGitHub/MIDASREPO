@@ -12,7 +12,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  LRI100 - Additional info. entries not statemented since      *
-      *           exist on history file.                              *
+      *           exist on history file                               *
       *  LRI100 - Statement Format Changes                            *
       *         - Upgrade CARs LRI009/LRI010 to FB Midas.             *
       *                                                               *

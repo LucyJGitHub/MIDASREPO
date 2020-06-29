@@ -9,7 +9,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  LRI100 - Statement Format Changes                            *
+      *  LRI100 - Statement Format Changes.                           *
       *         - Upgrade CARs LRI009/LRI010 to FB Midas.             *
       *                                                               *
       *****************************************************************

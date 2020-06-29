@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2004           */
 /*                                                                   */
-/*       Last Amend No. MD036791           Date 09Dec15              */
-/*       Prev Amend No. MD021351 *REWRITE  Date 23Jul13              */
+/*       Last Amend No. MD051643           Date 22Jun20              */
+/*       Prev Amend No. MD036791           Date 09Dec15              */
+/*                      MD021351 *REWRITE  Date 23Jul13              */
 /*                      CCB023             Date 06Aug12              */
 /*                      CBF002             Date 04Jul11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -24,6 +25,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD051643 - DLC0002 job does not auto start after COB.       */
+/*                - Applied fix for MD055648                         */
 /*       MD036791 - Failed Component SCKOBJLCB 00003                 */
 /*       MD021351 - Design for Kill object locks                     */
 /*       CCB023 - COB Restructure - Input Cycle Termination          */
@@ -63,6 +66,8 @@
 /*/COPY SDCPYSRC,SDSVALDCL                                           */
              DCL        VAR(&REPORT) TYPE(*CHAR) LEN(1)
              DCL        VAR(&PIMMED) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&CCM002) TYPE(*CHAR) LEN(1) /*MD051643*/
+             DCL        VAR(&SAR) TYPE(*CHAR) LEN(6) /*MD051643*/
 
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
@@ -187,6 +192,23 @@ RETRYKILL:
                 ENDDO
 
              ENDDO
+
+                                                                                        /*MD051643*/
+/** Check if Citydealer Interface feature is switched on. */                            /*MD051643*/
+                                                                                        /*MD051643*/
+             CHGVAR     VAR(&PRTCD) VALUE('       ')                                    /*MD051643*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                     /*MD051643*/
+             CHGVAR     VAR(&SAR) VALUE('CCM002')                                       /*MD051643*/
+             CALL       PGM(AOSARDR0) PARM(&PRTCD &OPTN &SAR)                           /*MD051643*/
+             IF         COND(&PRTCD *EQ '       ') THEN(CHGVAR VAR(&CCM002) +
+                          VALUE('Y'))                                                   /*MD051643*/
+                                                                                        /*MD051643*/
+/** If Citydealer Interface is ON, reset the active status flag to 'N' */               /*MD051643*/
+                                                                                        /*MD051643*/
+             IF         COND(&CCM002 *EQ 'Y') THEN(DO)                                  /*MD051643*/
+                CHGDTAARA  DTAARA(DLCDSTAT (1 1)) VALUE('N')                            /*MD051643*/
+             ENDDO                                                                      /*MD051643*/
+                                                                                        /*MD051643*/
 
              IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
                 GOTO       CMDLBL(END)

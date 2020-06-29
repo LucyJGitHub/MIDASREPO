@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGP017             Date 06Aug12               *
+      *  Last Amend No. DUG502             Date 24Feb18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGP017             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -25,6 +26,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  DUG502 - Security Diary enhancements                         *
+      *           Add hooks DUG502_066->069                           *
       *  MD046248 - Finastra Rebranding                               *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *
       *  BUG10215 - Global replication needs a global interface       *
@@ -76,13 +79,17 @@
      D  END_SS                 5      6S 0
  
      IFormatZON     01
+     I/COPY WNCPYSRC,DUG502_066                                                               DUG502
      I                                          SDSN          L1M3
      I                                          SDED          L1M2
      I                                          SDET          L1M1
+     I/COPY WNCPYSRC,DUG502_067                                                               DUG502
      IFormatGLB     02
+     I/COPY WNCPYSRC,DUG502_068                                                               DUG502
      I                                          G_SDSN        L1M3
      I                                          G_SDED        L1M2
      I                                          G_SDET        L1M1
+     I/COPY WNCPYSRC,DUG502_069                                                               DUG502
  
      C     *INMR         IFEQ      *OFF
      C     *IN01         IFEQ      *ON

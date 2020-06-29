@@ -795,7 +795,6 @@
      C                   MOVE      'Y'           CRE100            1                        MD055830
      C                   ELSE                                                               MD055830
      C                   MOVE      'N'           CRE100                                     MD055830
-     C                   MOVE      *ON           *IN45                                      MD055830
      C                   ENDIF                                                              MD055830
       *                                                                                     MD055830
       ** Determine system values whether internal postings for interest                       CRE100

@@ -4,9 +4,9 @@
 /*                                                                   */
 /*       GLC0802B  DAILY EVENTS BY CURRENCY                          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
-/*       Last Amend No. DUG503             Date 08Feb18              */
+/*       Last Amend No. DUG503 *CREATE     Date 08Feb18              */
 /*       Prev Amend No. xxxxxx             Date ddmmmyy              */
 /*                                                                   */
 /*********************************************************************/
@@ -21,19 +21,19 @@
 /*  -----------------------------------------------------------    */
 /*                                                                 */
 /* With override for DL events */
-             CHGJOB     SWS(XXX0XXXX)
-             OVRDBF     FILE(DLEVNTLI) TOFILE(DLEVNTLJ)
+                CHGJOB     SWS(XXX0XXXX)                                                  /*DUG503*/
+             OVRDBF     FILE(DLEVNTLI) TOFILE(DLEVNTLJ)                                   /*DUG503*/
 /*  Call By Branch version of value date report */
              IF         COND(&RLEV *EQ 'B') THEN(CALL PGM(GLD056) +
-                          PARM(&TYPE &RSEQ &RENT))
-             DLTOVR     FILE(DLEVNTLI)
- 
+                          PARM(&TYPE &RSEQ &RENT))                                        /*DUG503*/
+             DLTOVR     FILE(DLEVNTLI)                                                    /*DUG503*/
+
 /* With override for SE events */
-             CHGJOB     SWS(XXX1XXXX)
-             OVRDBF     FILE(DLEVNTLI) TOFILE(DLEVNTLK)
+             CHGJOB     SWS(XXX1XXXX)                                                     /*DUG503*/
+             OVRDBF     FILE(DLEVNTLI) TOFILE(DLEVNTLK)                                   /*DUG503*/
 /*  Call By Branch version of value date report */
              IF         COND(&RLEV *EQ 'B') THEN(CALL PGM(GLD056) +
-                          PARM(&TYPE &RSEQ &RENT))
-             DLTOVR     FILE(DLEVNTLI)
- 
-             ENDDO
+                          PARM(&TYPE &RSEQ &RENT))                                        /*DUG503*/
+             DLTOVR     FILE(DLEVNTLI)                                                    /*DUG503*/
+
+             ENDDO                                                                        /*DUG503*/

@@ -1,20 +1,21 @@
-000100000000/*********************************************************************/
-000200000000/*                                                                   */
-000300050711/*       Midas - Retail Module                                       */
-000400000000/*                                                                   */
-000500050711/*       REC35  MIDAS RE CUSTOMER EXCHANGES INPUT TODAY              */
-000600000000/*                                                                   */
-000700000000/*       (c) Misys International Banking Systems Ltd. 2004           */
-000800000000/*                                                                   */
-000801180404/*       Last Amend No. DUG503             Date 08Apr18              */
-000802180404/*       Prev Amend No. DUG431             Date 11Jul05              */
-001100000000/*                                                                   */
-001200000000/*********************************************************************/
-001300000000/*                                                                   */
-001301050627/*       DUG431 - Amendments to 'Events by Value Date' Report        */
-001600000000/*                                                                   */
-001700000000/*********************************************************************/
-002700050711/*  Start of DUG431  */                                               /*DUG431*/
-002701050711             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)                 /*DUG431*/
-002702050711             DCL        VAR(&SYSPRE) TYPE(*CHAR) LEN(2)               /*DUG431*/
-002800050711/*  End of DUG431  */                                                 /*DUG431*/
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Retail Module                                       */
+/*                                                                   */
+/*       REC35  MIDAS RE CUSTOMER EXCHANGES INPUT TODAY              */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*                                                                   */
+/*       Last Amend No. DUG503             Date 08Apr18              */
+/*       Prev Amend No. DUG431 *CREATE     Date 11Jul05              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       DUG503 - Events by Value Date Report                        */
+/*       DUG431 - Amendments to 'Events by Value Date' Report        */
+/*                                                                   */
+/*********************************************************************/
+/*  Start of DUG431  */                                               /*DUG431*/
+             DCL        VAR(&LIB) TYPE(*CHAR) LEN(10)                 /*DUG431*/
+             DCL        VAR(&SYSPRE) TYPE(*CHAR) LEN(2)               /*DUG431*/
+/*  End of DUG431  */                                                 /*DUG431*/

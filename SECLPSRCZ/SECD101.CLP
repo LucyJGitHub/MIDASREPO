@@ -9,9 +9,8 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2017                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. DUG503             Date 08Apr18              */
-/*                      DUG405             DATE 30JUL04              */
+/*       Last Amend No. DUG503             Date 08Apr18              */
+/*       Prev Amend No. DUG405             DATE 30JUL04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
@@ -20,7 +19,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
-/*       MD046248 - Finastra Rebranding                              */
+/*       DUG503 - Events by Value Date Report                        */
 /*       DUG405 - Input Cycle Events by Value Date Reporting.        */
 /*                Upgrade of S20208/S20039 from ABS 2.3 to R4.01.    */
 /*                Based on SEC1101 (from R4) & SEC9101 (from 2.3).   */

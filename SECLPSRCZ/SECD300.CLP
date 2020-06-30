@@ -9,12 +9,10 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2017                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. DUG507             Date 04Feb18              */
+/*       Last Amend No. DUG507             Date 04Feb18              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
-/*       MD046248 - Finastra Rebranding                              */
 /*       DUG507 -  UGB FED CARS upgrde                               */
 /*              -  Apply to FBM from Midas R4                        */
 /*                 DUG420 - SE GL Reconciliation Report              */

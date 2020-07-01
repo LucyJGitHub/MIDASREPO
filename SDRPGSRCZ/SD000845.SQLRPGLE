@@ -83,8 +83,8 @@
       *
      D QPARM2          DS
      D  QLENG                  1      4B 0
-      *
       ** "Before image of file"
+      *
      D QFILEB          DS         32046
      D  MQMSIB                 1     19  0
      D  MQSTAB                20     20
@@ -98,9 +98,13 @@
      D  MQTMSA                21     46
      D  MQMSGA                47  32046
       *
+     D  MQMSGN         S          32000    VARYING
+     D  MQMSIN         S             19  0
+     D  MQSTAN         S              1
+     D  MQTMSN         S             26
+      *
      D WQMSGS          DS         32000
-     D**APINME*****           45     48
-     D  APIACT                27     32
+     D  APIACT                27     31
      D  APINME                46     49
       *
      D PSDS           SDS
@@ -149,11 +153,20 @@
       ** If a record is added to T_APIMSG
       ** Write a record to API24X7SPD
       *
+     C     'TESTQEV'     DUMP
 b1   C     QEVENT        IFEQ      '1'
       *
       ** Access API24X7SPD using MQMSID
       *
      C                   MOVEL     MQMSIA        KMQSID           19 0
+      *
+     C/EXEC SQL
+     C+ Select MQMSID, MQSTAT, MQTMST, MQMSGS
+     C+ into :MQMSIN, :MQSTAN, :MQTMSN, :MQMSGN
+     C+  from B3DZLIB/T_APIMSG
+     C+  where MQMSID = :KMQSID
+     C/END-EXEC
+     C                   eval      WQMSGS = MQMSGN
       *
      C     KMQSID        CHAIN     API24X7SL0                         71
 b2   C                   IF        *IN71 = *on
@@ -165,8 +178,6 @@ b2   C                   IF        *IN71 = *on
      C                   IF        *IN72 = *OFF
      C                   MOVEL     'E'           APSTAT
      C                   UPDATE    API24X7SD0
-     C*************      ELSE
-     C*************      MOVEL     'P'           APSTAT
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
@@ -185,26 +196,20 @@ b2   C                   IF        *IN71 = *on
       *
      C     #PWRIT        BEGSR
       *
-      ** Retrieve details from T_APIMSG
-      ** to setup APMAPI
-      *
-     C                   MOVEL     MQMSGA        WQMSGS
       ** Set APMAPI based on
       ** if Customer                                                            CAP734
      C     CAP734        IFEQ      'Y'                                          CAP734
      C     APINME        ANDEQ     'CUSD'                                       CAP734
      C     APIACT        ANDEQ     'WRITE'                                      CAP734
-     C****************   MOVEL     '1CUS'        APMAPI                         CAP734
      C                   MOVEL     '1CUSD'       APMAPI                         CAP734
-     C                   MOVEL     MQMSGA        APXML                          CAP734
+     C                   MOVEL     MQMSGN        APXML                          CAP734
      C                   ENDIF                                                  CAP734
       ** if Account                                                             CAP735
      C     CAP735        IFEQ      'Y'                                          CAP735
      C     APINME        ANDEQ     'AMAD'                                       CAP735
      C     APIACT        ANDEQ     'WRITE'                                      CAP734
-     C****************   MOVEL     '1AMD'        APMAPI                         CAP735
      C                   MOVEL     '2AMAD'       APMAPI                         CAP735
-     C                   MOVEL     MQMSGA        APXML                          CAP735
+     C                   MOVEL     MQMSGN        APXML                          CAP735
      C                   ENDIF                                                  CAP735
       *
      C     APINME        IFEQ      'CUSD'                                       CAP734

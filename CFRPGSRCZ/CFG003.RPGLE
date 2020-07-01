@@ -3,6 +3,7 @@
       *****************************************************************
 /*S*D ***RPGBASEBND****************************************************                     MD041126
 /*STD *  RPGBASEMOD                                                   *                     MD041126
+/*EXI *  TEXT('Midas CF Receive Confirmation from MMM via queue')     *
       *****************************************************************
       *                                                               *
       *  Midas - CONFIRMATION MATCHING                                *

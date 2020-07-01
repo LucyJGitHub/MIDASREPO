@@ -11,10 +11,10 @@
 /*********************************************************************/
 /*                                                                   */
 /*       DUG503 - Events by Value Date Reporting                     */
-/*                DUG431 - Amendments to 'Events by Value Date'      */
+/*       DUG431 - Amendments to 'Events by Value Date'               */
 /*                Report                                             */
-/*                DUG405 - Events by value date.                     */
-/*                Upgrade of feature S20039 from ABS2.03 to DBA4.01. */
+/*       DUG405 - Events by value date.                              */
+/*       Upgrade of feature S20039 from ABS2.03 to DBA4.01.          */
 /*                                                                   */
 /*********************************************************************/
              CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*DUG503*/
@@ -55,12 +55,12 @@
              OVRDBF     FILE(DLEVNIL2) TOFILE(DLEVNIL3)                                   /*DUG503*/
 /*  Call Consolidated version of value date report */
              IF         COND((&RLEV *EQ 'S') *OR (&RLEV *EQ ' ')) +
-                          THEN(CALL PGM(GLD055) PARM(&TYPE &RSEQ))                        /*DUG503*/ 
+                          THEN(CALL PGM(GLD055) PARM(&TYPE &RSEQ))                        /*DUG503*/
              DLTOVR     FILE(DLEVNIL2)                                                    /*DUG503*/
 
 /* With override for SE events */
              CHGJOB     SWS(XXX1XXXX)                                                     /*DUG503*/
-             OVRDBF     FILE(DLEVNIL2) TOFILE(DLEVNIL4)                                   /*DUG503*/ 
+             OVRDBF     FILE(DLEVNIL2) TOFILE(DLEVNIL4)                                   /*DUG503*/
 /*  Call Consolidated version of value date report */
              IF         COND((&RLEV *EQ 'S') *OR (&RLEV *EQ ' ')) +
                           THEN(CALL PGM(GLD055) PARM(&TYPE &RSEQ))                        /*DUG503*/

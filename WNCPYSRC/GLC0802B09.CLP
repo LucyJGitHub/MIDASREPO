@@ -12,8 +12,8 @@
 /*********************************************************************/
 /*                                                                   */
 /*       DUG503 - Events by Value Date Reporting                     */
-/*                DUG405 - Events by value date.                     */
-/*                Upgrade of feature S20039 from ABS2.03 to DBA4.01. */
+/*       DUG405 - Events by value date.                              */
+/*       Upgrade of feature S20039 from ABS2.03 to DBA4.01.          */
 /*                                                                   */
 /*********************************************************************/
              IF         COND(&DUG503 *EQ 'Y') THEN(DO)

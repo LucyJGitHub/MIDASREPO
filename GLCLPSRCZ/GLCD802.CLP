@@ -9,9 +9,9 @@
 /*       (c) Finastra International Limited 2001                    */
 /*                                                                  */
 /*       Last Amend No. DUG503            Date  08Apr18             */
-/*       Prev Amend No. DUG431            DATE  27Jun05             */
-/*                      DUG405            DATE  30JUL04             */
-/*                      DUG405            DATE  27JUL04             */
+/*       Prev Amend No. DUG431            Date  27Jun05             */
+/*                      DUG405            Date  30Jul04             */
+/*                      DUG405 *CREATE    Date  27Jul04             */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      S01408            DATE  13DEC95             */

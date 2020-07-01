@@ -11,10 +11,10 @@
 /*********************************************************************/
 /*                                                                   */
 /*       DUG503 - Events by Value Date Report                        */
-/*                DUG431 - Amendments to 'Events by Value Date'      */
-/*                         Report                                    */
-/*                DUG405 - Events by value date.                     */
-/*                Upgrade of feature S20039 from ABS2.03 to DBA4.01. */
+/*       DUG431 - Amendments to 'Events by Value Date'               */
+/*                Report                                             */
+/*       DUG405 - Events by value date.                              */
+/*       Upgrade of feature S20039 from ABS2.03 to DBA4.01.          */
 /*                                                                   */
 /*********************************************************************/
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                                     /*DUG502*/

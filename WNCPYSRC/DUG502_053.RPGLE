@@ -7,9 +7,9 @@
       *  DUG502 - Security Diary Enhancements                         *
       *                                                               *
       *****************************************************************
-      *
-      ** Book Code
-     C                   IF        DUG502 = 'Y'
-     C                   EVAL      S2SDBK = DDSDBK
-     C                   ENDIF
-      *
+      *                                                                                       DUG502
+      ** Book Code                                                                            DUG502
+     C                   IF        DUG502 = 'Y'                                               DUG502
+     C                   EVAL      S2SDBK = DDSDBK                                            DUG502
+     C                   ENDIF                                                                DUG502
+      *                                                                                       DUG502

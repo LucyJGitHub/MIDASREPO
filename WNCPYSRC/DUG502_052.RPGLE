@@ -7,7 +7,7 @@
       *  DUG502 - Security Diary Enhancements                         *
       *                                                               *
       *****************************************************************
-      *
-      ** OK Book Code
-     C                   PARM                    OKSDBK
-      *
+      *                                                                                       DUG502
+      ** OK Book Code                                                                         DUG502
+     C                   PARM                    OKSDBK                                       DUG502
+      *                                                                                       DUG502

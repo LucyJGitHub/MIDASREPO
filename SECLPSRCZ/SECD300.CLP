@@ -9,7 +9,7 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2017                     */
 /*                                                                   */
-/*       Last Amend No. DUG507             Date 04Feb18              */
+/*       Last Amend No. DUG507 *CREATE     Date 04Feb18              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */

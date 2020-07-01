@@ -8,7 +8,7 @@
       *                                                               *
       *****************************************************************
       *
-     C                   IF        DUG502 = 'Y'
-     C                   EVAL      DDSDBK = SDBK
-     C                   ENDIF
-      *
+     C                   IF        DUG502 = 'Y'                                               DUG502
+     C                   EVAL      DDSDBK = SDBK                                              DUG502
+     C                   ENDIF                                                                DUG502
+      *                                                                                       DUG502

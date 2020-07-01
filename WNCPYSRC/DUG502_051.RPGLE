@@ -7,7 +7,7 @@
       *  DUG502 - Security Diary Enhancements                         *
       *                                                               *
       *****************************************************************
-      *
-      ** Book Code
-     C                   PARM                    DDSDBK
-      *
+      *                                                                                       DUG502
+      ** Book Code                                                                            DUG502
+     C                   PARM                    DDSDBK                                       DUG502
+      *                                                                                       DUG502

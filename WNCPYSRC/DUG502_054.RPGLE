@@ -8,28 +8,28 @@
       *                                                               *
       *****************************************************************
       *
-      ** Check if DUG502 is enabled.
+      ** Check if DUG502 is enabled.                                                          DUG502
  
-     C                   CALLB     'AOSARDR0'
-     C                   PARM      *BLANKS       PRtCd
-     C                   PARM      '*VERIFY'     POptn
-     C                   PARM      'DUG502'      PSARD
-     C     SCSARD        PARM      SCSARD        DSFDY
+     C                   CALLB     'AOSARDR0'                                                 DUG502
+     C                   PARM      *BLANKS       PRtCd                                        DUG502
+     C                   PARM      '*VERIFY'     POptn                                        DUG502
+     C                   PARM      'DUG502'      PSARD                                        DUG502
+     C     SCSARD        PARM      SCSARD        DSFDY                                        DUG502
  
-     C                   MOVE      'N'           DUG502            1
+     C                   MOVE      'N'           DUG502            1                          DUG502
  
-     C                   IF        PRtCd = *BLANKS
-     C                   EVAL      DUG502 = 'Y'
-     C                   ELSE
+     C                   IF        PRtCd = *BLANKS                                            DUG502
+     C                   EVAL      DUG502 = 'Y'                                               DUG502
+     C                   ELSE                                                                 DUG502
  
-     C                   IF        PRtCd <> '*NRF   '
-     C     *LOCK         IN        LDA
-     C                   EVAL      DBFile = 'SCSARDPD'
-     C                   EVAL      DBKey = PSARD
-     C                   EVAL      DBase = 102
-     C                   OUT       LDA
-     C                   EXSR      *PSSR
-     C                   ENDIF
+     C                   IF        PRtCd <> '*NRF   '                                         DUG502
+     C     *LOCK         IN        LDA                                                        DUG502
+     C                   EVAL      DBFile = 'SCSARDPD'                                        DUG502
+     C                   EVAL      DBKey = PSARD                                              DUG502
+     C                   EVAL      DBase = 102                                                DUG502
+     C                   OUT       LDA                                                        DUG502
+     C                   EXSR      *PSSR                                                      DUG502
+     C                   ENDIF                                                                DUG502
  
-     C                   ENDIF
-      *
+     C                   ENDIF                                                                DUG502
+      *                                                                                       DUG502

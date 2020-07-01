@@ -8,10 +8,10 @@
       *                                                               *
       *****************************************************************
       *
-     C     DUG502        ANDNE     'Y'
-     C     OKSDSN        OREQ      'Y'
-     C     OKSDED        ANDEQ     'Y'
-     C     OKSDET        ANDEQ     'Y'
-     C     OKSDBK        ANDEQ     'Y'
-     C     DUG502        ANDEQ     'Y'
-      *
+     C     DUG502        ANDNE     'Y'                                                        DUG502
+     C     OKSDSN        OREQ      'Y'                                                        DUG502
+     C     OKSDED        ANDEQ     'Y'                                                        DUG502
+     C     OKSDET        ANDEQ     'Y'                                                        DUG502
+     C     OKSDBK        ANDEQ     'Y'                                                        DUG502
+     C     DUG502        ANDEQ     'Y'                                                        DUG502
+      *                                                                                       DUG502

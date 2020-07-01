@@ -7,6 +7,6 @@
       *  DUG502 - Security Diary Enhancements                         *
       *                                                               *
       *****************************************************************
-      *
-     C                   ENDIF
-      *
+      *                                                                                       DUG502
+     C                   ENDIF                                                                DUG502
+      *                                                                                       DUG502

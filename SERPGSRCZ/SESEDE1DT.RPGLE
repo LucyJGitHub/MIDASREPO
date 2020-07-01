@@ -39,6 +39,8 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  DUG502 - Security Diary enhancements                         *
+      *           Add hooks DUG502_055, DUG502_056, DUG502_057,       *
+      *           DUG502_058                                          *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *

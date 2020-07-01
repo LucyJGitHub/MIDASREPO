@@ -7,8 +7,8 @@
       *  DUG502 - Security Diary Enhancements                         *
       *                                                               *
       *****************************************************************
-      *
-     C                   IF        DUG502 = 'Y'
-     C     KSedev2       SETLL     SEDEV
-     C                   ELSE
-      *
+      *                                                                                       DUG502
+     C                   IF        DUG502 = 'Y'                                               DUG502
+     C     KSedev2       SETLL     SEDEV                                                      DUG502
+     C                   ELSE                                                                 DUG502
+      *                                                                                       DUG502

@@ -8,10 +8,10 @@
       *                                                               *
       *****************************************************************
       *
-      ** Key list for diary event record.
-     C     KSedev2       KLIST
-     C                   KFLD                    DDSDSN
-     C                   KFLD                    PEvtDno
-     C                   KFLD                    DDSDET
-     C                   KFLD                    DDSDBK
-      *
+      ** Key list for diary event record.                                                     DUG502
+     C     KSedev2       KLIST                                                                DUG502
+     C                   KFLD                    DDSDSN                                       DUG502
+     C                   KFLD                    PEvtDno                                      DUG502
+     C                   KFLD                    DDSDET                                       DUG502
+     C                   KFLD                    DDSDBK                                       DUG502
+      *                                                                                       DUG502

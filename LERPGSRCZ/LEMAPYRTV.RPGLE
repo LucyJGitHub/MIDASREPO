@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. MD055065           Date 24Apr20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD034264           Date 05May15               *
       *                 CLE164             Date 18Aug14               *
@@ -75,6 +76,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055065 - Incorrect feature being checked in AOSARDR0.      *
+      *             Check CSC054 instead.                             *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
@@ -337,7 +340,7 @@
       ** Ê Declared variables                   Ê
       ** Ê ==================                   Ê
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Ix              S              3P 0
       *                                                                         CAP084
@@ -396,7 +399,7 @@
                                                                                               CSC024
      D CAP086          S              1A                                                      CAP086
      D CLE056          S              1A                                                      CLE056
- 
+
      D wLoanAlpha      S              1A                                                      CLE148
      D PLNRF           S              6A                                                      CLE148
      D PValid          S              6A                                                      CLE148
@@ -424,7 +427,7 @@
      D SVAL9           S            200A                                                      CLE148
      D SVALK0          S             20A                                                      CLE148
      D SVAL10          S            200A                                                      CLE148
- 
+
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
@@ -435,7 +438,7 @@
       ** +--------------------------------------+
       *****************************************************************
       /EJECT
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** Ê                                                                Ê
       ** Ê Initial processing is performed automatically: the *inzsr is   Ê
@@ -453,7 +456,7 @@
      C                   UNLOCK    ZMUSER                                                    BUG8550
       *                                                                                      BUG8550
      C                   EXSR      INIT
- 
+
       ** Check whether user is a web browser user, if so overwrite                            CAP084
      C**********         CALL      'SFC000026'                                       CAP084 MD024398
      C**********         PARM      *BLANKS       USER             10                 CAP084 MD024398
@@ -489,7 +492,7 @@
      C     OKESEQ        OREQ      'N'
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDIF                                                  *FRONT
       *
       ***  Validate Key fields and Input details
@@ -513,9 +516,9 @@
      C     RespMode      IFEQ      'S'
      C                   EXSR      ACSSEC
      C                   END
- 
+
       ***  Return
- 
+
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -897,12 +900,12 @@
      C                   Eval      K@FCNO = CL_FSEQ
       *
      C     K@FCLTY       CHAIN     FCLTY                              99
- 
+
      C                   IF        *IN99 = *On or                               Not Found
      C                             *IN99 = *Off and FC_RECI = 'E' or            Expired
      C                             CLE005 = 'Y' and
      C                             *IN99 = *Off and FC_RECI = 'C'               Closed
- 
+
       ***  No Facility Found,
       *
      C                   If        *IN99 = *on                                  Not Found
@@ -1357,7 +1360,7 @@
      C                   MOVE      'N'           OKEVAL
      C                   ADD       1             Ix
      C                   MOVEL     'DDEVAL'      FldNameArr(Ix)
- 
+
       ***  'Value date is Mandatory and in valid format
       *
      C                   MOVEL     'LEM0106'     MsgIdArr(Ix)
@@ -1381,7 +1384,7 @@
      c                   Endif
       *
      c                   if        DDACTN = 'I'                                 insert Validation
- 
+
       ***  1) Expected Sequence is mandatory when Insert and Expected Value Date was input
       *
      C                   If        DDESEQ = *BLANKS and DDEVAL <> *BLANKS
@@ -1394,7 +1397,7 @@
      C                   MOVEL     'LEM0202'     MsgIdArr(Ix)
      C                   GOTO      EVAL
      c                   endif
- 
+
       ***  2) Expected Value Date must be input if Action ='I' and Exp. seq. is input.
       *
      C                   If        DDESEQ <> *BLANKS and DDEVAL = *BLANKS
@@ -1402,13 +1405,13 @@
      C                   ADD       1             Ix
      C**********         MOVEL     'DDESEQ'      FldNameArr(Ix)                              BUG4326
      C                   MOVEL     'DDEVAL'      FldNameArr(Ix)                              BUG4326
- 
+
       ***  'Please, fill in Expected Date when Expected sequence is filled in (when Insert).'
       *
      C                   MOVEL     'LEM0210'     MsgIdArr(Ix)
      C                   GOTO      EVAL
      c                   endif
- 
+
       ***  3) Expected Value date may be LN or a valid numeric
       *
       * Allow lower case entry                                                               BUG4326
@@ -1429,7 +1432,7 @@
      C                   MOVE      'N'           OKESEQ
      C                   ADD       1             Ix
      C                   MOVEL     'DDESEQ'      FldNameArr(Ix)
- 
+
       ***  'Invalid or wrong format for sequence number'
       *
      C                   MOVEL     'LEM0031'     MsgIdArr(Ix)
@@ -1438,7 +1441,7 @@
      c                   endif                                                  'LN '
       *
      C                   endif                                                  DDACTN = 'I'
- 
+
       *
       ***  Other Validation : Check Manual Repayment Loan Amendment
       ***  Access loan amendment record what ever Action Code is.
@@ -2462,18 +2465,21 @@
       *                                                                                      BUG3760
      C                   ENDIF                                                               BUG3760
                                                                                               CSC024
-      ** Check if enhancement CSC024 (Open Month End) is on                                   CSC024
+      ***Check*if*enhancement*CSC024*(Open*Month*End**is*on                          CSC024 MD055065
+      ** Check if enhancement CSC054 (Period End Adjustment) is on                          MD055065
                                                                                               CSC024
      C                   CALLB     'AOSARDR0'                                                 CSC024
      C                   PARM      *BLANKS       @RTCD                                        CSC024
      C                   PARM      '*VERIFY'     @OPTN                                        CSC024
-     C                   PARM      'CSC024'      @SARD                                        CSC024
+     C**********         PARM      'CSC024'      @SARD                               CSC024 MD055065
+     C                   PARM      'CSC054'      @SARD                                      MD055065
      C     SCSARD        PARM      SCSARD        DSFDY                                        CSC024
                                                                                               CSC024
      C                   IF        @RTCD <> *BLANKS AND                                       CSC024
      C                             @RTCD <> '*NRF   '                                         CSC024
      C                   EVAL      DBFile = 'SCSARDPD'                                        CSC024
-     C                   EVAL      DBKey  = 'CSC024'                                          CSC024
+     C**********         EVAL      DBKey  = 'CSC024'                                 CSC024 MD055065
+     C                   EVAL      DBKey  = 'CSC054'                                        MD055065
      C                   EVAL      DBase  = 3                                                 CSC024
      C                   EXSR      *PSSR                                                      CSC024
      C                   ENDIF                                                                CSC024

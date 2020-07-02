@@ -26,8 +26,9 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. MD041126           Date 02Dec19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD053992A          Date 06Apr20               *
+      *  Prev Amend No. MD041126           Date 02Dec19               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 262992             Date 01Aug12               *
       *                 CLE134             Date 01Aug12               *
@@ -125,6 +126,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053992A - End of support WebSphere MQ v.8.                 *
+      *            - BNDSRVPGM must be QMQM/LIBMQM (Recompile).       *
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
       *           - Applied for MD-53992                              *
       *  CER050 - Annualised Percentage Rate (Recompile)              *

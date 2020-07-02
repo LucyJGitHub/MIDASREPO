@@ -16,14 +16,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD041126           Date 02Dec19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD053992A          Date 06Apr20               *
+      *  Prev Amend No. MD041126           Date 02Dec19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD020167           Date 23Apr13               *
       *                 AR989228           Date 13Jun12               *
       *                 CSC054  *CREATE    Date 23Feb12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053992A - End of support WebSphere MQ v.8.                 *
+      *            - BNDSRVPGM must be QMQM/LIBMQM (Recompile).       *
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
       *           - Applied for MD-53992                              *
       *  CSD102 - Password Length Extension (Recompile)               *

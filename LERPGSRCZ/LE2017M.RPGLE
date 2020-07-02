@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD041126           Date 02Dec19               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. MD053992A          Date 06Apr20               *
+      *  Prev Amend No. MD041126           Date 02Dec19               *
+      *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CCB020             Date 06Aug12               *
@@ -35,6 +36,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053992A - End of support WebSphere MQ v.8.                 *
+      *            - BNDSRVPGM must be QMQM/LIBMQM (Recompile).       *
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
       *           - Applied for MD-53992                              *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *

@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGP017             Date 06Aug12               *
+      *  Last Amend No. DUG502             Date 14Feb18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                  GP017             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -25,6 +26,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  DUG502 - Security Diary enhancements                         *
+      *           Add hook DUG502_070                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *
       *  BUG10215 - Global replication needs a global interface       *
@@ -113,6 +116,7 @@ O    C                   KFLD                    SEZONE
 O    C                   KFLD                    SDSN
 O    C                   KFLD                    SDED
 O    C                   KFLD                    SDET
+     C/COPY WNCPYSRC,DUG502_070                                                               DUG502
  
      C                   ENDSR
       ********************************************************************

@@ -9,14 +9,15 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. DUG503             Date 04Apr18             */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. S01408             Date 13Dec95              */
+/*                      S01408             Date 13Dec95              */
 /*                      AUS017             Date 14Aug92              */
 /*                      E40440             DATE 22MAY92             */
 /*                      E22608             DATE 04SEP90             */
@@ -29,6 +30,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       DUG503 - UGB FED CARS Upgrade                              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       S01408 - Addition of core hook GLC0802B01                  */
 /*       AUS017  -  Australian Release - FX/MM Daily Events by      */

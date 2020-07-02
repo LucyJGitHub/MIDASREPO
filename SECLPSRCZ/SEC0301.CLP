@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CSE108             Date 06Oct17              */
+/*       Last Amend No. DUG504             Date 06Dec17              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CSE108             Date 06Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -32,6 +33,9 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /**/                                                               /**/
+/*       DUG504 - Cost of Funds                                      */
+/*                Amended hooks SEC0301006 and SEC0301007            */
+/*                Added hooks DUG504_009 and DUG504_010              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CSE108 - Yearly Profitability Report and Enquiry            */
 /*       CSE017 - Cum/Ex Indicator on Depot Movements (Recompiled)   */
@@ -457,6 +461,7 @@
                           EXCHANGE RATE LIST'))
                                                                                           /*CSE108*/
 /*/COPY WNCPYSRC,SEC0301004                                          */
+/*/COPY WNCPYSRC,DUG504_010                                          */                   /*DUG504*/
 /**/
 /* SEND PGM MESSAGE */
 /**/
@@ -489,6 +494,7 @@ S01169*/
              GOTO ERROR                                                                   /*CSE108*/
              ENDDO                                                                        /*CSE108*/
                                                                                           /*CSE108*/
+/*/COPY WNCPYSRC,DUG504_009                                          */                   /*DUG504*/
              IF         COND(&PRM01 *EQ 'SE0351' *OR +
                              &PRM01 *EQ 'SE0352' *OR +
                              &PRM01 *EQ 'SE0353' *OR +

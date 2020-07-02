@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. DUG502             Date 04Dec17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 CRE026             Date 24May06               *
@@ -30,6 +31,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  DUG502 - Security Diary Enhancements                         *
+      *           Add hooks DUG502_029->_038                          *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CRE026 - Consumer Banking (Recompile)                        *
@@ -236,10 +239,12 @@
      C                   MOVEL     PSDSNSel      DDSDSN
      C                   MOVEL     PSDEDSel      DDSDED
      C                   MOVEL     PSDETSel      DDSDET
+      /COPY WNCPYSRC,DUG502_029                                                               DUG502
      C                   ELSE
      C                   MOVEL     DDSDSN_In     DDSDSN
      C                   MOVEL     DDSDED_In     DDSDED
      C                   MOVEL     DDSDET_In     DDSDET
+      /COPY WNCPYSRC,DUG502_030                                                               DUG502
      C                   MOVEL     *BLANK        PErrMs
      C                   ENDIF
       *
@@ -276,11 +281,13 @@
      C     OKSDSN        IFEQ      'Y'
      C     OKSDED        ANDEQ     'Y'
      C     OKSDET        ANDEQ     'Y'
+      /COPY WNCPYSRC,DUG502_031                                                               DUG502
      C                   EVAL      OKFLDS = 'Y'
      C                   ELSE
      C                   MOVEL     DDSDSN        ODDSDSN
      C                   MOVEL     DDSDED        ODDSDED
      C                   MOVEL     DDSDET        ODDSDET
+      /COPY WNCPYSRC,DUG502_032                                                               DUG502
      C                   ENDIF
      C
       *
@@ -311,6 +318,7 @@
      C                   PARM                    DDSDSN
      C                   PARM                    DDSDED
      C                   PARM                    DDSDET
+      /COPY WNCPYSRC,DUG502_033                                                               DUG502
       *
       ** Read backwards
      C                   PARM                    @RDBCK
@@ -343,7 +351,7 @@
       ** Event type
      C                   PARM                    PSDSNSel
      C                   PARM                    PSDEDSel
-     C                   PARM                    PSDETSel
+      /COPY WNCPYSRC,DUG502_034                                                               DUG502
  
      C                   ENDSR
       **********************************************************************
@@ -390,6 +398,7 @@
       *
       ** Event type
      C                   PARM                    DDSDET
+      /COPY WNCPYSRC,DUG502_035                                                               DUG502
       *
       ** STANDING DATA
       ** =============
@@ -457,6 +466,7 @@
       *
       ** OK Event type
      C                   PARM                    OKSDET
+      /COPY WNCPYSRC,DUG502_036                                                               DUG502
       *
       ** Security Diary Events retrieved from file - file format
      C                   PARM                    SEDEFilFmt
@@ -647,6 +657,7 @@
      C                   PARM                    DDSDSN_In        10
      C                   PARM                    DDSDED_In         6
      C                   PARM                    DDSDET_In         2
+      /COPY WNCPYSRC,DUG502_037                                                               DUG502
      C                   PARM                    Buffer         6000
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
@@ -879,6 +890,7 @@
      C                   ENDIF                                                                CGL031
                                                                                               CGL031
      C                   ENDIF                                                                CGL031
+      /COPY WNCPYSRC,DUG502_038                                                               DUG502
       *
       ** Access ICD details for securities trading.
      C                   CALL      'AOSTRDR0'

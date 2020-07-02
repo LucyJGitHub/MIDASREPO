@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. DUG502             Date 29Nov17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -37,6 +38,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  DUG502 - Security Diary enhancements                         *
+      *           Add hooks DUG502_055, DUG502_056, DUG502_057,       *
+      *           DUG502_058                                          *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -339,7 +343,9 @@
      C                   IF        DDACTN = 'I' AND D1MLTI = 'Y'
       *
       ** Fetch previous payment currency if security is multi-currency.
+      /COPY WNCPYSRC,DUG502_057                                                               DUG502
      C     KSedev        SETLL     SEDEV
+      /COPY WNCPYSRC,DUG502_058                                                               DUG502
      C                   READP     SEDEV                                  02
  
      C                   DOW       *IN02 = *OFF AND DDSDSN = I1SDSN
@@ -600,6 +606,7 @@
      C                   KFLD                    DDSDSN
      C                   KFLD                    PEvtDno
      C                   KFLD                    DDSDET
+      /COPY WNCPYSRC,DUG502_056                                                               DUG502
       *                                                                                       CSE075
       ** Access SAR File to determine if CSE075 is switched on                                CSE075
       *                                                                                       CSE075
@@ -625,6 +632,7 @@
      C                   OUT       LDA                                                        CSE075
      C                   EXSR      *PSSR                                                      CSE075
      C                   ENDIF                                                                CSE075
+      /COPY WNCPYSRC,DUG502_055                                                               DUG502
       *
       ** Program, module and procedure names for database error processing
       ** =================================================================

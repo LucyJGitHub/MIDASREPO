@@ -9,19 +9,23 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. DUG504             Date 06Sep17              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. S11029             Date 19Apr93              */
+/*                      S11029             Date 19Apr93              */
 /*                      S01117             Date 09Jan91              */
 /*                      S01179             DATE 16/09/88             */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       DUG504 - Cost of Funds                                      */
+/*                Added hooks DUG504_001, DUG504_002, DUG504_003 and */
+/*                DUG504_004                                         */
 /*       MD046248 - Finastra Rebranding                              */
 /*       S11029 - RPG Programs rewritten to extract Year-to-date     */
 /*                Funding information. Therefore names changed.      */
@@ -52,6 +56,7 @@
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)                 /*S01117*/
              DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)                 /*S01117*/
              DCL        VAR(&RENT) TYPE(*CHAR) LEN(3)                 /*S01117*/
+/*/COPY WNCPYSRC,DUG504_001                                          */                   /*DUG504*/
  
 /* SEND PGM MESSAGE */
  
@@ -62,6 +67,7 @@
 /* CLEAR SWITCHES */
  
              CHGJOB     SWS(00000000)
+/*/COPY WNCPYSRC,DUG504_002                                          */                   /*DUG504*/
  
 /* CLEAR FILES */
  
@@ -71,6 +77,7 @@
 /* CALL COST OF FUNDS EXTRACT PROGRAM */
  
 /***********    CALL       PGM(SE1080)  ***/                          /*S11029*/
+/*/COPY WNCPYSRC,DUG504_003                                          */                   /*DUG504*/
              CALL (SE1081) PARM(&RENT)                                /*S11029*/
  
 /* IF NO ERRORS CALL COST OF FUNDS REPORT PROGRAM */
@@ -97,6 +104,7 @@
                                                                       /*S01401*/
              CALL (SE1086) PARM(&RSEQ)                                /*S01401*/
              ENDDO
+/*/COPY WNCPYSRC,DUG504_004                                          */                   /*DUG504*/
  
 /* FOR DATABASE ERRORS RECOVER DATA FROM LDA */
  

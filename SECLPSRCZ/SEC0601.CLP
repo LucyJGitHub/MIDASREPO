@@ -9,12 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. DUG504             Date 06Sep17              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CSE039             Date 06Mar03              */
+/*                      CSE039             Date 06Mar03              */
 /*                      CSE041             Date 27Feb03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.04 ---------------------------------------------------*/
@@ -32,6 +33,8 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       DUG504 - Cost of Funds                                      */
+/*                Added hook DUG504_011, DUG504_012 and DUG504_013   */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CSE039 - Automatic Settlements of Trades                    */
 /*       CSE041 - DVP/RVP Processing                                 */
@@ -83,6 +86,7 @@
              DCL        VAR(&TRADE) TYPE(*CHAR) LEN(6)                /*CSE039*/
              DCL        VAR(&DEPMV) TYPE(*CHAR) LEN(6)                /*CSE039*/
              DCL        VAR(&ALL) TYPE(*CHAR) LEN(1)                  /*CSE039*/
+/*/COPY WNCPYSRC,DUG504_011                                          */                   /*DUG504*/
              CHGVAR     VAR(&ALL) VALUE('X') /*CSE039*/
 /**/                                                                  /*CSE004*/
              CHGVAR     VAR(&RTCD) VALUE('       ')                   /*CSE004*/
@@ -132,6 +136,7 @@
              IF         COND(&RTCD *EQ '       ') THEN(DO)            /*CSE041*/
                 CHGVAR     VAR(&CSE039) VALUE('Y')                    /*CSE041*/
              ENDDO                                                    /*CSE041*/
+/*/COPY WNCPYSRC,DUG504_012                                          */                   /*DUG504*/
 /**/                                                                  /*S01117*/
 /* CREATE KEY TO POSITION FILES                                       /*S01117*/
 /**/                                                                  /*S01117*/
@@ -295,6 +300,7 @@
 /************IF         COND(&PRM01 *EQ 'SE0375  ') +                * *S01117*/
 /************             THEN(CALL PGM(&PRM01))                     * *S01117*/
                                                            /*E15601*/
+/*/COPY WNCPYSRC,DUG504_013                                          */                   /*DUG504*/
 /*                                                                   /*S01169*/
 /*********** IF (&PRM01 *EQ 'SE0350  ' *AND &CSE004 *EQ +
 /***********     'Y') THEN(CALL PGM(&PRM01) PARM(&RSEQ))    /*CSE004* *CSE023*/

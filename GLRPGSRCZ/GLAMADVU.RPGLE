@@ -34,8 +34,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. MD041837           Date 16Jun19               *
+      *  Last Amend No. DUG509             Date 17Sep17               * 
+      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *                 MD041837           Date 16Jun19               *
       *                 CER050             Date 16Jun19               *
       *                 CSD101             Date 07Dec18               *
       *                 CSD102             Date 08Jan19               *
@@ -140,6 +141,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  DUG509 - Default Account Name to Account Code Name           *
+      *           Addition of hook DUG509_001                         *
+      *           Amendment of core hook GLAMADVC02                   *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  MD041837 - Tax indicator is not defaulted anymore with       *
@@ -3046,6 +3050,7 @@
      C                   PARM      *BLANKS       @CNST                                      MD040146
      C     SDCUST        PARM      SDCUST        DSLDY                                      MD040146
      C                   EVAL      DDANAM = BBCRNM                                          MD040146
+     C/COPY WNCPYSRC,DUG509_001
      C                   MOVEL     CurAcDebi     AccnInDebi                                   BUG553
      C                   MOVEL     CurAcCred     AccnInCred                                   BUG553
      C                   MOVEL     CurAcComm     AccnInComm                                   BUG553

@@ -1,0 +1,217 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas SE General Ledger Extract')                      *
+     F*****************************************************************
+     F*        MIDAS/SECURITIES TRADING                               *
+     F*                                                               *
+     F*   SED302 - GENERAL LEDGER EXTRACT                             *
+     F*                                                               *
+     F*  (c) Finastra International Limited 2001                      *
+     F*                                                               *
+     F*  Last Amend No. DUG507 *CREATE     Date 04Apr18               *
+     F*  Prev Amend No. DUG420             DATE 02Sep04               *
+     F*                                                               *
+     F*---------------------------------------------------------------*
+     F*  DUG507 - UGB FED CARS UPGRADE                                *
+     F*         - incorporate from Midas R4                           *
+     F*  DUG420 - SE GL Reconciliation Report                         *
+     F*                                                               *
+      *****************************************************************
+     FSERECNPPIP  E           K        DISK
+     FTABTG10 IF  E           K        DISK
+     FSED302P1O   F     132     OF     PRINTER      KINFDS SPOOL
+      *
+     ISERECNP0
+     I                                              NMCY  L3
+     I                                              ACOD  L2
+     I                                              ISSR  L1
+     ISPOOL       DS                                                      S01117
+     I** FILE INFORMATION DATA STRUCTURE                                  S01117
+     I                                       83  92 SFILE                 S01117
+     I                                    B 123 1240SFNUM                 S01117
+     I                                    B 243 2460SWRIT                 S01117
+     ISDBANK    E DSSDBANKPD                                              S01194
+     I** EXTERNAL DS FOR BANK DETAILS                                     S01194
+      *
+     IDSFDY     E DSDSFDY                                                 S01194
+     I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
+      *
+      *****************************************************************
+     C*
+     C* N10                EXCPTHEAD
+     C  N10                SETON                     10
+     C*
+     C   L3      NMCY      CHAINTABTG10F             99
+     C   L3      CDP       COMP 0                        60*
+     C   L3      CDP       COMP 2                        62*
+     C   L3      CDP       COMP 3                        63*
+      *
+     C                     EXSR REPORT
+      *
+     CL1                   EXCPTACTOT
+      *
+     CL3         TOTC      IFNE 0
+     CL3                   SETON                     40
+     CL3                   ELSE
+     CL3                   SETOF                     40
+     CL3                   END
+      *
+     CL3                   EXCPTCYTOT
+      *
+     C*
+     C*****************************************************************
+     C           *INZSR    BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           ZTYPE   2
+     C                     PARM           ZSEQ    5
+      *
+     C** READ BANK DETAILS VIA ACCESS PROGRAM
+     C                     CALL 'AOBANKR0'
+     C                     PARM '*MSG   ' @RTCD   7
+     C                     PARM '*FIRST ' @OPTN   7
+     C           SDBANK    PARM SDBANK    DSFDY
+      *
+     C                     EXSR #ZSFIL
+      *
+     C                     ENDSR
+     C*****************************************************************
+     C           #ZSFIL    BEGSR
+      *
+     C                     Z-ADDSFNUM     ZSNUM   60
+     C                     CALL 'ZSFILE'
+     C                     PARM           ZSEQ    5
+     C                     PARM *BLANK    @PARM   3
+     C                     PARM           SFILE
+     C                     PARM           ZSNUM
+     C                     PARM *BLANK    ZSERR   1
+     C*
+     C           ZSERR     IFEQ 'Y'
+     C                     SETON                     U7U8
+     C                     RETRN
+     C                     END
+      *
+     C                     ENDSR
+      *****************************************************************
+     C           REPORT    BEGSR
+      *
+     C                     ADD  1         COUNT   50
+      *
+     C           USEQ      IFEQ ' '
+     C                     SETON                     20
+     C                     ADD  PAMT      TOT    150
+     C                     ADD  PAMT      TOTC   150
+     C                     ADD  PAMT      TOTZZZ 150
+     C                     ADD  USAMT     TOTUSS 150
+     C                     ELSE
+     C                     SUB  PAMT      TOT
+     C                     SUB  PAMT      TOTC
+     C                     ADD  USAMT     TOTUSG 150
+     C                     SETOF                     20
+     C                     END
+     C*
+     C           TOT       IFNE 0
+     C                     SETON                     30
+     C                     ELSE
+     C                     SETOF                     30
+     C                     END
+     C                     EXCPTDETAIL
+     C*
+     C                     ENDSR
+     C*****************************************************************
+      * Added for the case of no records on the workfile SERECNPP
+     O*SED302P1D 12    N10
+     OSED302P1D  2 1  N10
+     O       OR        OF
+     O                                   18 'REFERENCE SED302P1'
+     O                         BJURPT    89                               S01194
+     O                                  104 'DATE'
+     O                         BJMRDT   112
+     O                                  122 'PAGE'
+     O                         PAGE  Z  127
+      *
+     O        D  2    N10
+     O       OR        OF
+     O                                   70 'GL & SE RECONCILIATION'
+     O                                   77 'REPORT'
+      *
+     O        D  2    N10
+     O       OR        OF
+     O                                    4 'BRCH'
+     O                                    8 'CCY'
+     O                                   13 'ACOD'
+     O**********                         20 'ISSUER'                      DUG503
+     O**********                         31 'SECURITY'                    DUG503
+     O**********                         37 'BOOK'                        DUG503
+     O                                   26 'ISSUER'                      DUG503
+     O                                   37 'SECURITY'                    DUG503
+     O                                   43 'BOOK'                        DUG503
+     O                                   59 'NOMINAL POSITION'
+     O                                   79 'LAST AVERAGE PRICE'
+     O                                  102 'LEDGER BALANCE'
+     O                                  126 'US¢ AMOUNT'
+      *
+     O        E 1              DETAIL
+     O                         BRANCH     3
+     O                         NMCY       8
+     O**********               ACOD      13                               DUG503
+     O**********               ISSR      20                               DUG503
+     O**********               SESN      31                               DUG503
+     O**********               BHBK      35                               DUG503
+     O                         ACOD      19                               DUG503
+     O                         ISSR      26                               DUG503
+     O                         SESN      37                               DUG503
+     O                         BHBK      41                               DUG503
+     O                 20      NPSN      56 '   ,   ,   ,   ,   -'
+     O                 20      LAVP      79 '       .        '
+     O                         USAMT    127 ' ,   ,   ,   ,   .  -'
+     O                 60      PAMT     101 '   ,   ,   ,   ,   -'
+     O                 62      PAMT     103 ' ,   ,   ,   ,   .  -'
+     O                 63      PAMT     105 '   ,   ,   ,   .   -'
+      *
+     O****    E 12     10      ACTOT
+     O        E 22     10      ACTOT
+     O****                               20 'NET A/C TOTAL'
+     O                                   16 'NET TOTAL'
+     O                 60      TOT    B 101 '   ,   ,   ,   ,   -'
+     O                 62      TOT    B 103 ' ,   ,   ,   ,   .  -'
+     O                 63      TOT    B 105 '   ,   ,   ,   .   -'
+     O                 30               110 '**'
+      *
+     O****    E 2      10      CYTOT
+     O        E 1      10      CYTOT
+     O                                   20 'NET CCY TOTAL'
+     O                 60      TOTC   B 101 '   ,   ,   ,   ,   -'
+     O                 62      TOTC   B 103 ' ,   ,   ,   ,   .  -'
+     O                 63      TOTC   B 105 '   ,   ,   ,   .   -'
+     O                 40               110 '***'
+      *
+     O        EF1      10      CYTOT
+     O                                   20 'SECURITY TOTAL'
+     O                 60      TOTZZZ B 101 '   ,   ,   ,   ,   -'
+     O                 62      TOTZZZ B 103 ' ,   ,   ,   ,   .  -'
+     O                 63      TOTZZZ B 105 '   ,   ,   ,   .   -'
+     O                         TOTUSS B 127 ' ,   ,   ,   ,   .  -'
+     O                                  132 'USD'
+      *
+     O****    E 1      10      CYTOT
+     O        EF11     10      CYTOT
+     O                                   20 'GEN LED. TOTAL'
+     O                         TOTUSG B 127 ' ,   ,   ,   ,   .  -'
+     O                                  132 'USD'
+      *
+     O****    E 1      10      CYTOT
+     O        EF11     10      CYTOT
+     O                                   24 '************************'
+     O                                   48 '************************'
+     O                                   72 '************************'
+     O                                   96 '************************'
+     O                                  120 '************************'
+     O                                  132 '************************'
+      *
+     O        E 3     N10      CYTOT
+     O                                      ' '
+     O        E 3     N10      CYTOT
+     O                                   59 '** NO RECORDS ON'
+     O                                   82 'RECONCILIATION FILE **'

@@ -1,0 +1,213 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas XX SE Month End Exchange Rates Report')          *
+      *****************************************************************
+      *                                                               *
+      *  Midas - Securities Trading                                   *
+      *                                                               *
+      *  XX0003 -   XX SE Month End Exchange Rates Report             *
+      *                                                               *
+      *  Function:  This program outputs Month End Exchange Rate      *
+      *             report.                                           *
+      *                                                               *
+      *  Called By: SEC0302 - Midas SE Full Lists - On Request        *
+      *                                                               *
+      *  Calls    : None                                              *
+      *                                                               *
+      *  (c) Finastra International Limited 2017                      *
+      *                                                               *
+      *  Last Amend No. DUG504 *CREATE      Date 07Sep17              *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  DUG504 - Cost of Funds (Include SC233797)                    *
+      *  233797 - Allow report to be included in the Report Control   *
+      *           Facility.                                           *
+      *                                                               *
+      *****************************************************************
+      *
+     F*SED003P1O***E                    PRINTER                                               233797
+     FXX0003P1O   E                    PRINTER      KINFDS SPOOL      UC                      233797
+     FXXMEXRPDIF  E           K        DISK
+     FSDBANKPDIF  E           K        DISK
+      /COPY ZSRSRC,ZEDITZ1
+      *
+     ILDA        UDS                            256                                           233797
+     I                                      134 141 DBFILE                                    233797
+     I                                      142 170 DBKEY                                     233797
+     I                                      171 180 DBPGM                                     233797
+     I                                      181 1830DBASE                                     233797
+     ISPOOL       DS                                                                          233797
+      *                                                                                       233797
+      **  DS FOR SPOOL FILE NAME                                                              233797
+      *                                                                                       233797
+     I                                       83  92 SFILE                                     233797
+     I                                    B 123 1240SFNUM                                     233797
+      *                                                                                       233797
+     IRUNDT       DS                                                                          233797
+      *                                                                                       233797
+      ** RUNDAT data area                                                                     233797
+      *                                                                                       233797
+     I                                        1   7 RUNA                                      233797
+     I                                    P   8  100RUND                                      233797
+     I                                       11  11 SSF                                       233797
+     I                                       12  12 DATF                                      233797
+     I                                       13  13 MBIN                                      233797
+      *
+      **  Execute initial processing
+      *
+     C                     EXSR INIT
+      *
+      **  Execute detail processing
+      *
+     C                     EXSR DETL
+      *
+      **  Execute final processing
+      *
+     C                     EXSR FINAL
+      *
+     C/EJECT
+      ********************************************************************
+      *
+     C           DETL      BEGSR
+      *
+     C                     READ XXMEXRPD                 50
+     C                     MOVE *BLANKS   DPEYR   2
+      *
+     C           *IN50     IFEQ '1'
+      *                                                                                       233797
+     C           *IN12     IFEQ '0'                                                           233797
+     C                     MOVE '1'       *IN12                                               233797
+     C                     OPEN XX0003P1                                                      233797
+     C                     EXSR RCFP1                                                         233797
+     C                     ENDIF                                                              233797
+      *                                                                                       233797
+     C                     WRITEHEADER
+     C                     WRITENODETS
+     C                     WRITETRAILER
+     C                     SETON                     LR
+     C                     RETRN
+     C                     END
+     C*
+     C           *IN50     DOWEQ'0'
+      *                                                                                       233797
+     C           *IN12     IFEQ '0'                                                           233797
+     C                     MOVE '1'       *IN12                                               233797
+     C                     OPEN XX0003P1                                                      233797
+     C                     EXSR RCFP1                                                         233797
+     C                     ENDIF                                                              233797
+      *                                                                                       233797
+     C                     MOVE DMERT     ZFIELD
+     C                     Z-ADD8         ZADEC
+     C                     EXSR ZEDIT
+     C                     MOVE ZFIELD    EXCRAT
+      *
+     C           LCOUNT    IFGE 58
+     C           DMEYR     ORNE DPEYR
+     C                     WRITEHEADER
+     C                     Z-ADD12        LCOUNT
+     C                     END
+      *
+     C                     WRITEDETAIL
+     C                     ADD  1         LCOUNT
+     C                     MOVE DMEYR     DPEYR
+     C                     READ XXMEXRPD                 50
+     C                     END
+      *
+     C                     ENDSR
+     C/EJECT
+      ********************************************************************
+      *
+     C           INIT      BEGSR
+      *
+     C           *ENTRY    PLIST
+     C                     PARM           MODE    1
+     C                     PARM           SEQ     5                       S01117
+      *
+      **  Access bank details
+      *
+     C                     READ SDBANKPD                 55
+      *
+     C           BJDFIN    IFEQ 'M'
+     C                     SETON                     98
+     C                     END
+      *
+     C                     Z-ADD0         LCOUNT  20
+     C                     MOVE '0'       *IN12                                               233797
+      *                                                                                       233797
+      ** Read in RUNDAT data area                                                             233797
+      *                                                                                       233797
+     C           *NAMVAR   DEFN RUNDAT    RUNDT                                               233797
+     C                     IN   RUNDT                                                         233797
+      *                                                                                       233797
+     C           MBIN      IFEQ 'Y'                                                           233797
+     C                     MOVE '1'       *IN30                                               233797
+     C                     ENDIF                                                              233797
+      *
+     C                     ENDSR
+      *
+     C/EJECT
+      ********************************************************************
+      *                                                                  *
+      *    FINAL - Final processing                                      *
+      *                                                                  *
+      *    CALLED BY: MAIN - Main processing                             *
+      *    CALLS:                                                        *
+      *                                                                  *
+      ********************************************************************
+      *
+     C           FINAL     BEGSR
+      *
+      **  Check if new page required
+      *
+     C           LCOUNT    IFGE 55
+     C                     WRITEHEADER
+     C                     END
+      *
+      **  Write 'END OF REPORT' line to report
+      *
+     C                     WRITETRAILER
+      *
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+      *****************************************************************                       233797
+     C/EJECT                                                                                  233797
+      *****************************************************************                       233797
+      *                                                                                       233797
+      *  RCFP1 -- SUBROUTINE TO REGISTER P1 PRINTER FILE VIA RCF                              233797
+      *                                                                                       233797
+      *****************************************************************                       233797
+      *                                                                                       233797
+     C           RCFP1     BEGSR                            ** RCFP1 **                       233797
+      *                                                                                       233797
+      **      ENSURE REPORT SPOOL FILE RECORDED BY RCF                                        233797
+      *                                                                                       233797
+     C                     Z-ADDSFNUM     ZSNUM   60                                          233797
+      *                                                                                       233797
+     C                     CALL 'ZSFILE'                                                      233797
+     C                     PARM           SEQ     5                                           233797
+     C                     PARM           SENTY   3                                           233797
+     C                     PARM           SFILE                                               233797
+     C                     PARM           ZSNUM                                               233797
+     C                     PARM           ZSERR   1                                           233797
+      *                                                                                       233797
+     C           ZSERR     IFEQ 'Y'                                                           233797
+      *                                                                                       233797
+      **  ERROR DURING ZSFILE PROCESSING, RETURN TO CALLING PROGRAM                           233797
+      *                                                                                       233797
+     C                     SETON                     U7U8LR                                   233797
+     C                     RETRN                                                              233797
+     C                     ENDIF                                                              233797
+      *                                                                                       233797
+     C                     ENDSR                                                              233797
+      *                                                                                       233797
+      *****************************************************************                       233797
+     C/EJECT                                                                                  233797
+      *****************************************************************                       233797
+      *
+     C/EJECT
+      /COPY ZSRSRC,ZEDITZ2
+      *

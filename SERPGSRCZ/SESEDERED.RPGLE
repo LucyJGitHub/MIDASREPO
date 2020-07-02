@@ -16,7 +16,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. DUG502             Date 04Dec17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -28,6 +29,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  DUG502 - Security Diary Enhancements                         *
+      *           Add hooks DUG502_039->_049,_090->_095               *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL031 - Taxation of Savings Income (Recompile)              *
       *  CAP140 - Conversion of SE Security Diary Event inputs into   *
@@ -68,6 +71,7 @@
       ** Security Diary Events by Security Shortname, Event Date
       ** and Event Type.
      FSEDEVL3   IF   E           K DISK    INFSR(*PSSR)
+     F/COPY WNCPYSRC,DUG502_039                                                               DUG502
       *
       *****************************************************************
       /EJECT
@@ -123,6 +127,7 @@
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
+     D/COPY WNCPYSRC,DUG502_040                                                               DUG502
       *
       ** Indicator array
      D Indicators      DS                  BASED(IndicatorP)
@@ -157,6 +162,7 @@
       *
       ** Work Variables
      D WSDED           S              5P 0
+     D/COPY WNCPYSRC,DUG502_041                                                               DUG502
       *
       ** Parameters for ZDATE1
      D PDaynoOut       S              5P 0
@@ -192,6 +198,7 @@
      C                   EVAL      PSDSN  = *BLANKS
      C                   EVAL      PSDED  = *BLANKS
      C                   EVAL      PSDET  = *BLANKS
+     C/COPY WNCPYSRC,DUG502_042                                                               DUG502
      C                   EVAL      PErrMs = *BLANKS
       *
       ** Check for user authority to browse if not multi-branching.
@@ -296,13 +303,17 @@
       *
       ** Position to current record on file.
       *
+     C/COPY WNCPYSRC,DUG502_043                                                               DUG502
      C     WKey1         SETGT     SEDEVL3
+     C/COPY WNCPYSRC,DUG502_044                                                               DUG502
       *
       ** Read until end of file or a valid record is found.
       *
      C                   DOU       EndOfFile = True OR PError = *ZERO
  
+     C/COPY WNCPYSRC,DUG502_045                                                               DUG502
      C                   READ      SEDEVL3                                10
+     C/COPY WNCPYSRC,DUG502_046                                                               DUG502
       *
       ** If not end of file.
      C                   IF        EndOfFile = False
@@ -357,6 +368,7 @@
       *
       ** Event type.
      C                   EVAL      PSDET = SDET
+     C/COPY WNCPYSRC,DUG502_047                                                               DUG502
      C                   ENDIF
  
      C                   ENDSR
@@ -374,13 +386,17 @@
       *
       ** Position to current record on file.
       *
+     C/COPY WNCPYSRC,DUG502_048                                                               DUG502
      C     WKey1         SETLL     SEDEVL3
+     C/COPY WNCPYSRC,DUG502_049                                                               DUG502
       *
       ** Read until start of file or a valid record is found.
       *
      C                   DOU       StrOfFile = True OR PError = *ZERO
  
+     C/COPY WNCPYSRC,DUG502_090                                                               DUG502
      C                   READP     SEDEVL3                                10
+     C/COPY WNCPYSRC,DUG502_091                                                               DUG502
       *
       ** Record found.
       *
@@ -431,6 +447,7 @@
       *
       ** Event type.
      C                   EVAL      PSDET = SDET
+     C/COPY WNCPYSRC,DUG502_092                                                               DUG502
      C                   ENDIF
  
      C                   ENDSR
@@ -463,6 +480,7 @@
       *
       ** Event Type
      C                   PARM                    DDSDET
+     C/COPY WNCPYSRC,DUG502_093                                                               DUG502
       *
       ** Read backwards
      C                   PARM                    PRdBck
@@ -496,6 +514,7 @@
       *
       ** Event Type
      C                   PARM                    PSDET
+      /COPY WNCPYSRC,DUG502_094                                                               DUG502
       *
       ** Program, module and procedure names for database error processing
       ** =================================================================
@@ -510,6 +529,7 @@
      C                   KFLD                    WSDED
      C                   KFLD                    DDSDET
  
+     C/COPY WNCPYSRC,DUG502_095                                                               DUG502
      C                   ENDSR
  
       *****************************************************************

@@ -11,12 +11,13 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. DUG502             Date 07Dec17              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG11616           Date 28Jun06              */
+/*                      BUG11616           Date 28Jun06              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
@@ -26,6 +27,9 @@
 /*                      E14236                  DATE  09/09/88      */
 /*                                                                  */
 /*------------------------------------------------------------------*/
+/*       DUG502 - Security Diary Enhancements.                       */
+/*                Add Hook DUG502_228                                */
+/*                Amend Hook SEC0606E01                              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BUG11616 - SEC0606E 00001 failed, field DDPT would not     */
 /*                  map from file DPOSND.                           */
@@ -55,7 +59,7 @@
  
 /*           DCLDTAARA  DTAARA(LDA)                                 *  *S01179*/
              DCL        VAR(&LDA)     TYPE(*CHAR)  LEN(256)           /*S01179*/
-/*/COPY WNCPYSRC,SEC0606E01                                          */
+/*/COPY WNCPYSRC,SEC0606E01                                          */                   /*DUG502*/
  
 /* SETUP AND SEND PGM MESSAGE                */
  
@@ -131,6 +135,7 @@
 /* CALL THE PROGRAM                   */
  
              CALL       PGM(SE2390)
+/*/COPY WNCPYSRC,DUG502_228                                          */                   /*DUG502*/
  
 /* DELETE OVERRIDE                    */
  

@@ -6,10 +6,11 @@
 /*                                                                                  */
 /*       (c) Finastra International Limited 2004                                    */
 /*                                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17                        */
+/*       Last Amend No. DUG502             Date 29Nov17                             */
+/*       Prev Amend No. MD046248           Date 27Oct17                        */
 /* Bank Fusion Midas 1.4 Base -------------------------------------------------*/
 /* Midas Plus 1.4 Base 04 -----------------------------------------------------*/
-/*       Prev Amend No. BUG13379           Date 22Feb07                             */
+/*                      BUG13379           Date 22Feb07                             */
 /* Midas Plus 1.3 ---------------- Base ---------------------------------------*/
 /*                      CGL035             Date 01Mar05                             */
 /*                      CSE074             Date 30Aug05                             */
@@ -19,6 +20,7 @@
 /*                                                                                  */
 /*----------------------------------------------------------------------------------*/
 /*                                                                                  */
+/*       DUG502 - Security Diary enhancements                                       */
 /*       MD046248 - Finastra Rebranding                                        */
 /*       BUG13379-Do not show initial value diary events on listview                */
 /*       CGL035 - EUSD Upgrade to Midasplus                                         */
@@ -32,10 +34,62 @@
   **********/**********                                                         :
   AS                                                                            :
   SELECT                                                                        :
-  *                                                                             :
-  FROM GZSDFTCSPD                                                               :
+***RECI,*SDSN,*SDET,*SDNV,*SRMI,*SDNC,*SDPC,*SDTP,*SDRP,*SDCV,*SDCX,*SDCE,******:DUG502
+   RECI, SDSN, SDET, SDBK, SDNV, SRMI, SDNC, SDPC, SDTP, SDRP, SDCV, SDCX, SDCE,:DUG502
+   SDMD, NMCY, RCIC, CHTP, SDCP, FRNT, REPA, TMST, SCRS, SLQP, SDNN,            :
+***DIGITS(TNLU)*as*PADTNLU,*****************************************************:BUG2668
+   CASE WHEN TNLU=0 THEN NULL ELSE DIGITS(TNLU) END AS PADTNLU,                 :BUG2668
+   CASE WHEN SDED=0 THEN NULL ELSE DATE(SDED+719892) END AS FSDED,              :
+   CASE WHEN SDPD=0 THEN NULL ELSE DATE(SDPD+719892) END AS FSDPD,              :
+   CASE WHEN SDAD=0 THEN NULL ELSE DATE(SDAD+719892) END AS FSDAD,              :
+   CASE WHEN SDDT=0 THEN NULL ELSE DATE(SDDT+719892) END AS FSDDT,              :
+   CASE WHEN LCD=0 THEN NULL ELSE DATE(LCD+719892) END AS FLCD,                 :
+   CASE WHEN SDXD=0 THEN NULL ELSE DATE(SDXD+719892) END AS FSDXD,              :
+***DEC(SDVA*C1.SCALING,15,4)*AS*"SSDVA",****************************************:            BUG5839
+***DEC(SDVA*C1.SCALING*C1.RATE,15,4)*AS*"BSSDVA",*******************************:            BUG5839
+***DEC(SRPT*C1.SCALING,15,4)*AS*"SSRPT",****************************************:            BUG5839
+***DEC(SRPT*C1.SCALING*C1.RATE,15,4)*AS*"BSSRPT",*******************************:            BUG5839
+***DEC(SDTR*C1.SCALING,15,4) AS "SSDTR",****************************************:            BUG5839
+***DEC(SDTR*C1.SCALING*C1.RATE,15,4)*AS*"BSSDTR",*******************************:            BUG5839
+***DEC(SDVA*C1.SCALING,15,4) AS "SSDPP",****************************************:            BUG5839
+***DEC(SDVA*C1.SCALING*C1.RATE,15,4)*AS*"BSSDPP",*******************************:            BUG5839
+***DEC(SDTA*C1.SCALING,15,4)*AS*"SSDTA",****************************************:            BUG5839
+***DEC(SDTA*C1.SCALING*C1.RATE,15,4)*AS*"BSSDTA",*******************************:            BUG5839
+   SDVA AS SSDVA,                                                               :            BUG5839
+   SRPT AS SSRPT,                                                               :            BUG5839
+   SDTR AS SSDTR,                                                               :            BUG5839
+   SDVA AS SSDPP,                                                               :            BUG5839
+   SDTA AS SSDTA,                                                               :            BUG5839
+***SEZONE*AS*CUSTZONE***********************************************************:CGL035
+   SEZONE AS CUSTZONE, SETX                                                     :CGL035
+***FROM*GZSEDEVD;***************************************************************:   BUG5839 BUG13379
+   FROM GZSEDEVD WHERE SDED <> 0 ;                                              :           BUG13379
+***FROM*GZSEDEVD*LEFT*JOIN*V_GLOBRATE*C1*ON*C1.CCY=NMCY;************************:            BUG5839
+                                                                                :
+ * DESCRIBESTART                                                                :
+ * DESCRIBEFIELD PADTNLU    AS TNLU       USING GZSEDEVD                        :
+ * DESCRIBEFIELD FSDED      AS SDED       USING GZSEDEVD                        :
+ * DESCRIBEFIELD FSDPD      AS SDPD       USING GZSEDEVD                        :
+ * DESCRIBEFIELD FSDAD      AS SDAD       USING GZSEDEVD                        :
+ * DESCRIBEFIELD FSDDT      AS SDDT       USING GZSEDEVD                        :
+ * DESCRIBEFIELD FLCD       AS LCD        USING GZSEDEVD                        :
+ * DESCRIBEFIELD FSDXD      AS SDXD       USING GZSEDEVD                        :
+ * DESCRIBEFIELD SSDVA      AS SDVA       USING GZSEDEVD                        :
+ * DESCRIBEFIELD SSRPT      AS SRPT       USING GZSEDEVD                        :
+ * DESCRIBEFIELD SSDTR      AS SDTR       USING GZSEDEVD                        :
+ * DESCRIBEFIELD SSDPP      AS SDPP       USING GZSEDEVD                        :
+ * DESCRIBEFIELD SSDTA      AS SDTA       USING GZSEDEVD                        :
+***DESCRIBEFIELD*BSSDVA*****AS*SDVA*******USING*GZSEDEVD************************:            BUG5839
+***DESCRIBEFIELD*BSSRPT*****AS*SRPT*******USING*GZSEDEVD************************:            BUG5839
+***DESCRIBEFIELD*BSSDTR*****AS*SDTR*******USING*GZSEDEVD************************:            BUG5839
+***DESCRIBEFIELD*BSSDPP*****AS*SDPP*******USING*GZSEDEVD************************:            BUG5839
+***DESCRIBEFIELD*BSSDTA*****AS*SDTA*******USING*GZSEDEVD************************:            BUG5839
+ * DESCRIBEEND                                                                  :
+********************************************************************************:
+**FROM*GZSDFTCSPD***************************************************************:
 /*******************************************************************************/
  ;                                                                              :
   label on table     **********/**********                                      :
-   is 'Midas GZ FATCA Customer Details                   ';                     :
+***is*'Midas*GZ*FATCA*Customer*Details*******************';*********************:
+   is 'Midas GZ SE Security Diary Events - GZSEDEVD      ';                     :
                                                                                 :

@@ -9,12 +9,13 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. DUG502             Date 04Dec17              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CSD031             Date 10Apr06              */
+/*                      CSD031             Date 10Apr06              */
 /*                      CRE020             Date 20Jan04              */
 /*                      CSC023             Date 02Feb04              */
 /*                      CGP001             Date 23May03              */
@@ -70,6 +71,9 @@
 /*                        S01129             DATE  11/05/88         */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       DUG403 - Security Diary Enhancements.                       */
+/*                Add hooks DUG502_013->017                          */
+/*                Amend Hooks SEC02005 & SEC02006                    */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CSD031 - Enhanced Centralised Static Data                   */
 /*       CRE020 - Midas Plus Online Printing of Advices (GE7)        */
@@ -188,7 +192,7 @@
              DCL        VAR(&CRE020) TYPE(*CHAR) LEN(1)                                   /*CRE020*/
              DCL        VAR(&PMOD) TYPE(*CHAR) LEN(10)                                    /*CRE020*/
              DCL        VAR(&PCMD) TYPE(*CHAR) LEN(50)                                    /*CRE020*/
-/*/COPY WNCPYSRC,SEC02005                                            */
+/*/COPY WNCPYSRC,SEC02005                                            */                   /*DUG502*/
 /**/                                                                  /*S01496*/
              CHGVAR     VAR(&RTCD) VALUE('       ')                   /*S01496*/
              CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                   /*S01496*/
@@ -230,7 +234,7 @@
                                                                       /*CEU017*/
              CHGVAR     VAR(&RTCD) VALUE('       ')                   /*CEU017*/
                                                                       /*CEU017*/
-/*/COPY WNCPYSRC,SEC02006                                            */
+/*/COPY WNCPYSRC,SEC02006                                            */                   /*DUG502*/
 /**/                                                                  /*CSE010*/
 /**  Check if Transaction Enhancements is installed */                /*CSE010*/
 /**/                                                                  /*CSE010*/
@@ -564,10 +568,14 @@
 /***************OVRDBF     FILE(POSET) TOFILE(POSET1) SHARE(*NO) E13952 S01117*/
 /*/COPY WNCPYSRC,SEC02009                                            */
              IF         COND(&CSE023 *EQ 'Y') THEN(DO)                /*186055*/
+/*/COPY WNCPYSRC,DUG502_013                                                               /*DUG502*/
                 OVRDBF     FILE(POSETX) TOFILE(POSET7) SHARE(*NO)     /*186055*/
+/*/COPY WNCPYSRC,DUG502_014                                                               /*DUG502*/
              ENDDO                                                    /*186055*/
              ELSE       CMD(DO)                                       /*186055*/
+/*/COPY WNCPYSRC,DUG502_015                                                               /*DUG502*/
                 OVRDBF     FILE(POSETX) TOFILE(POSET1) SHARE(*NO)     /*E13952*/
+/*/COPY WNCPYSRC,DUG502_016                                                               /*DUG502*/
              ENDDO                                                    /*186055*/
                 OVRDBF     FILE(POSETDZ1) TOFILE(POSETDY1) SHARE(*NO) /*S01401*/
                 OVRDBF     FILE(POSETDZ2) TOFILE(POSETDY2) SHARE(*NO) /*S01401*/
@@ -644,6 +652,7 @@ CALLP:
              IF COND((%SST(&FMT 104 1) *EQ 'Y')) THEN(DO)             /*CPB001*/
                 CHGJOB SWS(XXX1XXXX)                                  /*CPB001*/
              ENDDO                                                    /*CPB001*/
+/*/COPY WNCPYSRC,DUG502_017                                                               /*DUG502*/
              CALL       PGM(&PARM)
              CHGJOB SWS(XXX0XXXX)                                     /*CPB001*/
              MONMSG     MSGID(RPG0000 CPF0000 MCH0000) EXEC(DO)

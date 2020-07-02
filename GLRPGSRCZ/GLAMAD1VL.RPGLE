@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. DUG509             Date 28Sep17               *
+      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *                 CER050             Date 16Jun19               *
       *                 AR1021393          Date 13Nov18               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL184             Date 07Dec16               *
@@ -83,6 +84,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  DUG509 - Default Account Name to Account Code Name           *
+      *           Addition of hooks DUG509_002 and DUG509_003         *
+      *           Amendment of core hook GLAMA1VC04                   *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate                          *
@@ -420,6 +424,7 @@
      D PACOD                  13     22                                                       CGL029
      D PACSQ                  23     24                                                       CGL029
                                                                                               CSD012
+     D/COPY WNCPYSRC,DUG509_002
      D/COPY OFCPYSRCZ,CGL123_001                                                              CGL123
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -584,6 +589,7 @@
       ** Retrieve Account Name from Customer Report Name                                    AR869261
                                                                                             AR869261
      C                   EVAL      DDANAM = BBCRNM                                          AR869261
+      /COPY WNCPYSRC,DUG509_003
      C                   ENDIF                                                              AR869261
      C                   ENDIF
       *

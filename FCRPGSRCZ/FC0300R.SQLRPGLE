@@ -65,7 +65,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
-      *  MD056040 - Make description protected                        *
+      *  MD056040 - Make description protected.(Recompiled)           *
       *  MD055265 - Deliverable Data Split for Report Control Facility*
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *

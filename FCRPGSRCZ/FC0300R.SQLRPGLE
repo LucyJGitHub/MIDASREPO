@@ -26,8 +26,9 @@
       * Standard RPG Creation PAR - standard functions  *
      F*****************************************************************
      F*                                                               *
-      *  Last Amend No. MD055265           Date 10Feb20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056040           Date 29Jun20               (
+      *  Prev Amend No. MD055265           Date 10Feb20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -64,6 +65,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD056040 - Make description protected.(Recompiled)           *
       *  MD055265 - Deliverable Data Split for Report Control Facility*
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *

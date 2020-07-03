@@ -30,8 +30,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD042042           Date 22Mar19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD055503           Date 03Apr20               *
+      *  Prev Amend No. MD042042           Date 22Mar19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR1090283          Date 10Aug16               *
       *                 CFT151             Date 21Mar14               *
@@ -101,6 +102,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055503 - Not able to do webfacing authorisation for invalid*
+      *             outgoing payment that had been repaired.          *
+      *           - Added the missing parameter (InputUser) introduced*
+      *             by MD042042 in FTOPAY3VL and FTOPAY4VL.           *
       *  MD042042 - Input User Information is replaced by WIP         *
       *             Authoriser in Authorizing in "HATS"               *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -1886,6 +1891,7 @@
      C                   PARM                    ValidPmntB                     CFT014
       *  Validation Work Fields from/to caller
      C                   Parm                    Val@Fields
+     C                   PARM                    InputUser                                  MD055503
  
  
      C                   ENDSR
@@ -1937,6 +1943,7 @@
       ** Charges to the debit of - field changed (Y or blank)                                 200149
                                                                                               200149
      C                   PARM                    PCDROCHG                                     200149
+     C                   PARM                    InputUser                                  MD055503
                                                                                 CFT014
      C                   EndSr                                                  CFT014
                                                                                 CFT014

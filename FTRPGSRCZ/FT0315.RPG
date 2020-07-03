@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 263333             Date 20Nov12               *
+      *  Last Amend No. MD055003           Date 12Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 263333             Date 20Nov12               *
       *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER047             Date 19May08               *
@@ -53,6 +54,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD055003 - Allow use of BIC Directory details if SWIFT ID    *
+      *             is existing in MEBICDPD. This is switchable via   *
+      *             AllowUseOfBICDetails system value.                *
       *  MD046248 - Finastra Rebranding                               *
       *  263333 - FT: Length of field Sender on input or amend cycles *
       *           does not. Move BBCSID to an 11 character long varia-*
@@ -262,6 +266,7 @@
      ISCCMT       DS                            256                                           CSC022
      I                                        1   30CMTNUM                                    CSC022
      I                                        4 103 CMTARR                                    CSC022
+     I              'AllowUseOfBICDetails'C         SVAL1                                   MD055003
      I/EJECT
       *****************************************************************
       *                 M A I N L I N E
@@ -1384,6 +1389,8 @@
       *
      C           W0MADD    WHEQ 'Y'
      C           W9CUST    ANDEQ'Y'
+     C           ##BIC     ANDNE'Y'                                                         MD055003
+     C           USEBIC    ANDEQ'N'                                                         MD055003
      C           W0MADD    OREQ 'Y'
      C           W0TYPE    ANDEQ'C'
      C           W0MADD    OREQ 'Y'
@@ -1407,6 +1414,7 @@
       *
      C           ##BIC     WHEQ 'Y'
      C           W9BICD    ANDEQ'Y'
+     C           USEBIC    ANDEQ'Y'                                                         MD055003
      C                     MOVELBDINS1    ADCHK2
       *
       *  Check fields not concatenated
@@ -1709,6 +1717,8 @@
       *
      C           W0MADD    WHEQ 'Y'
      C           W9CUST    ANDEQ'Y'
+     C           ##BIC     ANDNE'Y'                                                         MD055003
+     C           USEBIC    ANDEQ'N'                                                         MD055003
      C           W0MADD    OREQ 'Y'
      C           W0TYPE    ANDEQ'C'
      C           W0MADD    OREQ 'Y'
@@ -1732,6 +1742,7 @@
       *
      C           ##BIC     WHEQ 'Y'
      C           W9BICD    ANDEQ'Y'
+     C           USEBIC    ANDEQ'Y'                                                         MD055003
      C                     MOVELBDINS1    ADCHK1
       *
       *  Check fields not concatenated
@@ -1972,6 +1983,8 @@
       *
      C           W0MADD    WHEQ 'Y'
      C           W9CUST    ANDEQ'Y'
+     C           ##BIC     ANDNE'Y'                                                         MD055003
+     C           USEBIC    ANDEQ'N'                                                         MD055003
      C           W0MADD    OREQ 'Y'
      C           W0TYPE    ANDEQ'C'
      C           W0MADD    OREQ 'Y'
@@ -1995,6 +2008,7 @@
       *
      C           ##BIC     WHEQ 'Y'
      C           W9BICD    ANDEQ'Y'
+     C           USEBIC    ANDEQ'Y'                                                         MD055003
      C                     MOVELBDINS1    ADCHK2
       *
       *  Check fields not concatenated
@@ -2480,6 +2494,34 @@
      C                     EXSR SRERR                                     CFT004
      C                     END                                            CFT004
      C                     END                                            CFT004
+      *                                                                                     MD055003
+     C                     CALL 'AOSVALR0'                                                  MD055003
+     C                     PARM *BLANKS   P@RTCD                                            MD055003
+     C                     PARM SVAL1     P@OP01 20                                         MD055003
+     C                     PARM *BLANKS   P@VL01200                                         MD055003
+     C                     PARM *BLANKS   P@OP02 20                                         MD055003
+     C                     PARM *BLANKS   P@VL02200                                         MD055003
+     C                     PARM *BLANKS   P@OP03 20                                         MD055003
+     C                     PARM *BLANKS   P@VL03200                                         MD055003
+     C                     PARM *BLANKS   P@OP04 20                                         MD055003
+     C                     PARM *BLANKS   P@VL04200                                         MD055003
+     C                     PARM *BLANKS   P@OP05 20                                         MD055003
+     C                     PARM *BLANKS   P@VL05200                                         MD055003
+     C                     PARM *BLANKS   P@OP06 20                                         MD055003
+     C                     PARM *BLANKS   P@VL06200                                         MD055003
+     C                     PARM *BLANKS   P@OP07 20                                         MD055003
+     C                     PARM *BLANKS   P@VL07200                                         MD055003
+     C                     PARM *BLANKS   P@OP08 20                                         MD055003
+     C                     PARM *BLANKS   P@VL08200                                         MD055003
+     C                     PARM *BLANKS   P@OP09 20                                         MD055003
+     C                     PARM *BLANKS   P@VL09200                                         MD055003
+     C                     PARM *BLANKS   P@OP10 20                                         MD055003
+     C                     PARM *BLANKS   P@VL10200                                         MD055003
+      *                                                                                     MD055003
+     C                     MOVEL*BLANKS   USEBIC  1                                         MD055003
+     C           P@RTCD    IFEQ *BLANKS                                                     MD055003
+     C                     MOVELP@VL01    USEBIC                                            MD055003
+     C                     ENDIF                                                            MD055003
      C/COPY WNCPYSRC,FT0315C001
       *
       *  Unwind subroutine stack name

@@ -56,8 +56,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CCB020             Date 06Aug12               *
+      *  Last Amend No. MD055146           Date 04Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CCB020             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -81,6 +82,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055146 - Failed MXC004802 seq. 00001 and others            *
+      *             Increase Branches to 900.                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -119,9 +122,12 @@
       * IN  - @PLCSL0 Customer Details
      D/EJECT
       * Branch details
-     D ZBR             S              3    DIM(99)
-     D ZBC             S              6    DIM(99)
-     D ZBN             S             22    DIM(99)
+     D*ZBR******       S              3    DIM(99)                                          MD055146
+     D*ZBC******       S              6    DIM(99)                                          MD055146
+     D*ZBN******       S             22    DIM(99)                                          MD055146
+     D ZBR             S              3    DIM(999)                                         MD055146
+     D ZBC             S              6    DIM(999)                                         MD055146
+     D ZBN             S             22    DIM(999)                                         MD055146
       * Book details
      D ZBK             S              2    DIM(99)
      D ZBP             S              4    DIM(99)
@@ -520,7 +526,8 @@
       *
       * If full start from beginning again
       *
-     C     B1            IFGT      99
+     C*****B1***         IFGT      99                                                       MD055146
+     C     B1            IFGT      999                                                      MD055146
      C                   Z-ADD     1             B1
      C                   ENDIF
       *

@@ -18,8 +18,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL182             Date 11May17               *
+      *  Last Amend No. MD050216           Date 15Nov18               *
+      *  Prev Amend No. MD032070           Date 20Mar15               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CGL182             Date 11May17               *
       *                 AR1093704          Date 05Mar13               *
       *                 AR1054387          Date 09Nov12               *
       *                 AR1005162          Date 16Jul12               *
@@ -28,6 +30,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050216 - I/E transfer not done for PEA system if Book date *
+      *             = rundate. Perform SRFrgnCCY with this condition  *
+      *  MD032070 - Missing postings when inserting backvalued journal*
+      *             items. Use batch customer number instead of BICN  *
+      *             for EOY position transfer in Base ccy.            *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL182 - Journal Entry via the Interface File - Java Version *
       *           (Recompile)                                         *
@@ -220,12 +227,68 @@
      D PzMDay          S              2  0                                                  AR985003
      D PBaseDate       S              5  0                                                  AR985003
                                                                                             AR985003
+     D PEASystem       C                   Const('PEASystemPrefix')                         MD050216
+     D CurSystem       C                   Const('BrgMidasSystemPrefix')                    MD050216
+                                                                                            MD050216
+     D WPEA            S              2A                                                    MD050216
+     D WSYS            S              2A                                                    MD050216
+     D PSysVal01       S             20A                                                    MD050216
+     D PCurSet01       S            200A                                                    MD050216
+     D PSysVal02       S             20A                                                    MD050216
+     D PCurSet02       S            200A                                                    MD050216
+     D PSysVal03       S             20A                                                    MD050216
+     D PCurSet03       S            200A                                                    MD050216
+     D PSysVal04       S             20A                                                    MD050216
+     D PCurSet04       S            200A                                                    MD050216
+     D PSysVal05       S             20A                                                    MD050216
+     D PCurSet05       S            200A                                                    MD050216
+     D PSysVal06       S             20A                                                    MD050216
+     D PCurSet06       S            200A                                                    MD050216
+     D PSysVal07       S             20A                                                    MD050216
+     D PCurSet07       S            200A                                                    MD050216
+     D PSysVal08       S             20A                                                    MD050216
+     D PCurSet08       S            200A                                                    MD050216
+     D PSysVal09       S             20A                                                    MD050216
+     D PCurSet09       S            200A                                                    MD050216
+     D PSysVal10       S             20A                                                    MD050216
+     D PCurSet10       S            200A                                                    MD050216
       *****************************************************************
       /EJECT
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
  
+     C                   CALL      'AOSVALR0'                                               MD050216
+     C                   PARM      *BLANKS       PRtCd                                      MD050216
+     C                   PARM      PEASystem     PSysVal01                                  MD050216
+     C                   PARM                    PCurSet01                                  MD050216
+     C                   PARM      CurSystem     PSysVal02                                  MD050216
+     C                   PARM                    PCurSet02                                  MD050216
+     C                   PARM                    PSysVal03                                  MD050216
+     C                   PARM                    PCurSet03                                  MD050216
+     C                   PARM                    PSysVal04                                  MD050216
+     C                   PARM                    PCurSet04                                  MD050216
+     C                   PARM                    PSysVal05                                  MD050216
+     C                   PARM                    PCurSet05                                  MD050216
+     C                   PARM                    PSysVal06                                  MD050216
+     C                   PARM                    PCurSet06                                  MD050216
+     C                   PARM                    PSysVal07                                  MD050216
+     C                   PARM                    PCurSet07                                  MD050216
+     C                   PARM                    PSysVal08                                  MD050216
+     C                   PARM                    PCurSet08                                  MD050216
+     C                   PARM                    PSysVal09                                  MD050216
+     C                   PARM                    PCurSet09                                  MD050216
+     C                   PARM                    PSysVal10                                  MD050216
+     C                   PARM                    PCurSet10                                  MD050216
+                                                                                            MD050216
+     C                   IF        PrtCd   = *BLANKS                                        MD050216
+     C                             AND PCurSet01 <> *BLANKS                                 MD050216
+     C                   EVAL      WPEA    = PCurSet01                                      MD050216
+     C                   EVAL      WSYS    = PCurSet02                                      MD050216
+     C                   ELSE                                                               MD050216
+     C                   EXSR      *PSSR                                                    MD050216
+     C                   ENDIF                                                              MD050216
+                                                                                            MD050216
       ** Process all corrective batch entries for additional posting
  
      C     *LOVAL        SETLL     GLJENPJ0
@@ -244,7 +307,10 @@
  
      C**********         IF        HQBDTE < BKAPDT AND                                      AR985003
      C                   IF        HQBDTE <= PzDayNo AND                                    AR985003
-     C                             BTPTAM <> *ZERO
+     C**********                   BTPTAM <> *ZERO                                          MD050216
+     C                             BTPTAM <> *ZERO OR                                       MD050216
+     C                             WPEA = WSYS   AND                                        MD050216
+     C                             HQBDTE <= BJRDNB                                         MD050216
      C                   EXSR      SRFrgnCCY
      C                   ENDIF
      C                   IF        HQBDTE <= BJPEYD AND
@@ -513,7 +579,8 @@
  
      C                   MOVE      BTACCD        ACOD
      C                   MOVE      BTACSN        ACSQ
-     C                   EVAL      CNUM = A8BICN
+     C**********         EVAL      CNUM = A8BICN                                            MD032070
+     C                   EVAL      CNUM = BTCUST                                            MD032070
      C                   EVAL      ATYP = BTACTY
      C                   EVAL      ACSC = ACS(X)
      C                   EVAL      PNAR = PNARR(3)

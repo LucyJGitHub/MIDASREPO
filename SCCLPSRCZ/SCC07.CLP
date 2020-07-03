@@ -9,8 +9,11 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD054045           Date 27Aug19              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. AR374612           Date 21Mar15              */
+/*       Prev Amend No. MD021975B          Date 10Dec14              */
+/*                      MD021975           Date 27Nov13              */
+/*                      MD054045           Date 27Aug19              */
+/*                      MD046248           Date 27Oct17              */
 /*                      MD037757           Date 26Apr16              */
 /*                      MD031644           Date 12Jan15              */
 /*                      MD023896           Date 06May14              */
@@ -129,6 +132,16 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       AR374612 - COB Re-Open option fails due to problem restoring*/
+/*                  file members in DBIC which cannot be found in    */
+/*                  some files in DMLIB. Fix is to use the correct   */
+/*                  variable name &OPTN instead of &OPN              */
+/*                - Applied for MD031827                             */
+/*       MD021975B - Global BSPL Request file needs to be restored   */
+/*                   during reopen to ensure reports are produced at */
+/*                   next COB                                        */
+/*       MD021975 - Save Global BSPL files for Reopen IC restore in  */
+/*                  PEA system (live system not changed).            */
 /*       MD054045 - Not able to reopen i/c after the 1st attempt     */
 /*                  to reopen failed.                                */
 /*       MD046248 - Finastra Rebranding                              */
@@ -490,6 +503,9 @@
              DCL        VAR(&MQMSG) TYPE(*CHAR) LEN(2000) VALUE('PEA +
                           Ready')                                                         /*CSC054*/
              DCL        VAR(&PRFX) TYPE(*CHAR) LEN(2)                                     /*CSC054*/
+/**********  DCL        VAR(&CGP010) TYPE(*CHAR) LEN(1) VALUE(' ')  */    /*MD021975*/ /*MD021975B*/
+             DCL        VAR(&GMLIB) TYPE(*CHAR) LEN(10) VALUE('  GMLIB   ')             /*MD021975*/
+/**********  DCL        VAR(&GLOBID) TYPE(*CHAR) LEN(2)             */    /*MD021975*/ /*MD021975B*/
 /*/COPY WNCPYSRC,SCH00005                                            */
                                                                                           /*249135*/
 /*/COPY WNCPYSRC,SCC07INT                                            */
@@ -521,7 +537,8 @@
              CHGVAR     VAR(&SARD) VALUE('CAS005')                                        /*CAS005*/
              CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CAS005*/
 /*********** CALL       PGM(AOSARDR0) PARM(&RTN &OPN &SARD &SFMT)                  CAS005   224829*/
-             CALL       PGM(AOSARDR0) PARM(&RTCD &OPN &SARD &SFMT)                        /*224829*/
+/**********  CALL       PGM(AOSARDR0) PARM(&RTCD &OPN &SARD &SFMT) */            /*224829 AR374612*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SFMT)                     /*AR374612*/
              IF         COND(&RTCD *EQ '       ') THEN(DO)                                /*CAS005*/
                 CHGVAR     VAR(&CAS005) VALUE('Y')                                        /*CAS005*/
              ENDDO                                                                        /*CAS005*/
@@ -532,7 +549,8 @@
              CHGVAR     VAR(&SARD) VALUE('CAS006')                                        /*CAS006*/
              CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CAS006*/
 /*********   CALL       PGM(AOSARDR0) PARM(&RTN &OPN &SARD &SFMT)                  CAS006   224829*/
-             CALL       PGM(AOSARDR0) PARM(&RTCD &OPN &SARD &SFMT)                        /*224829*/
+/**********  CALL       PGM(AOSARDR0) PARM(&RTCD &OPN &SARD &SFMT) */            /*224829 AR374612*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SFMT)                     /*AR374612*/
              IF         COND(&RTCD *EQ '       ') THEN(DO)                                /*CAS006*/
                 CHGVAR     VAR(&CAS006) VALUE('Y')                                        /*CAS006*/
              ENDDO                                                                        /*CAS006*/
@@ -577,6 +595,31 @@
 /**********  CALL       PGM(AOSARDR0) PARM(&CCB009 '*VERIFY' +
                           'CCB009' &AOFMT)                                      */ /*CCB009 CCB020*/
 /*                                                                                        /*CSC018*/
+                                                                                        /*MD021975*/
+/**********  CALL (AOSARDR0) PARM(&PRTCD '*VERIFY' 'CGP010') */           /*MD021975*/ /*MD021975B*/
+/**********  IF (&PRTCD *EQ ' ') (CHGVAR (&CGP010) VALUE('Y')) */         /*MD021975*/ /*MD021975B*/
+                                                                                        /*MD021975*/
+/**********  IF         COND(&CGP010 *EQ 'Y') THEN(DO) */                 /*MD021975*/ /*MD021975B*/
+                                                                                        /*MD021975*/
+/**Determine*global*system*ID**/                                          /*MD021975*/ /*MD021975B*/
+                                                                                        /*MD021975*/
+/**********  CALL       PGM(AOSVALR0) PARM(&PRTCD 'BrgMidasGlobalPrefix' +
+                          &SVAL1 &SVALK2 &SVAL2 &SVALK3 &SVAL3 +
+                          &SVALK4 &SVAL4 &SVALK5 &SVAL5 &SVALK6 +
+                          &SVAL6 &SVALK7 &SVAL7 &SVALK8 &SVAL8 +
+                          &SVALK9 &SVAL9 &SVALK10 &SVAL10) */             /*MD021975*/ /*MD021975B*/
+                                                                                        /*MD021975*/
+/**If*there*is*an*error*finding*system*values,*then*end*abnormally.**/    /*MD021975*/ /*MD021975B*/
+                                                                                        /*MD021975*/
+/*********      IF         COND(&PRTCD *NE '       ') THEN(GOTO +
+                             CMDLBL(ABNOR)) */                            /*MD021975*/ /*MD021975B*/
+                                                                                        /*MD021975*/
+/**Calculate*name*of*global*library**/                                    /*MD021975*/ /*MD021975B*/
+                                                                                        /*MD021975*/
+/*********   CHGVAR     VAR(&GLOBID) VALUE(&SVAL1) */                     /*MD021975*/ /*MD021975B*/
+/*********   CHGVAR     VAR(&GMLIB) VALUE(&GLOBID *CAT 'GMLIB   ') */     /*MD021975*/ /*MD021975B*/
+                                                                                        /*MD021975*/
+/*********   ENDDO */                                                     /*MD021975*/ /*MD021975B*/
 /***Check*for*Switchable*feature*CSC018*(Journaling*options*for*high***         */ /*CSC018 CCB020*/
 /** availability)******************************************************         */ /*CSC018 CCB020*/
 /*                                                                                        /*CSC018*/
@@ -1344,6 +1387,10 @@ CHKCMPLFL:                                                                      
                               OUTPUT(*PRINT)                                           /*AR1093685*/
                  RSTLIB     SAVLIB(&DTALIB) DEV(*SAVF) +
                               SAVF(&LIB2/DBICDTA) OUTPUT(*PRINT)                          /*207764*/
+                 RTVOBJD    OBJ(GPBSRQPD) OBJTYPE(*FILE) RTNLIB(&GMLIB) +
+                                                                                       /*MD021975B*/
+                 RSTOBJ     OBJ(GPBSRQPD) SAVLIB(&GMLIB) DEV(*SAVF) +
+                              SAVF(&LIB2/DBICGM) OUTPUT(*PRINT)                        /*MD021975B*/
                                                                                           /*CBF002*/
 /**********  IF         COND(&CRE026 *EQ 'Y') THEN(DO)             */            /*BUG12169 CCB022*/
 /*******************************************************************/           /*BUG14179A CCB022*/
@@ -1838,6 +1885,15 @@ CHKCMPLFL:                                                                      
                                                                                           /*CSC054*/
              CALL       PGM(ZAMSGTOMQ) PARM(&RSVALRTNC &PRFX +
                           &MQMGR &MQOUT &MQMSG)                                           /*CSC054*/
+                                                                                        /*MD021975*/
+/**********  IF         COND(&CGP010 *EQ 'Y') THEN(DO) */                 /*MD021975*/ /*MD021975B*/
+                                                                                        /*MD021975*/
+/**********  RSTOBJ     OBJ(GPACODPD GPBSADPD GPBSANPD GPBSRIPD +
+                          GPBSRQPD GPBSXDPD GPHHOXPD GPHIBLPD) +
+                          SAVLIB(&GMLIB) DEV(*SAVF) +
+                          SAVF(&DLIB/BSPLIC) */                           /*MD021975*/ /*MD021975B*/
+                                                                                        /*MD021975*/
+/*********    ENDDO */                                                    /*MD021975*/ /*MD021975B*/
                                                                                        /*AR1042302*/
 /** Run Archiving */                                                                   /*AR1042302*/
              CALL       PGM(SCC0420)                                                   /*AR1042302*/

@@ -16,9 +16,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 252696             Date 22May20               *
-      *  Prev Amend No. MD047369A          Date 24Jan18               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. MD047369A          Date 24Jan18               *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 MD036089           Date 23Oct15               *
       *                 AR1090283          Date 10Aug16               *
       *                 MD025111           Date 10May14               *
@@ -104,9 +103,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  252696 - Ensure that field Swift Reference field is save in  *
-      *           in INPAYDD file for MidasPlus as well as other      *
-      *           needed fields.                                      *
       *  MD047369A - Funds transfter does not check block Dr flag on  *
       *              beneficary customer account.                     *
       *  MD046248 - Finastra Rebranding                               *
@@ -262,7 +258,6 @@
      F                                     INFSR(*PSSR)                                       CER001
                                                                                               CER001
      FSDCURRLD  IF   E           K DISK    INFSR(*PSSR)                                       225169
-     FMEINMPL1  IF   E           K DISK    INFSR(*PSSR)                                       252696
       *
       ** Hook to enable non-core files to be included
       /COPY WNCPYSRC,FTIPAYS001
@@ -8098,16 +8093,6 @@
      C                   Z-ADD     *ZERO         IPMAMT                         N
      C                   ENDIF                                                  N
       *
-      *                                                                                       252696
-     C     IPMIR         IFEQ      *BLANKS                                                    252696
-     C     DDSWTN        ANDNE     *BLANKS                                                    252696
-     C                   MOVEL     DDSWTN        IPMIR                                        252696
-      *                                                                                       252696
-     C     KEYMP         CHAIN     MEINMPL1                           94                      252696
-     C                   IF        *IN94 = '0'                                                252696
-     C                   MOVEL     MPTRNO        IPINTRNO                                     252696
-     C                   ENDIF                                                                252696
-     C                   ENDIF                                                                252696
       ** Update files.
       *
      C                   CALLB     'FTIPAYUPD'
@@ -13571,10 +13556,6 @@
      C                   KFLD                    KACCD
      C                   KFLD                    KACSQ
      C                   KFLD                    KBRCA
-      *                                                                                       252696
-     C     KEYMP         KLIST                                                                252696
-     C                   KFLD                    IPINMSGR                                     252696
-     C                   KFLD                    IPINKPRT                                     252696
       *
       * Initialise flag to show first time through                                            204152
      C                   MOVE      'Y'           FirstTime         1                          204152

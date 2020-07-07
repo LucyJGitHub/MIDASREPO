@@ -14,13 +14,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD054940           Date 18Feb20               *
-      *  Prev Amend No. MD054905           Date 04Dec19               *
+      *  Last Amend No. MD056131           Date 05Jul20               *
+      *  Prev Amend No. MD054940           Date 18Feb20               *
+      *                 MD054905           Date 04Dec19               *
       *                 MD040961           Date 09Sep16               *
       *                 CGL177  *CREATE    Date 11Jan16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056131 - Database error encountered upon printing          *
+      *             CRS Report                                        *
       *  MD054940 - CRS Issue: Controlling Person Type                *
       *  MD054905 - Change Message Ref Id format                      *
       *  MD040961 - Issues in Printed Report in CRS                   *
@@ -214,8 +217,10 @@
      D WExidN          S              2P 0
 
      D WxDCOT          S             80A
-     D WxDTIN          S            800A
-     D WxDTIB          S             80A
+     D***WxDTIN*         S            800A                                                  MD056131
+     D***WxDTIB*         S             80A                                                  MD056131
+     D WxDTIN          S           9999A                                                    MD056131
+     D WxDTIB          S            999A                                                    MD056131
      D CtrNum          S              5  0
      D CtryNo          S              5  0
      D TINNum          S              5  0

@@ -693,8 +693,9 @@
       *                                                                                       CDL099
       ** Split Value Date                                                                     CDL099
      C     CDL099        IFEQ      'Y'                                                        CDL099
-     C*****DDSDAT        IFNE      @DDSDAT                                           CDL099 MD056102
-     C     DDVDAT        IFNE      @DDSDAT                                                  MD056102
+     C     DDDLTP        ANDNE     'OP'                                                     MD056102
+     C     DDDLTP        ANDNE     'OT'                                                     MD056102
+     C     DDSDAT        IFNE      @DDSDAT                                                    CDL099
      C                   ADD       1             Idx                                          CDL099
      C                   EVAL      FldNameArr(Idx) = 'DDSDAT'                                 CDL099
      C                   EVAL      MsgIDArr(Idx)   = 'FXM7005'                                CDL099

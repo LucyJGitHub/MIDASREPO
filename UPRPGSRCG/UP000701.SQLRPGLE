@@ -13,14 +13,17 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD055832             Date 14May20             *
-      *  Prev Amend No. MD055829             Date 12May20             *
+      *  Last Amend No. MD056224             Date 03Jul20             *
+      *  Prev Amend No. MD055832             Date 14May20             *
+      *                 MD055829             Date 12May20             *
       *                 MD055469             Date 13Mar20             *
       *                 MD054605             Date 17Oct19             *
       *                 MD054209   *CREATE   Date 07Sep19             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056224 - Dumps generated after Global PRCA                 *
+      *             Applied fix MD-56020                              *
       *  MD055832 - Avoid deletion of bespoke records in extension    *
       *             table                                             *
       *  MD055829 - GPWIPBTD field WC_BOACAU should not be updated as *
@@ -158,7 +161,8 @@
      C                   eval      WHERE = %trimr(WHERE) + ' and A.' +
      C                             %trimr(KeyArr(WIdx)) +
      C                             ' = B.' + %trimr(KeyArr(WIdx))
-     C                   eval      WHEREX = %trimr(WHERE) + ' and A.' +                     MD055832
+     C**********         eval      WHEREX = %trimr(WHERE) + ' and A.' +            MD055832 MD056224
+     C                   eval      WHEREX = %trimr(WHEREX) + ' and A.' +                    MD056224
      C                             %trimr(KeyArr(WIdx)) +                                   MD055832
      C                             ' = X.' + %trimr(KeyArr(WIdx))                           MD055832
      C                   eval      WIdx = WIdx + 1

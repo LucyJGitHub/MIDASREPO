@@ -13,13 +13,13 @@
       *                                                               *
       *  (c)Finastra International Limited 2018                       *
       *                                                               *
-      *  Last Amend No. MD056224            Date 03Jul20              *
+      *  Last Amend No. MD055908A           Date 03Jul20              *
       *  Prev Amend No. MD052082  *CREATE   Date 11Oct18              *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD056224 - ZDBU failed during installation                   *
-      *           - Applied MD-55908A                                 *
+      *  MD055908A - ZDBU failed during installation                  *
+      *            - Applied fix for MD-56224                         *
       *  MD052082 - Synchronises SDNOSRQD, SDNOST2D and T_GZNOSREX    *
       *                                                               *
       *****************************************************************

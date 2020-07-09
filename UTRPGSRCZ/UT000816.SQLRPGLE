@@ -13,10 +13,13 @@
       *                                                               *
       *  (c)Finastra International Limited 2018                       *
       *                                                               *
-      *  Last Amend No. MD052082  *CREATE  Date 11Oct18               *
+      *  Last Amend No. MD055908A           Date 03Jul20              *
+      *  Prev Amend No. MD052082  *CREATE   Date 11Oct18              *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055908A - ZDBU failed during installation                  *
+      *            - Applied fix for MD-56224                         *
       *  MD052082 - Synchronises SDNOSRQD, SDNOST2D and T_GZNOSREX    *
       *                                                               *
       *****************************************************************
@@ -107,16 +110,24 @@
      C/EXEC SQL
      C+ Insert into T_GZNOSREX
      C+ (DDBRCA, DDCUSN, DDCCY, DDACOD, DDACSQ, DDNONB, DDCYCD, ZONE)
-     C+ Select DDBRCA,(Select BBBRCD from SDCUSTPD
-     C+ where substr(DDCUSN,1,6) = BBCUST) concat '-' concat
-     C+ substr(DDCUSN,1,6), DDCCY, DDACOD, DDACSQ, DDNONB, DDCCY, :WZONE
-     C+ from SDNOSRQD
+     C*+*Select*DDBRCA,(Select*BBBRCD*from*SDCUSTPD                                        MD055908A
+     C*+*where*substr(DDCUSN,1,6)*=*BBCUST)*concat*'-'*concat                              MD055908A
+     C*+*substr(DDCUSN,1,6),*DDCCY,*DDACOD,*DDACSQ,*DDNONB,*DDCCY,*:WZONE                  MD055908A
+     C*+*from*SDNOSRQD                                                                     MD055908A
+     C+ Select A.DDBRCA,(Select BBBRCD from SDCUSTPD                                       MD055908A
+     C+ where substr(A.DDCUSN,1,6) = BBCUST) concat '-' concat                             MD055908A
+     C+ substr(A.DDCUSN,1,6), A.DDCCY, A.DDACOD, A.DDACSQ, A.DDNONB, A.DDCCY,              MD055908A
+     C+ :WZONE from SDNOSRQD A                                                             MD055908A
      C+ where not exists
      C+ (Select * from T_GZNOSREX
-     C+ where DDBRCA = SDNOSRQD.DDBRCA
-     C+ and substr(DDCUSN,5,6) = substr(SDNOSRQD.DDCUSN,1,6)
-     C+ and DDCCY = SDNOSRQD.DDCCY and DDACOD = SDNOSRQD.DDACOD
-     C+ and DDACSQ = SDNOSRQD.DDACSQ and DDNONB = SDNOSRQD.DDNONB)
+     C+ where DDBRCA = A.DDBRCA                                                            MD055908A
+     C+ and substr(DDCUSN,5,6) = substr(A.DDCUSN,1,6)                                      MD055908A
+     C+ and DDCCY = A.DDCCY and DDACOD = A.DDACOD                                          MD055908A
+     C+ and DDACSQ = A.DDACSQ and DDNONB = A.DDNONB)                                       MD055908A
+     C*+*where*DDBRCA*=*SDNOSRQD.DDBRCA                                                    MD055908A
+     C*+*and*substr(DDCUSN,5,6)*=*substr(SDNOSRQD.DDCUSN,1,6)                              MD055908A
+     C*+*and*DDCCY*=*SDNOSRQD.DDCCY*and*DDACOD*=*SDNOSRQD.DDACOD                           MD055908A
+     C*+*and*DDACSQ*=*SDNOSRQD.DDACSQ*and*DDNONB*=*SDNOSRQD.DDNONB)                        MD055908A
      C/END-EXEC
      C                   IF        SQLCODE <> 0 AND SQLCODE <> 100
      C                   EXSR      *PSSR

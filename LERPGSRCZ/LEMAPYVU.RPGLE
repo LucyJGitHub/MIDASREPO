@@ -2127,6 +2127,7 @@
       *
      C*****MR_PTYP       IFEQ      66                                                        BUG4502
      C     V_MRPTYP      IFEQ      66                                                        BUG4502
+     C     V_MRPTYP      OREQ      67                                                       MD055652
      C     CLE005        OREQ      'Y'
      C*****MR_PTYP       ANDEQ     69                                                        BUG4502
      C     V_MRPTYP      ANDEQ     69                                                        BUG4502

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Calc day num of next pymnt frq from curr dayno')       *
@@ -71,7 +71,7 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. 250822  *CREATE    Date 22MAY20               *
+      *  Last Amend No. 250822  *CREATE    Date 22May20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
@@ -545,6 +545,6 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2008
+(c) Finastra International Limited 2008
 **  ZFMD
 312831303130313130313031

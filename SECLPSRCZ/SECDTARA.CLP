@@ -7,9 +7,9 @@
 /*                                                                   */
 /*       SECDTARA - Check TRADSDX2 File                              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2007           */
+/*       (c) Finastra International Limited 2007                     */
 /*                                                                   */
-/*       LAST Amend No. 248683  *CREATE    Date 22MAY20              */
+/*       Last Amend No. 248683  *CREATE    Date 22MAY20              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */

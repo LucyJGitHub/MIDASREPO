@@ -53,5 +53,5 @@
              CHGJOB     SWS(XXXXXX11)
 
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                         Finastra International Limited')
              ENDPGM

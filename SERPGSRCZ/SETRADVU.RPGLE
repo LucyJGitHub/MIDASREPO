@@ -126,9 +126,9 @@
       *                 CAP084  *CREATE    Date 14Jul03               *
       *                                                               *
       *---------------------------------------------------------------*
+      *  258901 - Error in tax amount for charges and commissions.    *
       *  247524 - Securities Trades - charges are not defaulted and   *
       *           not calculated.                                     *
-      *  258901 - Error in tax amount for charges and commissions.    *
       *  247907 - Wrong settlement amount for trades with the same    *
       *           nominal and settlement currency.                    *
 

@@ -35,7 +35,7 @@
       *                                                               *
       *  Last Amend No. 258901             Date 22May20               *
       *  Prev Amend No. 247907             Date 22May20               *
-      *                 257524             Date 22May20               *
+      *                 247524             Date 22May20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD049746           Date 15Mar18               *
       *                 MD046248           Date 27Oct17               *
@@ -131,7 +131,6 @@
       *           not calculated.                                     *
       *  247907 - Wrong settlement amount for trades with the same    *
       *           nominal and settlement currency.                    *
-
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD049746 - Settlement details is not defaulted when Charges/ *
       *             Commission fields have values when Trade is       *
@@ -608,7 +607,6 @@
      D  #1MATY                30     34  0                                                    CER001
      D  #1FOTR                35     54                                                       CER001
      D  #1TMST                55     80Z                                                      CER001
-     D*
       ** DS to keep old TranInExch data                                                       247907
      D OldTranInExch E DS                  EXTNAME(SETREXPD)                                  247907
      D                                     PREFIX(O)                                          247907
@@ -766,7 +764,6 @@
       ** Commitment Skip Field                                                                CSC022
                                                                                              BUG3145
      D CGL014          S              1A                                                     BUG3145
-     D*
       ** For Countervalue computation                                                         247907
      D OldV_TDER       S             13  8                                                    247907
      D OldV_TMDI       S              1A                                                      247907
@@ -3142,7 +3139,7 @@
      C                   EXSR      DfltTrExc                                                BUG10021
      C*********          Endif                                                     BUG10021 BUG11197
      C**********         Endif                                              BUG11197 BUG8690R 247907
-     C*
+                                                                                            BUG10021
       * If exchange rate defaulting was done, roght-align OldTranInExch for comparison        247907
      C                   If        DfltExFlg = 'Y'                                            247907
      C                   Exsr      RghtAlign                                                  247907
@@ -3256,13 +3253,7 @@
       * CalcTrCHCM - Calculate Trade Charges/Commissions                                      258901
                                                                                               258901
      C                   EXSR      CalcTrCHCM                                                 258901
-     C*
-      * CalcTrEUTX - Calculate EU Tax                                                         237063
                                                                                               237063
-     C                   IF        CGL031 = 'Y'                                               237063
-     C                   EXSR      CalcTrEUTX                                                 237063
-     C                   ENDIF                                                                237063
-     C*
       * Validate user input exchange details vs system defaulted details                      247907
       * When Action is 'A', user is not allowed to change the Settle Ccy                      247907
       * hence, no need to validate                                                            247907
@@ -3270,6 +3261,12 @@
      C                   EXSR      ValdExch                                                   247907
      C                   Endif                                                                247907
                                                                                               247907
+      * CalcTrEUTX - Calculate EU Tax                                                         237063
+                                                                                              237063
+     C                   IF        CGL031 = 'Y'                                               237063
+     C                   EXSR      CalcTrEUTX                                                 237063
+     C                   ENDIF                                                                237063
+ 
       * CalcTrCVAL - Calculate Trade Countervalue
 
      C                   EXSR      CalcTrCVAL                                                BUG3145

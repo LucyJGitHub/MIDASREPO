@@ -169,7 +169,8 @@
 
      C     DDNStD        Ifeq      *Blanks
 
-     C     DDStFq        Ifeq      'D'
+     C*****DDStFq        Ifeq      'D'                                                        210058
+     C     DDStFq        Ifne      'D'                                                        210058
      C     CGL184        Andeq     'N'                                                        CGL184
      C     DDStFq        Orne      'D'                                                        CGL184
      C     DDStFq        Andne     'K'                                                        CGL184

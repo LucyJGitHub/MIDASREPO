@@ -60,8 +60,8 @@
 
 /* Catch non-specified error messages and process error routine */                        /*255926*/
                                                                                           /*255926*/
-             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO CMDLBL(ERROR)) +
-                          /*255926*/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ERROR))                                                  /*255926*/
 
              RTVDTAARA DTAARA(SDSTAT) RTNVAR(&SDSTAT)
              CHGVAR    VAR(&PRE) VALUE(%SST(&SDSTAT 6 2))

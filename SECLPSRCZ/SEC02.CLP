@@ -10,7 +10,7 @@
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
 /*       Last Amend No. AR586601           Date 22May20              */
-/*       Prev Amend No. 259607             Date 22MAY20              */
+/*       Prev Amend No. 259607             Date 22May20              */
 /*                      MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -653,9 +653,9 @@ CALLP:
              IF COND((%SST(&FMT 104 1) *EQ 'Y')) THEN(DO)             /*CPB001*/
                 CHGJOB SWS(XXX1XXXX)                                  /*CPB001*/
              ENDDO      /*CPB001*/
-             IF         COND(&PARM = 'SE1910') THEN(DO) /*259607*/
-                OVRDBF     FILE(SECNTRLX) TOFILE(SECNTRL0) SHARE(*NO) /*259607*/
-             ENDDO      /*259607*/
+             IF         COND(&PARM = 'SE1910') THEN(DO)                                   /*259607*/
+                OVRDBF     FILE(SECNTRLX) TOFILE(SECNTRL0) SHARE(*NO)                     /*259607*/
+             ENDDO                                                                        /*259607*/
              CALL       PGM(&PARM)
 /**********  CHGJOB SWS(XXX0XXXX) */                                             /*CPB001 AR586601*/
              MONMSG     MSGID(RPG0000 CPF0000 MCH0000) EXEC(DO)

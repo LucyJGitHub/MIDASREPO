@@ -3,7 +3,7 @@
 /*EXI *  TEXT('Midas RE CONSOLIDATED INT. STATEMENT PRINT')          */
 /*********************************************************************/
 /*                                                                   */
-/*       Midas     Retail Module                                 */
+/*       Midas     Retail Module                                     */
 /*                                                                   */
 /*       REC3765 - INTEREST STATEMENT PRINT - CONSOLIDATED           */
 /*                                                                   */
@@ -63,9 +63,9 @@
              CALL       PGM(RE3765) PARM(&BJLANG)
 /*/COPY WNCPYSRC,REC3765003                                          */
    DLTOVR     FILE(*ALL)
-   IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO CMDLBL(ABNOR)) /*253776*/
+   IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO CMDLBL(ABNOR))                            /*253776*/
 /**/
    CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International Limited')
  ABNOR: SNDPGMMSG MSG('REC3765 - Consolidated Retail interestS statements ended +
-                abnormally') TOMSGQ(MOPERQ MRUNQ) /*253776*/
+                abnormally') TOMSGQ(MOPERQ MRUNQ)                                         /*253776*/
 ENDCL:       ENDPGM

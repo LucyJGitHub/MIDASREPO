@@ -26,6 +26,7 @@
       *                                                               *
       *  Last Amend No. MD039032           Date 22May20               *
       *  Prev Amend No. 259813             Date 22May20               *
+      *                 251029             Date 22May20               *      
       *                 MD041126           Date 04May20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -137,10 +138,10 @@
       *  MD039032 - Modified fix 251029 to include checking of the    *
       *             Front Office ID to make sure that new transactions*
       *             will be processed.                                *
-      *  251029 - Handle file locking properly.  Applied fix 231306   *
-      *           and added some checking in field ARERRMODE.         *
       *  259813 - Clear APDUMP before giving it a new value.          *
       *           Applied for MD-39032                                *
+      *  251029 - Handle file locking properly.  Applied fix 231306   *
+      *           and added some checking in field ARERRMODE.         *      
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
       *           - Applied for MD055614                              *
       *  CSD102 - Password Length Extension                           *

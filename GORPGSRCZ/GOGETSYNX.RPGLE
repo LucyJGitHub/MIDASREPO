@@ -11,7 +11,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD055751           Date 22May20               *
+      *  Last Amend No. MD055751           Date 07Jun20               *
       *  Prev Amend No. MD055146           Date 04Feb20               *
       *                 MD046248           Date 27Oct17               *
       *                 AR1079991          Date 29Jan13               *
@@ -32,6 +32,7 @@
       *                                                               *
       *  MD055751 - Global Sync Issue for GOC0100 during COB          *
       *             Include zone in the creation of SQL view.         *
+      *             Applied for MD-56240.                             *
       *  MD055146 - Failed MXC004802 seq. 00001 and others            *
       *             Increase Branch count to 900.                     *
       *  MD046248 - Finastra Rebranding                               *

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD055146           Date 04Feb20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055751           Date 22May20               *
+      *  Prev Amend No. MD055146           Date 04Feb20               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR1079991          Date 29Jan13               *
       *                 AR1064845          Date 05Dec12               *
       *                 262126             Date 12Oct09               *
@@ -29,6 +30,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055751 - Global Sync Issue for GOC0100 during COB          *
+      *             Include zone in the creation of SQL view.         *
       *  MD055146 - Failed MXC004802 seq. 00001 and others            *
       *             Increase Branch count to 900.                     *
       *  MD046248 - Finastra Rebranding                               *
@@ -46,27 +49,29 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
      FGPGLOBFL1 IF   E           K DISK
      FGZSDBRCHL1IF   E           K DISK
- 
- 
+
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
- 
+
+
      D KY              S             10    DIM(9)
- 
+
      D ZLFOVR          S              1    DIM(55) CTDATA PERRCD(55)
      D GLFOVR          S              1    DIM(55) CTDATA PERRCD(55)
      D GLFCLO          S              1    DIM(55) CTDATA PERRCD(55)
      D ZLFDLO          S              1    DIM(55) CTDATA PERRCD(55)
      D GLFDLO          S              1    DIM(55) CTDATA PERRCD(55)
- 
+
      D OPNQRY          S             20    DIM(3) CTDATA PERRCD(1)
- 
+
      D SUBZ            S             38    DIM(1) CTDATA PERRCD(1)
      D SUBB            S             35    DIM(3) CTDATA PERRCD(1)
- 
+
+     D OPNQRY2         S             20    DIM(5) CTDATA PERRCD(1)                          MD055751
+                                                                                            MD055751
      D                 DS
      D*QRYSLT***               1   2000                                                       242731
      D*QS*******               1   2000                                                       242731
@@ -74,21 +79,21 @@
      D QRYSLT                  1  31000                                                       242731
      D QS                      1  31000                                                       242731
      D                                     DIM(31000)                                         242731
- 
+
      D                 DS
      D QRYKEY                  1    500
      D QK                      1    500
      D                                     DIM(500)
- 
+
      Dqrysltx          S          31000A                                                      262126
      Dqrytemp          S             25A                                                      262126
- 
+
      C     GFGBRC        IFEQ      *BLANK
      C                   EXSR      S_ZONE
      C                   ELSE
      C                   EXSR      S_BRCA
      C                   ENDIF
- 
+
      C     GFGBRC        IFEQ      *BLANK                                                     262126
      C                   EVAL      O_OPNQRY =   OPNQRY(1) + GFGLF
      C                                        + OPNQRY(2)
@@ -101,8 +106,28 @@
      C                                        + %trim(qrysltx)                                262126
      C                                        + QRYKEY                                        262126
      C                                        + OPNQRY(3)                                     262126
+      *                                                                                     MD055751
+      ** OPNQRYF for SQL View                                                               MD055751
+      *                                                                                     MD055751
+     C                   MOVE      *BLANKS       F_FORMAT         10                        MD055751
+      *                                                                                     MD055751
+     C                   IF        GFGLFF = *BLANKS                                         MD055751
+     C                   EVAL      F_FORMAT = GFZLFF                                        MD055751
+     C                   ELSE                                                               MD055751
+     C                   EVAL      F_FORMAT = GFGLFF                                        MD055751
+     C                   ENDIF                                                              MD055751
+      *                                                                                     MD055751
+     C                   EVAL      O_OPNQRY2 =  OPNQRY2(1) + FSQLVIEW                       MD055751
+     C                                        + OPNQRY2(2)                                  MD055751
+     C                                        + OPNQRY2(3)                                  MD055751
+     C                                        + GFGLF + ' '                                 MD055751
+     C                                        + F_FORMAT                                    MD055751
+     C                                        + OPNQRY2(4)                                  MD055751
+     C                                        + QRYKEY                                      MD055751
+     C                                        + OPNQRY2(5)                                  MD055751
+      *                                                                                     MD055751
      C                   ENDIF                                                                262126
- 
+
      C                   SETON                                        LR
      C                   RETURN
      C/SPACE 5
@@ -110,11 +135,11 @@
       * Selection is by zone
       ********************************************************************
      C     S_ZONE        BEGSR
- 
+
      C                   MOVEA     SUBZ(1)       QS(1)
      C                   MOVEA     GFZONE        QS(9)
      C                   MOVEA     I_ZONE        QS(25)
- 
+
      C                   ENDSR
       ********************************************************************
      C/SPACE 5
@@ -122,7 +147,7 @@
       * Selection is by branch
       ********************************************************************
      C     S_BRCA        BEGSR
- 
+
      C**********         Z-ADD     1             X                 4 0                        262126
      C                   eval      qrysltx = *blanks                                          262126
       * Blank branch                                                                          BG1364
@@ -135,7 +160,7 @@
      C**********                   + %trim(gfgbrc) + ' *EQ "   "'                   262126 AR1064845
                                                                                               BG1364
       * Live branches                                                                         BG1364
- 
+
      C     I_ZONE        SETLL     SDBRCHD0
      C     I_ZONE        READE     SDBRCHD0                               99
      C     *IN99         DOWEQ     *OFF
@@ -157,11 +182,11 @@
      C                   eval      qrysltx = %trim(qrysltx) + ' ' + qrytemp                AR1079991
      C     I_ZONE        READE     SDBRCHD0                               99
      C                   ENDDO
- 
+
      C**********         MOVEA     SUBB(3)       QS(X)                                        262126
      C**********         eval      qrysltx = %trim(qrysltx) + ''')'                 262126 AR1064845
      C                   eval      qrysltx = %trim(qrysltx) + ')' + ''')'                  AR1064845
- 
+
      C                   ENDSR
       ********************************************************************
      C/SPACE 5
@@ -169,7 +194,7 @@
       * *INZSR - Initial subroutine called automatically at program start
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       * Inputs
      C                   PARM                    I_GPF            10
@@ -181,28 +206,31 @@
      C                   PARM                    O_GLFCLO         60
      C                   PARM                    O_ZLFDLO         60
      C                   PARM                    O_GLFDLO         60
- 
+
      C**********         PARM                    O_OPNQRY       5000                          242731
      C**********         PARM                    O_OPNQRY      32767                   242731 243724
      C                   PARM                    O_OPNQRY      32702                          243724
- 
+
      C                   PARM                    O_ZLF            10                          BG1364
      C                   PARM                    O_BLFD            1                          BG1364
                                                                                               BG1364
      C                   PARM                    O_BLSY            1
+                                                                                              BG1364
      C                   PARM                    O_GFGPF          10                        MD055146
      C                   PARM                    O_GFGBRC         10                        MD055146
      C                   PARM                    O_GFGLF          10                        MD055146
- 
+     C                   PARM                    FSQLVIEW         10                        MD055751
+     C                   PARM                    O_OPNQRY2      1000                        MD055751
+
      C                   MOVE      *BLANK        I#RTCD            7
      C                   MOVE      *BLANK        I#ERMS           50
      C                   MOVE      *BLANKS       O_GFGPF                                    MD055146
      C                   MOVE      *BLANKS       O_GFGBRC                                   MD055146
      C                   MOVE      *BLANKS       O_GFGLF                                    MD055146
+     C                   MOVE      *BLANKS       O_OPNQRY2                                  MD055751
                                                                                             MD055146
- 
      C     I_GPF         CHAIN     GPGLOBFD0                          99
- 
+
      C     *in99         IFEQ      *OFF
      C                   MOVEL     GFBLSY        O_BLSY
      C                   MOVEL     GFGLFU        O_GLFU
@@ -212,14 +240,14 @@
      C                   ELSE
      C                   MOVEL     '?'           O_BLSY
      C                   ENDIF
- 
+
       * End now if bulk synchronisation is not done for this file
- 
+
      C     O_BLSY        IFNE      'Y'
      C                   SETON                                        LR
      C                   RETURN
      C                   ENDIF
- 
+
      C                   MOVEL     GFGKY1        KY(1)
      C                   MOVEL     GFGKY2        KY(2)
      C                   MOVEL     GFGKY3        KY(3)
@@ -229,7 +257,7 @@
      C                   MOVEL     GFGKY7        KY(7)
      C                   MOVEL     GFGKY8        KY(8)
      C                   MOVEL     GFGKY9        KY(9)
- 
+
      C                   MOVEA     '  KEYFLD('   QK(1)
      C                   Z-ADD     1             ZK                2 0
      C                   Z-ADD     10            ZL                5 0
@@ -245,13 +273,13 @@
      C                   ADD       2             ZL
      C                   ENDDO
      C                   MOVE      ')'           QK(ZL)
- 
+
      C                   MOVEA     GFZLF         ZLFOVR(17)
      C                   MOVEA     GFGLF         GLFOVR(17)
      C                   MOVEA     GFGLF         GLFCLO(17)
      C                   MOVEA     GFZLF         ZLFDLO(17)
      C                   MOVEA     GFGLF         GLFDLO(17)
- 
+
      C                   MOVEA     ZLFOVR        O_ZLFOVR
      C                   MOVEA     GLFOVR        O_GLFOVR
      C                   MOVEA     GLFCLO        O_GLFCLO
@@ -260,7 +288,7 @@
                                                                                               BG1364
      C                   MOVEL     GFZLF         O_ZLF                                        BG1364
      C                   MOVEL     GFBLFD        O_BLFD                                       BG1364
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -290,3 +318,9 @@ QRYSLT('           *EQ "          "')
 QRYSLT('           *EQ "   "
    *OR             *EQ "   "
 ')
+** OPNQRY2                                                                                  MD055751
+OPNQRYF FILE(                                                                               MD055751
+) OPTION(*ALL)                                                                              MD055751
+ FORMAT(                                                                                    MD055751
+)                                                                                           MD055751
+ OPNSCOPE(*JOB)                                                                             MD055751

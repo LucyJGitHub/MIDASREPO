@@ -15,7 +15,7 @@
 /*                                                                   */                 /*CGO001AA*/
 /*       (c) Finastra International Limited 2009                     */
 /*                                                                   */
-/*       Last Amend No. MD055751           Date 22May20              */
+/*       Last Amend No. MD055751           Date 07Jun20              */
 /*       Prev Amend No. MD055146           Date 04Feb20              */
 /*                      MD052296           Date 26Nov18              */
 /*                      MD046248           Date 27Oct17              */
@@ -28,6 +28,7 @@
 /*                                                                   */
 /*       MD055751 - Global Sync Issue for GOC0100 during COB         */
 /*                  Include zone in the creation of SQL view.        */
+/*                  Applied for MD-56240.                            */
 /*       MD055146 - Failed MXC004802 seq. 00001 and others           */
 /*                  Increase Branches to 900.                        */
 /*       MD052296 - Problems caused by use of special characters     */

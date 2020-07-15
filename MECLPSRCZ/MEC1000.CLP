@@ -9,7 +9,8 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD055961           Date 08Jun20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -25,6 +26,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD055961 - Outgoing Payments HATs option and messages to be */
+/*                  processed thru FT in error end in error (ERZ248) */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CSC023 - MidasPlus additional packaging.  SBMJOB change.    */
 /*                OUTQ must always be *JOBD.                         */
@@ -77,8 +81,10 @@
 /* */
              CHGVAR     VAR(&RTN_CODE) VALUE(' ')
 /* */
+             OVRDBF     FILE(OTPAYQL0) OVRSCOPE(*JOB) SHARE(*NO)    /*MD055961*/
              CALL       PGM(ME1000) PARM(&RTN_CODE &ACTION &BRANCH +
                           &FT_PROC)
+             DLTOVR     FILE(OTPAYQL0) LVL(*JOB)                    /*MD055961*/
 /* */
 /* Check for Database errors trapped by program */
 /* */

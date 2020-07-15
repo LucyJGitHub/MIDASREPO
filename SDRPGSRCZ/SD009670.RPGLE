@@ -19,7 +19,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
+      *  MD041126 - Certify WebSphere MQ 9 with Midas product line.   *
       *           - Applied for MD055945.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG27831B - Define Messge Queue Manager                      *
@@ -41,80 +41,80 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** For case translation
      D UpCase          C                   'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
      D LoCase          C                   'abcdefghijklmnopqrstuvwxyz'
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       **  Declare MQI structures needed
       * MQI Constants
      D***/COPY*QMQM/QRPGLESRC,CMQR                                                          MD041126
      D/COPY QMQM/QRPGLESRC,CMQG                                                             MD041126
- 
+
       ** Object Descriptor
      D MQOD            DS
      D***/COPY*QMQM/QRPGLESRC,CMQODR                                                        MD041126
      D/COPY QMQM/QRPGLESRC,CMQODG                                                           MD041126
- 
+
       ** +--------------------------------------+
       ** ¦ Declared Variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Queue Name
      D QName           DS           200
      D  MQNAME                 1     48
- 
+
       ** Error message id in GBSDUSRMSG
      D ErrMsgId        S              7
- 
+
       ** System value to be processed
      D SystemValue     S             20
- 
+
       ** Processing mode
      D ProcMode        S            190
- 
+
       ** General error indicator
      D GenError        S              1
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              2P 0
- 
+
       ** Array of error message IDs
      D MsgIDXArr       S                   DIM(99) LIKE(ErrMsgId)
- 
+
      D***P@CID**         S              9P 0                                                MD041126
      D***P@Conn*         S              9P 0                                                MD041126
      D***P@In***         S              9P 0                                                MD041126
@@ -127,7 +127,7 @@
      D P@Code          S             10I 0                                                  MD041126
      D P@Resn          S             10I 0                                                  MD041126
      D P@MQMgr         S             48A                                                   BUG27831B
- 
+
      D P@OP01          S             20                                                    BUG27831B
      D P@VL01          S            200                                                    BUG27831B
      D P@OP02          S             20                                                    BUG27831B
@@ -152,7 +152,7 @@
                                                                                            BUG27831B
      D PCommand        S            256A
      D PLength         S             15P 5
- 
+
       /EJECT
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -160,27 +160,27 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       **  Convert the Queue Name to upper case
      C     LoCase:UpCase XLATE     MQNAME        QNameUC          48
- 
+
       ** Open MQ/Series Queue
       ** --------------------
- 
+
      C                   EXSR      SR_OPEN
- 
- 
+
+
       ** Close MQ/Series Queue
       ** ---------------------
- 
+
      C                   EXSR      SR_CLOSE
- 
+
       ** Normal end processing
- 
+
      C                   EVAL      *INLR      = *ON
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -189,9 +189,9 @@
       *                                                               *
       *****************************************************************
      C     SR_OPEN       BEGSR
- 
+
       ** Use default connection handle, and implicit connection
- 
+
      C                   EVAL      P@CONN = HCDEFH
                                                                                            BUG27831B
      C                   EVAL      ODMN = P@MQMgr                                          BUG27831B
@@ -210,18 +210,18 @@
      C                   EVAL      GenError = 'Y'                                          BUG27831B
      C                   EXSR      *PSSR                                                   BUG27831B
      C                   ENDIF                                                             BUG27831B
- 
+
       ** Queue name
- 
+
      C                   EVAL      ODON = QNameUC
- 
+
       ** Open options: OUTPUT and FAIL_IF_QUIESCING
- 
+
      C                   EVAL      P@Opts = OOOUT  +
      C                                      OOFIQ
- 
+
       ** Open queue
- 
+
      C**********         EVAL      P@CID = MQOPEN                                           MD041126
       **********                                                                            MD041126
      C**********         CALL      'QMQM'                                                   MD041126
@@ -235,15 +235,15 @@
                                                                                             MD041126
      C                   CALLP     MQOPEN( P@Conn : MQOD : P@Opts :                         MD041126
      C                                     P@In : P@Code : P@Resn )                         MD041126
- 
+
       ** If open queue failed, indicate abnormal end
- 
+
      C                   IF        P@RESN <>  RCNONE
      C                   EVAL      GenError = 'Y'
      C                   EVAL      *INLR    = *ON
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -253,13 +253,13 @@
       *                                                               *
       *****************************************************************
      C     Sr_Close      BEGSR
- 
+
       ** Close options: NONE
- 
+
      C                   EVAL      P@OPTS = CONONE
- 
+
       ** Close queue
- 
+
      C**********         EVAL      P@CID = MQCLOS                                           MD041126
       **********                                                                            MD041126
      C**********         CALL      'QMQM'                                                   MD041126
@@ -272,15 +272,15 @@
                                                                                             MD041126
      C                   CALLP     MQCLOSE( P@Conn : P@In : P@Opts :                        MD041126
      C                                      P@Code : P@Resn )                               MD041126
- 
+
       ** If close queue failed, indicate abnormal end
- 
+
      C                   IF        P@RESN <>  RCNONE
      C                   EVAL      GenError = 'Y'
      C                   EVAL      *INLR    = *ON
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -290,9 +290,9 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       ** System value to be processed
      C                   PARM                    SystemValue
       ** Value entered by user
@@ -305,7 +305,7 @@
      C                   PARM                    Idx
       ** Error message ID (array)
      C                   PARM                    MsgIDXArr
- 
+
       ** Use queue name defined in system values.                                          BUG27831B
                                                                                            BUG27831B
      C                   EVAL      P@OP01 = 'MQQueueMgr'                                   BUG27831B
@@ -340,15 +340,15 @@
      C                   ENDIF                                                             BUG27831B
      C                   EVAL      P@MQMgr = P@VL01                                        BUG27831B
      C                   EVAL      GenError = ' '
- 
+
       ** Ensure that QMQM exist in library list.
      C                   EVAL      PCommand = 'ADDLIBLE QMQM *LAST'
      C                   EVAL      PLength = %LEN( %TRIM( PCommand ) )
- 
+
      C                   CALL(E)   'QCMDEXC'
      C                   PARM                    PCommand
      C                   PARM                    PLength
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -361,14 +361,14 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   EVAL      GenError = 'Y'
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
- 
+
      C                   ENDSR

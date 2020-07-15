@@ -30,7 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
+      *  MD041126 - Certify WebSphere MQ 9 with Midas product line.   *
       *           - Applied for MD055945.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  256564 - Recompile due to PF changes done by fix 256330      *
@@ -41,7 +41,7 @@
       *  CMX001 - Meridian Export                                     *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -59,43 +59,43 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
- 
+
+
       **  Declare MQI structures needed
       * MQI Constants
      D***/COPY*QMQM/QRPGLESRC,CMQR                                                          MD041126
      D/COPY QMQM/QRPGLESRC,CMQG                                                             MD041126
- 
+
       ** Object Descriptor
      D MQOD            DS
      D***/COPY*QMQM/QRPGLESRC,CMQODR                                                        MD041126
      D/COPY QMQM/QRPGLESRC,CMQODG                                                           MD041126
- 
+
       ** Message Descriptor
      D MQMD            DS
      D***/COPY*QMQM/QRPGLESRC,CMQMDR                                                        MD041126
      D/COPY QMQM/QRPGLESRC,CMQMDG                                                           MD041126
- 
+
       ** Get message options
      D MQGMO           DS
      D***/COPY*QMQM/QRPGLESRC,CMQGMOR                                                       MD041126
      D/COPY QMQM/QRPGLESRC,CMQGMOG                                                          MD041126
- 
+
       ** Put message options
      D MQPMO           DS
      D***/COPY*QMQM/QRPGLESRC,CMQPMOR                                                       MD041126
      D/COPY QMQM/QRPGLESRC,CMQPMOG                                                          MD041126
- 
- 
+
+
       ** The include below brings in the return code structure that
       ** is used in calls to OS/400 APIs.
      D/COPY QSYSINC/QRPGLESRC,QUSEC
@@ -111,8 +111,8 @@
      D OPTS            S             10I 0                                                  MD041126
                                                                                             MD041126
       * API Error code parameter
- 
- 
+
+
      C     *entry        plist
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           30
@@ -127,8 +127,8 @@
      C                   PARM                    p@msgbuf      32000
      C**********         parm                    p@key             4                   CSW039 244430
      C                   parm                    p@key             2                          244430
- 
- 
+
+
      C                   select
       *
       ** OPEN a queue
@@ -161,17 +161,17 @@
       * ------                                                             *
       **********************************************************************
      C     sr_put        begsr
- 
+
       ** Get message length
- 
+
      C     ' '           checkr    p@msgbuf      p@msglen
- 
+
       ** MDFMT (Format Name) is a subfield of the MQMD data structure,
       ** defined in the include member CMQMDR.
       ** FMSTR is a named constant defined in CMQR; it contains 'MQSTR   '.
      C                   EVAL      MDFMT = FMSTR
      C                   movel     p@key         MDCID                                        CSW039
- 
+
       ** Send message
      C**********         Z-ADD     MQPUT         CID                                        MD041126
      C                   Z-ADD     PMNMID        PMOPT
@@ -189,14 +189,14 @@
      C                   CALLP     MQPUT( HCONN : HIN : MQMD : MQPMO :                      MD041126
      C                                    P@MsgLen : %ADDR(P@MsgBuf) :                      MD041126
      C                                    CCODE : REASON )                                  MD041126
- 
+
       ** If send message failed, indicate abnormal end
- 
+
      C                   IF        REASON <> RCNONE
      C                   EVAL      I#ERMS = 'ERROR IN MQ SERIES PUT MSG'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   endsr
       **********************************************************************
       /SPACE 5
@@ -205,7 +205,7 @@
       * ------                                                             *
       **********************************************************************
      C     sr_get        begsr
- 
+
       ** Get options: WAIT, CONVERT and ALLOW TRUNCATION.
       ** Note: the last of these options means that a message longer than
       ** the buffer length defined in this module (currently 1500 bytes)
@@ -214,22 +214,22 @@
      C                   Z-ADD     GMWT          GMOPT
      C                   ADD       GMCONV        GMOPT
      C                   ADD       GMATM         GMOPT
- 
+
       ** Set wait interval to 2 seconds
      C                   Z-ADD     2000          GMWI
- 
+
       ** Perform get operation inside commitment control. Commitment
       ** boundary is after the message management file updates.
      C                   ADD       GMSYP         GMOPT
- 
+
       ** MsgId and CorrelId are selectors cleared to ensure messages
       ** are processed in arrival/priority sequence
      C                   MOVEL     MINONE        MDMID
      C                   MOVEL     CINONE        MDCID
- 
+
       ** Clear message buffer
      C                   clear                   p@msgbuf
- 
+
       ** Get message
      C**********         Z-ADD     MQGET         CID                                        MD041126
      C**********         CALL      'QMQM'                                                   MD041126
@@ -256,7 +256,7 @@
      C                   EVAL      I#ERMS = 'ERROR IN MQ SERIES GET MSG'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   endsr
       **********************************************************************
       /SPACE 5
@@ -265,13 +265,13 @@
       * -------                                                            *
       **********************************************************************
      C     sr_open       begsr
- 
+
       ** Use default connection handle, and implicit connection
      C                   Z-ADD     HCDEFH        HCONN
- 
+
       ** Queue name
      C                   MOVEL     p@queuenm     ODON             48
- 
+
       ** Queue Manager                                                                      BUG17937
      C                   Eval      ODMN = p@qmnager                                         BUG17937
       *                                                                                     BUG17937
@@ -295,20 +295,20 @@
      C                   Endif                                                              BUG17937
       *                                                                                     BUG17937
       ** Open queue for INPUT
- 
+
      C     p@request     ifeq      '*OPEN_GET'
- 
+
       ** Open options: INPUT and FAIL_IF_QUIESCING
      C     OOINPQ        ADD       OOFIQ         OPTS
- 
+
       ** Open queue for OUTPUT
- 
+
      C                   else
- 
+
       ** Open options: OUTPUT and FAIL_IF_QUIESCING
      C     OOOUT         ADD       OOFIQ         OPTS
      C                   endif
- 
+
       ** Open queue
      C**********         Z-ADD     MQOPEN        CID                                        MD041126
      C**********         CALL      'QMQM'                                                   MD041126
@@ -322,14 +322,14 @@
                                                                                             MD041126
      C                   CALLP     MQOPEN( HCONN : MQOD : OPTS :                            MD041126
      C                                     HIN : OCODE: REASON )                            MD041126
- 
+
       ** If open queue failed, indicate abnormal end
- 
+
      C     REASON        IFNE      RCNONE
      C                   EVAL      I#ERMS = 'ERROR IN MQ SERIES OPEN Q'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   endsr
       **********************************************************************
       /SPACE 5
@@ -338,10 +338,10 @@
       * --------                                                           *
       **********************************************************************
      C     sr_close      begsr
- 
+
       ** Close options: NONE
      C                   Z-ADD     CONONE        OPTS
- 
+
       ** Close queue
      C**********         Z-ADD     MQCLOS        CID                                        MD041126
      C**********         CALL      'QMQM'                                                   MD041126
@@ -354,14 +354,14 @@
                                                                                             MD041126
      C                   CALLP     MQCLOSE( HCONN : HIN : OPTS :                            MD041126
      C                                      CCODE : REASON )                                MD041126
- 
+
       ** If close queue failed, indicate abnormal end
- 
+
      C     REASON        IFNE      RCNONE
      C                   EVAL      I#ERMS = 'ERROR IN MQ SERIES CLOSE Q'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Disconnect
      C**********         Eval      CID = MQDISC                                    BUG17937 MD041126
       **********                                                                   BUG17937 MD041126

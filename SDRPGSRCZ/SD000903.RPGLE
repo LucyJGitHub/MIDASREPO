@@ -20,7 +20,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
+      *  MD041126 - Certify WebSphere MQ 9 with Midas product line.   *
       *           - Applied for MD055945.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD083 - Watch List Compliance Upgrade                       *
@@ -206,7 +206,7 @@
      D P@MsgLen        S             10I 0                                                  MD041126
      D CCODE           S             10I 0                                                  MD041126
      D MESLEN          S             10I 0                                                  MD041126
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

@@ -80,7 +80,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
+      *  MD041126 - Certify WebSphere MQ 9 with Midas product line.   *
       *           - Applied for MD055945.                             *
       *  MD048231 - Removed/Changed fix 251373 in order to process    *
       *             PAPER network messages using MQ queue             *

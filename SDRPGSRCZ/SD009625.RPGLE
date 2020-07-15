@@ -20,7 +20,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
+      *  MD041126 - Certify WebSphere MQ 9 with Midas product line.   *
       *           - Applied for MD055945.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  245310 - validate that the value supplied relates to a       *
@@ -48,77 +48,77 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** For case translation
      D UpCase          C                   'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
      D LoCase          C                   'abcdefghijklmnopqrstuvwxyz'
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       **  Declare MQI structures needed
       * MQI Constants
      D***/COPY*QMQM/QRPGLESRC,CMQR                                                          MD041126
      D/COPY QMQM/QRPGLESRC,CMQG                                                             MD041126
- 
+
       ** Object Descriptor
      D MQOD            DS
      D***/COPY*QMQM/QRPGLESRC,CMQODR                                                        MD041126
      D/COPY QMQM/QRPGLESRC,CMQODG                                                           MD041126
- 
+
       ** +--------------------------------------+
       ** ¦ Declared Variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Queue Manager
      D QManager        DS           200
      D  MQMGR                  1     48
- 
+
       ** Error message id in GBSDUSRMSG
      D ErrMsgId        S              7
- 
+
       ** System value to be processed
      D SystemValue     S             20
- 
+
       ** Processing mode
      D ProcMode        S            190
- 
+
       ** General error indicator
      D GenError        S              1
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              2P 0
- 
+
       ** Array of error message IDs
      D MsgIDXArr       S                   DIM(99) LIKE(ErrMsgId)
                                                                                             MD041126
@@ -127,7 +127,7 @@
      D HCONN           S             10I 0                                                  MD041126
      D OCODE           S             10I 0                                                  MD041126
      D REASON          S             10I 0                                                  MD041126
- 
+
       /EJECT
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -135,10 +135,10 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       **  Convert the Queue Manager name to upper case
      C     LoCase:UpCase XLATE     MQMGR         QManagerUC       48
- 
+
       **  Attempt to CONNECT to the MQ Manager
       *              ~~~~~~~
      C**********         CALL      'QMQM'                                                   MD041126
@@ -154,21 +154,21 @@
      C                   Z-ADD     *ZERO         REASON                                     MD041126
      C                   CALLP     MQCONN( QMNAME : HCONN :                                 MD041126
      C                                     OCODE : REASON )                                 MD041126
- 
+
       ** Error processing
      C     REASON        IFNE      RCNONE
      C     REASON        ANDNE     RC2002
- 
+
      C                   ADD       1             Idx
      C                   MOVEL     'USR9838'     MsgIDXArr(Idx)
      C                   EVAL      GenError = 'Y'
- 
+
      C                   ELSE
- 
+
      C                   EVAL      MQMGR = QManagerUC
- 
+
      C                   ENDIF
- 
+
       **  DISCONNECT from the MQ Manager
       *
      C**********         CALL      'QMQM'                                                   MD041126
@@ -180,18 +180,18 @@
      C                   Z-ADD     *ZERO         OCODE                                      MD041126
      C                   Z-ADD     *ZERO         REASON                                     MD041126
      C                   CALLP     MQDISC( HCONN : OCODE : REASON )                         MD041126
- 
+
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
       /EJECT
       *****************************************************************
       *  *INZSR - Program Initialisation routine                      *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       ** System value to be processed
      C                   PARM                    SystemValue
       ** Value entered by user
@@ -204,9 +204,9 @@
      C                   PARM                    Idx
       ** Error message ID (array)
      C                   PARM                    MsgIDXArr
- 
+
      C                   EVAL      GenError = ' '
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -218,14 +218,14 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   EVAL      GenError = 'Y'
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
- 
+
      C                   ENDSR

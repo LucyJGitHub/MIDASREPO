@@ -225,7 +225,7 @@
       *                                                               *
       *  260173 - Introduce new parameter in DEAM API to be used in   *
       *           the validation of action code during reversal       *
-      *           authorization. Apply fix 258724. (Recompile)        *
+      *           authorization. Apply fix 258724.                    *
       *  MD054696 - Journal Entries Avoid Shadow Postings Update.     *
       *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *
       *  MD054538 - Buffer issue on Rollover Maintenance              *

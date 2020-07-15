@@ -84,7 +84,7 @@
       *                                                               *
       *  260173 - Introduce new parameter in DEAM API to be used in   *
       *           the validation of action code during reversal       *
-      *           authorization. Apply fix 258724. (Recompile)        *
+      *           authorization. Apply fix 258724.                    *
       *  MD054906 - CBS-2882 fix extenstion for Principal Change      *
       *             Schedule                                          *
       *           - Passed ACTRJ to IRSIRSR and IRCIRSR to match      *

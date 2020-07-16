@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD034776           Date 10Jul15               *
-      *  Prev Amend No. CLE164             Date 18Aug14               *
+      *  Last Amend No. MD055652           Date 25Jun20               *
+      *  Prev Amend No. MD034776           Date 10Jul15               *
+      *                 CLE164             Date 18Aug14               *
       *                 CDL094             Date 01Sep14               *
       *                 MD025009B          Date 12May14               *
       *                 MD024398           Date 11May14               *
@@ -90,6 +91,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055652 - Error LEM0215 occurs when authorising a manual    *
+      *             repayment attached to PD. In the codes introduced *
+      *             by CLE164, add condition to check if expected     *
+      *             details are blank before executing SR/ValidateTr. *
+      *           - Save pay settlement details for MR with PTYP 67   *
+      *             in new settlement details DS so projections are   *
+      *             generated for discount part sold.                 *
       *  MD034776 - Reverse AR805843 to consider negative interest    *
       *             rate.                                             *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
@@ -800,6 +808,7 @@
 
      C                   If        DDACTN <> 'R'                                              CLE164
      C                             and CLE134 = 'Y'                                           CLE164
+     C                             AND DDEVAL = *BLANKS AND DDESEQ = *BLANKS                MD055652
      C                   EXSR      ValidateTr                                                 CLE164
      C                   EndIf                                                                CLE164
                                                                                               CLE164
@@ -1944,6 +1953,7 @@
       *
      C*****MR_PTYP       IFEQ      66                                                        BUG4502
      C     V_MRPTYP      IFEQ      66                                                        BUG4502
+     C     V_MRPTYP      OREQ      67                                                       MD055652
      C     CLE005        OREQ      'Y'
      C*****MR_PTYP       ANDEQ     69                                                        BUG4502
      C     V_MRPTYP      ANDEQ     69                                                        BUG4502
@@ -1957,6 +1967,7 @@
       *
      C*****MR_PTYP       IFEQ      66                                                        BUG4502
      C     V_MRPTYP      IFEQ      66                                                        BUG4502
+     C     V_MRPTYP      OREQ      67                                                       MD055652
      C     CLE005        OREQ      'Y'
      C*****MR_PTYP       ANDEQ     69                                                        BUG4502
      C     V_MRPTYP      ANDEQ     69                                                        BUG4502

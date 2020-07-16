@@ -15,8 +15,9 @@
 /*                                                                   */                 /*CGO001AA*/
 /*       (c) Finastra International Limited 2009                     */
 /*                                                                   */
-/*       Last Amend No. MD055146           Date 04Feb20              */
-/*       Prev Amend No. MD052296           Date 26Nov18              */
+/*       Last Amend No. MD055751           Date 07Jun20              */
+/*       Prev Amend No. MD055146           Date 04Feb20              */
+/*                      MD052296           Date 26Nov18              */
 /*                      MD046248           Date 27Oct17              */
 /*                      AR1097467          Date 17Apr13              */
 /*                      CGO001AA           Date 06Aug12              */
@@ -25,6 +26,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD055751 - Global Sync Issue for GOC0100 during COB         */
+/*                  Include zone in the creation of SQL view.        */
+/*                  Applied for MD-56240.                            */
 /*       MD055146 - Failed MXC004802 seq. 00001 and others           */
 /*                  Increase Branches to 900.                        */
 /*       MD052296 - Problems caused by use of special characters     */
@@ -86,7 +90,10 @@
              DCL        VAR(&STM4)     TYPE(*CHAR) LEN(6) VALUE(' FROM ')               /*MD055146*/
              DCL        VAR(&STM5)     TYPE(*CHAR) LEN(1) VALUE(')')                    /*MD055146*/
                                                                                         /*MD055146*/
-
+             DCL        VAR(&STM6)     TYPE(*CHAR) LEN(4) VALUE('''')                   /*MD055751*/
+             DCL        VAR(&FSQLVIEW) TYPE(*CHAR) LEN(10) VALUE('GOFILE')              /*MD055751*/
+             DCL        VAR(&OPNQRY2)  TYPE(*CHAR) LEN(1000)                            /*MD055751*/
+                                                                                        /*MD055751*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2009')
@@ -229,12 +236,16 @@
 /**********               &ZLFOVR &GLFOVR &GLFCLO &ZLFDLO &GLFDLO +  */                 /*MD055146*/
 /**********               &OPNQRY &ZLF &BLFD &BLSY)                  */      /*BG1364*/ /*MD055146*/
                                                                                         /*MD055146*/
+/**********  CALL       PGM(GOGETSYNX) PARM(&GPF &ZOZONE &GLFU       */                 /*MD055751*/
+/**********               &ZLFOVR &GLFOVR &GLFCLO &ZLFDLO &GLFDLO +  */                 /*MD055751*/
+/**********               &OPNQRY &ZLF &BLFD &BLSY &GFGPF &GFGBRC +  */                 /*MD055751*/
+/**********               &GFGLF)                                    */    /*MD055146*/ /*MD055751*/
+                                                                                        /*MD055146*/
              CALL       PGM(GOGETSYNX) PARM(&GPF &ZOZONE &GLFU +
                           &ZLFOVR &GLFOVR &GLFCLO &ZLFDLO &GLFDLO +
                           &OPNQRY &ZLF &BLFD &BLSY &GFGPF &GFGBRC +
-                          &GFGLF)                                                       /*MD055146*/
-                                                                                        /*MD055146*/
-
+                          &GFGLF &FSQLVIEW &OPNQRY2)                                    /*MD055751*/
+                                                                                        /*MD055751*/
 /* End if bulk synchronisation not done for this file*/
 /**********  IF         COND(&BLSY ¬= 'Y') THEN(DO)                                     /*MD052296*/
              IF         COND(&BLSY *NE 'Y') THEN(DO)                                    /*MD052296*/
@@ -266,9 +277,19 @@
                           &STM_STR3 '*CLEAR')                                           /*MD055146*/
                                                                                         /*MD055146*/
              CHGVAR     VAR(&STM_STR1) VALUE(&STM1 *CAT &GFGPF)                         /*MD055146*/
+/**********  CHGVAR     VAR(&STM_STR2) VALUE(&STM2 *CAT &GFGBRC *CAT + */               /*MD055751*/
+/**********               &STM3 *CAT 'A8BRCD' *CAT &STM4 *CAT +        */               /*MD055751*/
+/**********               'GZSDBRCHPD' *CAT &STM5)                     */  /*MD055146*/ /*MD055751*/
+                                                                                        /*MD055751*/
+                                                                                        /*MD055146*/
              CHGVAR     VAR(&STM_STR2) VALUE(&STM2 *CAT &GFGBRC *CAT +
                           &STM3 *CAT 'A8BRCD' *CAT &STM4 *CAT +
-                          'GZSDBRCHPD' *CAT &STM5)                                      /*MD055146*/
+                          'GZSDBRCHPD')                                                 /*MD055751*/
+                                                                                        /*MD055751*/
+             CHGVAR     VAR(&STM_STR3) VALUE(&STM2 *CAT 'A8ZONE = ' +
+                          *CAT &STM6 *TCAT %TRIMR(&ZOZONE) *TCAT &STM6  +
+                          *CAT &STM5)                                                   /*MD055751*/
+                                                                                        /*MD055751*/
                                                                                         /*MD055146*/
              CALL       PGM(UTWRTSQL2) PARM(&STM_STR1 &STM_STR2 +
                           &STM_STR3 '*WRITE')                                           /*MD055146*/
@@ -276,9 +297,15 @@
                           COMMIT(*NONE)                                                 /*MD055146*/
              MONMSG     MSGID(SQL9010)                                                  /*MD055146*/
                                                                                         /*MD055146*/
-             OVRDBF     FILE(GOFILE) TOFILE(&GFGLF) SHARE(*YES) +
-                          OPNSCOPE(*JOB)                                                /*MD055146*/
+/**********  OVRDBF     FILE(GOFILE) TOFILE(&GFGLF) SHARE(*YES) +      */               /*MD055751*/
+/**********               OPNSCOPE(*JOB)                               */  /*MD055146*/ /*MD055751*/
                                                                                         /*MD055146*/
+                                                                                        /*MD055751*/
+             CALL       PGM(QCMDEXC) PARM(&OPNQRY2 1000)                                /*MD055751*/
+                                                                                        /*MD055751*/
+             OVRDBF     FILE(&GFGLF) TOFILE(GOFILE) +
+                          SHARE(*YES) OPNSCOPE(*JOB)                                    /*MD055751*/
+                                                                                        /*MD055751*/
              OVRDBF     FILE(&GPF) SEQONLY(*YES 4000)
              OVRDBF     FILE(GPGDRPPD) SEQONLY(*YES 5000)
 /* Filter duplicates                                                                  */
@@ -292,7 +319,9 @@
              CALL       PGM(QCMDEXC) PARM(&ZLFDLO 60)
 /**********  CALL       PGM(QCMDEXC) PARM(&GLFDLO 60)                */                 /*MD055146*/
                                                                                         /*MD055146*/
-             DLTOVR     FILE(GOFILE)                                                    /*MD055146*/
+/**********  DLTOVR     FILE(GOFILE)                                 */    /*MD055146*/ /*MD055751*/
+             CLOF       OPNID(GOFILE)                                                   /*MD055751*/
+             DLTOVR     FILE(&GFGLF)                                                    /*MD055751*/
                                                                                         /*MD055146*/
 
 /* error */

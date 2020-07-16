@@ -39,8 +39,13 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR324886           Date 07Apr20               *
-      *  Prev Amend No. HUT103             Date 03Apr20               *
+      *  Last Amend No. 248698             Date 01Jun20               *
+      *  Prev Amend No. 248184             Date 01Jun20               *
+      *                 263929             Date 01Jun20               *
+      *                 MD051520           Date 01Jun20              *
+      *                 263661             Date 01Jun20               *
+      *                 AR324886           Date 07Apr20               *
+      *                 HUT103             Date 03Apr20               *
       *                 MD052583           Date 22Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CSE110             Date 06Oct17               *
@@ -238,6 +243,23 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  248698 - Rounding discrepancies on some SE reports. Applied  *
+      *           fix 228682.                                         *
+      *  228682 - Recompiled due to ZCNSDZ1 changes. Applied 176594.  *
+      *  248184 - Wrong security withholding tax calculation.  If     *
+      *           S01496, use 4 dec places for tax rate else use 2.   *
+      *  263929 - Maturity position settlement with 0 nominal         *
+      *           position and 0 amount due was generated.            *
+      *           Applied fix of 238137. Does not include reopen fix. *
+      *           Check if Amount Due is zero for none-generation of  *
+      *           record.                                             *
+      *           Do not write maturity position settlement for PM    *
+      *           customer having a position of zero.                 *
+      *  MD051520 - System generates duplicate and incorrect position *
+      *             settlement.                                       *
+      *  263661 - Non-generation of event type 'MT' & 'CP' for        *
+      *           customer side in POSETD when maturity date & coupon *
+      *           date falls in holiday.                              *
       *  AR324886 - Implement 4-eyes processing in Position           *
       *             Settlement Maintenance.                           *
       *             (Upgrade as required by HUT105)                   *
@@ -665,6 +687,8 @@
      F            CDEPPDF                           KRENAMECDEPP0         189942
      FCDEPS   IF  E           K        DISK                               189942
      F            CDEPPDF                           KRENAMECDEPPS         189942
+     FCDEPL4  IF  E           K        DISK                                                   263661
+     F            CDEPPDF                           KRENAMECDEPPL4                            263661
      FSECDEPL5IF  E           K        DISK                               189942
      F            CDEPPDF                           KRENAMECDEPP5         189942
      FPOSETA  O   E                    DISK         KINFDS POSADS
@@ -929,6 +953,8 @@
      I              RECI                            CDRECI                189942
      ICDEPPS                                                              189942
      I              RECI                            CDRECI                189942
+     ICDEPPL4                                                                                 263661
+     I              RECI                            CDRECI                                    263661
      ICDEPP5                                                              189942
      I              RECI                            CDRECI                189942
       *                                                                                       CSE037
@@ -1468,6 +1494,13 @@
      C*
      C* READ ACTION FILE OF SECURITY ACTIONS
      C*
+     C                     MOVE *BLANKS   WWCNUM                                              263661
+     C                     MOVE *BLANKS   WWPTFR                                              263661
+     C                     MOVE *BLANKS   WWTDSS                                              263661
+     C                     MOVE *BLANKS   WWCDPT                                              263661
+     C                     MOVE *BLANKS   WWCDMK                                              263661
+     C                     MOVE *BLANKS   WWCDPA                                              263661
+      *                                                                                       263661
      C                     READ SECAC                    89
      C           BGPFMG    IFEQ 'Y'                                       S01486
      C           BGN4ST    OREQ 'Y'                                       CPB001
@@ -2115,14 +2148,41 @@
      C*                                                                   189942
      C* SET LOWER LIMITS ON CURRENT POSITION FILE. LF/CDEPS               189942
      C*                                                                   189942
+     C                     EXSR SECTIN                                                        263661
+     C           SAAT      IFEQ 'MA'                                                          263661
+     C           SAED      ANDLTBJDNWD                                                      MD051520
+     C           SAAT      OREQ 'CP'                                                          263661
+     C           MATY      ANDEQSAED                                                          263661
+     C           SAED      ANDLTBJDNWD                                                      MD051520
+     C           PMCPSS    SETLLCDEPL4                                                        263661
+     C                     ELSE                                                               263661
      C           PMCPSS    SETLLCDEPS                                     189942
+     C                     ENDIF                                                              263661
      C                     END                             E1             S01486
      C*                                                                   S01486
      C* READ CURRENT POSITIONS BY SECURITY FILE                           S01486
      C*                                                                   S01486
      C           RDNEXT    TAG                                            S01486
      C***********PMCPSS    READEPMCPSSLL                 76        S01486 189942
+     C           SAAT      IFEQ 'MA'                                                          263661
+     C           SAED      ANDLTBJDNWD                                                      MD051520
+     C           SAAT      OREQ 'CP'                                                          263661
+     C           MATY      ANDEQSAED                                                          263661
+     C           SAED      ANDLTBJDNWD                                                      MD051520
+     C           PMCPSS    READECDEPL4                   76                                   263661
+     C           *IN76     IFEQ '0'                                                           263661
+     C           CDCN      ANDEQWWCNUM                                                        263661
+     C           PTFR      ANDEQWWPTFR                                                        263661
+     C           CDSN      ANDEQWWTDSS                                                        263661
+     C           CDPT      ANDEQWWCDPT                                                        263661
+     C           CDMK      ANDEQWWCDMK                                                        263661
+     C           CDPA      ANDEQWWCDPA                                                        263661
+     C                     Z-ADD0         CDNV                                                263661
+     C                     GOTO ENDPTF                                                        263661
+     C                     ENDIF                                                              263661
+     C                     ELSE                                                               263661
      C           PMCPSS    READECDEPS                    76               189942
+     C                     ENDIF                                                              263661
      C*                                                                   S01486
      C* DO WHILE RECORDS EXIST FOR THE SECURITY                           S01486
      C*                                                                   S01486
@@ -2134,6 +2194,9 @@
      C                     MOVE CDCN      WWCNUM                          189942
      C                     MOVE PTFR      WWPTFR                          189942
      C                     MOVE CDSN      WWTDSS                          189942
+     C                     MOVE CDPT      WWCDPT                                              263661
+     C                     MOVE CDMK      WWCDMK                                              263661
+     C                     MOVE CDPA      WWCDPA                                              263661
       *                                                                                       CGL031
       ** Place the retrieve CDCN,CDPA into a work variable                                    CGL031
       ** to be used in ZATXCLPI/ZATXCLJA later.                                               CGL031
@@ -5406,17 +5469,20 @@
      C** DO NOT OUPUT RECORDS IF AMOUNT DUE IS ZERO
      C*
      C********** PAMD      CABEQ0         ENDW02                          S01486
-     C           BGPFMG    IFEQ 'Y'                                       S01486
-     C           BGN4ST    OREQ 'Y'                                       CPB001
-     C           PAMD      IFEQ 0                                         S01486
-     C           PEVT      ANDNE'MT'                                      S01486
-     C                     GOTO ENDW02                                    S01486
-     C                     END                                            S01486
-     C                     ELSE                                           S01486
-     C           PAMD      IFEQ 0                                         S01486
-     C                     GOTO ENDW02                                    S01486
-     C                     END                                            S01486
-     C                     END                                            S01486
+      *                                                                                       263929
+     C           PAMD      CABEQ0         ENDW02                                              263929
+      *                                                                                       263929
+     C********** BGPFMG    IFEQ 'Y'                                                    S01486 263929
+     C********** BGN4ST    OREQ 'Y'                                                    CPB001 263929
+     C********** PAMD      IFEQ 0                                                      S01486 263929
+     C********** PEVT      ANDNE'MT'                                                   S01486 263929
+     C**********           GOTO ENDW02                                                 S01486 263929
+     C**********           END                                                         S01486 263929
+     C**********           ELSE                                                        S01486 263929
+     C********** PAMD      IFEQ 0                                                      S01486 263929
+     C**********           GOTO ENDW02                                                 S01486 263929
+     C**********           END                                                         S01486 263929
+     C**********           END                                                         S01486 263929
       *                                                                                       260331
      C           WSRECI    IFEQ 'R'                                                           260331
      C           PPRE      IFEQ 'R'                                                           260331
@@ -7057,13 +7123,23 @@
       *                                                                   S01447
       *** calculate amount deducted at source                             S01447
       *                                                                   S01447
+     C           S01496    IFEQ 'Y'                                                           248184
+     C           PAMD      MULT UTXRSR    WTASO  204                                          248184
+     C           WTASO     DIV  100       TASO      H                                         248184
+     C                     ELSE                                                               248184
      C           UTXRSR    DIV  100       URATE   54                      S01447
      C           PAMD      MULT URATE     TASO      H                     S01447
+     C                     ENDIF                                                              248184
       *                                                                   S01447
       *** calculate amount deducted refundable                            S01447
       *                                                                   S01447
+     C           S01496    IFEQ 'Y'                                                           248184
+     C           PAMD      MULT UTXRRF    WTASR  204                                          248184
+     C           WTASR     DIV  100       TASR      H                                         248184
+     C                     ELSE                                                               248184
      C           UTXRRF    DIV  100       URATE                           S01447
      C           PAMD      MULT URATE     TASR      H                     S01447
+     C                     ENDIF                                                              248184
       *                                                                   S01447
       *** calculate amount deducted by user                               S01447
       *                                                                   S01447
@@ -7090,10 +7166,15 @@
      C           UDLOR     OREQ 'N'                                       S01447
      C           CLOC      ANDNEUBRLOC                                    S01447
       *                                                                   S01447
+     C           S01496    IFEQ 'Y'                                                           248184
+     C           PAMD      MULT UTXRUS    WTAUS  204                                          248184
+     C           WTAUS     DIV  100       TAUS      H                                         248184
+     C                     ELSE                                                               248184
      C           UTXRUS    DIV  100       URATE                           S01447
      C/COPY WNCPYSRC,SE2400C060
      C           PAMD      MULT URATE     TAUS      H                     S01447
      C/COPY WNCPYSRC,SE2400C061
+     C                     ENDIF                                                              248184
      C                     END                             *E2            S01447
       *                                                                   S01447
      C                     END                             *E1            S01447

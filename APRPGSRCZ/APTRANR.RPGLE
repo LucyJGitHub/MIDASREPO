@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054906           Date 15Jan20               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. 260173             Date 22May20               *
+      *  Prev Amend No. MD054906           Date 15Jan20               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD052550           Date 07Jan19               *
       *                 MD044880           Date 15Jan18               *
       *               . MD046248           Date 27Oct17               *
@@ -81,6 +82,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260173 - Introduce new parameter in DEAM API to be used in   *
+      *           the validation of action code during reversal       *
+      *           authorization. Apply fix 258724.                    *
       *  MD054906 - CBS-2882 fix extenstion for Principal Change      *
       *             Schedule                                          *
       *           - Passed ACTRJ to IRSIRSR and IRCIRSR to match      *
@@ -530,6 +534,7 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
+     C                   PARM      *BLANK        @ACTRV            1                          260173
 
       * GL Collateral Details
 

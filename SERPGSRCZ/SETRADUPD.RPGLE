@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 258848             Date 22May20               *
+      *  Prev Amend No. 248683             Date 22May20               *
+      *                 CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD020922           Date 26Jun13               *
       *                 AR1092084          Date 03Apr13               *
       *                 AR632291           Date 24Aug10               *
@@ -120,6 +122,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  258848 - Corrected incorporation of fix 230335.              *
+      *  248683 - 'B' record in TRADSDX2 is not being written during  *
+      *           TRADE REPAIR. Amended program to write 'B' record to*
+      *           said file as it does to TRADSDX1. Amended program to*
+      *           check whether TRADSDX2 was already written by SE1806*
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD020922 - Serious Midas error encountered when authorising  *
@@ -651,6 +658,11 @@
      D XDDEUTX         S             16A                                                      235112
      D XEUTX           S             13P 0                                                    235112
      D XEUTS           S             13P 0                                                    235112
+      *                                                                                       248683
+      ** Flag for Writing to the TRADSDX2 File                                                248683
+      *                                                                                       248683
+     D FLAG2XA         S              1A                                                      248683
+     D FLAG2XB         S              1A                                                      248683
                                                                                               CGL031
      IMUSERDDF
      I              RECI                        MUSR_RECI
@@ -1082,10 +1094,10 @@
      C                   MOVEL     TRADSF        Z#BSTS
      C                   MOVEL     TRADSF        B_TRADS
      C                   MOVEL     RECI          PREVREC           1                          179084
-     C     B_RECI        IFNE      'R'                                                        230335
-     C     B_LCD         ANDNE     BJRDNB                                                     230335
-     C                   MOVEL     *BLANK        Z#BSTS                                       230335
-     C                   ENDIF                                                                230335
+     C*****B_RECI        IFNE      'R'                                                 230335 258848
+     C*****B_LCD         ANDNE     BJRDNB                                              230335 258848
+     C**********         MOVEL     *BLANK        Z#BSTS                                230335 258848
+     C**********         ENDIF                                                         230335 258848
 
       ** SET TRADE FIELDS ON INSERT
 
@@ -1355,6 +1367,10 @@
      C                   MOVEL     TRADSF        Z#BSTS
      C                   MOVEL     TRADSF        B_TRADS
      C                   MOVEL     RECI          PREVREC           1                          179084
+     C     B_RECI        IFNE      'R'                                                        258848
+     C     B_LCD         ANDNE     BJRDNB                                                     258848
+     C                   MOVEL     *BLANK        Z#BSTS                                       258848
+     C                   ENDIF                                                                258848
 
       ** Store original value of CHTP before changing to 'P'                                  CRE020
                                                                                               CRE020
@@ -1372,7 +1388,10 @@
 
       ** UPDATE 'AFTER' STATUS
 
+     C     B_RECI        IFEQ      'L'                                                        258848
+     C     B_RECI        OREQ      'P'                                                        258848
      C                   MOVEL     TRADSF        Z#ASTS
+     C                   ENDIF                                                                258848
       *
      C                   ENDSR
      C*****************************************************************
@@ -4495,9 +4514,21 @@
      C                   ELSE                                                                 240736
      C                   IF        PMode = 'UPC' or                                           CSE045
      C                             PMode = 'RPR'                                              CSE045
+      * Retrieve flag from data area whether SE1806 already wrote a record in                 248683
+      * TRADSDX2                                                                              248683
+     C                   CALL      'SECDTARA'                                                 248683
+     C                   PARM      'SETRADUPD'   PGMNAM           10                          248683
+     C                   PARM      *BLANKS       WRTFLG            1                          248683
+      * If Write Flag is not 'Y' then go through normal processing                            248683
+     C                   IF        WRTFLG <> 'Y'                                              248683
                                                                                               238859
      C**********         IF        A_CHTP = 'A'                                        238859 240736
      C                   EXSR      UTRADSX2A                                                  CSE045
+     C                   ELSE                                                                 248683
+      * 99 Write Flag is 'Y' then Update Timestamp                                            248683
+     C                   EVAL      T2WHEN = 'A'                                               248683
+     C                   EXSR      SRUpdStp                                                   248683
+     C                   ENDIF                                                                248683
      C                   ENDIF                                                                CSE045
      C                   ENDIF                                                                CSE045
 
@@ -4618,13 +4649,38 @@
                                                                                               210517
      C                   ELSE                                                                BUG7975
       ** Get the user define entry for Tradsdx2 for amend                                    BUG7975
+      * Retrieve flag from data area whether SE1806 already wrote a record in                 248683
+      * TRADSDX2                                                                              248683
+     C                   CALL      'SECDTARA'                                                 248683
+     C                   PARM      'SETRADUPD'   PGMNAM           10                          248683
+     C                   PARM      *BLANKS       WRTFLG            1                          248683
+      * If Write Flag is not 'Y' then go through normal processing                            248683
+     C                   IF        WRTFLG <> 'Y'                                              248683
                                                                                              BUG7975
      C                   EXSR      UTRADSX2A                                                 BUG7975
+     C                   ELSE                                                                 248683
+      * If Write Flag is 'Y' then Update Timestamp                                            248683
+     C                   EVAL      T2WHEN = 'A'                                               248683
+     C                   EXSR      SRUpdStp                                                   248683
+     C                   ENDIF                                                                248683
+      *                                                                                       248683
                                                                                              BUG7975
      C                   IF        CustClass = 'S' or                                        BUG7975
      C                             CustClass = 'D'                                           BUG7975
      C                   IF        CSW003 = 'Y'                                              BUG7975
+      * Retrieve flag from data area whether SE1806 already wrote a record in                 248683
+      * TRADSDX2                                                                              248683
+     C                   CALL      'SECDTARA'                                                 248683
+     C                   PARM      'SETRADUPD'   PGMNAM           10                          248683
+     C                   PARM      *BLANKS       WRTFLG            1                          248683
+      * If Write Flag is not 'Y' then go through normal processing                            248683
+     C                   IF        WRTFLG <> 'Y'                                              248683
      C                   EXSR      UTRADSX2B                                                 BUG7975
+     C                   ELSE                                                                 248683
+      * If Write Flag is 'Y' then Update Timestamp                                            248683
+     C                   EVAL      T2WHEN = 'B'                                               248683
+     C                   EXSR      SRUpdStp                                                   248683
+     C                   ENDIF                                                                248683
      C                   ENDIF                                                               BUG7975
      C                   ENDIF                                                               BUG7975
                                                                                              BUG7975
@@ -5238,6 +5294,7 @@
       ** Update Trade Extenstion 2 record                                                     210517
                                                                                               210517
      C                   IF        PMode = 'UPC'                                              210517
+     C                              or PMode = 'RPR'                                          248683
                                                                                               238859
      C**********         IF        A_CHTP = 'I'                                        238859 240736
      C                   EVAL      PScreen = 'B'                                              210517
@@ -5250,9 +5307,23 @@
      C                   ELSE                                                                 240736
      C                   IF        PMode = 'UPC' or                                           CSE045
      C                             PMode = 'RPR'                                              CSE045
+      * Retrieve flag from data area whether SE1806 already wrote a record in                 248683
+      * TRADSDX2                                                                              248683
+     C                   CALL      'SECDTARA'                                                 248683
+     C                   PARM      'SETRADUPD'   PGMNAM           10                          248683
+     C                   PARM      *BLANKS       WRTFLG            1                          248683
+      * If Write Flag is not 'Y' then go through normal processing                            248683
+     C                   IF        WRTFLG <> 'Y'                                              248683
                                                                                               238859
      C**********         IF        A_CHTP = 'A'                                        238859 240736
      C                   EXSR      UTRADSX2B                                                  CSE045
+     C                   ELSE                                                                 248683
+      * If Write Flag is 'Y' then Update Timestamp                                            248683
+     C                   EVAL      T2WHEN = 'B'                                               248683
+     C                   EXSR      SRUpdStp                                                   248683
+     C                   ENDIF                                                                248683
+      *                                                                                       248683
+
      C                   ENDIF                                                                CSE045
      C                   ENDIF                                                                CSE045
 
@@ -5279,6 +5350,8 @@
      C                   MOVEL     ' '           T2WHEN                                       CSE045
      C                   END                                                                  CSE045
      C     TRADSY2K      CHAIN     TRADSDD2                           99                      CSE045
+      *                                                                                       248683
+     C     FLAG2XA       IFNE      'Y'                                                        248683
       *                                                                                       CSE045
       ** DATABASE ERROR                                                                       CSE045
       ** IF INSERT, BUT RECORD PRESENT ALREADY                                                CSE045
@@ -5293,6 +5366,7 @@
      C                   MOVEL     '856'         DBASE                          * DBERR 856*  CSE045
      C                   EXSR      SRERR                                        ************  CSE045
      C                   ENDIF                                                                CSE045
+     C                   ENDIF                                                                248683
       *                                                                                       CSE045
       ** Update with details from valid trade extension record                                CSE045
       *                                                                                       CSE045
@@ -5313,6 +5387,7 @@
      C                   EVAL      T2TMST = TimeStamp                                        BUG3947
      C     *IN99         IFEQ      '1'                                                        CSE045
      C                   WRITE     TRADSDD2                                                   CSE045
+     C                   EVAL      FLAG2XA = 'Y'                                              248683
      C                   ELSE                                                                 CSE045
      C                   UPDATE    TRADSDD2                                                   CSE045
      C                   ENDIF                                                                CSE045
@@ -5331,6 +5406,7 @@
       *                                                                                       CSE045
      C                   MOVEL     'B'           T2WHEN                                       CSE045
      C     TRADSY2K      CHAIN     TRADSDD2                           99                      CSE045
+     C     FLAG2XB       IFNE      'Y'                                                        248683
       *                                                                                       CSE045
       ** DATABASE ERROR                                                                       CSE045
       ** IF INSERT, BUT RECORD PRESENT ALREADY                                                CSE045
@@ -5341,10 +5417,12 @@
      C     A_CHTP        ORNE      'I'                                                        CSE045
      C     *IN99         ANDEQ     '1'                                                        CSE045
      C                   MOVEL     A_TDRF        DBKEY                                        CSE045
-     C                   MOVEL     'TRADSDX1'    DBFILE                         ************  CSE045
+     C**********         MOVEL     'TRADSDX1'    DBFILE                         *******CSE045 248683
+     C                   MOVEL     'TRADSDX2'    DBFILE                         ************  248683
      C                   MOVEL     '857'         DBASE                          * DBERR 857*  CSE045
      C                   EXSR      SRERR                                        ************  CSE045
      C                   ENDIF                                                                CSE045
+     C                   ENDIF                                                                248683
       *                                                                                       CSE045
       ** If depots are different                                                              CSE045
       ** Update with details from valid trade extension 'B' record                            CSE045
@@ -5366,6 +5444,7 @@
      C                   EVAL      T2TMST = TimeStamp                                        BUG3947
      C     *IN99         IFEQ      '1'                                                        CSE045
      C                   WRITE     TRADSDD2                                                   CSE045
+     C                   EVAL      FLAG2XB = 'Y'                                              248683
      C                   ELSE                                                                 CSE045
      C                   UPDATE    TRADSDD2                                                   CSE045
      C                   ENDIF                                                                CSE045
@@ -6461,6 +6540,24 @@
      C                   ENDSR                                                                CRE020
       ****************************************************************                        CRE020
       ****************************************************************                        CSD015
+      *****************************************************************                       248683
+      *                                                               *                       248683
+      *  SRUpdStp - Update TimeStamp                                  *                       248683
+      *                                                               *                       248683
+      *****************************************************************                       248683
+     C     SRUpdStp      BEGSR                                                                248683
+      ** Search for records and update Time Stamp                                             248683
+     C     TRADSY2K      CHAIN     TRADSDY2                                                   248683
+      ** Update TimeStamp                                                                     248683
+     C                   EVAL      T2TMST = TimeStamp                                         248683
+      *                                                                                       248683
+      ** Update Record                                                                        248683
+      *                                                                                       248683
+     C                   IF        %found(TRADSDY2)                                           248683
+     C                   UPDATE    TRADSDD2                                                   248683
+     C                   ENDIF                                                                248683
+     C                   ENDSR                                                                248683
+      ****************************************************************                        248683
       /EJECT
       *****************************************************************
       *                                                               *

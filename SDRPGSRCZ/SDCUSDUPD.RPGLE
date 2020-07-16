@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055210           Date 03Feb20               *
-      *  Prev Amend No. MD054883           Date 23Dec19               *
+      *  Last Amend No. 252069             Date 22May20               *
+      *  Prev Amend No. MD055210           Date 03Feb20               *
+      *                 MD054883           Date 23Dec19               *
       *                 MD053436           Date 21Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
@@ -148,6 +149,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  252069 - Database error message occurs when there is a       *
+      *           record locking issue.                               *
       *  MD055210 - Serious midas error encountered in CUSD           *
       *  MD054883 - CUSD Reverse API had an increased runtime         *
       *  MD053436 - Unable to perform end to end testing for          *
@@ -348,6 +351,7 @@
 
       * UPD : Midas SD Customer Details Master File
      FSDCUSTL0  UF A E           K DISK    COMMIT
+     F                                     INFDS(DSPDS)                                       252069
      F/COPY WNCPYSRC,SDH00749
 
       ** UPD : Midas SD Customer Ext Details File                                             CGL132
@@ -1091,6 +1095,11 @@
      D  LCHGDA                 1     30
      D  LCHD                   1     30P 0 INZ(0)
      D                                     DIM(10)                              LIAB.CHG. DTE ARR
+      *                                                                                       252069
+      ** File information data structure                                                      252069
+      *                                                                                       252069
+     DDSPDS            DS                                                                     252069
+     D STATUS            *STATUS                                                              252069
                                                                                               CGL132
       ** Parameter variables for AOSVALR0 string                                              CGL132
      D SValK1          S             20                                                       CGL132
@@ -3719,7 +3728,9 @@
 
       ** ACCESS CUSTOMER DETAILS RECORD
 
-     C     A_CUCUST      CHAIN     SDCUSTL0                           99
+     C*****A_CUCUST      CHAIN     SDCUSTL0                           99                      252069
+     C     A_CUCUST      CHAIN     SDCUSTL0                           9997                    252069
+     C                   EXSR      ChkChain                                                   252069
 
       ** DATABASE ERROR
 
@@ -5221,7 +5232,9 @@
 
       ** ACCESS CUSTOMER
 
-     C     A_CUCUST      CHAIN     SDCUSTL0                           99
+     C*****A_CUCUST      CHAIN     SDCUSTL0                           99                      252069
+     C     A_CUCUST      CHAIN     SDCUSTL0                           9997                    252069
+     C                   EXSR      ChkChain                                                   252069
 
       ** DATABASE ERROR
 
@@ -5494,7 +5507,9 @@
                                                                                               CSD007
       ** ACCESS CUSTOMER                                                                      CSD007
                                                                                               CSD007
-     C     A_CUCUST      CHAIN     SDCUSTL0                           99                      CSD007
+     C*****A_CUCUST      CHAIN     SDCUSTL0                           99               CSD007 252069
+     C     A_CUCUST      CHAIN     SDCUSTL0                           9997                    252069
+     C                   EXSR      ChkChain                                                   252069
                                                                                               CSD007
       ** DATABASE ERROR                                                                       CSD007
                                                                                               CSD007
@@ -5640,7 +5655,9 @@
                                                                                               CSD007
       ** ACCESS CUSTOMER                                                                      CSD007
                                                                                               CSD007
-     C     A_CUCUST      CHAIN     SDCUSTL0                           99                      CSD007
+     C*****A_CUCUST      CHAIN     SDCUSTL0                           99               CSD007 252069
+     C     A_CUCUST      CHAIN     SDCUSTL0                           9997                    252069
+     C                   EXSR      ChkChain                                                   252069
                                                                                               CSD007
       ** DATABASE ERROR                                                                       CSD007
                                                                                               CSD007
@@ -6853,6 +6870,20 @@
      C                   ENDIF                                                                CGP001
                                                                                               CGP001
      C                   ENDSR                                                                CGP001
+     C****************************************************************                        252069
+      /EJECT                                                                                  252069
+      ********************************************************************                    252069
+      *                                                                  *                    252069
+      * ChkChain - Exit SDCUSDUPD if there is record locking in SDCUSTL0 *                    252069
+      *                                                                  *                    252069
+      ********************************************************************                    252069
+     C     ChkChain      BEGSR                                                                252069
+     C     *IN97         IFEQ      *ON                                                        252069
+     C     STATUS        ANDEQ     01218                                                      252069
+     C                   EVAL      @@RTCD = '*LOCKED'                                         252069
+     C                   GOTO      EXIT                                                       252069
+     C                   ENDIF                                                                252069
+     C                   ENDSR                                                                252069
       ****************************************************************                        CGP001
       /EJECT
       *****************************************************************

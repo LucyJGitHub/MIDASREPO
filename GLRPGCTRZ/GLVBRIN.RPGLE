@@ -18,18 +18,25 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR850162           Date 01Jun20               *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BUG2948            Date 03Jun04               *
+      *                 BUG2948            Date 03Jun04               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.02 -----------------------------------------------*
       *                 CAP032  *CREATE    Date 26Apr99               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR850162 - Batches were not held due to wrong summary of     *
+      *             totals and wrong checking of multi-branch ind.    *
+      *             Applied fix 263436 and changed checking of        *
+      *             amended multi-branch ind. value only during       *
+      *             amendments. (Child: AR850163)                     *
+      *           - Applied for  MD-35908                             *      
       *  MD046248 - Finastra Rebranding                               *
       *  BUG2948 - Do not allow change from Y to N.                   *
       *  CAP032 - Conversion of Journal Batch Entry inputs into       *
@@ -170,6 +177,7 @@
                                                                                              BUG2948
      C     H_BRMBRB      IFEQ      'Y'                                                       BUG2948
      C     DDMBRB        ANDEQ     'N'                                                       BUG2948
+     C     DDACTN        ANDEQ     'A'                                                      AR850162
      C                   MOVE      'N'           DDMbrbOK                                    BUG2948
      C                   ADD       1             Idx                                         BUG2948
      C                   MOVEL     'DDMBRB'      FldNamXAr(Idx)                              BUG2948
@@ -203,6 +211,10 @@
                                                                                              BUG2948
       ** Multiple Branch Batch Indicator on File                                             BUG2948
      C                   PARM                    H_BRMBRB          1                         BUG2948
+      *                                                                                     AR850162
+      ** Action Code of Transaction                                                         AR850162
+      *                                                                                     AR850162
+     C                   PARM                    DDACTN            1                        AR850162
       *
       ** OUTPUT
       ** ======

@@ -19,12 +19,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD043182           Date 08Apr20               *
-      *  Prev Amend No. HUT111             Date 08Apr20               *
+      *  Last Amend No. AR996802           Date 22May20               *
+      *  PREV Amend No. AR706573           Date 22May20               *
+      *                 264059             Date 22May20               *
+      *                 250115             Date 22May20               *
+      *                 249578             Date 22May20               *
+      *                 MD043182           Date 08Apr20               *
+      *                 HUT111             Date 08Apr20               *
       *                 AR586601           Date 07Apr20               *
       *                 AR568653           Date 07Apr20               *
-      *                 AR324886           Date 07Apr20               *
-      *                 MD046248           Date 27Oct17               *
+      *                 AR324886           Date 07Apr20               *            
+      *                 MD046248           Date 27Oct17               *      
       *                 AR1095995          Date 08Apr13               *
       *                 AR1095995          Date 18Mar13               *
       *                 CLE148             Date 23Jul12               *
@@ -225,6 +230,24 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR996802 - Error 996 encountered when authorising Position   *
+      *             Settlement even if it is not yet authorised.      *
+      *             Add PTFR in POSETK during CHAIN in POSET.         *
+      *             (Child: AR996804).                                *
+      *  AR706573 - Position settlement records can be seen by        *
+      *             un-authorised users. Change checking of *IN81 from*
+      *             'Y' to '1' to process the branch/user validation. *
+      *             (Child: AR706574)                                 *
+      *  264059 - Position Settlements maintenance displays duplicate *
+      *           records.                                            *
+      *           Set AID to 'UP' when pagedown key is pressed and    *
+      *           *IN03 is off.                                       *
+      *  250115 - Restore fix 220952 and reposition endif line of     *
+      *           fix 249578.                                         *
+      *         - Reversal of the original projected account movement *
+      *           should be done when an authorized position          *
+      *           settlement is amended. Applied fix 234985.          *
+      *  249578 - Position settlements.                               *
       *  MD043182 - Inconsistency in Block Dr/Cr indicator for POST   *
       *  HUT111 - Corporate Action Blocked Credit Account             *
       *           (Upgrade HUT024 to FM2.1 SP22)                      *
@@ -232,7 +255,7 @@
       *            processing)                                        *
       *           Amendment of core hook SE0170FFP1                   *
       *           Amendment of core hook SE0170CCP5                   *
-      *           Addition of hooks: HUT111_001 to _008               *
+      *           Addition of hooks: HUT111_001 to _008               *      
       *  AR586601 - Unable to allocate a record in PSAUT. Fix is to   *
       *             put 'N' in position 53 of CHAIN opcode used only  *
       *             for validation and not update.                    *
@@ -242,7 +265,7 @@
       *             (Upgraded as required by AR324886)                *
       *  AR324886 - Implement 4-eyes processing in Position           *
       *             Settlement Maintenance.                           *
-      *             (Upgraded as required by HUT105)                  *
+      *             (Upgraded as required by HUT105)                  *      
       *  MD046248 - Finastra Rebranding                               *
       *  AR1095995C - Generate projected movement when authorising    *
       *               position settlements with no amendments during  *
@@ -680,7 +703,7 @@
      FPSAUT   UF  E           K        DISK         KCOMIT       A                          AR324886
       ** SE Position Settlement Authorisation detail                                        AR324886
       *                                                                                     AR324886
-     FPOSETA  UF  E                    DISK         KCOMIT
+     FPOSETA  UF  E                    DISK         KCOMIT      
       *                                                                   CSE023
       ** Withholding tax customer details for retrieve.                   CSE023
      FSDWTCSL1IF  E           K        DISK         KINFSR INFSR          CSE023
@@ -1484,6 +1507,7 @@
      C                     KFLD           PCPY
      C                     KFLD           PDUD
      C                     KFLD           PEVT
+     C                     KFLD           PTFR                                              AR996802
      C*                                                                   E16843
      C           POSTK1    KLIST                                          169067
      C                     KFLD           PBCA                            169067
@@ -2606,7 +2630,6 @@
      C                     MOVE *OFF      *IN11                           186400
      C**********           WRITEKEYINPUT                                                     BUG1992
      C           INFMSG    IFEQ *BLANKS                                   084981
-     C                     MOVELINF,1     INFMSG                          S01117
      C**********           MOVELINF,1     INFMSG                                     S01117 AR324886
      C                     MOVELINF,16    INFMSG                                            AR324886
      C                     ENDIF                                          084981
@@ -3546,13 +3569,14 @@
      C*                                                                   084981
      C           PBCA      IFNE SAVBA                                     084981
      C                     Z-ADD0         @ERR                            084981
-     C           *IN81     IFEQ 'Y'                                       084981
+     C********** *IN81     IFEQ 'Y'                                                  084981 AR706573
+     C           *IN81     IFEQ '1'                                                         AR706573
      C                     CALL 'ZVBBU'                                   084981
      C                     PARM PBCA      @ZBRCD  3                       084981
      C                     PARM           @ERR    10                      084981
      C                     ENDIF                                          084981
      C                     ENDIF                                          084981
-     C*                                                                   084981
+      *                                                                   084981
      C                     Z-ADDTNL1      SPTNLU                                            AR324886
       *                                                                                     AR324886
      C           @ERR      IFEQ 0                                         084981
@@ -3774,7 +3798,8 @@
      C** before setting 'review from' key                                 084981
      C*                                                                   084981
      C           @ERR      DOUEQ0                                         084981
-     C           *IN81     IFEQ 'Y'                                       084981
+     C********** *IN81     IFEQ 'Y'                                                  084981 AR706573
+     C           *IN81     IFEQ '1'                                                         AR706573
      C                     CALL 'ZVBBU'                                   084981
      C                     PARM PBCA      @ZBRCD  3                       084981
      C                     PARM           @ERR    10                      084981
@@ -4608,9 +4633,11 @@
      C/COPY WNCPYSRC,SE0170C108
      C                     END                                            S01179
      C*                                                                   S01179
-     C**  If ROLLUP pressed                                               S01179
+     C****If*ROLLUP*pressed********************************************                S01179 264059
+      **  If ROLLUP pressed and *IN03 is off.                                                 264059
      C*                                                                   S01179
      C           *IN55     IFEQ '1'                                       S01179
+     C           *IN03     ANDEQ'0'                                                           264059
      C                     MOVE 'UP'      AID                             S01179
      C                     MOVE '0'       *IN55                           S01179
      C                     END                                            S01179
@@ -11234,7 +11261,12 @@
       ***Before*status*not*needed*to*avoid*twice*update*in*ACMV*files**                220952 247951
       *****************************************************************                220952 247951
      C**********           MOVEL*BLANKS   Z#BSTS                                       220952 247951
-     C                     MOVELDETREC    Z#BSTS                                              247951
+     C**********           MOVELDETREC    Z#BSTS                                       247951 250115
+     C           PAUI      IFEQ 'Y'                                                           250115
+     C                     MOVELDETREC    Z#BSTS                                              250115
+     C                     ELSE                                                               250115
+     C                     MOVEL*BLANKS   Z#BSTS                                              250115
+     C                     ENDIF                                                              250115
       *                                                                                   AR1095995A
      C           PDTG      IFNE *ZERO                                                     AR1095995A
      C           LCD       ANDLTBJRDNB                                                    AR1095995A
@@ -11668,6 +11700,7 @@
       ***Before*status*not*needed*to*avoid*twice*update*in*ACMV*files**                220952 247951
       *****************************************************************                220952 247951
      C**********           MOVEL*BLANKS   Z#BSTS                                       220952 247951
+     C                     MOVEL*BLANKS   Z#BSTS                                              250115
      C** TRANSLATE RECORD DETAILS FROM SCREEN LAYOUT TO FILE LAYOUT
      C*
      C                     EXSR VALIDD
@@ -11862,12 +11895,15 @@
      C********** ACTN      IFEQ 'Y'                                                    100604 247951
      C********** PDUD      OREQ RUND                                                   100604 247951
       *****************************************************************                100604 247951
-     C           ACTN      IFEQ 'U'                                                         AR324886
-     C           Z#BSTS    ANDNE*BLANKS                                                     AR324886
+     C           PAUI      IFEQ 'Y'                                                           249578
+     C********** ACTN      OREQ 'A'                                                  250115 AR324886
+     C           ACTN      OREQ 'U'                                                         AR324886
+     C           Z#BSTS    ANDNE*BLANKS                                                       250115
      C           CRE020    IFEQ 'Y'                                                           CRE020
      C                     MOVE TNL1      TNLUX1                                              CRE020
      C                     MOVE TNL1      TNLUX2                                              CRE020
      C                     ENDIF                                                              CRE020
+     C**********           ENDIF                                                       249578 250115
      C*                                                                   082738
      C* Do On-line Updates                                                082738
      C*                                                                   082738
@@ -11887,7 +11923,7 @@
      C                     END                                            082738
       **********                                                                       100604 247951
      C**********           END                                                         100604 247951
-     C                     ENDIF                                                            AR324886
+     C                     ENDIF                                                              250115
      C*
      C** GET AUDIT RECORD
      C*

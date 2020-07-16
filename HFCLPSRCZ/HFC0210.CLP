@@ -9,12 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. 252421             Date 01Jun20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 209119             Date 17Oct06              */
+/*                      209119             Date 17Oct06              */
 /*                      228542             Date 05Aug04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
@@ -22,6 +23,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       252421 - HAF multi membered files contains deleted records  */
+/*                but never reorganize to release space causing      */
+/*                unwanted disk consumption.                         */
 /*       MD046248 - Finastra Rebranding                              */
 /*       209119 - Access the file members one at a time, to ensure   */
 /*                that everything is processed accordingly.          */
@@ -104,7 +108,8 @@ PROC2:                                                                          
              IF         COND(&DELR *NE 0) THEN(DO)
 /**********  RGZPFM     FILE(&HFLIB/&FFILE)                                               /*228542*/
 /**********  MONMSG     MSGID(CPF0000)                                                    /*228542*/
-             CALL       PGM(SCC000060) PARM(&FFILE '*FIRST')                              /*228542*/
+/**********  CALL       PGM(SCC000060) PARM(&FFILE '*FIRST')                       /*228542 252421*/
+             CALL       PGM(SCC000060) PARM(&FFILE &RTNMBR)                               /*252421*/
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                           CMDLBL(ABNOR))                                                  /*228542*/
              ENDDO

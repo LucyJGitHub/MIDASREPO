@@ -2,7 +2,7 @@
      H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas SE Validate portfolio reference')
+/*EXI *  TEXT('Midas SE Validate portfolio reference')                *
       *****************************************************************
       *                                                               *
       *  Midas - Security Trading Module.                             *
@@ -32,11 +32,12 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR1075401          Date 01Jun20               *      
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. 245825             Date 22Feb07               *
+      *                 245825             Date 22Feb07               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
@@ -54,6 +55,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1075401 - Increase QANOML and QAOTNM length in PMCPOSPD.   *
+      *              Recompiled. (Child: AR1075402)                   *      
       *  MD046248 - Finastra Rebranding                               *
       *  245825 - Fix for BUG10344 did not take in account Private    *
       *           Banking module.                                     *

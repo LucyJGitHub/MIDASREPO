@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 258901             Date 22May20               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CSF011A            Date 28Nov11               *
       *                 AR698195B          Date 20Jan11               *
@@ -113,7 +114,7 @@
       *                 CAP002  *CREATE    Date 06OCT97               *
       *                                                               *
       *---------------------------------------------------------------*
-      *                                                               *
+      *  258901 - Error in tax amount for charges and commissions.    *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -1291,15 +1292,19 @@
      C                   EXSR      DfltTrOTH
 
       /COPY WNCPYSRC,SETRADC021                                                               CUT009
-      * CalcTrCHCM - Calculate Trade Charges/Commissions
+      **CalcTrCHCM*-*Calculate*Trade*Charges/Commissions***************                       258901
+      **********                                                                              258901
+     C**********         EXSR      CalcTrCHCM                                                 258901
 
-     C                   EXSR      CalcTrCHCM
 
       * Validate Trade Other details
       * (Exchange Rate, Settlement, Charges and Commissions)
 
      C                   EXSR      ValdTrOTH
-                                                                                              233881
+                                                                                              258901
+      * CalcTrCHCM - Calculate Trade Charges/Commissions                                      258901
+                                                                                              258901
+     C                   EXSR      CalcTrCHCM                                                 258901
       ** CalcTrEuTx - Calculate EU Tax                                                        233881
                                                                                               233881
      C     CGL031        IFEQ      'Y'                                                        233881

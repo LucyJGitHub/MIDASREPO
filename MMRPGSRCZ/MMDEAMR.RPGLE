@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. 260173             Date 22May20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 30May14               *
       *                 CSF011A            Date 28Nov11               *
@@ -42,6 +43,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260173 - Introduce new parameter in DEAM API to be used in   *
+      *           the validation of action code during reversal       *
+      *           authorization. Apply fix 258724.                    *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -70,17 +74,17 @@
       *  CAP084 - API wrapper project                                 *
       *                                                               *
       *****************************************************************
- 
+
      FMMDEALLL  IF   E           K DISK    INFSR(*PSSR)                                      BUG6534
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       **-----------------------------------------------------------------------
      D/COPY ZACPYSRC,STD_D_SPEC
       **-----------------------------------------------------------------------
- 
+
       ** Program Status Data Structure                                                       BUG6534
       ** =============================                                                       BUG6534
       ** The following /COPY line includes all the defined fields in the                     BUG6534
@@ -97,14 +101,14 @@
       **-----------------------------------------------------------------------
      D/COPY ZACPYSRC,ERR_ARRAYS
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** SCREEN FORMATS
       **-----------------------------------------------------------------------
- 
+
      D DealScnFmt    E DS                  EXTNAME(MMDEAMPD)
       * Deal in Screen Format
- 
+
      D InfData       E DS                  EXTNAME(MMDAIFPD)                                 BUG6012
       * Interface file data                                                                  BUG6012
                                                                                              BUG6012
@@ -116,20 +120,20 @@
                                                                                               CER043
      D ##RECS        E DS                  EXTNAME(SDESSRPD)
       ** SCREEN RECEIVE INSTRUCTIONS
- 
+
      D ##PAYS        E DS                  EXTNAME(SDESSPPD)
       ** SCREEN PAYMENT INSTRUCTIONS
- 
+
      D ##FRIS        E DS                  EXTNAME(SDESSFPD)
       ** SCREEN FRA/IRS INSTRUCTIONS
- 
+
       **-----------------------------------------------------------------------
       ** FILE FORMATS
       **-----------------------------------------------------------------------
- 
+
      D DealFilFmt    E DS                  EXTNAME(MMDEAMPP)
       ** Deal in File Format
- 
+
      D*MMVDRecIns***         314    368                                               TCA002 BUG2774
      D*MMVDPayIns***         383    927                                               TCA002 BUG2774
      D MMVDRecIns            314    382                                                      BUG2774
@@ -139,23 +143,23 @@
       * Large fields to include
       * - Receive instructions (xxRSTM to xxROCN)
       * - Pay     instructions (xxPSTM to xxBTB6)
- 
+
      D**FHREC****************400    468                                                       TCA002
      D**FHPAY****************469   1027                                                       TCA002
- 
+
      D ##RECF        E DS                  EXTNAME(SDESFRPD)
      D**FLREC******************1     69                                                       TCA002
      D  FLREC2                21     75                                                       TCA002
       ** FILE RECEIVE INSTRUCTIONS
- 
+
      D ##PAYF        E DS                  EXTNAME(SDESFPPD)
      D**FLPAY******************1    559                                                       TCA002
      D  FLPAY2                21    565                                                       TCA002
       *** FILE PAYMENT INSTRUCTIONS
- 
+
      D ##FRIF        E DS                  EXTNAME(SDESFFPD)
       ** FILE FRA/IRS INSTRUCTIONS
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CER043
       ** External DS for SAR details                                                          CER043
                                                                                               CER043
@@ -169,7 +173,7 @@
       ** External DS for Customer Details                                                     CER043
                                                                                               CER043
       **-----------------------------------------------------------------------
- 
+
      D CER043          S              1A                                                      CER043
       *                                                                                       CER043
       ** Parameters for Calling AOCUSTR0                                                      CER043
@@ -180,7 +184,7 @@
                                                                                               CER043
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
      D LONDEP          S              1                                                      BUG6534
@@ -188,9 +192,9 @@
      D DDFOID          S             20                                                       239400
      D InRCCY          S              3A                                                     CSF011A
      D InPCCY          S              3A                                                     CSF011A
- 
+
       **-----------------------------------------------------------------------
- 
+
      C                   CLEAR                   DealFilFmt
      C     DDACTN        IFEQ      *BLANK
      C     AuthComp      IFEQ      'X'
@@ -199,7 +203,7 @@
      C                   MOVEL     'E'           DDACTN
      C                   ENDIF
      C                   ENDIF
- 
+
      C     FwdBck        IFEQ      'F'
      C                   MOVEL     'Y'           @RDFWD
      C                   MOVEL     'N'           @RDBCK
@@ -212,7 +216,7 @@
      C                   MOVEL     'N'           @RDBCK
      C                   ENDIF
      C                   ENDIF
- 
+
      C     @RDFWD        IFEQ      'Y'
      C     @RDBCK        OREQ      'Y'
      C                   EXSR      MMDEAMRED
@@ -259,15 +263,15 @@
      C                   ENDIF                                                               BUG6534
       *                                                                                      BUG6534
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     @ERRMS        IFNE      *BLANK
      C                   MOVEL     '0'           APIRetc
      C                   MOVEL     'DDDLNO'      FldNameArr(1)
      C                   MOVEL     @ERRMS        MsgIDArr(1)
      C                   ENDIF
- 
+
      C                   MOVEL     HNTMST        @TimeStamp       26                         BUG4146
       *                                                                                       CER043
       ** Population of Customer Details                                                       CER043
@@ -282,10 +286,11 @@
      C                                           + TranIncust                                 CER043
      C                                           + LONDEP                                     CER043
      C                                           + DDFOID                                     239400
+     C                                           + @ACTRV                                     260173
      C                                           + ##RECS  + ##PAYS
      C                                           + InfData                                   BUG6012
      C                                           + ExtData                                   BUG6012
- 
+
      C                   SETON                                        LR
      C                   RETURN
       **********************************************************************
@@ -298,7 +303,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    AuthComp          1
      C                   PARM                    FwdBck            1
@@ -311,11 +316,12 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetc           1
- 
+     C                   PARM                    @ACTRV            1                          260173
+
       * Set up the name of the primary and secondary message files from
       * which the message handler will get the messages
      C                   EVAL      MsgFArray(1) = 'DRSMM'
- 
+
       *                                                                                       CER043
       ** Check if CER043 is switched on                                                       CER043
                                                                                               CER043
@@ -342,9 +348,9 @@
      C                   ENDIF                                                                CER043
       *  Hook to enable non-core message files to be included
      C/COPY WNCPYSRC,MMDEAMM01
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       **********************************************************************
@@ -398,37 +404,37 @@
       *
       * SEQUENCE NUMBER READ
      C                   PARM      *BLANK        @SQRED            3
- 
+
      C                   ENDSR
       **********************************************************************
      C     MMDEAMRTV     BEGSR
- 
+
      C                   CALLB     'MMDEAMRTV'
- 
+
       * INPUTS
- 
+
       * Return code
      C                   PARM                    ReturnCode
- 
+
       * Mode = '*FRONT' (FRONT OFFICE TRANSACTION INTERFACE)
       * Mode = '      ' (NOT FRONT OFFICE TRANSACTION INTERFACE)
      C                   PARM                    ModeofOp          6
       *
       * Response mode
      C                   PARM      'S'           APRESPMODE        1
- 
+
       * Action Code
      C                   PARM                    DDACTN            1
- 
+
       * Front Office Transaction ID
      C                   PARM                    APFOTranID       20
- 
+
       * Front Office Associated Transaction Id
      C                   PARM                    APFOAsocID       20
- 
+
       * (Midas) Deal Number
      C                   PARM                    DDDLNO
- 
+
       * Value Date
      C                   PARM                    DDVDAT
       *
@@ -440,53 +446,55 @@
       *
       * Deal Amendment Type
      C                   PARM                    DDMTYP
- 
+      * Action Code (Reversal transaction)                                                    260173
+     C                   PARM                    @ACTRV                                       260173
+
       * OUTPUTS
- 
+
       * (Current) deal in file format
      C                   PARM                    DealFilFmt
- 
+
       * OK - Action code
      C                   PARM                    DDActnOK          1
- 
+
       * OK - Deal Number
      C                   PARM                    DDDlnoOK          1
- 
+
       * OK - Value Date
      C                   PARM                    DDVDatOK          1
- 
+
       * OK - Sequence Number
      C                   PARM                    DDDS38OK          1
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
      C                   ENDSR
       *****************************************************************
      C     MMDEAMCVT     BEGSR
- 
+
      C                   CALLB     'MMDEAMCVT'
- 
+
       * INPUTS
       * Return Code
      C                   PARM                    ReturnCode
       * (Current) Deal in file format
      C                   PARM                    DealFilfmt
- 
+
       * OUTPUTS
       * (Current) Deal in screen format
      C                   PARM                    DealScnfmt
       * Deal Status
      C                   PARM                    DDSTS            24
- 
+
       ** AMEND CHECKING
      C                   RESET                   ReturnCode
- 
+
      C                   EVAL      DDFOID = HNFRNT                                            239400
                                                                                               239400
      C                   ENDSR

@@ -12,8 +12,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD050212           Date 02Apr18               *      
+      *  Last Amend No. 248936B            Date 22May20               *
+      *  Prev Amend No. 248936A            Date 22May20               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD050212           Date 02Apr18               *
       *                 CGL177             Date 11Jan16               *
       *                 MD046248           Date 05Feb18               *
       *                 MD049187           Date 04Jan18               *
@@ -112,8 +114,17 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  248936B - Print Additional Info to match enquiry screen.     *
+      *            Check if CGL031 is switched on.                    *
+      *            Patterned after 251925.                            *
+      *  248936A - Additional Details for Customer not printed.       *
+      *           Applied fix 249980.                                 *
+      *  249980 - Additional Customer Details not printed on SD0010PM.*
+      *           Recompiled due to changes in SD0010PM.              *
+      *  248936 - Fields introduced by CER001 should only be printed  *
+      *           when switchable feature ULX004 is switched on.      *
       *  CER050 - Annualised Percentage Rate                          *
-      *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *     
+      *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  CGL177 - CRS Reporting Phase 2                               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD049187 - AnaCredit fields were introduced to printer file  *
@@ -473,6 +484,18 @@
      I                                        4   4 #RSET                 CGL018
      I I            ','                       5   5 #COMMA                CGL018
       *                                                                   CGL018
+     IWWBRTH      DS                                                                         248936B
+      * Birth Date in DDMMMCCYY format                                                       248936B
+     I                                        1   5 WWBRDM                                   248936B
+     I                                        6   7 WWBRCC                                   248936B
+     I                                        8   9 WWBRYY                                   248936B
+     I*                                                                                      248936B
+     IWWISDT      DS                                                                         248936B
+      * Issue Date in DDMMMCCYY format                                                       248936B
+     I                                        1   5 WWISDM                                   248936B
+     I                                        6   7 WWISCC                                   248936B
+     I                                        8   9 WWISYY                                   248936B
+     I*                                                                                      248936B
      I              'AddCustDtlFl01'      C         @VAL01                                    CSD029
      I              'AddCustDtlFl02'      C         @VAL02                                    CSD029
      I              'AddCustDtlFl03'      C         @VAL03                                    CSD029
@@ -816,7 +839,13 @@
      C                     PARM           ZDATE   60                                          CGL032
      C                     PARM           ZADATE  7                                           CGL032
       *                                                                                       CGL032
-     C                     MOVE ZADATE    R2ISDT                                              CGL032
+     C**********           MOVE ZADATE    R2ISDT                                      CGL032 248936B
+     C                     MOVE *BLANKS   R2ISDT                                             248936B
+     C                     MOVELZADATE    WWISDT                                             248936B
+     C                     MOVELWWISCC    WWISYY                                             248936B
+     C           2         SUBSTE5ISDT:1  WWISCC                                             248936B
+     C                     MOVE *BLANKS   R2ISDT                                             248936B
+     C                     MOVELWWISDT    R2ISDT                                             248936B
      C                     ENDIF                                                              232543
       *                                                                                       232543
      C           CER047    IFEQ 'Y'                                                          CER034A
@@ -1963,12 +1992,14 @@
      C                     MOVE E5TXNB    A5TXNB 12                       S01421
      C                     MOVE E5PRVO    A5PRVO  1                       S01421
      C                     MOVE E5MDTL    A5MDTL  5                       S01421
-     C                     MOVE E5CNA1    A5CNA1 35                       S01421
+     C**********           MOVE E5CNA1    A5CNA1 35                                   S01421 248936B
+     C                     MOVE E5CNA1    A5CNA1 70                                          248936B
      C           CSW207    IFEQ 'Y'                                                           CSW207
      C                     MOVE E5ISCD    A5ISCD 35                                           CSW207
      C                     ENDIF                                                              CSW207
      C/COPY WNCPYSRC,SD0010PC31
-     C                     MOVE E5CNA2    A5CNA2 35                       S01421
+     C**********           MOVE E5CNA2    A5CNA2 35                                   S01421 248936B
+     C                     MOVE E5CNA2    A5CNA2 70                                          248936B
      C                     MOVE E5CNA3    A5CNA3 35                       S01421
      C                     MOVE E5CNA4    A5CNA4 35                       S01421
      C                     MOVE E5CWL1    A5CWL1 20                       S01421
@@ -2023,6 +2054,34 @@
      C                     END                                            113339
      C******************** MOVELWUWADT    A5BRTH  7                 S01421113339
      C                     MOVELWUWADT    A5BRTH    P                     113339
+      *                                                                                      248936B
+      ** Print City and Zip Code if CGL032 is ON                                             248936B
+      *                                                                                      248936B
+     C           CGL032    IFEQ 'Y'                                                          248936B
+     C                     MOVE E5CITY    A5CITY 35                                          248936B
+     C                     MOVE E5ZIPC    A5ZIPC 10                                          248936B
+     C                     SETON                     93                                      248936B
+     C                     ELSE                                                              248936B
+     C                     SETOF                     93                                      248936B
+     C                     ENDIF                                                             248936B
+      *                                                                                      248936B
+      * If CGL031 is ON:                                                                     248936B
+      * Synchronize screen field names with report field names.                              248936B
+      * Format Birth Date to print in DDMMMCCYY.                                             248936B
+      *                                                                                      248936B
+     C           CGL031    IFEQ 'Y'                                                          248936B
+     C                     SETON                     92                                      248936B
+     C           A5BRTH    IFNE *BLANKS                                                      248936B
+     C           E5BRT2    ANDNE*BLANKS                                                      248936B
+     C                     MOVE *BLANKS   WWBRTH                                             248936B
+     C                     MOVELA5BRTH    WWBRTH                                             248936B
+     C                     MOVELWWBRCC    WWBRYY                                             248936B
+     C                     MOVELE5BRT2    WWBRCC                                             248936B
+     C                     MOVELWWBRTH    A5BRTH                                             248936B
+     C                     ENDIF                                                             248936B
+     C                     ELSE                                                              248936B
+     C                     SETOF                     92                                      248936B
+     C                     ENDIF                                                             248936B
      C*
      C/COPY WNCPYSRC,SD0010PCP7
      C*
@@ -3033,6 +3092,7 @@
       *                                                                                       CER001
      C           PRTCD     IFEQ *BLANKS                                                       CER001
      C                     MOVE 'Y'       ULX004  1                                           CER001
+     C                     MOVE *ON       *IN20                                               248936
      C                     ELSE                                                               CER001
      C                     MOVE 'N'       ULX004  1                                           CER001
      C                     ENDIF                                                              CER001
@@ -3103,6 +3163,31 @@
      C                     MOVE 'N'       CGL032                                              CGL032
      C                     ENDIF                                                              CGL032
       *                                                                                       CGL032
+      ** Check CGL031 feature                                                                248936B
+      *                                                                                      248936B
+     C                     CALL 'AOSARDR0'                                                   248936B
+     C                     PARM '       ' PRTCD                                              248936B
+     C                     PARM '*VERIFY' POPTN                                              248936B
+     C                     PARM 'CGL031'  PSARD                                              248936B
+     C           SCSARD    PARM SCSARD    DSSDY                                              248936B
+      *                                                                                      248936B
+      ** DB Error Management.                                                                248936B
+      *                                                                                      248936B
+     C                     MOVEL'N'       CGL031  1                                          248936B
+     C           PRTCD     IFNE *BLANKS                                                      248936B
+     C           PRTCD     IFNE '*NRF   '                                                    248936B
+     C           *LOCK     IN   LDA                                                          248936B
+     C                     Z-ADD008       DBASE            **************                    248936B
+     C                     MOVEL'SCSARDPD'DBFILE           * DBERROR 08 *                    248936B
+     C                     MOVELPSARD     DBKEY            **************                    248936B
+     C                     OUT  LDA                                                          248936B
+     C                     EXSR *PSSR                                                        248936B
+     C                     ENDIF                                                             248936B
+     C                     ELSE                                                              248936B
+     C                     MOVEL'Y'       CGL031                                             248936B
+     C                     MOVE '1'       *IN92                                              248936B
+     C                     ENDIF                                                             248936B
+      *                                                                                      248936B
       ** Check CSW207 feature                                                                 CSW207
      C                     CALL 'SWIF2007'                                                    CSW207
      C                     PARM '       ' PRTCD                                               CSW207
@@ -3394,7 +3479,7 @@
      C                     MOVE 'N'       CER050                                              CER050
      C                     MOVE *OFF      *IN20                                               CER050
      C                     ENDIF                                                              CER050
-      *                                                                                       CER050 
+      *                                                                                       CER050
      C/COPY WNCPYSRC,SD0010PC33
      C*                                                                   CEU014
       * Move title to header - *Standard header/footer  *

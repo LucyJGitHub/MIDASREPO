@@ -19,8 +19,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 251950A            Date 27Feb12               *
+      *  Last Amend No. 262342             Date 22May20               *
+      *  Prev Amend No. 249578             Date 22May20               *
+      *                 MD046248           Date 27Oct17               *
+      *                 251950A            Date 27Feb12               *
       *                 CER049             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
@@ -53,6 +55,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  262342 - Project movement coming from authorized position    *
+      *           settlement yesterday is missing after COB.          *
+      *  249578 - Position settlements.
       *  MD046248 - Finastra Rebranding                               *
       *  251950A - Component SEC1112 0001 terminated abnormally.      *
       *            Check if PSEB is blank, if it is move value of     *
@@ -431,8 +436,14 @@
      C                     READ POSETDL0                 80
      C           *IN80     DOWEQ'0'
      C***********PDUD      ANDLEECD                                       117059
-     C           PSVL      IFLE ECD                                       117059
-     C           CRTX      ORNE *BLANK                                    187848
+     C********** PSVL      IFLE ECD                                                    117059 249578
+     C********** CRTX      ORNE *BLANK                                                 187848 249578
+     C********** PDUD      IFLT ECD                                                    249578 262342
+     C           PDUD      IFLE ECD                                                           262342
+     C           PAUI      ANDEQ'Y'                                                           262342
+     C           CRTX      ORNE *BLANK                                                        249578
+     C********** PDUD      ORGT ECD                                                    249578 262342
+     C********** PAUI      ANDEQ'Y'                                                    249578 262342
      C*
      C** Increment records read counter
      C*
@@ -468,12 +479,14 @@
      C                     MOVE PEVT      SNET                                                175571
      C                     ENDIF                                                              175571
       *                                                                                       175571
+     C********** PAUI      IFNE 'Y'                                                    249578 262342
      C           SNET      IFEQ 'MA'                                                          175571
      C           SNET      OREQ 'CP'                                                          175571
      C           SNKEY     CHAINSNDEVDF              25                                       175571
      C                     ELSE                                                               191275
      C           CDKEY     CHAINCDEVE                25                                       191275
      C                     ENDIF                                                              175571
+     C**********           ENDIF                                                       249578 262342
       *                                                                                       175571
       ** Do not process the event record if already exists in events                          175571
       ** file.                                                                                175571
@@ -482,9 +495,10 @@
      C*
      C** Setup fields common to both files
      C*
-     C           PSVL      IFGT ECD                                                           223026
-     C           BVAPST    ANDNE'Y'                                                           223026
-     C           PAUI      ANDEQ'Y'                                                           223026
+     C********** PSVL      IFGT ECD                                                    223026 262342
+     C********** BVAPST    ANDNE'Y'                                                    223026 262342
+     C********** PAUI      ANDEQ'Y'                                                    223026 262342
+     C           PAUI      IFEQ 'Y'                                                           262342
      C                     MOVE 'A'       RECI                                                223026
      C                     ELSE                                                               223026
      C                     MOVE 'D'       RECI

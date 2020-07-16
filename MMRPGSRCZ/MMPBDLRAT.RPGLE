@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 260173             Date 22May20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR701789           Date 26Sep16               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -55,6 +56,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260173 - Synchronize parameter in MMDEAMRTV to avoid         *
+      *           parameter mismatch. Apply fix 258724.               *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  AR701789 - Unable to reject a deal amendment. Add a new      *
@@ -101,10 +104,10 @@
       *  CAP052 - Deal Range Authorisation (By Front Office ID)       *
       *                                                               *
       *****************************************************************
- 
+
      FMMPBDLRDF CF   E             WORKSTN INFSR(*PSSR)
      F/COPY WNCPYSRC,MMPBDLGF01
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -123,38 +126,38 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the error arrays
      D ArrayMax        C                   CONST(75)
                                                                                               CAS004
@@ -162,35 +165,35 @@
      D WFldNamArr      S             10A   DIM(ArrayMax)                                      CAS004
      D WMsgIDArr       S                   DIM(ArrayMax) LIKE(#MsgID)                         CAS004
      D WMsgDtaArr      S                   DIM(ArrayMax) LIKE(#MsgData)                       CAS004
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** data structure for data to output 'authorized' message
      D @ADAT           DS            46
      D  @ADAT1                 1      6
      D  @ADAT2                 7     26
      D  @ADAT3                27     45
- 
+
       ** data structure for data to output 'failed' message
      D @FDTA           DS            45
      D  @FDT1                  1      6
      D  @FDT2                  7     26
      D  @FDT3                 27     45
- 
- 
+
+
       ** Array of Fields in error.
      D FldNameArr      S             10A   DIM(ArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDArr        S                   DIM(ArrayMax) LIKE(#MsgID)
- 
+
       ** Array of error message data.
      D MsgDtaArr       S                   DIM(ArrayMax) LIKE(#MsgData)
- 
- 
+
+
      D DELDFilFmt    E DS                  EXTNAME(MMDELDPP)
      D DSFRCD                        47    OVERLAY(DELDFilFmt:1850)                           CDL033
       ** DS for FRCD Issued Extension details                                                 CDL033
@@ -207,8 +210,8 @@
      D MOPIQQ2       E                     EXTFLD(QQMOPI)                                     CGL029
      D RONSQQ2       E                     EXTFLD(QQRONS)                                     CGL029
      D PONSQQ2       E                     EXTFLD(QQPONS)                                     CGL029
- 
- 
+
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
       ** EXTERNAL DS FOR DEALING DETAILS
      D DSFDY         E DS                  EXTNAME(DSFDY)
@@ -230,17 +233,17 @@
      D PSARD           S              6A                                                      CDL033
                                                                                               CDL033
      D/COPY WNCPYSRC,MMPBDLGD01
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Response Mode, passed as a constant parameter to the VAL module
       ** This is always 'S' for Synchronous
      D RespMode        S              1A   INZ('S')
      D/COPY WNCPYSRC,MMPBDLGD02
- 
+
       ** Index for arrays of of warning message ids etc                                       CAS004
      D WIdx            S              3P 0                                                    CAS004
       *                                                                                       CGL029
@@ -261,16 +264,16 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** If authorizations are not required
- 
+
      C     BNMMAU        IFEQ      'N'
      C                   EXSR      NOINPUT
      C                   ENDIF
- 
+
       **  Main processing
       **  Loop until CK/3 taken
- 
+
      C     *INKC         DOWEQ     False
      C                   EXSR      MAIN
      C                   ENDDO
@@ -278,57 +281,57 @@
       * TERMINATE PROGRAM
       *
      C                   MOVE      True          *INLR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * MAIN - MAIN PROCESSING
       *****************************************************************
      C     MAIN          BEGSR
- 
+
       ** Selection screen
- 
+
      C                   TIME                    DDTIME
      C                   WRITE     MMPBDLS0
      C                   WRITE     MMPBDLD1
      C                   WRITE     MMPBDLF1
      C                   READ      MMPBDLD1                               99
- 
+
       ** If CK/3 taken, bypass
- 
+
      C     *INKC         CABEQ     True          EMAIN
- 
+
       ** Validate screen input
- 
+
      C                   EXSR      VALSIN
- 
+
       ** If validation not OK, bypass
- 
+
      C     *IN50         CABEQ     True          EMAIN
- 
+
       ** Initialize count of authorizattions and failed authorizations
- 
+
      C                   Z-ADD     0             @CNTAU            6 0
      C                   Z-ADD     0             @CNTFL            6 0
- 
+
       ** Authorize all unauthorized loans and deposits
- 
+
      C                   EXSR      AUTHLDNI
- 
+
       ** Authorize all unauthorized NAs purchased
- 
+
      C                   EXSR      AUTHNASP
- 
+
       ** Authorize all unauthorized NAs sold
- 
+
      C                   EXSR      AUTHNASS
- 
+
       ** Authorize all unauthorized deal amendments
- 
+
      C                   EXSR      AUTHDEAM
- 
+
       ** Output authorized count message
- 
+
      C                   MOVEL     'MMM0266'     @MSGID
      C                   MOVE      @CNTAU        @ADAT1
      C                   MOVEL     DDFDLN        @ADAT2
@@ -336,9 +339,9 @@
      C                   CALL      'ZA0440'
      C                   PARM                    @MSGID
      C                   PARM                    @ADAT
- 
+
       ** Output failure count message
- 
+
      C     @CNTFL        IFNE      0
      C                   MOVEL     'MMM1048'     @MSGID
      C                   MOVE      @CNTFL        @FDT1
@@ -356,37 +359,37 @@
       * AUTHLDNI - Authorize all unauthorized loans and deposits
       *****************************************************************
      C     AUTHLDNI      BEGSR
- 
+
       * Read Loans and Deposits
- 
+
      C                   MOVEL     NXTLDNIID     DDFRTN
      C                   MOVE      'Y'           @RDFWD
      C                   MOVE      *BLANKS       @RDBCK
      C                   EXSR      READLDNI
- 
+
       ** Do while not EOF
- 
+
      C     @ERRMS        DOWEQ     *BLANK
- 
+
       ** If deal is not deleted
- 
+
      C     HKDDLT        IFNE      'D'
- 
+
       ** Error in retrieve
- 
+
      C     Idx           IFNE      *ZERO
      C                   ADD       1             @CNTFL
      C                   MOVEL     @FTRED        DDFRTN
      C                   ELSE
- 
+
       ** Update Loan/Deposit
- 
+
      C                   EXSR      UPDTLDNI
      C                   ENDIF
      C                   ENDIF
- 
+
       * Read Loans and Deposits
- 
+
      C                   EXSR      READLDNI
      C                   ENDDO
       *
@@ -397,37 +400,37 @@
       * AUTHNASP - Authorize all unauthorized NAs Purchased
       *****************************************************************
      C     AUTHNASP      BEGSR
- 
+
       * Read NAs Purchased
- 
+
      C                   MOVEL     NXTNASPID     DDFRTN
      C                   MOVE      'Y'           @RDFWD
      C                   MOVE      *BLANKS       @RDBCK
      C                   EXSR      READNASP
- 
+
       ** Do while not EOF
- 
+
      C     @ERRMS        DOWEQ     *BLANK
- 
+
       ** If deal is not deleted
- 
+
      C     HLDDLT        IFNE      'D'
- 
+
       ** Error in retrieve
- 
+
      C     Idx           IFNE      *ZERO
      C                   ADD       1             @CNTFL
      C                   MOVEL     @FTRED        DDFRTN
      C                   ELSE
- 
+
       ** Update NA Purchased
- 
+
      C                   EXSR      UPDTNASP
      C                   ENDIF
      C                   ENDIF
- 
+
       * Read NAs Purchased
- 
+
      C                   EXSR      READNASP
      C                   ENDDO
       *
@@ -438,37 +441,37 @@
       * AUTHNASS - Authorize all unauthorized NAs Sold
       *****************************************************************
      C     AUTHNASS      BEGSR
- 
+
       * Read NAs Sold
- 
+
      C                   MOVEL     NXTNASSID     DDFRTN
      C                   MOVE      'Y'           @RDFWD
      C                   MOVE      *BLANKS       @RDBCK
      C                   EXSR      READNASS
- 
+
       ** Do while not EOF
- 
+
      C     @ERRMS        DOWEQ     *BLANK
- 
+
       ** If deal is not deleted
- 
+
      C     HMDDLT        IFNE      'D'
- 
+
       ** Error in retrieve
- 
+
      C     Idx           IFNE      *ZERO
      C                   ADD       1             @CNTFL
      C                   MOVEL     @FTRED        DDFRTN
      C                   ELSE
- 
+
       ** Update NA Sold
- 
+
      C                   EXSR      UPDTNASS
      C                   ENDIF
      C                   ENDIF
- 
+
       * Read NAs Sold
- 
+
      C                   EXSR      READNASS
      C                   ENDDO
       *
@@ -479,37 +482,37 @@
       * AUTHDEAM - Authorize all unauthorized Deal Amendments
       *****************************************************************
      C     AUTHDEAM      BEGSR
- 
+
       * Read Deal amendments
- 
+
      C                   MOVEL     NXTDEAMID     DDFRTN
      C                   MOVE      'Y'           @RDFWD
      C                   MOVE      *BLANKS       @RDBCK
      C                   EXSR      READDEAM
- 
+
       ** Do while not EOF
- 
+
      C     @ERRMS        DOWEQ     *BLANK
- 
+
       ** If deal amendment is not deleted
- 
+
      C     HNDDLT        IFNE      'D'
- 
+
       ** Error in retrieve
- 
+
      C     Idx           IFNE      *ZERO
      C                   ADD       1             @CNTFL
      C                   MOVEL     @FTRED        DDFRTN
      C                   ELSE
- 
+
       ** Update Deal amendment
- 
+
      C                   EXSR      UPDTDEAM
      C                   ENDIF
      C                   ENDIF
- 
+
       * Read Deal amendments
- 
+
      C                   EXSR      READDEAM
      C                   ENDDO
       *
@@ -1237,6 +1240,8 @@
       *
       * Deal Amendment Type
      C                   PARM                    DDMTYP            2
+      * Action Code (Reversal transaction)                                                    260173
+     C                   PARM      *BLANK        @ACTRV            1                          260173
       *
       * OUTPUTS
       *
@@ -1386,17 +1391,17 @@
      C                   MOVEL     'MMM0159'     @MSGID           10
      C                   CALL      'ZA0240'
      C                   PARM                    @MSGID
- 
+
      C                   MOVE      '1'           *IN13
      C                   TIME                    DDTIME
      C                   WRITE     MMPBDLS0
      C                   WRITE     MMPBDLD1
      C                   WRITE     MMPBDLF1
      C                   READ      MMPBDLD1                               99
- 
+
      C                   SETON                                        LR
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1460,7 +1465,7 @@
      C                   ENDIF                                                                CDL033
       *                                                                                       CDL033
      C/COPY WNCPYSRC,MMPBDLGC03
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

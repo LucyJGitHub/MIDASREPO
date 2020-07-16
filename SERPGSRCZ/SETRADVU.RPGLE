@@ -33,8 +33,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD049746           Date 15Mar18               *
+      *  Last Amend No. 258901             Date 22May20               *
+      *  Prev Amend No. 247907             Date 22May20               *
+      *                 247524             Date 22May20               *
+      *                 CSD102             Date 08Jan19               *
+      *                 MD049746           Date 15Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD035243           Date 29Jul15               *
       *                 AR596191           Date 19Aug14               *
@@ -123,7 +126,11 @@
       *                 CAP084  *CREATE    Date 14Jul03               *
       *                                                               *
       *---------------------------------------------------------------*
-      *                                                               *
+      *  258901 - Error in tax amount for charges and commissions.    *
+      *  247524 - Securities Trades - charges are not defaulted and   *
+      *           not calculated.                                     *
+      *  247907 - Wrong settlement amount for trades with the same    *
+      *           nominal and settlement currency.                    *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD049746 - Settlement details is not defaulted when Charges/ *
       *             Commission fields have values when Trade is       *
@@ -600,7 +607,13 @@
      D  #1MATY                30     34  0                                                    CER001
      D  #1FOTR                35     54                                                       CER001
      D  #1TMST                55     80Z                                                      CER001
-                                                                                              CSC022
+      ** DS to keep old TranInExch data                                                       247907
+     D OldTranInExch E DS                  EXTNAME(SETREXPD)                                  247907
+     D                                     PREFIX(O)                                          247907
+      ** DS to keep retrieved TanInExch data                                                  247907
+     D NewTranInExch E DS                  EXTNAME(SETREXPD)                                  247907
+     D                                     PREFIX(N)                                          247907
+                                                                                              247907
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)                                  CSF011
      D                                     PREFIX(NO_)                                        CSF011
      D ACCNT         E DS                  EXTNAME(ACCNTAB)                                   CSF011
@@ -751,6 +764,25 @@
       ** Commitment Skip Field                                                                CSC022
                                                                                              BUG3145
      D CGL014          S              1A                                                     BUG3145
+      ** For Countervalue computation                                                         247907
+     D OldV_TDER       S             13  8                                                    247907
+     D OldV_TMDI       S              1A                                                      247907
+     D OldV_TBCR       S             13  8                                                    247907
+     D NewV_TDER       S             13  8                                                    247907
+     D NewV_TMDI       S              1A                                                      247907
+                                                                                              247907
+      ** Parameters for ZASIGN                                                                247907
+     D ZASIGNOK        S              1A                                                      247907
+     D ZFLD17          S             17A                                                      247907
+     D ZFSIGN          S              1A                                                      247907
+     D ZOUT15          S             15A                                                      247907
+     D ZSDEC           S              1P 0                                                    247907
+     D ZSDCSP          S              1A                                                      247907
+     D ZSDIG           S              2P 0                                                    247907
+     D ZECODE          S              1A                                                      247907
+     D ZFLD15          S             15P 0                                                    247907
+     D ZOUT21          S             21A                                                      247907
+                                                                                              247907
       ** Front office id variable.                                                         AR698195B
      D DDFRNT          S             20A                                                   AR698195B
                                                                                              BUG5230
@@ -3095,14 +3127,49 @@
 
       * Default Trade Other details
       * (Exchange Rate, Settlement, Charges and Commissions)
-
+                                                                                              247907
+      * If with user inputs, keep current details for comparison later                        247907
+     C                   If        TranInExch <> *blanks                                      247907
+     C                   Eval      OldTranInExch = TranInExch                                 247907
+     C                   Endif                                                                247907
+     C*
       * Exchange Rates                                                                      BUG10021
      C**********         If        TranInExch = *blanks                            BUG10021 BUG11197
-     C                   If        TranInExch = *blanks                                     BUG8690R
+     C**********         If        TranInExch = *blanks                     BUG11197 BUG8690R 247907
      C                   EXSR      DfltTrExc                                                BUG10021
      C*********          Endif                                                     BUG10021 BUG11197
-     C                   Endif                                                              BUG8690R
+     C**********         Endif                                              BUG11197 BUG8690R 247907
                                                                                             BUG10021
+      * If exchange rate defaulting was done, roght-align OldTranInExch for comparison        247907
+     C                   If        DfltExFlg = 'Y'                                            247907
+     C                   Exsr      RghtAlign                                                  247907
+     C                   Eval      DfltExFlg = 'N'                                            247907
+     C                   Endif                                                                247907
+                                                                                              247907
+      * If with user inputs, keep the retrieved transaction exchange details for              247907
+      * validation later and display the original user screen inputs                          247907
+     C                   If        OldTranInExch <> *blanks                                   247907
+     C                             and OldTranInExch <> TranInExch                            247907
+     C                   Eval      NewTranInExch = TranInExch                                 247907
+     C                   Eval      NewV_TDER = V_TDER                                         247907
+     C                   Eval      NewV_TMDI = V_TMDI                                         247907
+     C                   Eval      TranInExch = OldTranInExch                                 247907
+     C                   Eval      V_TDER = *zeros                                            247907
+     C                   Eval      V_TMDI = *blanks                                           247907
+     C                   Eval      V_TBCR = *zeros                                            247907
+     C                   Endif                                                                247907
+                                                                                              247907
+      * If Settlement Currency and Nominal Currency is the same use the default value         247907
+      * 1 and M.  These fields are protected when Settlement Ccy = Nominal Ccy except         247907
+      * when Action is 'A'.                                                                   247907
+     C                   If        NMCY = DDSETC and NDDSMDI <> *blanks                       247907
+     C                             and NDDTDER <> *blanks and DDACTN <> 'A'                   247907
+     C                   Eval      DDSMDI = NDDSMDI                                           247907
+     C                   Eval      DDTDER = NDDTDER                                           247907
+     C                   Eval      V_TDER = NewV_TDER                                         247907
+     C                   Eval      V_TMDI = NewV_TMDI                                         247907
+     C                   Endif                                                                247907
+      *                                                                                       247907
       * Don't default if details already entered                                             BUG8690
      C                   EVAL      WDDCLTY2= *BLANKS                                        BUG11529
      C                   EVAL      WDDDELF = *BLANKS                                        BUG11529
@@ -3170,9 +3237,9 @@
      C                   ENDIF                                                              BUG11529
      C                   ENDIF                                                              BUG11529
 
-      * CalcTrCHCM - Calculate Trade Charges/Commissions
-
-     C                   EXSR      CalcTrCHCM
+      **CalcTrCHCM*-*Calculate*Trade*Charges/Commissions***************                       258901
+      **********                                                                              258901
+     C**********         EXSR      CalcTrCHCM                                                 258901
                                                                                       CGL014 BUG3145
       **CalcTrCVAL*-*Calculate*Trade*Countervalue                                     CGL014 BUG3145
                                                                                       CGL014 BUG3145
@@ -3182,13 +3249,24 @@
       * (Exchange Rate, Settlement, Charges and Commissions)
 
      C                   EXSR      ValdTrOTH
+                                                                                              258901
+      * CalcTrCHCM - Calculate Trade Charges/Commissions                                      258901
+                                                                                              258901
+     C                   EXSR      CalcTrCHCM                                                 258901
                                                                                               237063
+      * Validate user input exchange details vs system defaulted details                      247907
+      * When Action is 'A', user is not allowed to change the Settle Ccy                      247907
+      * hence, no need to validate                                                            247907
+     C                   If        DDACTN <> 'A'                                              247907
+     C                   EXSR      ValdExch                                                   247907
+     C                   Endif                                                                247907
+                                                                                              247907
       * CalcTrEUTX - Calculate EU Tax                                                         237063
                                                                                               237063
      C                   IF        CGL031 = 'Y'                                               237063
      C                   EXSR      CalcTrEUTX                                                 237063
      C                   ENDIF                                                                237063
-
+ 
       * CalcTrCVAL - Calculate Trade Countervalue
 
      C                   EXSR      CalcTrCVAL                                                BUG3145
@@ -3668,6 +3746,7 @@
      C     DDACTN        OREQ      'A'                                                      BUG11197
      C     DDSETC        ANDNE     SETC                                                     BUG11197
      C*****TRANINEXCH    OREQ      *BLANKS                                         BUG11197 BUG8690R
+     C     TranInExch    OREQ      *BLANKS                                  BUG11197 BUG8690R 247907
                                                                                             BUG10021
      C                   CALLB     'SETEXCHDFT'                                             BUG10021
                                                                                             BUG10021
@@ -3700,6 +3779,9 @@
      C                   PARM                    V_TMDI            1                        BUG10021
      C                   PARM                    V_TBCR           13 8                      BUG10021
                                                                                             BUG10021
+      ** Set default flag                                                                     247907
+     C                   Move      'Y'           DfltExFlg         1                          247907
+                                                                                              247907
      C                   END                                                                BUG10021
                                                                                             BUG10021
      C                   ENDSR                                                              BUG10021
@@ -4010,7 +4092,120 @@
      C                   ENDSR                                                               BUG3145
       *****************************************************************                      BUG3145
       /EJECT                                                                                 BUG3145
-      *****************************************************************
+      *                                                               *                       247907
+      * ValdExch -Validate Exchange Rate: User input vs System default*                       247907
+      *                                                               *                       247907
+      *****************************************************************                       247907
+     C     ValdExch      BEGSR                                                                247907
+                                                                                              247907
+     C                   If        NewTranInExch <> OldTranInExch                             247907
+     C                             and OldTranInExch <> *blanks                               247907
+     C                             and NewTranInExch <> *blanks                               247907
+                                                                                              247907
+      ** Difference in Exchange Rate                                                          247907
+     C                   If        DDTDER <> NDDTDER and DDTDER <> *blanks                    247907
+     C                   ADD       1             WIdx                                         247907
+     C                   Eval      WFldNamArr(WIdx) = 'DDTDER'                                247907
+     C                   Eval      WMsgIDArr(WIdx) = 'MMA0741'                                247907
+     C                   Eval      WMsgDtaArr(WIdx) = NDDTDER                                 247907
+     C                   Endif                                                                247907
+                                                                                              247907
+      ** Difference in M/D Indicator                                                          247907
+     C                   If        DDSMDI <> NDDSMDI and DDSMDI <> *blanks                    247907
+     C                   ADD       1             WIdx                                         247907
+     C                   Eval      WFldNamArr(WIdx) = 'DDSMDI'                                247907
+     C                   Eval      WMsgIDArr(WIdx) = 'MMA0742'                                247907
+     C                   Eval      WMsgDtaArr(WIdx) = NDDSMDI                                 247907
+     C                   Endif                                                                247907
+                                                                                              247907
+      ** Difference in Margin                                                                 247907
+     C                   If        DDFXMP <> NDDFXMP and DDFXMP <> *blanks                    247907
+     C                   ADD       1             WIdx                                         247907
+     C                   Eval      WFldNamArr(WIdx) = 'DDFXMP'                                247907
+     C                   Eval      WMsgIDArr(WIdx) = 'MMA0743'                                247907
+     C                   Eval      WMsgDtaArr(WIdx) = NDDFXMP                                 247907
+     C                   Endif                                                                247907
+                                                                                              247907
+      ** Difference in Base Rate                                                              247907
+     C                   If        DDBRTE <> NDDBRTE and DDBRTE <> *blanks                    247907
+     C                   ADD       1             WIdx                                         247907
+     C                   Eval      WFldNamArr(WIdx) = 'DDBRTE'                                247907
+     C                   Eval      WMsgIDArr(WIdx) = 'MMA0744'                                247907
+     C                   Eval      WMsgDtaArr(WIdx) = NDDBRTE                                 247907
+     C                   Endif                                                                247907
+     C                   Endif                                                                247907
+                                                                                              247907
+     C                   ENDSR                                                                247907
+      *****************************************************************                       247907
+      /EJECT                                                                                  247907
+      *****************************************************************                       247907
+      *                                                               *                       247907
+      * RghtAlign - Right Align fields                                *                       247907
+      *                                                               *                       247907
+      *****************************************************************                       247907
+     C     RghtAlign     BEGSR                                                                247907
+                                                                                              247907
+      ** Settlement Exchange Rate                                                             247907
+     C                   If        ODDTDER <> *Blanks                                         247907
+     C                   MOVE      *BLANKS       ZFLD17                                       247907
+     C                   MOVEL     ODDTDER       ZFLD17                                       247907
+     C                   Z-ADD     5             ZSDIG                                        247907
+     C                   Z-ADD     8             ZSDEC                                        247907
+                                                                                              247907
+     C                   CALLB     'ZASIGN'                                                   247907
+     C                   PARM                    ZASIGNok                                     247907
+     C                   PARM                    ZFLD17                                       247907
+     C                   PARM                    ZSDIG                                        247907
+     C                   PARM                    ZSDEC                                        247907
+     C                   PARM                    ZSDCSP                                       247907
+     C                   PARM                    ZOUT15                                       247907
+     C                   PARM                    ZFSIGN                                       247907
+      *                                                                                       247907
+                                                                                              247907
+     C                   MOVE      *BLANKS       ZFLD15                                       247907
+     C                   MOVE      ZOUT15        ZFLD15                                       247907
+                                                                                              247907
+     C                   CALLB     'ZSEDIT'                                                   247907
+     C                   PARM                    ZFLD15                                       247907
+     C                   PARM      8             ZSDEC                                        247907
+     C                   PARM      *BLANK        ZECODE                                       247907
+     C                   PARM      *BLANKS       ZOUT21                                       247907
+                                                                                              247907
+     C                   MOVE      ZOUT21        ODDTDER                                      247907
+     C                   Endif                                                                247907
+                                                                                              247907
+      ** Base Currency Exchange Rate                                                          247907
+     C                   If        ODDBRTE <> *Blanks                                         247907
+     C                   MOVE      *BLANKS       ZFLD17                                       247907
+     C                   MOVEL     ODDBRTE       ZFLD17                                       247907
+     C                   Z-ADD     5             ZSDIG                                        247907
+     C                   Z-ADD     8             ZSDEC                                        247907
+                                                                                              247907
+     C                   CALLB     'ZASIGN'                                                   247907
+     C                   PARM                    ZASIGNok                                     247907
+     C                   PARM                    ZFLD17                                       247907
+     C                   PARM                    ZSDIG                                        247907
+     C                   PARM                    ZSDEC                                        247907
+     C                   PARM                    ZSDCSP                                       247907
+     C                   PARM                    ZOUT15                                       247907
+     C                   PARM                    ZFSIGN                                       247907
+                                                                                              247907
+     C                   MOVE      *BLANKS       ZFLD15                                       247907
+     C                   MOVE      ZOUT15        ZFLD15                                       247907
+                                                                                              247907
+     C                   CALLB     'ZSEDIT'                                                   247907
+     C                   PARM                    ZFLD15                                       247907
+     C                   PARM      8             ZSDEC                                        247907
+     C                   PARM      *BLANK        ZECODE                                       247907
+     C                   PARM      *BLANKS       ZOUT21                                       247907
+                                                                                              247907
+     C                   MOVE      ZOUT21        ODDBRTE                                      247907
+     C                   Endif                                                                247907
+                                                                                              247907
+     C                   ENDSR                                                                247907
+      *****************************************************************                       247907
+      /EJECT                                                                                  247907
+      *****************************************************************                       247907
       *                                                               *
       * DfltTrSwfA - Default Trade Extension (SWIFT) 'A' details      *
       *                                                               *
@@ -4642,7 +4837,21 @@
      C                   ELSE
      C                   MOVEL     'N'           CEU005
      C                   END
-      *
+      *                                                                                       247524
+      ** Access SAR details file to determine if S01496 (Private                              247524
+      ** Banking Securities Trading Enhancements) is on.                                      247524
+      *                                                                                       247524
+     C                   CALLB     'AOSARDR0'                                                 247524
+     C                   PARM      *BLANKS       @RTCD                                        247524
+     C                   PARM      '*VERIFY'     @OPTN                                        247524
+     C                   PARM      'S01496'      @SARD                                        247524
+     C     SCSARD        PARM      SCSARD        DSFDY                                        247524
+      *                                                                                       247524
+     C     @RTCD         IFEQ      *BLANK                                                     247524
+     C                   MOVEL     'Y'           S01496                                       247524
+     C                   ELSE                                                                 247524
+     C                   MOVEL     'N'           S01496                                       247524
+     C                   ENDIF                                                                247524
       ** Access SAR file to determine if CSE011
       ** (duplicate security code check) is installed.
       *

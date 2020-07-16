@@ -33,8 +33,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 215959             Date 21Mar16               *
+      *  Last Amend No. 258975             Date 22May20               *
+      *  Prev Amend No. 243841             Date 22May20               *
+      *                 MD046248           Date 27Oct17               *
+      *                 215959             Date 21Mar16               *
       *                 226449             Date 24Jun15               *
       *                 250925             Date 15Jun15               *
       *                 CSW210             Date 04May10               *
@@ -181,6 +183,13 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  258975 - The system generate wrong posting date events on    *
+      *           the settlement for securities events. Use trade     *
+      *           date as posting date when generating trade date     *
+      *           account keys.                                       *
+      *  253841 - Suppress trade action generation for a matured      *
+      *           security to avoid duplicate record error in BKPHDD. *
+      *           Partially applied fix 137339.                       *
       *  MD046248 - Finastra Rebranding                               *
       *  215959 - Truncation error on event amount in SE2450P3.       *
       *           Recompiled due to changes in PF/SEKEYD.             *
@@ -1600,6 +1609,7 @@
      C           TRECI     IFEQ 'D'                                                          BUG9864
      C           TRECI     OREQ 'L'                                                          BUG9864
      C           TRECI     OREQ 'R'                                                          BUG9864
+     C           TRECI     OREQ 'P'                                                           253841
      C                     MOVE 'Y'       DROP                                               BUG9864
      C                     ENDIF                                                             BUG9864
      C                     ENDIF                                                             BUG9864
@@ -2759,6 +2769,13 @@
      C                     MOVE PRIC      TRPR                            S01486
      C                     MOVE TSUB      TDTS
      C*
+      *                                                                                       253841
+     C           *IN36     IFEQ '1'                                                           253841
+     C           SRECI     ANDNE'D'                                                           253841
+      *                                                                                       253841
+      ** Do not generate trade action for a matured security.                                 253841
+      *                                                                                       253841
+     C                     ELSE                                                               253841
      C* Trade Date Processing
      C*
      C           *IN29     IFEQ '1'
@@ -3039,8 +3056,11 @@
      C/COPY WNCPYSRC,SE2290C050
      C                     WRITETRDACDF
      C*                                                                   E21606
+     C*
      C* IF BOOK TRANSFER WITH VALUE DATE OF DNWD THEN RESET AUTO-SETTLE   E21606
      C* INDICATOR                                                         E21606
+     C                     ENDIF                                                              253841
+      *                                                                                       253841
      C*                                                                   E21606
      C           C1DI      IFEQ 'I'                                       E21606
      C***********TDVD      ANDEQDNWD                               E21606 S01117
@@ -4549,33 +4569,33 @@
      C           *IN29     IFEQ '1'
      C                     MOVE 'T'       EVCD
      C*                                                                   S01486
-     C**  If Portfolio Management is present                              S01486
+     C****If*Portfolio*Management*is*present***************************                S01486 258975
      C*                                                                   S01486
-     C           BGPFMG    IFEQ 'Y'                                       S01486
-     C           BGN4ST    OREQ 'Y'                                       CPB001
-     C*                                                                   S01486
-     C**  For safe custody or discretionary customers, output the trade   S01486
-     C**  value date to LF/SEKEY as the event date, if amount code on     S01486
-     C**  account key is either 'CN' or 'CV'.                             S01486
-     C*                                                                   S01486
-     C           C1DI      IFEQ 'D'                                       S01486
-     C           C1DI      OREQ 'S'                                       S01486
-     C           AMTC      IFEQ 'CV'                                      S01486
-     C           AMTC      OREQ 'CN'                                      S01486
-     C           AMTC      OREQ 'MV'                                      CAC002
-     C                     Z-ADDTDVD      EVDT                            S01486
-     C                     ELSE                                           S01486
-     C                     Z-ADDTDDT      EVDT                            S01486
-     C                     END                                            S01486
-     C                     ELSE                                           S01486
-     C                     MOVE TDDT      EVDT                            S01486
-     C                     END                                            S01486
+     C********** BGPFMG    IFEQ 'Y'                                                    S01486 258975
+     C********** BGN4ST    OREQ 'Y'                                                    CPB001 258975
+     C*****************************************************************                S01486 258975
+     C****For*safe*custody*or*discretionary*customers,*output*the*trade                S01486 258975
+     C****value*date*to*LF/SEKEY*as*the*event*date,*if*amount*code*on**                S01486 258975
+     C****account*key*is*either*'CN'*or*'CV'.**************************                S01486 258975
+     C*****************************************************************                S01486 258975
+     C********** C1DI      IFEQ 'D'                                                    S01486 258975
+     C********** C1DI      OREQ 'S'                                                    S01486 258975
+     C********** AMTC      IFEQ 'CV'                                                   S01486 258975
+     C********** AMTC      OREQ 'CN'                                                   S01486 258975
+     C********** AMTC      OREQ 'MV'                                                   CAC002 258975
+     C**********           Z-ADDTDVD      EVDT                                         S01486 258975
+     C**********           ELSE                                                        S01486 258975
+     C**********           Z-ADDTDDT      EVDT                                         S01486 258975
+     C**********           END                                                         S01486 258975
+     C**********           ELSE                                                        S01486 258975
+     C**********           MOVE TDDT      EVDT                                         S01486 258975
+     C**********           END                                                         S01486 258975
      C*COPY*WNCPYSRC,SE2290C033****************************************   S01408
      C*                                                                   S01486
-     C**  Portfolio Management is not present                             S01486
-     C                     ELSE                                           S01486
+     C****Portfolio*Management*is*not*present**************************                S01486 258975
+     C**********           ELSE                                                        S01486 258975
      C                     MOVE TDDT      EVDT
-     C                     END                                            S01486
+     C**********           END                                                         S01486 258975
      C/COPY WNCPYSRC,SE2290C033                                           S01408
      C*                                                                   S01486
      C                     END

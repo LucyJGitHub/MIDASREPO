@@ -35,8 +35,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 260191A            Date 22May20               **
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -61,6 +62,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  260191A- System should not allow deletion of LIVE/MATURED    *
+      *           security diary event if ALL generated position      *
+      *           settlements are still unsettled/live records.       *
+      *           Hence, system will not generate reversal position   *
+      *           settlements.                                        *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
@@ -152,6 +158,11 @@
       *
       ** Midas Module Flag file
      FMMODF     IF   E             DISK    INFSR(*PSSR)
+      *                                                                                      260191A
+      ** Position Settlement by Security                                                     260191A
+      *                                                                                      260191A
+     FPOSET3    IF   E           K DISK    INFSR(*PSSR)                                      260191A
+     F                                     PREFIX(F3)                                        260191A
       *
       ** Hook to enable non-core files to be included
       /COPY WNCPYSRC,SESEDEC001
@@ -1455,6 +1466,44 @@
       *
      C**********         EVAL      NwDEFilFmt = CrDEFilFmt                                    CSE065
      C                   EVAL      NwDEFilFmt1 = CrDEFilFmt1                                  CSE065
+      *                                                                                      260191A
+      ** If Record Id is 'D', reset SDDT to zero                                             260191A
+      *                                                                                      260191A
+     C                   IF        S2RECI = 'D'                                              260191A
+     C                   IF        S2SDET = 'MP' OR S2SDET = 'DV'                            260191A
+     C                               OR S2SDET = 'PP'                                        260191A
+     C                   Z-ADD     0             S2SDDT                                      260191A
+     C                   ENDIF                                                               260191A
+      *                                                                                      260191A
+     C                   ELSE                                                                260191A
+     C                   IF        S2RECI = 'M'                                              260191A
+     C                   MOVE      'N'           NOTALL            1                         260191A
+     C     S2SDSN        SETLL     POSETDF                                                   260191A
+     C     S2SDSN        READE     POSETDF                                02                 260191A
+     C                   DOW       NOT *IN02                                                 260191A
+      *                                                                                      260191A
+     C     S2SDET        IFEQ      'MP'                                                      260191A
+     C     S2SDET        OREQ      'DV'                                                      260191A
+     C     S01512        ANDNE     'Y'                                                       260191A
+     C                   Z-ADD     S2SDPD        WWPDUD            5 0                       260191A
+     C                   ELSE                                                                260191A
+     C                   Z-ADD     S2SDED        WWPDUD                                      260191A
+     C                   ENDIF                                                               260191A
+      *                                                                                      260191A
+     C                   IF        S2SDET = F3PEVT and WWPDUD = F3PDUD                       260191A
+     C                             AND F3RECI = 'M'                                          260191A
+     C                   MOVE      'Y'           NOTALL                                      260191A
+     C                   ENDIF                                                               260191A
+      *                                                                                      260191A
+     C     S2SDSN        READE     POSETDF                                02                 260191A
+     C                   ENDDO                                                               260191A
+      *                                                                                      260191A
+     C                   IF        NOTALL = 'N'                                              260191A
+     C                   Z-ADD     0             S2SDDT                                      260191A
+     C                   ENDIF                                                               260191A
+     C                   ENDIF                                                               260191A
+      *                                                                                      260191A
+     C                   ENDIF                                                               260191A
       *                                                                                       CSE065
      C                   IF        CSE065 = 'Y'                                               CSE065
      C                   Z-ADD     SDAL          S2SDAL                                       CSE065
@@ -2048,6 +2097,33 @@
      C                   ELSE                                                                 CSE065
      C                   MOVEL     'N'           CSE065                                       CSE065
      C                   ENDIF                                                                CSE065
+      *                                                                                      260191A
+      ** Check if S01512 is installed                                                        260191A
+      *                                                                                      260191A
+     C                   CallB     'AOSARDR0'                                                260191A
+     C                   Parm      *BLANKS       PRTCD             7                         260191A
+     C                   Parm      '*VERIFY'     POPTN             7                         260191A
+     C                   Parm      'S01512'      PSARD             6                         260191A
+     C     SCSARD        Parm      SCSARD        DSFDY                                       260191A
+      *                                                                                      260191A
+      ** An NRF (No Record Found) return code is valid.                                      260191A
+      ** Issue database error only for error return codes.                                   260191A
+      *                                                                                      260191A
+     C                   IF        PRtcd <> *BLANKS AND                                      260191A
+     C                             PRtcd <> '*NRF   '                                        260191A
+     C     *LOCK         IN        LDA                                                       260191A
+     C                   EVAL      DBKey = 'S01512'                                          260191A
+     C                   EVAL      DBFile= 'SCSARDPD'                                        260191A
+     C                   EVAL      DBase = 011                                               260191A
+     C                   OUT       LDA                                                       260191A
+     C                   EXSR      *PSSR                                                     260191A
+     C                   ENDIF                                                               260191A
+      *                                                                                      260191A
+     C                   IF        PRTCD = *BLANKS                                           260191A
+     C                   MOVE      'Y'           S01512            1                         260191A
+     C                   ELSE                                                                260191A
+     C                   MOVE      'N'           S01512                                      260191A
+     C                   ENDIF                                                               260191A
       *
       ** Retrieve Midas Module Flag details
       *

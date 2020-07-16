@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSF011A            Date 28Nov11               *
+      *  Last Amend No. 249587             Date 22May20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSF011A            Date 28Nov11               *
       *                 CRE073             Date 06Dec10               *
       *                 AR698195B          Date 20Jan11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -67,6 +68,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  249587 - Commission code amount should be zero and not       *
+      *           blanks if Commission code is also entered.          *
       *  MD046248 - Finastra Rebranding                               *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
       *            (Recompile)                                        *
@@ -128,10 +131,10 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
      FSECTY     IF   E           K DISK
      FINVTP     IF   E           K DISK
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -143,43 +146,43 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Trade - File Formats
      D TradFilFmt    E DS                  EXTNAME(TRADSD)
      D TRD_REPI      E                     EXTFLD(REPI)                         CPB001
@@ -187,7 +190,7 @@
      D                                     PREFIX(A_)
      D TX1BFilFmt    E DS                  EXTNAME(TRADSDX1)
      D                                     PREFIX(B_)
- 
+
       * Trade - Screen Formats
      D TrPrim        E DS                  EXTNAME(SETRPRPD)
      D TrSeco        E DS                  EXTNAME(SETRSEPD)
@@ -200,8 +203,8 @@
      D                                     PREFIX(A_)
      D TrSwft_B      E DS                  EXTNAME(SETRSWPD)
      D                                     PREFIX(B_)
- 
- 
+
+
       ** Security Details
      D SECTYDts      E DS                  EXTNAME(SECTYD)
      D SEC_RECI      E                     EXTFLD(RECI)
@@ -213,7 +216,7 @@
      D SEC_FRNT      E                     EXTFLD(FRNT)                                       CAP137
      D SEC_REPA      E                     EXTFLD(REPA)                                       CAP137
      D SEC_TMST      E                     EXTFLD(TMST)                                       CAP137
- 
+
       ** Investment Type Details
      D INVTPDts      E DS                  EXTNAME(INVTPD)
      D INV_RECI      E                     EXTFLD(RECI)
@@ -221,54 +224,54 @@
      D INV_CHTP      E                     EXTFLD(CHTP)
      D INV_TNLU      E                     EXTFLD(TNLU)
      D INV_NDEC      E                     EXTFLD(NDEC)                                       CAS006
- 
- 
+
+
       ** The following /COPY includes the customer details data structure
      D/COPY SECPYSRC,SE_CUSTDT
       ** The following /COPY includes the currency details data structures
      D/COPY SECPYSRC,SE_CCYDT
- 
- 
+
+
       ** Array used to move right Swift Id.
      D ROU             S              1    DIM(12)
- 
+
       ** Array used to left-align countervalue.
      D                 DS                                                       E20653
      D  CTR                    1     21                                         E20653
      D                                     DIM(21)                              COUNTERVALUE     E20
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDSTRD        E DS                  EXTNAME(SDSTRDPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
- 
+
      D SDPORT        E DS                  EXTNAME(SDPORTPD)
       ** EXTERNAL DS FOR Portfolio Management DETAILS
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       ** EXTERNAL DS FOR CUSTOMER DETAILS
- 
+
      D SDSECS        E DS                  EXTNAME(SDSECSPD)
      D BFZONE        E                     EXTFLD(SEZONE)
       ** EXTERNAL DS FOR SECURITIES CUSTOMER DETAILS
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** EXTERNAL DS FOR CURRENCY DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
                                                                                 211800
      D DSLDY         E DS                  EXTNAME(DSLDY)                       211800
       ** FIRST DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                      211800
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -292,13 +295,13 @@
      D CGL031          S              1A                                                      CGL031
       ** Front office id variable.                                                         AR698195B
      D DDFRNT          S             20A                                                   AR698195B
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       *  Rename common field names in SECTY & INVTP
       *
      ISECTYDF
@@ -316,7 +319,7 @@
      I              CHTP                        INV_CHTP
      I              LCD                         INV_LCD
      I              TNLU                        INV_TNLU
- 
+
       **************************************************************
       /EJECT
      C**************************************************************
@@ -373,19 +376,19 @@
       ** SCN_PRIM - SET PRIMARY SCREEN FIELDS
       *****************************************************************
      C     SCN_PRIM      BEGSR
- 
+
       *  Trade Reference
      C                   MOVE      TDRF          DDTDRF
- 
+
       *  Bulk Reference
      C                   MOVE      BLKR          DDBLKR
- 
+
       *  Security Shortname
      C                   MOVEL     TDSS          DDSESN
      C                   EXSR      ACSINST
- 
+
       *  Customer number/name
- 
+
      C*****TCNR*         IFNE      *ZEROS                                                     CSD027
      C     TCNR          IFNE      *BLANKS                                                    CSD027
      C                   MOVEL     TCNR          DDCNUM
@@ -447,7 +450,7 @@
       *  Clearance type
      C                   MOVEL     CLTY          DDCLTY
      C                   MOVEL     CLTY          XX_DDCLTY
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -460,14 +463,14 @@
                                                                                            AR698195B
       *  Settlement currency
      C                   MOVEL     SETC          DDSETC
- 
+
       *  Get settlement currency details
- 
+
      C     DDSETC        IFNE      NMCY
- 
+
      C                   MOVE      DDSETC        @AJCD
      C                   EXSR      ACSCURR
- 
+
      C                   MOVEL     A6SPRT        SetCcySPRT
      C                   Z-ADD     A6NBDP        SetCcyDec
      C                   MOVEL     A6MDIN        SetCcyMDIN
@@ -475,11 +478,11 @@
      C                   MOVEL     A6SWCY        SetCcySWCY
      C                   MOVEL     A6CDFN        SetCcyCDFN
      C                   MOVEL     A6ECDN        SetCcyECDN
- 
+
      C                   ELSE
- 
+
      C                   MOVEL     NomCcyDts     SetCcyDts
- 
+
      C                   END
       *
       *  Reallowance
@@ -650,10 +653,10 @@
      C                   EXSR      ZSEDIT
      C                   MOVE      ZOUT21        DDCPNR
      C                   END
- 
+
      C                   END
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -733,13 +736,13 @@
       ** SCN_EXCH - SET EXCHANGE RATE SCREEN FIELDS
       *****************************************************************
      C     SCN_EXCH      BEGSR
- 
+
       *  Exchange Rate
- 
+
      C     TDER          IFNE      *ZEROS
- 
+
      C                   MOVE      *BLANKS       ZFLD15
- 
+
      C     BGN0ST        IFNE      'Y'
      C     DDSETC        OREQ      NMCY
      C                   MOVE      TDER          ZFLD15
@@ -760,10 +763,10 @@
      C                   EXSR      ZSEDIT
      C                   MOVE      ZOUT21        DDTDER
      C                   END
- 
+
       *  M/D indicator
      C                   MOVE      TMDI          DDSMDI
- 
+
       *  Base currency rate
      C     TBCR          IFNE      *ZEROS
      C                   MOVE      *BLANKS       ZFLD15
@@ -799,7 +802,7 @@
       *  Originating Branch
       *
      C                   MOVE      ORBR          DDORBR
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -845,11 +848,11 @@
      C                   MOVEL     DELT          DDDELT
      C/COPY WNCPYSRC,SETRADNC05
      C                   END
- 
+
       *  For a/c of (FROM)
      C                   MOVEL     DFFA          DDDFFA
      C/COPY WNCPYSRC,SETRADNC06
- 
+
       *  For a/c of (TO)
      C                   MOVEL     DTFA          DDDTFA
      C/COPY WNCPYSRC,SETRADNC07
@@ -872,10 +875,10 @@
       *
       *  Pay code
      C                   MOVEL     PCOD          DDPCOD
- 
+
       *  Auto-Settle indicator
      C                   MOVEL     AUTS          DDAUTS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -926,6 +929,7 @@
       *
       *  Broker commission amount
      C     WTBCA         IFNE      *ZEROS
+     C     DDTBCC        ORNE      *BLANKS                                                    249587
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      WTBCA         ZFLD15
      C                   Z-ADD     NomCcyDec     ZDECS
@@ -939,6 +943,7 @@
       *
       *  Customer commission amount
      C     WTCCA         IFNE      *ZEROS
+     C     DDTCCC        ORNE      *BLANKS                                                    249587
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      WTCCA         ZFLD15
      C                   Z-ADD     NomCcyDec     ZDECS
@@ -952,6 +957,7 @@
       *
       *  Charges 1 amount
      C     WTCA1         IFNE      *ZEROS
+     C     DDTCC1        ORNE      *BLANKS                                                    249587
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      WTCA1         ZFLD15
      C                   Z-ADD     NomCcyDec     ZDECS
@@ -965,6 +971,7 @@
       *
      C*  Charges 2 amount
      C     WTCA2         IFNE      *ZEROS
+     C     DDTCC2        ORNE      *BLANKS                                                    249587
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      WTCA2         ZFLD15
      C                   Z-ADD     NomCcyDec     ZDECS
@@ -978,6 +985,7 @@
       *
       *  Charges 3 amount
      C     WTCA3         IFNE      *ZEROS
+     C     DDTCC3        ORNE      *BLANKS                                                    249587
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      WTCA3         ZFLD15
      C                   Z-ADD     NomCcyDec     ZDECS
@@ -991,6 +999,7 @@
       *
       *  Charges 4 amount
      C     WTCA4         IFNE      *ZEROS
+     C     DDTCC4        ORNE      *BLANKS                                                    249587
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      WTCA4         ZFLD15
      C                   Z-ADD     NomCcyDec     ZDECS
@@ -1004,6 +1013,7 @@
       *
       *  Charges 5 amount
      C     WTCA5         IFNE      *ZEROS
+     C     DDTCC5        ORNE      *BLANKS                                                    249587
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      WTCA5         ZFLD15
      C                   Z-ADD     NomCcyDec     ZDECS
@@ -1017,6 +1027,7 @@
       *
       *  Charges 6 amount
      C     WTCA6         IFNE      *ZEROS
+     C     DDTCC6        ORNE      *BLANKS                                                    249587
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      WTCA6         ZFLD15
      C                   Z-ADD     NomCcyDec     ZDECS
@@ -1030,6 +1041,7 @@
       *
       *  Charges 7 amount
      C     WTCA7         IFNE      *ZEROS
+     C     DDTCC7        ORNE      *BLANKS                                                    249587
      C                   MOVE      *BLANKS       ZFLD15
      C                   MOVE      WTCA7         ZFLD15
      C                   Z-ADD     NomCcyDec     ZDECS
@@ -1122,7 +1134,7 @@
       *
      C     BGPFMG        IFEQ      'Y'
      C     BGN4ST        OREQ      'Y'                                          CPB001
- 
+
       * Portfolio ref.
      C     PTFR          IFEQ      '9997'
      C     BGN4ST        ANDNE     'Y'                                          CPB001
@@ -1146,7 +1158,7 @@
       * multiply/divide indicator
      C                   MOVE      SPMD          DDSPMD
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1167,51 +1179,51 @@
      C                   MOVE      SMTH          WSETP
       *
      C                   EXSR      SR1100
- 
+
       ** Destination of Settlement
- 
+
      C                   MOVE      WWROU         A_DDROUS
      C                   MOVE      WWROT         A_DDROTS
- 
+
       * Settlement Message Request
- 
+
      C     A_T1GMES      IFEQ      *BLANK                                                     200614
      C                   MOVE      'N'           A_T1GMES                                     200614
      C                   ENDIF                                                                200614
                                                                                               200614
      C                   MOVE      A_T1GMES      A_DDGMES
- 
+
       * Time of Trade
      C     A_T1TRTT      IFEQ      *BLANK                                                     200614
      C                   TIME                    WWTIME            6 0                        200614
      C                   MOVEL     WWTIME        A_T1TRTT                                     200614
      C                   ENDIF                                                                200614
      C                   MOVE      A_T1TRTT      A_DDTRTT
- 
+
       * Instructions Type
      C                   MOVE      A_T1INST      A_DDINST
- 
+
       * Instructions Sub-Type
      C                   MOVE      A_T1INSS      A_DDINSS
- 
+
       * Counterparty Euroclear/Cedel Code
      C                   MOVE      A_T1EUCL      A_DDEUCL
- 
+
       * Safekeeping A/C
      C                   MOVE      A_T1SAFA      A_DDSAFA
- 
+
       * Requested Priority
      C                   MOVE      A_T1RPTY      A_DDRPTY
- 
+
       * Guaranteed Delivery
      C                   MOVE      A_T1GDEL      A_DDGDEL
- 
+
       * Sender's Role
      C                   MOVE      A_T1SROL      A_DDSROL
- 
+
       * Fungibility Code
      C                   MOVE      A_T1FCOD      A_DDFCOD
- 
+
       * Fungible Trade Ind
      C                   MOVE      A_T1FTID      A_DDFTID
       *
@@ -1222,12 +1234,12 @@
      C                   MOVE      SMTH          WSETP
       *
      C                   EXSR      SR1100
- 
+
       ** Destination of Confirmation
- 
+
      C                   MOVE      WWROU         A_DDROUC
      C                   MOVE      WWROT         A_DDROTC
- 
+
       * Confirmation Message Request
                                                                                               200614
      C     A_T1GMEC      IFEQ      *BLANK                                                     200614
@@ -1235,7 +1247,7 @@
      C                   ENDIF                                                                200614
                                                                                               200614
      C                   MOVE      A_T1GMEC      A_DDGMEC
- 
+
       * Customer/Counterparty Indicator                                      . -
      C     A_T1CCID      IFEQ      *BLANK                                                     200614
      C     BFCLAS        IFEQ      'M'                                                        200614
@@ -1245,7 +1257,7 @@
      C                   ENDIF                                                                200614
      C                   ENDIF                                                                200614
      C                   MOVE      A_T1CCID      A_DDCCID
- 
+
       * Further Identification (MT510)                                       . -
      C                   SELECT
      C     A_T1FID1      WHENEQ    ' FORWARD'
@@ -1282,7 +1294,7 @@
       ** Transaction Report Marker                                                            CSE028
                                                                                               CSE028
      C                   EVAL      A_DDTRRM = A_T1TRRM                                        CSE028
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1303,43 +1315,43 @@
      C                   MOVE      SMTH          WSETP
       *
      C                   EXSR      SR1100
- 
+
       ** Destination of Settlement
- 
+
      C                   MOVE      WWROU         B_DDROUS
      C                   MOVE      WWROT         B_DDROTS
- 
+
       * Settlement Message Request
- 
+
      C                   MOVE      B_T1GMES      B_DDGMES
- 
+
       * Time of Trade
      C                   MOVE      B_T1TRTT      B_DDTRTT
- 
+
       * Instructions Type
      C                   MOVE      B_T1INST      B_DDINST
- 
+
       * Instructions Sub-Type
      C                   MOVE      B_T1INSS      B_DDINSS
- 
+
       * Counterparty Euroclear/Cedel Code
      C                   MOVE      B_T1EUCL      B_DDEUCL
- 
+
       * Safekeeping A/C
      C                   MOVE      B_T1SAFA      B_DDSAFA
- 
+
       * Requested Priority
      C                   MOVE      B_T1RPTY      B_DDRPTY
- 
+
       * Guaranteed Delivery
      C                   MOVE      B_T1GDEL      B_DDGDEL
- 
+
       * Sender's Role
      C                   MOVE      B_T1SROL      B_DDSROL
- 
+
       * Fungibility Code
      C                   MOVE      B_T1FCOD      B_DDFCOD
- 
+
       * Fungible Trade Ind
      C                   MOVE      B_T1FTID      B_DDFTID
       *
@@ -1350,18 +1362,18 @@
      C                   MOVE      SMTH          WSETP
       *
      C                   EXSR      SR1100
- 
+
       ** Destination of Confirmation
- 
+
      C                   MOVE      WWROU         B_DDROUC
      C                   MOVE      WWROT         B_DDROTC
- 
+
       * Confirmation Message Request
      C                   MOVE      B_T1GMEC      B_DDGMEC
- 
+
       * Customer/Counterparty Indicator                                      . -
      C                   MOVE      B_T1CCID      B_DDCCID
- 
+
       * Further Identification (MT510)                                       . -
      C                   SELECT
      C     B_T1FID1      WHENEQ    ' FORWARD'
@@ -1398,7 +1410,7 @@
       ** Transaction Report Marker                                                            CSE028
                                                                                               CSE028
      C                   EVAL      B_DDTRRM = B_T1TRRM                                        CSE028
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1449,9 +1461,9 @@
      C                   MOVEA     ROU           WWROT
      C                   END
      C                   END
- 
+
      C                   ELSE
- 
+
      C                   MOVEL     *BLANKS       WWROU
      C                   MOVEL     *BLANKS       WWROT
       *
@@ -1490,9 +1502,9 @@
       * TRADSTAT - TRADE STATUS
       *****************************************************************
      C     TRADSTAT      BEGSR
- 
+
       ** Trade status : cancelled or settled
- 
+
      C     RECI          IFEQ      'C'
      C     RECI          OREQ      '*'
      C     RECI          OREQ      'R'
@@ -1525,10 +1537,10 @@
      C     DDSTAT        IFEQ      *BLANKS                                                  BUG13267
      C                   MOVEL     'UNSETTLED'   DDSTAT                                     BUG13267
      C                   ENDIF                                                              BUG13267
- 
+
       ** Trade authorized/not authorized
       ** if complete                                                                          196903
- 
+
      C     TINC          IFNE      'I'                                                        196903
      C     RECI          IFEQ      'L'
      C     RECI          OREQ      'P'
@@ -1552,11 +1564,11 @@
       *                                                               *
       *****************************************************************
      C     ZEDIT         BEGSR
- 
+
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZFIELD           16
      C                   PARM                    ZADEC             1 0
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1566,13 +1578,13 @@
       *                                                               *
       *****************************************************************
      C     ZSEDIT        BEGSR
- 
+
      C                   CALLB     'ZSEDIT'
      C                   PARM                    ZFLD15           15 0
      C                   PARM                    ZDECS             1 0
      C                   PARM                    ZECODE            1
      C                   PARM                    ZOUT21           21
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1582,14 +1594,14 @@
       *                                                               *
       *****************************************************************
      C     ZSEDITF       BEGSR
- 
+
      C                   CALLB     'ZSEDITF'
      C                   PARM                    ZFLD15           15 0
      C                   PARM                    ZDECS             1 0
      C                   PARM                    ZECODE            1
      C                   PARM                    ZECHAR            1
      C                   PARM                    ZOUT21           21
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1599,13 +1611,13 @@
       *                                                               *
       *****************************************************************
      C     ZDATE2        BEGSR
- 
+
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    BJDFIN
      C                   PARM                    ZDATE             6 0
      C                   PARM                    ZADATE            7
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1615,7 +1627,7 @@
       *                                                               *
       *****************************************************************
      C     ZCONV         BEGSR
- 
+
      C                   CALLB     'ZCONV'
      C                   PARM                    ZAMTCI           15 0
      C                   PARM                    ZEXCH            13 8
@@ -1625,7 +1637,7 @@
      C                   PARM                    ZCDPI             1 0
      C                   PARM                    ZCDPO             1 0
      C                   PARM                    ZAMTCO           15 0
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1646,26 +1658,26 @@
      C                   MOVEL     *BLANK        TrSwft_A
      C                   MOVEL     *BLANK        TrSwft_B
      C                   MOVEL     ##ACTN        DDACTN
- 
+
      C                   MOVEL     *BLANK        DDSTAT
      C                   MOVEL     *BLANK        DDAUTH                                        S0126
- 
+
      C**********         MOVEL     *BLANK        DDSRPN                                       CSE016
      C                   MOVEL     *BLANK        DDSRNME                                      CSE016
      C                   MOVEL     *BLANK        DDCRNM
- 
+
      C                   MOVEL     *BLANK        DDCPNR
      C                   MOVEL     *BLANK        DDCFCT
      C                   MOVEL     *BLANK        DDMAMT
      C                   MOVEL     *BLANK        DDSPXR
      C                   MOVEL     *BLANK        DDSPMD
      C                   MOVEL     *BLANK        DDTCTR
- 
+
      C                   MOVEL     *BLANK        A_DDROUS
      C                   MOVEL     *BLANK        A_DDROTS
      C                   MOVEL     *BLANK        A_DDROUC
      C                   MOVEL     *BLANK        A_DDROTC
- 
+
      C                   MOVEL     *BLANK        B_DDROUS
      C                   MOVEL     *BLANK        B_DDROTS
      C                   MOVEL     *BLANK        B_DDROUC
@@ -1679,9 +1691,9 @@
       * ACSINST - ACCESS INSTRUMENT DETAILS                           *
       *****************************************************************
      C     ACSINST       BEGSR
- 
+
       * Access Security details
- 
+
      C     TDSS          CHAIN     SECTYDF                            99
       *
       * DATABASE ERROR
@@ -1692,9 +1704,9 @@
      C                   MOVEL     '001'         DBASE
      C                   EXSR      *PSSR
      C                   END
- 
+
       * Security report name
- 
+
      C**********         MOVEL     SRPN          DDSRPN                                       CSE016
       *                                                                                       CSE016
       ** Format security report description                                                   CSE016
@@ -1718,9 +1730,9 @@
       *                                                                                       CSE016
      C                   EVAL      DDSRNME = PRNME                                            CSE016
      C                   ENDIF                                                                CSE016
- 
+
       * Access Investment Type details
- 
+
      C     KLINVT        CHAIN     INVTPDF                            99
       *
       * DATABASE ERROR
@@ -1732,12 +1744,12 @@
      C                   MOVEL     '002'         DBASE
      C                   EXSR      *PSSR
      C                   END
- 
+
       * Get nominal currency details
- 
+
      C                   MOVE      NMCY          @AJCD
      C                   EXSR      ACSCURR
- 
+
      C                   MOVEL     A6SPRT        NomCcySPRT
      C                   Z-ADD     A6NBDP        NomCcyDec
      C                   MOVEL     A6MDIN        NomCcyMDIN
@@ -1745,7 +1757,7 @@
      C                   MOVEL     A6SWCY        NomCcySWCY
      C                   MOVEL     A6CDFN        NomCcyCDFN
      C                   MOVEL     A6ECDN        NomCcyECDN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1753,7 +1765,7 @@
       * ACSCURR - ACCESS CURRENCY DETAILS                             *
       *****************************************************************
      C     ACSCURR       BEGSR
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       @RTCD             7                           S0111
      C                   PARM      '*KEY   '     @OPTN             7                           S0111
@@ -1768,7 +1780,7 @@
      C                   MOVEL     '003'         DBASE
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1776,10 +1788,10 @@
       * ACSCUST - ACCESS CUSTOMER DETAILS                             *
       *****************************************************************
      C     ACSCUST       BEGSR
- 
+
      C                   MOVEL     *BLANK        @KEY1
      C                   MOVEL     TCNR          @KEY1
- 
+
      C*******************CALL      'AOCUSTR0'                                                 211800
      C                   CALL      'AOCUSTR1'                                                 211800
      C                   PARM      *BLANK        @RTCD             7
@@ -1798,7 +1810,7 @@
      C                   MOVEL     '004'         DBASE
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   CALL      'AOSECSR0'                                                  S0111
      C*******************PARM                    @RTCD             7                    S0111 211800
      C                   PARM      *BLANKS       @RTCD             7                          211800
@@ -1814,7 +1826,7 @@
      C                   MOVEL     '005'         DBASE
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   MOVE      BFCUST        CustNum
      C                   MOVE      BFACCD        CustAccd                                      S0111
      C                   MOVE      BFCYCD        CustCurr                                      S0111
@@ -1829,7 +1841,7 @@
      C                   MOVE      BFTCD         CustTAXC                                      S0111
      C                   MOVE      BFASIN        CustAUTS                               E17228 S0111
      C                   MOVE      BFTDCG        CustTDCG                                      07845
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1870,15 +1882,15 @@
      C                   PARM                    TrChCm
      C                   PARM                    TrSwft_A
      C                   PARM                    TrSwft_B
- 
+
       ** Security Details
       ** Investment Type Details
      C                   PARM                    SECTYDts
      C                   PARM                    INVTPDts
- 
+
       ** Nominal Currency Details
      C                   PARM                    NomCcyDts
- 
+
       ** Settlement Currency Details
      C                   PARM                    SetCcyDts
       *
@@ -1894,7 +1906,7 @@
      C**********         PARM                    DDSRPN           20                          CSE016
      C                   PARM                    DDSRNME          41                          CSE016
      C                   PARM                    DDCRNM           20
- 
+
       * Coupon Rate
       * Current Factor
       * Margin Amount
@@ -1909,7 +1921,7 @@
      C                   PARM                    DDTCTR           21
      C                   PARM                    DDWTAX           15            CSE023
      C                   PARM                    DDPRICN                                      CAS006
- 
+
       * SCREEN A
       * Destination of Settlement
       * Destination of Confirmation
@@ -1917,7 +1929,7 @@
      C                   PARM                    A_DDROTS         12
      C                   PARM                    A_DDROUC          6
      C                   PARM                    A_DDROTC         12
- 
+
       * SCREEN B
       * Destination of Settlement
       * Destination of Confirmation

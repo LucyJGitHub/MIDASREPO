@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. 261824             Date 22May20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -43,6 +44,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  261824 - Error messages appear which should not be as field  *
+      *           being validate is valid when compare to the input - *
+      *           Maturity Date. Fix is to make sure that field will  *
+      *           be validated only if Maturity Date is non-zero.     *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -212,9 +217,9 @@
       *  SRValIssDt - Validation for Issue Date                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValIssDt    BEGSR
- 
+
      C                   IF        CGL031 = 'Y' AND                                           CGL031
      C                             DDISSD = *BLANKS                                           CGL031
      C                   IF        PPROT <> '2' AND                                           CGL031
@@ -231,15 +236,15 @@
      C                   ENDIF                                                                CGL031
                                                                                               CGL031
      C                   IF        DDISSD <> *BLANKS
- 
+
      C                   Z-ADD     *ZERO         PDayNo
- 
+
      C                   CALLB     'ZAVDATE'
      C                   PARM      *BLANK        RetCodeOut
      C                   PARM      DDISSD        PDateIn
      C                   PARM      BJDFIN        PDFmt
      C                   PARM                    PDayNo
- 
+
      C                   IF        RetCodeOut = 'Error'
      C                   MOVE      'N'           OKISSD
      C                   ADD       1             Idx
@@ -265,23 +270,24 @@
       *
      C                   IF        DDMATY1 <> *Blanks or
      C                             DDMATY2 <> *Blanks
- 
-     C                   IF        PDayNo > S1MATY
+
+     C**********         IF        PDayNo > S1MATY                                            261824
+     C                   IF        PDayNo > S1MATY and S1MATY <> *ZEROS                       261824
      C                   MOVE      'N'           OKISSD
      C                   ADD       1             Idx
      C                   MOVEL     'DDISSD'      FldNamXAr(Idx)
      C                   MOVEL     'SEA0101'     MsgIdXAr(Idx)
      C                   GOTO      EValIssDt
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   Z-ADD     PDayNo        WIssDt
- 
+
      C                   ENDIF
- 
+
      C     EValIssDt     ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -293,7 +299,7 @@
       *****************************************************************
       *
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT
@@ -346,9 +352,9 @@
       ** The following /COPY sets these values.
       *
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -357,7 +363,7 @@
       ** subroutine, including a bound call to the DBERRCTL module.
       *
       /COPY ZACPYSRC,PSSR_ILE
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

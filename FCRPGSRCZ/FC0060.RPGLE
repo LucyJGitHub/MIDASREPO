@@ -11,10 +11,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 248899             Date 22May20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. CRE026             Date 24May06               *
+      *                 CRE026             Date 24May06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
@@ -43,6 +44,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  248899 - Reinstated use in MidasPlus.  Applied fix 245733.   *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE026 - Consumer Banking (Recompile)                        *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -1459,21 +1461,62 @@
      C                   ELSE
      C                   MOVEL     'Y'           MODE
      C                   END
-     C*
-     C** CALL PROGRAM FC0065
-     C*
-     C                   CALL      'FC0065'
-     C                   PARM                    USER
-     C                   PARM                    BRANCH
-     C                   PARM                    SRNAM
-     C                   PARM                    SDESC
-     C                   PARM                    SSEQ
-     C                   PARM                    MODE
-     C                   PARM                    TERM              1
+      *                                                                                       248899
+     C     MODE          IFEQ      'T'                                                        248899
+     C     SSEQ          CHAIN     FCRREQL0                           82                      248899
+     C     *IN82         IFEQ      '1'                                                        248899
+     C     *LOCK         IN        LDA                                                        248899
+     C                   MOVEL     'FC0060'      DBPGM                                        248899
+     C                   MOVEL     'FCRREQL0'    DBFILE                                       248899
+     C                   MOVEL     SRNAM         DBKEY                          ************* 248899
+     C                   Z-ADD     87            DBASE                          * DBERR 087 * 248899
+     C                   SETON                                        U7U8      ************* 248899
+     C                   OUT       LDA                                                        248899
+     C                   EXSR      *PSSR                                                      248899
+     C                   END                                                                  248899
+     C                   MOVE      D5JBNM        ABJBNM                                       248899
+     C                   MOVE      D5JUSR        ABJUSR                                       248899
+     C                   MOVE      D5JBNB        ABJBNB                                       248899
+     C                   ELSE                                                                 248899
+     C                   MOVEL     SRNAM         KRNAM                                        248899
+     C                   MOVEL     SSEQ          KRQSQ                                        248899
+     C     KYEST1        CHAIN     FCYREQL1                           82                      248899
+     C     *IN82         IFEQ      '1'                                                        248899
+     C     *LOCK         IN        LDA                                                        248899
+     C                   MOVEL     'FC0060'      DBPGM                                        248899
+     C                   MOVEL     'FCYREQL1'    DBFILE                                       248899
+     C                   MOVEL     SRNAM         DBKEY                          ************* 248899
+     C                   Z-ADD     88            DBASE                          * DBERR 088 * 248899
+     C                   SETON                                        U7U8      ************* 248899
+     C                   OUT       LDA                                                        248899
+     C                   EXSR      *PSSR                                                      248899
+     C                   END                                                                  248899
+     C                   MOVE      EKJBNM        ABJBNM                                       248899
+     C                   MOVE      EKJUSR        ABJUSR                                       248899
+     C                   MOVE      EKJBNB        ABJBNB                                       248899
+     C                   END                                                                  248899
+      *                                                                                       248899
+     C                   CALL      'FCC2001A'                                                 248899
+     C                   PARM                    ABJBNM           10                          248899
+     C                   PARM                    ABJUSR           10                          248899
+     C                   PARM                    ABJBNB            6                          248899
+     C**********                                                                              248899
+     C***CALL*PROGRAM FC0065                                                                  248899
+     C**********                                                                              248899
+     C**********         CALL      'FC0065'                                                   248899
+     C**********         PARM                    USER                                         248899
+     C**********         PARM                    BRANCH                                       248899
+     C**********         PARM                    SRNAM                                        248899
+     C**********         PARM                    SDESC                                        248899
+     C**********         PARM                    SSEQ                                         248899
+     C**********         PARM                    MODE                                         248899
+     C**********         PARM                    TERM              1                          248899
      C*
      C** IF FC0065 RETURNS TERM AS 'T' THEN TERMINATE PROGRAM
      C*
-     C     TERM          IFEQ      'T'
+     C*****TERM*         IFEQ      'T'                                                        248899
+     C     *INKL         IFEQ      '1'                                                        248899
+     C     *INKC         OREQ      '1'                                                        248899
      C                   EXSR      CTERM
      C                   END
      C*

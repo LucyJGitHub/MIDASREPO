@@ -28,12 +28,13 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 259591             Date 22May20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CGL029             Date 01Sep03               *
       * Midas Release 4 --------------- Base -------------------------*
@@ -43,6 +44,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  259591 - From the Depot Walk In/Out, users intermittently    *
+      *           encounter booking branch validation error message.  *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -51,12 +54,12 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -68,98 +71,98 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
       ** Array of error message IDs
       ** Array of error message data.
      D FldNamXAr       S             10A   DIM(XArrayMax)
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Branch Details Data Structure
       ** DS used for Access Objects pgm
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
- 
- 
+
+
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
- 
+
+
      ** Input field(s)
      ** --------------
- 
+
       ** Screen Field(s)
      D  DDDPBA         S              3A
- 
+
       ** ICD
       ** System Details
- 
+
      D  MBIN           S              1A
      D  USRBCH         S              3A
- 
+
       ** Output field(s)
       ** ---------------
- 
+
      D DDDPBAOk        S              1A
      D DPBA            S              3A
- 
+
       ** Working Variables
       ** -----------------
- 
+
      D @DSNB           S              3A
      D @ERR            S              1P 0
      D @ZBR            S              3A
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
       *                                                                                       CGL029
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
       *                                                                                       CGL029
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -167,8 +170,8 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
- 
+
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
@@ -179,12 +182,12 @@
       ** Initialization
       *
      C                   MOVE      *BLANK        RetCodeIn
- 
+
      C                   MOVE      *BLANK        FldNamXAr
      C                   MOVE      *BLANK        MsgIDXAr
      C                   MOVE      *BLANK        MsgDtaXAr
      C                   Z-ADD     0             Idx
- 
+
      C                   MOVE      *Blanks       DPBA
       *
       ** Validation
@@ -200,7 +203,7 @@
       * Return
       *
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -212,7 +215,7 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     DPBAV         BEGSR
       *
       ** MultiBranch = ON
@@ -253,7 +256,7 @@
       *
       ** Update file
       *
- 
+
      C                   ELSE
       *
       ** No branch entered
@@ -275,12 +278,13 @@
       **  Validate SPF - User's authority to booking branch
       *
      C     RespMode      IFEQ      'S'
- 
+
      C                   CALL      'ZVBBU'
      C                   PARM      DPBA          @ZBR
      C                   PARM                    @ERR
       *
-     C     @ERR          IFEQ      2
+     C*****@ERR*         IFEQ      2                                                          259591
+     C     @ERR          IFEQ      1                                                          259591
       *
       ** Error 307
       *
@@ -289,8 +293,9 @@
      C                   MOVEL     'MMA0343'     MsgIdXAr(Idx)
      C                   MOVE      'N'           DDDPBAOK
      C                   END
- 
-     C     @ERR          IFEQ      1
+     C*
+     C*****@ERR*         IFEQ      1                                                          259591
+     C     @ERR          IFEQ      2                                                          259591
       *
       ** Error 308
       *
@@ -299,7 +304,7 @@
      C                   MOVEL     'MMA0344'     MsgIdXAr(Idx)
      C                   MOVE      'N'           DDDPBAOK
      C                   END
- 
+
      C                   END
       *
       ** Fetch default Branch Internal Customer Number for single branch
@@ -320,11 +325,11 @@
      C                   PARM      DPBA          @DSNB
      C*****SDBRCH        PARM      SDBRCH        DSFDY                                        CGL029
      C     SDBRCH        PARM      SDBRCH        DSSDY                                        CGL029
- 
+
      C                   END
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -336,21 +341,21 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *inzsr        BEGSR
- 
+
      C     *entry        PLIST
- 
+
       ** Return Error code Indicator
      C                   PARM                    RetCodeIn
- 
+
       ** Received parameters
       ** -------------------
- 
+
       ** Screen Fields
       *  Booking Branch Code (3A)
      C                   PARM                    DDDPBA
- 
+
       ** System Details
       *  Multi-Branch Indicator  (1A)
       *  Default User's Branch (3A)
@@ -358,33 +363,33 @@
      C                   PARM                    MBIN
      C                   PARM                    USRBCH
      C                   PARM                    RespMode          1
- 
+
       ** Returned parameters
       ** -------------------
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
- 
+
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
- 
+
       ** Data structure for the branch details
      C                   PARM                    SDBRCH
- 
+
       ** Branch Code Ok Indicator (1A)
       ** Branch Code (3A)
      C                   PARM                    DDDPBAOk
      C                   PARM                    DPBA
- 
- 
+
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **--------------------------------------------------------------------------------------------
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

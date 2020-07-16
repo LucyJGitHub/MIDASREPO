@@ -23,8 +23,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 248812B            Date 22May20               *
+      *  Prev Amend No. 248812A            Date 22MaY20               *
+      *                 248812             Date 22May20               *
+      *                 CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD039105           Date 06Jun16               *
       *                 CSW216             Date 14Mar16               *
       *                 CPK030             Date 11Apr14               *
@@ -56,6 +59,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  248812B- Another MSGW due to non-existence of other data area*
+      *  248812A- Another MSGW due to non-existence of ZBRU1 not ZVRU1*
+      *  248812 - Error on APISERVFL when Response Mode S A S on MQ   *
+      *           Message. Dataara ZBRU and ZOBU not found.           *
+
       *  CSD102 - Password Length Extension                           *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039105 - Data truncation encountered when trying to insert *
@@ -96,23 +104,23 @@
       *                                                               *
       *****************************************************************
       /EJECT
- 
+
       ** API Transaction file
      FAPITRANSPDUF   E             DISK
- 
+
       ** File to log received data
      F***APOUTPUTPDO*   E           K DISK                                                   CAP186C
      F***APOUTPUTPDO    E           K DISK    PREFIX(O_)                            CAP186C MD039105
- 
+
       ** File to log unauthorised access attempts
      FAPUNAUTHPDO    E           K DISK    USROPN
- 
+
       ** File to log details of message after exception error
      FAPEXCPERPDO    E           K DISK
- 
+
       ** File to log job details
      FAPIJOBL0  O    E           K DISK    USROPN
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -131,20 +139,20 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
      D JournalEnt      DS
       * Standard fields on all journal entries
      D  Filler01                      5A
@@ -152,27 +160,27 @@
      D  JrnCode                       1A
      D  JrnEntType                    2A
      D  Filler02                     38A
- 
+
      D ControlInf      DS
      D  CTRLInfo1                     1
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** Do NOT change the following constant values. Alterations
       ** here require changes to PC applications.
- 
+
       * Don't need little letters...
      D CHARSET         C                   'ABCDEFGHIJKLMNOPQRST-
      D                                     UVWXYZABCDEFGHIJKLMN-
@@ -182,21 +190,21 @@
      D                                     JAmesC0oKunlO4G3i-
      D                                     XhW8pxQftVvTPLHgFdby-
      D                                     7qkZUM'
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D SDAPI         E DS                  EXTNAME(SDAPIPD)
       ** External DS for API ICD
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
       ** Incoming message header format
      D APHEAD        E DS                  EXTNAME(APHEADPD)
- 
+
       ** Data structure for incoming message formats
      D*BUFFER***       DS          6000                                                       CFT039
      D*BUFFER***       DS         12000                                                CFT039 CSW213
@@ -205,29 +213,34 @@
      D  USERID                33     42
      D**PASSWORD              43     52                                                       CSD102
      D  PASSWORD              43    170                                                       CSD102
- 
+      ***Command*to*create*dtaara*ZBRU,*ZOBU*and*ZVRU1*in*QTEMP****                   248812 248812A
+      ** Command to create dtaara ZBRU, ZOBU and ZBRU1 in QTEMP                              248812A
+      ** Increase array length for creation of other data areas                              248812B
+     D*CRT@*****       S             50    DIM(3) CTDATA PERRCD(1)                            248812
+     D CRT@            S             80    DIM(6) CTDATA PERRCD(1)                           248812B
+
       ** The include below brings in the return code structure that
       ** is used in calls to OS/400 APIs.
      D/COPY QSYSINC/QRPGLESRC,QUSEC
       * API Error code parameter
- 
+
      D PaySttmt      E DS                  EXTNAME(SDESSPPD)
       * Pay Settlement Instructions
      D RecSttmt      E DS                  EXTNAME(SDESSRPD)
       * Receive Settlement Instructions
      D FRASttmt      E DS                  EXTNAME(SDESSFPD)
       * FRA/IRS Settlement Instructions
- 
+
      D PayStmtV      E DS                  EXTNAME(SDESSPPD)  PREFIX(V)
       * Pay Settlement Instructions
      D RecStmtV      E DS                  EXTNAME(SDESSRPD)  PREFIX(V)
       * Receive Settlement Instructions
- 
+
      D PayStmtM      E DS                  EXTNAME(SDESSPPD)  PREFIX(M)
       * Pay Settlement Instructions
      D RecStmtM      E DS                  EXTNAME(SDESSRPD)  PREFIX(M)
       * Receive Settlement Instructions
- 
+
      D  DLRIS1In     E DS                  EXTNAME(DLRIS1PD)                                  CSW213
      D  DLRIS2In     E DS                  EXTNAME(DLRIS2PD)                                  CSW213
      D  DLRIS3In     E DS                  EXTNAME(DLRIS3PD)                                  CSW213
@@ -251,18 +264,18 @@
       ** ¦ Declared Variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       ** Real message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D MsgID           S                   LIKE(#MsgID)
      D MsgF            S             10A
- 
+
      D******Object          S             10A   INZ('APISERVER')                            BUG10160
      D Object          S             10A   INZ('APISERVFL')                                 BUG10160
      D Lib             S             10A   INZ('*LIBL')
@@ -272,14 +285,14 @@
      D WaitTime        S              6A   INZ('*CLS')
      D Dlcobj          S              1A
      D Return          S              7A
- 
+
       ** Error message for sending to the operator
      D MQError         S            132A
- 
+
       ** Other Depot Details for Securities Customer.
       ** This totals to 150 additional other depot details from the incoming message.
      D OthDData        S           4755A
- 
+
       ** Work variable used by CSW209                                                         CSW209
      D TRANS9A         S           1000A                                                      CSW209
      D TRANS9B         S           1000A                                                      CSW209
@@ -291,26 +304,26 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ****************************************************************
       *                                                              *
       *  Main processing                                             *
       *                                                              *
       ****************************************************************
- 
+
       ** Loop to read all records from API Transaction file
- 
+
      C                   READ      APITRANSPD                             91
- 
+
      C     *IN91         DOWEQ     *OFF
- 
+
       ** End job if Shutdown command received
      C                   IF        TYPE = 'SHUTDOWN'
      C                   DELETE    APITRANSD0
      C                   EVAL      CTRLInfo1 = '9'
      C                   LEAVE
      C                   ENDIF
- 
+
       ** If an exception error occurred when validating the last
       ** message, then the rollback will cause the same message to
       ** be retrieved again.
@@ -318,7 +331,7 @@
       ** file and retrieve the next message.
       ** The module in error is stored in the return code on the
       ** APHEAD parameter.
- 
+
      C     APRETCODE     IFNE      *BLANKS
      C                   EVAL      PASSWORD = *BLANKS                                         CSD102
      C                   WRITE     APEXCPERD0
@@ -326,7 +339,7 @@
       ** Perform a commit to ensure that message cannot be read again
      C                   COMMIT
      C                   ELSE
- 
+
       ** If required, validate the Profile / Password
      C                   IF        GHPWCR = 'Y'
      C                   EXSR      ValPrfPwd
@@ -334,37 +347,37 @@
      C                   EVAL      PASSWORD = *BLANKS                                         CSD102
      C                   EVAL      APPASSWORD = *BLANKS                                       CSD102
      C                   ENDIF
- 
+
       ** QUESI is the Error MSGID from the API call
       **   N.B. QUESI will always be blank if the checking is off
      C     QUSEI         IFEQ      *BLANKS
- 
+
      C                   EXSR      VALID8
- 
+
       ** The PrfHandle must be released to avoid hitting the job limit:
       ** 25574 simultaneous handles.
      C                   IF        GHPWCR = 'Y'
      C                   CALL      'QSYRLSPH'
      C                   PARM                    PrfHandle
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
       ** Send an error message for the  Profile / Password
      C                   EXSR      PrfPwdErr
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   DELETE    APITRANSD0
      C                   READ      APITRANSPD                             91
      C                   ENDDO
- 
+
       ** Perform a commit to ensure that the 'Shutdown' message is removed
       ** from the queue.
      C                   COMMIT
- 
+
      C                   SETON                                        LR
      C                   RETURN
       /EJECT
@@ -374,13 +387,13 @@
       *                                                              *
       ****************************************************************
      C     VALID8        BEGSR
- 
+
      C                   MOVEL     BUFFER        APHEAD
- 
+
      C     APMIDUSR      IFEQ      *BLANKS
      C                   MOVEL     PSUSER        APMIDUSR
      C                   ENDIF
- 
+
       ** Log incoming data
      C                   MOVEL     *BLANKS       O_BUFFER                                    CAP186C
      C                   MOVEL     BUFFER        O_BUFFER                                    CAP186C
@@ -396,9 +409,9 @@
      C+   :O_BUFFER                                                                         MD039105
      C+ )                                                                                   MD039105
      C/end-exec                                                                             MD039105
- 
+
       ** Set up the Transaction & Settlement DS's
- 
+
      C                   CALLB     'APPARSMSG'
      C                   PARM                    BUFFER
      C                   PARM                    TRANS1          500
@@ -432,13 +445,13 @@
      C                   PARM                    Trans9999_2                                  CSW213
      C                   PARM                    Trans9999_3                                  CSW213
      C                   PARM                    Bypass            1
- 
+
       ** Any unrecognised message types are written to the error file
      C     Bypass        IFEQ      'Y'
      C                   WRITE     APEXCPERD0
      C                   COMMIT
      C                   ENDIF
- 
+
       ** Load the entire message header into the API Dump data area so that
       **  dumps in any lower level modules will include the key information
      C     *Lock         IN        APDump
@@ -461,9 +474,9 @@
      C                   MOVEL     APRETCODE     ARRETCODE                                    CSD102
      C                   MOVEL     APMIDUSR      ARMIDUSR                                     CSD102
      C                   OUT       APDump
- 
+
       ** Validate
- 
+
       ** Call submodule to apply override and call appropriate
       ** validation program
      C     Bypass        IFEQ      'N'                                                        CPK015
@@ -504,7 +517,7 @@
      C                   PARM                    #ProcMod
      C                   PARM                    #ProcName
      C                   ENDIF                                                                CPK015
- 
+
      C                   ENDSR
       /EJECT
       ****************************************************************
@@ -513,10 +526,10 @@
       *                                                              *
       ****************************************************************
      C     ValPrfPwd     BEGSR
- 
+
       ** Decode the APPASSWORD field in preparation for the validation
      C                   EXSR      DECODE
- 
+
       ** The following call is an OS/400 API which will validate
       ** the incoming message parameters of UserId and Password.
       ** If the incoming details were valid, then the field QUSEI
@@ -526,21 +539,21 @@
       ** logged to APUNAUTHPD, and a message is sent to QSYSOPR.
       ** Unauthorised information will not be logged to APOUTPUTPD, as
       ** this file is updated during the VALID8 subroutine.
- 
+
      C                   MOVE      *BLANKS       PrfHandle
      C                   RESET                   QUSEC
- 
+
      C                   CALL      'QSYGETPH'
      C                   PARM                    USERID
      C                   PARM                    PASSWORD
      C                   PARM                    PrfHandle        12
      C                   PARM                    QUSEC
- 
+
       ** The UserID and Password fields are now irrelevant, and are
       ** starred out to prevent them appearing on log files and dumps.
      C                   MOVE      '**********'  APPASSWORD
      C                   MOVE      '**********'  PASSWORD
- 
+
      C                   ENDSR
       /EJECT
       ****************************************************************
@@ -549,11 +562,11 @@
       *                                                              *
       ****************************************************************
      C     PrfPwdErr     BEGSR
- 
+
       ** Send message to QSYSOPR warning of attempted unauthorised
       ** access to Midas APIs
- 
- 
+
+
      C                   CLEAR                   MQError
      C                   EVAL      MsgF = 'APMSGF'
      C                   IF        APUserID = *Blanks
@@ -561,21 +574,21 @@
      C                   ELSE
      C                   EVAL      MsgID = 'API0001'
      C                   END
- 
+
      C                   CALLB     'ZAMSGTOOPR'
      C                   PARM                    MQReturn         10
      C                   PARM                    MQError
      C                   PARM                    MsgID
      C                   PARM                    MsgF
- 
+
      C                   OPEN      APUNAUTHPD
      C                   WRITE     APUNAUTHD0
      C                   CLOSE     APUNAUTHPD
- 
- 
+
+
       ** Commit the MQGET operation
      C                   COMMIT
- 
+
      C                   ENDSR
       /EJECT
       ****************************************************************
@@ -584,7 +597,7 @@
       *                                                              *
       ****************************************************************
      C     DECODE        BEGSR
- 
+
      C                   MOVE      *BLANK        CURRCHAR          1
      C                   MOVE      *BLANKS       DECODED          10
      C                   Z-ADD     0             W                 1 0
@@ -596,46 +609,46 @@
       * X is the position in the clear or enciphered constant,
       * Y is a work field
       * Z is the position in the incoming (enciphered) password
- 
+
      C     Z             DOWLT     11
- 
+
       ** Get the next character in the password
      C     1             SUBST     PASSWORD:Z    CURRCHAR
- 
+
       ** Look up the cipher value
      C     CURRCHAR      SCAN      CIPHER        X
- 
+
       ** Ignore unrecognised characters
      C     X             IFNE      0
- 
+
      C     Z             MULT      2             Y
      C                   SUB       Y             X
      C     X             IFLE      0
      C                   ADD       63            X
      C                   ENDIF
- 
+
       ** Substitute in the correct value
      C     1             SUBST     CHARSET:X     CURRCHAR
- 
+
       ** Drop out if character is a blank
      C     CURRCHAR      IFEQ      *BLANK
      C                   LEAVE
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   CAT       CURRCHAR:W    DECODED
- 
+
       ** Cater for special case of blanks
      C     CURRCHAR      IFEQ      *BLANK
      C                   Z-ADD     1             W
      C                   ELSE
      C                   Z-ADD     0             W
      C                   ENDIF
- 
+
      C                   ADD       1             Z
- 
+
      C                   ENDDO
- 
+
      C                   MOVEL     DECODED       PASSWORD
      C                   ENDSR
       /EJECT
@@ -645,32 +658,32 @@
       *                                                              *
       ****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    JournalEnt
      C                   PARM                    ControlInf
- 
+
       * If the first byte of Control Information is 0, no data has been
       *  passed so simply return
- 
+
      C                   IF        CTRLInfo1 = '0'
      C                   SETON                                        LR                      248330
      C                   RETURN
      C                   ENDIF
- 
+
       *  Lock allocation data area
- 
+
       *   The data area is allocated *SHRRD here.
       *   The function to submit this tries to get a *EXCL lock.
- 
+
       *                         Submitter
       *                 Lock      Lock     Submitter
       *      Status    Status   Successful   Action
       *      ------    ------   ---------- ---------
       *   Not running  None        Yes      Submit this
- 
+
       *   Running      *SHRRD      No        None
- 
+
      C                   CALLB     'APCALCOBJ'
      C                   PARM                    Object
      C                   PARM                    Lib
@@ -680,44 +693,92 @@
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM                    Return
- 
+
       ** Set up Midas SPF Environment
      C                   CALL      'SFC0401'
- 
+
       ** Create required QTEMP objects
      C                   CALL      'APCCRTQTO'
      C                   PARM                    ReturnCde        10
- 
+
       ** Check for success, else bomb
      C     ReturnCde     IFNE      *BLANKS
      C                   ENDIF
- 
+
       ** Log job start-up in jobs file
      C                   OPEN      APIJOBL0
      C                   WRITE     JOBRCD
      C                   CLOSE     APIJOBL0
- 
+
       ** Set up the procedure/module/program names for calls to the
       **  validation modules
      C                   EVAL      #ProcPgm  = PSProcPgm
      C                   EVAL      #ProcMod  = PSProcMod
      C                   EVAL      #ProcName = PSProcName
- 
+
       ** Call CL to start commitment control
      C                   CALLB     'ZACSCMTCTL'
- 
+
       ** Access API ICD via access program
       *  (database error handling done in access program)
      C                   CALLB     'AOAPIR0'
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDAPI         PARM      SDAPI         DSFDY
- 
+
       ***Ensure*that*all*the*API*data*queues*exist*                                           CPK030
      C**********         CLEAR                   ReturnCode                                   CPK030
      C**********         CALL      'APCRTDTAQS'                                               CPK030
      C**********         PARM                    ReturnCode                                   CPK030
- 
+
+      ** Create dtaara ZBRU in QTEMP                                                          248812
+     C                   MOVE      *BLANKS       CMDTXT                                       248812
+     C                   MOVEA     CRT@(1)       CMDTXT                                       248812
+     C                   CALL      'QCMDEXC'                            9999                  248812
+     C                   PARM                    CMDTXT           50                          248812
+     C                   PARM      50            LEN              15 5                        248812
+
+      ** Create dtaara ZOBU in QTEMP                                                          248812
+     C                   MOVE      *BLANKS       CMDTXT                                       248812
+     C                   MOVEA     CRT@(2)       CMDTXT                                       248812
+     C                   CALL      'QCMDEXC'                            9999                  248812
+     C                   PARM                    CMDTXT                                       248812
+     C                   PARM      50            LEN                                          248812
+
+      ***Create*dtaara*ZVRU1*in*QTEMP**                                               248812 248812A
+      ** Create dtaara ZBRU1 in QTEMP                                                        248812A
+      ** Increase command text length                                                        248812B
+     C**********         MOVE      *BLANKS       CMDTXT                               248812 248812B
+     C**********         MOVEA     CRT@(3)       CMDTXT                               248812 248812B
+     C                   MOVE      *BLANKS       CMDTXT2                                     248812B
+     C                   MOVEA     CRT@(3)       CMDTXT2                                     248812B
+     C                   CALL      'QCMDEXC'                            9999                  248812
+     C**********         PARM                    CMDTXT                               248812 248812B
+     C**********         PARM      50            LEN                                  248812 248812B
+     C                   PARM                    CMDTXT2          80                         248812B
+     C                   PARM      80            LEN                                         248812B
+
+      ** Create dtaara ZBRU2 in QTEMP                                                        248812B
+     C                   MOVE      *BLANKS       CMDTXT                                      248812B
+     C                   MOVEA     CRT@(4)       CMDTXT                                      248812B
+     C                   CALL      'QCMDEXC'                            9999                 248812B
+     C                   PARM                    CMDTXT                                      248812B
+     C                   PARM      50            LEN                                         248812B
+                                                                                             248812B
+      ** Create dtaara ZOBU1 in QTEMP                                                        248812B
+     C                   MOVE      *BLANKS       CMDTXT2                                     248812B
+     C                   MOVEA     CRT@(5)       CMDTXT2                                     248812B
+     C                   CALL      'QCMDEXC'                            9999                 248812B
+     C                   PARM                    CMDTXT2                                     248812B
+     C                   PARM      80            LEN                                         248812B
+                                                                                             248812B
+      ** Create dtaara ZOBU2 in QTEMP                                                        248812B
+     C                   MOVE      *BLANKS       CMDTXT                                      248812B
+     C                   MOVEA     CRT@(6)       CMDTXT                                      248812B
+     C                   CALL      'QCMDEXC'                            9999                 248812B
+     C                   PARM                    CMDTXT                                      248812B
+     C                   PARM      50            LEN                                         248812B
+                                                                                             248812B
      C                   ENDSR
       /EJECT
       ****************************************************************
@@ -731,3 +792,10 @@
       ****************************************************************
 **  CPY@
 (c) Finastra International Limited 2003
+**  CRT@                                                                                      248812
+CRTDTAARA DTAARA(QTEMP/ZBRU) TYPE(*CHAR) LEN(304)                                             248812
+CRTDTAARA DTAARA(QTEMP/ZOBU) TYPE(*CHAR) LEN(304)                                             248812
+CRTDTAARA DTAARA(QTEMP/ZBRU1) TYPE(*CHAR) LEN(1998)                                   248812 248812A
+CRTDTAARA DTAARA(QTEMP/ZBRU2) TYPE(*CHAR) LEN(402)                                           248812B
+CRTDTAARA DTAARA(QTEMP/ZOBU1) TYPE(*CHAR) LEN(1998)                                          248812B
+CRTDTAARA DTAARA(QTEMP/ZOBU2) TYPE(*CHAR) LEN(402)                                           248812B

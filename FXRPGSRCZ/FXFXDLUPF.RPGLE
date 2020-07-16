@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 251029             Date 22May20               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CDL094             Date 30May14               *
       *                 CSW212             Date 03May12               *
@@ -77,6 +78,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  251029 - Applied fix 231306.                                 *
+      *  231306 - Handle file locking properly.                       *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date                                    *
@@ -567,7 +570,12 @@
      C*
      C* ACCESS RELATED DEAL
      C*
-     C     @F3DAN        CHAIN     FXDEALP0                           99
+     C*****@F3DAN        CHAIN     FXDEALP0                           99
+     C     @F3DAN        CHAIN     FXDEALP0                           9998                    231306
+      *                                                                                       231306
+     C     *IN98         IFEQ      '1'                                                        231306
+     C                   EXSR      SRERR                                                      231306
+     C                   ENDIF                                                                231306
      C*
      C**  DATA BASE ERROR
      C*
@@ -659,7 +667,12 @@
      C**  ACCESS DEAL
      C*
      C                   CLEAR                   FXDEAL
-     C     F3DN38        CHAIN     FXDEALP0                           99
+     C*****F3DN38        CHAIN     FXDEALP0                           99                      231306
+     C     F3DN38        CHAIN     FXDEALP0                           9998                    231306
+      *                                                                                       231306
+     C     *IN98         IFEQ      '1'                                                        231306
+     C                   EXSR      SRERR                                                      231306
+     C                   ENDIF                                                                231306
      C*
      C**  UPDATE 'BEFORE' STATUS
      C*
@@ -773,7 +786,12 @@
      C*
      C**  ACCESS DEAL
      C*
-     C     F3DN38        CHAIN     FXDEALP0                           99
+     C*****F3DN38        CHAIN     FXDEALP0                           99                      231306
+     C     F3DN38        CHAIN     FXDEALP0                           9998                    231306
+      *                                                                                       231306
+     C     *IN98         IFEQ      '1'                                                        231306
+     C                   EXSR      SRERR                                                      231306
+     C                   ENDIF                                                                231306
      C*
      C**  DATA BASE ERROR
      C*
@@ -922,7 +940,12 @@
      C*
      C**  ACCESS DEAL
      C*
-     C     F3DN38        CHAIN     FXDEALP0                           99
+     C*****F3DN38        CHAIN     FXDEALP0                           99                      231306
+     C     F3DN38        CHAIN     FXDEALP0                           9998                    231306
+      *                                                                                       231306
+     C     *IN98         IFEQ      '1'                                                        231306
+     C                   EXSR      SRERR                                                      231306
+     C                   ENDIF                                                                231306
      C*
      C**  DATA BASE ERROR
      C*
@@ -977,7 +1000,12 @@
      C*
      C* ACCESS RELATED DEAL
      C*
-     C     @F3DAN        CHAIN     FXDEALP0                           99
+     C*****@F3DAN        CHAIN     FXDEALP0                           99                      231306
+     C     @F3DAN        CHAIN     FXDEALP0                           9998                    231306
+      *                                                                                       231306
+     C     *IN98         IFEQ      '1'                                                        231306
+     C                   EXSR      SRERR                                                      231306
+     C                   ENDIF                                                                231306
      C*
      C**  DATA BASE ERROR
      C*
@@ -1046,7 +1074,12 @@
      C*
      C**  ACCESS DEAL
      C*
-     C     F3DN38        CHAIN     FXDEALP0                           99
+     C*****F3DN38        CHAIN     FXDEALP0                           99                      231306
+     C     F3DN38        CHAIN     FXDEALP0                           9998                    231306
+      *                                                                                       231306
+     C     *IN98         IFEQ      '1'                                                        231306
+     C                   EXSR      SRERR                                                      231306
+     C                   ENDIF                                                                231306
      C*
      C**  DATA BASE ERROR IF NOT FOUND
      C*
@@ -2010,6 +2043,13 @@
      C                   PARM                    DummyMsgF                      CAP006
      C                   ADD       1             C                              CAP006
      C                   END                                                    CAP006
+      *                                                                                       231306
+      **  Produce DUMP if error on validation found for easier analysis                       231306
+      *                                                                                       231306
+     C                   MOVEL     MidasDlNum    DBKEY                                        231306
+     C                   MOVEL     'FXDEALP0'    DBFILE                                       231306
+     C                   MOVEL     '016'         DBASE                                        231306
+     C                   DUMP                                                                 231306
                                                                                 CAP006
      C                   END                                                    CAP006
                                                                                 CAP006
@@ -2061,6 +2101,10 @@
      C                   EXSR      SRIdxTrn                                                   CRE020
      C                   ENDIF                                                                CRE020
      C                   ENDIF                                                                CRE020
+      *                                                                                       231306
+     C     @RTCD         IFEQ      '*RECLCK'                                                  231306
+     C                   EXSR      SRERR                                                      231306
+     C                   ENDIF                                                                231306
       *
      C                   ENDSR
      C*****************************************************************
@@ -2799,12 +2843,21 @@
      C*****************************************************
      C     SRERR         BEGSR
      C*
+     C     *IN98         IFEQ      '1'                                                        231306
+     C     @RTCD         OREQ      '*RECLCK'                                                  231306
+     C                   MOVEL     '*RECLCK'     @@RTCD                                       231306
+     C                   SETON                                        LR                      231306
+     C                   ELSE                                                                 231306
+      *                                                                                       231306
      C                   MOVEL     '*ERROR '     @@RTCD
      C                   MOVEL     'FXFXDLUPF'   DBPGM            10
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
      C                   MOVE      '1'           *INLR
      C                   DUMP
+      *                                                                                       231306
+     C                   ENDIF                                                                231306
+      *                                                                                       231306
      C*
      C**  TERMINATE THE PROGRAM
      C*

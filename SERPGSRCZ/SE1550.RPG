@@ -18,10 +18,12 @@
       *  (c) Finastra International Limited 2001                      *
       *      1988, 1991.                                              *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 258879             Date 22May20               *
+      *  Prev Amend No. 249578             Date 22May20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. CRE026             Date 24May06               *
+      *                 CRE026             Date 24May06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CSD027             Date 09Dec05               *
       *                 CSW037A            Date 02May05               *
@@ -60,6 +62,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  258879 - Duplicate projected a/c movements for TS generated  *
+      *           in COB. Applied fixes 255167 and 252669.            *
+      *  249578 - Position settlements.  Applied 234878.              *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE026 - Consumer Banking (Recompile)                        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -204,8 +209,10 @@
      I**  PRFC renamed to avoid overwriting with field on ACCNT           S01117
      I*                                                                   S01117
      ICPEVEDF     02
+     I              RECI                            EVRECI                                    249578
      I              CPYD                            CCPD                  S01510
      IDPEVEDF     03
+     I              RECI                            EVRECI                                    249578
      ILDA         DS                            256                       S01117
      I*                                                                   S01117
      I**  Local Data Area for Database Error Reporting                    S01117
@@ -439,10 +446,12 @@
      C***********TRVD      IFLT DNWD                               132257 CRE009
      C           CRE009    IFEQ 'Y'                                       CRE009
      C           TRVD      ANDLEWDATE                                     CRE009
-     C           TRVD      ANDGERUND                                      132257
+     C           IBRE      ANDNE'Y'                                                           258879
+     C********** TRVD      ANDGERUND                                                   132257 258879
      C           CRE009    OREQ 'N'                                       CRE009
      C           TRVD      ANDLTDNWD                                      CRE009
-     C           TRVD      ANDGERUND                                      CRE009
+     C           IBRE      ANDNE'Y'                                                           258879
+     C********** TRVD      ANDGERUND                                                   CRE009 258879
      C********** SKTD      ANDEQ'T'                                                    S01448 201149
      C/COPY WNCPYSRC,SE1550C003
      C*
@@ -484,15 +493,16 @@
      C*
      C                     ELSE
      C           APNS      IFEQ 'Y'                                       S01154
+     C           EVRECI    OREQ 'A'                                                           249578
      C***********CCDT      IFEQ DNWD                                      S01154
      C***********CCDT      IFEQ RUND                               S01154 132257
      C***********CCDT      IFLT DNWD                               132257 CRE009
      C           CRE009    IFEQ 'Y'                                       CRE009
      C           CCDT      ANDLEWDATE                                     CRE009
-     C           CCDT      ANDGERUND                                      132257
+     C********** CCDT      ANDGERUND                                                   132257 258879
      C           CRE009    OREQ 'N'                                       CRE009
      C           CCDT      ANDLTDNWD                                      CRE009
-     C           CCDT      ANDGERUND                                      CRE009
+     C********** CCDT      ANDGERUND                                                   CRE009 258879
      C/COPY WNCPYSRC,SE1550C004
      C*
      C           CCSM      IFEQ 4

@@ -3,23 +3,25 @@
 /*EXI *  TEXT('Midas RE CONSOLIDATED INT. STATEMENT PRINT')          */
 /*********************************************************************/
 /*                                                                   */
-/*       Midas     Retail Module                                 */
+/*       Midas     Retail Module                                     */
 /*                                                                   */
 /*       REC3765 - INTEREST STATEMENT PRINT - CONSOLIDATED           */
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. 253776             Date 22May20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       PREV AMEND NO. S01413 *CREATE     DATE 13APR93              */
+/*                      S01413 *CREATE     DATE 13APR93              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       253776 - Monitor job switches.                              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       S01413 - Retail 3 Incorporation                             */
 /*                                                                   */
@@ -60,8 +62,10 @@
 /*/COPY WNCPYSRC,REC3765002                                          */
              CALL       PGM(RE3765) PARM(&BJLANG)
 /*/COPY WNCPYSRC,REC3765003                                          */
-             DLTOVR     FILE(*ALL)
+   DLTOVR     FILE(*ALL)
+   IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO CMDLBL(ABNOR))                            /*253776*/
 /**/
-             CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Finastra International Limited')
+   CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International Limited')
+ ABNOR: SNDPGMMSG MSG('REC3765 - Consolidated Retail interestS statements ended +
+                abnormally') TOMSGQ(MOPERQ MRUNQ)                                         /*253776*/
 ENDCL:       ENDPGM

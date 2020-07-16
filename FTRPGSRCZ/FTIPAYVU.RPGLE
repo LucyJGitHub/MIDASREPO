@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD050928           Date 15May18               *
+      *  Last Amend No. 257943             Date 22May20               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD050928           Date 15May18               *
       *                 MD047369A          Date 24Jan18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD042042           Date 14Feb17               *
@@ -100,6 +101,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  257943 - Using the CANCEL button after routing MT103 to an   *
+      *           incoming message, does not release the MT103 to be  *
+      *           routed again. Ensure that a selected message is     *
+      *           released if the transaction is cancelled.           *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD050928 - SP15_MQ: Unclear error message - Error validating *
       *              'Stamp Tax Amount' : Invalid Numeric Value       *
@@ -221,7 +226,8 @@
      F                                     PREFIX(PY)
 
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
-
+     FMEINCRL2  IF   E           K DISK    INFSR(*PSSR)                                       257943
+     FMEINCRL3  IF   E           K DISK    INFSR(*PSSR)                                       257943
       ** Hook to enable non-core files to be included
       /COPY WNCPYSRC,FTIPAYV001
 
@@ -1056,6 +1062,23 @@
       *                                                                                      BUG1282
       ** Delete reserved messages if user presses cancel                                     BUG1282
       *                                                                                      BUG1282
+     C                   MOVEL     DDSEQNO       WSEQNO                                       257943
+                                                                                              257943
+     C     WSEQNO        IFEQ      0                                                          257943
+     C                   Z-ADD     1             PKPRT                                        257943
+     C                   ELSE                                                                 257943
+     C                   Z-ADD     WSEQNO        PKPRT                                        257943
+     C                   ENDIF                                                                257943
+     C     DDSWTN        CHAIN     @INCRL2                                                    257943
+     C                   IF        %FOUND (MEINCRL2)                                          257943
+     C                   EVAL      PMSGR = CRMSGR                                             257943
+     C                   ELSE                                                                 257943
+     C     DDSWTN        CHAIN     @INCRL3                                                    257943
+     C                   IF        %FOUND (MEINCRL3)                                          257943
+     C                   EVAL      PMSGR = CRMSGR                                             257943
+     C                   ENDIF                                                                257943
+     C                   ENDIF                                                                257943
+                                                                                              257943
      C                   EXSR      DlRsMsg                                                   BUG1282
      C                   EVAL      *INLR = *ON                                               BUG1282
      C                   RETURN                                                              BUG1282

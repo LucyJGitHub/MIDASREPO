@@ -24,9 +24,12 @@
       *                                                               *                       CAP083
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD041126           Date 04May20               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD039032           Date 22May20               *
+      *  Prev Amend No. 259813             Date 22May20               *
+      *                 251029             Date 22May20               *      
+      *                 MD041126           Date 04May20               *
+      *                 CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD039105           Date 06Jun16               *
       *                 CSW216             Date 14Mar16               *
       *                 CPK030             Date 11Apr14               *
@@ -132,6 +135,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039032 - Modified fix 251029 to include checking of the    *
+      *             Front Office ID to make sure that new transactions*
+      *             will be processed.                                *
+      *  259813 - Clear APDUMP before giving it a new value.          *
+      *           Applied for MD-39032                                *
+      *  251029 - Handle file locking properly.  Applied fix 231306   *
+      *           and added some checking in field ARERRMODE.         *      
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
       *           - Applied for MD055614                              *
       *  CSD102 - Password Length Extension                           *
@@ -360,6 +370,7 @@
      D ClosFailed      C                   CONST('MQSeries MQCLOS failed: ')
      D ConnFailed      C                   CONST('MQSeries MQCONN failed: ')                  245310
      D DiscFailed      C                   CONST('MQSeries MQDISC failed: ')                  245310
+     D ProcErr         C                   CONST('Error in module')                           251029
 
       ** Do NOT change the following constant values. Alterations
       ** here require changes to PC applications.
@@ -748,13 +759,42 @@
       ** file and retrieve the next message.
       ** The module in error is stored in the return code on the
       ** APHEAD parameter.
-
-     C     APRETCODE     IFNE      *BLANKS
+      ** or in dtaara APDUMP in case of exception error after validation                      251029
+      ** modules in controller                                                                251029
+                                                                                              251029
+     C                   IN        APDUMP                                                     251029
+     C                   MoveL     BUFFER        APHEAD                                     MD039032
+     C*
+     C*****APRETCODE     IFNE      *BLANKS                                                    251029
+     C**********         IF        (APRETCODE <> *BLANKS) OR                         251029 MD039032
+     C                   If        (APRETCODE <> *BLANKS And                                MD039032
+     C                              APFOTRANID = ARFOTRANID) Or                             MD039032
+     C                             (ARERRMOD <> *BLANKS AND                                   251029
+     C                              APFOTRANID = ARFOTRANID And                             MD039032
+     C                             %SUBST(ARERRMOD:1:2) =                                     251029
+     C                             %SUBST(TYPE:1:2))                                          251029
      C                   EVAL      PASSWORD = *BLANKS                                         CSD102
      C                   WRITE     APEXCPERD0
      C                   EVAL      APRETCODE = *BLANKS
       ** Perform a commit to ensure that message cannot be read again
      C                   COMMIT
+                                                                                              251029
+      ** If error detected, send message to system operator                                   251029
+                                                                                              251029
+     C     ARERRMOD      IFNE      *BLANK                                                     251029
+     C                   EVAL      MQError = ProcErr + ARERRMOD                               251029
+                                                                                              251029
+     C                   CALLB     'ZAMSGTOOPR'                                               251029
+     C                   PARM                    MQReturn                                     251029
+     C                   PARM                    MQError                                      251029
+     C                   PARM                    DummyMsgID                                   251029
+     C                   PARM                    DummyMsgF                                    251029
+                                                                                              251029
+     C     *LOCK         IN        APDUMP                                                     251029
+     C                   EVAL      ARERRMOD = *BLANK                                          251029
+     C                   OUT       APDUMP                                                     251029
+     C                   ENDIF                                                                251029
+                                                                                              251029
      C                   ELSE
      C/COPY WNCPYSRC,APH00075
 
@@ -1121,7 +1161,9 @@
       ** Load the entire message header into the API Dump data area so that
       **  dumps in any lower level modules will include the key information
      C     *Lock         IN        APDump
+     C                   Clear                   APDUMP                                       259813
      C**********         MOVEL     APHEAD        APDUMP                                       CSD102
+     C                   MOVE      *BLANKS       ARERRMOD                                     251029
      C                   MOVEL     APTGTTYPE     ARTGTTYPE                                    CSD102
      C                   MOVEL     APTGTSYS      ARTGTSYS                                     CSD102
      C                   MOVEL     APSRCTYPE     ARSRCTYPE                                    CSD102

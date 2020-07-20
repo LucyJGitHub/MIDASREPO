@@ -2,15 +2,16 @@
 /*STD    CLPBASE                                                     */
 /*EXI    TEXT('Midas LE Events File Creation')                       */
 /*********************************************************************/
-/*                                                                  */
-/*        Midas     - Customer Lending Module                   */
-/*                                                                  */
-/*     LEC0609A -  EVENTS FILE CREATION I                           */
-/*                                                                  */
+/*                                                                   */
+/*        Midas     - Customer Lending Module                        */
+/*                                                                   */
+/*     LEC0609A -  EVENTS FILE CREATION I                            */
+/*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
-/*                                                                  */
-/*       Last Amend No. MD054799           Date 14Nov19              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                                                                   */
+/*       Last Amend No. MD055685           Date 24Apr20              */
+/*       Prev Amend No. MD054799           Date 14Nov19              */
+/*                      MD046248           Date 27Oct17              */
 /*                      MD021351           Date 06May14              */
 /*                      MD021605           Date 22Aug13              */
 /*                      MD020954           Date 02Aug13              */
@@ -61,8 +62,12 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
-/*       MD054799 - LVNTXEL contains two P1 events for a single     */
-/*                  PDCL                                            */
+/*       MD055685 - Double posting of Retail Account Debit Balance   */
+/*                  on FCLTYFN and FACHISA. Do not process RSACMTPD  */
+/*                  records on ANWD run. Set job switch 4 to ON to   */
+/*                  signal LE0491 that program is called on ANWD     */
+/*       MD054799 - LVNTXEL contains two P1 events for a single      */
+/*                  PDCL                                             */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD021351 - Design for Kill object locks                    */
 /*       MD021605 - Process only non-PDCL on the first run and only */
@@ -536,7 +541,7 @@ RECVRD:                                                                         
                           &SVALK6 &SVAL6 &SVALK7 &SVAL7 &SVALK8 +
                           &SVAL8 &SVALK9 &SVAL9 &SVALK0 &SVAL10)                        /*BUG28050*/
 /**********  ENDDO                                              */              /*CLE134 AR1073031*/
- 
+
 /* If the 'JavaPathStem' system value is missing then end abnormally */                  /*BUG3523*/
                                                                                          /*BUG3523*/
              IF         COND(%SST(&JAVAPATH 1 4) *EQ '*NRF') THEN(GOTO +
@@ -565,7 +570,7 @@ RECVRD:                                                                         
                              '/lib/ext')                                                 /*BUG3523*/
                 ADDLNK     OBJ(&JAVAPATH2) NEWLNK(B)                                     /*BUG3523*/
                 MONMSG     MSGID(CPFA0A0)                                                 /*CLE025*/
- 
+
 /* Get 'BrgMidasSystemPrefix' system value from file SDSVALPD  */                         /*CLE040*/
                                                                                           /*CLE040*/
              CALL       PGM(AOSVALR0) PARM(&RTNCDE +
@@ -717,8 +722,12 @@ RECVRD:                                                                         
                                                                                           /*CLE040*/
 /* For ANWD run, perform overrides  */                                                    /*CLE040*/
                                                                                           /*CLE040*/
-                   IF         COND((&CLE025 = 'Y') *AND (&CSEQ = 10025)) THEN(DO)         /*CLE040*/
+/**********        IF         COND((&CLE025 = 'Y') *AND (&CSEQ = 10025)) THEN(DO)/*CLE040 MD055685*/
+                   IF         COND((&CLE025 = 'Y' *AND &CSEQ = 10025) *OR +
+                                (&CLE025 = 'Y' *AND &CSEQ = 04002)) THEN(DO)            /*MD055685*/
                         OVRDBF     FILE(GLACP1L2) TOFILE(GLACP5L2) SHARE(*NO)             /*CLE040*/
+                                                                                        /*MD055685*/
+                        CHGJOB     SWS(XXX1XXXX)                                        /*MD055685*/
                    ENDDO                                                                  /*CLE040*/
                                                                                           /*CLE040*/
 /**********        CALL       PGM(LE0491)   */                                     /*S01270 CLE134*/

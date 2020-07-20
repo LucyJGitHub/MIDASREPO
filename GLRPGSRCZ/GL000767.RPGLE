@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD054940           Date 18Feb20               *      
-      *  Prev Amend No. MD055078           Date 18Feb20               *
+      *  Last Amend No. MD056237           Date 20Jul20               *
+      *  Prev Amend No. MD054940           Date 18Feb20               *
+      *                 MD055078           Date 18Feb20               *
       *                 MD055071           Date 29Jan20               *
       *                 MD054986           Date 27Jan20               *
       *                 MD054905           Date 04Dec19               *
@@ -29,6 +30,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056237 - Reporting Group/Accounts were removed from the    *
+      *             CRS Report after authorization. Amend to          *
+      *             correctly get data from file.                     *
       *  MD054940 - CRS Issue: Controlling Person Type                *
       *  MD055078 - Information on non-account holders is missing     *
       *  MD055071- Correct A/C Holder Type for N/PA. With ContPerson  *
@@ -2908,6 +2912,26 @@
      C                   EVAL      MGELMT = 'BirthDate'
      C                   EVAL      MGDATA = E5DBTH
      C                   EXSR      SRWrite
+                                                                                            MD056237
+     C                   EVAL      MGELMT = 'City'                                          MD056237
+     C                   EVAL      MGDATA = E5BTHT                                          MD056237
+     C                   EXSR      SRWrite                                                  MD056237
+                                                                                            MD056237
+     C                   EVAL      KGroupNm = 'BirthInfo2'                                  MD056237
+     C                   EVAL      KElemNm  = 'CountryInfo'                                 MD056237
+     C                   EXSR      SRGetGrpLevl                                             MD056237
+     C                   EVAL      MGELMT = 'CountryInfo'                                   MD056237
+     C                   EVAL      MGDATA = *Blanks                                         MD056237
+     C                   EXSR      SRWrite                                                  MD056237
+                                                                                            MD056237
+     C                   EVAL      KGroupNm = 'CountryInfo'                                 MD056237
+     C                   EVAL      KElemNm  = 'CountryCode'                                 MD056237
+     C                   EVAL      MGTPMT = KGroupNm                                        MD056237
+     C                   EVAL      MGELMT = KElemNm                                         MD056237
+     C                   EVAL      MGDATA = E5BTHC                                          MD056237
+     C                   EXSR      SRWrite                                                  MD056237
+     C                   EVAL      MGTPMT = 'ControllingPerson'                             MD056237
+                                                                                            MD056237
      C                   ENDIF                                                              MD045184
 
      C                   ELSE
@@ -2961,6 +2985,25 @@
      C                   EVAL      MGDATA = *BLANKS
      C                   MOVEL     NHDBTH        MGDATA
      C                   EXSR      SRWrite
+                                                                                            MD056237
+     C                   EVAL      MGELMT = 'City'                                          MD056237
+     C                   EVAL      MGDATA = NHBTHT                                          MD056237
+     C                   EXSR      SRWrite                                                  MD056237
+                                                                                            MD056237
+     C                   EVAL      KGroupNm = 'BirthInfo2'                                  MD056237
+     C                   EVAL      KElemNm  = 'CountryInfo'                                 MD056237
+     C                   EXSR      SRGetGrpLevl                                             MD056237
+     C                   EVAL      MGELMT = 'CountryInfo'                                   MD056237
+     C                   EVAL      MGDATA = *Blanks                                         MD056237
+     C                   EXSR      SRWrite                                                  MD056237
+                                                                                            MD056237
+     C                   EVAL      KGroupNm = 'CountryInfo'                                 MD056237
+     C                   EVAL      KElemNm  = 'CountryCode'                                 MD056237
+     C                   EVAL      MGTPMT = KGroupNm                                        MD056237
+     C                   EVAL      MGELMT = KElemNm                                         MD056237
+     C                   EVAL      MGDATA = NHBTHC                                          MD056237
+     C                   EXSR      SRWrite                                                  MD056237
+     C                   EVAL      MGTPMT = 'ControllingPerson'                             MD056237
      C                   ENDIF                                                              MD045184
      C                   ENDIF
 

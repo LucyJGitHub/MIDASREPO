@@ -77,7 +77,7 @@
       *  MD055830 - Checked first if CRE100 is switched on considering*
       *             system values RET_INTAC_CUST_LVL and RET_CHG_CUST_*
       *             LVL would not be allocated when CRE100 is switched*
-      *             off.                                              *
+      *             off                                               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039111 - REC3666 in MSGW during COB                        *
       *  MD034990 - Postings not posted against account sequence of   *

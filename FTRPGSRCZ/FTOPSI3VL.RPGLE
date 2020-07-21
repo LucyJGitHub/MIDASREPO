@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *  Last Amend No. MD055626           Date 13Apr20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CFT157             Date 29Aug14               *
       *                 AR1097264          Date 27Mar13               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
@@ -43,6 +44,8 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD055626 - Database error in OPAY Template maintenance upon  *
+      *             completion of input                               *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *            (Recompile)                                        *
@@ -244,6 +247,7 @@
       ** +--------------------------------------+
       *
      D CFT120          S              1A                                                      CFT120
+     D InputUser       S             10A                                                    MD055626
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -430,6 +434,7 @@
      C                   Parm                    NwPtFilFmX
       *  Validation Work Fields from/to caller
      C                   Parm                    Val@Fields
+     C                   PARM      *BLANKS       InputUser                                  MD055626
       *
       **  Restore defaulted values
      C                   Movel     SSTRCT        STRCT

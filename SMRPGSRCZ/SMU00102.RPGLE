@@ -11,13 +11,18 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055748           Date 10Jul20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. BG26993            Date 26Jan10               *
+      *                 BG26993            Date 26Jan10               *
       *                 210796  *CREATE    Date 09Jul03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055748 - Program does not update SDNOSTPD field A7OACN     *
+      *             because SETLL uses 0 as key instead of 1, which   *
+      *             means that no record will be found for update.    *
+      *             Correct access to SDNOSTPD by using 1 as key.     *
       *  MD046248 - Finastra Rebranding                               *
       *  BG26993 - Delivery of upgrade programs to core.              *
       *          - Renamed program S210796R01.                        *
@@ -119,8 +124,9 @@
      C     *INZSR        BEGSR
  
       ** Read first record from MBRBSDD.
- 
-     C     0             SETLL     SDNOSTPD
+
+     C*****0****         SETLL     SDNOSTPD                                                 MD055748
+     C     1             SETLL     SDNOSTPD                                                 MD055748
      C                   READ      SDNOSTPD                             9999
       *
       * Until end of file.

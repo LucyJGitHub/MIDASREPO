@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 259576             Date 02Apr14               *
-      *  Prev Amend No. MD021318A          Date 08Aug13               *
+      *  Last Amend No. MD056318           Date 23Jul20               *
+      *  Prev Amend No. 259576             Date 02Apr14               *
+      *                 MD021318A          Date 08Aug13               *
       *                 MD021318           Date 26Jul13               *
       *                 AR884141           Date 19Jun13               *
       *                 MD051978           Date 14Oct19               *
@@ -120,6 +121,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056318 - Missed out compatibility patch objects in RBRU    *
+      *             SP22 Upgrade Delivery (RZBDK0001)                 *
       *  259576 - Remove warning message for Inactive accounts.       *
       *           Applied for MD-26109                                *
       *  MD021318A - Array index error due to incorrect position of   *

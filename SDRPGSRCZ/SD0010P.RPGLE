@@ -16,8 +16,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. EML103             Date 19Feb20               *
-      *  Prev Amend No. CER073D            Date 28Nov19               *
+      *  Last Amend No. CER076             Date 22Jul20               *
+      *  Prev Amend No. EML103             Date 19Feb20               *
+      *                 CER073D            Date 28Nov19               *
       *                 CER050             Date 16Jun19               *
       *                 MD050212           Date 02Apr18               *
       *                 CGL177             Date 11Jan16               *
@@ -118,6 +119,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  CER076   - Update to KWG § 24c interface specification       *
+      *             (BaFin version 3.3)                               *
       *  EML103 - Upgrade EMP001 to FB Midas SP2.1                    *
       *           Additional Fields on customer details.              *
       *           Existing /COPY members used:                        *
@@ -302,6 +305,10 @@
       *
      FSDANACI1  IF   E           K DISK
       * AnaCredit Reporting            Retrieval index                                        CER073
+      *                                                                                       CER076
+     FSDACUSY0  IF   E           K DISK    INFSR(*PSSR)                                       CER076
+     F                                     USROPN                                             CER076
+      * Additional customer details extension                                                 CER076
       *
      F*
      F/COPY WNCPYSRC,SD0010PFP1
@@ -847,6 +854,19 @@
      C                   ENDDO
      C                   ENDIF
       *                                                                                       CGL177
+      * Economic Identification No.                                                           CER076
+      *                                                                                       CER076
+     C     CER076        IFEQ      'Y'                                                        CER076
+     C     SDACUK        KLIST                                                                CER076
+     C                   KFLD                    BBCUST                                       CER076
+     C     SDACUK        CHAIN     SDACUSY0                           99                      CER076
+     C     *IN99         IFEQ      '0'                                                        CER076
+     C                   MOVEL     E5EINO        REINO                                        CER076
+     C                   ELSE                                                                 CER076
+     C                   MOVEL     *BLANK        REINO                                        CER076
+     C                   ENDIF                                                                CER076
+     C                   ENDIF                                                                CER076
+      *                                                                                       CER076
      C**********           Z-ADDE5ISDT    ZDAYNO                                       CGL032 232543
      C     2             SUBST     E5ISDT:7      WDD               2
      C     2             SUBST     E5ISDT:5      WMM               2
@@ -3453,6 +3473,23 @@
      C                   MOVE      *OFF          *IN20
      C                   ENDIF
       *                                                                                       CER050
+      ** Check if feature CER076 is installed                                                 CER076
+      *                                                                                       CER076
+     C                   MOVE      'N'           CER076            1                          CER076
+     C                   MOVE      *OFF          *IN48                                        CER076
+      *                                                                                       CER076
+     C                   CALL      'AOSARDR0'                                                 CER076
+     C                   PARM      *BLANKS       PRTCD                                        CER076
+     C                   PARM      '*VERIFY'     POPTN                                        CER076
+     C                   PARM      'CER076'      PSARD                                        CER076
+     C     SCSARD        PARM      SCSARD        DSSDY                                        CER076
+      *                                                                                       CER076
+     C     PRTCD         IFEQ      *BLANKS                                                    CER076
+     C                   MOVE      'Y'           CER076                                       CER076
+     C                   OPEN      SDACUSY0                             99                    CER076
+     C                   MOVE      *ON           *IN48                                        CER076
+     C                   ENDIF                                                                CER076
+      *                                                                                       CER076
      C/COPY WNCPYSRC,SD0010PC33
      C*                                                                   CEU014
       * Move title to header - *Standard header/footer  *

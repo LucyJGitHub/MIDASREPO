@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD052465           Date 10Jan19               *
-      *  Prev Amend No. MD040876           Date 13Sep16               *
+      *  Last Amend No. CER076             Date 11Feb20               *
+      *  Prev Amend No. MD052465           Date 10Jan19               *
+      *                 MD040876           Date 13Sep16               *
       *                 CGL177             Date 11Jan16               *
       *                 MD036509           Date 12Nov15               *
       *                 MD036460           Date 05Nov15               *
@@ -62,6 +63,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER076   - Update to KWG § 24c interface specification       *
+      *             (BaFin version 3.3)                               *
       *  MD052465 - Not possible to capture mandatory US TIN for      *
       *             FATCA reporting                                   *
       *  MD040876 - CRS MQ (Recompile)                                *
@@ -124,10 +127,10 @@
       *  CGL032 - Automatic Exchange of Information.                  *
       *                                                               *
       *****************************************************************
- 
+
      FSDNHTXL1  IF   E           K DISK    INFSR(*PSSR)                                       233295
       ** Midas SD Non-a/c Holders by Country of Tax - Retrieve Index                          233295
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -139,52 +142,52 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
      D X               S              3  0
      D #FldNameArr     S            200
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Current Non-A/C Holder in File Format
      D CrNaFilFmt    E DS                  Extname(SDNAHOPD)
      D                                     Prefix(C_)
@@ -192,7 +195,7 @@
       ** Current Non-A/C Holder in File Format - FATCA details                                CGL132
      D CrFaFilFmt    E DS                  EXTNAME(SDFTNHPD)                                  CGL132
      D                                     PREFIX(C_)                                         CGL132
- 
+
       ** Current Non-A/C Holder in File Format - CRS details                                  CGL157
      D CrCrhFlFmt    E DS                  EXTNAME(SDCRNHPD)                                  CGL157
      D                                     PREFIX(C_)                                         CGL157
@@ -204,7 +207,7 @@
       ** Current Non-A/C Holder in Screen Format - FATCA Details                              CGL132
      D CurCuFATC     E DS                  EXTNAME(SDFTNRPD)                                  CGL132
      D                                     PREFIX(@)                                          CGL132
- 
+
       ** Current NOn-A/C Holder in Screen Format - CRS Details                                CGL157
      D CurCuCRNH     E DS                  EXTNAME(SDCRNSPD)                                  CGL157
      D                                     PREFIX(@_)                                         CGL157
@@ -214,7 +217,7 @@
                                                                                               CGL132
       ** New Non-A/C Holder in File Format - FATCA Details                                    CGL132
      D NwFaFilFmt    E DS                  EXTNAME(SDVFTNHPD)                                 CGL132
- 
+
       ** New Non-A/C Holder in File Format - CRS Details                                      CGL157
      D NwCrhFlFmt    E DS                  EXTNAME(SDVCRNHPD)                                 CGL157
                                                                                               CGL157
@@ -223,10 +226,10 @@
                                                                                               CGL132
       ** New Non-A/C Holder in Screen Format - FATCA details                                  CGL132
      D NewCuFATC     E DS                  EXTNAME(SDFTNRPD)                                  CGL132
- 
+
       ** New Non-A/C Holder in Screen Format - CRS Details                                    CGL157
      D NewCuCRNH     E DS                  EXTNAME(SDCRNSPD)                                  CGL157
- 
+
       ** Previous Non-A/C Holder in Screen Format - Primary Details
      D PrvNaPrim     E DS                  Extname(SDNAHLPD)
      D                                     Prefix(@P)
@@ -234,7 +237,7 @@
       ** Previous Customer in Screen Format - FATCA customer details                          CGL132
      D PrvCuFATC     E DS                  EXTNAME(SDFTNRPD)                                  CGL132
      D                                     PREFIX(@P)                                         CGL132
- 
+
       ** Previous Customer in Screen Format - CRS Details                                     CGL157
      D PrvCuCRNH     E DS                  EXTNAME(SDCRNSPD)                                  CGL157
      D                                     PREFIX(@P)                                         CGL157
@@ -254,17 +257,17 @@
      D PCrsdS          S            351A   DIM(30)                                            CGL177
      D PCrsdB          S            351A   DIM(30)                                            CGL177
      D DFCTRY          S              2A                                                      CGL157
- 
+
       ** External DS FOR BANK DETAILS
      D SDBANK        E DS                  Extname(SDBANKPD)
- 
+
       ** External DS for SAR details
      D SCSARD        E DS                  Extname(SCSARDPD)
      D  SCA_LCD      E                     Extfld(LCD)
- 
+
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  Extname(DSFDY)
- 
+
       ** Second DS for access progrmas, long data structure
      D DSSDY         E DS                  Extname(DSSDY)
       ** External DS for CRS API Format Definition File - Detail                            MD052465
@@ -305,10 +308,10 @@
      D  WWCDOM2              146    147                                                       CGL132
      D  WWACCZ2              148    149                                                       CGL132
      D  WWTINO2              150    174                                                       CGL132
- 
+
       ** Changed Party Names Array
      D ChgNamArr       S              1    Dim(5)
- 
+
       ** Override Database Table                                                              CGL132
      D ##OV1           S             50    DIM(1) CTDATA PERRCD(1)                            CGL132
      D ##OV2           S             50    DIM(1) CTDATA PERRCD(1)                            CGL132
@@ -317,23 +320,25 @@
                                                                                               CGL132
      D @opsel          S              1A   Dim(ArrayMax)
      D @nasel          S             10A   Dim(ArrayMax)
- 
+
+     D/COPY QWINDSRC,SDNAHLDTA                                                                CER076
+                                                                                              CER076
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Non-A/C Holder Work Field
      D WKNAHO          S                   Like(DDNAHO)
- 
+
      D ExtData         S            500A
- 
+
      D Retcd           S              7A
- 
+
      D Option          S              7A
- 
+
      D Sardesc         S              6A
- 
+
      D PReturn         S              7A                                                      CGL132
      D PTranID         S             10A                                                      CGL132
      D PSource         S              1A                                                      CGL132
@@ -344,10 +349,10 @@
       ** Response Mode, passed as a constant parameter to the VAL module
       ** This is always 'S' for Synchronous
      D RespMode        S              1A   Inz('S')
- 
+
       ** Timestamp for the transaction
      D TimeStamp       S               Z
- 
+
       ** Parameter fields for 1DP
      D @EKYFD          S              1
      D @EDTFD          S              1
@@ -364,29 +369,29 @@
      D @INKS           S              1A                                                      CGL132
      D @INKT           S              1A                                                      CGL132
      D @INKX           S              1                                                       CSD093
- 
+
      D @EINKJ          S              1
      D @INKJ           S              1
      D InsertEnq       S              1
- 
+
       ** Parameter Fields for RED pgm
      D @RDFWD          S              1
      D @RDBCK          S              1
      D @ERRMS          S              7
      D @NARED          S             10
      D @RdNb           S              1
- 
+
       ** Parameter Fields for BRW pgm
      D @BDSFL          S              1
      D @RDSFL          S              1
      D @In36           S              1
      D @IN81           S              1                                                       CGL132
      D @INKI           S              1
- 
+
       ** Parameter Fields for RTV pgm
      D @@MODE          S              6
      D @@RSMD          S              1
- 
+
      D CGL132          S              1                                                       CGL132
      D CGL133          S              1                                                       CGL132
      D CGL157          S              1                                                       CGL157
@@ -403,7 +408,7 @@
                                                                                               233295
       ** Key Fields                                                                           233295
      D KNAHo           S                   LIKE(NXNAHO)                                       233295
- 
+
      D CGL031          S              1    INZ('N')                                           CSW207
      D CGL032          S              1    INZ('N')                                           CSW207
      D PSard           S              6    INZ(*Blanks)                                       CSW207
@@ -424,13 +429,13 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -441,21 +446,21 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Issue rollback to clear any possible updates in window functions
- 
+
      C     @INKL         IFEQ      *On
      C                   ROLBK
      C                   ENDIF
- 
+
       ** Build browse subfile record
- 
+
      C     @SCRN         IFEQ      'B'
      C                   EXSR      SRBldBrw
      C                   ENDIF
- 
+
       ** Read next browse subfile record
- 
+
      C     @SCRN         IFEQ      'R'
      C                   EXSR      SRRdnBrw
      C                   ENDIF
@@ -483,16 +488,16 @@
      C     @SCRN         IFEQ      '9'                                                        CGL177
      C                   EXSR      RDNCSBRW                                                   CGL177
      C                   ENDIF                                                                CGL177
- 
+
       ** Do While screen: Key Details Screen
- 
+
      C                   Z-ADD     *ZERO         WIdx_KVAL
      C     @SCRN         DOWEQ     'K'
      C                   EXSR      SRScrn@K
      C                   ENDDO
- 
+
       ** Do While screen: Primary Details Screen
- 
+
      C                   Z-ADD     *ZERO         WIdx_PVAL
      C     @SCRN         DOWEQ     'P'
      C                   EXSR      SRScrn@P
@@ -578,15 +583,22 @@
      C                   EXSR      SCRN@O                                                     CGL132
      C                   ENDDO                                                                CGL132
                                                                                               CGL132
- 
+      ** Do window processing                                                                 CER076
+      ** (CGL157 has used the std 'W' value which is normally used for window processing,     CER076
+      ** (hence, using 'X' as the Window value for CER076).                                   CER076
+                                                                                              CER076
+     C     @SCRN         DOWEQ     'X'                                                        CER076
+     C                   EXSR      Scrn@X                                                     CER076
+     C                   ENDDO                                                                CER076
+
       ** Do File updates
- 
+
      C     @SCRN         IFEQ      'U'
      C                   EXSR      SRUpdats
      C                   ENDIF
- 
+
       ** Call Non-Account Holder details by Country of Tax
- 
+
      C                   IF        @SCRN = 'A'
      C                   EXSR      SRCallNATX
      C                   IF        WFATCABRW <> ' ' AND                                     MD027324
@@ -600,9 +612,9 @@
      C                   ENDIF                                                              BUG22582
      C                   ENDIF                                                              MD027324
      C                   ENDIF
- 
+
       ** Terminate program
- 
+
      C     @SCRN         IFEQ      'T'
      C                   EVAL      *InLR = *On
      C                   ENDIF
@@ -612,19 +624,19 @@
       ** SRCrn@K - Process Screen: Key Details
       *****************************************************************
      C     SRSCrn@K      BEGSR
- 
+
       ** Reset Non-A/C Holder reference if there are no errors
- 
+
      C     MsgIdArr(1)   IFEQ      *Blanks
      C                   MOVE      *BLANKS       DDNAHO
      C                   ENDIF
- 
+
       ** Set F7/F8 called from Insert mode flag
- 
+
      C                   MOVE      'Y'           INSERTENQ
- 
+
       ** Write/Read display screen - Key Details
- 
+
      C                   CALLB     'SDNAHL1DP'
       **                 ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       ** INPUTS :
@@ -638,7 +650,7 @@
       ** Enabled Function Keys
       ** KG = Command Key 07 = Read Previous
       ** KH = Comannd Key 08 = Read Next
- 
+
      C                   PARM      *BLANK        RetCodeOut
      C                   PARM                    NewNaPrim
      C                   PARM                    OkNaPrim
@@ -652,19 +664,19 @@
      C                   PARM                    @EDTFD
      C                   PARM      'Y'           @EINKG
      C                   PARM      'Y'           @EINKH
- 
+
       ** OUTPUTS :
       ** Function Keys
       ** Write screen with no read indicator
- 
+
      C                   PARM      *Off          @INKC
      C                   PARM      *Off          @INKG
      C                   PARM      *Off          @INKH
      C                   PARM      *Off          @INKL
      C                   PARM      'N'           WriteOnly
- 
+
       ** Reset Errors ....
- 
+
      C                   MOVE      *ALL'Y'       OkNaPrim
      C                   MOVEL     *BLANK        FldNameArr
      C                   MOVEL     *BLANK        MsgIdArr
@@ -672,28 +684,28 @@
      C                   MOVEL     *BLANK        WFldNamArr
      C                   MOVEL     *BLANK        WMsgIdArr
      C                   MOVEL     *BLANK        WMsgDtaArr
- 
+
       ** F3 - End Program
- 
+
      C     @INKC         CASEQ     *On           SREndP
- 
+
       ** F7 - Roll Backwards
- 
+
      C     @INKG         CASEQ     *On           SRRoll
- 
+
       ** F8 - Roll Forwards
- 
+
      C     @INKH         CASEQ     *On           SRRoll
- 
+
       ** F12 - Cancel on Key Screen
- 
+
      C     @INKL         CASEQ     *On           SRCanC@K
- 
+
       ** Validate input to Key screen
- 
+
      C                   CAS                     SRVal@K
      C                   ENDCS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -701,24 +713,24 @@
       ** SRVal@K  - Validate Input to Key screen
       *****************************************************************
      C     SRVal@K       BEGSR
- 
+
       ** Retrieve Non-A/C Holder details
- 
+
      C                   EXSR      SRRtvNah
- 
+
       ** If primary fields are NOT OK
       ** Re-output screen with error messages on it
- 
+
      C     OKACTN        IFEQ      'N'
      C     OKNAHO        OREQ      'N'
      C                   GOTO      EndVAL@K
      C                   ENDIF
- 
+
       ** If action code is not insert
       **  .. Convert the Non-A/C Holder to screen format
       **  .. Update the Non-A/C Holder in file format
       **  .. Go to Primary details screen
- 
+
      C     DDACTN        IFNE      'I'
      C                   EXSR      SRCvtNah
      C                   MOVEL     CrNaFilFmt    NwNaFilFmt
@@ -726,9 +738,9 @@
      C                   EXSR      SRSfdS@P
      C                   GOTO      EndVAL@K
      C                   ENDIF
- 
+
       ** Clear any warning messages
- 
+
      C                   CLEAR                   NwNaFilFmt
      C                   CLEAR                   CrNaFilFmt
      C                   CLEAR                   NwFaFilFmt                                   CGL132
@@ -755,12 +767,12 @@
      C                   MOVEL     *BLANK        WFldNamArr
      C                   MOVEL     *BLANK        WMsgIdArr
      C                   MOVEL     *BLANK        WMsgDtaArr
- 
+
       ** Go to Primary Details screen
- 
+
      C                   MOVEL     'P'           @SCRN
      C                   EXSR      SRSfdS@P
- 
+
      C     EndVAL@K      ENDSR
       *****************************************************************
       /EJECT
@@ -768,9 +780,9 @@
       ** SRSfdS@P - Set field status on primary screen
       *****************************************************************
      C     SRSfdS@P      BEGSR
- 
+
       ** Enable/disable fields on primary screen
- 
+
      C     DDACTN        IFEQ      'I'
      C     DDACTN        OREQ      'A'
      C                   MOVEL     'Y'           @EKYFD
@@ -779,7 +791,7 @@
      C                   MOVEL     'N'           @EKYFD
      C                   MOVEL     'N'           @EDTFD
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -787,13 +799,13 @@
       ** SRScrn@P - Process primary screen
       *****************************************************************
      C     SRScrn@P      BEGSR
- 
+
       ** Set function key status on Primary screen
- 
+
      C                   EXSR      SRSfKeys
- 
+
       ** Write/Read Display Screen - Primary Details
- 
+
      C                   CALLB     'SDNAHL2DP'
       **                 ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       ** INPUTS :
@@ -807,7 +819,7 @@
       ** KG = Command Key 07 = Read Previous
       ** KH = Command Key 08 = Read Next
       ** KJ = Command Key 10 = Confirm Delete
- 
+
      C                   PARM      *BLANK        RetCodeOut
      C                   PARM                    NewNaPrim
      C                   PARM                    OkNaPrim
@@ -822,11 +834,11 @@
      C                   PARM                    @EINKG
      C                   PARM                    @EINKJ
      C                   PARM                    @EINKX                                       CSD093
- 
+
       ** OUTPUTS :
       ** Function Keys
       ** Write screen with no read indicator
- 
+
      C                   PARM      *Off          @INKC
      C                   PARM      *Off          @INKG
      C                   PARM      *Off          @INKH
@@ -834,9 +846,9 @@
      C                   PARM      *Off          @INKL
      C                   PARM      *Off          @INKX                                        CSD093
      C                   PARM      'N'           WriteOnly
- 
+
       ** Reset errors ....
- 
+
      C     OKNAHO        IFNE      'N'
      C                   MOVE      *ALL'Y'       OkNaPrim
      C                   MOVEL     *BLANK        FldNameArr
@@ -846,25 +858,25 @@
      C                   MOVEL     *BLANK        WMsgIdArr
      C                   MOVEL     *BLANK        WMsgDtaArr
      C                   ENDIF
- 
+
       ** F3 - End Program
- 
+
      C     @INKC         CASEQ     *On           SREndP
- 
+
       ** F7 - Roll Backwards
- 
+
      C     @INKG         CASEQ     *On           SRRoll
- 
+
       ** F8 - Roll Forwards
- 
+
      C     @INKH         CASEQ     *On           SRRoll
- 
+
       ** F12 - Cancel on Primary Screen
- 
+
      C     @INKL         CASEQ     *On           SRCanC@P
- 
+
       ** Validate Input to Primary Screen
- 
+
      C                   CAS                     SRVal@P
      C                   ENDCS
                                                                                               CSD093
@@ -873,7 +885,7 @@
      C     Idx           ANDEQ     0                                                          CSD093
      C                   EXSR      SRDocMan                                                   CSD093
      C                   ENDIF                                                                CSD093
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -881,34 +893,34 @@
       ** SRVal@P  - Validate Input to Primary screen
       *****************************************************************
      C     SRVal@P       BEGSR
- 
+
       ** If Non-A/C Holder Reference is not OK
       ** Re-output screen with error message on it
- 
+
      C     OKNAHO        IFEQ      'N'
      C                   GOTO      EndVAL@P
      C                   ENDIF
- 
+
       ** Prior to validation, initialize error indicators as 'OK'
- 
+
      C                   Z-ADD     *ZERO         Idx
      C                   Z-ADD     *ZERO         WIdx_PVAL
      C                   MOVE      *ALL'Y'       OkNaPrim
- 
+
       ** If Delete
- 
+
      C     DDACTN        IFEQ      'D'
- 
+
       ** If F10 taken, go on to updates
- 
+
      C     @INKJ         IFEQ      *On
      C                   MOVEL     'U'           @SCRN
      C                   ENDIF
      C                   GOTO      EndVAL@P
      C                   ENDIF
- 
+
       ** If Enquire
- 
+
      C     DDACTN        IFEQ      'E'
       ** If Document Management (F23) has not been selected                                   CSD093
      C     @INKX         IFEQ      '0'                                                        CSD093
@@ -929,38 +941,38 @@
      C                   ENDIF                                                                CSD093
      C                   GOTO      EndVAL@P
      C                   ENDIF
- 
+
       ** If Insert or Amend / Change
- 
+
      C     DDACTN        IFEQ      'I'
      C     DDACTN        OREQ      'A'
- 
+
       ** Validate Primary Non-A/C Holder Details
- 
+
       ** Update 'previous' screens and previous number of warnings
- 
+
      C                   MOVEL     NewNaPrim     PrvNaPrim
      C                   Z-ADD     WIdx_PVAL     PrvN_Warn
- 
- 
+
+
      C                   CALLB     'SDNAHL2VL'
       **                ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       ** INPUTS :
       ** Response mode
       ** Non-A/C Holder Primary Details
       ** Non-A/C Holder Extra Data
- 
+
      C                   PARM                    RespMode
      C                   PARM                    NewNaPrim
      C                   PARM                    ExtData
- 
+
       ** OUTPUTS :
       ** Non-A/C Holder Primary Details OK inds
       ** Error fields/message IDs/message data (arrays) from/to caller
       ** Warning fields/message IDs/message data (arrays) from/to caller
       ** Valid Non-A/C Holder layout (DS) from/to caller
       ** Switchable feature CGL032
- 
+
      C                   PARM                    OkNaPrim
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
@@ -971,29 +983,29 @@
      C                   PARM                    WMsgDtaArr
      C                   PARM                    WIdx_PVAL
      C                   PARM                    NwNaFilFmt
- 
+
       ** If errors returned
- 
+
      C     Idx           IFNE      0
      C                   GOTO      EndVAL@P
      C                   ENDIF
- 
+
       ** If the screen has changed in the course of the validation
       ** or if there are warnings which have not been displayed
       ** re-display the screen
- 
+
      C     NewNaPrim     IFNE      PrvNaPrim
      C     WIdx_PVAL     ORNE      PrvN_Warn
      C                   GOTO      EndVAL@P
      C                   ENDIF
- 
+
       ** Clear any warning messages
- 
+
      C                   MOVE      *ALL'Y'       OkNaPrim
      C                   MOVEL     *BLANK        WFldNamArr
      C                   MOVEL     *BLANK        WMsgIdArr
      C                   MOVEL     *BLANK        WMsgDtaArr
- 
+
       ** If Document Management (F23) has not been selected                                   CSD093
      C     @INKX         IFEQ      '0'                                                        CSD093
      C**********         IF        CGL132 = 'Y'                                        CGL132 CGL157
@@ -1012,9 +1024,9 @@
      C                   MOVE      'P'           @SCRN                                        CSD093
      C                   EXSR      SRIfdS@K                                                   CSD093
      C                   ENDIF                                                                CSD093
- 
+
      C                   ENDIF
- 
+
      C     EndVAL@P      ENDSR
       *****************************************************************
       /EJECT
@@ -1022,23 +1034,23 @@
       ** SRRoll - Roll backwards & forwards through Non-A/C Holders file
       *****************************************************************
      C     SRRoll        BEGSR
- 
+
       ** If action is insert, control return to key screen
- 
+
      C     DDACTN        IFEQ      'I'
      C                   MOVE      'Y'           INSERTENQ
      C                   ENDIF
- 
+
       ** Default action code to enquiry if action insert or not valid
- 
+
      C     DDACTN        IFNE      'A'
      C     DDACTN        ANDNE     'D'
      C                   MOVE      'E'           DDACTN
      C                   ENDIF
- 
+
       ** Read next or previous record on Non-A/C Holder file
       ** according to command key taken (F7/@INKG OR F8/@INKH)
- 
+
      C     @INKG         IFEQ      *On
      C                   MOVEL     *BLANK        @RDFWD
      C                   MOVEL     'Y'           @RDBCK
@@ -1046,7 +1058,7 @@
      C                   MOVEL     'Y'           @RDFWD
      C                   MOVEL     *BLANK        @RDBCK
      C                   ENDIF
- 
+
      C                   CALLB     'SDNAHLRED'
       **                 ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       ** INPUTS :
@@ -1055,54 +1067,54 @@
       ** Non-A/C Holders Ref. Pointer
       ** Read forwards
       ** Read backwards
- 
+
      C                   PARM      *BLANK        RetCodeOut
      C                   PARM                    DDACTN
      C                   PARM                    DDNAHO
      C                   PARM                    @RDFWD
      C                   PARM                    @RDBCK
- 
+
       ** OUTPUTS :
       ** Error message
       ** Non-A/C Holders Ref. Read
- 
+
      C                   PARM      *BLANK        @ERRMS
      C                   PARM      *BLANK        @NARED
- 
+
       ** If error message returned from read, send it to detail screen
- 
+
      C     @ERRMS        IFNE      *BLANK
      C                   EXSR      SRSndM@P
      C                   GOTO      EROLL
      C                   ENDIF
- 
+
       ** If Non-A/C Holder read
- 
+
      C     @NARED        IFNE      *BLANK
- 
+
       ** Retrieve Non-A/C Holder details
- 
+
      C                   MOVEL     @NARED        DDNAHO
      C                   EXSR      SRRtvNah
- 
+
       ** Return to browse screen if there is an error on Non-A/C Holder Reference
- 
+
      C     OKNAHO        IFEQ      'N'
      C     OKACTN        OREQ      'N'
      C                   MOVEL     'B'           @SCRN
      C                   GOTO      EROLL
      C                   ENDIF
- 
+
       ** Convert Non-A/C Holder
- 
+
      C                   EXSR      SRCvtNah
      C                   MOVEL     CrNaFilFmt    NwNaFilFmt
- 
+
       ** Put the Non-A/C Holder on the primary details screen
- 
+
      C                   MOVEL     'P'           @SCRN
      C                   ENDIF
- 
+
      C     EROLL         ENDSR
       *****************************************************************
       /EJECT
@@ -1113,7 +1125,7 @@
       *                                                               *
       *****************************************************************
      C     SRCallNATX    BEGSR
- 
+
      C                   IF        CGL031 = 'Y' and CGL032 = 'Y'                              CSW207
      C                             or CGL132 = 'Y'                                            CGL132
      C                   CALL      'SDNATXSIN'
@@ -1122,7 +1134,7 @@
      C                   PARM                    NANAHO
      C                   PARM      *BLANKS       PFKey                                      BUG22582
      C                   ENDIF                                                                CSW207
- 
+
       ** Return to Non-A/c Holder Details                                                     233004
                                                                                               233004
      C**********         IF        DDACTN <> 'I'                                       233295 235364
@@ -1165,18 +1177,18 @@
       ** SRBldBrw - Build browse subfile
       *****************************************************************
      C     SRBldbrw      BEGSR
- 
+
       ** Set/reset return to key screen from primary details
- 
+
      C                   MOVE      'N'           INSERTENQ
- 
+
       ** Reset Read next browse subfile record
- 
+
      C                   MOVEL     *BLANK        @RDNB
      C                   EVAL      WFATCABRW = ' '                                          MD027324
- 
+
       ** Build Browse subfile
- 
+
      C                   CALLB     'SDNAHLBRW'
       **                 ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       ** INPUTS :
@@ -1185,7 +1197,7 @@
       ** Non-A/C Holder Ref. Pointer
       ** Build subfile
       ** Read subfile record
- 
+
      C                   PARM      *BLANK        RetCodeOut
      C                   PARM                    DDACTN
      C                   PARM                    DDNAHO
@@ -1196,13 +1208,13 @@
      C                   PARM                    MsgDtaArr
      C                   PARM      *Off          @IN36
      C                   PARM                    @IN81                                        CGL132
- 
+
       ** OUTPUTS :
       ** Error message
       ** Option Selected
       ** Non-A/C Holder Reference Selected
       ** Command Keys
- 
+
      C                   PARM      *BLANK        @ERRMS
      C                   PARM                    @OPSEL
      C                   PARM                    @NASEL
@@ -1210,16 +1222,16 @@
      C                   PARM      *Off          @INKI
      C                   PARM      '0'           @INKN             1                          CGL132
      C                   PARM      '0'           @INKQ             1                          CGL177
- 
+
       ** If F3 taken in browse, End Program
- 
+
      C     @INKC         IFEQ      *On
      C                   EXSR      SREndP
      C                   GOTO      EndBLDBRW
      C                   ENDIF
- 
+
       ** If Insert (F9) selected from browse, go to key screen
- 
+
      C     @OPSEL(1)     IFEQ      'I'
      C                   MOVEL     'K'           @SCRN
      C                   MOVE      'I'           DDACTN
@@ -1237,19 +1249,19 @@
      C                   MOVEL     '8'           @SCRN                                        CGL177
      C                   GOTO      EndBLDBRW                                                  CGL177
      C                   END                                                                  CGL177
- 
+
       ** If error message returned from browse, send it to detail screen
- 
+
      C     @ERRMS        IFNE      *BLANK
      C                   EXSR      SRSndM@P
      C                   GOTO      EndBLDBRW
      C                   ENDIF
- 
+
       ** Read next browse subfile record
- 
+
      C                   MOVE      'Y'           @RDNB
      C                   MOVEL     'R'           @SCRN
- 
+
      C     EndBLDBRW     ENDSR
       *****************************************************************
       /EJECT
@@ -1257,9 +1269,9 @@
       ** SRRdnBrw - Read next browse subfile record
       *****************************************************************
      C     SRRdnBrw      BEGSR
- 
+
       ** Read Next Subfile Record
- 
+
      C                   CALLB     'SDNAHLBRW'
       **                 ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       ** INPUTS :
@@ -1269,7 +1281,7 @@
       ** Build Sub-file
       ** Read Sub-file record
       ** Browse Screen
- 
+
      C                   PARM      *BLANK        RetCodeOut
      C                   PARM                    DDACTN
      C                   PARM                    DDNAHO
@@ -1280,13 +1292,13 @@
      C                   PARM                    MsgDtaArr
      C                   PARM      *Off          @IN36
      C                   PARM                    @IN81                                        CGL132
- 
+
       ** OUTPUTS :
       ** Error Message
       ** Option Selected
       ** Non-A/C Holder Ref. selected
       ** Function keys
- 
+
      C                   PARM      *BLANK        @ERRMS
      C                   PARM                    @OPSEL
      C                   PARM                    @NASEL
@@ -1294,54 +1306,54 @@
      C                   PARM      *Off          @INKI
      C                   PARM      '0'           @INKN             1                          CGL132
      C                   PARM      '0'           @INKQ                                        CGL177
- 
+
      C                   EVAL      x = 1
- 
+
       ** Go to initial screen
- 
+
      C                   IF        @Opsel(X) = *blanks or
      C                             @Nasel(X) = *blanks
      C                   EXSR      SRInitial
      C                   ELSE
- 
+
       ** If Non-A/C Holder read from subfile
- 
+
      C                   DOW       @opsel(x) <> *Blank   or
      C                             @nasel(x) <> *Blanks
- 
+
       ** Retrieve Non-A/C Holder details
- 
+
      C                   MOVEL     @OPSEL(x)     DDACTN
      C                   MOVEL     @NASEL(x)     DDNAHO
      C                   EVAL      Idx = x - 1
      C                   EXSR      SRRtvNah
      C                   EVAL      X = X + 1
      C                   MOVEA     FldnameArr    #fldnamearr
- 
+
       ** Stay on browse screen if there is an error on Non-A/C Holder Reference
- 
+
      C     OKNAHO        IFEQ      'N'
      C     OKACTN        OREQ      'N'
      C                   MOVEL     'B'           @SCRN
      C                   ITER
      C                   ENDIF
- 
+
      C                   IF        #FldNameArr = *blanks
- 
+
       ** Convert Non-A/C Holder details
- 
+
      C                   EXSR      SRCvtNah
      C                   MOVEL     CrNaFilFmt    NwNaFilFmt
- 
+
       ** Put Non-A/C Holder on key screen for Insert, primary details otherwise
- 
+
      C     @OPSEL(1)     IFEQ      'I'
      C                   MOVEL     'K'           @SCRN
      C                   ELSE
      C                   MOVEL     'P'           @SCRN
      C                   ENDIF
      C                   EXSR      SRSfdS@P
- 
+
      C                   Z-ADD     *ZERO         WIdx_PVAL
      C     @SCRN         DOWEQ     'P'
      C                   EXSR      SRScrn@P
@@ -1440,6 +1452,12 @@
      C                   EXSR      SCRN@O                                                     CGL132
      C                   ENDDO                                                                CGL132
                                                                                               CGL132
+      ** Do window processing                                                                 CER076
+                                                                                              CER076
+     C     @SCRN         DOWEQ     'X'                                                        CER076
+     C                   EXSR      Scrn@X                                                     CER076
+     C                   ENDDO                                                                CER076
+                                                                                              CER076
       ** Build browse subfile record                                                          CGL177
       *                                                                                       CGL177
      C     @SCRN         IFEQ      '8'                                                        CGL177
@@ -1451,7 +1469,7 @@
      C     @SCRN         IFEQ      '9'                                                        CGL177
      C                   EXSR      RDNCSBRW                                                   CGL177
      C                   ENDIF                                                                CGL177
- 
+
      C                   IF        @SCRN = 'A'
      C                   EXSR      SRCallNATX
      C                   IF        DDACTN <> 'E'                                            BUG22582
@@ -1460,14 +1478,14 @@
      C                   EVAL      @SCRN = 'P'                                              BUG22582
      C                   ENDIF                                                              BUG22582
      C                   ENDIF
- 
+
      C                   IF        @scrn = 'U'
      C                   EXSR      SRUpdats
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Process the remaining options selected.
- 
+
      C                   IF        @opsel(X) <> *blanks or
      C                             @nasel(X) <> *blanks
      C                   EVAL      @scrn = 'R'
@@ -1475,7 +1493,7 @@
      C                   ENDIF
      C                   ENDDO
      C                   ENDIF
- 
+
      C     EndRDNBRW     ENDSR
       *****************************************************************                       CGL132
       /EJECT                                                                                  CGL132
@@ -1717,6 +1735,12 @@
      C     @SCRN         DOWEQ     'N'                                                        CGL132
      C                   EXSR      SCRN@O                                                     CGL132
      C                   ENDDO                                                                CGL132
+                                                                                              CER076
+      ** Do window processing                                                                 CER076
+                                                                                              CER076
+     C     @SCRN         DOWEQ     'X'                                                        CER076
+     C                   EXSR      Scrn@X                                                     CER076
+     C                   ENDDO                                                                CER076
       *                                                                                       CGL177
       ** Build browse subfile record                                                          CGL177
       *                                                                                       CGL177
@@ -1993,6 +2017,12 @@
      C     @SCRN         DOWEQ     'N'                                                        CGL177
      C                   EXSR      SCRN@O                                                     CGL177
      C                   ENDDO                                                                CGL177
+                                                                                              CER076
+      ** Do window processing                                                                 CER076
+                                                                                              CER076
+     C     @SCRN         DOWEQ     'X'                                                        CER076
+     C                   EXSR      Scrn@X                                                     CER076
+     C                   ENDDO                                                                CER076
                                                                                               CGL177
       ** Build browse subfile record                                                          CGL177
                                                                                               CGL177
@@ -2032,9 +2062,9 @@
       ** SRRtnNah - Retrieve Non-account Holder
       *****************************************************************
      C     SRRtvNah      BEGSR
- 
+
       ** Retrieve Non-account Holder
- 
+
      C                   CALLB     'SDNAHLRTV'
       **                 ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       ** INPUTS :
@@ -2045,7 +2075,7 @@
       ** Action Code
       ** Front Office Transaction ID
       ** (Midas) Non-A/C Holder Reference
- 
+
      C                   PARM      *BLANK        RetCodeOut
      C                   PARM      '      '      @@MODE
      C                   PARM      'S'           @@RSMD
@@ -2053,13 +2083,13 @@
      C                   PARM                    C_NHFRNT
      C                   PARM                    DDNAHO
      C                   PARM      *Off          @IN36
- 
+
       ** OUTPUTS :
       ** (Current) Customer in file format
       ** OK - Action code
       ** OK - Customer Reference
       ** Error fields/message IDs/message data (arrays) from/to caller
- 
+
      C                   PARM                    CrNaFilFmt
      C                   PARM                    CrFaFilFmt                                   CGL132
      C                   PARM                    CrFoFilFmt                                   CGL132
@@ -2071,44 +2101,44 @@
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
      C                   PARM                    Idx
- 
+
      C                   EVAL      WCLAFlag = ' '                                           MD027561
                                                                                             MD027561
      C     EndRTVNAH     ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       ** SRCvtNah - Put a Non-A/C Holder on the primary details screen
       *****************************************************************
- 
+
      C     SRCvtNah      BEGSR
- 
+
       ** Call program to fill screen fields with data from SDNAHOPD
- 
+
      C                   CALLB     'SDNAHLCVT'
       **                 ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       ** INPUTS :
       ** Return Code
       ** Non-A/C Holder file format
- 
+
      C                   PARM      *BLANK        RetCodeOut
      C                   PARM                    CrNaFilFmt
      C                   PARM                    CrFaFilFmt                                   CGL132
      C                   PARM                    CrFoFilFmt                                   CGL132
      C                   PARM                    CrCrhFlFmt                                   CGL157
      C                   PARM                    PCrsdF                                       CGL157
- 
+
       ** OUTPUTS :
       ** Non-A/C Holder - screen formats
       ** Update 'Current' Customer with Customer in Screen Format
- 
+
      C                   PARM                    NewNaPrim
      C                   PARM                    NewCuFATC                                    CGL132
      C                   PARM                    NewCuFOTH                                    CGL132
      C                   PARM                    NewCuCRNH                                    CGL157
      C                   PARM                    PCrsdS                                       CGL157
- 
+
      C                   MOVEL     NewNaPrim     CurNaPrim
      C                   IF        CGL132 = 'Y'                                               CGL132
      C                   MOVEL     NewCuFATC     CurCuFATC                                    CGL132
@@ -2117,7 +2147,7 @@
      C                   IF        CGL157 = 'Y'                                               CGL157
      C                   MOVEL     NewCuCRNH     CurCuCRNH                                    CGL157
      C                   ENDIF                                                                CGL157
- 
+
       ** Reset Country of Tax Flag everytime a new transaction is loaded                      233004
                                                                                               233004
      C                   EVAL      WNATXok = 'N'                                              233004
@@ -2129,12 +2159,12 @@
       ** SRSfKeyS - Set Function key status on screen
       *****************************************************************
      C     SRSfKeys      BEGSR
- 
+
       ** Enable/disable function keys
- 
+
       ** KG = Command Key 07 = Read Previous Non-A/C Holder
       ** KH = Command Key 08 = Read Next Non-A/C Holder
- 
+
      C     @SCRN         IFEQ      'P'
      C                   MOVEL     'Y'           @EINKG
      C                   MOVEL     'Y'           @EINKH
@@ -2142,9 +2172,9 @@
      C                   MOVEL     'N'           @EINKG
      C                   MOVEL     'N'           @EINKH
      C                   ENDIF
- 
+
       ** KJ = Command Key 10 = Confirm Delete
- 
+
      C     DDACTN        IFEQ      'D'
      C                   MOVEL     'Y'           @EINKJ
      C                   ELSE
@@ -2158,7 +2188,7 @@
      C                   ELSE                                                                 CSD093
      C                   MOVEL     'N'           @EINKX                                       CSD093
      C                   ENDIF                                                                CSD093
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2166,12 +2196,12 @@
       ** SRIfdS@K - Initialise field status on key screen
       *****************************************************************
      C     SRIfdS@K      BEGSR
- 
+
       ** Enable Key fields on key screen
- 
+
      C                   MOVEL     'Y'           @EDTFD
      C                   MOVEL     'Y'           @EKYFD
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2179,14 +2209,14 @@
       ** SRSndM@P - Send a message to screen
       *****************************************************************
      C     SRSndM@P      BEGSR
- 
+
       ** Add error message to array passed to detail screen
- 
+
      C                   Z-ADD     1             E
      C     *BLANK        LOOKUP    FldNameArr(E)                          99
      C                   MOVEL     '*ANY'        FldNameArr(E)
      C                   MOVEL     @ERRMS        MsgIdArr(E)
- 
+
      C     EndSNDM@P     ENDSR
       *****************************************************************
       /EJECT
@@ -2194,26 +2224,26 @@
       ** SRCanC@K - Cancel on Key screen
       *****************************************************************
      C     SRCanC@K      BEGSR
- 
+
       ** Reset Read Next Browse Subfile Record (if active)
- 
+
      C                   MOVEL     *BLANK        @RDNB
      C                   MOVEL     'B'           @SCRN
      C                   MOVEA     *Blanks       @OPSEL
      C                   MOVEA     *Blanks       @NASEL
- 
+
       ** If input fields are enabled
       ** Blank the screens
- 
+
      C     @EKYFD        IFEQ      'Y'
      C     @EDTFD        OREQ      'Y'
      C                   MOVEL     *BLANK        NewNaPrim
      C                   ENDIF
- 
+
       ** Initialize field status on Key Screen
- 
+
      C                   EXSR      SRIfdS@K
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2221,9 +2251,9 @@
       ** SRCanC@P - Cancel on Primary screen
       *****************************************************************
      C     SRCanC@P      BEGSR
- 
+
       ** Return to previous screen
- 
+
      C     INSERTENQ     IFEQ      'Y'
      C                   MOVE      'I'           DDACTN
      C                   MOVEL     'K'           @SCRN
@@ -2235,7 +2265,7 @@
      C                   MOVEL     'B'           @SCRN
      C                   ENDIF                                                              MD027324
      C                   ENDIF
- 
+
      C                   ENDSR
                                                                                               CGL132
       *****************************************************************                       CGL132
@@ -3029,7 +3059,11 @@
       *                                                                                       CGL132
      C     DDACTN        IFEQ      'I'                                                        CGL132
      C     DDACTN        OREQ      'A'                                                        CGL132
+     C                   IF        CER076 = 'Y'                                               CER076
+     C                   MOVEL     'X'           @SCRN                                        CER076
+     C                   ELSE                                                                 CER076
      C                   MOVEL     'U'           @SCRN                                        CGL132
+     C                   ENDIF                                                                CER076
      C                   ELSE                                                                 CGL132
      C                   IF        WFATCABRW <> ' ' AND                                     MD027324
      C                             CGL132 = 'Y'                                             MD027324
@@ -3679,8 +3713,13 @@
      C                   ELSE                                                                 CGL157
      C                   IF        CGL132 = 'Y'                                               CGL157
      C                   MOVEL     'G'           @SCRN                                        CGL157
+
      C                   ELSE                                                                 CGL157
+     C                   IF        CER076 = 'Y'                                               CER076
+     C                   MOVE      'X'           @SCRN                                        CER076
+     C                   ELSE                                                                 CER076
      C                   MOVEL     'U'           @SCRN                                        CGL157
+     C                   ENDIF                                                                CER076
      C                   ENDIF                                                                CGL157
      C                   ENDIF                                                                CGL157
                                                                                               CGL157
@@ -4204,20 +4243,20 @@
      C                   EVAL      @SCRN = 'M'                                                CGL157
                                                                                               CGL157
      C     EndSRVal@Z    ENDSR                                                                CGL157
-                                                                                              CGL157                                                                                         
+                                                                                              CGL157
       *****************************************************************
       /EJECT
       *****************************************************************
       ** SRUpdatS - Updates
       *****************************************************************
      C     SRUpdatS      BEGSR
- 
+
       ** Update valid customer: Non-A/C Holders Reference
- 
+
      C                   MOVEL     DDNAHO        NANAHO
      C                   MOVEL     DDACTN        NACHTP
      C                   MOVEL     PSUser        NALUSR                                       CGL132
- 
+
      C                   MOVEL     *BLANK        @RTCD
                                                                                               CGL132
      C                   IF        CGL132 = 'Y'                                               CGL132
@@ -4262,16 +4301,16 @@
      C                   EVAL      FVAUST = C_FNAUST                                       MD027473A
      C                   ENDIF                                                                CGL132
                                                                                               CGL132
- 
+
       ** Non-account Holder updates
- 
+
      C                   CALLB     'SDNAHLUPD'
      C                   PARM                    @RTCD
      C                   PARM                    NwNaFilFmt
      C                   PARM                    NwFaFilFmt                                   CGL132
      C                   PARM                    NwCrhFlFmt                                   CGL157
      C                   PARM                    PCrsdF                                       CGL157
- 
+
       ** Non-a/c Holder by Country of Tax updates.                                            233295
                                                                                               233295
      C                   IF        @RTCD = *BLANKS AND                                        233295
@@ -4300,14 +4339,14 @@
                                                                                               233295
       ** If there were any errors in the Update fucntions, Rollback any
       ** updates and end this program. otherwise, Commit the updates
- 
+
      C     @RTCD         IFNE      *BLANK
      C                   ROLBK
      C                   EXSR      *PSSR
      C                   ELSE
      C                   Commit
      C                   ENDIF
- 
+
      C                   IF        @RTCD = *BLANKS                                            CGL132
      C                             AND CGL132 ='Y'                                            CGL132
      C                             AND CGL133 ='N'                                            CGL132
@@ -4340,15 +4379,15 @@
      C                   ENDIF                                                                CGL132
                                                                                               CGL132
      C**********         EXSR      SRCallNATX                                                 233004
- 
+
       ** If records are still to be read from the subfile, read them
- 
+
      C     @RDNB         IFEQ      'Y'
      C                   MOVEL     'R'           @SCRN
      C                   ELSE
- 
+
       ** ELSE, return to insert key screen or browse subfile
- 
+
      C     DDACTN        IFEQ      'I'
      C                   MOVEL     'K'           @SCRN
      C                   ELSE
@@ -4360,7 +4399,7 @@
      C                   ENDIF                                                              MD027324
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        WNATXok = 'N'                                              233004
      C                             AND DDACTN <> 'D'                                          233295
      C                   EXSR      SRCallNATX                                                 233004
@@ -4377,9 +4416,9 @@
       ** SREndP - End Program
       *****************************************************************
      C     SREndP        BEGSR
- 
+
      C                   MOVEL     'T'           @SCRN
- 
+
      C                   ENDSR
       *****************************************************************                       CGL157
       /EJECT                                                                                  CGL157
@@ -4444,28 +4483,28 @@
       ** SRInitial - Go To Initial Screen
       *****************************************************************
      C     SRInitial     BEGSR
- 
+
       ** Reset Read Next Browse Subfile Record (if active)
- 
+
      C                   MOVEL     *BLANK        @RDNB
- 
+
       ** Blank the screens
- 
+
      C                   MOVEL     *BLANK        NewNaPrim
- 
+
       ** Browse Screen
- 
+
      C                   IF        WFATCABRW <> ' ' AND                                     MD027324
      C                             CGL132 = 'Y'                                             MD027324
      C                   MOVEL     'J'           @SCRN                                      MD027324
      C                   ELSE                                                               MD027324
      C                   MOVEL     'B'           @SCRN
      C                   ENDIF                                                              MD027324
- 
+
       ** Initialize field status on Key Screen
- 
+
      C                   EXSR      SRIfdS@K
- 
+
      C                   EVAL      WNATXok = 'N'                                              233295
                                                                                               233295
      C                   ENDSR
@@ -4475,27 +4514,27 @@
       ** *INZSR - Initial processing
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       ** Initialize program name
- 
+
      C                   MOVEL     'SDNAHLSIN'   DBPGM
- 
+
       ** Access Bank details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       Retcd
      C                   PARM      '*FIRST '     Option
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database error
- 
+
      C     Retcd         IFNE      *BLANKS
      C                   MOVEL     'SDBANKPD'    DBFILE
      C                   MOVEL     '901'         DBASE
      C                   MOVEL     Option        DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Check SAR's CGL031/CGL032 if available                                               CSW027
                                                                                               CSW027
      C                   CALL      'AOSARDR0'                                                 CSW027
@@ -4613,12 +4652,109 @@
      C                   EVAL      CGL157 = 'Y'                                               CGL157
      C                   ENDIF                                                                CGL157
      C                   EVAL      WFATCABRW = ' '                                          MD027324
+                                                                                              CER076
+      ** Check if CER076 is on                                                                CER076
+                                                                                              CER076
+     C                   CALL      'AOSARDR0'                                                 CER076
+     C                   PARM      *Blanks       Retcd                                        CER076
+     C                   PARM      '*VERIFY'     Option                                       CER076
+     C                   PARM      'CER076'      PSard                                        CER076
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CER076
+                                                                                              CER076
+     C                   MOVE      'N'           CER076            1                          CER076
+     C                   IF        Retcd <> *Blanks                                           CER076
+     C                   IF        Retcd <> '*NRF'                                            CER076
+     C                   MOVEL     'SCSARDPD'    Dbfile                                       CER076
+     C                   MOVEL     '912'         Dbase                                        CER076
+     C                   MOVEL     PSard         Dbkey                                        CER076
+     C                   EXSR      *PSSR                                                      CER076
+     C                   ENDIF                                                                CER076
+     C                   ELSE                                                                 CER076
+     C                   EVAL      CER076 = 'Y'                                               CER076
+     C                   ENDIF                                                                CER076
+                                                                                              CER076
       ** Go to initial screen
- 
+
      C                   EXSR      SRInitial
- 
- 
+
+
      C                   ENDSR
+      /EJECT                                                                                  CER076
+      *****************************************************************                       CER076
+      * SCRN@X - Window Processing                                                            CER076
+      *****************************************************************                       CER076
+     C     Scrn@X        BEGSR                                                                CER076
+      *                                                                                       CER076
+      ** Write/Read Display Screen - Primary Details                                          CER076
+      *                                                                                       CER076
+     C                   IF        DDACTN = 'I'                                               CER076
+     C                   CALLB     'SDNAHL2DP'                                                CER076
+      ** Input parameters                                                                     CER076
+     C                   PARM      *BLANK        RetCodeOut                                   CER076
+     C                   PARM                    NewNaPrim                                    CER076
+     C                   PARM                    OkNaPrim                                     CER076
+     C                   PARM                    FldNameArr                                   CER076
+     C                   PARM                    MsgIdArr                                     CER076
+     C                   PARM                    MsgDtaArr                                    CER076
+     C                   PARM                    WFldNamArr                                   CER076
+     C                   PARM                    WMsgIdArr                                    CER076
+     C                   PARM                    WMsgDtaArr                                   CER076
+     C                   PARM                    @EKYFD                                       CER076
+     C                   PARM                    @EDTFD                                       CER076
+     C                   PARM                    @EINKG                                       CER076
+     C                   PARM                    @EINKJ                                       CER076
+     C                   PARM                    @EINKX                                       CER076
+      ** OutPut parameters                                                                    CER076
+     C                   PARM                    @INKC                                        CER076
+     C                   PARM                    @INKG                                        CER076
+     C                   PARM                    @INKH                                        CER076
+     C                   PARM                    @INKJ                                        CER076
+     C                   PARM                    @INKL                                        CER076
+     C                   PARM                    @INKX                                        CER076
+     C                   PARM      'Y'           WriteOnly                                    CER076
+     C                   ENDIF                                                                CER076
+      *                                                                                       CER076
+     C/COPY WNCPYSRC,SDNAHLSMV1                                                               CER076
+      *                                                                                       CER076
+     C                   CALL      'WN0010'                                                   CER076
+     C                   PARM      'SDNAHLSIN'   PWPgm            10                          CER076
+     C                   PARM                    PWKey             2                          CER076
+     C                   PARM      DDACTN        PWAction          1                          CER076
+     C                   PARM                    Data                                         CER076
+     C                   PARM      *Blanks       PWRtn             7                          CER076
+     C                   PARM                    PWSpare         256                          CER076
+      *                                                                                       CER076
+      ** If F3 pressed, end program                                                           CER076
+      *                                                                                       CER076
+     C     PWRtn         IFEQ      'Y2U9999'                                                  CER076
+     C                   EXSR      SREndP                                                     CER076
+     C                   ELSE                                                                 CER076
+      *                                                                                       CER076
+      ** Else if F12 pressed, return to Primary Details Screen                                CER076
+      *                                                                                       CER076
+     C     PWRtn         IFEQ      'USR0790'                                                  CER076
+     C                   EVAL      @SCRN = 'P'                                                CER076
+     C                   EVAL      WriteOnly = 'N'                                            CER076
+     C                   ROLBK                                                                CER076
+     C                   ELSE                                                                 CER076
+      *                                                                                       CER076
+      ** Else if ENTER key was pressed,                                                       CER076
+      **      if action is Enquire, move onto Non-Account Holder details by Country of Tax    CER076
+      **      if Insert or Delete, do update processing                                       CER076
+      *                                                                                       CER076
+     C     DDACTN        IFEQ      'E'                                                        CER076
+     C                   EVAL      @SCRN = 'A'                                                CER076
+     C                   ELSE                                                                 CER076
+     C     DDACTN        IFEQ      'I'                                                        CER076
+     C     DDACTN        OREQ      'A'                                                        CER076
+     C                   EVAL      @SCRN = 'U'                                                CER076
+     C                   ENDIF                                                                CER076
+     C                   ENDIF                                                                CER076
+      *                                                                                       CER076
+     C                   ENDIF                                                                CER076
+     C                   ENDIF                                                                CER076
+      *                                                                                       CER076
+     C                   ENDSR                                                                CER076
       *****************************************************************
       /EJECT
       *****************************************************************

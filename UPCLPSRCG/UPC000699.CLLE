@@ -9,11 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
-/*       Last Amend No. CUP040  *CREATE    Date 04Mar13              */
-/*       Prev Amend No. xxxxxxxx           Date ddMmmyy              */
+/*       Last Amend No. MD056253A          Date 13Jul20              */
+/*       Prev Amend No. CUP040  *CREATE    Date 04Mar13              */
+/*                      xxxxxxxx           Date ddMmmyy              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD056253A - ZDBU failed during installation                 */
 /*       CUP040 - New deliverable data methodology.                  */
 /*              - This is a version of the ACTIONFILE CPP program    */
 /*                (UPC000799) which will only be used for the mass   */
@@ -26,12 +28,12 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&MODE &FILE &OLDLIB &NEWLIB)
- 
+
              DCL        VAR(&MODE) TYPE(*CHAR) LEN(4)
              DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
              DCL        VAR(&OLDLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&NEWLIB) TYPE(*CHAR) LEN(10)
- 
+
              DCL        VAR(&BESPFILE) TYPE(*CHAR) LEN(10)
              DCL        VAR(&OFFSET) TYPE(*DEC) LEN(3 0)
              DCL        VAR(&RECLEN) TYPE(*DEC) LEN(5 0)
@@ -40,29 +42,29 @@
              DCL        VAR(&SUBRERR) TYPE(*INT) LEN(4) VALUE(0)
              DCL        VAR(&SECCOPY) TYPE(*CHAR) LEN(10)
              DCL        VAR(&USRDTA) TYPE(*CHAR) LEN(10)
- 
+
              DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE(N)
              DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
              DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2013')
- 
+
 /* Global monitor message. */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
              CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
              CHGJOB     SWS(XXXXXX00)
- 
+
 CONFLICT:
              IF         COND(&MODE *EQ '*CFT') THEN(DO)
                 CHGVAR     VAR(&MODE) VALUE('*RVW')
                 CHGVAR     VAR(&MODEX) VALUE('X')
              ENDDO
- 
+
 REVIEW:
 /* The review will compare the delivered file, which will be a complete set */
 /*  of core records, against the system set of records.                     */
@@ -74,10 +76,10 @@ REVIEW:
                 IF         COND(&RTNCODE *NE ' ') THEN(DO)
                    GOTO       CMDLBL(ERROR)
                 ENDDO
- 
+
 /* Create work files. */
                 CALLSUBR   SUBR(CRTWRKFS) RTNVAL(&SUBRERR)
- 
+
 /* Copy data from files to flat-files; compare core and bespoke against */
 /*  deliverable.                                                        */
                 CPYF       FROMFILE(&OLDLIB/&FILE) +
@@ -93,10 +95,10 @@ REVIEW:
                              TOFILE(QTEMP/UPAFODPD) MBROPT(*REPLACE) +
                              FMTOPT(*NOCHK)
                 MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)
- 
+
 /* Perform special processing for before build. */
                 CALLSUBR   SUBR(PRERVW) RTNVAL(&SUBRERR)
- 
+
 /* Call program to perform comparison. */
                 OVRDBF     FILE(UPAFODPD) TOFILE(QTEMP/UPAFODPD)
                 OVRDBF     FILE(UPAFNDPD) TOFILE(QTEMP/UPAFNDPD)
@@ -116,13 +118,13 @@ REVIEW:
 /* Perform special processing after build. */
                 CALLSUBR   SUBR(PSTRVW)  RTNVAL(&SUBRERR)
              ENDDO
- 
+
 PROCESS:
 /* Process Action File. */
              IF         COND(&MODE *EQ '*PRC') THEN(DO)
 /* Perform special processing before processing Action File. */
                 CALLSUBR   SUBR(PREPRC) RTNVAL(&SUBRERR)
- 
+
                 CLRPFM     FILE(&OLDLIB/&FILE)
                 CPYF       FROMFILE(&NEWLIB/&FILE) +
                              TOFILE(&OLDLIB/&FILE) MBROPT(*REPLACE)
@@ -135,9 +137,9 @@ PROCESS:
 /* Perform special processing after processing Action File. */
                 CALLSUBR   SUBR(PSTPRC) RTNVAL(&SUBRERR)
              ENDDO
- 
+
              GOTO       CMDLBL(ENDPGM)
- 
+
 ERROR:
              IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
                 CHGVAR     VAR(&RECURSIVE) VALUE('Y')
@@ -154,7 +156,7 @@ RCVMSG:
                 SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
                              MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
              ENDDO
- 
+
 /*********************************************************************/
 /*                                                                   */
 /*       PRERVW - Special processing to perform before the review of */
@@ -162,7 +164,7 @@ RCVMSG:
 /*                                                                   */
 /*********************************************************************/
              SUBR       SUBR(PRERVW)
- 
+
              ENDSUBR
 /* End PRERVW subroutine. */
 /*********************************************************************/
@@ -172,7 +174,7 @@ RCVMSG:
 /*                                                                   */
 /*********************************************************************/
              SUBR       SUBR(PSTRVW)
- 
+
              ENDSUBR
 /* End PSTRVW subroutine. */
 /*********************************************************************/
@@ -182,13 +184,18 @@ RCVMSG:
 /*                                                                   */
 /*********************************************************************/
              SUBR       SUBR(PREPRC)
- 
+
 /* Create security copy of file before updating it. */
              CHGVAR     VAR(&SECCOPY) VALUE('Q' *TCAT &FILE)
+/**********  CPYF       FROMFILE(&FILE) TOFILE(QTEMP/&SECCOPY) +
+                          FROMMBR(*ALL) TOMBR(*FROMMBR) +
+                          MBROPT(*REPLACE) CRTFILE(*YES)             */                /*MD056253A*/
+
              CPYF       FROMFILE(&FILE) TOFILE(QTEMP/&SECCOPY) +
                           FROMMBR(*ALL) TOMBR(*FROMMBR) +
-                          MBROPT(*REPLACE) CRTFILE(*YES)
- 
+                          MBROPT(*REPLACE) CRTFILE(*YES) +
+                          FMTOPT(*MAP *DROP)                                           /*MD056253A*/
+                                                                                       /*MD056253A*/
              ENDSUBR
 /* End PREPRC subroutine. */
 /*********************************************************************/
@@ -198,9 +205,9 @@ RCVMSG:
 /*                                                                   */
 /*********************************************************************/
              SUBR       SUBR(PSTPRC)
- 
+
              CALL       PGM(UP009016) PARM(&FILE)
- 
+
              ENDSUBR
 /* End PSTPRC subroutine. */
 /*********************************************************************/
@@ -209,7 +216,7 @@ RCVMSG:
 /*                                                                   */
 /*********************************************************************/
              SUBR       SUBR(CRTWRKFS)
- 
+
              DLTF       FILE(QTEMP/UPAFODPD)
              MONMSG     MSGID(CPF0000)
              DLTF       FILE(QTEMP/UPAFNDPD)
@@ -218,9 +225,9 @@ RCVMSG:
                           TOLIB(QTEMP)
              CRTDUPOBJ  OBJ(UPAFNDPD) FROMLIB(*LIBL) OBJTYPE(*FILE) +
                           TOLIB(QTEMP)
- 
+
              ENDSUBR
 /* End CRTWRKFS subroutine. */
- 
+
 ENDPGM:
              ENDPGM

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD049574           Date 07Feb18               *
-      *  Prev Amend No. MD047859           Date 19Sep17               *
+      *  Last Amend No. MD056318           Date 23Jul20               *
+      *  Prev Amend No. MD049574           Date 07Feb18               *
+      *                 MD047859           Date 19Sep17               *
       *                 AR933170           Date 07Jun13               *      
       *                 MD054117           Date 12Sep19               *
       *                 MD046248           Date 27Oct17               *
@@ -56,6 +57,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056318 - Missed out compatibility patch objects in RBRU    *
+      *             SP22 Upgrade Delivery (RZBDK0001)                 *
       *  MD049574 - Correct buffer positions for Principal Change     *
       *             schedule fields                                   *
       *  MD047859 - Correct buffer conflict of AR933171 fix           *

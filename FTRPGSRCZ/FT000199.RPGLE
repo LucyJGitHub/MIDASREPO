@@ -1274,7 +1274,7 @@
      C                   EVAL      WBIC = %SUBST(CRMOR:7:8)                                 MD056303
      C                   EVAL      WBranch = %SUBST(CRMOR:16:3)                             MD056303
      C                   EVAL      WSender = WBIC + WBranch                                 MD056303
-
+                                                                                            MD056303
       ** Save the value of Incoming Message Currency
      C**********         EVAL      WICcy = CRCYCD                                           MD055939
      C                   EVAL      WIMCcy = CRCYCD                                          MD055939

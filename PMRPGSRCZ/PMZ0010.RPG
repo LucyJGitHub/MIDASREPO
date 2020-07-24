@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. HUT113             Date 01Apr20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056309           Date 16Jul20               *
+      *  Prev Amend No. HUT113             Date 01Apr20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -35,6 +36,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056309 - Missing MD-51933 functionality                    *
+      *             Intrusive changes and amendments to hooks:        *
+      *             HUT113_028, HUT113_029, HUT113_030, HUT113_031    *
+      *             and HUT113_033                                    *
       *  HUT113 - Full Private Banking Functionality in FM            *
       *           (Upgrade HUT026 to FM2.1 SP22)                      *
       *           Apply fix MD051933                                  *
@@ -100,6 +105,8 @@
       * SDMMODD0 - Module Details                                         CPB001
       *
      I/COPY WNCPYSRC,HUT113_033                                                        HUT113
+      ** Named Constant                                                                    MD056309
+     I              '0123456789'          C         DIGITS                                 MD056309
       *...................................................................
       * Error processing data structures:
       *
@@ -304,13 +311,19 @@
       *
       *
      C/COPY WNCPYSRC,HUT113_028                                                        HUT113
-      *
      C           W0PTFR    CAT  W0CUST    PMMSDT    P
      C                     MOVEL'PMA0001' PMMSID
      C                     MOVELW0CPGM    PMPGMQ
      C                     EXSR PMSNMS
-      *
+     C                     MOVEL'PMA0001' W0RTN                                            MD056309
      C/COPY WNCPYSRC,HUT113_029                                                        HUT113
+      *                                                                                    MD056309
+     C                     Z-ADD*ZEROS    PORCHK  40                                       MD056309
+     C                     MOVE W0PTFR    PORCHK                                           MD056309
+     C           DIGITS    CHECKW0PTFR                   10                                MD056309
+     C           *IN10     IFEQ *OFF                                                       MD056309
+     C           PORCHK    IFGE 1                                                          MD056309
+     C           PORCHK    ANDLE99                                                         MD056309
       *
       *
       * Cpysrc Templates portfolio does not exist
@@ -319,8 +332,15 @@
       *  Set return code to message id.
       *
      C/COPY WNCPYSRC,HUT113_030                                                        HUT113
-     C                     MOVEL'PMA0001' W0RTN
+     C**********           MOVEL'PMA0001' W0RTN                                         MD056309
      C/COPY WNCPYSRC,HUT113_031                                                        HUT113
+      *
+     C                     ELSE                                                         MD056309
+     C                     MOVEL'PMA1011' W0RTN                                         MD056309
+     C                     ENDIF                                                        MD056309
+     C                     ELSE                                                         MD056309
+     C                     MOVEL'PMA1011' W0RTN                                         MD056309
+     C                     ENDIF                                                        MD056309
       *
      C                     ENDIF
       *

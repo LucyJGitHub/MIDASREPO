@@ -6,7 +6,7 @@
       *                                                               *
       *  SDVDFPO - Validate default portfolio                         *
       *                                                               *
-      *  Last Amend No. MD056300  *Create  Date 17Jul20               *
+      *  Last Amend No. MD056300  *Create  Date 16Jul20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER068             Date 25Feb14               *
+      *  Last Amend No. CER076             Date 11Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER068             Date 25Feb14               *
       *                 CER059             Date 19Jul10               *
       *                 262700             Date 03Dec09               *
       *                 262095             Date 14Oct09               *
@@ -28,6 +29,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER076 - Update to KWG § 24c interface specification         *
+      *           (BaFin version 3.3)                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CER068 - Upgrade CER047 to be compatible with BaFin 3.2.2    *
       *           (Recompile)                                         *
@@ -72,7 +75,8 @@
       ** ERCRCDPD - Record type 'C' workfile
       *
      F***ERCRCDPD**IF***F*2000********DISK*** INFSR(*PSSR)                                    262700
-     FERCRCDPD  IF   F 1086        DISK    INFSR(*PSSR)                                       262700
+     F***ERCRCDPD**IF***F*1086********DISK*** INFSR(*PSSR)                             262700 CER076
+     FERCRCDPD  IF   F 1145        DISK    INFSR(*PSSR)                                       CER076
      F                                     USROPN
       *
       ** ERTINFL0 - Midas @24 KWG file info by file number
@@ -156,6 +160,9 @@
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
       *
+     D DSFDY         E DS                  EXTNAME(DSFDY)                                     CER076
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CER076
+                                                                                              CER076
      D*DSK24Ab**       DS            80                                                     BUG25857
      D**WAbLen**               1      4I 0 INZ(80)                                          BUG25857
      D*DSK24Ab**       DS            91                                              BUG25857 262700
@@ -447,7 +454,8 @@
       *
      IERCRCDPD  NS  01
      I**********                        1 2000  GWINP                                         262700
-     I                                  1 1086  GWINP                                         262700
+     I**********                        1 1086  GWINP                                 262700  CER076
+     I                                  1 1145  GWINP                                         CER076
       *
       *****************************************************************
       /EJECT
@@ -814,6 +822,8 @@
       *
      C                   SELECT
       *
+     C                   WHEN      WFLDNAM = 'F1TINO ' and CER076 <> 'Y'                      CER076
+     C                   WHEN      WFLDNAM = 'F1EINO ' and CER076 <> 'Y'                      CER076
      C                   WHEN      PBkn = 'B'
      C                   EVAL      %LEN(WRcd) = %LEN(WRcd) + WBin2 + 2
      C                   EVAL      %SUBST(WRcd:WRcdPos) =
@@ -840,6 +850,8 @@
      C                   ELSE
       *
      C                   SELECT
+     C                   WHEN      WFLDNAM = 'F1TINO ' and CER076 <> 'Y'                      CER076
+     C                   WHEN      WFLDNAM = 'F1EINO ' and CER076 <> 'Y'                      CER076
      C                   WHEN      PBkn = 'B'
      C                   EVAL      %LEN(WRcd) = %LEN(WRcd) + WFldLen
      C                   EVAL      %SUBST(WRcd:WRcdPos) =
@@ -1147,6 +1159,26 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
+                                                                                              CER076
+      ** Check if CER076 is on                                                                CER076
+                                                                                              CER076
+     C                   CALL      'AOSARDR0'                                                 CER076
+     C                   PARM      *Blanks       PRtCd                                        CER076
+     C                   PARM      '*VERIFY'     POptn             7                          CER076
+     C                   PARM      'CER076'      PSard             6                          CER076
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CER076
+                                                                                              CER076
+     C                   MOVE      'N'           CER076            1                          CER076
+     C                   IF        PRtCd <> *Blanks                                           CER076
+     C                   IF        PRtCd <> '*NRF'                                            CER076
+     C                   MOVEL     'SCSARDPD'    DBFILE                                       CER076
+     C                   MOVEL     '901'         DBASE                                        CER076
+     C                   MOVEL     PSard         DBKEY                                        CER076
+     C                   EXSR      *PSSR                                                      CER076
+     C                   ENDIF                                                                CER076
+     C                   ELSE                                                                 CER076
+     C                   EVAL      CER076 = 'Y'                                               CER076
+     C                   ENDIF                                                                CER076
       *
       ** Create the user space for the File Field information
       *

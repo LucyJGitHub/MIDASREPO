@@ -85,7 +85,7 @@ RUN:
              ELSE       CMD(DO)                                       /*CFT018*/
              OVRDBF     FILE(OTPAYQL0) OVRSCOPE(*JOB) SHARE(*NO)    /*MD055961*/
              CALL       PGM(&PROG) PARM(&ACTION &PREF &RTNCD)
-             DLTOVR     FILE(OTPAYQL0) LVL(*JOB)
+             DLTOVR     FILE(OTPAYQL0) LVL(*JOB)                    /*MD055961*/
 
              ENDDO                                                    /*CFT018*/
 /*/COPY WNCPYSRC,FTC0041002                                          */

@@ -94,11 +94,11 @@
       ** +--------------------------------------+
      F***FTOPAY1DF*CF***E             WORKSTN                                   CFT007
      FFTOPAY1DF CF   E             WORKSTN INFDS(INFDS#)                        CFT007
- 
+
      FMUSER     IF   E           K DISK
- 
+
      FMEINCRL1  IF   E           K DISK
- 
+
       ** Table of field numbers and names                                       CFT007
      FZAFLDNPD  IT   F   15        DISK    INFSR(*pssr)                         CFT007
                                                                                 CFT007
@@ -158,25 +158,25 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **---------------------------------------------------------------         CFT007
       ** The following /COPY line includes all the definitions of the error     CFT007
       ** arrays, including the named constant giving the size of                CFT007
@@ -201,59 +201,59 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D @Z0             S              1    DIM(60) CTDATA PERRCD(60)
      D*@NAR************S             52    DIM(3) CTDATA PERRCD(1)              CFT007
- 
+
      D @EI             S              1    DIM(60)
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULE DETAILS
                                                                                 CFT014
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                    CFT014
       ** External DS for Midas Switchable Features details                      CFT014
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
       *                                                                                       CGL029
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
       *                                                                                       CGL029
- 
+
      D FTOPAY        E DS                  EXTNAME(FTOPY1PD)
      D FTEOPY        E DS                  EXTNAME(FTEOPY1PD)
      D FTOPAYX       E DS                  EXTNAME(FTOPY1APD)                   CFT014
       ** Payment Extension Details layout                                       CFT014
      D/COPY WNCPYSRC,ERZ248_045                                                 ERZ248
- 
+
      D                 DS
      D**DDFOTX*********        1     52                                         CFT007
      D**DDSIDN*********       13     27                                         CFT007
- 
+
       *  Define fields for message transalation
       *
      D  #MSDTA                 1    132
@@ -263,7 +263,7 @@
      D #MSTX2          DS
      D  #MSTXA                 1    256
      D  #MSTXB               257    512
- 
+
      D INFDS#        E DS                  EXTNAME(Y2I#DSP)                     CFT007
       * Display file information data structure                                 CFT007
                                                                                 CFT007
@@ -277,21 +277,21 @@
      D  F21text               71     84                                         CFT007
      D  F4text                85     94                                         CFT007
      D  F16text               95    105                                         CFT007
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @MSGR           S              8S 0
- 
+
      D XPREF           S             15A
                                                                                               CSW203
       ** Flag to indicate if CSW203 is switched on                                            CSW203
      D CSW203          S              1A                                                      CSW203
                                                                                               CSW203
      D PRTCD           S              7A                                                      CSW203
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -455,7 +455,7 @@
      C     XPREF         ANDNE     *BLANKS
      C                   MOVE      '1'           *IN84
      C                   END
- 
+
       * DEAL STATUS
       *
      C     DDSTS         COMP      *BLANK                             7979
@@ -515,8 +515,8 @@
       *
      C     WriteOnly     IFNE      'Y'
      C/COPY WNCPYSRC,ERZ248_024                                                 ERZ248
-     C/COPY WNCPYSRC,ERZ248_025                                                 ERZ248
      C                   READ      FTOPAY1D1                              99    *
+     C/COPY WNCPYSRC,ERZ248_025                                                 ERZ248
      C                   ENDIF
      C/COPY WNCPYSRC,FTOPA1XC02
       *
@@ -524,7 +524,7 @@
      C     *INKV         IFEQ      '1'
      C                   EXSR      ADDLINFO
      C                   END
- 
+
       * Clear message subfile
       *
      C                   CALL      'ZA0250'
@@ -749,10 +749,10 @@
      C                   PARM                    @AUTH1           10
      C                   PARM                    @AUTH2           10
      C                   PARM                    @MSGR
- 
+
       * SWIFT Identifier (if called from SWIFT enquiry)
      C                   PARM                    XPREF
- 
+
       * OUTPUT PARAMETERS
       *
       * FUNCTION KEYS
@@ -1046,7 +1046,7 @@
       ** functions for the message handler, ZAMSGHNDLE.                         CFT007
      C/COPY FTCPYSRC,MSGHNDDATA                                                 CFT007
       **---------------------------------------------------------------         CFT007
- 
+
      C/COPY WNCPYSRC,FTOPA1XC03
      C                   ENDSR
       *****************************************************************

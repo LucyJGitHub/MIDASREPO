@@ -29,7 +29,6 @@
 /*       MD055961 - Outgoing Payments HATs option and messages to be */
 /*                  processed thru FT in error end in error (ERZ248) */
 /*       MD046248 - Finastra Rebranding                              */
-/*       MD046248 - Finastra Rebranding                              */
 /*       CSC023 - MidasPlus additional packaging.  SBMJOB change.    */
 /*                OUTQ must always be *JOBD.                         */
 /*       CPK014 - Submit jobs with user *JOBD                        */

@@ -26,13 +26,15 @@
              DCL        VAR(&GLOBPRFX) TYPE(*CHAR) LEN(2)
              DCL        VAR(&ZONEPRFX) TYPE(*CHAR) LEN(2)
              DCL        VAR(&ERRORFLAG) TYPE(*CHAR) LEN(1)
-             DCL        VAR(&TODAY) TYPE(*CHAR) LEN(6)
-             DCL        VAR(&BACKUPLIB) TYPE(*CHAR) LEN(10)
-             DCL        VAR(&BFLIB) TYPE(*CHAR) LEN(10)
-             DCL        VAR(&SAVF) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&STATUS) TYPE(*CHAR) LEN(1)
              DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
              DCL        VAR(&AUTL) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GPLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&GTALIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&BFLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TODAY) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&BACKUPLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&SAVF) TYPE(*CHAR) LEN(10)
              DCL        VAR(&JLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&JRN) TYPE(*CHAR) LEN(10)
              DCL        VAR(&RETURN) TYPE(*CHAR) LEN(1)
@@ -49,7 +51,7 @@
              CHGJOB     SWS(XXXXXX00)
 
 /** The new schema library should exists */
-             CHKOBJ     OBJ(&BACKUPLIB) OBJTYPE(*LIB)
+             CHKOBJ     OBJ(&NEWBFLIB) OBJTYPE(*LIB)
              MONMSG     MSGID(CPF9801) EXEC(DO)
                 GOTO       CMDLBL(ABNOR)
              ENDDO
@@ -61,6 +63,7 @@
              ENDDO
 
 /** Setup program variables */
+             CHGVAR     VAR(&GPLIB) VALUE(&GLOBPRFX *TCAT 'GPLIB')
              CHGVAR     VAR(&GTALIB) VALUE(&GLOBPRFX *TCAT 'GTALIB')
              CHGVAR     VAR(&OWNER) VALUE(&GLOBPRFX *TCAT 'OWNER')
              CHGVAR     VAR(&AUTL) VALUE(&GLOBPRFX *TCAT 'DATABASE')
@@ -71,6 +74,47 @@
                 CHGVAR     VAR(&BFLIB) VALUE(&ZONEPRFX *TCAT +
                              &GLOBPRFX *TCAT 'BFLIB')
              ENDDO
+
+/** Create the schema upgrade status data area if not exists */
+             CHKOBJ     OBJ(&GPLIB/SMBUPSTAT) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(DO)
+                CALL       PGM(UPC000034) PARM('SMBUPSTAT' 'SMDTASRCGP' +
+                             &BRGSRCLIB &GPLIB ' ' ' ' &OWNER +
+                             &AUTL &RETURN)
+                IF         COND(&RETURN = 'E') THEN(DO)
+                   GOTO       CMDLBL(ABNOR)
+                ENDDO
+             ENDDO
+
+/** Check the schema upgrade status */
+             RTVDTAARA  DTAARA(&GPLIB/SMBUPSTAT) RTNVAR(&STATUS)
+
+/** If status is nonblank, this is a re-run of a previous failure */
+/** Do recovery point processing */
+             IF         COND(&STATUS *EQ 'A') THEN(DO)
+                GOTO       CMDLBL(PHASEA)
+             ENDDO
+
+             IF         COND(&STATUS *EQ 'B') THEN(DO)
+                GOTO       CMDLBL(PHASEB)
+             ENDDO
+
+             IF         COND(&STATUS *EQ 'C') THEN(DO)
+                GOTO       CMDLBL(PHASEC)
+             ENDDO
+
+             IF         COND(&STATUS *EQ 'D') THEN(DO)
+                GOTO       CMDLBL(PHASED)
+             ENDDO
+
+             IF         COND(&STATUS *EQ 'E') THEN(DO)
+                GOTO       CMDLBL(PHASEE)
+             ENDDO
+
+/** PHASEA: Migration of data from old schema to new schema */
+PHASEA:
+             CHGVAR     VAR(&STATUS) VALUE('A')
+             CHGDTAARA  DTAARA(&GPLIB/SMBUPSTAT) VALUE(&STATUS)
 
 /** Create the schema migration details file if not exists*/
              CHKOBJ     OBJ(&GTALIB/SMBFMCTD) OBJTYPE(*FILE)
@@ -98,8 +142,15 @@
                 GOTO       CMDLBL(ABNOR)
              ENDDO
 
-/** If migration is successful, replace the old schema library */
-/** First, create backup of the old schema library before deletion */
+/** Migration completed, reset status of SMBFMCTD */
+             CPYF       FROMFILE(&BRGDTALIB/SMBFMCTD) +
+                          TOFILE(&GTALIB/SMBFMCTD) MBROPT(*REPLACE)
+
+/** PHASEB: Creation of old schema library backup before deletion */
+PHASEB:
+             CHGVAR     VAR(&STATUS) VALUE('B')
+             CHGDTAARA  DTAARA(&GPLIB/SMBUPSTAT) VALUE(&STATUS)
+
              RTVJOBA    DATE(&TODAY)
              CHGVAR     VAR(&BACKUPLIB) VALUE('#' *TCAT &BFLIB)
              CHKOBJ     OBJ(&BACKUPLIB) OBJTYPE(*LIB)
@@ -117,7 +168,11 @@
                              SAVF(&BACKUPLIB/&SAVF) OUTPUT(*PRINT)
              ENDDO
 
-/** Next, delete all Midas views dependent to old BFLIB files */
+/** PHASEC: Deletion of all Midas views dependent to old schema */
+PHASEC:
+             CHGVAR     VAR(&STATUS) VALUE('C')
+             CHGDTAARA  DTAARA(&GPLIB/SMBUPSTAT) VALUE(&STATUS)
+
              IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
                 CHGVAR     VAR(&BACKUPLIB) VALUE('#.' *TCAT &GLOBPRFX +
                              *TCAT 'GMLIB')
@@ -127,12 +182,21 @@
                 ENDDO
              ENDDO
 
-/** Then, delete all objects from the old schema library */
-             CLRLIB     LIB(&BFLIB)
+/** PHASED: Deletion of all objects from the old schema library */
+/** And also, replacing it with the delivered new schema objects */
+PHASED:
+             CHGVAR     VAR(&STATUS) VALUE('D')
+             CHGDTAARA  DTAARA(&GPLIB/SMBUPSTAT) VALUE(&STATUS)
 
-/** Last, copy the delivered new schema library */
+             CLRLIB     LIB(&BFLIB)
              CPYLIB     FROMLIB(&NEWBFLIB) TOLIB(&BFLIB) +
                           CRTLIB(*NO)
+
+/** PHASEE: Update of new schema objects to use Midas journalling */
+/** And also, update object ownership and authority */
+PHASEE:
+             CHGVAR     VAR(&STATUS) VALUE('E')
+             CHGDTAARA  DTAARA(&GPLIB/SMBUPSTAT) VALUE(&STATUS)
 
 /** Delete existing journals and use the Midas Journalling */
              CALLSUBR   SUBR(CHGJRN)
@@ -140,9 +204,10 @@
                 GOTO       CMDLBL(ABNOR)
              ENDDO
 
-/** Migration completed, reset status of SMBFMCTD */
-             CPYF       FROMFILE(&BRGDTALIB/SMBFMCTD) +
-                          TOFILE(&GTALIB/SMBFMCTD) MBROPT(*REPLACE)
+/** Program successful completion */
+/** Set status to blanks */
+             CHGVAR     VAR(&STATUS) VALUE(' ')
+             CHGDTAARA  DTAARA(&GPLIB/SMBUPSTAT) VALUE(&STATUS)
 
              GOTO       CMDLBL(ENDPGM)
 

@@ -26,7 +26,7 @@
      D PReturn         S              1A
 
       ** Program work variables
-     D RecType         S              2A
+     D RecType         S              3A
      D TableName       S             50A
      D UniqueFld       S             50A
      D TableFlds       S           2000A
@@ -81,7 +81,7 @@
      C                   ENDIF
 
       ** Build the SQL statement depending on the record type
-     C                   IF        RecType = 'ID'
+     C                   IF        RecType = 'INS'
      C                   EVAL      SQLStmt = 'insert into '
      C                                      + %trim(PNewBFLiB) + '/'
      C                                      + %trim(TableName) + '('
@@ -101,7 +101,7 @@
      C                                      + %trim(TableName) + '))'
      C                   ENDIF
 
-     C                   IF        RecType = 'CV'
+     C                   IF        RecType = 'CRT'
      C                   EVAL      SQLStmt = %trim(TableFlds)
      C                   ENDIF
 

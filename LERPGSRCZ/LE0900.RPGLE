@@ -74,7 +74,7 @@
 0009 F*                                                               *
 0009 F*---------------------------------------------------------------*
 0009 F*                                                               *
-      *  MD055687 - Live COB - LEC10A failed
+      *  MD055687 - Live COB - LEC10A failed                          *
       *           - File control error occurs in LE0860 as amount is  *
       *             being truncated when calculating file control.    *
       *             Apply similar fix of MD-22680, change field length*

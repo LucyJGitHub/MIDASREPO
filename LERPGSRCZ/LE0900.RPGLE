@@ -78,8 +78,8 @@
       *           - File control error occurs in LE0860 as amount is  *
       *             being truncated when calculating file control.    *
       *             Apply similar fix of MD-22680, change field length*
-      *             of WBOTH from 13,0 to 15,0. Also, reset ZZAMT for *
-      *             every record read in HISTSHM file.                *
+      *             of WBOTH from 13,0 to 15,0. Also, initialize      *
+      *             ZZAMT field to 0 on every execution of MHASH subr *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
       *  MD024133 - LEC06A failed due to FOOB in BoM CoB              *

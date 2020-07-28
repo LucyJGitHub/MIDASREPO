@@ -30,7 +30,6 @@
              DCL        VAR(&OWNER) TYPE(*CHAR) LEN(10)
              DCL        VAR(&AUTL) TYPE(*CHAR) LEN(10)
              DCL        VAR(&GPLIB) TYPE(*CHAR) LEN(10)
-             DCL        VAR(&GTALIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&BFLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&TODAY) TYPE(*CHAR) LEN(6)
              DCL        VAR(&BACKUPLIB) TYPE(*CHAR) LEN(10)
@@ -64,7 +63,6 @@
 
 /** Setup program variables */
              CHGVAR     VAR(&GPLIB) VALUE(&GLOBPRFX *TCAT 'GPLIB')
-             CHGVAR     VAR(&GTALIB) VALUE(&GLOBPRFX *TCAT 'GTALIB')
              CHGVAR     VAR(&OWNER) VALUE(&GLOBPRFX *TCAT 'OWNER')
              CHGVAR     VAR(&AUTL) VALUE(&GLOBPRFX *TCAT 'DATABASE')
              IF         COND(&LAYER *EQ '*GLOBAL') THEN(DO)
@@ -117,21 +115,21 @@ PHASEA:
              CHGDTAARA  DTAARA(&GPLIB/SMBUPSTAT) VALUE(&STATUS)
 
 /** Create the schema migration details file if not exists*/
-             CHKOBJ     OBJ(&GTALIB/SMBFMCTD) OBJTYPE(*FILE)
+             CHKOBJ     OBJ(&GPLIB/SMBFMGTD) OBJTYPE(*FILE)
              MONMSG     MSGID(CPF9801) EXEC(DO)
-                CALL       PGM(UPC000034) PARM('SMBFMCTD' 'SMSQLSRCGT' +
-                             &BRGSRCLIB &GTALIB ' ' ' ' &OWNER +
+                CALL       PGM(UPC000034) PARM('SMBFMGTD' 'SMSQLSRCGP' +
+                             &BRGSRCLIB &GPLIB ' ' ' ' &OWNER +
                              &AUTL &RETURN)
                 IF         COND(&RETURN = 'E') THEN(DO)
                    GOTO       CMDLBL(ABNOR)
                 ENDDO
 
 /** Copy delivered SMBFMCTD */
-                CPYF       FROMFILE(&BRGDTALIB/SMBFMCTD) +
-                             TOFILE(&GTALIB/SMBFMCTD) MBROPT(*REPLACE)
+                CPYF       FROMFILE(&BRGDTALIB/SMBFMGTD) +
+                             TOFILE(&GPLIB/SMBFMGTD) MBROPT(*REPLACE)
 
 /** Start journalling */
-                STRJRNPF   FILE(SMBFMCTD) JRN(GPJRN) IMAGES(*BOTH) +
+                STRJRNPF   FILE(SMBFMGTD) JRN(GPJRN) IMAGES(*BOTH) +
                              OMTJRNE(*OPNCLO)
              ENDDO
 
@@ -141,10 +139,6 @@ PHASEA:
              IF         COND(&RETURN = 'E') THEN(DO)
                 GOTO       CMDLBL(ABNOR)
              ENDDO
-
-/** Migration completed, reset status of SMBFMCTD */
-             CPYF       FROMFILE(&BRGDTALIB/SMBFMCTD) +
-                          TOFILE(&GTALIB/SMBFMCTD) MBROPT(*REPLACE)
 
 /** PHASEB: Creation of old schema library backup before deletion */
 PHASEB:
@@ -205,6 +199,10 @@ PHASEE:
              ENDDO
 
 /** Program successful completion */
+/** Migration completed, reset status of SMBFMGTD */
+             CPYF       FROMFILE(&BRGDTALIB/SMBFMGTD) +
+                          TOFILE(&GPLIB/SMBFMGTD) MBROPT(*REPLACE)
+
 /** Set status to blanks */
              CHGVAR     VAR(&STATUS) VALUE(' ')
              CHGDTAARA  DTAARA(&GPLIB/SMBUPSTAT) VALUE(&STATUS)

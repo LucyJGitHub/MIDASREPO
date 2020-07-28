@@ -45,13 +45,13 @@
 
 
      C/exec SQL
-     C+ declare BFMC cursor for
+     C+ declare BFMG cursor for
      C+ select
      C+   BFRTYP
      C+ , BFTABL
      C+ , BFUFLD
      C+ , BFTFLD
-     C+ from SMBFMCTD
+     C+ from SMBFMGTD
      C+ where
      C+     BFSTAT <> 'C'
      C+ and BFLAYR = :PLayer
@@ -60,12 +60,12 @@
      C/end-exec
 
      C/exec SQL
-     C+ open BFMC
+     C+ open BFMG
      C/end-exec
 
      C/exec SQL
      C+ fetch next
-     C+ from BFMC
+     C+ from BFMG
      C+ into
      C+   :RecType
      C+ , :TableName
@@ -124,14 +124,14 @@
      C                   ENDIF
 
      C/exec SQL
-     C+ update SMBFMCTD
+     C+ update SMBFMGTD
      C+ set BFSTAT = :Status
-     C+ where current of BFMC
+     C+ where current of BFMG
      C/end-exec
 
      C/exec SQL
      C+ fetch next
-     C+ from BFMC
+     C+ from BFMG
      C+ into
      C+   :RecType
      C+ , :TableName
@@ -142,7 +142,7 @@
      C                   ENDDO
 
      C/exec SQL
-     C+ close BFMC
+     C+ close BFMG
      C/end-exec
 
       ** If atleast one failed SQL, then end program abnormally

@@ -165,8 +165,8 @@
       *             SDCUSDCVT, SDCUSD6VL and SDCUSDUPD.               *
       *  MD052432 - System does not recognise the defined authority   *
       *              holders (i.e. controlling persons for CRS)       *
-      *  MD053634 - Requested Customer Authority Holders Link Report *
-      *             for KWG$24c not generated.                       *
+      *  MD053634 - Requested Customer “Authority Holders Link Report *
+      *             for KWG$24c” not generated.                       *
       *  MD054610 - Added the parameter TranInCRDD to SDFTCS5VL call  *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *

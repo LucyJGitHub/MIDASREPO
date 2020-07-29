@@ -2,11 +2,12 @@
      H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /***********BASEMOD                                                   *                       260324
-/*CRT *  CRTRPGMOD                                                    *                       260324
-/*CRT *  MODULE(**********/**********)                                *                       260324
-/*CRT *  SRCFILE(**********/**********)                               *                       260324
-/*CRT *  SRCMBR(*MODULE) OUTPUT(*PRINT)                               *                       260324
-/*CRT *  INDENT(*NONE) TGTRLS(V5R3M0)                                 *                       260324
+/*C*T****CRTRPGMOD*****************************************************              260324 MD053540
+/*C*T****MODULE(**********/**********)*********************************              260324 MD053540
+/*C*T****SRCFILE(**********/**********)********************************              260324 MD053540
+/*C*T****SRCMBR(*MODULE)*OUTPUT(*PRINT)********************************              260324 MD053540
+/*C*T****INDENT(*NONE)*TGTRLS(V5R3M0)**********************************              260324 MD053540
+/*STD *  RPGBASEMO2                                                   *                     MD053540
 /*CRT *  TEXT('Midas MX Daily Events Extract - General Ledger')
       *****************************************************************
       *                                                               *
@@ -18,9 +19,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD053540           Date 23Jul20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. 260324             Date 27May09               *
+      *                 260324             Date 27May09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
@@ -36,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD053540 - IBMi 7.4 Certification. Applied for MD-56011.     *
       *  MD046248 - Finastra Rebranding                               *
       *  260324 - Recompile with FIXNBR(*NONE) to prevent endless     *
       *           joblogs ni MXC0500. Internalised Create Parameters. *

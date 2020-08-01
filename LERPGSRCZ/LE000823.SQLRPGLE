@@ -613,23 +613,23 @@
                                                                                             MD048558
      C*****KLOANK        CHAIN     CLOANL4                                         MD048558 MD051242
      C**********         ENDIF                                                              MD051242
-     C                   EVAL      L1_EAMT = wTransAmt                                      MD056223
 
-     C                   EVAL      WINAMT = L1_EAMT
-     C                   EXSR      SRCvtAmt
-     C                   CLEAR                   KeyStr                                     MD051242
-     C                   IF        L1_PAMT <> 0                                             MD051242
-     C                   MOVEA     'XP'          AKP(09)                                    MD051242
-     C                   ELSE                                                               MD051242
-     C                   MOVEA     'XI'          AKP(09)                                    MD051242
-     C                   ENDIF                                                              MD051242
-     C                   MOVEA     AKP           KeyStr                                     MD051242
-     C                   EXSR      CheckPDCL                                                MD051242
-     C                   IF        NOT(PDCL)                                                MD051242
-     C                   EVAL      L1_EAMT = L1_OTHA                                        MD051242
-     C                   ELSE                                                               MD051242
-     C                   EVAL      L1_EAMT = WOUTAMT
-     C                   ENDIF                                                              MD051242
+     C**********         EVAL      WINAMT = L1_EAMT                                         MD056223
+     C**********         EXSR      SRCvtAmt                                                 MD056223
+     C**********         CLEAR                   KeyStr                            MD051242 MD056223
+     C**********         IF        L1_PAMT <> 0                                    MD051242 MD056223
+     C**********         MOVEA     'XP'          AKP(09)                           MD051242 MD056223
+     C**********         ELSE                                                      MD051242 MD056223
+     C**********         MOVEA     'XI'          AKP(09)                           MD051242 MD056223
+     C**********         ENDIF                                                     MD051242 MD056223
+     C**********         MOVEA     AKP           KeyStr                            MD051242 MD056223
+     C**********         EXSR      CheckPDCL                                       MD051242 MD056223
+     C**********         IF        NOT(PDCL)                                       MD051242 MD056223
+     C**********         EVAL      L1_EAMT = L1_OTHA                               MD051242 MD056223
+     C**********         ELSE                                                      MD051242 MD056223
+     C**********         EVAL      L1_EAMT = WOUTAMT                                        MD056223
+     C**********         ENDIF                                                     MD051242 MD056223
+     C                   EVAL      L1_EAMT = wTransAmt                                      MD056223
 
       ** Format xxSyybbbFC or xxSyybbbBC key for amount in purchase ccy
 
@@ -857,16 +857,16 @@
      C                   MOVE      'F'           AKY(7)
      C                   ENDIF
 
-     C                   EVAL      WINAMT = L2_LKEAMT
-     C                   EXSR      SRCvtAmt
-     C                   MOVEA     'D'           AKP(10)                                    MD051242
-     C                   MOVEA     AKP           KeyStr                                     MD051242
-     C                   EXSR      CheckPDCL                                                MD051242
-     C                   IF        NOT(PDCL)                                                MD051242
-     C                   EVAL      L2_LKEAMT = L2_LKOTHA                                    MD051242
-     C                   ELSE                                                               MD051242
-     C                   EVAL      L2_LKEAMT = WOUTAMT
-     C                   ENDIF                                                              MD051242
+     C**********         EVAL      WINAMT = L2_LKEAMT                                       MD056223
+     C**********         EXSR      SRCvtAmt                                                 MD056223
+     C**********         MOVEA     'D'           AKP(10)                           MD051242 MD056223
+     C**********         MOVEA     AKP           KeyStr                            MD051242 MD056223
+     C**********         EXSR      CheckPDCL                                       MD051242 MD056223
+     C**********         IF        NOT(PDCL)                                       MD051242 MD056223
+     C**********         EVAL      L2_LKEAMT = L2_LKOTHA                           MD051242 MD056223
+     C**********         ELSE                                                      MD051242 MD056223
+     C**********         EVAL      L2_LKEAMT = WOUTAMT                                      MD056223
+     C**********         ENDIF                                                     MD051242 MD056223
      C                   EVAL      L2_LKEAMT = wTransAmt                                    MD056223
 
      C                   MOVE      WRKSCY        L2_LKECCY
@@ -1118,16 +1118,16 @@
      C                   MOVE      'F'           AKY(7)
      C                   ENDIF
 
-     C                   EVAL      WINAMT = L3_LKEAMT
-     C                   EXSR      SRCvtAmt
-     C                   MOVEA     'D'           AKP(10)                                    MD051242
-     C                   MOVEA     AKP           KeyStr                                     MD051242
-     C                   EXSR      CheckPDCL                                                MD051242
-     C                   IF        NOT(PDCL)                                                MD051242
-     C                   EVAL      L3_LKEAMT = L3_LKOTHA                                    MD051242
-     C                   ELSE                                                               MD051242
-     C                   EVAL      L3_LKEAMT = WOUTAMT
-     C                   ENDIF                                                              MD051242
+     C**********         EVAL      WINAMT = L3_LKEAMT                                       MD056223
+     C**********         EXSR      SRCvtAmt                                                 MD056223
+     C**********         MOVEA     'D'           AKP(10)                           MD051242 MD056223
+     C**********         MOVEA     AKP           KeyStr                            MD051242 MD056223
+     C**********         EXSR      CheckPDCL                                       MD051242 MD056223
+     C**********         IF        NOT(PDCL)                                       MD051242 MD056223
+     C**********         EVAL      L3_LKEAMT = L3_LKOTHA                           MD051242 MD056223
+     C**********         ELSE                                                      MD051242 MD056223
+     C**********         EVAL      L3_LKEAMT = WOUTAMT                                      MD056223
+     C**********         ENDIF                                                     MD051242 MD056223
      C                   EVAL      L3_LKEAMT = wTransAmt                                    MD056223
 
      C                   MOVE      WKSALC        L3_LKECCY

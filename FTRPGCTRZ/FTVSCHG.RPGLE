@@ -16,8 +16,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT157             Date 29Aug14               *
+      *  Last Amend No. MD055398A          Date 27Feb20               *
+      *  Prev Amend No. MD055398           Date 20Feb20               *
+      *                 ERZ247             Date 19Nov19               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CFT157             Date 29Aug14               *
       *                 MD000091           Date 06May13               *
       *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
@@ -44,6 +47,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055398A-Duplicate 0.00 (ERZ247)                            *
+      *           Hooks: ERZ247_019,ERZ247_004,ERZ247_016             *
+      *  MD055398-Duplicate 0.00 (ERZ247)                             *
+      *           Hooks: ERZ247_016                                   *
+      *  ERZ247 - Field 71F in MT103 for GPI                          *
+      *           Hooks: ERZ247_001,ERZ247_002,ERZ247_003,ERZ247_004, *
+      *                  ERZ247_005,ERZ247_006,ERZ247_007,ERZ247_008, *
+      *                  ERZ247_009,ERZ247_010,ERZ247_011,ERZ247_012  *
+      *                  ERZ247_016                                   *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT157 - Stop FT Transaction after Authorisation             *
       *           (Recompile)                                         *
@@ -202,6 +214,7 @@
      D  WSCYCH2               16     75
      D  WSCYCH3               31     75
      D  WSCYCH4               46     75
+     D/COPY WNCPYSRC,ERZ247_001                                                               ERZ247
  
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -228,6 +241,7 @@
      D   LenStr                1      2                                                     MD000091
      D   MsgDtaTmp                   99                                                     MD000091
                                                                                             MD000091
+     D/COPY WNCPYSRC,ERZ247_002                                                               ERZ247
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -316,13 +330,17 @@
  
       ** If entered blanks, default 1st sender's charge to 0 with
       ** currency equal to pay currency.
+     C/COPY WNCPYSRC,ERZ247_019                                                            MD055398A
  
      C                   If        (WSCHG = *Blank) And (SDTCH = 'BEN')
      C                             And (@MT103='Y')                                           208219
+     C/COPY WNCPYSRC,ERZ247_003                                                               ERZ247
      C                   If        SADDC = 'A'
+     C/COPY WNCPYSRC,ERZ247_004                                                               ERZ247
      C*******************Move      '0'           SSCH1                          BUG3919
      C                   Move      WTOTAL        SSCH1                          BUG3919
      C                   Move      SSMCY         SSCC1                          BUG3919
+     C/COPY WNCPYSRC,ERZ247_005                                                               ERZ247
      C                   Else
  
       ** Default first sender amount field by the total charge accumu-
@@ -366,8 +384,10 @@
      C                   PARM                    BNDCSP            1                         BUG8541
      C                   EndIf                                                               BUG8541
                                                                                              BUG8541
+     C/COPY WNCPYSRC,ERZ247_006                                                               ERZ247
      C                   If        @PDAM = *Zero And SPYTP <> 'RP'
      C                             and @@AMT <> 0                                            BUG8541
+     C/COPY WNCPYSRC,ERZ247_007                                                               ERZ247
      C                   If        @MT103='Y'                                                 208219
      C                   Movel     'FTM3244'     WErrMsgId         7
      C                   ExSr      SrFldChk
@@ -960,7 +980,9 @@
       ** default charge currency to pay currency.
  
      C                   If        (SSCH5 <> *Blank) And (SSCC5 = *Blank)
+     C/COPY WNCPYSRC,ERZ247_008                                                               ERZ247
      C                   Move      SPCCY         SSCC4
+     C/COPY WNCPYSRC,ERZ247_009                                                               ERZ247
      C                   EndIf
  
      C                   Eval      ZFIELD = *Blank
@@ -996,6 +1018,7 @@
      C                   Eval      @SENT = 5
      C                   EndIf
      C                   EndIf
+     C/COPY WNCPYSRC,ERZ247_016                                                               ERZ247
  
       ** Check charges total
  
@@ -1161,8 +1184,10 @@
  
       ** Send warning message if the last sender's charge field entry
       ** does not equal the actual sum of the charges levied.
+     C/COPY WNCPYSRC,ERZ247_010                                                               ERZ247
  
      C                   If        WLAST <> WTOTCH
+     C/COPY WNCPYSRC,ERZ247_011                                                               ERZ247
      C                   Eval      WIx = WIx + 1
      C                   Select
      C                   When      @SENT = 1
@@ -1374,6 +1399,7 @@
      C                   Parm                    WMsgDtaXAr
      C                   Parm                    OKFlagsDS
      C                   Parm                    Val@Fields
+     C/COPY WNCPYSRC,ERZ247_012                                                               ERZ247
  
      C                   EndSr
  

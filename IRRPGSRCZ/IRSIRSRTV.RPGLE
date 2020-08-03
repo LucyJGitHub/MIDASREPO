@@ -16,8 +16,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD054957           Date 11Dec19               *
+      *  Prev Amend No. AR933170           Date 07Jun13               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -70,6 +72,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054957 - RBRU SP21 Compatibility Patch (Recompile)         *
+      *  AR933170 - Front office id does not reflect on DEALSDG. Add  *
+      *             DDFOID as parameters. (Child: AR933171)           *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -160,6 +165,13 @@
       ** Midas AP API Configuration                                                           CAP185
      FAPICFGL0  IF   E           K DISK    INFSR(*PSSR)                                       CAP185
 
+     FFRNTOFCL1 IF   E           K DISK    INFSR(*PSSR)                                     AR933170
+     F                                     RENAME(MMDELDP0:MMDELDX0)                        AR933170
+     F                                     RENAME(MMDENBP0:MMDENBX0)                        AR933170
+     F                                     RENAME(MMDENSP0:MMDENSX0)                        AR933170
+     F                                     RENAME(ABDEALP0:ABDEALX0)                        AR933170
+     F                                     RENAME(FXDEALP0:FXDEALX0)                        AR933170
+     F                                     RENAME(DEALSDGF:DEALSGX0)                        AR933170
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -488,17 +500,25 @@
      C                   END
 
       * ACCESS DEAL WITH FRONT OFFICE TRANSACTION ID
-     C     FOTRID        CHAIN     IRSIRSL0F                          99
-
+     C*****FOTRID        CHAIN     IRSIRSL0F                          99                    AR933170
+     C     FOTRID        CHAIN     FRNTOFCL1                          99                    AR933170
+      *                                                                                     AR933170
+     C                   MOVE      SDLNO         WKDN38            6 0                      AR933170
       * IF INSERT
      C     SACCD         IFEQ      'I'
-
+     C     SACCD         OREQ      'A'                                                      AR933170
+     C     DLNO          ANDNE     WKDN38                                                   AR933170
       * FRONT OFFICE TRANSACTION ID CAN'T BE PRESENT ALREADY
      C     *IN99         IFEQ      '0'
      C                   MOVE      'N'           OKACTN
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SACCD '
+     C     SACCD         IFEQ      'I'                                                      AR933170
      C                   MOVEL     'APM0102'     MsgIdArr(Idx)
+     C                   ELSE                                                               AR933170
+     C                   EVAL      FldNameArr(Idx) = 'FOTRID'                               AR933170
+     C                   MOVEL     '45045933'    MsgIdArr(Idx)                              AR933170
+     C                   ENDIF                                                              AR933170
      C**********         MOVEL     FOTRID        MsgDtaArr(Idx)                             MD000091
      C                   EVAL      BLen = %Len(%Trim(FOTRID))                               MD000091
      C                   EVAL      MsgDtaArr(Idx) = LenStr +%TRIM(FOTRID)                   MD000091

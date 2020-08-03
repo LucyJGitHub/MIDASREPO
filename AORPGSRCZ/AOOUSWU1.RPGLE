@@ -12,8 +12,9 @@
       *                                                                  *
       *  (c) Finastra International Limited 2001                         *
       *                                                                  *
-      *  Last Amend No. MD046248           Date 27Oct17               *      
-      *  Prev Amend No. MD047993           Date 23Sep17               *
+      *  Last Amend No. MD051554           Date 28Sep18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD047993           Date 23Sep17               *
       *                 MD035545           Date 11Sep15               *
       *                 MD033602           Date 06Jul17               *
       *                 AR743357           Date 06Jul17               *
@@ -40,7 +41,10 @@
       *                                                                  *
       *------------------------------------------------------------------*
       *                                                                  *
-      *  MD046248 - Finastra Rebranding                               *      
+      *  MD051554 - Leap Year Fix for interest calculation basis to   *
+      *             be used for 1st Jan should not be present in      *
+      *             FRA/IRS module                                    *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
       *             on Last Day indicator.                            *
       *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
@@ -94,7 +98,7 @@
      D*  Subroutine stack
      D @STK            S             10    DIM(20)
      D*
-     D WPARML          C                   CONST('LECalcBasis6LeapYear')                    MD035545
+     D****WPARML          C                   CONST('LECalcBasis6LeapYear')        MD035545 MD051554
      D**  Copyright array.
      D/COPY WNCPYSRC,AOOUSWU0E3
      D/SPACE 5
@@ -303,46 +307,46 @@
      C**********         MOVEL     @OPTN         W0KEY                             MD035545 MD047993
      C**********         EXSR      SRERR                                           MD035545 MD047993
      C**********         ENDIF                                                     MD035545 MD047993
-      *                                                                                     MD035545
-      ** Retrieve system value setting                                                      MD035545
-      *                                                                                     MD035545
-     C                   MOVEL     WPARML        P@OP01                                     MD035545
-     C                   CALL      'AOSVALR0'                                               MD035545
-     C                   PARM      *BLANKS       W0RTCD            7                        MD035545
-     C                   PARM                    P@OP01           20                        MD035545
-     C                   PARM                    P@VL01          200                        MD035545
-     C                   PARM                    P@OP02           20                        MD035545
-     C                   PARM                    P@VL02          200                        MD035545
-     C                   PARM                    P@OP03           20                        MD035545
-     C                   PARM                    P@VL03          200                        MD035545
-     C                   PARM                    P@OP04           20                        MD035545
-     C                   PARM                    P@VL04          200                        MD035545
-     C                   PARM                    P@OP05           20                        MD035545
-     C                   PARM                    P@VL05          200                        MD035545
-     C                   PARM                    P@OP06           20                        MD035545
-     C                   PARM                    P@VL06          200                        MD035545
-     C                   PARM                    P@OP07           20                        MD035545
-     C                   PARM                    P@VL07          200                        MD035545
-     C                   PARM                    P@OP08           20                        MD035545
-     C                   PARM                    P@VL08          200                        MD035545
-     C                   PARM                    P@OP09           20                        MD035545
-     C                   PARM                    P@VL09          200                        MD035545
-     C                   PARM                    P@OP10           20                        MD035545
-     C                   PARM                    P@VL10          200                        MD035545
-      *                                                                                     MD035545
-      ** If system value is not found then default value to 'N'                             MD035545
-      *                                                                                     MD035545
-     C     W0RTCD        IFNE      '       '                                                MD035545
-     C                   MOVE      'N'           WCALC6                                     MD035545
-     C                   ELSE                                                               MD035545
-     C                   MOVEL     P@VL01        WCALC6                                     MD035545
+      **********                                                                   MD035545 MD051554
+      ***Retrieve*system*value*setting**********************                       MD035545 MD051554
+      ***********                                                                  MD035545 MD051554
+     C***********        MOVEL     WPARML        P@OP01                            MD035545 MD051554
+     C***********        CALL      'AOSVALR0'                                      MD035545 MD051554
+     C***********        PARM      *BLANKS       W0RTCD            7               MD035545 MD051554
+     C***********        PARM                    P@OP01           20               MD035545 MD051554
+     C***********        PARM                    P@VL01          200               MD035545 MD051554
+     C***********        PARM                    P@OP02           20               MD035545 MD051554
+     C***********        PARM                    P@VL02          200               MD035545 MD051554
+     C***********        PARM                    P@OP03           20               MD035545 MD051554
+     C***********        PARM                    P@VL03          200               MD035545 MD051554
+     C***********        PARM                    P@OP04           20               MD035545 MD051554
+     C***********        PARM                    P@VL04          200               MD035545 MD051554
+     C***********        PARM                    P@OP05           20               MD035545 MD051554
+     C***********        PARM                    P@VL05          200               MD035545 MD051554
+     C***********        PARM                    P@OP06           20               MD035545 MD051554
+     C***********        PARM                    P@VL06          200               MD035545 MD051554
+     C***********        PARM                    P@OP07           20               MD035545 MD051554
+     C***********        PARM                    P@VL07          200               MD035545 MD051554
+     C***********        PARM                    P@OP08           20               MD035545 MD051554
+     C***********        PARM                    P@VL08          200               MD035545 MD051554
+     C***********        PARM                    P@OP09           20               MD035545 MD051554
+     C***********        PARM                    P@VL09          200               MD035545 MD051554
+     C***********        PARM                    P@OP10           20               MD035545 MD051554
+     C***********        PARM                    P@VL10          200               MD035545 MD051554
+      ***********                                                                  MD035545 MD051554
+      ***If*system value is not found then default value to 'N'                    MD035545 MD051554
+      ***********                                                                  MD035545 MD051554
+     C*****W0RTCD        IFNE      '       '                                       MD035545 MD051554
+     C***********        MOVE      'N'           WCALC6                            MD035545 MD051554
+     C***********        ELSE                                                      MD035545 MD051554
+     C***********        MOVEL     P@VL01        WCALC6                            MD035545 MD051554
      C*****WCALC6        IFEQ      'Y'                                             MD035545 MD047993
      C*****BKALDI        ANDEQ     'Y'                                             MD035545 MD047993
      C**********         MOVE      'Y'           WCALC6                            MD035545 MD047993
      C**********         ELSE                                                      MD035545 MD047993
      C**********         MOVE      'N'           WCALC6                            MD035545 MD047993
      C**********         ENDIF                                                     MD035545 MD047993
-     C                   ENDIF                                                              MD035545
+     C**********         ENDIF                                                     MD035545 MD051554
       *
       **  Set up subroutine stack name
      C                   ADD       1             Q

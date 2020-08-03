@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD034521A          Date 14Sep15               *
-      *  Prev Amend No. MD039547           Date 20Sep16               *
+      *  Last Amend No. 259576             Date 02Apr14               *
+      *  Prev Amend No. MD034521A          Date 14Sep15               *
+      *                 MD039547           Date 20Sep16               *
       *                 MD046248           Date 27Oct17               *
       *                 261791             Date 19Aug14               *
       *                 262272             Date 20Dec12               *
@@ -65,6 +66,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  259576 - Remove warning message for Inactive accounts.       *
+      *           Applied for MD-26109                                *
       *  MD034521A - Error handling of Blocked account is not the     *
       *              same across the modules                          *
       *  MD039547 - Referred account is not properly validated.       *
@@ -1256,16 +1259,16 @@
      C                   ENDIF                                                                240689
       *                                                                                       240689
       ** Inactive                                                                             240689
-     C                   TESTB     '4'           WRETB                    48                  240689
-     C     *IN48         IFEQ      '1'                                                        240689
+     C**********         TESTB     '4'           WRETB                    48           240689 259576
+     C******IN48         IFEQ      '1'                                                 240689 259576
      C**********         MOVE      'N'           OKSnd1                                       240689
-     C     OKSnd1        IFNE      'N'                                                        240689
-     C                   MOVE      'W'           OKSnd1                                       240689
-     C                   ENDIF                                                                240689
-     C                   ADD       1             WIdx                                         240689
-     C                   EVAL      WFldNmXAr(WIdx) = 'DDSND1'                                 240689
-     C                   EVAL      WMsgIDXAr(WIdx) = 'FTM0017'                                240689
-     C                   ENDIF                                                                240689
+     C*****OKSnd1        IFNE      'N'                                                 240689 259576
+     C**********         MOVE      'W'           OKSnd1                                240689 259576
+     C**********         ENDIF                                                         240689 259576
+     C**********         ADD       1             WIdx                                  240689 259576
+     C**********         EVAL      WFldNmXAr(WIdx) = 'DDSND1'                          240689 259576
+     C**********         EVAL      WMsgIDXAr(WIdx) = 'FTM0017'                         240689 259576
+     C**********         ENDIF                                                         240689 259576
       *                                                                                       240689
       ** Referred Debit                                                                       240689
      C                   TESTB     '0'           WRETB                    48                  240689

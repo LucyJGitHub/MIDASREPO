@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054906           Date 15Jan20               *
-      *  Prev Amend No. MD054117           Date 12Sep19               *
+      *  Last Amend No. MD044553           Date 08May17               *
+      *  Prev Amend No. MD054906           Date 15Jan20               *
+      *                 MD054117           Date 12Sep19               *
       *                 MD053400           Date 03Jul19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD044506           Date 28Mar17               *
@@ -63,6 +64,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044553 - Corrected buffer position for WIP timestamp       *
       *  MD054906 - CBS-2882 fix extenstion for Principal Change      *
       *             Schedule                                          *
       *           - Receive ACTRJ from IRCIRSVU to properly initialize*
@@ -465,6 +467,7 @@
      D DFOfcrIDOK      S              1                                                       CSW213
      D WNoRepFlag      S              1                                                       CSW213
      D CSW213          S              1                                                       CSW213
+     D @WIPTmst        S             26                                                     MD044553
       ** Action Code Reject                                                                 MD053400
      D ACTRJ           S              1                                                     MD053400
       *                                                                                     MD054117
@@ -791,6 +794,7 @@
      C                                      + FORMULATR + FORMULATP                         MD030454
      C                                      + FORMULAOC + FORMULATC                         MD030454
      C                                      + FORMULAOPC+ FORMULATPC                        MD030454
+     C                                      + @WIPTmst +                                    MD044553
      C                                      + InSwift2013                                   MD030454
      C                                      + ACTRJ                                         MD053400
      C                                      + ORDATEAST                                     MD030454
@@ -844,18 +848,30 @@
      C**********         EVAL      BufferEx7=%SUBST(OPCSAST:6057)+TPCSAST            CSW216 MD053400
      C**********         EVAL      BufferEx8=%SUBST(TPCSAST:1056)                    CSW216 MD053400
      C**********         EVAL      BufferEx9=%SUBST(TPCSAST:11055)                   CSW216 MD053400
-     C                   EVAL      BufferEx2=%SUBST(ORDATEAST:1661)+OPDATEAST               MD053400
-     C                                      + TRDATEAST                                     MD053400
-     C                   EVAL      BufferEx3=%SUBST(TRDATEAST:2060)+TPDATEAST               MD053400
-     C                                         +OCFSAST                                     MD053400
-     C                   EVAL      BufferEx4=%SUBST(OCFSAST:2459)                           MD053400
-     C                   EVAL      BufferEx5=%SUBST(OCFSAST:12458)                          MD053400
-     C                                      + TCFSAST                                       MD053400
-     C                   EVAL      BufferEx6=%SUBST(TCFSAST:9257)                           MD053400
-     C                                      + OPCSAST                                       MD053400
-     C                   EVAL      BufferEx7=%SUBST(OPCSAST:6056)+TPCSAST                   MD053400
-     C                   EVAL      BufferEx8=%SUBST(TPCSAST:1055)                           MD053400
-     C                   EVAL      BufferEx9=%SUBST(TPCSAST:11054)                          MD053400
+     C**********         EVAL      BufferEx2=%SUBST(ORDATEAST:1661)+OPDATEAST      MD053400 MD044553
+     C**********                            + TRDATEAST                            MD053400 MD044553
+     C**********         EVAL      BufferEx3=%SUBST(TRDATEAST:2060)+TPDATEAST      MD053400 MD044553
+     C**********                               +OCFSAST                            MD053400 MD044553
+     C**********         EVAL      BufferEx4=%SUBST(OCFSAST:2459)                  MD053400 MD044553
+     C**********         EVAL      BufferEx5=%SUBST(OCFSAST:12458)                 MD053400 MD044553
+     C**********                            + TCFSAST                              MD053400 MD044553
+     C**********         EVAL      BufferEx6=%SUBST(TCFSAST:9257)                  MD053400 MD044553
+     C**********                            + OPCSAST                              MD053400 MD044553
+     C**********         EVAL      BufferEx7=%SUBST(OPCSAST:6056)+TPCSAST          MD053400 MD044553
+     C**********         EVAL      BufferEx8=%SUBST(TPCSAST:1055)                  MD053400 MD044553
+     C**********         EVAL      BufferEx9=%SUBST(TPCSAST:11054)                 MD053400 MD044553
+     C                   EVAL      BufferEx2=%SUBST(ORDATEAST:1635)+OPDATEAST               MD044553
+     C                                      + TRDATEAST                                     MD044553
+     C                   EVAL      BufferEx3=%SUBST(TRDATEAST:2034)+TPDATEAST               MD044553
+     C                                         +OCFSAST                                     MD044553
+     C                   EVAL      BufferEx4=%SUBST(OCFSAST:2433)                           MD044553
+     C                   EVAL      BufferEx5=%SUBST(OCFSAST:12432)                          MD044553
+     C                                      + TCFSAST                                       MD044553
+     C                   EVAL      BufferEx6=%SUBST(TCFSAST:9231)                           MD044553
+     C                                      + OPCSAST                                       MD044553
+     C                   EVAL      BufferEx7=%SUBST(OPCSAST:6030)+TPCSAST                   MD044553
+     C                   EVAL      BufferEx8=%SUBST(TPCSAST:1029)                           MD044553
+     C                   EVAL      BufferEx9=%SUBST(TPCSAST:11028)                          MD044553
      C                   ENDIF
  
      C                   EVAL      *INLR = *ON

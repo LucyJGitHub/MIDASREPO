@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD043379           Date 11Jan17               *
+      *  Last Amend No. AR746232           Date 11Aug11               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD043379           Date 11Jan17               *
       *                 223313             Date 16Mar15               *
       *                 MD000091           Date 09May13               *
       *                 CER059             Date 19Jul10               *
@@ -35,6 +36,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR746232 - DLC0601D 00001. File Control Out of Balance.      *
+      *             Remove checking of CAP059 since client do not     *
+      *             have this feature but checking should still be    *
+      *             done. (Child: AR746233)                           *
       *  MD046248 - Finastra Rebranding                               *
       *  MD043379 - Forward Rates Module shows a wrong error message  *
       *             when trying to insert an already existing forward *
@@ -218,9 +223,9 @@ E01  C                   ENDIF
      C                   RETURN                                                 CAP059
      C                   ENDIF                                                  CAP059
       *                                                                         CAP059
-      **  Carry out extra validation if CAP059 is on                            CAP059
+      ****Carry*out*extra*validation*if*CAP059*is*on*******************              CAP059 AR746232
       *                                                                         CAP059
-     C                   IF        CAP059 = 'Y'                                 CAP059
+     C**********         IF        CAP059 = 'Y'                                      CAP059 AR746232
       *                                                                         CAP059
       *  *--------------------------------*                                     CAP059
       *  * Validation for Action Code 'I' *                                     CAP059
@@ -260,7 +265,7 @@ E01  C                   ENDIF
      C                   RETURN                                                 CAP059
      C                   ENDIF                                                  CAP059
       *                                                                         CAP059
-     C                   ENDIF                                                  CAP059
+     C**********         ENDIF                                                       CAP059 AR746232
       *
       * Return
       *

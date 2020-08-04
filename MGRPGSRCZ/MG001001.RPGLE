@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD037229           Date 03Sep18               *
+      *  Last Amend No. CMG008             Date 20Feb20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD037229           Date 03Sep18               *
       *                 MD038302           Date 03Sep18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD035038           Date 14Jul15               *
@@ -23,6 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD037229 - Remove the validation of town after ISO code in   *
       *             first occurrence of 3/                            *

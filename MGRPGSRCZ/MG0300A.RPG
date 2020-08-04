@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD053861           Date 16Aug19               *
-      *  Prev Amend No. MD053582           Date 16Aug19               *
+      *  Last Amend No. MD054911           Date 30Apr20               *
+      *  Prev Amend No. MD053861           Date 16Aug19               *
+      *                 MD053582           Date 16Aug19               *
       *                 MD053532           Date 27May19               *
       *                 MD053362           Date 24Apr19               *
       *                 CSW219             Date 04Mar19               *
@@ -104,6 +105,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054911 - MT300 57A receiving agent missing Beneficiary     *
+      *             Account number                                    *
       *  MD053861 - Change Request: SWIFT 2019 /CLRC/ in MT300        *
       *  MD053582 - Tag 57D TO BE NETTED is generated when CSW219 is  *
       *             ON. This should be tag 57J /NOSI/NETS instead.    *
@@ -457,6 +460,7 @@
      I              'PopSTRConf          'C         APOPB                                   AR994044
      I              'SupF58onMT3CustEqBen'C         SUP58                                   MD052277
      I              'ReplaceJFormatSlash' C         AJFORM                                    CSW219
+     I              'Fld57AcctLineDtls   'C         A57ACC                                  MD054911
       *                                                                                       190127
       **  Data structure for related reference                                                190127
      I@HREF       DS                         16                                               190127
@@ -1209,7 +1213,8 @@
      C**********           PARM *BLANKS   P@OP03 20                                   255986B CSW219
      C                     PARM AJFORM    P@OP03 20                                           CSW219
      C                     PARM *BLANKS   P@VL03200                                          255986B
-     C                     PARM *BLANKS   P@OP04 20                                          255986B
+     C**********           PARM *BLANKS   P@OP04 20                                 255986B MD054911
+     C                     PARM A57ACC    P@OP04 20                                         MD054911
      C                     PARM *BLANKS   P@VL04200                                          255986B
      C                     PARM *BLANKS   P@OP05 20                                          255986B
      C                     PARM *BLANKS   P@VL05200                                          255986B
@@ -1226,10 +1231,12 @@
       *                                                                                      255986B
      C                     MOVEL'N'       PAPOPB  1                                          255986B
      C                     MOVEL' '       WS      1                                           CSW219
+     C                     MOVEL*BLANKS   W57     1                                         MD054911
      C           @RTCD     IFEQ *BLANK                                                       255986B
      C                     MOVELP@VL01    PAPOPB                                             255986B
      C**********           MOVELP@VL02    WS                                         CSW219 MD053532
      C                     MOVELP@VL03    WS                                                MD053532
+     C                     MOVELP@VL04    W57                                               MD054911
      C                     ENDIF                                                             255986B
       *                                                                                     MD052277
      C                     MOVEL'N'       WSUP58  1                                         MD052277
@@ -1345,6 +1352,7 @@
      C                     MOVE *BLANKS   WRKMRS                                           MD022633A
      C                     MOVE *BLANKS   WRKMRL                                           MD022633A
      C                     MOVE *BLANKS   WRKMRA                                           MD022633A
+     C                     MOVEL*BLANKS   WBEN57  1                                         MD054911
      C/COPY WNCPYSRC,MG0300AC25
       *
       **  Initialise field to indicate that the current position
@@ -2693,7 +2701,9 @@
      C                     MOVELMGBENN    ZDEST
      C/COPY WNCPYSRC,MG0300AC11
      C                     MOVE *BLANKS   ACLINE
+     C           WBEN57    IFNE 'Y'                                                         MD054911
      C                     MOVELMGBENA    ACLINE                                            MD039569
+     C                     ENDIF                                                            MD054911
      C                     MOVE ' '       TAG
      C                     MOVE '58'      FLDNO
      C                     EXSR FSWAD
@@ -4685,7 +4695,12 @@
      C                     MOVEL*BLANKS   ACLINE
      C/COPY WNCPYSRC,MG0300AC51
      C**********           MOVELMGBENA    ACLINE                                            MD023137
+     C           W57       IFEQ 'A'                                                         MD054911
      C                     MOVELMGAWBA    ACLINE                                            MD023137
+     C                     ELSE                                                             MD054911
+     C                     MOVELMGBENA    ACLINE                                            MD054911
+     C                     MOVEL'Y'       WBEN57                                            MD054911
+     C                     ENDIF                                                            MD054911
      C                     MOVE ' '       TAG
      C                     MOVE '57'      FLDNO
      C/COPY WNCPYSRC,MG0300AC04

@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD055056           Date 13Jan20              */
-/*       Prev Amend No. MD054605           Date 17Oct19              */
+/*       Last Amend No. MD054955           Date 16Dec19              */
+/*       Prev Amend No. MD055056           Date 13Jan20              */
+/*                      MD054605           Date 17Oct19              */
 /*                      MD046248           Date 27Oct17              */
 /*                      CUP040             Date 04Mar13              */
 /*                      CUP021             Date 07Feb11              */
@@ -26,6 +27,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD054955 - Deliverable Data Split for Correspondence Mgr    */
 /*       MD055056 - Override not found at specified level.           */
 /*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
@@ -66,6 +68,7 @@
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2003')
+             DCL        VAR(&SAVLIB) TYPE(*CHAR) LEN(10)                                /*MD054955*/
 
 /************DCLF       FILE(UPUICDPD)                                                 */ /*CUP024*/
 /**********  DCLF       FILE(UPSVALJ0) */                                      /*CUP033* *MD054605*/
@@ -181,7 +184,10 @@ VALIDATE:                                                                       
                           'DDSDATA') (*AND AUDTYP *EQ 'I') (*AND +
                           AUDTLB *EQ &LAYER))                                           /*MD054605*/
                                                                                         /*MD054605*/
-             CALL       PGM(UPC008004) PARM(&MODE &BRGDTALIB)                           /*MD054605*/
+/**********  CALL       PGM(UPC008004) PARM(&MODE &BRGDTALIB) */              /*MD054605* MD054955*/
+             CHGVAR     VAR(&SAVLIB) VALUE('#.' *TCAT &SBSID +
+                             *TCAT 'DMLIB')                                             /*MD054955*/
+             CALL       PGM(UPC008004) PARM(&MODE &BRGDTALIB &SAVLIB)                   /*MD054955*/
 /**********  DLTOVR     FILE(UPDLVCPD) */                                    /*MD054605* *MD055056*/
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)                                /*MD054605*/
                 RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +

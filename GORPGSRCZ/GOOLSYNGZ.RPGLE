@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD055147           Date 24Jan20               *
-      *  Prev Amend No. CLE070             Date 19Jun19               *
+      *  Last Amend No. CMG008             Date 20Feb20               *
+      *  Prev Amend No. MD055147           Date 24Jan20               *
+      *                 CLE070             Date 19Jun19               *
       *                 MD054605           Date 17Oct19               *
       *                 CSD101             Date 07Dec18               *
       *                 MD050212           Date 02Apr18               *
@@ -109,6 +110,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD055147 - No replication of SDSVL* if triggers are not      *
       *             attached.                                         *
       *  CLE070 - Manual Diary (Recompile)                            *

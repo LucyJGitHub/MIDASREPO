@@ -14,8 +14,9 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. MD055739           Date 22May20               *
-      *  Prev Amend No. MD055146           Date 04Feb20               *
+      *  Last Amend No. MD056082           Date 22Jun20               *
+      *  Prev Amend No. MD055739           Date 22May20               *
+      *                 MD055146           Date 04Feb20               *
       *                 MD050138           Date 12Apr18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD037270           Date 26Apr16               *
@@ -41,6 +42,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056082 - GLC0263 failed but batch with discrepancy was not *
+      *             reported on GL0263AU. Outputs every record read   *
+      *             by calling the EXCPT command inside the loop.     *
       *  MD055739 - CoB GLC0263 fails with no indication of reason    *
       *             Change printer file record type to E to generate  *
       *             report. Comment out condition *IN50 IFEQ '0' to   *
@@ -284,6 +288,7 @@
       *****************************************************************
      C           MAIN      BEGSR
       *
+     C                     EXCPTHEADER                                                      MD056082
       ** Read batch header record
      C                     READ GLJENHL2                 50
      C/COPY WNCPYSRC,GL0263C001
@@ -506,7 +511,11 @@
      C                     ENDIF
       *
      C                     ENDIF
-      *
+     C           *INOF     IFEQ *ON                                                         MD056082
+     C                     EXCPTHEADER                                                      MD056082
+     C                     SETOF                     OF                                     MD056082
+     C                     ENDIF                                                            MD056082
+     C                     EXCPTPROCES                                                      MD056082
       ** Read next batch header record
      C                     READ @BRTHCJ                  50
       *
@@ -1182,7 +1191,8 @@
       *
      C                     SETON                     U7U8LR
      C                     DUMP
-     C                     EXCPT                                                            MD055739
+     C**********           EXCPT                                                   MD055739 MD056082
+     C                     EXCPTHEADER                                                      MD056082
      C                     EXCPTDBERR                                                       MD055739
      C                     RETRN
       *
@@ -1585,7 +1595,8 @@
      C           END       BEGSR
       *
      C                     SETON                         LR
-     C                     EXCPT                                                            MD055739
+     C**********           EXCPT                                                   MD055739 MD056082
+     C                     EXCPTSUMMRY                                                      MD056082
      C                     RETRN
       *
      C                     ENDSR
@@ -1664,8 +1675,9 @@
       *****************************************************************                   AR1097467B
       *
      O*****GL0263AUD  203   51                                                              MD055739
-     OGL0263AUE  203   51                                                                   MD055739
-     O       OR        OF
+     O*****GL0263AUE  203   51                                                     MD055739 MD056082
+     O*******OR*       OF                                                                   MD056082
+     OGL0263AUE  203           HEADER                                                       MD056082
      O                                   24 'REFERENCE GL0263AU'
      O                         BJURPT    89
      O                                  104 'DATE'
@@ -1673,17 +1685,20 @@
      O                                  122 'PAGE'
      O                         PAGE  Z  127
      O********D* 1     51                                                                   MD055739
-     O        E  1     51                                                                   MD055739
-     O       OR        OF
+     O********E* 1     51                                                          MD055739 MD056082
+     O*******OR*       OF                                                                   MD056082
+     O        E  1             HEADER
      O                                   70 'BATCH TRANSACTIONS FILE'
      O                                   76 'SPLIT'
      O********D* 1     51                                                                   MD055739
-     O        E  2     51                                                                   MD055739
-     O       OR        OF
+     O********E* 2     51                                                          MD055739 MD056082
+     O*******OR*       OF                                                                   MD056082
+     O        E  1             HEADER
      O                                   70 '-----------------------'
      O                                   76 '------'                                        MD055739
      O********D* 2     08 64                                                                MD055739
-     O        E  2     08 64
+     O********E* 2     08 64                                                                MD056082
+     O        E  2     08 64   PROCES
      O                                   19 'BATCH NO.-'
      O                         BNUM      23
      O                                   34 'ACTUAL -'
@@ -1694,39 +1709,42 @@
      O                 46                92 'DISCREPANCY ***'
       *
      O********T* 203   LR U7 U8                                                             MD055739
-     O        E  203   LR U7 U8                                                             MD055739
+     O********E* 203   LR U7 U8                                                    MD055739 MD056082
      O*******OR*       LRN50                                                                MD055739
-     O       AND       LRN46                                                                MD055739
-     O                                   24 'REFERENCE GL0263AU'
-     O                         BJURPT    89
-     O                                  104 'DATE'
-     O                         BJMRDT   113
-     O                                  122 'PAGE'
-     O                         PAGE  Z  127
+     O*******AND       LRN46                                                       MD055739 MD056082
+     O**********                         24 'REFERENCE GL0263AU'                            MD056082
+     O**********               BJURPT    89                                                 MD056082
+     O**********                        104 'DATE'                                          MD056082
+     O**********               BJMRDT   113                                                 MD056082
+     O**********                        122 'PAGE'                                          MD056082
+     O**********               PAGE  Z  127                                                 MD056082
      O********T* 1     LR U7 U8                                                             MD055739
-     O        E  1     LR U7 U8                                                             MD055739
-     O*******OR*       LRN50                                                                MD055739
-     O       AND       LRN46                                                                MD055739
-     O                                   70 'BATCH TRANSACTIONS FILE'
-     O                                   76 'SPLIT'
+     O********E* 1     LR U7 U8                                                    MD055739 MD056082
+     O*******OR*       LRN50                                                       MD055739 MD056082
+     O*******AND       LRN46                                                                MD055739
+     O**********                         70 'BATCH TRANSACTIONS FILE'                       MD056082
+     O**********                         76 'SPLIT'                                         MD056082
      O********T* 2     LR U7 U8                                                             MD055739
-     O        E  2     LR U7 U8                                                             MD055739
+     O********E* 2     LR U7 U8                                                    MD055739 MD056082
      O*******OR*       LRN50                                                                MD055739
-     O       AND       LRN46                                                                MD055739
-     O                                   70 '-----------------------'
-     O                                   76 '------'
+     O*******AND       LRN46                                                       MD055739 MD056082
+     O**********                         70 '-----------------------'                       MD056082
+     O**********                         76 '------'                                        MD056082
      O********T* 2     LRNU7                                                                MD055739
-     O        E  2     LRNU7                                                                MD055739
+     O********E* 2     LRNU7                                                       MD055739 MD056082
+     O        E  2     LR 50   SUMMRY                                                       MD056082
      O                                   26 'NUMBER OF BATCHES'
      O                                   36 'PROCESSED'
      O                         COUNT 1   67
      O********T* 2     LRNU7                                                                MD055739
-     O        E  2     LRNU7                                                                MD055739
+     O********E* 2     LRNU7                                                       MD055739 MD056082
+     O        E  2     LR 50   SUMMRY
      O                                   26 'NUMBER OF ACCOUNT'
      O                                   43 'POSTINGS WRITTEN'
      O                         ACTOT 1   67
      O********T* 2     LRNU7                                                                MD055739
-     O        E  2     LRNU7                                                                MD055739
+     O********E* 2     LRNU7                                                       MD055739 MD056082
+     O        E  2     LR 50   SUMMRY
      O                                   26 'VALUE OF ACCOUNT '
      O                                   43 'POSTINGS WRITTEN'
      O                         ZZTOTIZ   64
@@ -1746,7 +1764,7 @@
      O                                   52 'KEY'
      O                         DBKEY     82
      O********T*3      LR                                                                   MD055739
-     O        E 3      LR                                                                   MD055739
+     O********E*3      LR                                                          MD055739 MD056082
       *****************************************************************
 ** DELT
 NARRATIVE DELETED

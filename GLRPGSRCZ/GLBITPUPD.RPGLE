@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. CGL148             Date 13Jul18               *
+      *  Last Amend No. MD041767           Date 25Jun20               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 CGL148             Date 13Jul18               *
       *                 MD025083           Date 13Jul18               *
       *                 MD047741           Date 31Jan18               *
       *                 MD046248           Date 27Oct17               *
@@ -90,6 +91,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041767 - COB Component GLC0263 failed. Added *IN43 in the  *
+      *             condition to ensure that when record was not read *
+      *             in CHQBKPD, WRITE will be executed and not UPDATE *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  CGL148 - Automatic Opening of GL accounts                    *
       *         - Includes fix MD024246 and MD025083                  *
@@ -1726,10 +1730,10 @@ E1   C                   ENDIF                                                  
       *                                                                                       CRE019
      C                   OPEN      CHQBKL1                                                    CRE019
      C     KCHQBK        SETGT     CHQBKPDF                                                   CRE019
-     C     KCHQB2        READPE    CHQBKPDF                               43                  CRE019
+z    C     KCHQB2        READPE    CHQBKPDF                               43                  CRE019
       *                                                                                       CRE019
      C                   IF        SCQN <= KSCQN AND KSCQN <= ECQN                            CRE019
-      *                                                                                       CRE019
+     C                             AND *IN43 <> '1'                                         MD041767
      C                   Eval      BTOUTR = 'N'                                             MD034050
      C                   MOVE      RECID         WKRECID           1                        MD032083
      C                   Z-ADD     KSCQN         WSCQN             8 0                        CRE019
@@ -1803,6 +1807,7 @@ E1   C                   ENDIF                                                  
      C                   BITON     '0'           WAR(1)                                       CRE019
      C                   MOVEA     WAR           CQPS                                         CRE019
      C                   IF        WKRECID = '*'                                            MD032083
+     C                             AND *IN43 <> '1'                                         MD041767
      C                   UPDATE    CHQBKPDF                                                 MD032083
      C                   ELSE                                                               MD032083
      C                   WRITE     CHQBKPDF                                                   CRE019

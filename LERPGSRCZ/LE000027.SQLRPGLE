@@ -19,10 +19,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2019                      *
       *                                                               *
-      *  Last Amend No. MD052994  *CREATE  Date 25Nov19               *
+      *  Last Amend No. MD056172           Date 03Jul20               *
+      *  Prev Amend No. MD052994  *CREATE  Date 25Nov19               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD056172 - Typographical Error in LE000027AU.(Recompile)     *
       *  MD052994 - CL Facility event not generated for retail        *
       *             account debit capitalised interests               *
       *                                                               *

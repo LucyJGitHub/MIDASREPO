@@ -9,18 +9,20 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. CSW220             Date 09Mar20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CPK024             Date 12Apr06              */
+/*                      CPK024             Date 12Apr06              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      CCB001 *C *CREATE  Date 01Mar95              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CSW220 - SWIFT Changes 2020                                 */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CPK024 - Packaging of MPlus 1.2.1. Copy sources needed by   */
 /*                UTC0012.                                           */
@@ -38,6 +40,8 @@
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
              DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1) VALUE(S)
              DCL        VAR(&RENT) TYPE(*CHAR) LEN(3)
+             DCL        VAR(&CSW2020) TYPE(*CHAR) LEN(6) VALUE('CSW220')                  /*CSW220*/
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7) VALUE('       ')                   /*CSW220*/
  
 /* Global monitor message */
  
@@ -47,6 +51,15 @@
 /***COPY*FTCPYSRC,FTC0690MPS*                                        */                   /*CPK024*/
 /*/COPY WNCPYSRC,FTC0690MPS                                          */                   /*CPK024*/
  
+                                                                                          /*CSW220*/
+ /* Check if switchable feature CSW220 is on */                                           /*CSW220*/
+             CALL       PGM(SWIFTACTV) PARM(&CSW2020 &PRTCD)                              /*CSW220*/
+                                                                                          /*CSW220*/
+             IF         COND(&PRTCD *EQ 'CSWACTV') THEN(DO)                               /*CSW220*/
+             CALL       PGM(FT000200)                                                     /*CSW220*/
+             IF         COND(%SWITCH(XXXXXXX1)) THEN(GOTO CMDLBL(ABNOR))                  /*CSW220*/
+             ENDDO                                                                        /*CSW220*/
+                                                                                          /*CSW220*/
              CALL       PGM(FTC0630) PARM(&RSEQ &RLEV &RENT)
  
              IF         COND(%SWITCH(XXXXXXX1)) THEN(GOTO +

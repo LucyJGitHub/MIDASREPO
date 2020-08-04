@@ -12,8 +12,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD055714           Date 06May20               *
-      *  Prev Amend No. MD054877           Date 14Jan20               *
+      *  Last Amend No. MD031292           Date 06Nov19               *
+      *  Prev Amend No. MD025836           Date 06Nov19               *
+      *                 MD055714           Date 06May20               *
+      *                 MD054877           Date 14Jan20               *
       *                 CER050             Date 16Jun19               *
       *                 MD054035           Date 03Sep19               *
       *                 MD054317           Date 09Sep19               *
@@ -161,6 +163,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031292 - Initialize CLOANCK when inserting to avoid        *
+      *             update with data from previous loan.              *
+      *  MD025836 - Loan principal increase causing excess. Remove    *
+      *             DAYNO increase when maturity is amended to update *
+      *             drawn amount on previous maturity date.           *
       *  MD055714 - Missing rebate posting after changing maturity    *
       *             date of discount loan. Restore original value of  *
       *             OMDT field upon reject.                           *
@@ -1855,6 +1862,7 @@
       *
       ***  Write CLOANCK records
       *
+     C                   CLEAR                   CLOANCKF                                   MD031292
      C                   EXSR      LONK_INS
      C                   WRITE     CLOANCKF
      C                   MOVE      *BLANKS       Z#BSTK                                       222373
@@ -5720,7 +5728,7 @@
      C                   Z-ADD     Prv_MDAT      DAYNO
      C                   Z-ADD     Prv_MDAT      ENDAY
      C     Prv_MDAT      IFGT      BJRDNB
-     C                   ADD       1             DAYNO
+     C**********         ADD       1             DAYNO                                      MD025836
      C                   ADD       1             ENDAY
      C                   END
      C                   MOVE      *BLANK        ZLOC

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054037           Date 23Sep19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. CSW220             Date 09Mar20               *
+      *  Prev Amend No. MD054037           Date 23Sep19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD044588           Date 09Mar17               *
       *                 CFT049             Date 20Feb15               *
@@ -122,6 +123,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW220 - SWIFT Changes 2020                                  *
       *  MD054037 - Outward payment routing from incoming (OPIN = Y)  *
       *             via API                                           *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -716,6 +718,12 @@
       ** CFT120 switchable field                                                              CFT120
       *                                                                                       CFT120
      D CFT120          S              1A                                                      CFT120
+      *                                                                                       CSW220
+      ** CSW220 switchable field                                                              CSW220
+      *                                                                                       CSW220
+     D CSW220          S              1A                                                      CSW220
+     D PSWIFT          S              6A                                                      CSW220
+     D PRTNCD          S              7A                                                      CSW220
  
      D CAP205          S              1A                                                      CAP205
      D/COPY WNCPYSRC,FTH00560
@@ -2480,6 +2488,14 @@
      C                   MOVEL     W0LMSG        W2LMSG                         Log file Msg ID
      C                   MOVEL     PNWRK         W2NWRK                         Network
      C                   MOVEL     'FTOPAYUPD'   ##PGM            10
+      *                                                                                       CSW220
+      ** Update MT199 Flag on reverse                                                         CSW220
+      *                                                                                       CSW220
+     C                   IF        CSW220 = 'Y' AND                                           CSW220
+     C                             OTCHTP = 'D' AND                                           CSW220
+     C                             FTM199 <> 'Z'                                              CSW220
+     C                   EVAL      FTM199 = *BLANKS                                           CSW220
+     C                   ENDIF                                                                CSW220
  
       *  N.B. Audit Stamp details are determined in called program
       *  Set up data to be passed using the rcd format data structure
@@ -5012,6 +5028,18 @@
      C     @RTCD         IFEQ      *BLANK                                                     CFT049
      C                   MOVE      'Y'           CFT049                                       CFT049
      C                   ENDIF                                                                CFT049
+      *                                                                                       CSW220
+      ** Determine if Swift 2020 is activated                                                 CSW220
+      *                                                                                       CSW220
+     C                   CALL      'SWIFTACTV'                                                CSW220
+     C                   PARM      'CSW220'      PSWIFT                                       CSW220
+     C                   PARM      *BLANKS       PRTNCD                                       CSW220
+      *                                                                                       CSW220
+     C     PRTNCD        IFEQ      'CSWACTV'                                                  CSW220
+     C                   MOVE      'Y'           CSW220                                       CSW220
+     C                   ELSE                                                                 CSW220
+     C                   MOVE      'N'           CSW220                                       CSW220
+     C                   ENDIF                                                                CSW220
  
      C                   ENDSR
       *****************************************************************                       CGL029

@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD021108A          Date 16Jul13               *
-      *  Prev Amend No. CMG006             Date 15Oct19               *
+      *  Last Amend No. CMG008             Date 20Feb20               *
+      *  Prev Amend No. MD021108A          Date 16Jul13               *
+      *                 CMG006             Date 15Oct19               *
       *                 MD052633           Date 08Oct19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD042357           Date 02Dec16               *
@@ -53,6 +54,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD021108A - Problem in generating MT950. Use rundate for tags*
       *              60M and 62M.                                     *
       *            - Applied for MD-53366                             *

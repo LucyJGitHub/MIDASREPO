@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD055714           Date 06May20               *
-      *  Prev Amend No. MD055380           Date 17Apr20               *
+      *  Last Amend No. MD029863           Date 18Jan18               *
+      *  Prev Amend No. MD055714           Date 06May20               *
+      *                 MD055380           Date 17Apr20               *
       *                 MD055344           Date 28Feb20               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
@@ -169,6 +170,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD029863 - Loan input field Final Maturity date not reset    *
+      *             after change to the date is rejected.             *
+      *           - Applied for MD049247.                             *
       *  MD055714 - Missing rebate posting after changing maturity    *
       *             date of discount loan. Restore original value of  *
       *             OMDT field upon reject.                           *
@@ -1148,6 +1152,7 @@
      D PCcy            S              3A                                                      CER020
      D PZloc           S              3A                                                      CER020
      D PZInd           S              1A                                                      CER020
+     D WSVFM           S              5P 0                                                  MD029863
                                                                                               CLE025
      D PSysVal01       S             20A   INZ('LoansPartPrchPartSld')                       BUG6108
      D PCurSet01       S            200A                                                     BUG6108
@@ -8526,6 +8531,22 @@ B001 C     ZERR          IFNE      *BLANKS
      C                   MOVEL     WNUM7         WALF6                                      AR804863
      C                   Z-ADD     ZDAYNO        WSVMD                                      AR804863
      C                   Z-ADD     WSVMD         CCLMDAT                                    AR804863
+      *                                                                                     MD029863
+      ** Final Maturity Date                                                                MD029863
+      *                                                                                     MD029863
+     C                   Z-ADD     *ZEROS        WSVFM                                      MD029863
+     C                   MOVE      DDFMDT        ZDATE                                      MD029863
+     C                   MOVE      BJDFIN        ZDATFM                                     MD029863
+     C                   CALL      'ZDATE1'                                                 MD029863
+     C                   PARM      *BLANKS       ZERR                                       MD029863
+     C                   PARM                    ZDATE                                      MD029863
+     C                   PARM                    ZDATFM                                     MD029863
+     C                   PARM                    ZDAYNO                                     MD029863
+      *                                                                                     MD029863
+     C                   MOVEL     DDFMDT        WNUM7                                      MD029863
+     C                   MOVEL     WNUM7         WALF6                                      MD029863
+     C                   Z-ADD     ZDAYNO        WSVFM                                      MD029863
+     C                   Z-ADD     WSVFM         CCLFMDT                                    MD029863     
       *                                                                                     MD055714
       ** Original Maturity Date                                                             MD055714
       *                                                                                     MD055714

@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. MD054354           Date 23Oct19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -46,6 +47,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054354 - Settlement of fee accrual for prior period for    *
+      *             backdated notional change                         *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
@@ -467,6 +470,7 @@
      C                   PARM                    S#ACTN
      C                   PARM                    LEFEEAD
      C                   PARM                    TRANSDTL
+     C                   PARM                    P_SIGN            1                        MD054354
  
       ** Write to support database log file
  

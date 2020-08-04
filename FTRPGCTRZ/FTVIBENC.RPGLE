@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD034521A          Date 14Sep15               *
-      *  Prev Amend No. MD039547           Date 20Sep16               *
+      *  Last Amend No. MD055570           Date 15May20               *
+      *  Prev Amend No. MD034521A          Date 14Sep15               *
+      *                 MD039547           Date 20Sep16               *
       *                 MD047369A          Date 24Jan18               *
       *                 MD047369           Date 30Aug17               *
       *                 MD046248           Date 27Oct17               *
@@ -77,6 +78,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055570 - Payment with account blocked (CR/DR) can be       *
+      *             inserted.                                         *
       *  MD034521A - Error handling of Blocked account is not the     *
       *              same across the modules                          *
       *  MD039547 - Referred account is not properly validated.       *
@@ -655,10 +658,23 @@
      C**********         Add       1             Idx                               BUG4581 MD034521A
      C**********         Movel     'DDBNC1'      FldNamXAr(Idx)                    BUG4581 MD034521A
      C**********         Movel     'FTM0019'     MsgIdXAr(Idx)                     BUG4581 MD034521A
+      *                                                                                     MD055570
+     C                   IF         PSJobName = 'QZDASOINIT' OR                             MD055570
+     C                              PSJobName = 'QSQSRVR' OR                                MD055570
+     C                              PSJobName = 'APISERVER'                                 MD055570
+      *                                                                                     MD055570
      C                   Move      'W'           OKBNC1                                    MD034521A
      C                   Add       1             WIx                                       MD034521A
      C                   Movel     'DDBNC1'      WFldNmXAr(WIx)                            MD034521A
      C                   Movel     'FTM0019'     WMsgIdXAr(WIx)                            MD034521A
+     C                   ELSE                                                               MD055570
+      *                                                                                     MD055570
+     C                   Move      'N'           OKBNC1                                     MD055570
+     C                   Add       1             Idx                                        MD055570
+     C                   Movel     'DDBNC1'      FldNamXAr(Idx)                             MD055570
+     C                   Movel     'FTM0019'     MsgIdXAr(Idx)                              MD055570
+     C                   ENDIF                                                              MD055570
+      *                                                                                     MD055570
      C/COPY WNCPYSRC,FTH00519
      C                   End                                                                 BUG4581
       *

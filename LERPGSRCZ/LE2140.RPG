@@ -20,8 +20,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR674226           Date 04Dec19               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. MD055657           Date 14May20               *
+      *  Prev Amend No. MD036924           Date 06Nov19               *
+      *                 AR674226           Date 04Dec19               *
+      *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD020359           Date 07Mar14               *
       *                 CLE134             Date 01Aug12               *
@@ -92,6 +94,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055657 - Manual transaction from FFC TI Interface went to  *
+      *             repair queue because the facility exchange rate is*
+      *             longer than the defined facility exchange rate in *
+      *             Midas. Increase the field definition of the Midas *
+      *             facility exchange rate.                           *
+      *  MD036924 - Allow user to enquire when customer is closed     *
       *  AR674226 - Manual transaction reached 999. Increase the size *
       *             of utility sequence no. to accomodate 9999.       *
       *             (Child: AR674227)                                 *
@@ -469,10 +477,12 @@
      I                                        4  17 SUAMT
      I                                       18  23 SSTDT
      I                                       24  29 SEXDT
-     I                                       30  41 SUXRT
+     I**********                             30  41 SUXRT                                   MD055657
+     I                                       30  41 QSUXRT                                  MD055657
      I                                       42  42 SUXID
      I                                       43  72 SUNAR
      I                                       73  73 SAMTS                 148360
+     I                                       74  87 SUXRT                                   MD055657
       *
      IL2140F    E DSLE2140PD
       *
@@ -1676,7 +1686,8 @@
      C           WSKIP     OREQ 'N'
      C                     MOVE 'N'       WSKIP
      C***********          MOVE DSCRNA    DSCRNB 72                       148360
-     C                     MOVE DSCRNA    DSCRNB 73                       148360
+     C**********           MOVE DSCRNA    DSCRNB 73                                  148360 MD055657
+     C                     MOVE DSCRNA    DSCRNB 87                                         MD055657
      C                     EXSR SRVALD
      C                     ENDIF
      C                     ENDIF
@@ -2228,6 +2239,8 @@
      C           SDCUST    PARM SDCUST    DSSDY
       *
      C           PRTCD     IFEQ *BLANK
+     C           PRTCD     OREQ '*CUSCLS'                                                   MD036924
+     C           SACTN     ANDEQ'E'                                                         MD036924
      C                     MOVE *BLANKS   SCNUM
      C                     MOVELBBCUST    SCNUM
       *
@@ -2558,6 +2571,8 @@
      C                     PARM *BLANKS   PKYST   7
      C           SDCUST    PARM SDCUST    DSSDY
      C           PRTCD     IFEQ *BLANKS
+     C           PRTCD     OREQ '*CUSCLS'                                                   MD036924
+     C           SACTN     ANDEQ'E'                                                         MD036924
      C                     MOVE BBCSSN    SDCNM
      C                     ELSE
      C           *LOCK     IN   LDA
@@ -2712,7 +2727,8 @@
      C           UXRT      IFEQ 0
      C                     MOVE *BLANKS   SUXRT
      C                     ELSE
-     C                     Z-ADD7         ZADEC
+     C**********           Z-ADD7         ZADEC                                             MD055657
+     C                     Z-ADD8         ZADEC                                             MD055657
      C                     MOVE *BLANKS   ZFIELD
      C                     MOVE UXRT      ZFIELD
      C                     EXSR ZEDIT
@@ -3034,10 +3050,13 @@
      C           SUCCY     IFNE MFCCY
      C                     MOVE *BLANKS   ZFIELD
      C                     MOVELSUXRT     ZFIELD
-     C                     Z-ADD7         ZADEC
-     C                     Z-ADD4         ZADIG
+     C**********           Z-ADD7         ZADEC                                             MD055657
+     C**********           Z-ADD4         ZADIG                                             MD055657
+     C                     Z-ADD8         ZADEC                                             MD055657
+     C                     Z-ADD5         ZADIG                                             MD055657
      C                     EXSR ZALIGN
-     C                     MOVE ZFIELD    WUXRT  117
+     C**********           MOVE ZFIELD    WUXRT  117                                        MD055657
+     C                     MOVE ZFIELD    WUXRT  138                                        MD055657
       *
      C           *IN99     IFEQ '1'
      C           WUXRT     OREQ 0
@@ -4931,7 +4950,8 @@
      C                     MOVELWXRAT     ZFIELD                                            BUG23133
      C                     CALL 'ZEDIT'                                                     BUG23133
      C                     PARM           ZFIELD                                            BUG23133
-     C                     PARM 7         ZADEC                                             BUG23133
+     C**********           PARM 7         ZADEC                                    BUG23133 MD055657
+     C                     PARM 8         ZADEC                                             MD055657
      C                     MOVE ZFIELD    SUXRT                                             BUG23133
      C                     MOVE ZMDIX     SUXID                                             BUG23133
      C**********           ELSE                                                  BUG23133A BUG23133B
@@ -4955,7 +4975,8 @@
      C                     MOVELWXRAT     ZFIELD                                            BUG23133
      C                     CALL 'ZEDIT'                                                     BUG23133
      C                     PARM           ZFIELD                                            BUG23133
-     C                     PARM 7         ZADEC                                             BUG23133
+     C**********           PARM 7         ZADEC                                    BUG23133 MD055657
+     C                     PARM 8         ZADEC                                             MD955657
      C                     MOVE ZFIELD    SUXRT                                             BUG23133
      C                     MOVELA6MDIN    SUXID                                             BUG23133
      C                     ENDIF                                                            BUG23133
@@ -4979,7 +5000,8 @@
      C                     MOVELWXRAT     ZFIELD                                           BUG23133B
      C                     CALL 'ZEDIT'                                                    BUG23133B
      C                     PARM           ZFIELD                                           BUG23133B
-     C                     PARM 7         ZADEC                                            BUG23133B
+     C**********           PARM 7         ZADEC                                   BUG23133B MD055657
+     C                     PARM 8         ZADEC                                             MD055657
      C                     MOVE ZFIELD    SUXRT                                            BUG23133B
      C           A6MDIN    IFEQ 'M'                                                        BUG23133B
      C                     MOVEL'D'       SUXID                                            BUG23133B
@@ -5000,15 +5022,22 @@
      C           WEXCH     IFNE 'Y'                                                         BUG23133
      C********** SACTN     ANDNE'D'                                              BUG23133A BUG23133B
      C           SACTN     ANDNE'I'                                                        BUG23133B
-     C                     MOVELSUXRT     WCRAT  12                                         BUG23133
+     C**********           MOVELSUXRT     WCRAT  12                                BUG23133 MD055657
+     C                     MOVELSUXRT     WCRAT  14                                         MD055657
      C           '.'       CHECKWCRAT     L       20                                        BUG23133
-     C           L         SUBSTWCRAT:1   WDGT1   4                                         BUG23133
+     C********** L         SUBSTWCRAT:1   WDGT1   4                                BUG23133 MD055657
+     C           L         SUBSTWCRAT:1   WDGT1   5                                         MD055657
      C                     ADD  2         L                                                 BUG23133
-     C                     SUBSTWCRAT:L   WDECS   7                                         BUG23133
-     C                     MOVE WDGT1     WDGT2   40                                        BUG23133
-     C                     MOVE WDECS     WDEC1   70                                        BUG23133
-     C           WDEC1     DIV  10000000  WDEC2  117                                        BUG23133
-     C           WDGT2     ADD  WDEC2     WSPR2  117                                        BUG23133
+     C**********           SUBSTWCRAT:L   WDECS   7                                BUG23133 MD055657
+     C**********           MOVE WDGT1     WDGT2   40                               BUG23133 MD055657
+     C**********           MOVE WDECS     WDEC1   70                               BUG23133 MD055657
+     C********** WDEC1     DIV  10000000  WDEC2  117                               BUG23133 MD055657
+     C********** WDGT2     ADD  WDEC2     WSPR2  117                               BUG23133 MD055657
+     C                     SUBSTWCRAT:L   WDECS   8                                         MD055657
+     C                     MOVE WDGT1     WDGT2   50                                        MD055657
+     C                     MOVE WDECS     WDEC1   80                                        MD055657
+     C           WDEC1     DIV  10000000  WDEC2  138                                        MD055657
+     C           WDGT2     ADD  WDEC2     WSPR2  138                                        MD055657
      C                     CALL 'AOCURRR0'                                                  BUG23133
      C                     PARM *BLANKS   PRTCD                                             BUG23133
      C                     PARM '*KEY'    POPTN                                             BUG23133

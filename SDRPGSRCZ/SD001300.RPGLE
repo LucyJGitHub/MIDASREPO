@@ -13,8 +13,9 @@
       *             Identification Transaction Code                   *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL152             Date 02Dec13               *
+      *  Last Amend No. CMG008             Date 20Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL152             Date 02Dec13               *
       *                 CER059             Date 19Jul10               *
       *                 BUG22693           Date 05Feb09               *
       *                 BG22303            Date 19Jan08               *
@@ -22,6 +23,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL152 - Include Transaction Type Identification Code on     *
       *           MT940/MT950 (Recompile)                             *

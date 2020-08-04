@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR674226           Date 04Dec19               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. MD036924           Date 06Nov19               *
+      *  Prev Amend No. AR674226           Date 04Dec19               *
+      *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD026120           Date 13May14               *
       *                 MD024398           Date 11May14               *
@@ -68,6 +69,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036924 - Cannot enquire on certain screen when customer is *
+      *             closed. Added checking if customer is closed      *
+      *             during validation of customer.                    *
       *  AR674226 - Manual transaction reached 999. Increase the size *
       *             of utilisation sequence no. Rename fields for     *
       *             LEMNFUL7. (Child: AR674227)                       *
@@ -683,6 +687,10 @@
      C     SDCUST        PARM      SDCUST        DSSDY
       *
      C     @RTCD         IFNE      *BLANK
+     C     @RTCD         ANDNE     '*CUSCLS'                                                MD036924
+     C     @RTCD         ORNE      *BLANK                                                   MD036924
+     C     @RTCD         ANDEQ     '*CUSCLS'                                                MD036924
+     C     DDACTN        ANDNE     'E'                                                      MD036924
      C                   MOVE      'N'           DDCSSNOK
      C                   ADD       1             Ix
      C                   MOVEL     'DDCSSN    '  FldNameArr(Ix)

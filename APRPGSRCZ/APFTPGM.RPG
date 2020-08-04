@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CAP212             Date 15Sep14               *
+      *  Last Amend No. CSW220             Date 09Mar20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CAP212             Date 15Sep14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -23,6 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSW220 - SWIFT Changes 2020                                  *
       *  MD046248 - Finastra Rebranding                               *
       *  CAP212 - FT Nostro Transfer API (Recompile)                  *
       *  BUG2692 - Batch submit of confirmations programs             *
@@ -32,6 +34,7 @@
      FOTPAY1  IF  E           K        DISK         KINFSR *PSSR
      FCQPAC1  IF  E           K        DISK         KINFSR *PSSR
      FNTRAN1  IF  E           K        DISK         KINFSR *PSSR
+     FMEINFTL1IF  E           K        DISK         KINFSR *PSSR                              CSW220
       *
       /EJECT
      E                    CPY@    1   1 80
@@ -61,6 +64,11 @@
      I                                     *PROGRAM PGM
      I                                      244 253 WSID
      I                                      254 263 USER
+      *                                                                                       CSW220
+      ** DECLARE SWIFTACTV CONSTANT                                                           CSW220
+      *                                                                                       CSW220
+     I              'SWIFTACTV'           C         SWIFT                                     CSW220
+      *                                                                                       CSW220
       *
       *
       ** Set up copyright parameter
@@ -109,6 +117,26 @@
      C                     MOVEL'*YES   ' RETURN
      C                     ELSE
      C                     MOVEL'*NO    ' RETURN
+      *                                                                                       CSW220
+      ** Determine if Swift 2020 is activated                                                 CSW220
+      *                                                                                       CSW220
+     C                     CALL SWIFT                                                         CSW220
+     C                     PARM 'CSW220'  PSWIFT  6                                           CSW220
+     C                     PARM *BLANKS   PRTCD   7                                           CSW220
+      *                                                                                       CSW220
+     C           PRTCD     IFEQ 'CSWACTV'                                                     CSW220
+     C                     MOVE 'Y'       CSW220  1                                           CSW220
+     C                     ELSE                                                               CSW220
+     C                     MOVE 'N'       CSW220                                              CSW220
+     C                     ENDIF                                                              CSW220
+      *                                                                                       CSW220
+     C           CSW220    IFEQ 'Y'                                                           CSW220
+     C           *LOVAL    SETLL@INFTPD                                                       CSW220
+     C                     READ @INFTPD                  13                                   CSW220
+     C           *IN13     IFEQ '0'                                                           CSW220
+     C                     MOVEL'*YES   ' RETURN                                              CSW220
+     C                     ENDIF                                                              CSW220
+     C                     ENDIF                                                              CSW220
      C                     ENDIF
       *
      C                     ENDIF

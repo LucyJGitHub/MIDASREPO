@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD035074           Date 13May20               *
-      *  Prev Amend No. 255449             Date 21Apr20               *
+      *  Last Amend No. MD056198           Date 08Jul20               *
+      *  Prev Amend No. MD035074           Date 13May20               *
+      *                 255449             Date 21Apr20               *
       *                 MD050452           Date 11Feb20               *
       *                 MD054019           Date 11Feb20               *
       *                 MD041832           Date 08Feb17               *
@@ -107,6 +108,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD056198 - STOR was processed despite insufficient balance,  *
+      *             switch on CRE013 even if CAP207 is on             *
       *  MD035074 - Standing Order failed due to insufficient funds,  *
       *             but account balance show sufficient funds	 *
       *           - Validates available balance when EVTDAT is greater*
@@ -1231,6 +1234,20 @@
      C                     IN   REPMED                                    CRE009
      C                     MOVE REPMED    @REPMD                          CRE009
      C                     ENDIF                                          CRE009
+      *                                                                 MD056198
+      ** Access object to check for CRE013 feature                      MD056198
+      *                                                                 MD056198
+     C                     CALL 'AOSARDR0'                              MD056198
+     C                     PARM '       ' PRTCD                         MD056198
+     C                     PARM '*VERIFY' POPTN                         MD056198
+     C                     PARM 'CRE013'  PSARD                         MD056198
+     C           SCSARD    PARM SCSARD    DSFDY                         MD056198
+      *                                                                 MD056198
+     C           PRTCD     IFEQ *BLANKS                                 MD056198
+     C                     MOVE 'Y'       CRE13F  1                     MD056198
+     C                     ELSE                                         MD056198
+     C                     MOVE 'N'       CRE13F                        MD056198
+     C                     ENDIF                                        MD056198
       *                                                                                       CGL020
       ** Determine if Midas Compliance Watch is installed                                     CGL020
       *                                                                                       CGL020
@@ -1403,14 +1420,18 @@
       *                                                                                       CRE013
      C           CAP207    IFEQ 'Y'                                                           CAP207
      C                     OPEN RESTORPD                                                      CAP207
-     C                     ELSE                                                               CAP207
+     C**********           ELSE                                                      CAP207 MD056198
+     C                     ENDIF                                                            MD056198
      C           SVAL11    IFEQ 'Y'                                                           CRE013
+     C           CRE13F    ANDEQ'Y'                                                           CRE013
      C                     MOVE 'Y'       CRE013  1                                           CRE013
+     C           CAP207    IFNE 'Y'                                                         MD056198
      C                     OPEN RESTORPD                                                      CRE013
+     C                     ENDIF                                                            MD056198
      C                     ELSE                                                               CRE013
      C                     MOVE 'N'       CRE013                                              CRE013
      C                     ENDIF                                                              CRE013
-     C                     ENDIF                                                              CAP207
+     C**********           ENDIF                                                     CAP207 MD056198
       *                                                                   S01408
      C/COPY WNCPYSRC,RE0730CCP1                                           S01408
       *                                                                   S01408

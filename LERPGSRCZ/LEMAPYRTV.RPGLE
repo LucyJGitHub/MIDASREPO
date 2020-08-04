@@ -17,7 +17,8 @@
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *  Last Amend No. MD047582           Date 13Jul20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Prev Amend No. MD055065           Date 24Apr20               *
+      *                 CER050             Date 16Jun19               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD034264           Date 05May15               *
@@ -81,6 +82,8 @@
       *             to loan's maturity date but not attached to a     *
       *             past due record.                                  *
       *           - Applied for MD055652                              *
+      *  MD055065 - Incorrect feature being checked in AOSARDR0.      *
+      *             Check CSC054 instead.                             *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *

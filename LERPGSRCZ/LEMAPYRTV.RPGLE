@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. MD055065           Date 24Apr20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD034264           Date 05May15               *
       *                 CLE164             Date 18Aug14               *
@@ -75,6 +76,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055065 - Incorrect feature being checked in AOSARDR0.      *
+      *             Check CSC054 instead.                             *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
@@ -2462,18 +2465,21 @@
       *                                                                                      BUG3760
      C                   ENDIF                                                               BUG3760
                                                                                               CSC024
-      ** Check if enhancement CSC024 (Open Month End) is on                                   CSC024
+      ***Check*if*enhancement*CSC024*(Open*Month*End**is*on                          CSC024 MD055065
+      ** Check if enhancement CSC054 (Period End Adjustment) is on                          MD055065
                                                                                               CSC024
      C                   CALLB     'AOSARDR0'                                                 CSC024
      C                   PARM      *BLANKS       @RTCD                                        CSC024
      C                   PARM      '*VERIFY'     @OPTN                                        CSC024
-     C                   PARM      'CSC024'      @SARD                                        CSC024
+     C**********         PARM      'CSC024'      @SARD                               CSC024 MD055065
+     C                   PARM      'CSC054'      @SARD                                      MD055065
      C     SCSARD        PARM      SCSARD        DSFDY                                        CSC024
                                                                                               CSC024
      C                   IF        @RTCD <> *BLANKS AND                                       CSC024
      C                             @RTCD <> '*NRF   '                                         CSC024
      C                   EVAL      DBFile = 'SCSARDPD'                                        CSC024
-     C                   EVAL      DBKey  = 'CSC024'                                          CSC024
+     C**********         EVAL      DBKey  = 'CSC024'                                 CSC024 MD055065
+     C                   EVAL      DBKey  = 'CSC054'                                        MD055065
      C                   EVAL      DBase  = 3                                                 CSC024
      C                   EXSR      *PSSR                                                      CSC024
      C                   ENDIF                                                                CSC024

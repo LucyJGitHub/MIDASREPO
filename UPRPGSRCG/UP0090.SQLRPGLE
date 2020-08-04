@@ -11,8 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD055081             Date 17Jan20             *
-      *  Prev Amend No. MD054605             Date 17Oct19             *
+      *  Last Amend No. MD055242             Date 10Feb20             *
+      *  Prev Amend No. MD055265             Date 10Feb20             *
+      *                 MD055264             Date 31Mar20             *
+      *                 MD054955             Date 16Dec19             *
+      *                 MD055081             Date 17Jan20             *
+      *                 MD054605             Date 17Oct19             *
       *                 MD034724             Date 11Jun15             *
       *                 CUP042 *REWRITE    Date 04May15               *
       *                 CUP040             Date 09Aug13               *
@@ -33,6 +37,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055242 - Standardization of Deliverable Data Split         *
+      *  MD055265 - Deliverable Data Split for Report Control Facility*
+      *  MD055264 - Deliverable Data Split for Help Text              *
+      *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
       *  MD055081 - New files added for Deliverable Data Split do     *
       *             not exist yet, hence layer cannot be found.       *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
@@ -893,6 +901,16 @@
       *********************************************************************
      C     ProcOther     BEGSR
       *
+      ** Check if file is not '*XTD'                                                        MD055242
+     C                   If        %SUBST(Member:6:3) = 'XTD'                               MD055242
+     C                   EVAL      Char100 = '*XTD file cannot be +                         MD055242
+     C                             delivered, *CTD file must be delivered  : ' +            MD055242
+     C                             Member                                                   MD055242
+     C                   EXSR      InsertErrMsg                                             MD055242
+     C                   EVAL      NoWrite = 'N'                                            MD055242
+     C                   LEAVESR                                                            MD055242
+     C                   Endif                                                              MD055242
+                                                                                            MD055242
       ** Check if the file has an '*XTD' equivalent; this means it is using
       **  the new Deliverable Data Split.
      C                   EVAL      ChkFile = %SUBST(Member:1:5) + 'XTD'
@@ -908,6 +926,18 @@
      C                             or ChkFile = 'GPSVRXTD'                                  MD054605
      C                             or ChkFile = 'SDSVLXTD'                                  MD054605
      C                             or ChkFile = 'SDSVRXTD'                                  MD054605
+     C                             or ChkFile = 'CGCSHXTD'                                  MD054955
+     C                             or ChkFile = 'CGGSAXTD'                                  MD054955
+     C                             or ChkFile = 'CGPTNXTD'                                  MD054955
+     C                             or ChkFile = 'CGPTYXTD'                                  MD054955
+     C                             or ChkFile = 'CGRASXTD'                                  MD054955
+     C                             or ChkFile = 'CGRDEXTD'                                  MD054955
+     C                             or ChkFile = 'CGRDTXTD'                                  MD054955
+     C                             or ChkFile = 'CGSETXTD'                                  MD054955
+     C                             or ChkFile = 'SCHLPXTD'                                  MD055264
+     C                             or ChkFile = 'FCRCOXTD'                                  MD055265
+     C                             or ChkFile = 'FCREPXTD'                                  MD055265
+     C                             or ChkFile = 'FCRSFXTD'                                  MD055265
      C                   EVAL      AUMBNM = Member
      C                   EVAL      AUMBTX = ObjectText
      C                   EVAL      AUDTYP = 'I'
@@ -970,6 +1000,42 @@
      C                   PARM                    ObjectType
      C                   PARM                    ReturnCode
      C                   PARM                    ReturnData
+      ** If not found, try with 'old' name                                                  MD054955
+     C                   IF        ReturnCode = 'E'                                         MD054955
+     C                             and %SUBST(Member:6:3) = 'CTD'                           MD054955
+     C                   SELECT                                                             MD054955
+     C     Member        WHENEQ    'CGCSHCTD'                                               MD054955
+     C                   EVAL      Member = 'CGCSCHPD'                                      MD054955
+     C     Member        WHENEQ    'CGGSACTD'                                               MD054955
+     C                   EVAL      Member = 'CGGSASPD'                                      MD054955
+     C     Member        WHENEQ    'CGPTNCTD'                                               MD054955
+     C                   EVAL      Member = 'CGPTTNPD'                                      MD054955
+     C     Member        WHENEQ    'CGPTYCTD'                                               MD054955
+     C                   EVAL      Member = 'CGPTYPPD'                                      MD054955
+     C     Member        WHENEQ    'CGRASCTD'                                               MD054955
+     C                   EVAL      Member = 'CGRASCPD'                                      MD054955
+     C     Member        WHENEQ    'CGRDECTD'                                               MD054955
+     C                   EVAL      Member = 'CGRDECPD'                                      MD054955
+     C     Member        WHENEQ    'CGRDTCTD'                                               MD054955
+     C                   EVAL      Member = 'CGRDTAPD'                                      MD054955
+     C     Member        WHENEQ    'CGSETCTD'                                               MD054955
+     C                   EVAL      Member = 'CGGSETPD'                                      MD054955
+     C     Member        WHENEQ    'FCRCOCTD'                                               MD055265
+     C                   EVAL      Member = 'FCRCOMPD'                                      MD054955
+     C     Member        WHENEQ    'FCREPCTD'                                               MD055265
+     C                   EVAL      Member = 'FCREPTPD'                                      MD054955
+     C     Member        WHENEQ    'FCRSFCTD'                                               MD055265
+     C                   EVAL      Member = 'FCRSFXPD'                                      MD054955
+     C                   ENDSL                                                              MD054955
+                                                                                            MD054955
+     C                   CALL      'UTRTVOBJD'                                              MD054955
+     C                   PARM                    Member                                     MD054955
+     C                   PARM      '*LIBL'       Library                                    MD054955
+     C                   PARM                    ObjectType                                 MD054955
+     C                   PARM                    ReturnCode                                 MD054955
+     C                   PARM                    ReturnData                                 MD054955
+     C                   ENDIF                                                              MD054955
+                                                                                            MD054955
      C                   IF        ReturnCode = *blank
       ** Determine layer form the 3rd character of the returned library name.
      C                   IF        %SUBST(ReturnData:41:1) ='G'
@@ -982,11 +1048,15 @@
      C                   IF        Member = 'GPWIPCTD'                                      MD055081
      C                   EVAL      AUDTLB = '*GLOBAL'                                       MD055081
      C                   Else                                                               MD055081
+     C                   IF        Member = 'SCHLPCTD'                                      MD055264
+     C                   EVAL      AUDTLB = '*ZONE'                                         MD055264
+     C                   Else                                                               MD055264
      C                   EVAL      AUDTLB = '*UNKNOWN'
      C                   EVAL      Char100 = 'Deliverable data - +
      C                             Unknown layer                           : ' +
      C                             Member + ObjectType
      C                   EXSR      InsertErrMsg
+     C                   Endif                                                              MD055264
      C                   Endif                                                              MD055081
      C                   ENDIF
       *

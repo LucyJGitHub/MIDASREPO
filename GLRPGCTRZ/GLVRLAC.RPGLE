@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CRE114             Date 19Feb18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055857           Date 26May20               *
+      *  Prev Amend No. CRE114             Date 19Feb18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD042377           Date 01Dec16               *
       *                 MD034451C          Date 02Mar16               *
       *                 MD041157           Date 09Aug16               *
@@ -60,6 +61,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055857 - Amend MSG ID RE72035 for the sweep validation and *
+      *             change it to RE72015.                             *
+      *           - Added a new event code for RE72015.               *
       *  CRE114   - Modulus 10 for Retail Account Number (FOB006)     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD042377 - Error RE71053 should only be validated against a  *
@@ -1006,7 +1010,8 @@
      C                   Move      'N'           DDAcNoOk                                     253927
      C                   Add       1             Idx                                          253927
      C                   Movel     'DDAcNo'      FldNamXAr(Idx)                               253927
-     C                   Movel     'RE72035'     MsgIDXAr(Idx)                                253927
+     C**********         Movel     'RE72035'     MsgIDXAr(Idx)                       253927 MD055857
+     C                   Movel     'RE72015'     MsgIDXAr(Idx)                              MD055857
      C                   EndIf                                                                253927
       *                                                                                       253927
       *

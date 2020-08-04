@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. AR674226           Date 04Dec19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055657           Date 14May20               *
+      *  Prev Amend No. AR674226           Date 04Dec19               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -24,6 +25,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055657 - Manual transaction from FFC TI Interface went to  *
+      *             repair queue because the facility exchange rate is*
+      *             longer than the defined facility exchange rate in *
+      *             Midas. Increase the field definition of the Midas *
+      *             facility exchange rate.                           *
       *  AR674226 - Manual transaction reached 999. Increase the size *
       *             of utilisation sequence no. and transaction       *
       *             sequence. Recompile. (Child: AR674227)            *
@@ -43,10 +49,10 @@
      FLEMNFUL0  UF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(F1)
       ** Manual Utilisation Transaction
- 
+
      FFCLTYL1   IF   E           K DISK    INFSR(*PSSR)
       ** Facility File
- 
+
      ******************************************************************
       /EJECT
       *****************************************************************
@@ -66,23 +72,23 @@
       **                                    184 193 DBMOD
       **                                    194 203 DBPROC
       *
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for Currency Details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** Short Data Structure for Access Programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Long Data Structure for Access Programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Pameters/Variables/Keys
      D PRetCode        S              7
      D POption         S              7
@@ -93,18 +99,18 @@
      D WkRate2         S             16P 9
      D WkUXRT          S             16P 9
      D WkIntg          S             16P 9
- 
+
       ** Main Processing
- 
+
      C     *LOVAL        SETLL     LEMNFUL0
      C                   READ      LEMNFUL0
- 
+
      C                   DOW       NOT %EOF(LEMNFUL0)
- 
+
      C     KlFclt        CHAIN     FCLTYL1                            60
- 
+
       ** Only perform update when:
- 
+
       ** 1. utilisation transaction is a LIVE record (RECI='D')
       ** 2. facility being used is defined in the Facilities file and is
       **    a LIVE facility (Found in FCLTYL1 and RECI='D')
@@ -113,14 +119,14 @@
       **    flag = 'N')
       ** 5. transaction has different currency as that of the facility
       **    (Utilisation currency <> facility currency)
- 
+
      C                   IF        F1RECI = 'D' AND *IN60 = *OFF AND
      C                             RECI = 'D' AND BJRDNB > F1STDT AND
      C                             F1FIXR = 'N' AND F1UCCY <> FCCY
- 
+
      C                   EVAL      WkCurr = F1UCCY
      C                   EXSR      SRGetCurD
- 
+
      C                   IF        A6MDIN = 'D'
      C                   EVAL      WkRate1 = 1/A6SPRT
      C                   ELSE
@@ -128,20 +134,25 @@
      C                   ENDIF
      C                   EVAL      WkCurr = FCCY
      C                   EXSR      SRGetCurD
- 
+
      C                   IF        A6MDIN = 'D'
      C                   EVAL      WkRate2 = 1/A6SPRT
      C                   ELSE
      C                   EVAL      WkRate2 = A6SPRT
      C                   ENDIF
- 
-      ** Since length of Utilisation Exchange Rate field in the file allows
-      ** only 4 digit for whole numbers, so once it exceeds this, invert rate
-      ** and set multiply/divide indicator to 'D'
- 
+
+      ***Since*length*of*Utilisation*Exchange*Rate*field*in*the*file*allows**               MD055657
+      ***only*4*digit*for*whole*numbers,*so*once*it*exceeds*this,*invert*rate               MD055657
+      ***and*set*multiply/divide*indicator*to*'D'****************************               MD055657
+      *                                                                                     MD055657
+      ** Since length of Utilisation Exchange Rate field in the file allows                 MD055657
+      ** only 5 digit for whole numbers, so once it exceeds this, invert rate               MD055657
+      ** and set multiply/divide indicator to 'D'                                           MD055657
+      *                                                                                     MD055657
      C                   EVAL      WkUXRT = WkRate1/WkRate2
-     C                   EVAL      WkIntg = WkUXRT/10000
- 
+     C**********         EVAL      WkIntg = WkUXRT/10000                                    MD055657
+     C                   EVAL      WkIntg = WkUXRT/100000                                   MD055657
+
      C                   IF        WkIntg >= 1
      C                   EVAL      F1UXRT = 1/WkUXRT
      C                   EVAL      F1UXID = 'D'
@@ -149,17 +160,17 @@
      C                   EVAL      F1UXRT = WkRate1/WkRate2
      C                   EVAL      F1UXID = 'M'
      C                   ENDIF
- 
+
      C                   UPDATE    LEMNFUPF
- 
+
      C                   ENDIF
- 
+
      C                   READ      LEMNFUL0
- 
+
      C                   ENDDO
- 
+
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -171,20 +182,20 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     KlFclt        KLIST
      C                   KFLD                    F1BRCA
      C                   KFLD                    F1CNUM
      C                   KFLD                    F1FACT
      C                   KFLD                    F1FCNO
- 
+
       ** Access bank details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*MSG   '     PRetCode
      C                   PARM      '*FIRST '     POption
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database error
      C                   IF        PRetCode <> *BLANKS
      C     *LOCK         IN        LDA
@@ -194,7 +205,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -204,15 +215,15 @@
       *                                                               *
       *****************************************************************
      C     SRGetCurD     BEGSR
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*KEY   '     POption
      C                   PARM      WkCurr        PCurr
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
       ** Database Error
- 
+
      C                   IF        PRetCode <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDCURRPD'
@@ -221,7 +232,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *********************************************************************
       /EJECT
@@ -234,16 +245,16 @@
       *                                                                   *
       *********************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   IF        WRun = *BLANK
      C                   EVAL      WRun = 'Y'
- 
+
      C                   CALL      'DBERRCTL'
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = '1'
      C                   EVAL      *INU8 = '1'
      C                   EVAL      *INLR = '1'

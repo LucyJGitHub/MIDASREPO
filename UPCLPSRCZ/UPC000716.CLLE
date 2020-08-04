@@ -1,0 +1,179 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UP Deliverable Data Split migration')           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Bridge                                              */
+/*                                                                   */
+/*       UPC000716 - Deliverable Data Split migration                */
+/*                                                                   */
+/*       (c) Finastra International Limited 2019                     */
+/*                                                                   */
+/*       Last Amend No. MDPHS005 *CREATE   Date 18Jun20              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MDPHS005 - Deliverable Data Split migration                 */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&MODE &OLDLIB &NEWLIB)
+
+             DCL        VAR(&MODE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OLDLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&NEWLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MBROVR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&KEYFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OLDFILE) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ERROR) TYPE(*CHAR) LEN(10)
+
+             DCLF       FILE(UPDDSFPD)
+
+             COPYRIGHT TEXT('(c) Finastra International Limited +
+                          2020')
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+/* If mode is '*REPORT' */
+             IF         COND(&MODE *EQ '*REPORT') THEN(DO)
+             CALLSUBR   SUBR(SRREPORT)
+             ENDDO
+
+
+/* If mode is '*UPDATE' */
+             IF         COND(&MODE *EQ '*UPDATE') THEN(DO)
+             CALLSUBR   SUBR(SRUPDATE)
+             ENDDO
+
+             GOTO       CMDLBL(END)
+
+ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             DMPCLPGM
+
+/*********************************************************************/
+/*                                                                   */
+/*       SRREPORT  - Subroutine for Report                           */
+/*                                                                   */
+/*********************************************************************/
+             SUBR       SUBR(SRREPORT)
+
+             RTVJOBA    USER(&MBROVR)
+/* Add members for the specified member override. */
+             ADDPFM     FILE(UTFLDDPD) MBR(&MBROVR)
+             MONMSG     MSGID(CPF0000)
+             ADDLFM     FILE(UTFLDDL0) MBR(&MBROVR) +
+                          DTAMBRS((UTFLDDPD (&MBROVR)))
+             MONMSG     MSGID(CPF0000)
+             ADDLFM     FILE(UTFLDDL1) MBR(&MBROVR) +
+                          DTAMBRS((UTFLDDPD (&MBROVR)))
+             MONMSG     MSGID(CPF0000)
+             ADDLFM     FILE(UTFLDDL2) MBR(&MBROVR) +
+                          DTAMBRS((UTFLDDPD (&MBROVR)))
+             MONMSG     MSGID(CPF0000)
+
+/* Add overrides. */
+             OVRDBF     FILE(UTFLDDPD) MBR(&MBROVR)
+             OVRDBF     FILE(UTFLDDL0) MBR(&MBROVR)
+             OVRDBF     FILE(UTFLDDL1) MBR(&MBROVR)
+             OVRDBF     FILE(UTFLDDL2) MBR(&MBROVR)
+
+READNEXT:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ENDSRR)
+             ENDDO
+
+/* only consider Layer */
+             IF         COND(&DDSLYR *NE '*ZONE  ') THEN(DO)
+             GOTO       CMDLBL(READNEXT)
+             ENDDO
+
+             CALL       PGM(UT000022) PARM(&DDSNWF 'X')
+
+             DLTOVR     FILE(UTFLDDPD UTFLDDL0 UTFLDDL1 UTFLDDL2)
+             MONMSG     MSGID(CPF9841)
+
+/* Remove fields irrelevant to the compare*/
+             CALL       PGM(UP000704) PARM(&DDSNWF &MBROVR &KEYFILE)
+
+             CHGVAR     VAR(&OLDFILE) VALUE(&DDSNWF)
+/* If not blank, check that Original File exist in the old system */
+             IF         COND(&DDSORF *NE ' ') THEN(DO)
+             CHGVAR     VAR(&OLDFILE) VALUE(&DDSORF)
+             CHKOBJ     OBJ(&OLDLIB/&OLDFILE) OBJTYPE(*FILE)
+/* If not found, assume the same*/
+             MONMSG     MSGID(CPF9801 CPF9810) EXEC(DO)
+             CHGVAR     VAR(&OLDFILE) VALUE(&DDSNWF)
+             ENDDO
+             ENDDO
+/* and check if exists in the old system */
+             CHKOBJ     OBJ(&OLDLIB/&OLDFILE) OBJTYPE(*FILE)
+/* If not found, do not process*/
+             MONMSG     MSGID(CPF9801 CPF9810) EXEC(DO)
+             GOTO       CMDLBL(READNEXT)
+             ENDDO
+
+/* Run compare */
+             CMPF FILE1(&OLDLIB/&OLDFILE) FILE2(&NEWLIB/&DDSNWF) TFILE(&DDSNWF)  +
+             KEYFLD(*FILE) OUTPUT(*PRINT) KEYF(&KEYFILE)
+             CHGSPLFA   FILE(UT000023P1) SPLNBR(*LAST) USRDTA(&DDSNWF)
+
+             GOTO       CMDLBL(READNEXT)
+
+ENDSRR:
+             ENDSUBR
+
+/*********************************************************************/
+/*********************************************************************/
+/*                                                                   */
+/*       SRUPDATE  - Subroutine for UPDATE                           */
+/*                                                                   */
+/*********************************************************************/
+             SUBR       SUBR(SRUPDATE)
+
+
+UPDNEXT:
+             RCVF
+             MONMSG     MSGID(CPF0864) EXEC(DO)
+                GOTO       CMDLBL(ENDSR)
+             ENDDO
+
+/* only consider Layer */
+             IF         COND(&DDSLYR *NE '*ZONE  ') THEN(DO)
+             GOTO       CMDLBL(UPDNEXT)
+             ENDDO
+
+             CHGVAR     VAR(&OLDFILE) VALUE(&DDSNWF)
+/* If not blank, check that Original File exist in the old system */
+             IF         COND(&DDSORF *NE ' ') THEN(DO)
+             CHGVAR     VAR(&OLDFILE) VALUE(&DDSORF)
+             CHKOBJ     OBJ(&OLDLIB/&OLDFILE) OBJTYPE(*FILE)
+/* If not found, assume the same*/
+             MONMSG     MSGID(CPF9801 CPF9810) EXEC(DO)
+             CHGVAR     VAR(&OLDFILE) VALUE(&DDSNWF)
+             ENDDO
+             ENDDO
+/* and check if exists in the old system */
+             CHKOBJ     OBJ(&OLDLIB/&OLDFILE) OBJTYPE(*FILE)
+/* If not found, do not process*/
+             MONMSG     MSGID(CPF9801 CPF9810) EXEC(DO)
+             GOTO       CMDLBL(UPDNEXT)
+             ENDDO
+
+/* If Special Instructions */
+             IF         COND(&DDSSPI *NE ' ') THEN(DO)
+             CALL       PGM(&DDSSPI) PARM(&DDSNWF &OLDFILE &NEWLIB &OLDLIB &ERROR)
+             ENDDO
+             ELSE CMD(DO)
+             CALL       PGM(UP000710) PARM(&DDSNWF &OLDFILE &NEWLIB &OLDLIB &ERROR)
+             ENDDO
+
+             GOTO       CMDLBL(UPDNEXT)
+
+ENDSR:
+             ENDSUBR
+
+/*********************************************************************/
+END:
+             ENDPGM

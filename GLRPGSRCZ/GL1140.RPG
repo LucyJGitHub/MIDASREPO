@@ -11,8 +11,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054636           Date 27Jan20               *
-      *  Prev Amend No. MD050139           Date 23Mar18               *
+      *  Last Amend No. MD055483           Date 01Jul20               *
+      *  Prev Amend No. MD054636           Date 27Jan20               *
+      *                 MD050139           Date 23Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL184             Date 07Dec16               *
       *                 MD035042           Date 15Jul15               *
@@ -67,6 +68,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD055483 - Introduced system value AmtAccrualPurging that    *
+      *             will control the purging of records in AMACCD     *
+      *             file when CGL141 is ON.                           *
+      *           - Amended /copy CGL141_035.                         *
       *  MD054636 - Lessen the number of zeroes for Cheque Number     *
       *             to eight zeroes only instead of fourteen zeroes.  *
       *  MD050139- AOSARDR0 called every time causing performance     *
@@ -433,6 +438,7 @@
      I*                                                                   CGL003
      I/COPY ZSRSRC,ZHOLI                                                  CGL003
      I*                                                                   CGL003
+     I              'AmtAccrualPurging'   C         A#PURG                                  MD055483
 0073 I*                                                                   GL1160
      C*                                                                   CGL003
      C           *LIKE     DEFN AMAPDA    WAPDA                           CGL003
@@ -468,6 +474,45 @@
      C                     ELSE                                           S01194
      C                     SETOF                     98                   S01194
      C                     END                                            S01194
+      *                                                                                     MD055483
+      ** Retrieve System Value to determine whether to Purge Matured Accruals               MD055483
+      *                                                                                     MD055483
+     C                     CALL 'AOSVALR0'                                                  MD055483
+     C                     PARM *BLANKS   PRTCDE  7                                         MD055483
+     C                     PARM A#PURG    PSV01  20                                         MD055483
+     C                     PARM           PCS01 200                                         MD055483
+     C                     PARM           PSV02  20                                         MD055483
+     C                     PARM           PCS02 200                                         MD055483
+     C                     PARM           PSV03  20                                         MD055483
+     C                     PARM           PCS03 200                                         MD055483
+     C                     PARM           PSV04  20                                         MD055483
+     C                     PARM           PCS04 200                                         MD055483
+     C                     PARM           PSV05  20                                         MD055483
+     C                     PARM           PCS05 200                                         MD055483
+     C                     PARM           PSV06  20                                         MD055483
+     C                     PARM           PCS06 200                                         MD055483
+     C                     PARM           PSV07  20                                         MD055483
+     C                     PARM           PCS07 200                                         MD055483
+     C                     PARM           PSV08  20                                         MD055483
+     C                     PARM           PCS08 200                                         MD055483
+     C                     PARM           PSV09  20                                         MD055483
+     C                     PARM           PCS09 200                                         MD055483
+     C                     PARM           PSV10  20                                         MD055483
+     C                     PARM           PCS10 200                                         MD055483
+      *                                                                                     MD055483
+     C                     MOVE *BLANKS   WKPURG  1                                         MD055483
+     C           PRTCDE    IFEQ *BLANKS                                                     MD055483
+     C                     MOVELPCS01     WKPURG                                            MD055483
+      *                                                                                     MD055483
+     C                     ELSE                                                             MD055483
+     C                     MOVEL'SDSVALPD'DBFILE                                            MD055483
+     C                     MOVEL'105'     DBASE                                             MD055483
+     C                     MOVEL'*KEY'    DBOPTN                                            MD055483
+     C                     MOVEL'*KEY'    DBKEY                                             MD055483
+     C                     EXSR *PSSR                                                       MD055483
+     C                     SETON                     U7LRU8                                 MD055483
+     C                     GOTO DEND                                                        MD055483
+     C                     ENDIF                                                            MD055483
 0085 C*                                                                   S01194
 0086 C* ACCESS BANK DETAILS, DATABASE ERROR IF RETURN CODE NOT BLANK      S01194
 0087 C*                                                                   S01194

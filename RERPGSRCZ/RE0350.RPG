@@ -12,9 +12,10 @@
       *  (c) Finastra International Limited 2001                      *
 0009 F*      1990,1993                                                *
 0009 F*                                                               *
-      *  Last Amend No. MD050628           Date 26Jul18               *
-      *  Last Amend No. MD043946           Date 08Feb17               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. 257012             Date 12Mar20               *
+      *  Prev Amend No. MD050628           Date 26Jul18               *
+      *                 MD043946           Date 08Feb17               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD030959A          Date 17Jun15               *
       *                 MD031950           Date 17Jun15               *
       *                 CGL120             Date 06Aug12               *
@@ -82,6 +83,8 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  257012 - Handle correctly 'C' and 'D' charges sign.          *
+      *           Applied for MD-23223.                               *     
       *  MD050628 - FX Margin generated even if DCIN is BLANK         *
       *  MD043946 - Post to suspense account when the dr/cr account   *
       *             is flagged as Blocked debit/credit.               *
@@ -1287,6 +1290,8 @@
 0294 C   73                MOVE DRAM      DRAM3  133
 0295 C*
      C           CHSN      IFEQ '+'                        ** S-001 **    S01111
+     C           CHSN      OREQ 'D'                                                           257012
+     C           CHSN      OREQ 'd'                                                           257012
      C                     SETON                     31                   S01111
      C**********           MOVE DCUS      ASOC    60                                   S01111 CSD027
      C                     MOVE DCUS      ASOC    6                                           CSD027
@@ -1297,9 +1302,13 @@
      C** IF VALID CHARGES SIGN ENTERED THEN ADJUST DEBIT OR CREDIT POSTINGS01111
      C** AMOUNT AS NECESSARY                                              S01111
      C           CHSN      IFEQ '+'                        ** S-001 **    S01111
+     C           CHSN      OREQ 'D'                                                           257012
+     C           CHSN      OREQ 'd'                                                           257012
      C           DRAM      ADD  CHAM      DCHAM  130                      S01111
      C                     END                             ** E-001 **    S01111
      C           CHSN      IFEQ '-'                        ** S-001 **    S01111
+     C           CHSN      OREQ 'C'                                                           257012
+     C           CHSN      OREQ 'c'                                                           257012
      C           CRAM      SUB  CHAM      CCHAM  130                      S01111
      C                     END                             ** E-001 **    S01111
      C/COPY WNCPYSRC,REH00466
@@ -1345,6 +1354,8 @@
      C                     Z-ADD100       W100                                                CGL020
       *                                                                                       CGL020
      C           CHSN      IFEQ '+'                                                           CGL020
+     C           CHSN      OREQ 'D'                                                           257012
+     C           CHSN      OREQ 'd'                                                           257012
      C                     MOVE 'N'       WDFFLG                                              CGL020
      C                     Z-ADDCHAM      WDFVAL                                              CGL020
      C           CHAM      DIV  DRAM      WKFPCT                                              CGL020
@@ -1352,6 +1363,8 @@
      C                     ENDIF                                                              CGL020
       *                                                                                       CGL020
      C           CHSN      IFEQ '-'                                                           CGL020
+     C           CHSN      OREQ 'C'                                                           257012
+     C           CHSN      OREQ 'c'                                                           257012
      C                     MOVE 'N'       WCFFLG                                              CGL020
      C                     Z-ADDCHAM      WCFVAL                                              CGL020
      C           CHAM      DIV  CRAM      WKFPCT                                              CGL020
@@ -1697,6 +1710,8 @@
      C/COPY WNCPYSRC,RE0350C001
      C           CHSN      IFEQ ' '                                       S01117
      C           CHSN      OREQ '-'                                       S01117
+     C           CHSN      OREQ 'C'                                                           257012
+     C           CHSN      OREQ 'c'                                                           257012
      C           DRAM      DIV  1000      W153   153                      S01117
      C                     ELSE                                           S01117
      C           DCHAM     DIV  1000      W153                            S01117
@@ -1733,6 +1748,8 @@
      C/COPY WNCPYSRC,RE0350C002
      C           CHSN      IFEQ ' '                                       S01117
      C           CHSN      OREQ '+'                                       S01117
+     C           CHSN      OREQ 'D'                                                           257012
+     C           CHSN      OREQ 'd'                                                           257012
      C           CRAM      DIV  1000      W153                            S01117
      C                     ELSE                                           S01117
      C           CCHAM     DIV  1000      W153                            S01117
@@ -1980,6 +1997,8 @@
      C/COPY WNCPYSRC,RE0350C030
      C           CHSN      IFEQ ' '                                       S01117
      C           CHSN      OREQ '-'                                       S01117
+     C           CHSN      OREQ 'C'                                                           257012
+     C           CHSN      OREQ 'c'                                                           257012
      C           DRAM      DIV  1000      W153                            S01117
      C                     ELSE                                           S01117
      C           DCHAM     DIV  1000      W153                            S01117
@@ -2032,6 +2051,8 @@
      C/COPY WNCPYSRC,RE0350C032
      C           CHSN      IFEQ ' '                                       S01117
      C           CHSN      OREQ '+'                                       S01117
+     C           CHSN      OREQ 'D'                                                           257012
+     C           CHSN      OREQ 'd'                                                           257012
      C           CRAM      DIV  1000      W153                            S01117
      C                     ELSE                                           S01117
      C           CCHAM     DIV  1000      W153                            S01117

@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD031644           Date 08Jan15              */
+/*       Last Amend No. MD055683           Date 21May20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD031644           Date 08Jan15              */
 /*                      AR1000912          Date 13Nov14              */
 /*                      MD027386           Date 19Aug14              */
 /*                      CGL155             Date 21Mar14              */
@@ -47,6 +48,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD055683 - SWIFT jobs will now run based on configurations  */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD031644 - SP7 Build issue (Rework of CFT158 Return         */
 /*                  Status of Interfaced FT Payments). Unable        */
@@ -102,9 +104,9 @@
 /*                formerly contained within SCAUTOS.                 */
 /*********************************************************************/
              PGM
- 
+
 /*/COPY WNCPYSRC,SCC0104INT                                          */
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
@@ -155,12 +157,12 @@
 /**********  DCL        VAR(&CURR) TYPE(*CHAR) LEN(2)              */              /*214363 CCB020*/
 /**********  DCL        VAR(&SUPP) TYPE(*CHAR) LEN(2)              */              /*214363 CCB020*/
              DCL        VAR(&FRSTAT) TYPE(*CHAR) LEN(1)                                /*BUG27831A*/
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /***Check*if*24x7*Midas*Availability*Feature*is*on**/                              /*214363 CCB020*/
                                                                                           /*214363*/
 /**********  CHGVAR     VAR(&RTCD) VALUE('       ')                */              /*214363 CCB020*/
@@ -216,7 +218,7 @@
                   DLTDTAARA  DTAARA(LEC2010*)                         /*122661*/
                   MONMSG     MSGID(CPF0000)                           /*122661*/
              ENDDO                                                    /*122661*/
- 
+
 /* Determine if Cashier is installed */                                                   /*211819*/
                                                                                           /*211819*/
              CHGVAR     VAR(&RTCD) VALUE(' ')                                             /*211819*/
@@ -270,63 +272,63 @@
                                                                                           /*CAP084*/
 /* Read The Database Status                                         */
              RTVDTAARA  DTAARA(TSTATUS) RTNVAR(&TSTATUS)
- 
+
 /* If TSTATUS is empty then read MPHAS                              */
- 
+
              IF         COND(&TSTATUS *EQ '        ') THEN(DO)
- 
+
 /* Check The Phase of Processing */
                 RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)
- 
+
 /* If Phase A - Force Recovery                                      */
- 
+
 /**********     IF         COND(&MPHAS *EQ A) THEN(DO)             */                     /*CCB020*/
                 IF         COND((&MPHAS *EQ 'A') *OR (&MPHAS *EQ 'G')) +
                            THEN(DO)                                                       /*CCB020*/
- 
+
                    RTVSYSVAL  SYSVAL(QABNORMSW) RTNVAR(&ABNORM)
- 
+
                    IF         COND(&ABNORM *EQ '1') THEN(DO)
                       CALL PGM(SDC1796)
                    ENDDO
- 
+
 /* If Futures & Options present in system, set any market in       */
 /* end of centre to 'FAILED' status, so that it can be restarted   */
 /* by EOC restart procedure, send a warning message and clear any  */
 /* requested 'HOLDS'                                               */
- 
+
                       RTVDTAARA  DTAARA(MMOD (50 1))          +
                                    RTNVAR(&FF)
                       IF         COND(&FF *EQ 'Y')            +
                                    THEN(CALL PGM(SDC1744))
                       GOTO       CMDLBL(SKIP1)
- 
+
                 ENDDO
- 
+
 /* IF Phase B or X - Return to Phase A                              */
- 
+
 /**********     IF         COND((&MPHAS *EQ B) *OR (&MPHAS *EQ X)) THEN(DO)               /*CCB020*/
                 IF         COND(&MPHAS *EQ 'X') THEN(DO)                                  /*CCB020*/
                    CHGDTAARA  DTAARA(MPHAS) VALUE(A)
                    GOTO       CMDLBL(SKIP1)
                 ENDDO
              ENDDO
- 
+
 /* Now clear the other message queues */
- 
+
  SKIP1:      RMVMSG     MSGQ(MSTATUS) CLEAR(*ALL)
              RMVMSG     MSGQ(MSPECIAL) CLEAR(*ALL)
- 
+
 /* If confirmation matching is present, and the system is in       */
 /* Input Cycle, Re-Submit Control Program                          */
- 
+
                 RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)
 /**********     IF         COND(&MPHAS *EQ A) THEN(DO)             */                     /*CCB020*/
                 IF         COND((&MPHAS *EQ 'A') *OR (&MPHAS *EQ 'G')) +
                            THEN(DO)                                                       /*CCB020*/
- 
+
                    RTVDTAARA  DTAARA(MMOD (60 1)) RTNVAR(&CF)
- 
+
 /************      IF         COND(&CF *EQ 'Y') THEN(SBMJOB CMD(CALL +                    /*CPK014*/
 /************                 PGM(CFC0180)) JOB(CFCONTROL) +                              /*CPK014*/
 /************                 JOBD(MBATCH) JOBQ(CFJOBQA) +                                /*CPK014*/
@@ -338,19 +340,19 @@
                           PGM(CFC0180)) JOB(CFCONTROL) JOBD(MBATCH) +
                           JOBQ(CFJOBQA) USER(*JOBD) INLLIBL(*JOBD) +
                           OUTQ(*JOBD))                                                    /*CSC023*/
- 
+
 /*/COPY WNCPYSRC,SCC0104001                                          */
                 ENDDO
- 
+
 /* Reset EMSTAT and JNSTAT */
- 
+
              CHGDTAARA  DTAARA(JNSTAT (69 1)) VALUE('N')
              RTVDTAARA  DTAARA(EMSTAT (1 2)) RTNVAR(&EMJOB)
              IF         COND(&EMJOB *NE '  ') THEN(CHGDTAARA +
                           DTAARA(EMSTAT (2 1)) VALUE('N'))
- 
+
 /* Resubmit RRAUTOBKP job if appropriate */
- 
+
              RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)
 /**********  IF         COND(&MPHAS *EQ 'A') THEN(DO)              */                     /*CCB020*/
              IF         COND((&MPHAS *EQ 'A') *OR (&MPHAS *EQ 'G')) +
@@ -360,7 +362,7 @@
                         *NE '     ')) THEN(CALL SDC1760)
                 IF      COND(%SWITCH(XXXXXX1X)) THEN(GOTO ABNOR)
              ENDDO
- 
+
                                                                       /*CTI001*/
 /**********  IF         COND((%SST(&FMT 103 1) *EQ 'Y') *AND (&MPHAS +                 */ /*214363*/
 /**********               *EQ 'A')) THEN(DO)                                */ /*CTI001*/ /*214363*/
@@ -604,14 +606,15 @@
              IF         COND(&CSW025 *EQ 'Y' *AND +
                              (&MPHAS *EQ 'A' *OR +
                               &MPHAS *EQ 'G')) THEN(DO)                                 /*MD027386*/
-             WRKMSMIF   OPERATION(*STARTUP)                                             /*MD027386*/
+/**********  WRKMSMIF   OPERATION(*STARTUP)                                    /*MD027386 MD055683*/
+             WRKMSMIF   OPERATION(*STARTUP) MCID(*ALL) MODE(*AUTO)                      /*MD055683*/
              MONMSG     MSGID(CPF0000 MCH0000)                                          /*MD027386*/
              ENDDO                                                                      /*MD027386*/
                                                                                         /*MD027386*/
 /*/COPY WNCPYSRC,SCC0104MPE                                          */
- 
+
              GOTO       CMDLBL(END)
- 
+
  ABNOR:
 /*/COPY WNCPYSRC,SCC0104ERR                                          */
              CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)               /*178063*/
@@ -620,12 +623,12 @@
              MONMSG     MSGID(CPF0000 MCH0000)                        /*178063*/
              DMPCLPGM                                                 /*178063*/
              MONMSG     MSGID(CPF0000 MCH0000)                        /*178063*/
- 
+
              CHGJOB     SWS(XXXXXX11)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
 /* Abnormal termination */
- 
+
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('** +
                           Error - unable to start Midas **') +
                           TOMSGQ(MOPERQ)
@@ -635,19 +638,19 @@
              CHGVAR     VAR(%SUBSTRING(&MSG 18 2)) +
                           VALUE(%SUBSTRING(&SDSTAT 6 2))
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              SNDPGMMSG  MSG(&MSG) TOMSGQ(QSYSOPR)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              CHGVAR     VAR(%SUBSTRING(&SBS 2 2)) +
                           VALUE(%SUBSTRING(&SDSTAT 6 2))
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
              ENDSBS     SBS(&SBS) OPTION(*IMMED)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
 /*/COPY WNCPYSRC,SCC0104END                                          */
- 
+
              ENDPGM

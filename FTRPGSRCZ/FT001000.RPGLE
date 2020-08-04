@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. MD050730           Date 25Nov19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CMG008             Date 20Feb20               *
+      *  Prev Amend No. MD050730           Date 25Nov19               *
+      *                 CER050             Date 16Jun19               *
       *                 MD037229           Date 03Sep18               *
       *                 MD046248           Date 27Oct17               *
       *                 CSW216             Date 14Mar16               *
@@ -122,6 +123,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD050730 - Output 1/ and 2/ depending on the current setup   *
       *             of system value Fld50FAddCustDtl                  *
       *  CER050 - Annualised Percentage Rate (Recompile)              *

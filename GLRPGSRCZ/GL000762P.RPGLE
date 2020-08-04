@@ -14,13 +14,20 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD054940           Date 18Feb20               *
-      *  Prev Amend No. MD054905           Date 04Dec19               *
+      *  Last Amend No. MD056237           Date 20Jul20               *
+      *  Prev Amend No. MD056131           Date 05Jul20               *
+      *                 MD054940           Date 18Feb20               *
+      *                 MD054905           Date 04Dec19               *
       *                 MD040961           Date 09Sep16               *
       *                 CGL177  *CREATE    Date 11Jan16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056237 - Reporting Group/Accounts were removed from the    *
+      *             CRS Report after authorization. Amend to          *
+      *             correctly get data from file.                     *
+      *  MD056131 - Database error encountered upon printing          *
+      *             CRS Report                                        *
       *  MD054940 - CRS Issue: Controlling Person Type                *
       *  MD054905 - Change Message Ref Id format                      *
       *  MD040961 - Issues in Printed Report in CRS                   *
@@ -98,6 +105,12 @@
      F                                     RENAME(GLCRMDD0:GLCRMD0B)
      FGLCRMDLD  IF   E           K DISK    INFSR(*PSSR)                                     MD054940
      F                                     RENAME(GLCRMDD0:GLCRMD0D)                        MD054940
+     FGLCRMDLE  IF   E           K DISK    INFSR(*PSSR)                                     MD056237
+     F                                     RENAME(GLCRMDD0:GLCRMD0E)                        MD056237
+     FGLCRMDLF  IF   E           K DISK    INFSR(*PSSR)                                     MD056237
+     F                                     RENAME(GLCRMDD0:GLCRMD0F)                        MD056237
+     FGLCRMDLG  IF   E           K DISK    INFSR(*PSSR)                                     MD056237
+     F                                     RENAME(GLCRMDD0:GLCRMD0G)                        MD056237
 
       *****************************************************************
       /EJECT
@@ -214,8 +227,10 @@
      D WExidN          S              2P 0
 
      D WxDCOT          S             80A
-     D WxDTIN          S            800A
-     D WxDTIB          S             80A
+     D***WxDTIN*         S            800A                                                  MD056131
+     D***WxDTIB*         S             80A                                                  MD056131
+     D WxDTIN          S           9999A                                                    MD056131
+     D WxDTIB          S            999A                                                    MD056131
      D CtrNum          S              5  0
      D CtryNo          S              5  0
      D TINNum          S              5  0
@@ -300,6 +315,15 @@
      D WxACNO          S             26A
      D WxCNNH          S             10A
      D WxMTYP          S             04A
+     D WyACNO          S             26A                                                    MD056237
+     D WyFound         S              1A                                                    MD056237
+     D WzFound         S              1A                                                    MD056237
+     D WdFound         S              1A                                                    MD056237
+     D KAcctHld        S             10A                                                    MD056237
+     D KAcctNo         S             26A                                                    MD056237
+     D WPType          S              1A                                                    MD056237
+     D WPAmnt          S              1A                                                    MD056237
+     D WPAcno          S              1A                                                    MD056237
 
       ** Parameters for ZFRPED - Pool Report
      D PFld15          S             15  0
@@ -820,6 +844,10 @@
      C                   KFLD                    KMsgRID
      C                   KFLD                    KTopElm
 
+     C     KeyTpmt       KLIST                                                              MD056237
+     C                   KFLD                    KMsgRID                                    MD056237
+     C                   KFLD                    KTopElm                                    MD056237
+                                                                                            MD056237
      C     KeyACBL       KLIST
      C                   KFLD                    KMsgRID
      C                   KFLD                    KmgACNO
@@ -837,11 +865,17 @@
      C                   ENDIF
 
       ** Report Message Header
-
-     C     PMsgRId       SETLL     GLCRMDL2
-     C     PMsgRId       READE     GLCRMDL2
-     C                   DOW       NOT %EOF(GLCRMDL2) AND
-     C                             Leave = 'N'
+     C                   EVAL      KMsgRID = PMsgRId                                        MD056237
+     C                   EVAL      KTopElm = 'MessageSpec'                                  MD056237
+                                                                                            MD056237
+     C*****PMsgRId       SETLL     GLCRMDL2                                                 MD056237
+     C*****PMsgRId       READE     GLCRMDL2                                                 MD056237
+     C     KeyTpmt       SETLL     GLCRMDL0                                                 MD056237
+     C     KeyTpmt       READE     GLCRMDL0                                                 MD056237
+     C**********         DOW       NOT %EOF(GLCRMDL2) AND                                   MD056237
+     C**********                   Leave = 'N'                                              MD056237
+     C                   DOW       NOT %EOF(GLCRMDL0) AND                                   MD056237
+     C                             MGTPMT = 'MessageSpec'                                   MD056237
 
      C                   SELECT
 
@@ -871,20 +905,28 @@
 
      C                   WHEN      MGELMT = 'Timestamp'
      C                   EVAL      R7TSMP = MGDATA
-     C                   EVAL      Leave  = 'Y'
+     C**********         EVAL      Leave  = 'Y'                                             MD056237
 
      C                   ENDSL
 
-     C     PMsgRId       READE     GLCRMDL2
+     C*****PMsgRId       READE     GLCRMDL2                                                 MD056237
+     C     KeyTpmt       READE     GLCRMDL0                                                 MD056237
 
      C                   ENDDO
 
       ** Reporting Financial Institution
 
-     C     PMsgRId       SETLL     GLCRMDL2
-     C     PMsgRId       READE     GLCRMDL2
-     C                   DOW       NOT %EOF(GLCRMDL2) AND
-     C                             LeaveFI = 'N'
+     C                   EVAL      KMsgRID = PMsgRId                                        MD056237
+     C                   EVAL      KTopElm = 'ReportingFI'                                  MD056237
+                                                                                            MD056237
+     C*****PMsgRId       SETLL     GLCRMDL2                                                 MD056237
+     C*****PMsgRId       READE     GLCRMDL2                                                 MD056237
+     C     KeyTpmt       SETLL     GLCRMDL0                                                 MD056237
+     C     KeyTpmt       READE     GLCRMDL0                                                 MD056237
+     C**********         DOW       NOT %EOF(GLCRMDL2) AND                                   MD056237
+     C**********                   LeaveFI = 'N'                                            MD056237
+     C                   DOW       NOT %EOF(GLCRMDL0) AND                                   MD056237
+     C                             MGTPMT = 'ReportingFI'                                   MD056237
 
      C                   SELECT
 
@@ -929,11 +971,12 @@
      C                   WHEN      MGELMT = 'CorrDocRefId'
      C                             AND MGTPMT = 'ReportingFI'
      C                   EVAL      R7CRID = MGDATA
-     C                   EVAL      LeaveFI  = 'Y'
+     C**********         EVAL      LeaveFI  = 'Y'                                           MD056237
 
      C                   ENDSL
 
-     C     PMsgRId       READE     GLCRMDL2
+     C*****PMsgRId       READE     GLCRMDL2                                                 MD056237
+     C     KeyTpmt       READE     GLCRMDL0                                                 MD056237
 
      C                   ENDDO
 
@@ -989,6 +1032,17 @@
      C                   KFLD                    KTopElmN4                                  MD054940
      C                   KFLD                    KMGSEQU                                    MD054940
                                                                                             MD054940
+     C     KAccntF       KLIST                                                              MD056237
+     C                   KFLD                    KPMsgID                                    MD056237
+     C                   KFLD                    KAcctHld                                   MD056237
+     C                   KFLD                    KAcctNo                                    MD056237
+                                                                                            MD056237
+     C     KAccntG       KLIST                                                              MD056237
+     C                   KFLD                    KPMsgID                                    MD056237
+     C                   KFLD                    KTopElm                                    MD056237
+     C                   KFLD                    KAcctHld                                   MD056237
+     C                   KFLD                    KAcctNo                                    MD056237
+
       ** Write Header Record Format
      C                   WRITE     GL000763R0
 
@@ -1007,12 +1061,17 @@
 
      C                   EVAL      RxACBL = *BLANKS
      C                   EVAL      RxABCC = *BLANKS
+     C                   EVAL      WyFound = 'N'                                            MD056237
 
-     C     PMsgRId       SETLL     GLCRMDL2
-     C     PMsgRId       READE     GLCRMDL2
-     C                   DOW       NOT %EOF(GLCRMDL2)
+     C*****PMsgRId       SETLL     GLCRMDL2                                                 MD056237
+     C*****PMsgRId       READE     GLCRMDL2                                                 MD056237
+     C     PMsgRId       SETLL     GLCRMDLE                                                 MD056237
+     C     PMsgRId       READE     GLCRMDLE                                                 MD056237
+     C**********         DOW       NOT %EOF(GLCRMDL2)                                       MD056237
+     C                   DOW       NOT %EOF(GLCRMDLE)                                       MD056237
      C                             AND PMsgRId = MGMSID
 
+     C                   EVAL      WyACNO = MGACNO                                          MD056237
      C                   SELECT
 
      C                   WHEN      MGELMT = 'DocRefId'
@@ -1049,6 +1108,23 @@
 
      C                   WHEN      MGELMT = 'AcctHolderType'
      C                   EVAL      R1ACHT = MGDATA
+     C                   EVAL      WyFound = 'Y'                                            MD056237
+                                                                                            MD056237
+     C                   ENDSL                                                              MD056237
+                                                                                            MD056237
+     C     PMsgRId       READE     GLCRMDLE                                                 MD056237
+                                                                                            MD056237
+     C                   IF        WyACNO <> MGACNO                                         MD056237
+     C                             AND WyACNO <> *Blanks                                    MD056237
+     C                             AND WyFound = 'Y'                                        MD056237
+     C                             OR %EOF(GLCRMDLE)                                        MD056237
+     C                             AND PMsgRId = MGMSID                                     MD056237
+     C                             AND WyACNO = MGACNO                                      MD056237
+     C                             AND WyACNO <> *Blanks                                    MD056237
+     C                             AND WyFound = 'Y'                                        MD056237
+                                                                                            MD056237
+     C                   EVAL      WyFound = 'N'                                            MD056237
+                                                                                            MD056237
      C                   EXSR      SrAcctBal
 
       **  Check that sufficient lines remain for the Format. If not,
@@ -1067,9 +1143,10 @@
       ** Process detail record for Account Report Detail
      C                   EXSR      SrPrRGAHD
 
-     C                   ENDSL
-
-     C                   READ      GLCRMDL2
+     C                   ENDIF                                                              MD056237
+     C**********         ENDSL                                                              MD056237
+      **********                                                                            MD056237
+     C**********         READ      GLCRMDL2                                                 MD056237
 
      C                   ENDDO
 
@@ -1136,21 +1213,29 @@
      C                   EVAL      WxDTIN = *BLANKS
      C                   EVAL      WxDTIB = *BLANKS
      C                   EVAL      WTN = *ZEROS
+     C                   EVAL      KPMsgID = PMsgRId                                        MD056237
+     C                   EVAL      KAcctHld = R1CNNH                                        MD056237
+     C                   EVAL      KAcctNo = R1ACNO                                         MD056237
+     C                   EVAL      WzFound = 'N'                                            MD056237
 
-     C     PMsgRId       SETLL     GLCRMDL7
-     C     PMsgRId       READE     GLCRMDL7
-     C                   DOW       NOT %EOF(GLCRMDL7)
+     C*****PMsgRId       SETLL     GLCRMDL7                                                 MD056237
+     C*****PMsgRId       READE     GLCRMDL7                                                 MD056237
+     C     KAccntF       SETLL     GLCRMDLF                                                 MD056237
+     C     KAccntF       READE     GLCRMDLF                                                 MD056237
+     C**********         DOW       NOT %EOF(GLCRMDL7)                                       MD056237
+     C                   DOW       NOT %EOF(GLCRMDLF)                                       MD056237
      C                             AND PMsgRId = MGMSID
 
      C                   SELECT
 
      C                   WHEN      MGELMT = 'AccountHolder'
      C                   EVAL      AcnoEnd = MGDATA
-     C                   EVAL      WxDCOT = *BLANKS
-     C                   EVAL      WxDTIN = *BLANKS
-     C                   EVAL      WxDTIB = *BLANKS
-     C                   EVAL      WTN = *ZEROS
+     C**********         EVAL      WxDCOT = *BLANKS                                         MD056237
+     C**********         EVAL      WxDTIN = *BLANKS                                         MD056237
+     C**********         EVAL      WxDTIB = *BLANKS                                         MD056237
+     C**********         EVAL      WTN = *ZEROS                                             MD056237
      C                   EVAL      WMGSEQU = MGSEQU                                         MD054940
+     C                   EVAL      WzFound = 'Y'                                            MD056237
 
      C                   WHEN      MGELMT = 'ResCountryCode' AND
      C                             MGTPMT = 'Organisation' OR
@@ -1255,7 +1340,7 @@
      C                   EVAL      R2BRTD = *BLANKS
      C                   EVAL      R2CITY = *BLANKS
      C                   EVAL      R2COCO = *BLANKS
-     C                   GOTO      RGAHDP
+     C**********         GOTO      RGAHDP                                                   MD056237
      C                   ENDIF
 
      C                   WHEN      MGELMT = 'BirthDate' AND
@@ -1278,9 +1363,15 @@
      C                             MGTPMT = 'Individual'                                    MD040961
      C                             AND WMGSEQU = MGSEQU                                     MD054940
      C**********         EVAL      R2COCO = MGDATA                                          MD040961
-     C     RGAHDP        TAG
+                                                                                            MD056237
+     C                   ENDSL                                                              MD056237
+     C     KAccntF       READE     GLCRMDLF                                                 MD056237
+                                                                                            MD056237
+     C                   ENDDO                                                              MD056237
+     C*****RGAHDP        TAG                                                                MD056237
      C                   IF        AcnoEnd = R1CNNH
-     C                             AND MGACNO = R1ACNO
+     C**********                   AND MGACNO = R1ACNO                                      MD056237
+     C                             AND WzFound = 'Y'                                        MD056237
 
       **  Check that sufficient lines remain for the Format. If not,
       **  write out the Main Headings on a new page.
@@ -1301,17 +1392,19 @@
      C                   IF        R1ACHT = 'CRS101'                                        MD040961
       ** Process detail record for Account Report - Controlling Person
      C                   EXSR      SrPrRGASO
-     C                   LEAVE
-     C                   ENDIF                                                              MD040961
+     C**********         LEAVE                                                              MD056237
+     C**********         ENDIF                                                     MD040961 MD056237
+     C                   ELSE                                                               MD056237
       ** Process detail record for Account Report - Payment Details                         MD040961
      C                   EXSR      SrPrRGAPD                                                MD040961
      C                   ENDIF
 
-     C                   ENDSL
+     C                   ENDIF                                                              MD056237
+     C**********         ENDSL                                                              MD056237
 
-     C                   READ      GLCRMDL7
+     C**********         READ      GLCRMDL7                                                 MD056237
 
-     C                   ENDDO
+     C**********         ENDDO                                                              MD056237
 
      C                   ENDSR
       *****************************************************************
@@ -1404,9 +1497,12 @@
      C                   EVAL      KPMsgID = PMsgRId
      C                   EVAL      KTopElm = 'ControllingPerson'
 
-     C     KRGACKY       SETLL     GLCRMDL3
-     C     KRGACKY       READE     GLCRMDL3
-     C                   DOW       NOT %EOF(GLCRMDL3)
+     C*****KRGACKY       SETLL     GLCRMDL3                                                 MD056237
+     C*****KRGACKY       READE     GLCRMDL3                                                 MD056237
+     C     KAccntG       SETLL     GLCRMDLG                                                 MD056237
+     C     KAccntG       READE     GLCRMDLG                                                 MD056237
+     C**********         DOW       NOT %EOF(GLCRMDL3)                                       MD056237
+     C                   DOW       NOT %EOF(GLCRMDLG)                                       MD056237
      C                             AND PMsgRId = MGMSID
 
      C                   IF        MGCUST <> R1CNNH
@@ -1431,6 +1527,7 @@
      C                   EVAL      KTopElmN4 = 'Individual'                                 MD054940
      C                   EVAL      WxMTYP  = MGMTYP                                         MD054940
      C                   EVAL      KMGSEQU = MGSEQU                                         MD054940
+     C                   EVAL      WdFound = 'N'                                            MD056237
                                                                                             MD054940
      C     KAcctN4       SETLL     GLCRMDLD                                                 MD054940
      C     KAcctN4       READE     GLCRMDLD                                                 MD054940
@@ -1472,7 +1569,8 @@
      C**********         EVAL      R3LNME = *BLANKS                                         MD054940
 
      C     KAcctN3       SETLL     GLCRMDLB
-     C                   READ      GLCRMDLB
+     C**********         READ      GLCRMDLB                                                 MD056237
+     C     KAcctN3       READE     GLCRMDLB                                                 MD056237
      C                   DOW       NOT %EOF(GLCRMDLB)
      C                   IF        MGELMT = 'FirstName'
      C                             AND MGSEQU = KMGSEQU
@@ -1485,7 +1583,8 @@
      C                   LEAVE
      C                   ENDIF
 
-     C                   READ      GLCRMDLB
+     C***********        READ      GLCRMDLB                                                 MD056237
+     C     KAcctN3       READE     GLCRMDLB                                                 MD056237
 
      C                   ENDDO
      C                   ENDIF                                                              MD054940
@@ -1520,7 +1619,8 @@
      C                   EVAL      KMGSEQU = MGSEQU
 
      C     KAcctN3       SETLL     GLCRMDLB
-     C                   READ      GLCRMDLB
+     C**********         READ      GLCRMDLB                                                 MD056237
+     C     KAcctN3       READE     GLCRMDLB                                                 MD056237
      C                   DOW       NOT %EOF(GLCRMDLB)
      C                   IF        MGELMT = 'CountryCode'
      C                             AND MGTPMT = 'CountryInfo'
@@ -1529,16 +1629,23 @@
      C                   LEAVE
      C                   ENDIF
 
-     C                   READ      GLCRMDLB
+     C**********         READ      GLCRMDLB                                                 MD056237
+     C     KAcctN3       READE     GLCRMDLB                                                 MD056237
 
      C                   ENDDO
      C                   ENDIF                                                              MD054940
 
-     C                   IF        MGELMT = 'CountryInfo'                                   MD054940
+     C                   IF        MGELMT = 'CountryInfo'                          MD054940 MD056237
+     C                   EVAL      WdFound = 'Y'                                            MD056237
+     C                   ENDIF                                                              MD056237
+     C                                                                                      MD056237
+     C     KAcctN4       READE     GLCRMDLD                                                 MD056237
      C**********         WHEN      MGELMT = 'CountryInfo'                                   MD054940
      C                   IF        DsAcEnd = R1ACNO
      C                             AND MGACNO = R1ACNO
+     C                             AND WdFound = 'Y'                                        MD056237
 
+     C                   EVAL      WdFound = 'N'                                            MD056237
       **  Check that sufficient lines remain for the Format. If not,
       **  write out the Main Headings on a new page.
      C                   Eval      Rqdln1 = 8
@@ -1555,15 +1662,16 @@
      C                   EXSR      SrRGACS
       **  Insert processing and writing for List of Country here
      C                   ENDIF
-     C                   ENDIF                                                              MD054940
+     C**********         ENDIF                                                     MD054940 MD056237
                                                                                             MD054940
-     C     KAcctN4       READE     GLCRMDLD                                                 MD054940
+     C*****KAcctN4       READE     GLCRMDLD                                        MD054940 MD056237
      C                   ENDDO                                                              MD054940
 
      C                   ENDSL
 
      C     RGASO         TAG
-     C                   READ      GLCRMDL3
+     C     KAccntG       READE     GLCRMDLG                                                 MD056237
+     C**********         READ      GLCRMDL3                                                 MD056237
 
      C                   ENDDO
 
@@ -1583,10 +1691,18 @@
 
      C                   EVAL      KPMsgID = PMsgRId
      C                   EVAL      KTopElm = 'Payment'
+     C                   EVAL      DpAcEnd = *Blanks                                        MD056237
+     C                   EVAL      DpAHStr = *Blanks                                        MD056237
+     C                   EVAL      WPType = *Blanks                                         MD056237
+     C                   EVAL      WPAmnt = *Blanks                                         MD056237
+     C                   EVAL      WPAcno = *Blanks                                         MD056237
 
-     C     KRGACKY       SETLL     GLCRMDL3
-     C     KRGACKY       READE     GLCRMDL3
-     C                   DOW       NOT %EOF(GLCRMDL3)
+     C*****KRGACKY       SETLL     GLCRMDL3                                                 MD056237
+     C*****KRGACKY       READE     GLCRMDL3                                                 MD056237
+     C     KAccntG       SETLL     GLCRMDLG                                                 MD056237
+     C     KAccntG       READE     GLCRMDLG                                                 MD056237
+     C**********         DOW       NOT %EOF(GLCRMDL3)                                       MD056237
+     C                   DOW       NOT %EOF(GLCRMDLG)                                       MD056237
      C                             AND PMsgRId = MGMSID
 
      C                   SELECT
@@ -1596,6 +1712,7 @@
 
      C                   WHEN      MGELMT = 'Type'
      C                   EVAL      R4PAYT = MGDATA
+     C                   EVAL      WPType = 'Y'                                             MD056237
 
      C                   WHEN      MGELMT = 'PaymentAmnt'
      C                   EVAL      WxPSTA = MGDATA
@@ -1608,13 +1725,25 @@
      C                   Z-ADD     A6NBDP        PDECS
      C                   EXSR      SRCvtAmt
      C                   MOVE      POUT22        R4PSTA
+     C                   EVAL      WPAmnt = 'Y'                                             MD056237
 
      C                   WHEN      MGELMT = 'AccountNumber'
      C                   EVAL      DpAcEnd = MGDATA
-     C                   IF        DpAcEnd = R1ACNO
-     C                             AND MGACNO = R1ACNO
-     C                             AND DpAHStr= R1CNNH
+     C                   EVAL      WPAcno = 'Y'                                             MD056237
 
+     C                   ENDSL                                                              MD056237
+     C     KAccntG       READE     GLCRMDLG                                                 MD056237
+
+     C                   IF        DpAcEnd = R1ACNO
+     C**********                   AND MGACNO = R1ACNO                                      MD056237
+     C                             AND DpAHStr= R1CNNH
+     C                             AND WPType = 'Y'                                         MD056237
+     C                             AND WPAmnt = 'Y'                                         MD056237
+     C                             AND WPAcno = 'Y'                                         MD056237
+
+     C                   EVAL      WPType = *Blanks                                         MD056237
+     C                   EVAL      WPAmnt = *Blanks                                         MD056237
+     C                   EVAL      WPAcno = *Blanks                                         MD056237
      C                   Eval      Rqdln1 = 1
      C                   Eval      Difln1 = Oflln1 - Prtln1
 
@@ -1629,9 +1758,9 @@
      C                   ENDIF
      C                   ENDIF
 
-     C                   ENDSL
+     C**********         ENDSL                                                              MD056237
 
-     C                   READE     GLCRMDL3
+     C**********         READE     GLCRMDL3                                                 MD056237
 
      C                   ENDDO
 

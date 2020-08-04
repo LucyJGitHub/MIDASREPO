@@ -13,8 +13,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD055446           Date 04Apr20               *
-      *  Prev Amend No. MD054696           Date 29Oct19               *
+      *  Last Amend No. MD030856           Date 06Nov19               *
+      *  Prev Amend No. MD054354           Date 23Oct19               *
+      *                 MD055446           Date 04Apr20               *
+      *                 MD054696           Date 29Oct19               *
       *                 MD054538           Date 08Oct19               *
       *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
@@ -223,6 +225,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD030856 - Introduced reject processing to FEEM              *
+      *  MD054354 - Settlement of fee accrual for prior period for    *
+      *             backdated notional change                         *
       *  MD055446 - There are parties and fields missing from the BRT *	
       *             details tab in Customer Input plus date of birth  *	
       *             issues.                                           *	
@@ -813,7 +818,8 @@
      D @ACTRV          S              1                                                     AR910559
      D @DEPI           S              1                                                     MD030621
      D AuthUsers       S             20                                                       CFT163
-
+     D P_SIGN          S              1                                                     MD054354
+     D DRejFlg         S              1                                                     MD030856
       ** DS/variables to split up incoming parameter
      D APParm          DS          1000
      D  UPDATEYN               1      1
@@ -2894,6 +2900,10 @@ RGC  D RPIF4LN         S              4  0                                      
      C     LEIFLn        SUBST     BUFFER:Bfp    InfData                                      CAP086
      C                   ADD       LEIFLn        Bfp                                          CAP086
      C     FEEXLn        SUBST     BUFFER:Bfp    ExtData                                     BUG1100
+     C                   ADD       FEEXLn        Bfp                                        MD030856
+      ** Add FEEM Reject Flag                                                               MD030856
+     C     1             SUBST     BUFFER:Bfp    DRejFlg                                    MD030856
+     C                   ADD       1             Bfp                                        MD030856
                                                                                              BUG1100
      C                   CALL      'LEFEEMVU'                                                BUG1100
                                                                                              BUG1100
@@ -2908,6 +2918,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    RecSttmt                                    BUG1100
      C                   PARM                    InfData                                      CAP086
      C                   PARM                    Extdata                                     BUG1100
+     C                   PARM                    DRejFlg                                    MD030856
      C                   PARM                    FldNameArr                                  BUG1100
      C                   PARM                    MsgIDArr                                    BUG1100
      C                   PARM                    MsgDtaArr                                   BUG1100
@@ -2988,7 +2999,9 @@ RGC  D RPIF4LN         S              4  0                                      
                                                                                               CAP086
      C     LEIFLn        SUBST     BUFFER:Bfp    InfData                                      CAP086
      C                   ADD       LEIFLn        Bfp                                          CAP086
-
+      ** Add P_Sign                                                                         MD054354
+     C     1             SUBST     BUFFER:Bfp    P_SIGN                                     MD054354
+     C                   ADD       1             Bfp                                        MD054354
      C                   CALL      'LEFESTVU'
 
       * Common header information (DS) from source system
@@ -3000,6 +3013,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    PaySttmt
      C                   PARM                    RecSttmt
      C                   PARM                    InfData                                      CAP086
+     C                   PARM                    P_SIGN                                     MD054354
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr

@@ -10,8 +10,11 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055405           Date 04Mar20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. 260263             Date 06Nov19               *
+      *  Prev Amend No. MD025526           Date 06Nov19               *
+      *                 MD024810           Date 06Nov19               *
+      *                 MD055405           Date 04Mar20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD053295           Date 13Apr19               *
       *                 MD047693           Date 30Jan18               *
       *                 MD050139           Date 23Mar18               *
@@ -235,6 +238,15 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  260263 - Incorrect GL posting due to 'ST' event generated in *
+      *           ACTN3DK with field ACTI = ' '.                      *
+      *         - Fix is to setof *in74 when *in80 is being setof.    *
+      *         - Applied for MD-36270                                *
+      *  MD025526 - Incorrect Spread Rate & Funding Spread Rate used  *
+      *             during update of CLOANCL.  Update the IRCF and/or *
+      *             FRCF of RO record in ACTN3DK when there really is *
+      *             a change. Patterned after SC processing.          *
+      *  MD024810 - Correct NIDT check for call loans.                *
       *  MD055405 - Pass the system location code for non-nostro      *
       *             settlements                                       *
       *  CER050 - Annualised Percentage Rate                          *
@@ -3124,6 +3136,28 @@
      C                     MOVE RPSC      ROSTCY                                             CLE031
      C                     ENDIF                                                             CLE031
      C                     ENDIF                                                             CLE031
+      *                                                                                     MD025526
+     C                     MOVE ' '       NIRCF   1                                         MD025526
+     C                     MOVE ' '       NFRCF   1                                         MD025526
+      *                                                                                     MD025526
+      ** If Analytical Accounting is on, check if there is a change                         MD025526
+      ** in spread rate or funding spread rate to update the rate                           MD025526
+      ** change flag of RO record.                                                          MD025526
+      *                                                                                     MD025526
+     C           BGN0ST    IFEQ 'Y'                                                         MD025526
+     C           NRTSL     IFNE RTSPL                                                       MD025526
+     C           NRTSL     ORGT 0                                                           MD025526
+     C                     MOVE 'Y'       NIRCF                                             MD025526
+     C                     ENDIF                                                            MD025526
+      *                                                                                     MD025526
+     C           FPRC      IFNE *BLANKS                                                     MD025526
+     C           NFPC      ORNE *BLANKS                                                     MD025526
+     C           NFRS      IFNE FSRP                                                        MD025526
+     C                     MOVE 'Y'       NFRCF                                             MD025526
+     C                     ENDIF                                                            MD025526
+     C                     ENDIF                                                            MD025526
+     C                     ENDIF                                                            MD025526
+      *                                                                                     MD025526
 0691 C*
 0692 C* REC TO ACTN3 AND RATES
 0693 C                     EXSR EXCPTS
@@ -5206,6 +5240,7 @@
      C           NMDT      ANDNE0                                                             213788
      C           RLDT      ANDNE0                                                             214423
      C                     MOVE '0'       *IN80                                               213788
+     C                     MOVE '0'       *IN74                                               260263
      C                     ENDIF                                                              213788
       *                                                                                       213788
 0938 C** NO OUTPUT - PASS TO END
@@ -5878,6 +5913,12 @@
      C           *IN64     IFEQ '1'                                       159924
      C           *IN67     ANDEQ'0'                                       159924
      C           MDAT      ANDGEECDT                                                         BUG8652
+      *                                                                                     MD024810
+     C           *IN64     OREQ '1'                                                         MD024810
+     C           *IN67     ANDEQ'0'                                                         MD024810
+     C           MDAT      ANDEQ0                                                           MD024810
+     C           XWVALD    ANDLEEXTD                                                        MD024810
+     C           WNIDT     ANDGT0                                                           MD024810
      C**********           Z-ADDWNIDT     WVALD                                        159924 248090
      C                     Z-ADDWNIDT     XWVALD                                              248090
      C********** ONIDT     IFNE WVALD                                                  212308 260193
@@ -5896,6 +5937,9 @@
      C           *IN75     ANDEQ'0'                                       159924
      C           WNRPD     IFNE 0                                                             202817
      C           MDAT      ANDGEECDT                                                         BUG8652
+     C           MDAT      OREQ 0                                                           MD024810
+     C           XWVALD    ANDLEEXTD                                                        MD024810
+     C           WNRPD     ANDGT0                                                           MD024810
      C**********           Z-ADDWNRPD     WVALD                                        159924 248090
      C                     Z-ADDWNRPD     XWVALD                                              248090
      C                     ENDIF                                                              202817
@@ -8071,6 +8115,8 @@
      O                    25   NFPC     960                               CAC001
      O                   N25   NELEVN   955P                              CAC001
      O                         NTHIRT   967P                              CAC001
+     O                         NIRCF    968                                                 MD025526
+     O                         NFRCF    969                                                 MD025526
      O                         ZERO06   983                                                   CLE042
      O                         ZERO03   986                                                   CLE042
      O                         ZERO06   995                                                   CLE042

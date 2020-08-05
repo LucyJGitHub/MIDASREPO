@@ -23,12 +23,13 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. LCI001             Date 27Jul20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CSW037A            Date 02May05               *
       *                 CSD025             Date 11Jan05               *
@@ -46,6 +47,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  LCI001 - MM Deals Validation - Deal Type against Customer    *
+      *           Add hooks LCI001_001, LCI001_002, LCI001_003,       *
+      *            LCI001_004                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -170,6 +174,7 @@
       ** Customer Shortname field passed as a parameter
      D IKCSNM          S             10A
       **
+     D/COPY WNCPYSRC,LCI001_001
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -258,11 +263,13 @@
      C*
      C                   ELSE
       *
+     C/COPY WNCPYSRC,LCI001_003
      C     DDTYPE        IFEQ      'IP'
      C     DDTYPE        OREQ      'IT'
      C                   MOVE      'Y'           ErrorFound
      C                   MOVEL     'MMM1065'     Msgid2
      C                   END
+     C/COPY WNCPYSRC,LCI001_004
      C                   END
  
      C                   END
@@ -325,6 +332,7 @@
      C                   EVAL      CSD025 = 'Y'                                               CSD025
      C                   ENDIF                                                                CSD025
                                                                                               CSD025
+     C/COPY WNCPYSRC,LCI001_002
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as

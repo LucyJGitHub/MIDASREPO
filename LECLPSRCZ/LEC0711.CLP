@@ -3,15 +3,16 @@
 /*EXI    TEXT('Midas LE Financial Loans Diary - Extrct & Rpt')       */
 /*********************************************************************/
 /*                                                                   */
-/*       Midas     - Customer Lending Module                     */
+/*       Midas     - Customer Lending Module                         */
 /*                                                                   */
 /*       LEC0711 - FINANCIAL LOANS DIARY, EXTRACT AND REPORT         */
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*       1989                                                        */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR787620           Date 10Jun11              */
+/*       Last Amend No. CLE053             Date 27Jul20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      AR787620           Date 10Jun11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -33,6 +34,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       CLE053 - Financial Loans Diary Changes                      */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR787620 - Hooks Incorporation                              */
 /*                  WNCPYSRC,LEH00001                                */
@@ -173,8 +175,30 @@
 /*/COPY WNCPYSRC,LEH00002                                            */
              ENDDO                                                    /*S01117*/
 /*/COPY WNCPYSRC,LEC0711003                                          */
+             CHGVAR     VAR(&SARD) VALUE('CLE053')                    /*CLE053*/
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                   /*CLE053*/
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD)         /*CLE053*/
+             IF         COND(&RTCD *EQ '       ') THEN(DO)            /*CLE053*/
+                                                                      /*CLE053*/
+             OVRDBF     FILE(LVEDSL4) POSITION(*KEY 2 LVEDIF1F +
+                          &RENT)                                      /*CLE053*/
+             MONMSG     MSGID(CPF0000)                                /*CLE053*/
+             OPNDBF     FILE(LVEDSL4) OPTION(*ALL)                    /*CLE053*/
+             MONMSG     MSGID(CPF0000) EXEC(DO)                       /*CLE053*/
+             DLTOVR     FILE(LVEDSL4)                                 /*CLE053*/
+                                                                      /*CLE053*/
+                 ENDDO                                                /*CLE053*/
+                                                                      /*CLE053*/
+             CALL       PGM(LE1691) PARM(&RSEQ &RENT)                 /*CLE053*/
+             DLTOVR     FILE(LVEDSL4)                                 /*CLE053*/
+             MONMSG     MSGID(CPF0000)                                /*CLE053*/
+             CLOF       OPNID(LVEDSL4)                                /*CLE053*/
+             MONMSG     MSGID(CPF0000)                                /*CLE053*/
+             ENDDO                                                    /*CLE053*/
+             ELSE       CMD(DO)                                       /*CLE053*/
                       CALL    PGM(LE0691) PARM(&RSEQ &RENT)           /*S01117*/
 /*/COPY WNCPYSRC,LEC0711004                                          */
+             ENDDO                                                    /*CLE053*/
 /**/                                                                  /*098642*/
              IF COND((&RENT *NE '   ') *AND (&RENT *NE 'ALL')) +
              THEN(DO)                                                 /*098642*/

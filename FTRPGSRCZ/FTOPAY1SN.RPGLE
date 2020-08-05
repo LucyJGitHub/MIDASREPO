@@ -1930,7 +1930,7 @@
 
      C                   MOVEL     NewPmtScn1    PrvPmtScn1
      C                   MOVEL     NewPmtSc1b    PrvPmtSc1b                     CFT014
-     C/COPY WNCPYSRC,ERZ248_031                                                 ERZ248
+     C/COPY WNCPYSRC,ERZ248_031                                                               ERZ248
      C                   Z-ADD     WIdx_PVAL     PrvN_Warn         3 0
      C                   MOVEL     @CCI@M        @PCI@M
       *
@@ -4477,7 +4477,7 @@
       * Cursor location on screen                                               CFT007
      C                   PARM      0             CursorLoc                      CFT007
      C                   PARM                    SSIMode           1            CFT018
-     C/COPY WNCPYSRC,ERZ248_033                                                 ERZ248
+     C/COPY WNCPYSRC,ERZ248_033                                                               ERZ248
       *                                                                         CFT018
      C                   Endif                                                  CFT018
       *                                                                         CFT018
@@ -9229,7 +9229,7 @@
      C                   MOVEL     *BLANK        NewPmtScnA                                   CSW209
      C                   MOVEL     *BLANK        NewPmtScnC                                   CSW209
      C                   EndIf                                                                CSW209
-     C/COPY WNCPYSRC,ERZ248_034                                                 ERZ248
+     C/COPY WNCPYSRC,ERZ248_034                                                               ERZ248
      C                   END
      C                   EXSR      PAYSCM1                                                    256192
       *                                                                         CFT018
@@ -9530,7 +9530,7 @@
       * Cursor location on screen                                               CFT007
      C                   PARM      0             CursorLoc                      CFT007
      C                   PARM                    SSIMode           1            CFT018
-     C/COPY WNCPYSRC,ERZ248_035                                                 ERZ248
+     C/COPY WNCPYSRC,ERZ248_035                                                               ERZ248
       *                                                                         CFT018
      C                   Endif                                                  CFT018
       *

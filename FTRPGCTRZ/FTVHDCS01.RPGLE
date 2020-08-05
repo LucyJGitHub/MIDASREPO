@@ -991,9 +991,9 @@
      C**********         Eval      RetCodeIn        =   'Error'                        221776 259576
      C**********         Eval      WMsgIdXAr(WIdx)  =   'FTM0017'                      221776 259576
      C**********         Eval      WFldNmXAr(WIdx)  =   DDSName                        221776 259576
-     C**********         If        GenOkFlag <> 'N'                                    221776 259576
+     C**********         If        GenOkFlag <> 'N'                                    221774 259576
      C**********         Eval      GenOkFlag = 'W'                                     221776 259576
-     C**********         Endif                                                         221776 259576
+     C**********         Endif                                                         221774 259576
      C**********         Endif                                                         221776 259576
       *                                                                                       221776
       ** Referred Debit                                                                       221776

@@ -931,9 +931,9 @@
      C**********         Eval      RetCodeIn        =   'Error'                        221776 259576
      C**********         Eval      WMsgIdXAr(WIx)   =   'FTM0017'                      221776 259576
      C**********         Eval      WFldNmXAr(WIx)   =   DDSName                        221776 259576
-     C**********         If        OKTOC1 <> 'N'                                       221776 259576
+     C**********         If        OKTOC1 <> 'N'                                       221774 259576
      C**********         Eval      OKTOC1 = 'W'                                        221776 259576
-     C**********         Endif                                                         221776 259576
+     C**********         Endif                                                         221774 259576
      C**********         Endif                                                         221776 259576
       *                                                                                       221776
       ** Referred Debit                                                                       221776

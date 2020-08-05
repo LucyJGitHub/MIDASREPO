@@ -83,7 +83,7 @@
       /EJECT
       *****************************************************************
 
-YB   FOTPAYQL1  UF   E           K DISK                                         ERZ248
+YB   FOTPAYQL1  UF   E           K DISK                                               
 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
@@ -130,10 +130,10 @@ YB   FOTPAYQL1  UF   E           K DISK                                         
 
       ** Initialization
 
-YB   C     KPREF         CHAIN     OTPAYQL1                           38         ERZ248
-YB   C     *IN38         IFEQ      *OFF                                          ERZ248
-YB   C                   Move      KUETR         OTUETR                          ERZ248
-YB   C                   Update    OTPAYQD0                                      ERZ248
+YB   C     KPREF         CHAIN     OTPAYQL1                           38               
+YB   C     *IN38         IFEQ      *OFF                                                
+YB   C                   Move      KUETR         OTUETR                                
+YB   C                   Update    OTPAYQD0                                            
      C                   Endif
 
      C                   Return

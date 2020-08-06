@@ -1,6 +1,6 @@
 /*********************************************************************/
-/*S*D****CLPBASEBND***************************************************/
-/*E*I****TEXT('Midas*SM*Shell*for*calling*upgrade*pgms.*-**BEFORE')***/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas SM Shell for calling upgrade pgms. - *BEFORE')  */
 /*********************************************************************/
 /*                                                                   */
 /*       Midas - Implementation module                               */
@@ -9,20 +9,22 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2011           */
 /*                                                                   */
-/*       Last Amend No. CUP042 *REDUNDANT  Date 21Apr15              */
-/*       Prev Amend No. CUP023  *CREATE    Date 20Apr11              */
+/*       Last Amend No. MD056103           Date 21Jun20              */
+/*       Prev Amend No. CUP042 *REDUNDANT  Date 21Apr15              */
+/*                      CUP023  *CREATE    Date 20Apr11              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD056103 - Missing program for CUP042.                      */
 /*       CUP042 - Changes for Bridge deliverable data split          */
 /*       CUP023 - Run Upgrade Programs before migration.             */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&PFXSVAL &ORLVLSVAL)
- 
+
              DCL        VAR(&PFXSVAL) TYPE(*CHAR) LEN(20)
              DCL        VAR(&ORLVLSVAL) TYPE(*CHAR) LEN(20)
- 
+
              DCL        VAR(&SBSID) TYPE(*CHAR) LEN(2)
              DCL        VAR(&OLDRLVL) TYPE(*CHAR) LEN(22)
              DCL        VAR(&PROD) TYPE(*CHAR) LEN(10)
@@ -37,21 +39,23 @@
              DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)
              DCL        VAR(&REPLY) TYPE(*CHAR) LEN(1)
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
- 
-             DCLF       FILE(UPSVALJ0) OPNID(A)
+
+/**********  DCLF       FILE(UPSVALJ0) OPNID(A) */                                      /*MD056103*/
+             DCLF       FILE(UPSVALJ0) OPNID(A) ALWNULL(*YES)                           /*MD056103*/
              DCLF       FILE(SMRLSLPD) OPNID(B)
-             DCLF       FILE(SMDLVCL1) OPNID(C)
- 
+/**********  DCLF       FILE(SMDLVCL1) OPNID(C) */                                      /*MD056103*/
+             DCLF       FILE(SMUPGJW0) OPNID(C)                                         /*MD056103*/
+
              COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
                           2007')
- 
+
 /* Global monitor message */
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
              CHGJOB     LOG(4 0 *SECLVL) LOGCLPGM(*YES)
              CHGJOB     SWS(XXXXXX00)
- 
+
 /* Create and rename temporary source file for RUNSQLSTM. */
              DLTF       FILE(QTEMP/RUNSQLSTM)
              MONMSG     MSGID(CPF0000)
@@ -62,19 +66,19 @@
                           file for SMC000117')
              RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
                           NEWOBJ(RUNSQL)
- 
+
 /* Create data area MIDASMSG in QTEMP for error handling. */
              DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
              MONMSG     MSGID(CPF0000)
              CRTDTAARA  DTAARA(QTEMP/MIDASMSG) TYPE(*CHAR) LEN(800) +
                           VALUE(' ')
- 
+
 VALIDATE:
              RCVF       OPNID(A)
              MONMSG     MSGID(CPF0864) EXEC(DO)
                 GOTO       CMDLBL(CHECK)
              ENDDO
- 
+
              IF         COND(&A_GISVAL *EQ &PFXSVAL) THEN(DO)
                 IF         COND(&A_GIVAL *EQ ' ') THEN(DO)
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
@@ -83,7 +87,7 @@ VALIDATE:
                    CHGVAR     VAR(&SBSID) VALUE(&A_GIVAL)
                 ENDDO
              ENDDO
- 
+
              IF         COND(&A_GISVAL *EQ &ORLVLSVAL) THEN(DO)
                 IF         COND(&A_GIVAL *EQ ' ') THEN(DO)
                    CHGVAR     VAR(&BLANKSVAL) VALUE('Y')
@@ -92,9 +96,9 @@ VALIDATE:
                    CHGVAR     VAR(&OLDRLVL) VALUE(&A_GIVAL)
                 ENDDO
              ENDDO
- 
+
              GOTO       CMDLBL(VALIDATE)
- 
+
  CHECK:
              IF         COND(&BLANKSVAL *EQ 'Y') THEN(DO)
 /* Set up messages for Midas Information Screen  */
@@ -105,40 +109,53 @@ VALIDATE:
                 CALL       PGM(SCC0010) PARM('SMC000117' 'ENTER' ' ')
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
- 
+
              CALL       PGM(UPC0014) PARM(&SBSID)
- 
+
 /* Break down 'from' release level. */
              CHGVAR     VAR(&PROD) VALUE(%SST(&OLDRLVL 1 10))
              CHGVAR     VAR(&RLS) VALUE(%SST(&OLDRLVL 11 10))
              CHGVAR     VAR(&SRLS) VALUE(%SST(&OLDRLVL 21 2))
- 
+
 RELEASELVL:
              RCVF       OPNID(B)
              MONMSG     MSGID(CPF0864) EXEC(DO)
                 GOTO       CMDLBL(CALL)
              ENDDO
- 
+
              IF         COND(&B_RLPROD *EQ &PROD *AND &B_RLRLS *EQ +
                           &RLS *AND &B_RLSRLS *EQ &SRLS) THEN(DO)
 /* Set all statuses to 'C' apart from the release level that is required. */
-                CHGVAR     VAR(&STM_STR) VALUE('update SMDLVCPD set +
+/**********     CHGVAR     VAR(&STM_STR) VALUE('update SMDLVCPD set +
                              AUUSTS =' *BCAT &QUOTE *TCAT 'C' *TCAT +
                              &QUOTE *BCAT 'where AUPROJ <>' *BCAT +
-                             &QUOTE *TCAT &B_RLUPMB *TCAT &QUOTE)
+                             &QUOTE *TCAT &B_RLUPMB *TCAT &QUOTE) */                    /*MD056103*/
+                CHGVAR     VAR(&STM_STR) VALUE('update SMUPGXTD set +
+                             AUUSTS =' *BCAT &QUOTE *TCAT 'C' *TCAT +
+                             &QUOTE *BCAT 'where AUPROJ <>' *BCAT +
+                             &QUOTE *TCAT &B_RLUPMB *TCAT &QUOTE)                       /*MD056103*/
                 CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
                 RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                              COMMIT(*NONE)
                 MONMSG     MSGID(SQL9010)
              ENDDO
- 
+
              GOTO       CMDLBL(RELEASELVL)
- 
+
 CALL:
              RCVF       OPNID(C)
              MONMSG     MSGID(CPF0864) EXEC(DO)
                 GOTO       CMDLBL(ERRORCHK)
              ENDDO
+             IF         COND(&C_AUUSTS *NE ' ') THEN(DO)                                /*MD056103*/
+             GOTO       CMDLBL(CALL)                                                    /*MD056103*/
+             ENDDO                                                                      /*MD056103*/
+                                                                                        /*MD056103*/
+             IF         COND(&C_AUFMTO *NE '*BEFORE' *OR &C_AULAYR *NE +
+                          '*ZONE') THEN(DO)                                             /*MD056103*/
+             GOTO       CMDLBL(CALL)                                                    /*MD056103*/
+             ENDDO                                                                      /*MD056103*/
+                                                                                        /*MD056103*/
              CHGJOB     SWS(XXXXXX00)
              CHGVAR     VAR(&CMD) VALUE(' ')
              CHGVAR     VAR(&CMD) VALUE('CALL PGM(' *TCAT &C_AUMBNM +
@@ -162,11 +179,26 @@ CALL:
              ENDDO
 /* Update logical with status. */
 UPDATE:
-             CALL       PGM(SM000028) PARM(&C_AUPROJ &C_AUMBNM +
-                          &C_AUMBTP &USTS)
- 
+/**********  CALL       PGM(SM000028) PARM(&C_AUPROJ &C_AUMBNM +
+                          &C_AUMBTP &USTS) */                                           /*MD056103*/
+                                                                                        /*MD056103*/
+             CHGVAR     VAR(&STM_STR) VALUE(' ')                                        /*MD056103*/
+             CHGVAR     VAR(&STM_STR) VALUE('update SMUPGXTD set  +
+                            AUUSTS = ' *BCAT &QUOTE *TCAT &USTS +
+                           *TCAT &QUOTE *BCAT ' where   +
+                           AUMBNM = ')                                                  /*MD056103*/
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')                           /*MD056103*/
+             CHGVAR     VAR(&STM_STR) VALUE(' ')                                        /*MD056103*/
+             CHGVAR     VAR(&STM_STR) VALUE(&QUOTE *TCAT &C_AUMBNM +
+                           *TCAT &QUOTE *BCAT ' and AUPROJ = ' +
+                           *TCAT &QUOTE *TCAT &C_AUPROJ *TCAT &QUOTE)                   /*MD056103*/
+             CALL       PGM(UTWRTSQL) PARM(&STM_STR '*WRITE')                           /*MD056103*/
+             RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
+                          COMMIT(*NONE)                                                 /*MD056103*/
+             MONMSG     MSGID(SQL9010)                                                  /*MD056103*/
+
              GOTO       CMDLBL(CALL)
- 
+
 ERRORCHK:
              IF         COND(&ERROR *EQ 'Y') THEN(DO)
                 RTVMSG     MSGID(UPM0002) MSGF(UTMSGF) +
@@ -188,14 +220,16 @@ ERRORCHK:
              ENDDO
              ELSE       CMD(DO)
 /* If no errors then set statuses back to blank. */
-                CHGVAR     VAR(&STM_STR) VALUE('update SMDLVCPD set +
-                             AUUSTS =' *BCAT &QUOTE *BCAT &QUOTE)
+/**********     CHGVAR     VAR(&STM_STR) VALUE('update SMDLVCPD set +
+                             AUUSTS =' *BCAT &QUOTE *BCAT &QUOTE) */                    /*MD056103*/
+                CHGVAR     VAR(&STM_STR) VALUE('update SMUPGXTD set +
+                             AUUSTS =' *BCAT &QUOTE *BCAT &QUOTE)                       /*MD056103*/
                 CALL       PGM(UTWRTSQL) PARM(&STM_STR '*CLEAR')
                 RUNSQLSTM  SRCFILE(QTEMP/RUNSQL) SRCMBR(RUNSQLSTM) +
                              COMMIT(*NONE)
                 MONMSG     MSGID(SQL9010)
              ENDDO
- 
+
              GOTO       CMDLBL(ENDPGM)
  ERROR:
              RTVMSG     MSGID(UPM0001) MSGF(UTMSGF) +
@@ -203,12 +237,12 @@ ERRORCHK:
              MONMSG     MSGID(CPF0000)
              CHGDTAARA  DTAARA(MIDASMSG (101 50)) VALUE(&MESSAGE)
              MONMSG     MSGID(CPF0000)
- 
+
              CHGDTAARA  DTAARA(MIDASMSG (201 50)) VALUE('Check +
                           joblog for details')
              MONMSG     MSGID(CPF0000)
              CALL       PGM(SCC0010) PARM('SMC000117' 'JOBLOG' 'Y')
              MONMSG     MSGID(CPF0000)
- 
+
 ENDPGM:
              ENDPGM

@@ -9,14 +9,16 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2010                     */
 /*                                                                   */
-/*       Last Amend No. MD054605           Date 17Oct19              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD056103           Date 19Jun20              */
+/*       Prev Amend No. MD054605           Date 17Oct19              */
+/*                      MD046248           Date 27Oct17              */
 /*                      BUG28074           Date 26Aug10              */
 /*                      BUG28037           Date 17Aug10              */
 /*                      BUG27957  *CREATE  Date 30Jul10              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD056103 - Make sure correct table is updated               */
 /*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BUG28074 - Correct placement of override.                   */
@@ -29,6 +31,7 @@
              DCL        VAR(&GPSBSID) TYPE(*CHAR) LEN(2)
              DCL        VAR(&SYSVAL) TYPE(*CHAR) LEN(20)
              DCL        VAR(&GVLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GMLIB) TYPE(*CHAR) LEN(10)                                 /*MD056103*/
              DCL        VAR(&SYSVALVAL) TYPE(*CHAR) LEN(200)
              DCL        VAR(&SYSVALVAL1) TYPE(*CHAR) LEN(200)                           /*BUG28037*/
              DCL        VAR(&SYSVALVAL2) TYPE(*CHAR) LEN(200)                           /*BUG28037*/
@@ -37,6 +40,7 @@
              DCL        VAR(&SYSVAL2) TYPE(*CHAR) LEN(20)                               /*BUG28037*/
              DCL        VAR(&SYSVAL3) TYPE(*CHAR) LEN(20)                               /*BUG28037*/
              DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7)                                /*BUG28037*/
+             DCL        VAR(&SQLSTM) TYPE(*CHAR) LEN(80)                                /*MD056103*/
 
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2010')
@@ -45,6 +49,18 @@
                           CMDLBL(ERROR))
 
              CHGVAR     VAR(&GVLIB) VALUE(&GPSBSID *TCAT 'GVLIB')
+             CHGVAR     VAR(&GMLIB) VALUE(&GPSBSID *TCAT 'GMLIB')                       /*MD056103*/
+                                                                                        /*MD056103*/
+/* Set up file for SQL statements. */                                                   /*MD056103*/
+             DLTF       FILE(QTEMP/RUNSQLSTM)                                           /*MD056103*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056103*/
+             DLTF       FILE(QTEMP/RUNSQL)                                              /*MD056103*/
+             MONMSG     MSGID(CPF0000)                                                  /*MD056103*/
+             CRTSRCPF   FILE(QTEMP/RUNSQLSTM) RCDLEN(112) +
+                          MBR(RUNSQLSTM) TEXT('Temporary source +
+                          file for UTC000001')                                          /*MD056103*/
+             RNMOBJ     OBJ(QTEMP/RUNSQLSTM) OBJTYPE(*FILE) +
+                          NEWOBJ(RUNSQL)                                                /*MD056103*/
 
 /* Retrieve IASP System Values. */                                                      /*BUG28074*/
              CHGVAR     VAR(&SYSVAL1) VALUE('IASPinstallation')                         /*BUG28074*/
@@ -65,18 +81,37 @@
              CHGVAR     VAR(&SYSVALVAL) +
                           VALUE('/QOpenSys/Misys/MidasPlus/' *TCAT +
                           &GPSBSID)
-             CALL       PGM(GP009510) PARM(&SYSVAL &SYSVALVAL ' ')
+/**********  CALL       PGM(GP009510) PARM(&SYSVAL &SYSVALVAL ' ') */                   /*MD056103*/
+             CHGVAR     VAR(&SQLSTM) VALUE('UPDATE ' *BCAT &GMLIB +
+                        *TCAT '/GPSVLXTD set ')                                         /*MD056103*/
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*CLEAR')                            /*MD056103*/
+             CHGVAR     VAR(&SQLSTM) VALUE('GIVAL =' *TCAT '''' *TCAT &SYSVALVAL +
+                        *TCAT '''' +
+                        *BCAT ' where GISVAL =''GlobalJavaPathStem''' *TCAT ';')        /*MD056103*/
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')                            /*MD056103*/
+                                                                                        /*MD056103*/
 
 /* Update global layer prefix. */
              CHGVAR     VAR(&SYSVAL) VALUE(' ')
              CHGVAR     VAR(&SYSVALVAL) VALUE(' ')
              CHGVAR     VAR(&SYSVAL) VALUE('BrgMidasGlobalPrefix')
              CHGVAR     VAR(&SYSVALVAL) VALUE(&GPSBSID)
-             CALL       PGM(GP009510) PARM(&SYSVAL &SYSVALVAL ' ')
+/**********  CALL       PGM(GP009510) PARM(&SYSVAL &SYSVALVAL ' ') */                   /*MD056103*/
+             CHGVAR     VAR(&SQLSTM) VALUE('UPDATE ' *BCAT &GMLIB +
+                        *TCAT '/GPSVLXTD set GIVAL =' *TCAT '''' *TCAT &SYSVALVAL +
+                        *TCAT '''' +
+                        *BCAT ' where GISVAL =''BrgMidasGlobalPrefix''' *TCAT ';')      /*MD056103*/
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')                            /*MD056103*/
 
              CHGVAR     VAR(&SYSVAL) VALUE(' ')
              CHGVAR     VAR(&SYSVAL) VALUE('GlobalSystemPrefix')
-             CALL       PGM(GP009510) PARM(&SYSVAL &SYSVALVAL ' ')
+/**********  CALL       PGM(GP009510) PARM(&SYSVAL &SYSVALVAL ' ') */                   /*MD056103*/
+             CHGVAR     VAR(&SQLSTM) VALUE(' ')                                         /*MD056103*/
+             CHGVAR     VAR(&SQLSTM) VALUE('UPDATE ' *BCAT &GMLIB +
+                        *TCAT '/GPSVLXTD set GIVAL =' *TCAT '''' *TCAT &SYSVALVAL +
+                        *TCAT '''' +
+                        *BCAT ' where GISVAL =''GlobalSystemPrefix''' *TCAT ';')        /*MD056103*/
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')                            /*MD056103*/
 
 /* Update IASP values. */                                                               /*BUG28037*/
 /**********  CHGVAR     VAR(&SYSVAL1) VALUE('IASPinstallation')         */ /*BUG28037*/ /*BUG28074*/
@@ -89,10 +124,31 @@
 /**********  IF         COND(&RTNCODE *NE '       ') THEN(DO)           */ /*BUG28037*/ /*BUG28074*/
 /**********     GOTO       CMDLBL(ERROR)                                */ /*BUG28037*/ /*BUG28074*/
 /**********  ENDDO                                                      */ /*BUG28037*/ /*BUG28074*/
-             CALL       PGM(GP009510) PARM(&SYSVAL1 &SYSVALVAL1 ' ')                    /*BUG28037*/
-             CALL       PGM(GP009510) PARM(&SYSVAL2 &SYSVALVAL2 ' ')                    /*BUG28037*/
-             CALL       PGM(GP009510) PARM(&SYSVAL3 &SYSVALVAL3 ' ')                    /*BUG28037*/
+/**********  CALL       PGM(GP009510) PARM(&SYSVAL1 &SYSVALVAL1 ' ') */        /*BUG28037*MD056103*/
+             CHGVAR     VAR(&SQLSTM) VALUE(' ')                                         /*MD056103*/
+             CHGVAR     VAR(&SQLSTM) VALUE('UPDATE ' *BCAT &GMLIB +
+                        *TCAT '/GPSVLXTD set GIVAL =' *TCAT '''' *TCAT &SYSVALVAL1 +
+                        *TCAT ''''  *BCAT ' where GISVAL =' +
+                        *TCAT '''' *TCAT &SYSVAL1 *TCAT '''' *TCAT ';')                 /*MD056103*/
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')                            /*MD056103*/
+/**********  CALL       PGM(GP009510) PARM(&SYSVAL2 &SYSVALVAL2 ' ') */       /*BUG28037**MD056103*/
+             CHGVAR     VAR(&SQLSTM) VALUE(' ')                                         /*MD056103*/
+             CHGVAR     VAR(&SQLSTM) VALUE('UPDATE ' *BCAT &GMLIB +
+                        *TCAT '/GPSVLXTD set GIVAL =' *TCAT '''' *TCAT &SYSVALVAL2 +
+                        *TCAT ''''  *BCAT ' where GISVAL =' +
+                        *TCAT '''' *TCAT &SYSVAL2 *TCAT '''' *TCAT ';')                 /*MD056103*/
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')                            /*MD056103*/
+/**********  CALL       PGM(GP009510) PARM(&SYSVAL3 &SYSVALVAL3 ' ') */       /*BUG28037**MD056103*/
+             CHGVAR     VAR(&SQLSTM) VALUE(' ')                                         /*MD056103*/
+             CHGVAR     VAR(&SQLSTM) VALUE('UPDATE ' *BCAT &GMLIB +
+                        *TCAT '/GPSVLXTD set GIVAL =' *TCAT '''' *TCAT &SYSVALVAL3 +
+                        *TCAT ''''  *BCAT ' where GISVAL =' +
+                        *TCAT '''' *TCAT &SYSVAL3 *TCAT '''' *TCAT ';')                 /*MD056103*/
+             CALL       PGM(UTWRTSQL) PARM(&SQLSTM '*WRITE')                            /*MD056103*/
 
+             RUNSQLSTM  SRCFILE(RUNSQL) SRCMBR(RUNSQLSTM) COMMIT(*NONE)                 /*MD056103*/
+             DLTSPLF    FILE(RUNSQLSTM) SPLNBR(*LAST)                                   /*MD056103*/
+                                                                                        /*MD056103*/
 /**********  DLTOVR     FILE(GPSVALL0) */                                               /*MD054605*/
 
              GOTO       CMDLBL(ENDPGM)

@@ -30,8 +30,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055503           Date 03Apr20               *
-      *  Prev Amend No. MD042042           Date 22Mar19               *
+      *  Last Amend No. ERZ248             Date 18Nov19               *
+      *  Prev Amend No. MD055503           Date 03Apr20               *
+      *                 MD042042           Date 22Mar19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR1090283          Date 10Aug16               *
@@ -102,6 +103,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  ERZ248 - SWIFT UETR via OPAY API                             *
+      *           Add hooks ERZ248_037                                *
+      *           Amended hooks FTH00118, FTH00182, FTOPAYCC09,       *
+      *           FTOPAYCC10, FTOPAYC017, FTOPAYC018, FTOPAYC019,     *
+      *           FTOPAYC022                                          *
       *  MD055503 - Not able to do webfacing authorisation for invalid*
       *             outgoing payment that had been repaired.          *
       *           - Added the missing parameter (InputUser) introduced*
@@ -2350,6 +2356,7 @@
      C                   Eval      FTEOPYA = (*All'Y')                                        CSW209
      C                   Eval      FTEOPYC = (*All'Y')                                        CSW209
      C                   ENDIF                                                                CSW209
+     C/COPY WNCPYSRC,ERZ248_037                                                 ERZ248
  
      C                   RESET                   AmendOK
  

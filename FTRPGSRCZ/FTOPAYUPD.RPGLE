@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSW220             Date 09Mar20               *
-      *  Prev Amend No. MD054037           Date 23Sep19               *
+      *  Last Amend No. ERZ248             Date 18Nov19               *
+      *  Prev Amend No. CSW220             Date 09Mar20               *
+      *                 MD054037           Date 23Sep19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD044588           Date 09Mar17               *
@@ -123,6 +124,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  ERZ248 - SWIFT UETR via OPAY API                             *
+      *           Add new hook ERZ248_044                             *
+      *           Amended hooks FTH00422, FTOPAYDC08, FTOPAYDC12,     *
+      *           FTOPAYDC31                                          *
       *  CSW220 - SWIFT Changes 2020                                  *
       *  MD054037 - Outward payment routing from incoming (OPIN = Y)  *
       *             via API                                           *
@@ -1285,6 +1290,7 @@
       ** Move valid file details to extension file details                                    257487
       *                                                                                       257487
      C                   EVAL      OTFRID = OTFRNT                                            257487
+     C/COPY WNCPYSRC,ERZ248_044                                                               ERZ248
      C                   Write     OTPAYQD0                             99                    257487
                                                                                               257487
      C                   If        *IN99 = *ON                                                257487

@@ -11,8 +11,10 @@
 0006 F*                                                                  *
       *  (c) Finastra International Limited 2001                      *
 0008 F*                                                                  *
-      *  Last Amend No. 260405             Date 04Apr20               *
-      *  Prev Amend No. MD053295           Date 13Apr19               *
+      *  Last Amend No. MD054957           Date 11Dec19               *
+      *  Prev Amend No. MD051554           Date 28Sep18               *
+      *                 260405             Date 04Apr20               *
+      *                 MD053295           Date 13Apr19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 MD047993           Date 23Sep17               *
@@ -82,6 +84,10 @@
      F*                                                                  *S01119
 0011 F*------------------------------------------------------------------*
      F*                                                                  *
+      *  MD054957 - RBRU SP21 Compatibility Patch (Recompile)         *
+      *  MD051554 - Leap Year Fix for interest calculation basis to   *
+      *             be used for 1st Jan should not be present in      *
+      *             FRA/IRS module                                    *
       *  260405 - BRT Participation Date of Birth field is missing.   *
       *           Upgrade fix 235425. Recompile over changed SDCBRTPD.*
       *         - Applied for MD055446.                               *
@@ -89,11 +95,11 @@
       *             method 3 (30/360) has wrong interest payment      *
       *             amount for month of March (Recompile)             *
       *  MD046248 - Finastra Rebranding                               *
-      *  CDL099 - Split Value Date (Recompile)                        *
+      *  CDL099 - Split Value Date (Recompile)                        * 
       *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
       *             on Last Day indicator.                            *
       *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
-      *             Accrue on Last Day Indicator for method 6.        *
+      *             Accrue on Last Day Indicator for method 6.        *      
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -1546,6 +1552,7 @@
      C**********           MOVE 'N'       WCALC6                                   MD035545 MD047993
      C**********           ENDIF                                                   MD035545 MD047993
      C                     ENDIF                                                            MD035545
+     C                     MOVE WCALC6    SCALC6  1                                         MD051554
 0785 C           ENDBNK    TAG                             ** ENDBNK TAG**
 0786 C                     GOTO END
 0787 C/SPACE 3
@@ -1559,6 +1566,17 @@
 0794 C                     SETOF                     5839
 0795 C                     SETOF                     2426
 0796 C                     SETOF                     8338
+      *                                                                                     MD051554
+      ** If FRA/IRS then core interest calculation otherwise when the system                MD051554
+      ** value is set to ‘Y’, then the interest calculation period covering                 MD051554
+      ** December will be one day shorter, and the period in January will be                MD051554
+      ** one day longer for calculation basis 6                                             MD051554
+      *                                                                                     MD051554
+     C           *IN15     IFEQ '1'                                                         MD051554
+     C                     MOVE 'N'       WCALC6                                            MD051554
+     C                     ELSE                                                             MD051554
+     C                     MOVE SCALC6    WCALC6                                            MD051554
+     C                     ENDIF                                                            MD051554
      C* PSEUDO I/P PROCESSING
      C   04                MOVE RIP1      RIP,1
 0152 C* IF I/P CYCLE THEN AS LF/DTRIN TRAILER

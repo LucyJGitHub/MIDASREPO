@@ -10,8 +10,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD036619           Date 12Mar20               *
-      *  Prev Amend No. MD051152           Date 02Aug18               *
+      *  Last Amend No. MD054957           Date 11Dec19               *
+      *  Prev Amend No. MD051554           Date 28Sep18               *
+      *                 MD036619           Date 12Mar20               *
+      *                 MD051152           Date 02Aug18               *
       *                 MD053295           Date 13Apr19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -170,6 +172,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD054957 - RBRU SP21 Compatibility Patch (Recompile)         *
+      *  MD051554 - Leap Year Fix for interest calculation basis to   *
+      *             be used for 1st Jan should not be present in      *
+      *             FRA/IRS module                                    *
       *  MD036619 - Generated interest for pay/rec and confirmation   *
       *             had a difference of .01 with the actual posting   *
       *           - Half-adjust ZINTR and save to #WKINT before       *
@@ -1886,6 +1892,7 @@
      C**********           MOVE 'N'       WCALC6                                   MD035545 MD047993
      C**********           ENDIF                                                   MD035545 MD047993
      C                     ENDIF                                                            MD035545
+     C                     MOVE WCALC6    SCALC6  1                                         MD051554
 0535 C*
 0534 C                     SETON                     40
 0535 C*
@@ -2070,6 +2077,22 @@
 0605 C   42                MOVE AMT       ZZAMT
 0606 C   42                EXSR GLZADD
      C/COPY WNCPYSRC,DL0279CP29                                           S01408
+      *                                                                                     MD051554
+      ** If FRA/IRS then core interest calculation otherwise when the system                MD051554
+      ** value is set to ‘Y’, then the interest calculation period covering                 MD051554
+      ** December will be one day shorter, and the period in January will be                MD051554
+      ** one day longer for calculation basis 6                                             MD051554
+      *                                                                                     MD051554
+     C           DTYP      IFEQ 'FR'                                                        MD051554
+     C           DTYP      OREQ 'RS'                                                        MD051554
+     C           DTYP      OREQ 'RX'                                                        MD051554
+     C           DTYP      OREQ 'RR'                                                        MD051554
+     C           DTYP      OREQ 'RP'                                                        MD051554
+     C           DTYP      OREQ 'RF'                                                        MD051554
+     C                     MOVE 'N'       WCALC6                                            MD051554
+     C                     ELSE                                                             MD051554
+     C                     MOVE SCALC6    WCALC6                                            MD051554
+     C                     ENDIF                                                            MD051554
      C*                                                                   S01119
      C**  CHECK FOR FRA/IRS DEAL TYPES AS THESE ARE PROCESSED             S01119
      C**  DIFFERENTLY                                                     S01119

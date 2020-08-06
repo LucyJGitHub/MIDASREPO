@@ -1,0 +1,842 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas RZ Copy Database Objects')                      */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - RZ Developments                                     */
+/*                                                                   */
+/*       RZC000002 - Copy Database Objects                           */
+/*                                                                   */
+/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*                                                                   */
+/*       Note: This program is modelled on UPC0259 in terms of       */
+/*             message monitoring. It also calls some standard       */
+/*             UP* programs.                                         */
+/*             Any changes to this program should take this into     */
+/*             account.                                              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       Last Amend No. ERZ054E            Date 29Jan13              */
+/*       Prev Amend No. ERZ054D            Date 29Jan13              */
+/*                      ERZ054C            Date 29Jan13              */
+/*                      ERZ054   *CREATE   Date 29Jan13              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       ERZ054E - Allow new MBROPT *DELETE which deletes the        */
+/*                 file before copying. This is intended to          */
+/*                 cater specifically for UDF files.                 */
+/*                 Monitor for CPF2965 as per 2969.                  */
+/*       ERZ054D - Allow copying from specific member.               */
+/*       ERZ054C - Correct test of whether object is physical file.  */
+/*       ERZ054 - RZB Data Warehouse Extraction Requirements         */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       The program uses fields in RZCOPYPP/QADSPOBJ in the         */
+/*       following way:                                              */
+/*       &ODOBNM - From Object Name. Can be entered as:              */
+/*            1).  Complete name.                                    */
+/*       &ODOBTP - Object Type. Can be entered as:                   */
+/*            1).  *FILE                                             */
+/*            2).  *DTAARA                                           */
+/*            3).  *DTAQ                                             */
+/*       &ODLBNM - From Library. Can be entered as:                  */
+/*            1).  Complete name.                                    */
+/*            2).  Variable name xxABCLIB where xx is replaced by    */
+/*                 the Midas system prefix.                          */
+/*            3).  Blank defaults to *LIBL.                          */
+/*       &ODOBAT - From Member. Can be entered as:                   */                  /*ERZ054D*/
+/*            1).  Complete name.                                    */                  /*ERZ054D*/
+/*            2).  *FIRST                                            */                  /*ERZ054D*/
+/*            3).  *ALL                                              */                  /*ERZ054D*/
+/*            4).  Blank defaults to *ALL.                           */                  /*ERZ054D*/
+/*       &ODSRCL - To Library. Can be entered as:                    */
+/*            1).  Complete name.                                    */
+/*            2).  Variable name xxABCLIB where xx is replaced by    */
+/*                 the Midas system prefix.                          */
+/*       &ODSRCF - To Object Name. Can be entered as:                */
+/*            1).  Complete name.                                    */
+/*            2).  Blank defaults to &ODOBNM.                        */
+/*       &ODSRCM - To Member. Can be entered as:                     */
+/*            1).  Complete name.                                    */
+/*            2).  *FROMMBR                                          */
+/*            3).  *FIRST (is replaced by To Object Name during      */
+/*                 copy.                                             */
+/*            4).  Blanks defaults to *FROMMBR.                      */
+/*       &ODSFIL - MBROPT *ADD/*REPLACE. Can be entered as:          */
+/*            1).  *ADD                                              */
+/*            2).  *REPLACE                                          */
+/*                 If not *ADD will be set to *REPLACE regardless.   */
+/*                 The value is only used for copying files.         */
+/*            3).  *DELETE                                           */                  /*ERZ054E*/
+/*       &ODOBTX - INCREL. Can be entered as:                        */
+/*            1).  Selection criteria.                               */
+/*            2).  Blanks defaults to *NONE.                         */
+/*                                                                   */
+/*       Other fields in RZCOPYPP are used as follows:               */
+/*                                                                   */
+/*       &CPYSEQ - Sequence of component during which copy should    */
+/*                 take place.                                       */
+/*       &SARN   - Change Number. Optional, for clarity.             */
+/*                                                                   */
+/*       Other fields in RZCPYDPP are used as follows:               */
+/*                                                                   */
+/*       &ODDDAT - Updated to 'COPIED' by UP0262 to denote that      */
+/*                 the data object has been copied successfull.      */
+/*                 When the component is rerun, this field is        */
+/*                 checked to determine if the data object needs     */
+/*                 to be copied or has been already.                 */
+/*                                                                   */
+/*       Note that RZCPYDPP is a multi-membered file and that the    */
+/*       processing which takes place uses the member 'RZnnnnn'      */
+/*       where 'nnnnn' is the component sequence number.             */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&CNAM &CSEQ &THRESHOLD &JUMP)
+ 
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
+ 
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(200)
+ 
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&RERUN) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10) VALUE('  DPLIB   ')
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10) VALUE('  DMLIB   ')
+             DCL        VAR(&DTALIB) TYPE(*CHAR) LEN(10) VALUE('  DTALIB  ')
+             DCL        VAR(&CSEQA) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&MBRNAM) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&FROMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOOBJ) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OBJATR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&TOMBR) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&MBROPT) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&INCREL) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&CPYPRM) TYPE(*CHAR) LEN(500)
+             DCL        VAR(&CMD) TYPE(*CHAR) LEN(500)
+             DCL        VAR(&FROMMBR) TYPE(*CHAR) LEN(10)                                /*ERZ054D*/
+ 
+             DCL        VAR(&THRESHOLD) TYPE(*DEC) LEN(2 0)
+             DCL        VAR(&JUMP) TYPE(*DEC) LEN(2 0)
+ 
+             DCL        VAR(&SYSPCTBEF) TYPE(*DEC) LEN(7 4)
+             DCL        VAR(&SYSPCTAFT) TYPE(*DEC) LEN(7 4)
+             DCL        VAR(&SYSTOT) TYPE(*DEC) LEN(7 0)
+             DCL        VAR(&RETURNCODE) TYPE(*CHAR) LEN(10)
+ 
+             DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(1)
+ 
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
+             DCL        VAR(&IN01) TYPE(*LGL)
+             DCL        VAR(&FAILED) TYPE(*DEC) LEN(10 0)
+ 
+             COPYRIGHT  TEXT('(c) Misys International Banking +
+                          Systems Ltd. 2013')
+ 
+             DCLF       FILE(RZCPYDPP)
+ 
+/* Global monitor message                                            */
+ 
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+ 
+/* Set job switches                                                  */
+ 
+             CHGJOB     SWS(XXXXXX00)
+ 
+/*  Check if feature on                                              */
+ 
+             CHGVAR     VAR(&RTCD) VALUE('       ')
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&SARD) VALUE('ERZ054')
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &DSFDY)
+ 
+             IF         COND(&RTCD *NE '       ') THEN(DO)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+/* Check if LDA Dataarea exists and create it if not                 */
+ 
+             CHKOBJ     OBJ(LDA) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(CRTDTAARA +
+                        DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
+                        VALUE(' ') TEXT('Midas SD LOCAL +
+                          DATA AREA EQUIVALENT') AUT(*USE))
+ 
+             CHGVAR     VAR(&MSGDTA) VALUE('RZC000002 - RZ Copy +
+                            Procedure ' *CAT &CSEQA)
+ 
+             SNDPGMMSG  MSG(&MSGDTA) TOMSGQ(MRUNQ)
+ 
+/* Obtain system prefix and set program constant values              */
+ 
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PRE)
+             CHGVAR     VAR(%SST(&DPLIB 1 2)) VALUE(&PRE)
+             CHGVAR     VAR(%SST(&DMLIB 1 2)) VALUE(&PRE)
+             CHGVAR     VAR(%SST(&DTALIB 1 2)) VALUE(&PRE)
+ 
+             CHGVAR     VAR(&CSEQA) VALUE(&CSEQ)
+             CHGVAR     VAR(&MBRNAM) VALUE('RZ' *CAT &CSEQA)
+ 
+/* Make sure empty copies of work files exist                        */
+ 
+             CHKOBJ     OBJ(QTEMP/UPCERRQT) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(+
+                DSPOBJD    OBJ(&DPLIB/RZCPYDPP) OBJTYPE(*FILE) +
+                           OUTPUT(*OUTFILE) OUTFILE(QTEMP/UPCERRQT))
+             CLRPFM     FILE(QTEMP/UPCERRQT)
+ 
+/* Perform overrides of RZCPYDPP and CPYDTA (used in UP0262) to      */
+/* RZCPYDPP member &CSEQA                                            */
+ 
+             OVRDBF     FILE(RZCPYDPP) TOFILE(RZCPYDPP) MBR(&MBRNAM)
+             OVRDBF     FILE(CPYDTA) TOFILE(RZCPYDPP) MBR(&MBRNAM)
+ 
+/* Check restart status                                              */
+ 
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+ 
+/* Recovery point processing                                         */
+ 
+             IF         COND(&STAT *EQ 'R') THEN(DO)
+                CHGVAR     VAR(&RERUN) VALUE('Y')
+                GOTO       CMDLBL(READSKIP)
+             ENDDO
+ 
+             CHGVAR     VAR(&STAT) VALUE('Y')
+             CALL       CB0150 PARM(&CNAM &CSEQ &STAT)
+ 
+/* Copy records for copying for this component sequence into         */
+/* RZCPYDPP (to member is automatically overridden by previous       */
+/* override command).                                                */
+ 
+             CPYF       FROMFILE(&DTALIB/RZCOPYPP) +
+                          TOFILE(&DPLIB/RZCPYDPP) MBROPT(*REPLACE) +
+                          CRTFILE(*YES) INCREL((*IF CPYSEQ *EQ +
+                          &CSEQA)) FMTOPT(*MAP *DROP)
+ 
+/* Set Rerun Recovery point                                          */
+ 
+             CHGVAR     VAR(&STAT) VALUE('R')
+             CALL       CB0150 PARM(&CNAM &CSEQ &STAT)
+ 
+             GOTO       CMDLBL(READSKIP)
+ 
+/* Update previous record as having completed successfully           */
+/* and check system storage if object copied was a file              */
+ 
+ READNEXT:   CALL       PGM(UP0262) PARM(&ODOBNM &ODOBTP '*UPDATE' +
+                          &RTNCODE)
+             IF         COND(&ODOBTP *EQ '*FILE     ') THEN(DO)
+                CALL       PGM(UP0249) PARM(&RETURNCODE &SYSPCTAFT +
+                             &SYSTOT)
+                IF         COND((&SYSPCTAFT *GE &THRESHOLD) *OR +
+                             (&SYSPCTAFT - &SYSPCTBEF *GE &JUMP)) +
+                             THEN(GOTO CMDLBL(OVERFLOW))
+             ENDDO
+ 
+READSKIP:    RCVF
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(ENDPGM))
+ 
+/* Before attempting to copy check if it has already been copied     */
+/* but only if it is a re-run.                                       */
+ 
+             IF         COND((&RERUN *EQ 'Y') *AND (&ODDDAT *EQ +
+                          'COPIED')) THEN(GOTO CMDLBL(READSKIP))
+ 
+/* Set variable copy parameters                                      */
+/* - From Library                                                    */
+ 
+             CHGVAR    VAR(&FROMLIB) VALUE(&ODLBNM)
+             IF         COND((%SST(&FROMLIB 1 2) *EQ 'xx')) THEN(+
+                CHGVAR    VAR(%SST(&FROMLIB 1 2)) VALUE(&PRE))
+ 
+             IF         COND(&FROMLIB *EQ '          ') THEN(+
+                CHGVAR    VAR(&FROMLIB) VALUE('*LIBL     '))
+ 
+/* - To Library                                                      */
+ 
+             CHGVAR    VAR(&TOLIB) VALUE(&ODSRCL)
+             IF         COND((%SST(&TOLIB 1 2) *EQ 'xx')) THEN(+
+                CHGVAR    VAR(%SST(&TOLIB 1 2)) VALUE(&PRE))
+ 
+/* - To Object                                                       */
+ 
+             CHGVAR    VAR(&TOOBJ) VALUE(&ODSRCF)
+             IF         COND(&ODSRCF *EQ '          ') THEN(DO)
+                CHGVAR    VAR(&TOOBJ) VALUE(&ODOBNM)
+             ENDDO
+             ELSE (DO)
+                CHGVAR    VAR(&TOOBJ) VALUE(&ODSRCF)
+             ENDDO
+ 
+/*********************************************************************/
+/* Copy object is a file                                             */
+/*********************************************************************/
+ 
+             IF         COND(&ODOBTP *EQ '*FILE     ') THEN(DO)
+ 
+/* Check file exists and is a physical file                          */
+ 
+                RTVOBJD    OBJ(&FROMLIB/&ODOBNM) OBJTYPE(*FILE) +
+                             OBJATR(&OBJATR)
+                MONMSG     MSGID(CPF0000) EXEC(DO)
+                   CPYF       FROMFILE(&DPLIB/RZCPYDPP) +
+                                TOFILE(QTEMP/UPCERRQT) MBROPT(*ADD) +
+                                INCREL((*IF ODOBNM *EQ &ODOBNM) (*AND +
+                                ODOBTP *EQ '*FILE'))
+                   GOTO       CMDLBL(READSKIP)
+                ENDDO
+ 
+                IF         COND(%SST(&OBJATR 1 2) *NE 'PF') THEN(DO)
+                   CPYF       FROMFILE(&DPLIB/RZCPYDPP) +
+                                TOFILE(QTEMP/UPCERRQT) MBROPT(*ADD) +
+                                INCREL((*IF ODOBNM *EQ &ODOBNM) (*AND +
+                                ODOBTP *EQ '*FILE'))
+                   GOTO       CMDLBL(READSKIP)
+                ENDDO
+ 
+/* Find out how much system storage space has been used before.      */
+ 
+                CALL       PGM(UP0249) PARM(&RETURNCODE &SYSPCTBEF +
+                             &SYSTOT)
+ 
+/* Set additional variable copy parameters                           */
+/* - From Member                                                     */                  /*ERZ054D*/
+                                                                                         /*ERZ054D*/
+                CHGVAR    VAR(&FROMMBR) VALUE(&ODOBAT)                                   /*ERZ054D*/
+                IF         COND(&FROMMBR *EQ '          ') THEN(+
+                   CHGVAR    VAR(&FROMMBR) VALUE('*ALL      '))                          /*ERZ054D*/
+                                                                                         /*ERZ054D*/
+/* - To Member                                                       */
+ 
+                CHGVAR    VAR(&TOMBR) VALUE(&ODSRCM)
+                IF         COND(&TOMBR *EQ '          ') THEN(+
+                   CHGVAR    VAR(&TOMBR) VALUE('*FROMMBR  '))
+                IF         COND(&TOMBR *EQ '*FIRST    ') THEN(+
+                   CHGVAR    VAR(&TOMBR) VALUE(&TOOBJ))
+ 
+/* - Format Option                                                   */
+ 
+                CHGVAR    VAR(&MBROPT) VALUE(&ODSFIL)
+                                                                                         /*ERZ054E*/
+                IF         COND(&MBROPT *EQ '*DELETE ') THEN(DO)                         /*ERZ054E*/
+                   DLTF       FILE(&TOLIB/&TOOBJ)                                        /*ERZ054E*/
+                   MONMSG     MSGID(CPF0000)                                             /*ERZ054E*/
+                   CHGVAR    VAR(&MBROPT) VALUE('*ADD    ')                              /*ERZ054E*/
+                ENDDO                                                                    /*ERZ054E*/
+                                                                                         /*ERZ054E*/
+                IF         COND(&MBROPT *NE '*ADD    ') THEN(+
+                   CHGVAR    VAR(&MBROPT) VALUE('*REPLACE'))
+ 
+/* If copy is with format option replace, ensure unrequired members  */
+/* are removed from the to file.                                     */
+ 
+                IF         COND(&MBROPT *EQ '*REPLACE') THEN(DO)
+ 
+/* If copy is with to member *FROMMBR, call RZC000003 to remove      */
+/* unrequired members.                                               */
+ 
+                   IF         COND(&TOMBR *EQ '*FROMMBR') THEN(DO)
+                      CALL       PGM(RZC000003) PARM(&ODOBNM &FROMLIB &TOOBJ +
+                                   &TOLIB)
+ 
+/* Check for an error.                                               */
+ 
+                      IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                         CPYF       FROMFILE(&DPLIB/RZCPYDPP) +
+                                      TOFILE(QTEMP/UPCERRQT) MBROPT(*ADD) +
+                                      INCREL((*IF ODOBNM *EQ &ODOBNM) (*AND +
+                                      ODOBTP *EQ '*FILE'))
+                         CHGJOB     (XXXXXX00)
+                         GOTO       CMDLBL(READSKIP)
+                      ENDDO
+                   ENDDO
+                   ELSE (DO)
+ 
+/* If copy is not with to member *FROMMBR, remove all members from   */
+/* the file (a new member will be added back during copy).           */
+ 
+                      RMVM       FILE(&TOLIB/&TOOBJ) MBR(*ALL)
+                      MONMSG     MSGID(CPF7301)
+                   ENDDO
+                ENDDO
+ 
+/* - Include records by field test                                   */
+ 
+                CHGVAR     VAR(&INCREL) VALUE(&ODOBTX)
+                IF         COND(&INCREL *EQ ' ') THEN(+
+                   CHGVAR    VAR(&INCREL) VALUE('*NONE'))
+ 
+/* Build common copy parameter string                                */
+ 
+/************   CHGVAR     VAR(&CPYPRM) VALUE('CPYF FROMFILE(' *TCAT +                   /*ERZ054D*/
+/************                &FROMLIB *TCAT '/' *TCAT &ODOBNM *TCAT ') +                 /*ERZ054D*/
+/************                TOFILE(' *TCAT &TOLIB *TCAT '/' *TCAT +                     /*ERZ054D*/
+/************                &TOOBJ *TCAT ') FROMMBR(*ALL) TOMBR(' +                     /*ERZ054D*/
+/************                *TCAT &TOMBR *TCAT ') MBROPT(' *TCAT +                      /*ERZ054D*/
+/************                &MBROPT *TCAT ') CRTFILE(*YES) +                            /*ERZ054D*/
+/************                INCREL(' *TCAT &INCREL *TCAT ')')                           /*ERZ054D*/
+ 
+             CHGVAR     VAR(&CPYPRM) VALUE('CPYF FROMFILE(' *TCAT +
+                          &FROMLIB *TCAT '/' *TCAT &ODOBNM *TCAT ') +
+                          TOFILE(' *TCAT &TOLIB *TCAT '/' *TCAT +
+                          &TOOBJ *TCAT ') FROMMBR(' *TCAT &FROMMBR +
+                          *TCAT ') TOMBR(' *TCAT &TOMBR *TCAT ') +
+                          MBROPT(' *TCAT &MBROPT *TCAT ') +
+                          CRTFILE(*YES) INCREL(' *TCAT &INCREL +
+                          *TCAT ')')                                                     /*ERZ054D*/
+ 
+/* Create copy command with FMTOPT(*NONE)                            */
+ 
+                CHGVAR     VAR(&CMD) VALUE(&CPYPRM *BCAT 'FMTOPT(*NONE)')
+ 
+                CALL       PGM(QCMDEXC) PARM(&CMD 500)
+ 
+/*********************************************************************/
+/*     Message monitoring for CPYF FMTOPT(*NONE) - Category 1        */
+/*                                                                   */
+/* First category of monitored messages are critical errors and will */
+/* be flagged as failed without attempting other types of CPYF as    */
+/* they would also fail.                                             */
+/*********************************************************************/
+ 
+/* If to-file does not exist                                         */
+ 
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2861) EXEC(DO)
+                   CPYF       FROMFILE(&DPLIB/RZCPYDPP) +
+                                TOFILE(QTEMP/UPCERRQT) MBROPT(*ADD) +
+                                INCREL((*IF ODOBNM *EQ &ODOBNM) (*AND +
+                                ODOBTP *EQ '*FILE'))
+                   GOTO       CMDLBL(READSKIP)
+                ENDDO
+ 
+/* If from-file does not exist                                       */
+ 
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2802) EXEC(DO)
+                   CPYF       FROMFILE(&DPLIB/RZCPYDPP) +
+                                TOFILE(QTEMP/UPCERRQT) MBROPT(*ADD) +
+                                INCREL((*IF ODOBNM *EQ &ODOBNM) (*AND +
+                                ODOBTP *EQ '*FILE'))
+                   GOTO       CMDLBL(READSKIP)
+                ENDDO
+ 
+/* If insufficient authority to either from-file or to-file          */
+ 
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2864) EXEC(DO)
+                   CPYF       FROMFILE(&DPLIB/RZCPYDPP) +
+                                TOFILE(QTEMP/UPCERRQT) MBROPT(*ADD) +
+                                INCREL((*IF ODOBNM *EQ &ODOBNM) (*AND +
+                                ODOBTP *EQ '*FILE'))
+                   GOTO       CMDLBL(READSKIP)
+                ENDDO
+ 
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2862) EXEC(DO)
+                   CPYF       FROMFILE(&DPLIB/RZCPYDPP) +
+                                TOFILE(QTEMP/UPCERRQT) MBROPT(*ADD) +
+                                INCREL((*IF ODOBNM *EQ &ODOBNM) (*AND +
+                                ODOBTP *EQ '*FILE'))
+                   GOTO       CMDLBL(READSKIP)
+                ENDDO
+ 
+/**If*from-file has more fields than to-file, treat as error            */               /*ERZ054E*/
+/**********                                                             */               /*ERZ054E*/
+/**********     MONMSG     MSGID(CPF2817) CMPDTA(CPF2965) EXEC(DO)      */               /*ERZ054E*/
+/**********        CPYF       FROMFILE(&DPLIB/RZCPYDPP) +               */               /*ERZ054E*/
+/**********                     TOFILE(QTEMP/UPCERRQT) MBROPT(*ADD) +   */               /*ERZ054E*/
+/**********                     INCREL((*IF ODOBNM *EQ &ODOBNM) (*AND + */               /*ERZ054E*/
+/**********                     ODOBTP *EQ '*FILE'))                    */               /*ERZ054E*/
+/**********        GOTO       CMDLBL(READSKIP)                          */               /*ERZ054E*/
+/**********     ENDDO                                                   */               /*ERZ054E*/
+ 
+/* If, because of overrides, utility thinks it is copying to itself  */
+ 
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2874) EXEC(DO)
+                   CPYF       FROMFILE(&DPLIB/RZCPYDPP) +
+                                TOFILE(QTEMP/UPCERRQT) MBROPT(*ADD) +
+                                INCREL((*IF ODOBNM *EQ &ODOBNM) (*AND +
+                                ODOBTP *EQ '*FILE'))
+                   GOTO       CMDLBL(READSKIP)
+                ENDDO
+ 
+/* If from-file or to-file is locked, or to-file is in use           */
+ 
+                MONMSG     MSGID(CPF2952 CPF2909) EXEC(DO)
+                   CPYF       FROMFILE(&DPLIB/RZCPYDPP) +
+                                TOFILE(QTEMP/UPCERRQT) MBROPT(*ADD) +
+                                INCREL((*IF ODOBNM *EQ &ODOBNM) (*AND +
+                                ODOBTP *EQ '*FILE'))
+                   GOTO       CMDLBL(READSKIP)
+                ENDDO
+ 
+/* If to-file has insufficient allowed number of members             */
+ 
+                MONMSG     MSGID(CPF2888) EXEC(DO)
+                   CPYF       FROMFILE(&DPLIB/RZCPYDPP) +
+                                TOFILE(QTEMP/UPCERRQT) MBROPT(*ADD) +
+                                INCREL((*IF ODOBNM *EQ &ODOBNM) (*AND +
+                                ODOBTP *EQ '*FILE'))
+                   GOTO       CMDLBL(READSKIP)
+                ENDDO
+ 
+/* If from-file not found; this error may be caused by an existing   */
+/* override.                                                         */
+ 
+                MONMSG     MSGID(CPF2875) EXEC(DO)
+                   CPYF       FROMFILE(&DPLIB/RZCPYDPP) +
+                                TOFILE(QTEMP/UPCERRQT) MBROPT(*ADD) +
+                                INCREL((*IF ODOBNM *EQ &ODOBNM) (*AND +
+                                ODOBTP *EQ '*FILE'))
+                   GOTO       CMDLBL(READSKIP)
+                ENDDO
+ 
+/* If error in writing to 'to' member then it is unable to work      */
+/* out why; therefore flag as failure.                               */
+ 
+                MONMSG     MSGID(CPF2972) EXEC(DO)
+                   CPYF       FROMFILE(&DPLIB/RZCPYDPP) +
+                                TOFILE(QTEMP/UPCERRQT) MBROPT(*ADD) +
+                                INCREL((*IF ODOBNM *EQ &ODOBNM) (*AND +
+                                ODOBTP *EQ '*FILE'))
+                   GOTO       CMDLBL(READSKIP)
+                ENDDO
+ 
+/*********************************************************************/
+/*     Message monitoring for CPYF FMTOPT(*NONE) - Category 2        */
+/*                                                                   */
+/* Second category of monitored messages are non-critical errors and */
+/* will be flagged as completed without attempting other types of    */
+/* as they would also fail.                                          */
+/*********************************************************************/
+ 
+/* If from-file has no members or its only member is empty           */
+ 
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2868) EXEC(+
+                   GOTO       CMDLBL(READNEXT))
+ 
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(+
+                   GOTO       CMDLBL(READNEXT))
+ 
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2870) EXEC(+
+                   GOTO       CMDLBL(READNEXT))
+ 
+/*********************************************************************/
+/*     Message monitoring for CPYF FMTOPT(*NONE) - Category 3        */
+/*                                                                   */
+/* Third category of monitored messages are for possibly critical    */
+/* errors but further CPYFs should be attempted.                     */
+/*********************************************************************/
+ 
+/* If different FMTOPT required                                      */
+                                                                                         /*ERZ054E*/
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2965) EXEC(+
+                   GOTO       CMDLBL(TAG02))                                             /*ERZ054E*/
+ 
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2969) EXEC(+
+                   GOTO       CMDLBL(TAG02))
+ 
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2963) EXEC(+
+                   GOTO       CMDLBL(TAG02))
+ 
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2962) EXEC(+
+                   GOTO       CMDLBL(TAG02))
+ 
+/* If CPYF worked then read next record                              */
+ 
+                GOTO       CMDLBL(READNEXT)
+ 
+/* Create copy command with FMTOPT(*MAP *DROP)                       */
+ 
+ TAG02:         CHGVAR     VAR(&CMD) VALUE(&CPYPRM *BCAT 'FMTOPT(*MAP *DROP)')
+ 
+                CALL       PGM(QCMDEXC) PARM(&CMD 500)
+ 
+/*********************************************************************/
+/*     Message monitoring for CPYF FMTOPT(*MAP *DROP) - Category 1   */
+/*                                                                   */
+/* It is possible that a message from the 3rd category for the first */
+/* CPYF was received first; therefore, some category 1 errors must   */
+/* be monitored for again.                                           */
+/*********************************************************************/
+ 
+/* If from-file or to-file is locked, or to-file is in use           */
+ 
+                MONMSG     MSGID(CPF2952 CPF2909) EXEC(DO)
+                   CPYF       FROMFILE(&DPLIB/RZCPYDPP) +
+                                TOFILE(QTEMP/UPCERRQT) MBROPT(*ADD) +
+                                INCREL((*IF ODOBNM *EQ &ODOBNM) (*AND +
+                                ODOBTP *EQ '*FILE'))
+                   GOTO       CMDLBL(READSKIP)
+                ENDDO
+ 
+/* If to-file has insufficient allowed number of members             */
+ 
+                MONMSG     MSGID(CPF2888) EXEC(DO)
+                   CPYF       FROMFILE(&DPLIB/RZCPYDPP) +
+                                TOFILE(QTEMP/UPCERRQT) MBROPT(*ADD) +
+                                INCREL((*IF ODOBNM *EQ &ODOBNM) (*AND +
+                                ODOBTP *EQ '*FILE'))
+                   GOTO       CMDLBL(READSKIP)
+                ENDDO
+ 
+/* If to-file has incorrect data in any fields                       */
+ 
+                MONMSG     MSGID(CPF2972) EXEC(DO)
+                   CPYF       FROMFILE(&DPLIB/RZCPYDPP) +
+                                TOFILE(QTEMP/UPCERRQT) MBROPT(*ADD) +
+                                INCREL((*IF ODOBNM *EQ &ODOBNM) (*AND +
+                                ODOBTP *EQ '*FILE'))
+                   GOTO       CMDLBL(READSKIP)
+                ENDDO
+ 
+/*********************************************************************/
+/*     Message monitoring for CPYF FMTOPT(*MAP *DROP) - Category 2   */
+/*                                                                   */
+/* It is possible that a message from the 3rd category for the first */
+/* CPYF was received first; therefore, some category 2 errors must   */
+/* be monitored for again.                                           */
+/*********************************************************************/
+ 
+/* If from-file has no members or its only member is empty           */
+ 
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2868) EXEC(+
+                   GOTO       CMDLBL(READNEXT))
+ 
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(+
+                   GOTO       CMDLBL(READNEXT))
+ 
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2870) EXEC(+
+                   GOTO       CMDLBL(READNEXT))
+ 
+/*********************************************************************/
+/*     Message monitoring for CPYF FMTOPT(*MAP *DROP) - Category 3   */
+/*                                                                   */
+/* Third category of monitored messages are for possibly critical    */
+/* errors but further CPYFs should be attempted.                     */
+/*********************************************************************/
+ 
+/* If different FMTOPT required                                      */
+ 
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2963) EXEC(+
+                   GOTO       CMDLBL(TAG03))
+ 
+/* If CPYF worked then read next record                              */
+ 
+                GOTO       CMDLBL(READNEXT)
+ 
+/* Create copy command with FMTOPT(*NOCHK)                           */
+ 
+ TAG03:         CHGVAR     VAR(&CMD) VALUE(&CPYPRM *BCAT 'FMTOPT(*NOCHK)')
+ 
+                CALL       PGM(QCMDEXC) PARM(&CMD 500)
+ 
+/*********************************************************************/
+/*     Message monitoring for CPYF FMTOPT(*NOCHK) - Category 1       */
+/*                                                                   */
+/* It is possible that a message from the 3rd category for the       */
+/* second CPYF was received first; therefore, some category 1 errors */
+/* be monitored for again.                                           */
+/*********************************************************************/
+ 
+/* If from-file or to-file is locked, or to-file is in use           */
+ 
+                MONMSG     MSGID(CPF2952 CPF2909) EXEC(DO)
+                   CPYF       FROMFILE(&DPLIB/RZCPYDPP) +
+                                TOFILE(QTEMP/UPCERRQT) MBROPT(*ADD) +
+                                INCREL((*IF ODOBNM *EQ &ODOBNM) (*AND +
+                                ODOBTP *EQ '*FILE'))
+                   GOTO       CMDLBL(READSKIP)
+                ENDDO
+ 
+/* If to-file has insufficient allowed number of members             */
+ 
+                MONMSG     MSGID(CPF2888) EXEC(DO)
+                   CPYF       FROMFILE(&DPLIB/RZCPYDPP) +
+                                TOFILE(QTEMP/UPCERRQT) MBROPT(*ADD) +
+                                INCREL((*IF ODOBNM *EQ &ODOBNM) (*AND +
+                                ODOBTP *EQ '*FILE'))
+                   GOTO       CMDLBL(READSKIP)
+                ENDDO
+ 
+/*********************************************************************/
+/*     Message monitoring for CPYF FMTOPT(*NOCHK) - Category 2       */
+/*                                                                   */
+/* It is possible that a message from the 3rd category for the       */
+/* second CPYF was received first; therefore, some category 2 errors */
+/* be monitored for again.                                           */
+/*********************************************************************/
+ 
+/* If from-file has no members or its only member is empty           */
+ 
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2868) EXEC(+
+                   GOTO       CMDLBL(READNEXT))
+ 
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(+
+                   GOTO       CMDLBL(READNEXT))
+ 
+                MONMSG     MSGID(CPF2817) CMPDTA(CPF2870) EXEC(+
+                   GOTO       CMDLBL(READNEXT))
+ 
+             ENDDO
+ 
+/*********************************************************************/
+/* Copy object is Data Area                                          */
+/*********************************************************************/
+ 
+             IF         COND(&ODOBTP *EQ '*DTAARA   ') THEN(DO)
+ 
+/* Check if it exists in 'from' library and, if not, try to delete   */
+/* from 'to' library.                                                */
+ 
+                CHKOBJ     OBJ(&FROMLIB/&ODOBNM) OBJTYPE(*DTAARA)
+                MONMSG     MSGID(CPF9801) EXEC(DO)
+                   DLTDTAARA  DTAARA(&TOLIB/&TOOBJ)
+                   MONMSG     MSGID(CPF0000)
+                   CPYF       FROMFILE(&DPLIB/RZCPYDPP) +
+                                TOFILE(QTEMP/UPCERRQT) MBROPT(*ADD) +
+                                INCREL((*IF ODOBNM *EQ &ODOBNM) (*AND +
+                                ODOBTP *EQ '*DTAARA'))
+                   GOTO       CMDLBL(READSKIP)
+                ENDDO
+ 
+/* Check if it exists in 'to' library; if it doesn't then copy rec.  */
+ 
+                CHKOBJ     OBJ(&TOLIB/&TOOBJ) OBJTYPE(*DTAARA)
+                MONMSG     MSGID(CPF9801) EXEC(DO)
+                   CRTDUPOBJ  OBJ(&ODOBNM) FROMLIB(&FROMLIB) +
+                                OBJTYPE(*DTAARA) TOLIB(&TOLIB) NEWOBJ(&TOOBJ)
+                   GOTO       CMDLBL(READNEXT)
+                ENDDO
+ 
+                CPYDTAARA FMDTAARA(&FROMLIB/&ODOBNM) +
+                            TODTAARA(&TOLIB/&TOOBJ)
+                MONMSG     MSGID(CPF0000) EXEC(DO)
+                   CPYF       FROMFILE(&DPLIB/RZCPYDPP) +
+                                TOFILE(QTEMP/UPCERRQT) MBROPT(*ADD) +
+                                INCREL((*IF ODOBNM *EQ &ODOBNM) (*AND +
+                                ODOBTP *EQ '*DTAARA'))
+                   GOTO       CMDLBL(READSKIP)
+                ENDDO
+             ENDDO
+ 
+/*********************************************************************/
+/* Copy object is Data Queue                                         */
+/*********************************************************************/
+ 
+             IF         COND(&ODOBTP *EQ '*DTAQ     ') THEN(DO)
+ 
+/* Check if it exists in 'from' library and, if not, try to delete   */
+/* from 'to' library.                                                */
+ 
+                CHKOBJ     OBJ(&FROMLIB/&ODOBNM) OBJTYPE(*DTAQ)
+                MONMSG     MSGID(CPF9801) EXEC(DO)
+                   DLTDTAQ    DTAQ(&TOLIB/&TOOBJ)
+                   MONMSG     MSGID(CPF0000)
+                   CPYF       FROMFILE(&DPLIB/RZCPYDPP) +
+                                TOFILE(QTEMP/UPCERRQT) MBROPT(*ADD) +
+                                INCREL((*IF ODOBNM *EQ &ODOBNM) (*AND +
+                                ODOBTP *EQ '*DTAQ'))
+                   GOTO       CMDLBL(READSKIP)
+                ENDDO
+ 
+/* Check if it exists in 'to' library; if it doesn't then copy rec.  */
+ 
+                CHKOBJ     OBJ(&TOLIB/&TOOBJ) OBJTYPE(*DTAQ)
+                MONMSG     MSGID(CPF9801) EXEC(DO)
+                   CPYDTAQ    FMDTAQ(&FROMLIB/&ODOBNM) TODTAQ(&TOLIB/&TOOBJ) +
+                                CRTDTAQ(*YES)
+                   GOTO       CMDLBL(READNEXT)
+                ENDDO
+ 
+                CPYDTAQ    FMDTAQ(&FROMLIB/&ODOBNM) TODTAQ(&TOLIB/&TOOBJ)
+                MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(DO)
+                   CPYF       FROMFILE(&DPLIB/RZCPYDPP) +
+                                TOFILE(QTEMP/UPCERRQT) MBROPT(*ADD) +
+                                INCREL((*IF ODOBNM *EQ &ODOBNM) (*AND +
+                                ODOBTP *EQ '*DTAQ'))
+                   GOTO       CMDLBL(READSKIP)
+                ENDDO
+             ENDDO
+ 
+/* If object not phsical file or data area then just move to "not found" */
+/*  - or data queue.                                                     */
+ 
+/*********** IF         COND(%SST(&ODOBTP 1 2) *NE 'PF' *AND &ODOBTP +                     ERZ054C*/
+             IF         COND(%SST(&OBJATR 1 2) *NE 'PF' *AND &ODOBTP +
+                          *NE '*DTAARA' *AND &ODOBTP *NE '*DTAQ') +
+                          THEN(DO)
+                CPYF       FROMFILE(&DPLIB/RZCPYDPP) +
+                             TOFILE(QTEMP/UPCERRQT) MBROPT(*ADD) +
+                             INCREL((*IF ODOBNM *EQ &ODOBNM) (*AND +
+                             ODOBTP *EQ &ODOBTP))
+                GOTO       CMDLBL(READSKIP)
+             ENDDO
+ 
+             GOTO       CMDLBL(READNEXT)
+ 
+/* This section will be executed if the system storage:              */
+/* a) was over the threshold value before a file was copied;         */
+/* b) was over the threshold after a file was copied; or             */
+/* c) has increased by the 'jump' amount or more during the copy     */
+/*    of one file.                                                   */
+ 
+/* First close down the called program.                              */
+ 
+OVERFLOW:    RCLRSC
+ 
+/* Set up and send the message; it is sent as an escape message, so  */
+/*  the program will halt at this point.                             */
+ 
+             CHGVAR     VAR(&MSGDTA) VALUE('System storage threshold +
+                          violation occurred. Copy terminated')
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                          MSGDTA(&MSGDTA) TOMSGQ(MOPERQ)
+             CHGJOB     SWS(XXXXXX11)
+             GOTO       CMDLBL(ENDPGM)
+ 
+/*********************************************************************/
+ 
+ 
+/* Recursive error                                                   */
+ 
+ABNOR:       IF         COND(&IN01) THEN(DO)
+                SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                             MSGDTA('Recursive error in pgm UPC0259') +
+                             TOMSGQ(MOPERQ)
+                GOTO       CMDLBL(END)
+             ENDDO
+ 
+             CHGVAR     VAR(&IN01) VALUE('1')
+             DMPCLPGM
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) +
+                          MSGDTA('Error in pgm RZC000002') +
+                          TOMSGQ(MOPERQ)
+             GOTO       CMDLBL(END)
+ 
+/* Set indicators U7 and U8 if any items failed to copy              */
+ 
+ENDPGM:      RTVMBRD    FILE(QTEMP/UPCERRQT) NBRCURRCD(&FAILED)
+ 
+             IF         COND(&FAILED *GT 0) THEN(DO)
+ 
+/* Call program to report on items that failed to copy               */
+ 
+                OVRDBF     FILE(UPCERRQT) TOFILE(QTEMP/UPCERRQT)
+                CALL       PGM(UP0259)
+                DLTOVR     FILE(UPCERRQT)
+                SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Error +
+                             copying data objects in pgm RZC000002') +
+                             TOMSGQ(MOPERQ)
+                CHGJOB     SWS(XXXXXX11)
+             ENDDO
+ 
+             RCLRSC
+ END:        ENDPGM

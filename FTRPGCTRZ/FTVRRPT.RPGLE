@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR920077           Date 13Mar15               *
+      *  Last Amend No. MD021318           Date 26Jul13               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR920077           Date 13Mar15               *
       *                 MD025880           Date 19Aug14               *
       *                 CFT120             Date 28Sep12               *
       *                 CRE067             Date 05Oct10               *
@@ -39,6 +40,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD021318 - OPAY allowed input of account with block debit    *
+      *           - Fix is to condition CSD089 overridable error      *
+      *             changes when input is from HATS screen            *
       *  MD046248 - Finastra Rebranding                               *
       *  AR920077 - Correct :77B: validation. (Child: AR922613)       *
       *  MD025880 - Validation of Regulatory Reporting field on FT    *
@@ -205,6 +209,7 @@
      D ADSLON          S              1
      D ADFLDM          S              7
      D ADFLDF          S             10
+     D PMode           S              6A                                                    MD021318
  
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -293,10 +298,17 @@
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SRRP1'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA1051'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKRRP1                                     MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'SRRP1'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'MMA1051'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKRRP1                                       CSD089
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SRRP1'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   EndIf
  
      C                   If        AD#2 = 'Y'
@@ -304,10 +316,17 @@
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SRRP2'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA1051'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKRRP2                                     MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'SRRP2'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'MMA1051'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKRRP2                                       CSD089
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SRRP2'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   EndIf
  
      C                   If        AD#3 = 'Y'
@@ -315,10 +334,17 @@
      C**********         Add       1             Idx                                          CSD089
      C**********         Movel     'SRRP3'       FldNamXAr(Idx)                               CSD089
      C**********         Movel     'MMA1051'     MsgIdXAr(Idx)                                CSD089
+     C                   IF         Pmode = '*SIN  '                                        MD021318
+     C                   Move      'N'           OKRRP3                                     MD021318
+     C                   Add       1             Idx                                        MD021318
+     C                   Movel     'SRRP3'       FldNamXAr(Idx)                             MD021318
+     C                   Movel     'MMA1051'     MsgIdXAr(Idx)                              MD021318
+     C                   ELSE                                                               MD021318
      C                   Move      'W'           OKRRP3                                       CSD089
      C                   Add       1             WIx                                          CSD089
      C                   Movel     'SRRP3'       WFldNmXAr(WIx)                               CSD089
      C                   Movel     'MMA1051'     WMsgIdXAr(WIx)                               CSD089
+     C                   ENDIF                                                              MD021318
      C                   EndIf
  
      C                   If        SRRP1 <> *Blank
@@ -465,6 +491,7 @@
      C                   Parm                    WMsgDtXAr                                    CSD089
      C                   Parm                    OKFlagsDS
      C                   Parm                    Val@Fields
+     C                   PARM                    PMode                                      MD021318
  
      C                   EndSr
  

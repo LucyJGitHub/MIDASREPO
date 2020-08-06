@@ -12,7 +12,8 @@
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
       *  Last Amend No. MD055146           Date 04Feb20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. ERZ248             Date 18Nov19               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR1084524          Date 13Feb13               *
       *                 CER049  *CREATE    Date 06Dec10               *
       *                                                               *
@@ -20,6 +21,7 @@
       *                                                               *
       *  MD055146 - Failed MXC004802 seq. 00001 and others            *
       *             Increase Branches to 900.                         *
+      *  ERZ248 - SWIFT UETR via OPAY API (Recompile)                 *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1084524 - Performance issue on IPAY & OPAY listview        *
       *              (Recompile)                                      *

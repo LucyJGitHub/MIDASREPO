@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *  Last Amend No. MD031740           Date 09Nov15               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165             Date 23Feb15               *
       *                 CER059             Date 19Jul10               *
       *                 BUG23931           Date 11May09               *
       *                 CER048             Date 19May08               *
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031740 - Change the Spot Rate validation to warning.       *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax                                *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -393,6 +395,9 @@
      C                   PARM                    DDSPRTOK
      C                   PARM                    AVTLEX
      C                   PARM                    NewSPRT
+     C                   PARM                    WFldNmXAr                                  MD031740
+     C                   PARM                    WMsgIDXAr                                  MD031740
+     C                   PARM                    WMsgDtXAr                                  MD031740
       *
       * Update error info with that returned from the validation module
  

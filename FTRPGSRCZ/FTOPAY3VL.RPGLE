@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055002           Date 31Jan20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055656           Date 20apr20               *
+      *  Prev Amend No. MD021318           Date 26Jul13               *
+      *                 MD055002           Date 31Jan20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD042042           Date 14Feb17               *
       *                 MD034973           Date 16Jul15               *
       *                 CFT120             Date 28Sep12               *
@@ -58,6 +60,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055656 - OPAY messages sent via JMS API end in error       *
+      *             (ERZ248) (Recompile)                              *
+      *  MD021318 - OPAY allowed input of account with block debit    *
+      *           - Fix is to condition CSD089 overridable error      *
+      *             changes when input is from HATS screen            *
       *  MD055002 - No validation for Related Payment reference field *
       *  MD046248 - Finastra Rebranding                               *
       *  MD042042 - Input Officer 1 and Input Officer 2 are being     *
@@ -279,6 +286,7 @@
                                                                                               CSW201
       ** SWIFT 2001 switchable feature                                                        CSW201
      D Csw201          S              1A                                                      CSW201
+     D PMode           S              6A                                                    MD021318
 
      D InputUser       S             10A                                                    MD042042
      D/COPY WNCPYSRC,FTH00564
@@ -432,6 +440,7 @@
      C                   Parm                    WMsgDtXAr                                    CSD089
      C                   Parm                    OKFlagsDS                      CFT014
      C                   Parm                    Val@Fields                     CFT014
+     C                   PARM                    PMode                                      MD021318
      C/COPY WNCPYSRC,FTH00374
                                                                                 CFT014
       ** Update error info with that retured from the validation module         CFT014
@@ -476,6 +485,7 @@
      C                   Parm                    OKFlagsDS                      CFT014
      C                   Parm                    Val@Fields                     CFT014
      C                   PARM                    Csw201                                       CSW201
+     C                   PARM                    PMode                                      MD021318
                                                                                 CFT014
       ** Update error info with that retured from the validation module         CFT014
                                                                                 CFT014
@@ -1072,6 +1082,7 @@
      C                   Parm                    OKFlagsDS                      CFT014
      C                   Parm                    Val@Fields                     CFT014
      C                   PARM                    Csw201                                       CSW201
+     C                   PARM                    PMode                                      MD021318
                                                                                 CFT014
       ** Update error info with that retured from the validation module         CFT014
                                                                                 CFT014
@@ -1113,6 +1124,7 @@
      C                   Parm                    WMsgDtXAr                                    CSD089
      C                   Parm                    OKFlagsDS                      CFT014
      C                   Parm                    Val@Fields                     CFT014
+     C                   PARM                    PMode                                      MD021318
                                                                                 CFT014
       ** Update error info with that retured from the validation module         CFT014
                                                                                 CFT014
@@ -1422,6 +1434,8 @@
       *  Validation Work Fields from/to caller
      C                   Parm                    Val@Fields
      C                   PARM                    InputUser                                  MD042042
+      ** Screen Input Function                                                              MD021318
+     C                   PARM                    PMode                                      MD021318
 
       *  Move program name into *LDA field.
      C     *LOCK         In        LDA

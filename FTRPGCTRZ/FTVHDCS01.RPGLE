@@ -16,8 +16,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
  
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD034505           Date 26May15               *
+      *  Last Amend No. 259576             Date 02Apr14               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD034505           Date 26May15               *
       *                 MD027284           Date 25Nov14               *
       *                 MD000091           Date 07May13               *
       *                 CRE075             Date 06Dec10               *
@@ -81,6 +82,8 @@
  
       *---------------------------------------------------------------*
       *                                                               *
+      *  259576 - Remove warning message for Inactive accounts.       *
+      *           Applied for MD-26109                                *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034505 - Database error encountered when Ordering Customer *
       *             is a Customer Number or Accountline               *
@@ -982,16 +985,16 @@
       *                                                                                       221776
       ** Inactive                                                                             221776
       *                                                                                       221776
-     C                   TESTB     '4'           WRETB                    48                  221776
-     C                   If        *IN48 = '1'                                                221776
-     C                   Eval      WIdx             =   WIdx+1                                221776
-     C                   Eval      RetCodeIn        =   'Error'                               221776
-     C                   Eval      WMsgIdXAr(WIdx)  =   'FTM0017'                             221776
-     C                   Eval      WFldNmXAr(WIdx)  =   DDSName                               221776
-     C                   If        GenOkFlag <> 'N'                                           221774
-     C                   Eval      GenOkFlag = 'W'                                            221776
-     C                   Endif                                                                221774
-     C                   Endif                                                                221776
+     C**********         TESTB     '4'           WRETB                    48           221776 259576
+     C**********         If        *IN48 = '1'                                         221776 259576
+     C**********         Eval      WIdx             =   WIdx+1                         221776 259576
+     C**********         Eval      RetCodeIn        =   'Error'                        221776 259576
+     C**********         Eval      WMsgIdXAr(WIdx)  =   'FTM0017'                      221776 259576
+     C**********         Eval      WFldNmXAr(WIdx)  =   DDSName                        221776 259576
+     C**********         If        GenOkFlag <> 'N'                                    221774 259576
+     C**********         Eval      GenOkFlag = 'W'                                     221776 259576
+     C**********         Endif                                                         221774 259576
+     C**********         Endif                                                         221776 259576
       *                                                                                       221776
       ** Referred Debit                                                                       221776
       *                                                                                       221776

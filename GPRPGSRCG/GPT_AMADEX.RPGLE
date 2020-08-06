@@ -13,14 +13,19 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD026161           Date 04Apr14               *
+      *  Last Amend No. MD030320           Date 22May15               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD026161           Date 04Apr14               *
       *                 AR658311           Date 15Oct10               *
       *                 CER059             Date 19Jul10               *
       *                 BUG25565A *CREATE  Date 25Aug09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD030320 - Use 6 digit customer number in AMAD UDF instead of*
+      *             10 digit. Also apply MD026161, need to replace    *
+      *             ALWNULL(*INPUTONLY) to ALWNULL(*USRCTL) since this*
+      *             porgram updates T_GZAMADEX                        *
       *  MD046248 - Finastra Rebranding                               *
       *  MD026161 - ALWNULL(*INPUTONLY) only allows read of null      *
       *             values. Use ALWNULL(*USRCTL) instead since this   *
@@ -97,7 +102,8 @@
      C                   Read      T_GZAMADEX
  
      C                   DoW       NOT %EOF
-     C                   Eval      WCUSF = DDCUSN
+     C**********         Eval      WCUSF = DDCUSN                                           MD030320
+     C                   Eval      WCUSN = DDCUSN                                           MD030320
      C                   Eval      WCCY  = %trim(DDCCY)
      C                   Eval      WACOD = DDACOD
      C                   Eval      WACSQ = DDACSQ

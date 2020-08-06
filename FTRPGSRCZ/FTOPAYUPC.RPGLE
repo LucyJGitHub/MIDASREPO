@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *  Last Amend No. ERZ248             Date 18Nov19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CFT120             Date 28Sep12               *
       *                 CAP211             Date 28Sep12               *
       *                 CRE067             Date 05Oct10               *
       *                 CER059             Date 19Jul10               *
@@ -58,6 +59,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  ERZ248 - SWIFT UETR via OPAY API                             *
+      *           Add hooks ERZ248_041->042                           *
+      *           Amended hooks FTH00195, FTOPAYU010, FTOPAYU013,     *
+      *           FTOPAYUCC1                                          *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *           (Recompile)                                         *
@@ -109,10 +114,10 @@
       *****************************************************************
      FFTVOPAYPD UF   E             DISK    COMMIT
      F                                     INFSR(*PSSR)
- 
+
      FFTVOPAYL1 UF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(FTVOPAYD0:FTVOPAYD1)
- 
+
      FFTVEOPAYPDO    E             DISK    INFSR(*PSSR)
      F                                     RENAME(FTVOPAYD0:FTVOPAYERR)
                                                                                 CFT014
@@ -124,7 +129,7 @@
                                                                                 CFT014
      FFTVEOPY2PDO    E             DISK    INFSR(*PSSR)                         CFT014
      F                                     RENAME(FTVOPY2D0:FTVOPY2ERR)         CFT014
- 
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,FTOPAYU010
      FFTVOPLX1L0UF   E           K DISK    USROPN                                             CER001
@@ -156,33 +161,33 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** used in checking whether there are messages on the data queue.
      D/COPY ZACPYSRC,DTAQCHKDCL
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
      D DBerrUpd        C                   CONST('DB error in OPAY API update')
- 
+
       *****************************************************************
- 
+
       ** Commitment Control Job Array                                                         CSC022
      D WJobs           S             10A   Dim(10)                                            CSC022
       **                                                                                      CSC022
@@ -190,19 +195,19 @@
      D FTVOPY        E DS                  EXTNAME(FTVOPAYPD)
      D FTVOPYX       E DS                  EXTNAME(FTVOPY2PD)                   CFT014
      D/COPY WNCPYSRC,FTH00193
- 
+
       * Flags to indicate whether transaction fields are valid
      D FTEOPY1       E DS                  EXTNAME(FTEOPY1PD)
      D FTEOPY2       E DS                  EXTNAME(FTEOPY2PD)
      D FTEOPY3       E DS                  EXTNAME(FTEOPY3PD)
      D FTEOPY4       E DS                  EXTNAME(FTEOPY4PD)                   CFT014
      D FTEOPY5       E DS                  EXTNAME(FTEOPY5PD)                   CFT014
- 
+
       * Validation Work Fields
      D Val@Fields    E DS                  EXTNAME(FTV@OPAYPD)
- 
+
      D FTOPAYUPC       DS             1    DTAARA(FTOPAYUPC)
- 
+
      D Object          S             10A   INZ('FTOPAYUPC')
      D LockObj         S             10A   INZ('FTOPAYLCK')                                   201589
      D Lib             S             10A   INZ('*LIBL')
@@ -216,12 +221,12 @@
      D Return2         S              7A                                                      201589
      D Endjob          S              1A   INZ('Y')                                           201589
      D @Timestamp      S             26Z
- 
+
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
- 
+
       * Overide file OTPAY in UPD module
      D  OVERRIDE       S             47    INZ('OVRDBF FILE(OTPAYOVR)  +
      D                                            TOFILE(OTPAY) SHARE(*NO)')
@@ -238,26 +243,26 @@
      D PRTCD           S              7A                                                      CSC011
      D POPTN           S              7A                                                      CSC011
      D PSARD           S              6A                                                      CSC011
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       * External data structure for currency codes
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       * External data structure for General Ledger details
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)
       ** EXTERNAL DS FOR SAR DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
       ** SCCMTJOB DataArea Layout                                                             CSC022
      D SCCMTJOB      E DS                  EXTNAME(SCCMTJOB) DTAARA(SCCMTJOB)                 CSC022
      D  WDSJobs                4    103A                                                      CSC022
@@ -265,16 +270,16 @@
       * Data structure to retrieve multi branch indicator
      DRUNDAT           DS
      D WMBIN                  13     13
- 
+
      D TCNTRL          DS           256
      D  WPDTI                  1      1
      D  WGLUI                  4      4
      D  WVATF                  6      6
- 
+
       * Data structure to retrieve VAT rate
      DVATDS            DS
      D WVATR                  10     12P 4
- 
+
       ** CSC022 switchable field                                                              CSC022
      D CSC022          S              1A                                                      CSC022
       **                                                                                      CSC022
@@ -282,12 +287,12 @@
      D WArrPtr         S              3S 0                                                    CSC022
      D WSkpComtRolbk   S              1A                                                      CSC022
       **                                                                                      CSC022
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
@@ -297,26 +302,26 @@
      D FTVOPLXL      E DS                  EXTNAME(FTVOPLX1L0)                                CER001
      D FTVOPLXLS     E DS                  EXTNAME(FTVOPLX1L0)                                CER001
      D                                     PREFIX(SS)                                         CER001
- 
+
       /EJECT
      C*****************************************************************
      C*                                                               *
      C* MAIN - MAIN BODY                                              *
      C*                                                               *
      C*****************************************************************
- 
+
       /COPY WNCPYSRC,FTOPAYU001
- 
+
       ** Set up the name of the server/database updater data queue.
      C                   EVAL      DtaQName = 'APOPAYDTQ'
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes a check for whether there
       ** are messages on the server/updater data queue, and sends a 'GO'.
       ** message to the data queue if there are not.
      D/COPY ZACPYSRC,DTAQCHK
       **--------------------------------------------------------------------------------------------
- 
+
       *  Initialise Data queue parms
      C                   EVAL      DtqLen = 10
      C                   EVAL      DtqWait = -1
@@ -346,41 +351,41 @@
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM                    Return
- 
+
       /COPY WNCPYSRC,FTOPAYU002
- 
+
       ** Position file cursor to start of file to prevent problems on
       ** later calls
      C     1             SETLL     FTVOPAYPD
- 
+
       ** READ VALID OUTGOING PAYMENTS
      C                   READ      FTVOPAYPD                              99    *
      C     *IN99         DOWEQ     '0'
- 
+
       /COPY WNCPYSRC,FTOPAYU003
- 
+
       ** Load the API Dump data area with as many fields from the message
       **  header as are available, so that dumps in any lower level modules
       **  will include the key information
      C                   EVAL      ARFOTranID = OTFRNT
      C                   EVAL      ARRprLocn  = OTREPA
- 
+
       /COPY WNCPYSRC,FTOPAYU004
- 
+
       /COPY WNCPYSRC,FTOPAYU005
- 
+
       ** FT DATABASE UPDATE
      C     @@RTCD        IFNE      '*RECUPD'
      C     OTCHTP        IFEQ      'I'
      C     OTCHTP        OREQ      'A'
      C     OTCHTP        OREQ      'D'
      C/COPY WNCPYSRC,FTH00470
- 
+
       ** Set up fields on Val@Fields
      C                   EXSR      SetParms
- 
+
       /COPY WNCPYSRC,FTOPAYU006
- 
+
       ** Access Outgoing Payments extension valid file for other OP details     CFT014
                                                                                 CFT014
      C                   If        (@CFT003 = 'Y') Or (@CFT014 = 'Y')           CFT014
@@ -390,22 +395,23 @@
      C     KOPAYVLD      Chain     FTVOPY2L1                          89        CFT014
      C                   EndIf                                                  CFT014
                                                                                 CFT014
- 
+     C/COPY WNCPYSRC,ERZ248_041                                                               ERZ248
+
      C                   CALLB     'FTOPAYUPD'
       *  Return Code
      C                   PARM                    @@RTCD           10
- 
+
       *  OK Flags
      C                   Parm                    FTEOPY1
      C                   Parm                    FTEOPY2
      C                   Parm                    FTEOPY3
      C                   Parm                    FTEOPY4                        CFT014
      C                   Parm                    FTEOPY5                        CFT014
- 
+
       * New Valid payment layout
      C                   PARM                    FTVOPY
      C                   PARM                    FTVOPYX                        CFT014
- 
+
       *  Validation Work Fields
      C                   Parm                    Val@Fields
       *                                                                                       CAP211
@@ -413,10 +419,10 @@
      C                   PARM      *BLANKS       PUser            10                          CAP211
       *                                                                                       CAP211
      C/COPY WNCPYSRC,FTOPAYUCC1
- 
+
      C                   END
      C                   END
- 
+
       /COPY WNCPYSRC,FTOPAYU007
       *                                                                                       CER001
       ** Perform IBLC 2002 treatment if required                                              CER001
@@ -444,7 +450,7 @@
      C                   ENDIF                                                                CER001
       *                                                                                       CER001
      C                   ENDIF                                                                CER001
- 
+
       * COMIT UPDATES IF NO ERROR
      C     @@RTCD        IFEQ      '*ERROR '
      C     @@RTCD        OREQ      '*RECUPD'
@@ -464,7 +470,7 @@
      C/COPY WNCPYSRC,FTH00194
      C                   ELSE
      C                   DELETE    FTVOPAYPD                            98
- 
+
      C     *IN98         IFEQ      '1'
       **                                                                                      CSC022
       ** Execute rollback if SAR CSC022 is not enrolled or                                    CSC022
@@ -505,7 +511,7 @@
      C                   EndIf                                                  CFT014
      C                   EndIf                                                  CFT014
      C/COPY WNCPYSRC,FTH00195
- 
+
       **                                                                                      CSC022
       ** Execute commit if SAR CSC022 is not enrolled or                                      CSC022
       **   job is not currently running in batch mode                                         CSC022
@@ -515,7 +521,7 @@
      C                   COMMIT
      C                   EndIf                                                                CSC022
      C                   END
- 
+
       /COPY WNCPYSRC,FTOPAYU008
       *                                                                                       CER001
       ** If an error has occurred, remove record in error from                                CER001
@@ -535,7 +541,7 @@
      C                   ENDIF                                                                CER001
       *                                                                                       CER001
      C                   ENDIF                                                                CER001
- 
+
      ** If an error has occurred, reaccess record in error and remove from
      ** the file to prevent program processing the same record again
      C     @@RTCD        IFEQ      '*ERROR '
@@ -545,7 +551,7 @@
      C     @KFTOP1       CHAIN     FTVOPAYL1                          89
      ** Write details of record to error file (same format as FTVOPAYPD)
      C                   WRITE     FTVOPAYERR                           98
- 
+
      C     *IN98         IFEQ      '1'
      C                   MOVEL     'FTVEOPAYPD'  DBFILE                         ************
      C                   MOVEL     '002'         DBASE                          * DBERR 002*
@@ -554,9 +560,9 @@
      C                   MOVEL     OTTMESTMP     DBKEY
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   DELETE    FTVOPAYD1                            98
- 
+
      C     *IN98         IFEQ      '1'
      C                   MOVEL     'FTVOPAYPD'   DBFILE                         ************
      C                   MOVEL     '003'         DBASE                          * DBERR 003*
@@ -602,17 +608,18 @@
      C                   EndIf                                                  CFT014
      C                   EndIf                                                  CFT014
       *
+     C/COPY WNCPYSRC,ERZ248_042                                                               ERZ248
      ** Send message to system operator
      C                   MOVEL     DBerrUpd      DBError          28
- 
+
      C                   CALLB     'ZAMSGTOOPR'
      C                   PARM                    MsgSndRtn        10
      C                   PARM                    DBError
      C                   PARM                    DummyMsgID
      C                   PARM                    DummyMsgF
- 
+
      C                   ENDIF
- 
+
       ** READ VALID OUTGOING PAYMENTS
      C                   READ      FTVOPAYPD                              99    *
      C                   END
@@ -633,15 +640,15 @@
      C                   END
       ** End loop for data queue prompt
      C                   END
- 
+
       /COPY WNCPYSRC,FTOPAYU009
- 
+
       * EXIT FROM PROGRAM
      C                   RETURN
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,FTOPAYU012
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -653,12 +660,12 @@
       *                                                               *
       *****************************************************************
      C     SetParms      BEGSR
- 
+
      C* Charges branch
       * If single branch...
      C                   If        @MBIN = 'N'
      C                   Eval      @PYBR = BJSBRC
- 
+
      C                   Else
       * Else,if multi branched...
      C                   If        @MBIN = 'Y' and
@@ -667,7 +674,7 @@
      C                   Else
      C                   Eval      @PYBR = OTBRCA
      C                   End
- 
+
      C                   End
      C*
      C*
@@ -696,7 +703,7 @@
      C     KOPAYVLD      KList                                                  CFT014
      C                   KFld                    KOTPREF                        CFT014
      C                   KFld                    KOTTIME                        CFT014
- 
+
       *  Check if an existing DBU_OPAY job is active in the subsystem.                        201589
                                                                                               201589
      C                   CALL      'SCC0520'                                                  201589
@@ -709,24 +716,24 @@
      C                   PARM                    Return2                                      201589
                                                                                               201589
       *  Lock allocation data area
- 
+
       *   The data area is allocated *SHRRD here and *EXCL whilst processing
       *    of the valid file is actually taking place.
       *   The function to submit this updater tries to get a *EXCL lock.
       *   The controller tries to get a *SHRRD lock.
- 
+
       *                         Submitter             Controller
       *                 Lock      Lock     Submitter     Lock     Controller
       *      Status    Status   Successful   Action   Successful    Action
       *      ------    ------   ---------- ---------  ----------  ----------
       *   Not running  None        Yes      Submit       Yes        Prompt
       *                                     updater                 updater
- 
+
       *   Running not  *SHRRD      No        None        Yes        Prompt
       *    processing                                               updater
- 
+
       *   Processing   *EXCL       No        None        No         None
- 
+
      C                   CALLB     'APCALCOBJ'
      C                   PARM                    Object
      C                   PARM                    Lib
@@ -736,11 +743,11 @@
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM                    Return
- 
+
       ** Create required QTEMP objects
      C                   CALL      'APCCRTQTO'
      C                   PARM                    ReturnCde        10
- 
+
       * Override file 'OTPAY' in UPD module to 'OTPAYOVR'
      C                   CALL      'QCMDEXC'
      C                   PARM                    OVERRIDE
@@ -751,7 +758,7 @@
      C                   CALL      'QCMDEXC'                                    CFT014
      C                   PARM                    OVROPXL0                       CFT014
      C                   PARM      49            OvrLen1          15 5          CFT014
- 
+
       ***Override*file*'FTPREFL0'*in*UPD*module*with*SHARE(*NO)***************      BUG4776 BUG4776R
       **********                                                                    BUG4776 BUG4776R
      C**********         CALL      'QCMDEXC'                                        BUG4776 BUG4776R
@@ -771,7 +778,7 @@
      C                   Movel     '*CALL'       DBKEY
      C                   Exsr      *PSSR
      C                   End
- 
+
      C                   If        WGLUI = 'I'
      C                   Eval      @FTOV = 'Y'
      C                   Else
@@ -779,7 +786,7 @@
      C                   End
      C                   Eval      @PDTI =WPDTI
      C                   Eval      @VATF =WVATF
- 
+
       ** ACCESS BANK DETAILS
       *
      C                   CALL      'AOBANKR0'
@@ -821,7 +828,7 @@
      C                   Parm      '*VERIFY'     @OPTN
      C                   Parm      'CEU006'      @SARD
      C     SCSARD        Parm      SCSARD        DSFDY
- 
+
      C                   If        @RTCD <> *Blanks and
      C                             @RTCD <> '*NRF   '
      C     *LOCK         In        LDA
@@ -831,13 +838,13 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   End
- 
+
      C                   If        @RTCD = *Blanks
      C                   Movel     'Y'           @CEU006           1
      C                   Else
      C                   Movel     'N'           @CEU006
      C                   End
- 
+
       * Access SAR details file to determine if S01494 is on.
       *
      C                   CALLB     'AOSARDR0'
@@ -845,7 +852,7 @@
      C                   Parm      '*VERIFY'     @OPTN
      C                   Parm      'S01494'      @SARD
      C     SCSARD        Parm      SCSARD        DSFDY
- 
+
      C                   If        @RTCD <> *Blanks and
      C                             @RTCD <> '*NRF   '
      C     *LOCK         In        LDA
@@ -855,13 +862,13 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   End
- 
+
      C                   If        @RTCD = *Blanks
      C                   Movel     'Y'           @01494
      C                   Else
      C                   Movel     'N'           @01494
      C                   End
- 
+
       * Access SAR details file to determine if S01499 is on.
       *
      C                   CALLB     'AOSARDR0'
@@ -869,7 +876,7 @@
      C                   Parm      '*VERIFY'     @OPTN
      C                   Parm      'S01499'      @SARD
      C     SCSARD        Parm      SCSARD        DSFDY
- 
+
      C                   If        @RTCD <> *Blanks and
      C                             @RTCD <> '*NRF   '
      C     *LOCK         In        LDA
@@ -879,20 +886,20 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   End
- 
+
      C                   If        @RTCD = *Blanks
      C                   Movel     'Y'           @01499
      C                   Else
      C                   Movel     'N'           @01499
      C                   End
- 
+
       * Read V.A.T. details if S01499 switched ON
      C                   If        @01499 = 'Y'
      C                   CALL      'AOVATR0'                            9090
      C                   Parm      '*MSG   '     @RTCD
      C                   Parm      '*FIRST '     @OPTN
      C                   Parm                    VATDS
- 
+
      C                   If        *IN90 = *ON or
      C                             @RTCD = '*ERROR*'
      C                   Move      'FTOPAYUPC '  DBPGM
@@ -900,13 +907,13 @@
      C                   Eval      DBASE = 2
      C                   Movel     '*CALL'       DBKEY
      C                   Exsr      *PSSR
- 
+
      C                   Else
      C                   Eval      @VATR = WVATR
      C                   Eval      @VATP = 'Y'
      C                   End
      C                   End
- 
+
       * Access SAR details file to see if CFT003 is installed.
       *
      C                   CALLB     'AOSARDR0'
@@ -914,7 +921,7 @@
      C                   Parm      '*VERIFY'     @OPTN
      C                   Parm      'CFT003'      @SARD
      C     SCSARD        Parm      SCSARD        DSFDY
- 
+
      C                   If        @RTCD <> *Blanks and
      C                             @RTCD <> '*NRF   '
      C                   Movel     'SCSARDPD'    DBFILE
@@ -922,13 +929,13 @@
      C                   Movel     'CFT003'      DBKEY
      C                   Exsr      *PSSR
      C                   End
- 
+
      C                   If        @RTCD = *Blanks
      C                   Movel     'Y'           @CFT003
      C                   Else
      C                   Movel     'N'           @CFT003
      C                   End
- 
+
       * Access SAR details file to see if S01508 is installed.
       *
      C                   CALLB     'AOSARDR0'
@@ -936,7 +943,7 @@
      C                   Parm      '*VERIFY'     @OPTN
      C                   Parm      'S01508'      @SARD
      C     SCSARD        Parm      SCSARD        DSFDY
- 
+
      C                   If        @RTCD <> *Blanks and
      C                             @RTCD <> '*NRF   '
      C                   Movel     'SCSARDPD'    DBFILE
@@ -944,13 +951,13 @@
      C                   Movel     'S01508'      DBKEY
      C                   Exsr      *PSSR
      C                   End
- 
+
      C                   If        @RTCD = *Blanks
      C                   Movel     'Y'           @01508
      C                   Else
      C                   Movel     'N'           @01508
      C                   End
- 
+
       * Access SAR details file to see if S01506 is installed.
       *
      C                   CALLB     'AOSARDR0'
@@ -958,7 +965,7 @@
      C                   Parm      '*VERIFY'     @OPTN
      C                   Parm      'S01506'      @SARD
      C     SCSARD        Parm      SCSARD        DSFDY
- 
+
      C                   If        @RTCD <> *Blanks and
      C                             @RTCD <> '*NRF   '
      C                   Movel     'SCSARDPD'    DBFILE
@@ -966,7 +973,7 @@
      C                   Movel     'S01506'      DBKEY
      C                   Exsr      *PSSR
      C                   End
- 
+
      C                   If        @RTCD = *Blanks
      C                   Movel     'Y'           @01506
      C                   Else
@@ -1149,7 +1156,7 @@
      C                   EndIf                                                                CSC022
       **                                                                                      CSC022
      C/COPY WNCPYSRC,FTH00196
- 
+
       * Retrieve Base Currency Details
      C                   Move      BJCYCD        @K101
      C                   CALLB     'AOCURRR0'
@@ -1157,16 +1164,16 @@
      C                   Parm      '*KEY   '     @OPTN
      C                   Parm                    @K101             3
      C     SDCURR        Parm      SDCURR        DSSDY
- 
+
      C                   Eval      @BCDP = A6NBDP
- 
+
       * Get RUNDAT to access Multi Branch Indicator
      C     *DTAARA       Define                  RUNDAT
      C                   In        RUNDAT
      C                   Unlock    RUNDAT
- 
+
      C                   Eval      @MBIN = WMBIN
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,FTOPAYU013
      C                   MOVEL     'N'           ULX608            1                          CER001
@@ -1212,7 +1219,7 @@
      C                   OPEN      FTVOPLX1L0                                                 CER001
      C                   OPEN      FTVEOPX1PD                                                 CER001
      C                   ENDIF                                                                CER001
- 
+
      C                   ENDSR
      C****************************************************************
       /EJECT

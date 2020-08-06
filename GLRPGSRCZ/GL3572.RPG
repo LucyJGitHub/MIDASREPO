@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. BUG25122A          Date 02Sep09               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD039072           Date 25Jul16               *
       *                 MD034725           Date 27Jul16               *
       *                 MD031966           Date 27Jul15               *
@@ -84,6 +85,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  BUG25122A - Applied missing FOKFIX functionality             *
       *  CER050 - Annualised Percentage Rate                          *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039072 - GL3572AU is empty and no GL03572P1 report when    *
@@ -232,6 +234,12 @@
       *                                Audit report
      FGL3572P1O   E                    PRINTER      KINFDS SPOOL      UC
       *                                Account details report
+     FGLNW94L5IF  E           K        DISK                                                BUG25122A
+     F*                                Network Transaction                                 BUG25122A
+     FGLNWACL5IF  E           K        DISK                                                BUG25122A
+     F*                                Network accounts - Account Number                   BUG25122A
+     FSDNWRKL1IF  E           K        DISK                                                BUG25122A
+     F*                                Message Network Details                             BUG25122A
      FREAPRHI0IF  E           K        DISK                                                   CER050
      FREAPRHI1IF  E           K        DISK                                                   CER050
      F            REAPRHD0                          KRENAMEREAPRHD1                           CER050
@@ -346,6 +354,11 @@
      E/COPY WNCPYSRC,GL3572EEPG                                           S01408
      E*                                                                   S01408
       *-------------------------------------------------------------------
+     IGLNW94D0                                                                             BUG25122A
+      ** SAR File Details Accessed via access program AOSARDR0                             BUG25122A
+      *                                                                                    BUG25122A
+     I              QQACCD                          QQACCS                                 BUG25122A
+      *                                                                                    BUG25122A
      E**
      I*    ACCOUNT MASTER DETAIL RECORD
      I**
@@ -1369,9 +1382,79 @@
      C                     KFLD           ACSQ
      C                     KFLD           BRCA                            CRE001
      C*
+     C*
+     C           KACNBY    KLIST                                                           BUG25122A
+     C                     KFLD           BRCA                                             BUG25122A
+     C                     KFLD           CNUM                                             BUG25122A
+     C                     KFLD           CCY                                              BUG25122A
+     C                     KFLD           ACOD                                             BUG25122A
+     C                     KFLD           ACSQ                                             BUG25122A
+      *                                                                                    BUG25122A
+     C           KNW94     KLIST                                                           BUG25122A
+     C                     KFLD           NANWRK                                           BUG25122A
+     C                     KFLD           NABRCH                                           BUG25122A
+     C                     KFLD           NACNUM                                           BUG25122A
+     C                     KFLD           NACCY                                            BUG25122A
+     C                     KFLD           NAACOD                                           BUG25122A
+     C                     KFLD           NAACSQ                                           BUG25122A
+      *                                                                                    BUG25122A
+     C           KSDWK1    KLIST                                                           BUG25122A
+     C                     KFLD           NANWRK                                           BUG25122A
+      *                                                                                    BUG25122A
+     C*
      C*                                                                   S01408
      C/COPY WNCPYSRC,GL3572CCPG                                           S01408
      C*                                                                   S01408
+      *                                                                                    BUG25122A
+      **  Initialize internal switch indicator CGL013                                      BUG25122A
+      *                                                                                    BUG25122A
+     C                     MOVE 'N'       CGL013  1                                        BUG25122A
+      *                                                                                    BUG25122A
+      **  Check for SAR CGL013                                                             BUG25122A
+      *                                                                                    BUG25122A
+     C                     CALL 'AOSARDR0'                                                 BUG25122A
+     C                     PARM *BLANKS   @RTCD                                            BUG25122A
+     C                     PARM '*VERIFY' @OPTN                                            BUG25122A
+     C                     PARM 'CGL013'  @SARD   6                                        BUG25122A
+     C                     PARM           UFFDY 200                                        BUG25122A
+      *                                                                                    BUG25122A
+      **  If record found                                                                  BUG25122A
+      *                                                                                    BUG25122A
+     C           @RTCD     IFEQ *BLANKS                                                    BUG25122A
+      *                                                                                    BUG25122A
+      **  Set on internal switch indicator CGL013                                          BUG25122A
+      *                                                                                    BUG25122A
+     C                     MOVE 'Y'       CGL013                                           BUG25122A
+      *                                                                                    BUG25122A
+     C                     ENDIF                                                           BUG25122A
+      *                                                                                    BUG25122A
+      **  Initialize internal switch indicator CER030                                      BUG25122A
+      *                                                                                    BUG25122A
+     C                     MOVE 'N'       CER030  1                                        BUG25122A
+      *                                                                                    BUG25122A
+      **  Check for SAR CER030                                                             BUG25122A
+      *                                                                                    BUG25122A
+     C                     CALL 'AOSARDR0'                                                 BUG25122A
+     C                     PARM *BLANKS   @RTCD                                            BUG25122A
+     C                     PARM '*VERIFY' @OPTN                                            BUG25122A
+     C                     PARM 'CER030'  @SARD                                            BUG25122A
+     C           SCSARD    PARM SCSARD    DSFDY                                            BUG25122A
+      *                                                                                    BUG25122A
+      **  If record found                                                                  BUG25122A
+      *                                                                                    BUG25122A
+     C           @RTCD     IFEQ *BLANKS                                                    BUG25122A
+      *                                                                                    BUG25122A
+      **  Set on internal switch indicator CER030                                          BUG25122A
+      *                                                                                    BUG25122A
+     C                     MOVE 'Y'       CER030                                           BUG25122A
+      *                                                                                    BUG25122A
+     C                     ENDIF                                                           BUG25122A
+      *                                                                                    BUG25122A
+     C           CGL013    IFEQ 'Y'                                                        BUG25122A
+     C           CER030    OREQ 'Y'                                                        BUG25122A
+     C                     MOVEL'Y'       MTFLAG  1                                        BUG25122A
+     C                     ENDIF                                                           BUG25122A
+      *                                                                                    BUG25122A
      C                     Z-ADD0         CINUAF
      C                     Z-ADD0         COCLAF
      C                     Z-ADD0         COCFAF
@@ -2159,6 +2242,31 @@
      C*                                                                   S01408
      C/COPY WNCPYSRC,GL3572CPDR                                           S01408
      C*                                                                   S01408
+      ** Incorporate FOKFIX                                                                BUG25122A
+      **                                                                                   BUG25122A
+     C           MTFLAG    IFEQ 'Y'                                                        BUG25122A
+      **Check if customers account record is in the Network Details File                   BUG25122A
+     C           KACNBY    SETLLGLNWACL5                                                   BUG25122A
+     C           KACNBY    READEGLNWACL5                 27                                BUG25122A
+     C*                                                                                    BUG25122A
+      **Check if Multicash                                                                 BUG25122A
+     C           *IN27     DOWEQ'0'                                                        BUG25122A
+     C           KSDWK1    CHAINSDNWRKL1             28                                    BUG25122A
+     C*                                                                                    BUG25122A
+     C           *IN28     IFEQ '0'                                                        BUG25122A
+     C           EDMCNW    ANDEQ'Y'                                                        BUG25122A
+     C                     MOVEL'Y'       MTCASH  1                                        BUG25122A
+     C*                                                                                    BUG25122A
+     C           KNW94     CHAINGLNW94L5             29                                    BUG25122A
+     C           *IN29     IFEQ '0'                                                        BUG25122A
+     C                     MOVE '1'       *IN38                                            BUG25122A
+     C                     MOVE N40SFR    PFSTFQ                                           BUG25122A
+     C                     ENDIF                                                           BUG25122A
+     C                     ENDIF                                                           BUG25122A
+     C                     LEAVE                                                           BUG25122A
+     C           KACNBY    READEGLNWACL5                 27                                BUG25122A
+     C                     ENDDO                                                           BUG25122A
+     C                     ENDIF                                                           BUG25122A
       ** If Yellow book feature is 'on'                                                      LLN022A
       *                                                                                      LLN022A
      C           LLN007    IFEQ 'Y'                                                          LLN022A

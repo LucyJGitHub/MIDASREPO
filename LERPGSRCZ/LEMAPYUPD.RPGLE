@@ -15,9 +15,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD055733           Date 03Jul20               *
-      *  Prev Amend No. AR927395           Date 05Aug13               *
-      *                 CER050             Date 16Jun19               *
+      *  Last Amend No. AR927395           Date 05Aug13               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
       *                 MD054035           Date 03Sep19               *
       *                 MD054317           Date 09Sep19               *
       *                 CSD102             Date 08Jan19               *
@@ -120,13 +119,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
-      *             components.                                       *
-      *           - Redeliver of MD050139.                            *
       *  AR927395 - Wrong COF repayment when loan had rate changes.   *
       *             Compute corresponding COFA when PD interest is    *
       *             paid off. (Child: AR927398)                       *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *       
+      *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD054035 - Prevent file locking of LEFEED                    *
       *  MD054317 - PDCL X not generated for freq based repayment     *
       *  CSD102 - Password Length Extension (Recompile)               *

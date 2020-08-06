@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD051347           Date 12Mar20               *
-      *  Prev Amend No. AR819229           Date 10Dec18               *       
+      *  Last Amend No. AR760843           Date 01Sep11               *
+      *  Prev Amend No. MD051347           Date 12Mar20               *
+      *                 AR819229           Date 10Dec18               *
       *                 AR932652           Date 06Aug13               *
       *                 AR927395           Date 05Aug13               *
       *                 252101             Date 06Nov19               *
@@ -423,6 +424,10 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR760843 - Automatic Next interest payment date set in-      *
+      *             correctly. Move value of W@STBL to ZLOC only if   *
+      *             not blank. Use ZDYNBR instead of ZDAYNO for IBDT  *
+      *             and RBDT. (Child: AR760844)                       *
       *  MD051347 - Interest on a loan taken at the wrong date. Also  *
       *             update value of IBDT to zero if NIPD is less than *
       *             or equal to rundate. Additional fix to AR819229.  *
@@ -14204,7 +14209,9 @@ L118 I                             P   72   77 7RTSPL
      C                   ENDIF                                                  End If         CEU00
       *                                                                   CEU004
      C                   EXSR      SETLOC                                                      S0119
+     C     W@STBL        IFNE      *BLANK                                                   AR760843
      C                   MOVE      W@STBL        ZLOC                                          S0119
+     C                   ENDIF                                                              AR760843
      C                   END                                                                   S0119
                                                                                               CLE141
       ** Save the Base Date                                                                   CLE141
@@ -17663,6 +17670,9 @@ C    C                   ENDIF                                                  
      C                   MOVE      NRLC          W@STBL                                        S0119
      C                   END                                                                   S0119
       *                                                                   S01195
+     C                   ELSE                                                               AR760843
+     C                   MOVE      SYSL          W@STBL                                     AR760843
+      *                                                                                     AR760843
      C                   END                                                    *E1            S0119
       *                                                                   S01195
      C     SETRTN        ENDSR                                                  *** SETRTN *** S0119

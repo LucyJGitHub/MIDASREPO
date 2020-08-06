@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055382           Date 02Apr20               *
-      *  Prev Amend No. AR954846           Date 09Jan20               *
+      *  Last Amend No. 262263             Date 18Dec09               *
+      *  Prev Amend No. MD055382           Date 02Apr20               *
+      *                 AR954846           Date 09Jan20               *
       *                 255478A            Date 03Oct19               *
       *                 MD045515           Date 02Jul17               *
       *                 MD037555           Date 24Feb15               *
@@ -187,6 +188,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  262263 - Wrong value of OLDR and OLCR for GL accnts inserted *
+      *           Initialised the fields to zero for ATYP <> R.       *
       *  MD055382 - System generated account statements will be       *
       *             written to STMTAH only when it's NSTD is less than*
       *             the system's NWKD.                                *
@@ -1779,7 +1782,9 @@
      C                   Z-ADD     0             DITM
      C                   Z-ADD     0             CITM
      C                   Z-ADD     0             DAIC
+     C                   Z-ADD     0             OLDR                                         262263
      C                   Z-ADD     0             CAIC
+     C                   Z-ADD     0             OLCR                                         262263
      C                   Z-ADD     0             ENOC
      C                   Z-ADD     0             EPNO
      C                   Z-ADD     0             ECFB

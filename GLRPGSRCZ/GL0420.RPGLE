@@ -14,7 +14,7 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. 220877             Date 22Mar19               *
+      *  Last Amend No. 220877             Date 22Mar19               * 
       *  Prev Amend No. CGL188             Date 19Feb18               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL184             Date 07Dec16               *

@@ -122,7 +122,7 @@
       *  AR927395 - Wrong COF repayment when loan had rate changes.   *
       *             Compute corresponding COFA when PD interest is    *
       *             paid off. (Child: AR927398)                       *
-      *  CER050 - Annualised Percentage Rate (Recompile)              *
+      *  CER050 - Annualised Percentage Rate (Recompile)              *       
       *  MD054035 - Prevent file locking of LEFEED                    *
       *  MD054317 - PDCL X not generated for freq based repayment     *
       *  CSD102 - Password Length Extension (Recompile)               *

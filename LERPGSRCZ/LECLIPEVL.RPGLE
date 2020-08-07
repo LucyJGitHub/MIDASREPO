@@ -96,7 +96,7 @@
       ** +--------------------------------------+
       *****************************************************************
       *
-
+ 
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,LECLIPEV01
       *
@@ -120,10 +120,10 @@
       **    RunBefore  1A (for the PSSR)
       *
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
-
+ 
       *
       ** Program Status Data Structure
       ** =============================
@@ -165,7 +165,7 @@
       *
      D XArrayMax       C                   CONST(40)
       ***  The maximum size of the appended error arrays
-
+ 
       *
       ** +--------------------------------------+
       ** Ê Arrays and Data Structures           Ê
@@ -216,14 +216,14 @@
      D NwLnScnFmt7   E DS                  EXTNAME(LECLI7PD)                                  CLE141
      D  CurLocPI              61    120                                                       CLE141
       ** New Loan in Screen Format - Business Day Conv                                        CLE141
-
+ 
      D OKFlag1DS     E DS                  EXTNAME(LEECLI1PD)
       ***  Flags to indicate whether transaction fields are valid
       *
      D OKFlag2DS     E DS                  EXTNAME(LEECLI2PD)
       ***  Flags to indicate whether transaction fields are valid
       *
-
+ 
      D Idx             S              3P 0
       ** Index for arrays of error message ids etc
       *
@@ -231,7 +231,7 @@
      D WIdx            S              3P 0                                                   BUG4351
       ***  Index for arrays of of warning message ids etc
       *
-
+ 
      D  TransData      DS           500
       ***  Shared data
       *
@@ -449,7 +449,7 @@
       ** Ê =====================================  Ê
       ** +----------------------------------------+
       /COPY WNCPYSRC,LECLIPEV02
-
+ 
       *
       *****************************************************************
       /EJECT
@@ -460,13 +460,13 @@
       ** Ê                                                                Ê
       ** +----------------------------------------------------------------+
       *
-
+ 
       /COPY WNCPYSRC,LECLIPVE03
-
+ 
       *
       ***  Extra Validation after Extended Settlement
       *    ==========================================
-
+ 
       *
       ***  Reset variables updated by each module
       *
@@ -637,7 +637,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -645,7 +645,7 @@
       *  SRHOLY - Validate Holidays                                   *
       *****************************************************************
      C     SRHOLY        BEGSR
-
+ 
       *
       ** Holiday validations if loan currency is valid
       ** Test loan currency holiday for settlements 01, 07 and 08

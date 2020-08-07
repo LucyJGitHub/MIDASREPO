@@ -2356,7 +2356,7 @@
      C                   Eval      FTEOPYA = (*All'Y')                                        CSW209
      C                   Eval      FTEOPYC = (*All'Y')                                        CSW209
      C                   ENDIF                                                                CSW209
-     C/COPY WNCPYSRC,ERZ248_037                                                 ERZ248
+     C/COPY WNCPYSRC,ERZ248_037                                                               ERZ248
  
      C                   RESET                   AmendOK
  

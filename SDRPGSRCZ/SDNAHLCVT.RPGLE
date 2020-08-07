@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD052399           Date 05Dec18               *
-      *  Prev Amend No. CGL177             Date 11Jan16               *
+      *  Last Amend No. CSD100             Date 03Aug17               *
+      *  Prev Amend No. MD052399           Date 05Dec18               *
+      *                 CGL177             Date 11Jan16               *
       *                 CGL157             Date 17Aug15               *
       *                 MD046248           Date 27Oct17               *
       *                 MD027467           Date 11Jun14               *
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD100 - Patronymic and Gender Fields for Non-Account Holder *
       *  MD052399 - FATCA+CRS - Non-A/C Holder Maintenance  -Federal  *
       *             State Code is mandatory (even CER054 is OFF) and  *
       *             mandatory "Industry Code" field is protected      *
@@ -584,6 +586,9 @@
       *                                                                                       CER054
      C                   ENDIF                                                                CER054
       *                                                                                       CER054
+     C                   EVAL      DDGENR = NHGENR                                            CSD100
+     C                   EVAL      DDPNYC = NHPNYC                                            CSD100
+      *                                                                                       CSD100
      C                   ENDSR
                                                                                               CGL132
       *****************************************************************                       CGL132

@@ -34,8 +34,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. 260405             Date 04Apr20               *      
-      *  Prev Amend No. MD055514           Date 06Apr20               *
+      *  Last Amend No. MD039577           Date 08Jul16               *
+      *  Prev Amend No. 260405             Date 04Apr20               *      
+      *                 MD055514           Date 06Apr20               *
       *                 MD055212           Date 14Feb20               *
       *                 MD054028           Date 05Sep19               *
       *                 MD041837           Date 16Jun19               *
@@ -143,6 +144,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039577 - Account maintenance - Account name different from *
       *  260405 - BRT Participation Date of Birth field is missing.   *
       *           Upgrade fix 235425. Recompile over changed SDCBRTPD.*
       *         - Applied for MD055446.                               *      
@@ -1784,6 +1786,7 @@
       *
       *
      C                   MOVEL     DDCCY         CCY                                          240916
+     C                   MOVEL     BBCRNM        DDANAM                                     MD039577
      C                   MOVE      DDSTFQ        NDDSTFQ                                    MD042713
       *                                                                                     BUG13639
       ** Do not execute GLAMAD4DT when currency code is blanks,                             BUG13639

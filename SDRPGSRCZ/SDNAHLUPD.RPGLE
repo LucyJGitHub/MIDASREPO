@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD052399           Date 05Dec18               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. CSD100             Date 03Aug17               *
+      *  Prev Amend No. MD052399           Date 05Dec18               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD040876           Date 13Sep16               *
       *                 CGL177             Date 11Jan16               *
       *                 MD036311           Date 01Nov15               *
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD100 - Patronymic and Gender Fields for Non-Account Holder *
       *  MD052399 - FATCA+CRS - Non-A/C Holder Maintenance  -Federal  *
       *             State Code is mandatory (even CER054 is OFF) and  *
       *             mandatory "Industry Code" field is protected      *
@@ -815,6 +817,8 @@ als  C                   PARM                    @In36
      C                   EVAL      NHPCT4 = A_NAPCT4                                          CGL157
      C                   EVAL      NHPCT5 = A_NAPCT5                                          CGL157
 
+     C                   EVAL      NHGENR = A_NAGENR                                          CSD100
+     C                   EVAL      NHPNYC = A_NAPNYC                                          CSD100
       ** Write New Non-A/C Holder
 
      C                   WRITE     SDNAHOD0
@@ -1297,6 +1301,8 @@ als  C                   PARM                    @In36
      C                   EVAL      NHRLAF = A_NARLAF                                          CER054
      C                   ENDIF                                                                CER054
                                                                                               CER054
+     C                   EVAL      NHGENR = A_NAGENR                                          CSD100
+     C                   EVAL      NHPNYC = A_NAPNYC                                          CSD100
       ** Update Record
 
      C                   UPDATE    SDNAHOD0

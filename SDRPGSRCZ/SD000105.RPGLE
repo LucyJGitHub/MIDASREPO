@@ -12,8 +12,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. MD050157           Date 15Nov19               *
-      *  Prev Amend No. MD050220           Date 18Oct19               *
+      *  Last Amend No. CSD100             Date 17Aug17               *
+      *  Prev Amend No. CER074             Date 11Aug17               *      
+      *                 MD050157           Date 15Nov19               *
+      *                 MD050220           Date 18Oct19               *
       *                 MD038717           Date 18Oct19               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
@@ -25,6 +27,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD100 - Patronymic and Gender fields for Non-Account Holder *
+      *           (Recompile)                                         *
+      *  CER074 - New Authority Holder Link Types but Exclude from KWG*
+      *           24c Reporting (Recompile).                          *      
       *  MD050157 - Retail Account/Authority Holders Link Maint.      *
       *             accepts even a non-existing Non-a/c holder ref    *
       *  MD050220 - Change parameters for 'AONAHOR0' used DSLDY data  *

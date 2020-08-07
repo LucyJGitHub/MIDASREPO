@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD029046           Date 27Nov19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD026384           Date 25Jan18               *
+      *  Prev Amend No. MD029046           Date 27Nov19               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL094             Date 11Jun14               *
       *                 CSD095             Date 08Apr14               *
@@ -47,6 +48,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD026384 - Added generation by assignment processing.        *
+      *           - Applied for MD049367.                             *      
       *  MD029046 - Default Principal Increase settlement from        *
       *             SSI (standard settlement instructions) before     *
       *             trying to default from loan.                      *
@@ -173,6 +176,11 @@
       * Current loan amendment in screen format
      D C_LOAM_S      E DS                  EXTNAME(LELOAMPD)
      D                                     PREFIX(@)
+      *                                                                                     MD026384
+      ** Current loan amendment 2 in screen format                                          MD026384
+      *                                                                                     MD026384
+     D C_LOAM_2      E DS                  EXTNAME(LELOA2PD)                                MD026384
+     D                                     PREFIX(@)                                        MD026384
  
       * New loan amendment in file format
      D N_LOAM_F      E DS                  EXTNAME(LEVLOAMPD)
@@ -919,6 +927,7 @@
  
       ** Transaction information (DS) from source system (screen format)
      C                   PARM                    N_LOAM_S
+     C                   PARM                    C_LOAM_2                                   MD026384
  
       ** Current loan amendment in file format
      C                   PARM                    C_LOAM_F

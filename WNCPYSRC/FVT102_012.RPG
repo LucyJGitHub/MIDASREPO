@@ -1,0 +1,83 @@
+      *****************************************************************                       FVT102
+      *                                                               *                       FVT102
+      *  Midas - /COPY Member (RPG)                                   *                       FVT102
+      *                                                               *                       FVT102
+      *  FVT102_012 - MC0310 - Access mapping table                   *                       FVT102
+      *                                                               *                       FVT102
+      *  (c) Finastra International Limited 2019                      *                       FVT102
+      *                                                               *                       FVT102
+      *  Last Amend No. FVT102  *Create    Date 10May17               *                       FVT102
+      *                                                               *                       FVT102
+      *---------------------------------------------------------------*                       FVT102
+      *                                                               *                       FVT102
+      *  FVT102 - Posting to P/L Multiple Retained Earnings           *                       FVT102
+      *                                                               *                       FVT102
+      *****************************************************************                       FVT102
+      *                                                                                       FVT102
+     C                     ELSE                             End FVT102 *OFF                   FVT102
+      *                                                                                       FVT102
+      **  If FVT102 in *ON, read through the Mapped Spot Reval file                           FVT102
+      **  for all records for this Foreign Currency.                                          FVT102
+      *                                                                                       FVT102
+     C           *INL3     IFEQ *ON                                                           FVT102
+      *                                                                                       FVT102
+      **  Key List to Spot Revaluation Mapping file.                                          FVT102
+      *                                                                                       FVT102
+     C           KLIST2    KLIST                                                              FVT102
+     C                     KFLD           CCY                 Foreign Currency                FVT102
+      *                                                                                       FVT102
+     C           KLIST2    SETLLXXSRVLL2                                                      FVT102
+     C           KLIST2    READEXXSRVLL2                 22                                   FVT102
+      *                                                                                       FVT102
+      **  If exact match found in mapping file, create temporary arrays                       FVT102
+      **  of the Spot Trading accts and Spot Trade Equiv accts for this                       FVT102
+      **  Foreign Currency.                                                                   FVT102
+      *                                                                                       FVT102
+     C                     Z-ADD1         Z       30                                          FVT102
+     C                     MOVEA*BLANKS   ASPT,Z                                              FVT102
+     C                     MOVEA*BLANKS   ASPE,Z                                              FVT102
+     C                     MOVE 'N'       FOUND   1                                           FVT102
+     C           *IN22     DOWEQ*OFF                                                          FVT102
+     C**********           MOVE MBSPTA    ASPT,Z                                              FVT102
+     C                     MOVE MBSRVL    ASPT,Z                                              FVT102
+     C                     MOVE MBSPAE    ASPE,Z                                              FVT102
+     C                     MOVE 'Y'       FOUND                                               FVT102
+     C                     ADD  1         Z                                                   FVT102
+     C           KLIST2    READEXXSRVLL2                 22                                   FVT102
+     C                     ENDDO                            End *IN22                         FVT102
+      *                                                                                       FVT102
+     C                     ENDIF                            End *INL3                         FVT102
+      *                                                                                       FVT102
+      **  If at least one record for this Currency was found on the                           FVT102
+      **  Mapped Spot Reval file, then check if the posting a/c code                          FVT102
+      **  matches either the Spot Trade or Spot Trade Equiv acct.                             FVT102
+      *                                                                                       FVT102
+     C           FOUND     IFEQ 'Y'                                                           FVT102
+      *                                                                                       FVT102
+      **  Check for Mapped Spot Trade acct or Mapped Spot Trade Equivalent                    FVT102
+      *                                                                                       FVT102
+     C           ACODA     LOKUPASPT                     23 Spot Trade                        FVT102
+     C           ACODA     LOKUPASPE                     24 Spot Equiv.                       FVT102
+      *                                                                                       FVT102
+      **  If Spot Trade or Spot Trade Equivalent posting, ensure                              FVT102
+      **  Posting's profit centre is allowed for FX, else modify.                             FVT102
+      *                                                                                       FVT102
+     C           *IN23     IFEQ *ON                                                           FVT102
+     C           *IN24     OREQ *ON                                                           FVT102
+      *                                                                                       FVT102
+     C           PRFC      IFNE SPRFC                                                         FVT102
+     C                     MOVE PRFC      SPRFC   4                                           FVT102
+     C                     EXSR SRPRFC                                                        FVT102
+     C                     ENDIF                                                              FVT102
+      *                                                                                       FVT102
+     C           DSFPPC    IFNE *BLANK                                                        FVT102
+     C                     MOVE DSFPPC    PRFC                                                FVT102
+     C                     ENDIF                                                              FVT102
+      *                                                                                       FVT102
+     C                     ENDIF                            End *IN23,24                      FVT102
+     C                     ENDIF                            End FOUND                         FVT102
+     C                     ENDIF                            End FVT102 *ON                    FVT102
+      *                                                                                       FVT102
+      *****************************************************************                       FVT102
+      * End of /COPY FVT102_012                                       *                       FVT102
+      *****************************************************************                       FVT102

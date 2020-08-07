@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL132             Date 15Mar13               *
+      *  Last Amend No. CER074             Date 11Aug17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL132             Date 15Mar13               *
       *                 AR855391           Date 27Oct11               *
       *                 CSD091             Date 04Jun11               *
       *                 CER059             Date 19Jul10               *
@@ -25,6 +26,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER074 - New Authority Holder Link Types but Exclude from KWG*
+      *           24c Reporting (Recompile)                           *      
       *  MD046248 - Finastra Rebranding                               *
       *  AR855391 - CUSD Overridable Errors not found in EN System    *
       *  CSD091 - Overrideable Errors Configurability Enabler Phase 2 *

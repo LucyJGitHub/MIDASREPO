@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055514           Date 06Apr20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD039559           Date 04Jul16               *
+      *  Prev Amend No. MD055514           Date 06Apr20               *
+      *                 CER050             Date 16Jun19               *
       *                 CSD101             Date 07Dec18               *
       *                 MD051247           Date 16Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -87,6 +88,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039559 - account opening failed =>Data lost after clicking *
+      *             of Next : Currency, Account code, Account Seq,    *
+      *             Retail Number                                     *
+      *           - Applied partial fix 232076 which sets WCNUM value * 
       *  MD055514 - Not able to open a new Retail Account. Amend to   *
       *             add check if account in REDEFD is valid.          *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -1517,7 +1522,8 @@
       *                                                                                       194431
       ** Access Customer details of Default Account                                           194431
       *                                                                                       194431
-     C                   MOVE      A1CNUM        WCNUM             6                          194431
+     C**********         MOVE      A1CNUM        WCNUM             6                 194431 MD039559
+     C                   MOVE      DDCUSN        WCNUM             6                        MD039559
      C                   CALLB     'AOCUSTR0'                                                 194431
      C                   PARM      *BLANKS       @RTCD                                        194431
      C                   PARM      '*KEY   '     @OPTN                                        194431

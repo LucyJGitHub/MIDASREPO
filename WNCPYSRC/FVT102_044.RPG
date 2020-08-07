@@ -1,0 +1,166 @@
+      *****************************************************************                       FVT102
+      *                                                               *                       FVT102
+      *  Midas - /COPY Member (RPG)                                   *                       FVT102
+      *                                                               *                       FVT102
+      *  FVT102_044 - MC0410 - New Sr/GETACD and Sr/ANALYS            *                       FVT102
+      *                                                               *                       FVT102
+      *  (c) Finastra International Limited 2019                      *                       FVT102
+      *                                                               *                       FVT102
+      *  Last Amend No. FVT102  *Create    Date 10May17               *                       FVT102
+      *                                                               *                       FVT102
+      *---------------------------------------------------------------*                       FVT102
+      *                                                               *                       FVT102
+      *  FVT102 - Posting to P/L Multiple Retained Earnings           *                       FVT102
+      *                                                               *                       FVT102
+      *****************************************************************                       FVT102
+      *  GETACD -  Get alternate Spot Trade & Equiv accts to post.    *                       FVT102
+      *                                                               *                       FVT102
+      *  fields:   ACOD#T = alternate Spot Trading a/c code to post   *                       FVT102
+      *                     to in SR/PRW02.                           *                       FVT102
+      *            ACOD#E = alternate Spot Trade Equiv a/c to post    *                       FVT102
+      *                     to in SR/PRW03.                           *                       FVT102
+      *            ACOD#R = alternate Spot Reval a/c to pass to       *                       FVT102
+      *                     MC0400 in SR/PRP03                        *                       FVT102
+      *                                                               *                       FVT102
+      *  Called By:  Main Processing                                  *                       FVT102
+      *                                                               *                       FVT102
+      *  Calls    :                                                   *                       FVT102
+      *****************************************************************                       FVT102
+     C           GETACD    BEGSR                                                              FVT102
+      *                                                                                       FVT102
+      **  If FVT102 is present:                                                               FVT102
+      **  Read new Income/Expense mapping file and check whether the                          FVT102
+      **  account code being processed has an alternate Spot trade a/c                        FVT102
+      **  code defined.                                                                       FVT102
+      **  It will check for an exact match; then check within a range.                        FVT102
+      *                                                                                       FVT102
+      **  If an alternate Spot Trade a/c code is found, use this a/c code                     FVT102
+      **  along with the foreign ccy to chain to the Spot Reval mapping table                 FVT102
+      **  to access the alternate Spot Trade Equiv a/c code and the Alternate                 FVT102
+      **  Spot Trading a/c code.                                                              FVT102
+      *                                                                                       FVT102
+      **  If IN/EX account code (individual or range) does not                                FVT102
+      **  exist on the IN/EX mapping file   /or/                                              FVT102
+      **  If Spot trade a/c not specified on IN/EX mapping file   /or/                        FVT102
+      **  If Spot reval a/c not found on Spot Reval mapping file  /or/                        FVT102
+      **  If feature FVT102 is switched off,                                                  FVT102
+      **  then default to existing Spot Equiv and Spot Trading accts on ICD.                  FVT102
+      *                                                                                       FVT102
+     C                     MOVE *BLANKS   ACOD#R 10        Alt Spot Reval                     FVT102
+     C                     MOVE *BLANKS   ACOD#E 10        Alt Spot Equiv                     FVT102
+     C                     MOVE *BLANKS   ACOD#T 10        Alt Spot Trade                     FVT102
+      *                                                                                       FVT102
+     C           FVT102    IFEQ 'Y'                                                           FVT102
+     C                     MOVELXACOD     #WKACD 100                                          FVT102
+     C           #WKACD    SETLLXXINEXL1                                                      FVT102
+     C           #WKACD    READEXXINEXL1                 55                                   FVT102
+      *                                                                                       FVT102
+      * If exact match found in mapping file, use the                                         FVT102
+      * alternate Spot Trade a/c code.                                                        FVT102
+      *                                                                                       FVT102
+     C           *IN55     IFEQ '0'                                                           FVT102
+     C**********           MOVE MASRVL    ACOD#R                                              FVT102
+     C                     MOVE MASRVL    ACOD#T                                              FVT102
+     C                     ELSE                                                               FVT102
+      *                                                                                       FVT102
+      * If no exact match, check most suitable range for the                                  FVT102
+      * alternate Spot Reval a/c code.                                                        FVT102
+      *                                                                                       FVT102
+     C           #WKACD    SETLLXXINEXL1                                                      FVT102
+     C                     READPXXINEXL1                 55                                   FVT102
+      *                                                                                       FVT102
+     C           *IN55     IFEQ '0'                                                           FVT102
+     C           #WKACD    ANDGTMAINC1                                                        FVT102
+     C           #WKACD    ANDLEMAINC2                                                        FVT102
+     C*********            MOVE MASRVL    ACOD#R                                              FVT102
+     C                     MOVE MASRVL    ACOD#T                                              FVT102
+     C                     ENDIF                                                              FVT102
+     C                     ENDIF                                                              FVT102
+      *                                                                                       FVT102
+      **  Check against Spot Reval mapping file.                                              FVT102
+      *                                                                                       FVT102
+     C*********  ACOD#R    IFNE *BLANKS                                                       FVT102
+     C           ACOD#T    IFNE *BLANKS                                                       FVT102
+     C           KLIST2    CHAINXXSRVLL1             56                                       FVT102
+     C           *IN56     IFEQ *OFF                                                          FVT102
+     C                     MOVE MBSPAE    ACOD#E           Alt Spot Equiv                     FVT102
+     C**********           MOVE MBSPTA    ACOD#T           Alt Spot Trade                     FVT102
+     C                     MOVE MBSPTA    ACOD#R           Alt Spot Reval                     FVT102
+     C                     ELSE                                                               FVT102
+      *                                                                                       FVT102
+      **  If the alternate Spot Reval a/c code was not specified on the                       FVT102
+      **  Mapped Spot Reval account file (meaning that no alternate                           FVT102
+      **  Spot Trade Equiv or Spot Trading Account has been defined),                         FVT102
+      **  then do NOT use this alternate Spot Reval account.                                  FVT102
+      *                                                                                       FVT102
+     C                     MOVE *BLANKS   ACOD#R           Alt Spot Reval                     FVT102
+     C                     MOVE *BLANKS   ACOD#T           Alt Spot Trade                     FVT102
+     C                     ENDIF                                                              FVT102
+     C                     ENDIF                                                              FVT102
+      *                                                                                       FVT102
+     C                     ENDIF                                                              FVT102
+      *                                                                                       FVT102
+     C                     ENDSR                                                              FVT102
+      *****************************************************************                       FVT102
+      /EJECT                                                                                  FVT102
+      *****************************************************************                       FVT102
+      *  ANALYS -  Access PCA 'Management A/c Analysis fields' for    *                       FVT102
+      *            the alternate Spot Trade & Equiv accts.            *                       FVT102
+      *                                                               *                       FVT102
+      *  Called By:   PRW02  -  Write to PCA file for each transfer   *                       FVT102
+      *                         to Spot Trade Acct.                   *                       FVT102
+      *               PRW03  -  Write to PCA file for each transfer   *                       FVT102
+      *                         to Foreign Base Ccy Equivalent Acct.  *                       FVT102
+      *                                                               *                       FVT102
+      *  Calls    :                                                   *                       FVT102
+      *****************************************************************                       FVT102
+      *                                                                                       FVT102
+     C           ANALYS    BEGSR                                                              FVT102
+      *                                                                                       FVT102
+      **  Get 'Management A/c Analysis fields' using Spot Trade A/c                           FVT102
+      *                                                                                       FVT102
+     C                     CALL 'AOACODR0'                                                    FVT102
+     C                     PARM *BLANKS   PRTCD                                               FVT102
+     C                     PARM '*KEY   ' POPTN                                               FVT102
+     C                     PARM A#ACOD    PACCD  10                                           FVT102
+     C           SDACOD    PARM SDACOD    DSSDY                                               FVT102
+      *                                                                                       FVT102
+      **  If not found, set 'Management A/c Analysis fields' to 'N'                           FVT102
+      *                                                                                       FVT102
+     C           PRTCD     IFEQ '*NRF   '                                                     FVT102
+     C                     MOVE 'N'       A5MABK                                              FVT102
+     C                     MOVE 'N'       A5MAPR                                              FVT102
+     C                     MOVE 'N'       A5MAAC                                              FVT102
+     C                     ELSE                                                               FVT102
+     C           PRTCD     IFNE *BLANKS                                                       FVT102
+     C                     MOVEL'SDACODPD'WFILE   8        ************                       FVT102
+     C                     Z-ADD8         WBASE   30       * DBERR 08 *                       FVT102
+     C                     MOVELA#ACOD    WKEY   29        ************                       FVT102
+     C                     EXSR DBERR                                                         FVT102
+     C                     ENDIF                                                              FVT102
+      *                                                                                       FVT102
+      **  Blank Book if P&L A/c Analysis is not required                                      FVT102
+      *                                                                                       FVT102
+     C           A5MABK    IFNE 'Y'                                                           FVT102
+     C                     MOVE *BLANK    BOKC                                                FVT102
+     C                     ENDIF                                                              FVT102
+      *                                                                                       FVT102
+      **  Blank Product if P&L A/c Analysis is not required                                   FVT102
+      *                                                                                       FVT102
+     C           A5MAPR    IFNE 'Y'                                                           FVT102
+     C                     MOVE *BLANKS   OTST                                                FVT102
+     C                     MOVE *BLANKS   OTTP                                                FVT102
+     C                     ENDIF                                                              FVT102
+      *                                                                                       FVT102
+      **  Blank Assoc. Cust if P&L A/c Analysis is not required                               FVT102
+      *                                                                                       FVT102
+     C           A5MAAC    IFNE 'Y'                                                           FVT102
+     C                     MOVE *BLANKS   ASOC                                                FVT102
+     C                     ENDIF                                                              FVT102
+      *                                                                                       FVT102
+     C                     ENDIF                                                              FVT102
+      *                                                                                       FVT102
+     C                     ENDSR                                                              FVT102
+      *****************************************************************                       FVT102
+      * End of /COPY FVT102_044                                       *                       FVT102
+      *****************************************************************                       FVT102

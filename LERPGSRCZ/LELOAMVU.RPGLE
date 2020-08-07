@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD024811           Date 24Jan20               *
-      *  Prev Amend No. MD029046           Date 27Nov19               *
+      *  Last Amend No. MD026384           Date 25Jan18               *
+      *  Prev Amend No. MD024811           Date 24Jan20               *
+      *                 MD029046           Date 27Nov19               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD051890           Date 17Sep18               *
@@ -100,6 +101,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD026384 - Added generation by assignment processing.        *
+      *           - Applied for MD049367.                             *
       *  MD024811 - Spread rate change is blanking out Funding rate/  *
       *             spread                                            *
       *  MD029046 - Default Principal Increase settlement from        *
@@ -1438,6 +1441,10 @@
 
       ** Transaction information (DS) from source system (screen format)
      C                   PARM                    TranInLOAM
+      *                                                                                     MD026384
+      ** Secondary transaction information                                                  MD026384
+      *                                                                                     MD026384
+     C                   PARM                    TranInLOA2                                 MD026384
 
       ** Current Loan Amendment in file format from caller
      C                   PARM                    CurFilLoam

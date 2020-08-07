@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD040756           Date 24Aug16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CDL098             Date 06Oct17               *      
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -81,6 +82,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD040756 - Do not revalidate deal number range when inserted *
+      *             via MQ.                                           *      
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CDL098 - Cancelled Deal Numbers                              *      
@@ -821,6 +824,7 @@
       *
      C     @@DLNO        IFLT      NORDLN
      C     ModeofOp      ANDNE     '*FRONT'                                     CAP006
+     C     FOTRID        ANDEQ     *BLANKS                                                  MD040756
      C                   MOVE      'N'           OKDLNO
      C                   ADD       1             Ix
      C                   MOVEL     'DDDLNO'      FldNameArr(Ix)

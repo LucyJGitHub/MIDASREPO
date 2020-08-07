@@ -18,8 +18,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CER076             Date 02Jul19               *
+      *  Prev Amend No. CER075             Date 14Sep17               *
+      *                 CER074             Date 11Aug17               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 263480             Date 25Nov14               *
@@ -44,6 +47,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER076 - Update to KWG § 24c interface specification         *
+      *           (BaFin version 3.3)                                 *
+      *  CER075 - KWG 24c Reporting Branch Enhancement                *
+      *  CER074 - New Authority Holder Link Types but Exclude from    *
+      *           KWG 24c Reporting                                   *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
@@ -105,6 +113,7 @@
       *  SRCheck - Subroutine to Check System Value KWGDeletionDays   *
       *  SRZDate10 - Subroutine to Convert YYYYMMDD Format Date to    *
       *              Midas Day No.                                    *
+      *  SRCNTRY - Subroutine to get country code                     *                       CER075
       *  *INZSR - Program Initialisation routine                      *
       *                                                               *
       *    The *INZSR subroutine will only get called automatically   *
@@ -174,6 +183,11 @@
       *                                                                                     BUG23995
      FSDACAHL0  IF   E           K DISK    INFSR(*PSSR)                                     BUG23995
       *                                                                                     BUG23995
+      * Additional customer details extension                                                 CER076
+     FSDACUSY0  IF   E           K DISK    INFSR(*PSSR) PREFIX(D)                             CER076
+      ** Midas SD Non-account Holders extension                                               CER076
+     FSDNAHOY0  IF   E           K DISK    INFSR(*PSSR) PREFIX(E)                             CER076
+      *                                                                                       CER076
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -208,6 +222,9 @@
       ** Declare constants for the call of 'AOSVALR0'
       *
      D  WSysvl         C                   CONST('KWGDeletionDays')
+      *                                                                                       CER075
+      ** CER075 System Value - KWGCountryCode                                                 CER075
+     D PSYSVL          C                   CONST('KWGCountryCode')                            CER075
       *
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
@@ -222,6 +239,10 @@
       *
      D***DSSDY*        E DS                  EXTNAME(DSSDY)                                 BUG22633
      D DSLDY         E DS                  EXTNAME(DSLDY)                                   BUG22633
+      *                                                                                       CER075
+      ** Dummy Data Structure                                                                 CER075
+      *                                                                                       CER075
+     D DSSDY         E DS                  EXTNAME(DSSDY)                                     CER075
       *
       ** Data Structure for Additional Customer Details
       *
@@ -245,6 +266,19 @@
       *                                                                                     BUG24101
      D SDNAHO        E DS                  EXTNAME(SDNAHOPD)                                BUG24101
      D                                     PREFIX(E)                                        BUG24101
+      *                                                                                       CER074
+      ** Switchable features file                                                             CER074
+      *                                                                                       CER074
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CER074
+      *                                                                                       CER075
+      ** External data structures for Location Details                                        CER075
+      *                                                                                       CER075
+     D SDLOCN        E DS                  EXTNAME(SDLOCNPD)                                  CER075
+      *                                                                                       CER075
+      ** External data structures for Branch Details                                          CER075
+      *                                                                                       CER075
+     D SDBRCH        E DS                  EXTNAME(SDBRCHPD)                                  CER075
+     D                                     PREFIX(B_)                                         CER075
       *
       ** Data structure to format separate dates into a 8N number
       *
@@ -266,7 +300,8 @@
       *
      D WLDIMG        E DS                  EXTNAME(ERACEPPD)
      D**WLDCMP**              47    865                                                       CER068
-     D  WLDCMP                77    895                                                       CER068
+     D**WLDCMP**              77    895                                                CER068 CER076
+     D  WLDCMP                77    950                                                       CER076
       *
      D WCHIMG        E DS                  EXTNAME(ERACEXPD) PREFIX(D)
      D**WCHCMP**              36     70                                                       CER068
@@ -275,7 +310,8 @@
      D WCDIMG        E DS                  EXTNAME(ERACEPPD) PREFIX(D)
      D                                     OCCURS(100)
      D**WCDCMP**              47    865                                                       CER068
-     D  WCDCMP                77    895                                                       CER068
+     D**WCDCMP**              77    895                                                CER068 CER076
+     D  WCDCMP                77    950                                                       CER076
       *
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -315,6 +351,7 @@
      D W12ACC          S                   LIKE(F12ACC)                                     BUG22633
      D W12REF          S                   LIKE(F12REF)                                     BUG22633
      D*WDLFLG***       S              1A                                             BUG22633 262700
+     D KWGBRCA         S              3A                                                      CER075
       *
      D PRtCd           S              7A
      D POptn           S              7A
@@ -508,6 +545,15 @@
       *
      C**********         MOVEL     CNUM          CNUMA                                      BUG23808
      C                   MOVEL     OCNUM         CNUMA                                      BUG23808
+      ** Get customer details for BaFin version 3.3                                           CER076
+     C                   IF        CER076 = 'Y'                                               CER076
+     C                   CALL      'AOCUSTR1'                                                 CER076
+     C                   PARM      *BLANKS       PRtcd                                        CER076
+     C                   PARM      '*KEY   '     POptn                                        CER076
+     C                   PARM      CNUMA         PCust                                        CER076
+     C                   PARM                    PCnst                                        CER076
+     C     SDCUST        PARM      SDCUST        DSLDY                                        CER076
+     C                   ENDIF                                                                CER076
       *
      C                   CALL      'AOACUSR0'
      C                   PARM      *BLANKS       PRtCd
@@ -526,6 +572,9 @@
       *
      C                   IF        PRtCd = *BLANKS
       *
+     C                   IF        CER076 = 'Y'                                               CER076
+     C                   EXSR      SRGetACUSExtn                                              CER076
+     C                   ENDIF                                                                CER076
      C                   IF        DE5S24C <> 'Y'
      C                   EVAL      OK24C = DE5S24C
      C                   ENDIF
@@ -607,6 +656,14 @@
      C                   ENDIF                                                                263480
      C**********         EVAL      DF13FNM = DE5TITL                                 BUG23808 263480
      C                   EVAL      DF13FNM = DE5CNA2                                          263480
+      ** Report address for BaFin version 3.3                                                 CER076
+     C                   IF        CER076 = 'Y'                                               CER076
+     C                   EVAL      DF13STR = DE5CNA2                                          CER076
+     C                   EVAL      DF13TWN = DE5CITY                                          CER076
+     C                   EVAL      DF13ZIP = DE5ZIPC                                          CER076
+     C                   EVAL      WCtry = DBBCOLC                                            CER076
+     C                   EXSR      SRLookupCty                                                CER076
+     C                   ENDIF                                                                CER076
      C                   MOVEL     OACNO         DF13RFN                                      CER068
       *
       ** Set date of birth, if appropriate
@@ -632,6 +689,15 @@
      C                   ELSE
      C                   CLEAR                   DF13BDT
      C                   ENDIF
+      ** Report Tax ID number and Economic ID number for BaFin version 3.3                    CER076
+     C                   IF        CER076 = 'Y' and                                           CER076
+     C                             DBBCOLC = 'DE'                                             CER076
+     C                   EVAL      DF13TINO = DE5TINO                                         CER076
+     C                   EVAL      DF13EINO = DE5EINO                                         CER076
+     C                   ELSE                                                                 CER076
+     C                   CLEAR                   DF13TINO                                     CER076
+     C                   CLEAR                   DF13EINO                                     CER076
+     C                   ENDIF                                                                CER076
       *
       ** If this is a 'Final' record then no details about a person
       ** are reported
@@ -694,6 +760,15 @@
       ** Check if customer of the deal is a subject to @24c
       *
      C                   MOVEL     CNUM          CNUMA
+      ** Get customer details for BaFin version 3.3                                           CER076
+     C                   IF        CER076 = 'Y'                                               CER076
+     C                   CALL      'AOCUSTR1'                                                 CER076
+     C                   PARM      *BLANKS       PRtcd                                        CER076
+     C                   PARM      '*KEY   '     POptn                                        CER076
+     C                   PARM      CNUMA         PCust                                        CER076
+     C                   PARM                    PCnst                                        CER076
+     C     SDCUST        PARM      SDCUST        DSLDY                                        CER076
+     C                   ENDIF                                                                CER076
       *
      C                   CALL      'AOACUSR0'
      C                   PARM      *BLANKS       PRtCd
@@ -710,10 +785,22 @@
      C                   OUT       LDA
      C                   ENDIF
       *
+     C                   IF        CER076 = 'Y'                                               CER076
+     C                   EXSR      SRGetACUSExtn                                              CER076
+     C                   ENDIF                                                                CER076
      C                   IF        DE5S24C <> 'Y'
      C                   EVAL      FSK24C = DE5S24C
      C                   ENDIF
       *
+     C                   IF        CER075 = 'Y'                                               CER075
+     C                   EVAL      KWGBRCA = BRCA                                             CER075
+     C                   EXSR      SRCNTRY                                                    CER075
+      *                                                                                       CER075
+     C                   IF        KWGCtryCode <> DVCNCD                                      CER075
+     C                   EVAL      FSK24C = 'N'                                               CER075
+     C                   ENDIF                                                                CER075
+     C                   ENDIF                                                                CER075
+      *                                                                                       CER075
       ** Check if deal has matured today and was also entered today.
       ** If so, special processing must take place.
       ** An 'account open' must be created (done by setting maturity
@@ -846,6 +933,14 @@
      C                   ENDIF                                                                263480
      C**********         EVAL      DF13FNM = DE5TITL                                 BUG23808 263480
      C                   EVAL      DF13FNM = DE5CNA2                                          263480
+      ** Report address for BaFin version 3.3                                                 CER076
+     C                   IF        CER076 = 'Y'                                               CER076
+     C                   EVAL      DF13STR = DE5CNA2                                          CER076
+     C                   EVAL      DF13TWN = DE5CITY                                          CER076
+     C                   EVAL      DF13ZIP = DE5ZIPC                                          CER076
+     C                   EVAL      WCtry = DBBCOLC                                            CER076
+     C                   EXSR      SRLookupCty                                                CER076
+     C                   ENDIF                                                                CER076
       *
       ** Set date of birth, if appropriate
       *
@@ -870,6 +965,15 @@
      C                   ELSE
      C                   CLEAR                   DF13BDT
      C                   ENDIF
+      ** Report Tax ID number and Economic ID number for BaFin version 3.3                    CER076
+     C                   IF        CER076 = 'Y' and                                           CER076
+     C                             DBBCOLC = 'DE'                                             CER076
+     C                   EVAL      DF13TINO = DE5TINO                                         CER076
+     C                   EVAL      DF13EINO = DE5EINO                                         CER076
+     C                   ELSE                                                                 CER076
+     C                   CLEAR                   DF13TINO                                     CER076
+     C                   CLEAR                   DF13EINO                                     CER076
+     C                   ENDIF                                                                CER076
       *
       ** If this is a 'Final' record then no details about a person are
       ** reported
@@ -929,6 +1033,15 @@
       ** Check if customer of the loan is a subject to @24c
       *
      C                   MOVEL     CNUM          CNUMA
+      ** Get customer details for BaFin version 3.3                                           CER076
+     C                   IF        CER076 = 'Y'                                               CER076
+     C                   CALL      'AOCUSTR1'                                                 CER076
+     C                   PARM      *BLANKS       PRtcd                                        CER076
+     C                   PARM      '*KEY   '     POptn                                        CER076
+     C                   PARM      CNUMA         PCust                                        CER076
+     C                   PARM                    PCnst                                        CER076
+     C     SDCUST        PARM      SDCUST        DSLDY                                        CER076
+     C                   ENDIF                                                                CER076
       *
      C                   CALL      'AOACUSR0'
      C                   PARM      *BLANKS       PRtCd
@@ -945,10 +1058,22 @@
      C                   OUT       LDA
      C                   ENDIF
       *
+     C                   IF        CER076 = 'Y'                                               CER076
+     C                   EXSR      SRGetACUSExtn                                              CER076
+     C                   ENDIF                                                                CER076
      C                   IF        DE5S24C <> 'Y'
      C                   EVAL      AYK24C = DE5S24C
      C                   ENDIF
       *
+     C                   IF        CER075 = 'Y'                                               CER075
+     C                   EVAL      KWGBRCA = BRCA                                             CER075
+     C                   EXSR      SRCNTRY                                                    CER075
+      *                                                                                       CER075
+     C                   IF        KWGCtryCode <> DVCNCD                                      CER075
+     C                   EVAL      AYK24C = 'N'                                               CER075
+     C                   ENDIF                                                                CER075
+     C                   ENDIF                                                                CER075
+      *                                                                                       CER075
       ** Check if loan has matured today and was also entered today.
       ** If so, special processing must take place. An 'account open'
       ** must be created (done by setting maturity date to 0) followed
@@ -1044,6 +1169,14 @@
      C                   ENDIF                                                                263480
      C**********         EVAL      DF13FNM = DE5TITL                                 BUG23808 263480
      C                   EVAL      DF13FNM = DE5CNA2                                          263480
+      ** Report address for BaFin version 3.3                                                 CER076
+     C                   IF        CER076 = 'Y'                                               CER076
+     C                   EVAL      DF13STR = DE5CNA2                                          CER076
+     C                   EVAL      DF13TWN = DE5CITY                                          CER076
+     C                   EVAL      DF13ZIP = DE5ZIPC                                          CER076
+     C                   EVAL      WCtry = DBBCOLC                                            CER076
+     C                   EXSR      SRLookupCty                                                CER076
+     C                   ENDIF                                                                CER076
       *
       ** Set date of birth, if appropriate
       *
@@ -1068,6 +1201,15 @@
      C                   ELSE
      C                   CLEAR                   DF13BDT
      C                   ENDIF
+      ** Report Tax ID number and Economic ID number for BaFin version 3.3                    CER076
+     C                   IF        CER076 = 'Y' and                                           CER076
+     C                             DBBCOLC = 'DE'                                             CER076
+     C                   EVAL      DF13TINO = DE5TINO                                         CER076
+     C                   EVAL      DF13EINO = DE5EINO                                         CER076
+     C                   ELSE                                                                 CER076
+     C                   CLEAR                   DF13TINO                                     CER076
+     C                   CLEAR                   DF13EINO                                     CER076
+     C                   ENDIF                                                                CER076
       *
       ** If this is a 'Final' record then no details about a person are
       ** reported
@@ -1354,7 +1496,12 @@
      C**********         IF        CALTYP = 'VB' OR CALTYP = 'WB' OR                        BUG22521
      C**********                   CALTYP = 'OW'                                            BUG22521
      C     CALTYP        CHAIN     SDLINKL1                                                 BUG22521
-     C                   IF        %FOUND(SDLINKL1)                                         BUG22521
+     C**********         IF        %FOUND(SDLINKL1)                                  BUG22521 CER074
+     C                   IF        (%FOUND(SDLINKL1)                                          CER074
+     C                             And CER074 ='N') OR                                        CER074
+     C                             (%FOUND(SDLINKL1)                                          CER074
+     C                             And LKKWGE ='Y' And                                        CER074
+     C                             CER074 = 'Y')                                              CER074
       *                                                                                     BUG22521
      C                   EVAL      FLinkType = CALTYP
       *
@@ -1411,6 +1558,9 @@
      C     SDNAHO        PARM      SDNAHO        DSLDY                                      BUG24101
       *                                                                                     BUG24101
      C                   IF        PRtCd = *BLANKS                                          BUG24101
+     C                   IF        CER076 = 'Y'                                               CER076
+     C                   EXSR      SRGetNAHOExtn                                              CER076
+     C                   ENDIF                                                                CER076
      C                   EXSR      SRSetFrmAuth                                             BUG24101
      C                   ELSE                                                               MD029599
      C                   EVAL      DBFILE = 'SDNAHOPD'                                      MD029599
@@ -1458,6 +1608,9 @@
      C**********         ENDIF                                                              BUG24101
       *
      C                   IF        PRtCd = *BLANKS
+     C                   IF        CER076 = 'Y'                                               CER076
+     C                   EXSR      SRGetACUSExtn                                              CER076
+     C                   ENDIF                                                                CER076
      C                   EXSR      SRSetFrmCust
      C                   ENDIF
       *
@@ -1514,6 +1667,9 @@
      C     SDNAHO        PARM      SDNAHO        DSLDY                                      BUG24101
       *                                                                                     BUG24101
      C                   IF        PRtCd = *BLANKS                                          BUG24101
+     C                   IF        CER076 = 'Y'                                               CER076
+     C                   EXSR      SRGetNAHOExtn                                              CER076
+     C                   ENDIF                                                                CER076
      C                   EXSR      SRSetFrmAuth                                             BUG24101
      C                   ELSE                                                               MD029599
      C                   EVAL      DBFILE = 'SDNAHOPD'                                      MD029599
@@ -1559,6 +1715,9 @@
      C**********         ENDIF                                                     BUG23995 BUG24101
       *                                                                                     BUG23995
      C                   IF        PRtCd = *BLANKS                                          BUG23995
+     C                   IF        CER076 = 'Y'                                               CER076
+     C                   EXSR      SRGetACUSExtn                                              CER076
+     C                   ENDIF                                                                CER076
      C                   EXSR      SRSetFrmCust                                             BUG23995
      C                   ENDIF                                                              BUG23995
       *                                                                                     BUG23995
@@ -1617,6 +1776,15 @@
      C                   EVAL      WCtry = DBBCOLC                                          BUG23808
      C                   EXSR      SRLookupCty
      C                   CLEAR                   DF13BDT
+      ** Report Tax ID number and Economic ID number for BaFin version 3.3                    CER076
+     C                   IF        CER076 = 'Y' and                                           CER076
+     C                             DBBCOLC = 'DE'                                             CER076
+     C                   EVAL      DF13TINO = DE5TINO                                         CER076
+     C                   EVAL      DF13EINO = DE5EINO                                         CER076
+     C                   ELSE                                                                 CER076
+     C                   CLEAR                   DF13TINO                                     CER076
+     C                   CLEAR                   DF13EINO                                     CER076
+     C                   ENDIF                                                                CER076
       *
       ** Other types.
       *
@@ -1630,6 +1798,14 @@
      C                   CLEAR                   DF13TWN
      C                   CLEAR                   DF13ZIP
      C                   CLEAR                   DF13CTY
+      ** Report address for BaFin version 3.3                                                 CER076
+     C                   IF        CER076 = 'Y'                                               CER076
+     C                   EVAL      DF13STR = DE5CNA2                                          CER076
+     C                   EVAL      DF13TWN = DE5CITY                                          CER076
+     C                   EVAL      DF13ZIP = DE5ZIPC                                          CER076
+     C                   EVAL      WCtry = DBBCOLC                                            CER076
+     C                   EXSR      SRLookupCty                                                CER076
+     C                   ENDIF                                                                CER076
       *
       ** Set date of birth, if appropriate.
       *
@@ -1656,6 +1832,15 @@
      C                   ELSE
      C                   CLEAR                   DF13BDT
      C                   ENDIF
+      ** Report Tax ID number and Economic ID number for BaFin version 3.3                    CER076
+     C                   IF        CER076 = 'Y' and                                           CER076
+     C                             DBBCOLC = 'DE'                                             CER076
+     C                   EVAL      DF13TINO = DE5TINO                                         CER076
+     C                   EVAL      DF13EINO = DE5EINO                                         CER076
+     C                   ELSE                                                                 CER076
+     C                   CLEAR                   DF13TINO                                     CER076
+     C                   CLEAR                   DF13EINO                                     CER076
+     C                   ENDIF                                                                CER076
       *
      C                   ENDIF
       *
@@ -1702,6 +1887,15 @@
      C                   EVAL      WCtry = ENHCOLC                                          BUG24101
      C                   EXSR      SRLookupCty                                              BUG24101
      C                   CLEAR                   DF13BDT                                    BUG24101
+      ** Report Tax ID number and Economic ID number for BaFin version 3.3                    CER076
+     C                   IF        CER076 = 'Y' and                                           CER076
+     C                             ENHCOLC = 'DE'                                             CER076
+     C                   EVAL      DF13TINO = ENHTINO                                         CER076
+     C                   EVAL      DF13EINO = ENHEINO                                         CER076
+     C                   ELSE                                                                 CER076
+     C                   CLEAR                   DF13TINO                                     CER076
+     C                   CLEAR                   DF13EINO                                     CER076
+     C                   ENDIF                                                                CER076
       *                                                                                     BUG24101
       ** Other types                                                                        BUG24101
       *                                                                                     BUG24101
@@ -1715,6 +1909,14 @@
      C                   CLEAR                   DF13TWN                                    BUG24101
      C                   CLEAR                   DF13ZIP                                    BUG24101
      C                   CLEAR                   DF13CTY                                    BUG24101
+      ** Report address for BaFin version 3.3                                                 CER076
+     C                   IF        CER076 = 'Y'                                               CER076
+     C                   EVAL      DF13STR = ENHIDE3                                          CER076
+     C                   EVAL      DF13TWN = ENHCITY                                          CER076
+     C                   EVAL      DF13ZIP = ENHZIPC                                          CER076
+     C                   EVAL      WCtry = ENHCOLC                                            CER076
+     C                   EXSR      SRLookupCty                                                CER076
+     C                   ENDIF                                                                CER076
       *                                                                                     BUG24101
       ** Set date of birth, if appropriate                                                  BUG24101
       *                                                                                     BUG24101
@@ -1724,6 +1926,15 @@
      C                   ELSE                                                               BUG24101
      C                   CLEAR                   DF13BDT                                    BUG24101
      C                   ENDIF                                                              BUG24101
+      ** Report Tax ID number and Economic ID number for BaFin version 3.3                    CER076
+     C                   IF        CER076 = 'Y' and                                           CER076
+     C                             ENHCOLC = 'DE'                                             CER076
+     C                   EVAL      DF13TINO = ENHTINO                                         CER076
+     C                   EVAL      DF13EINO = ENHEINO                                         CER076
+     C                   ELSE                                                                 CER076
+     C                   CLEAR                   DF13TINO                                     CER076
+     C                   CLEAR                   DF13EINO                                     CER076
+     C                   ENDIF                                                                CER076
       *                                                                                     BUG24101
      C                   ENDIF                                                              BUG24101
       *                                                                                     BUG24101
@@ -1931,6 +2142,87 @@
       *
       *****************************************************************
       /EJECT
+      *****************************************************************                       CER075
+      * SRCNTRY- Retrieve correct country codee                       *                       CER075
+      *****************************************************************                       CER075
+                                                                                              CER075
+     C     SRCNTRY       BEGSR                                                                CER075
+                                                                                              CER075
+     C                   CALL      'AOBRCHR1'                                                 CER075
+     C                   PARM      *BLANKS       PRtcd                                        CER075
+     C                   PARM      '*KEY   '     POptn                                        CER075
+     C                   PARM                    KWGBRCA                                      CER075
+     C     SDBRCH        PARM      SDBRCH        DSSDY                                        CER075
+      *                                                                                       CER075
+     C                   IF        PRtcd <> *BLANKS                                           CER075
+     C     *LOCK         IN        LDA                                                        CER075
+     C                   EVAL      DBASE = 011                                                CER075
+     C                   EVAL      DBFILE = 'SDBRCHPD'                                        CER075
+     C                   EVAL      DBKEY = KWGBRCA                                            CER075
+     C                   OUT       LDA                                                        CER075
+     C                   EXSR      *PSSR                                                      CER075
+     C                   ENDIF                                                                CER075
+                                                                                              CER075
+     C                   CALL      'AOLOCNR0'                                                 CER075
+     C                   PARM      *BLANKS       PRtcd                                        CER075
+     C                   PARM      '*KEY   '     POptn                                        CER075
+     C                   PARM                    B_A8LCCD                                     CER075
+     C     SDLOCN        PARM      SDLOCN        DSFDY                                        CER075
+      *                                                                                       CER075
+     C                   IF        PRtcd <> *BLANKS                                           CER075
+     C     *LOCK         IN        LDA                                                        CER075
+     C                   EVAL      DBASE = 012                                                CER075
+     C                   EVAL      DBFILE = 'SDLOCNPD'                                        CER075
+     C                   EVAL      DBKEY = B_A8LCCD                                           CER075
+     C                   OUT       LDA                                                        CER075
+     C                   EXSR      *PSSR                                                      CER075
+     C                   ENDIF                                                                CER075
+                                                                                              CER075
+     C                   ENDSR                                                                CER075
+      *****************************************************************                       CER075
+      /EJECT                                                                                  CER076
+      *****************************************************************                       CER076
+      *                                                               *                       CER076
+      *  SRGetACUSExtn - Get Additional customer details extension    *                       CER076
+      *                                                               *                       CER076
+      *  Called by: MAIN, SRCusAutLink, SRAccAutLink                  *                       CER076
+      *                                                               *                       CER076
+      *  Calls: None                                                  *                       CER076
+      *                                                               *                       CER076
+      *****************************************************************                       CER076
+     C     SRGetACUSExtn BEGSR                                                                CER076
+      *                                                                                       CER076
+     C     SDACUSK       KLIST                                                                CER076
+     C                   KFLD                    DE5CUST                                      CER076
+     C     SDACUSK       CHAIN     SDACUSY0                                                   CER076
+     C                   IF        NOT %FOUND()                                               CER076
+     C                   EVAL      DE5EINO = *BLANK                                           CER076
+     C                   ENDIF                                                                CER076
+      *                                                                                       CER076
+     C                   ENDSR                                                                CER076
+      *****************************************************************                       CER076
+      /EJECT                                                                                  CER076
+      *****************************************************************                       CER076
+      *                                                               *                       CER076
+      *  SRGetNAHOExtn - Get Non-account Holders extension            *                       CER076
+      *                                                               *                       CER076
+      *  Called by: SRCusAutLink, SRAccAutLink                        *                       CER076
+      *                                                               *                       CER076
+      *  Calls: None                                                  *                       CER076
+      *                                                               *                       CER076
+      *****************************************************************                       CER076
+     C     SRGetNAHOExtn BEGSR                                                                CER076
+      *                                                                                       CER076
+     C     SDNAHOK       KLIST                                                                CER076
+     C                   KFLD                    ENHNAHO                                      CER076
+     C     SDNAHOK       CHAIN     SDNAHOY0                                                   CER076
+     C                   IF        NOT %FOUND()                                               CER076
+     C                   EVAL      ENHEINO = *BLANK                                           CER076
+     C                   ENDIF                                                                CER076
+      *                                                                                       CER076
+     C                   ENDSR                                                                CER076
+      *****************************************************************                       CER076
+      /EJECT
       *****************************************************************
       *                                                               *
       *  *INZSR - Program Initialisation routine                      *
@@ -2018,6 +2310,108 @@
      C     *HMS          MOVE      FVTM          FTIME
      C                   SUBDUR    1:*SECONDS    FTIME
      C     *HMS          MOVE      FTIME         FVTM1
+      *
+      ** Access SAR details file to determine if CER074 is ON                                 CER074
+      *                                                                                       CER074
+     C                   MOVE      'N'           CER074            1                          CER074
+     C                   CALLB     'AOSARDR0'                                                 CER074
+     C                   PARM      *BLANKS       PRTCD                                        CER074
+     C                   PARM      '*VERIFY'     POPTN                                        CER074
+     C                   PARM      'CER074'      PSARD             6                          CER074
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CER074
+      *                                                                                       CER074
+      ** Switchable Feature CER074 is *ON                                                     CER074
+      *                                                                                       CER074
+     C                   IF        PRTCD = *Blanks                                            CER074
+     C                   EVAL      CER074 = 'Y'                                               CER074
+     C                   ENDIF                                                                CER074
+      *                                                                                       CER074
+      ** Check if CER075 feature is on.                                                       CER075
+      *                                                                                       CER075
+     C                   CALL      'AOSARDR0'                                                 CER075
+     C                   PARM      *BLANKS       PRTCD                                        CER075
+     C                   PARM      '*VERIFY'     POPTN                                        CER075
+     C                   PARM      'CER075'      PSARD                                        CER075
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CER075
+      *                                                                                       CER075
+      ** Check for Database error                                                             CER075
+      *                                                                                       CER075
+     C     PRTCD         IFNE      *BLANKS                                                    CER075
+     C     PRTCD         ANDNE     '*NRF   '                                                  CER075
+     C     *LOCK         IN        LDA                                                        CER075
+     C                   EVAL      DBKEY = 'CER075'                                           CER075
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CER075
+     C                   EVAL      DBASE = 017                                                CER075
+     C                   OUT       LDA                                                        CER075
+     C                   EXSR      *PSSR                                                      CER075
+     C                   END                                                                  CER075
+      *                                                                                       CER075
+     C     PRTCD         IFEQ      *BLANKS                                                    CER075
+     C                   MOVE      'Y'           CER075            1                          CER075
+     C                   ELSE                                                                 CER075
+     C                   MOVE      'N'           CER075                                       CER075
+     C                   ENDIF                                                                CER075
+      *                                                                                       CER075
+     C     CER075        IFEQ      'Y'                                                        CER075
+      *                                                                                       CER075
+      ** Retrieve KWGCountryCode's current setting                                            CER075
+      *                                                                                       CER075
+     C                   CALL      'AOSVALR0'                                                 CER075
+     C                   PARM      *BLANKS       @RTCDE            7                          CER075
+     C                   PARM      PSYSVL        P@OP01           20                          CER075
+     C                   PARM      *BLANKS       P@VL01          200                          CER075
+     C                   PARM      *BLANKS       P@OP02           20                          CER075
+     C                   PARM      *BLANKS       P@VL02          200                          CER075
+     C                   PARM      *BLANKS       P@OP03           20                          CER075
+     C                   PARM      *BLANKS       P@VL03          200                          CER075
+     C                   PARM      *BLANKS       P@OP04           20                          CER075
+     C                   PARM      *BLANKS       P@VL04          200                          CER075
+     C                   PARM      *BLANKS       P@OP05           20                          CER075
+     C                   PARM      *BLANKS       P@VL05          200                          CER075
+     C                   PARM      *BLANKS       P@OP06           20                          CER075
+     C                   PARM      *BLANKS       P@VL06          200                          CER075
+     C                   PARM      *BLANKS       P@OP07           20                          CER075
+     C                   PARM      *BLANKS       P@VL07          200                          CER075
+     C                   PARM      *BLANKS       P@OP08           20                          CER075
+     C                   PARM      *BLANKS       P@VL08          200                          CER075
+     C                   PARM      *BLANKS       P@OP09           20                          CER075
+     C                   PARM      *BLANKS       P@VL09          200                          CER075
+     C                   PARM      *BLANKS       P@OP10           20                          CER075
+     C                   PARM      *BLANKS       P@VL10          200                          CER075
+                                                                                              CER075
+      ** Handle Database Error                                                                CER075
+                                                                                              CER075
+     C                   IF        @RTCDE <> *BLANKS                                          CER075
+     C     *LOCK         IN        LDA                                                        CER075
+     C                   EVAL      DBASE = 018                                                CER075
+     C                   EVAL      DBFILE = 'SDSVALPD'                                        CER075
+     C                   EVAL      DBKEY = P@OP01                                             CER075
+     C                   OUT       LDA                                                        CER075
+     C                   EXSR      *PSSR                                                      CER075
+     C                   ELSE                                                                 CER075
+     C                   MOVEL     P@VL01        KWGCtryCode       2                          CER075
+     C                   ENDIF                                                                CER075
+     C                   ENDIF                                                                CER075
+      *                                                                                       CER075
+      ** Check if CER076 is on                                                                CER076
+                                                                                              CER076
+     C                   CALL      'AOSARDR0'                                                 CER076
+     C                   PARM      *Blanks       PRtCd                                        CER076
+     C                   PARM      '*VERIFY'     POptn                                        CER076
+     C                   PARM      'CER076'      PSard             6                          CER076
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CER076
+                                                                                              CER076
+     C                   MOVE      'N'           CER076            1                          CER076
+     C                   IF        PRtCd <> *Blanks                                           CER076
+     C                   IF        PRtCd <> '*NRF'                                            CER076
+     C                   MOVEL     'SCSARDPD'    DBFILE                                       CER076
+     C                   MOVEL     '901'         DBASE                                        CER076
+     C                   MOVEL     PSard         DBKEY                                        CER076
+     C                   EXSR      *PSSR                                                      CER076
+     C                   ENDIF                                                                CER076
+     C                   ELSE                                                                 CER076
+     C                   EVAL      CER076 = 'Y'                                               CER076
+     C                   ENDIF                                                                CER076
       *
      C                   ENDSR
       *

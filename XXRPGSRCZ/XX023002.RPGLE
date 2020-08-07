@@ -17,11 +17,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD054783           Date 27Jul20               *
-      *  Prev Amend No. LCI023  *CREATE    Date 03Jul18               *
+      *  Last Amend No. MD054783A          Date 20Jul20               *
+      *  Prev Amend No. MD054783           Date 16Dec19               *
+      *                 LCI023  *Create    Date 03Jul18               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD054783A - Recompiled due to updated UDF files in delivery  *
+      *              system.                                          *
       *  MD054783 - LCI023 - Front Office Transaction ID (HKFRNT) not *
       *             being set in MMDELDPP.                            *
       *  LCI023 - Local Front Office Id. Upgrade to FBM 2.1           *

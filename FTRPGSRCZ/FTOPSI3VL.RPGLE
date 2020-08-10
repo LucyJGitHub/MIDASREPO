@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD055503           Date 03Apr20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055656           Date 20Apr20               *
+      *  Prev Amend No. MD021318           Date 26Jul13               *
+      *                 MD046248           Date 27Oct17               *
       *                 CFT157             Date 29Aug14               *
       *                 AR1097264          Date 27Mar13               *
       *                 CFT120             Date 28Sep12               *
@@ -44,6 +45,11 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD055656 - OPAY messages sent via JMS API end in error       *
+      *             (ERZ248) (Recompile)                              *
+      *  MD021318 - OPAY allowed input of account with block debit    *
+      *           - Fix is to condition CSD089 overridable error      *
+      *             changes when input is from HATS screen            *
       *  MD055503 - Not able to do webfacing authorisation for invalid*
       *             outgoing payment that had been repaired.          *
       *           - Added the missing parameter (InputUser) introduced*
@@ -249,6 +255,7 @@
       ** +--------------------------------------+
       *
      D CFT120          S              1A                                                      CFT120
+     D PMode           S              6A                                                    MD021318
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -478,6 +485,7 @@
      C                   Parm                    WMsgDtXAr                                    CFT120
      C                   Parm                    OKFlagsDS4
      C                   Parm                    Val@Fields
+     C                   PARM      *BLANKS       PMode                                      MD021318
       *                                                                                    AR1097264
       ** Retrieve defaulting from FTVCSRF for CDRC                                         AR1097264
       *                                                                                    AR1097264

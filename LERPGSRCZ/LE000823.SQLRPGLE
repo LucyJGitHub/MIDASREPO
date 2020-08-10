@@ -952,7 +952,6 @@
      C                   Z-ADD     BSAMT         L2_LKEAMT
      C                   MOVEA     AKY           L2_LKAKEY
      C                   MOVEL     SAVOKEY       L2_LKOKEY                                  MD056223
-     C                   MOVEL     SAVOKEY       L1_OKEY                                    MD056223
      C                   EVAL      L2_LKOTHA = wTransAmt                                    MD056223
      C                   EVAL      L2_LKOTHC = wTransCCY                                    MD056223
      C                   WRITE     LKEY2DPF
@@ -1621,7 +1620,7 @@
      C                   MOVEA     'XI'          AKP(09)                                    MD056223
      C                   ENDIF                                                              MD056223
      C                   ELSE                                                               MD056223
-     C                   MOVEA     'D'           AKP(10)                                    MD051242
+     C                   MOVEA     'D'           AKP(10)                                    MD056223
      C                   ENDIF                                                              MD056223
      C                   MOVEA     AKP           KeyStr                                     MD056223
      C                   EXSR      CheckPDCL                                                MD056223

@@ -22,8 +22,11 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054240           Date 22Apr20               *
-      *  Prev Amend No. MD055069           Date 26Feb20               *
+      *  Last Amend No. AR820690           Date 12Oct12               *
+      *  Prev Amend No. AR956619           Date 28Jun12               *
+      *                 AR911591           Date 03May12               *
+      *                 MD054240           Date 22Apr20               *
+      *                 MD055069           Date 26Feb20               *
       *                 AR674226           Date 04Dec19               *
       *                 MD054703           Date 14Jan20               *
       *                 MD023855           Date 14Jan20               *
@@ -293,6 +296,21 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  AR820690 - Missing LEFHST record. Ensure that when payment   *
+      *             falls on a holiday and ANWD=2, LEFHST record will *
+      *             be generated on next working day. Applied fix     *
+      *             242283A.                                          *
+      *           - Applied for AR1007302. (Child: AR1007303)         *
+      *  AR956619 - No accrual posting was generated for fees with    *
+      *             FECALT is 01/02/03/11/12/13/21. Applied part of   *
+      *             fix 263473 to ensure that accrual postings would  *
+      *             be generated. Also, part of 261129 was applied.   *
+      *             (Child: AR956620)                                 *
+      *  AR911591 - No Debit advice generated due to field FEPBTI not *
+      *             initialised to blank when settlement date falls on*
+      *             a holiday. Amended program wherein field FEPBTI   *
+      *             will be set to blank when FELPDT LE BJRDNB.       *
+      *             (Child: AR911592)                                 *
       *  MD054240 - Lending fees incorrect calculation of accruals    *
       *             when GL accrual indicator is changed. Reverse     *
       *             part of fixes 245081 and MD052410.                *
@@ -2150,6 +2168,10 @@
       ** File information data structures                                                   MD026969
      I                                       83  92 SFILE3                                  MD026969
      I                                    B 123 1240SFNUM3                                  MD026969
+      *                                                                                     AR820690
+     IJNSTAT     UDS                            200                                         AR820690
+     I                                    P 103 1050PRUN                                    AR820690
+      ** DATA AREA TO READ PREVIOUS RUNDATE                                                 AR820690
       *
      ISPOOL1      DS
       ** File information data structures
@@ -3725,7 +3747,8 @@
      C           FEPEND    ANDLEBJRDNB                                                        248440
      C           FEPEND    ANDNEFELADT                                                        248440
       *
-     C           FELPDT    IFEQ BJRDNB
+     C********** FELPDT    IFEQ BJRDNB                                                      AR911591
+     C           FELPDT    IFLE BJRDNB                                                      AR911591
      C                     MOVE *BLANK    FEPPTI
      C                     MOVE *BLANK    FEPBTI
      C                     END
@@ -4448,6 +4471,9 @@
      C           @PAYTD    IFEQ CODT                                                        MD052216
      C           @PAYTD    ORLE CODT                                                        MD052216
      C           @PAYTD    ANDGEBJRDNB                                                      MD052216
+     C           BKANWD    OREQ '2'                                                         AR820690
+     C           FELPDT    ANDLTCODT                                                        AR820690
+     C           FELPDT    ANDGTPRUN                                                        AR820690
       *                                                                                      BUG8762
       ** If CLE005 or CDE002 is on, setup details for writing a                              BUG8762
       ** record in LEFHST.                                                                   BUG8762
@@ -6556,8 +6582,14 @@
      C                     Z-ADD0         FELPAM                          BH3481
      C                     ELSE                                                               218648
      C**********           Z-ADDFEADAT    FELPAM                                       218648 261129
+     C           CALT      IFGE 4                                                           AR956619
+     C           CALT      ANDLE6                                                           AR956619
+     C           CALT      ORGE 14                                                          AR956619
+     C           CALT      ANDLE16                                                          AR956619
+     C           CALT      OREQ 22                                                          AR956619
      C                     Z-ADD0         LKEAMT                                              261129
      C           FEADBP    SUB  WFEE      FELPAM                                              261129
+     C                     ENDIF                                                            AR956619
      C                     ENDIF                                                              261129
      C                     ENDIF                                                              218648
      C/COPY WNCPYSRC,LER135C008
@@ -7187,6 +7219,9 @@
      C********** @NPAYD    ORLT CODT                                                 250628 MD052216
      C           @PAYTD    ORLE CODT                                                        MD052216
      C           ATYP      ANDEQ'H'                                                           250628
+     C           BKANWD    OREQ '2'                                                         AR820690
+     C           FELPDT    ANDLTCODT                                                        AR820690
+     C           FELPDT    ANDGTPRUN                                                        AR820690
      C********** FELPDT    ORLT BJRDNB                                                BUG8762 250628
      C********** FELPDT    ANDGTCODT                                                  BUG8762 250628
      C********** FELCHD    OREQ CODT                                                  BUG8762 250628
@@ -9388,6 +9423,10 @@
       ** Lock in dataarea RUNDAT
      C           *NAMVAR   DEFN           RUNDAT
      C                     IN   RUNDAT
+      *                                                                                     AR820690
+      ** Read JNSTAT data area for previous run date                                        AR820690
+      *                                                                                     AR820690
+     C           *NAMVAR   DEFN           JNSTAT                                            AR820690
       *
       ** Set Date Format Indicator *IN98  on if date format is MMDDYY
       *

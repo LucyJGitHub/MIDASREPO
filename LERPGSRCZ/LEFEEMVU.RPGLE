@@ -87,7 +87,7 @@
       *                                                               *
       *  MD031692 - Incorrect accrual when fee rate is changed on     *
       *             payment date. Add warning message parameters in   *
-      *             LEFEEMAMD.                                        *      
+      *             LEFEEMAMD.                                        *
       *  MD030856 - Introduced reject processing to FEEM              *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -849,6 +849,8 @@
 
       ** Valid Fee layout (DS) from/to caller
      C                   PARM                    ValidFeem
+                                                                                            MD052696
+     C                   PARM                    DRejFlg                                    MD052696
 
       ** If Syndications Manager is off, override UTN with PC Ref value                      CSF011A
                                                                                              CSF011A
@@ -1588,7 +1590,7 @@
       ** Array index (3P0) from/to caller                                                   MD031692
                                                                                             MD031692
      C                   PARM                    WIdx                                       MD031692
-                                                                                            MD031692     
+                                                                                            MD031692
       ** If any errors overwrite previous error information
 
      C                   IF        AmIdx <> 0

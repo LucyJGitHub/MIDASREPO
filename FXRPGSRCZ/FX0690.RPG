@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD050858           Date 21Jan19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 MD027863           Date 29Jan15               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -58,6 +59,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD050858 - Records with Last change type 'D' on              *
+      *             file DLRPIFPD causing serious Midas error         *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  MD027863 - Do not drop records from DLDLDBQD when correspon- *
@@ -157,6 +160,8 @@
      F            DLGHISD0                          KIGNORE                                   242477
      F*                                                                   S01408
      FDLDEALL5UF  E           K        DISK         KINFSR *PSSR      UC                    BUG10705
+     FDLRPIFL1UF  E           K        DISK                                                 MD050858
+      ** Midas DL Dealing Reporting Information file                                        MD050858
      F/COPY WNCPYSRC,FX0690FFPG                                           S01408
      F*                                                                   S01408
      E*
@@ -233,6 +238,8 @@
      I                                      254 263 @USER
      I*                                                                   S01194
      ISDBANK    E DSSDBANKPD                                              S01194
+     ISCSARD    E DSSCSARDPD                                              MD050858
+     I* SAR FILE DETAILS ACCESSED VIA ACCESS PROGRAM  AOSARDR0            MD050858
      I** DATA STRUCTURE FOR BANK DETAILS                                  S01194
      I*                                                                   197217
      ISDGELR    E DSSDGELRPD                                              197217
@@ -360,6 +367,17 @@
      C                     EXSR DELEXT                                                      BUG10705
      C                     ENDIF                                                            MD027863
      C                     ENDIF                                                              242477
+      *                                                                                     MD050858
+      ** Drop the purged deals from DLRPIFPD file if CSW213 is ON.                          MD050858
+      *                                                                                     MD050858
+     C           CSW213    IFEQ 'Y'                                                         MD050858
+     C                     MOVELFHTYPE    KDTYP   2                                         MD050858
+     C                     MOVELFHDN38    KDLNO  16                                         MD050858
+     C           RPIFKY    CHAINDLRPIFL1             10                                     MD050858
+     C           *IN10     IFNE *ON                                                         MD050858
+     C                     DELETDLRPIFL1                                                    MD050858
+     C                     ENDIF                                                            MD050858
+     C                     ENDIF                                                            MD050858
      C*                                                                   S01408
      C/COPY WNCPYSRC,FX0690CCPG                                           S01408
      C*                                                                   S01408
@@ -933,6 +951,10 @@
      C                     MOVEACPY@      BIS@   80                       S01194
       *
      C                     MOVEL'FX0690'  DBPGM
+     C** DEFINE KEY LIST FOR CHAINING TO DLRPIFL1                                           MD050858
+     C           RPIFKY    KLIST                                                            MD050858
+     C                     KFLD           KDTYP                                             MD050858
+     C                     KFLD           KDLNO                                             MD050858
       *
       ** open the files
      C                     OPEN FXDEALLL
@@ -1038,6 +1060,28 @@
       ** close the two files no longer used
      C*********************CLOSEFDTABJLL                                  S01195
      C*********************CLOSEFDICDRLL                                  S01194
+      ** Check if enhancement CSW213 is ON                                                  MD050858
+      *                                                                                     MD050858
+     C                     CALL 'AOSARDR0'                                                  MD050858
+     C                     PARM *BLANKS   @RTCD                                             MD050858
+     C                     PARM '*VERIFY' @OPTN                                             MD050858
+     C                     PARM 'CSW213'  @SARD   6                                         MD050858
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD050858
+      *                                                                                     MD050858
+     C           @RTCD     IFNE *BLANKS                                                     MD050858
+     C           @RTCD     ANDNE'*NRF   '                                                   MD050858
+     C                     MOVEL'SCSARDPD'DBFILE                                            MD050858
+     C                     MOVEL'CSW213'  DBKEY                                             MD050858
+     C                     MOVEL'006'     DBASE                                             MD050858
+     C                     EXSR *PSSR                                                       MD050858
+     C                     ENDIF                                                            MD050858
+      *                                                                                     MD050858
+     C           @RTCD     IFEQ *BLANKS                                                     MD050858
+     C                     MOVE 'Y'       CSW213  1                                         MD050858
+     C                     ELSE                                                             MD050858
+     C                     MOVE 'N'       CSW213                                            MD050858
+     C                     ENDIF                                                            MD050858
+      *                                                                                     MD050858
       *
       ** get the first record from FXDEALLL
      C                     READ FXDEALLL                 61

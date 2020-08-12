@@ -617,7 +617,7 @@
      C**********                            FORMULAOPC+ FORMULATPC + ORDATEAST        BUG4646 CSW213
      C                                      FORMULAOPC+ FORMULATPC +                          CSW213
      C**********                            InSwift2013 + ORDATEAST                  CSW213 MD053400
-     C                                      + @WIPTmst +                                    MD044553
+     C                                      @WIPTmst +                                      MD044553
      C                                      InSwift2013 + ACTRJ +                           MD053400
      C                                      ORDATEAST                                       MD053400
      C*******************EVAL      Buffer2=%SUBST(ORDATEAST:4239)+OPDATEAST     BUG4646BUG5357

@@ -794,7 +794,7 @@
      C                                      + FORMULATR + FORMULATP                         MD030454
      C                                      + FORMULAOC + FORMULATC                         MD030454
      C                                      + FORMULAOPC+ FORMULATPC                        MD030454
-     C                                      + @WIPTmst +                                    MD044553
+     C                                      + @WIPTmst                                      MD044553
      C                                      + InSwift2013                                   MD030454
      C                                      + ACTRJ                                         MD053400
      C                                      + ORDATEAST                                     MD030454

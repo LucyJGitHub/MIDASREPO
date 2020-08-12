@@ -1707,7 +1707,7 @@ RGC                                                                             
      C                                      FORMULAOC + FORMULATC +             BUG4646
      C**********                            FORMULAOPC+ FORMULATPC + ORDATEAST        BUG4646 CSW213
      C                                      FORMULAOPC+ FORMULATPC +                          CSW213
-     C                                      + @WIPTmst +                                    MD044553
+     C                                      @WIPTmst +                                      MD044553
      C**********                            OutSwift2013 + ORDATEAST                 CSW213 MD053400
      C                                      OutSwift2013 + ACTRJ +                          MD053400
      C                                      ORDATEAST                                       MD053400

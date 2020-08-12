@@ -6,7 +6,7 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2019                     */
 /*                                                                   */
-/*       Last Amend No. FVT102   *Create   Date 10May17              */
+/*       Last Amend No. FVT102   *CREATE   Date 10May17              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */

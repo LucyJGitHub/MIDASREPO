@@ -76,11 +76,11 @@
       *  AR1067967 -  NOCC is added to NOIS unconditionally causing   *
       *               account to be unexpectedly charged. Check if a  *
       *               non-charge posting exists before incrementing   *
-      *               NOIS based on NOCC. (Child: AR1067968)          *      
+      *               NOIS based on NOCC. (Child: AR1067968)          *
       *  MD046248 - Finastra Rebranding                               *
       *  MD035961 - LSTD not updated correctly. removed conditions    *
       *  MD041443 - CBC022001 failed due to invalid character in file *
-      *             text description (Recompile)                                 *
+      *             text description (Recompile)                      *
       *  MD029255B - CM STATEMENT_TURNOVER extracts wrong             *
       *              <BfwdBalance> for GL and Retail accounts.        *
       *            - Make sure to update ECFB field when statement    *
@@ -673,7 +673,7 @@
      C           TRAT      IFNE 91050                                                      AR1067967
      C                     MOVE '1'       *IN61                                            AR1067967
      C                     ENDIF                                                           AR1067967
-      *                                                                                    AR1067967     
+      *                                                                                    AR1067967
      C********** CGL013    IFEQ 'Y'                                                BUG24792 BUG25122
      C           MTFLAG    IFEQ 'Y'                                                         BUG25122
      C           CER030    ANDEQ'Y'                                                         AR864876
@@ -1090,12 +1090,15 @@
      C********** CGL013    IFEQ 'Y'                                                BUG24792 MD035961
      C********** ATYP      ANDEQ'R'                                                BUG24792 MD035961
      C********** N40SFR    ANDEQ'E'                                                BUG24792 MD035961
+     C           MTFLAG    IFEQ 'Y'                                                         BUG25122
+     C           MTCASH    ANDEQ'Y'                                                         BUG25122
       *                                                                                     BUG24792
      C                     Z-ADDECFB      CFSB                                              BUG24792
      C                     Z-ADDEPNO      LSTP                                              BUG24792
      C                     Z-ADDLMVD      LSTD                                              BUG24792
      C*                                                                                     BUG24792
      C**********           ENDIF                                                   BUG24792 MD035961
+     C                     ENDIF                                                            BUG25122
       *                                                                                    MD029255B
       ** Update extra carried forward balance with the ledger balance                      MD029255B
       ** amount if statement frequency is 'E' (Turnover)                                   MD029255B
@@ -1562,6 +1565,12 @@
      C                     MOVE 'Y'       CER030                                            AR864876
       *                                                                                     AR864876
      C                     ENDIF                                                            AR864876
+      *                                                                                     BUG25122
+     C           CGL013    IFEQ 'Y'                                                         BUG25122
+     C           CER030    OREQ 'Y'                                                         BUG25122
+     C                     MOVEL'Y'       MTFLAG  1                                         BUG25122
+     C                     ENDIF                                                            BUG25122
+      *                                                                                     BUG25122
      C** OUTPUT AUDIT HEADER
      C*
      C                     WRITEHEADAU

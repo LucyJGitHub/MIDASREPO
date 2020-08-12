@@ -26,7 +26,7 @@
              PGM (&PSTD)
 
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems 2017')
+                          Finastra International Limited 2017')     
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) /*        +
                           Return Code */
              DCL        VAR(&PKEY) TYPE(*CHAR) LEN(7) /*        +

@@ -32,7 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CAP702 - 24x7 APIs - Common processing.                      *
+      *  CAP702 - 24x7 APIs - Common processing                       *
       *  CSD102 - Password Length Extension                           *
       *  MD046248 - Finastra Rebranding                               *
       *  MD022060 - Reverse fix BUG12784. It limits the system to     *

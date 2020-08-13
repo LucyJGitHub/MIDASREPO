@@ -1,0 +1,187 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas SC 24x7 API Layer Setup')                       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC000361 - Midas SC 24x7 API Layer setup                   */
+/*                   End Journalling in DZLIB                        */
+/*                                                                   */
+/*       (c) Finastra International Limited 2020                     */
+/*                                                                   */
+/*       Last Amend No. CAP735             Date 12May20              */
+/*       Prev Amend No. CAP734             Date 12May20              */
+/*                      CAP702  *CREATE    Date 12May20              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CAP735 - 24x7 APIs - GL Accounts API                        */
+/*       CAP734 - 24x7 APIs - SD Customer Details API                */
+/*       CAP702 - 24x7 APIs - Common Processing                      */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&PREGG) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
+
+/* Variables for zone libs  */
+             DCL        VAR(&DZLIB) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&JLIB) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&GJLIB) TYPE(*CHAR) LEN(8)
+
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE(' ')
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&CAP702) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&CAP734) TYPE(*CHAR) LEN(1) VALUE('N')  /*CAP734*/
+             DCL        VAR(&CAP735) TYPE(*CHAR) LEN(1) VALUE('N')  /*CAP735*/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2020')
+
+/* Declare files for Loop17 to Loop20 */
+             DCLF       FILE(SCSRACTD) OPNID(S5C)
+             DCLF       FILE(SCSRABTD) OPNID(S5B)
+             DCLF       FILE(GPSRACTD) OPNID(G5C)
+             DCLF       FILE(GPSRABTD) OPNID(G5B)
+
+/* Retrieve Zone prefix                */
+             RTVDTAARA  DTAARA(SDSTAT *ALL) RTNVAR(&SDSTAT)
+/**/
+             CHGVAR     VAR(&PRE) VALUE(%SST(&SDSTAT 6 2))
+             CHGVAR     VAR(&DZLIB) VALUE(&PRE *TCAT 'DZLIB')
+             CHGVAR     VAR(&JLIB) VALUE(&PRE *TCAT 'JLIB')
+
+/* Retrieve Global prefix              */
+             CALL       PGM(GPRTVLIB) PARM(&PREGG)
+             CHGVAR     VAR(&GJLIB) VALUE(&PREGG *TCAT 'GJLIB')
+
+/**   CHECK FOR SWITCHABLE FEATURE CAP702     */
+
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&SARD) VALUE('CAP702')
+
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SCSARD)
+
+             IF         COND(&RTCD *EQ '       ') THEN(DO)
+                CHGVAR     VAR(&CAP702) VALUE('Y')
+             ENDDO
+
+/**   CHECK FOR SWITCHABLE FEATURE CAP734     */     /*CAP734*/
+
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')  /*CAP734*/
+             CHGVAR     VAR(&SARD) VALUE('CAP734')   /*CAP734*/
+
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SCSARD)  /*CAP734*/
+
+             IF         COND(&RTCD = '       ') THEN(CHGVAR +
+                          VAR(&CAP734) VALUE('Y'))   /*CAP734*/
+
+/**   CHECK FOR SWITCHABLE FEATURE CAP735     */     /*CAP735*/
+
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')  /*CAP735*/
+             CHGVAR     VAR(&SARD) VALUE('CAP735')   /*CAP735*/
+
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SCSARD)  /*CAP735*/
+
+             IF         COND(&RTCD = '       ') THEN(CHGVAR +
+                          VAR(&CAP735) VALUE('Y'))   /*CAP735*/
+
+/* 21a. End Journaling for zone core files                 */
+LOOP17:      RCVF       OPNID(S5C)
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(EXIT17))
+             IF         COND(&S5C_SATYPE *NE 'PF') THEN(GOTO CMDLBL(LOOP17))
+
+             IF COND(((&S5C_SASARN = 'CAP734') *AND (&CAP734 = 'Y')) *OR +
+                    ((&S5C_SASARN = 'CAP735') *AND (&CAP735 = 'Y')) *OR +
+                    ((&S5C_SASARN = 'CAP702') *AND (&CAP702 = 'Y'))) THEN(DO)
+
+             IF         COND(&S5C_SATYPE *EQ 'PF') THEN(DO)
+             ENDJRNPF FILE(&DZLIB/&S5C_SAOBJ) JRN(&JLIB/ICJRN)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             RMVPFTRG   FILE(&DZLIB/&S5C_SAOBJ) TRGTIME(*ALL) TRGEVENT(*ALL) +
+                                TRG(*ALL)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+                          GOTO LOOP17
+             ENDDO
+                          GOTO LOOP17
+             ENDDO
+                          GOTO LOOP17
+EXIT17:
+
+/* 21b. End Journaling for zone non core files             */
+LOOP18:      RCVF       OPNID(S5B)
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(EXIT18))
+             IF         COND(&S5B_SATYPE *NE 'PF') THEN(GOTO CMDLBL(LOOP18))
+
+             IF COND(((&S5B_SASARN = 'CAP734') *AND (&CAP734 = 'Y')) *OR +
+                    ((&S5B_SASARN = 'CAP735') *AND (&CAP735 = 'Y')) *OR +
+                    ((&S5B_SASARN = 'CAP702') *AND (&CAP702 = 'Y'))) THEN(DO)
+
+             IF         COND(&S5B_SATYPE *EQ 'PF') THEN(DO)
+             ENDJRNPF FILE(&DZLIB/&S5B_SAOBJ) JRN(&JLIB/ICJRN)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             RMVPFTRG   FILE(&DZLIB/&S5B_SAOBJ) TRGTIME(*ALL) TRGEVENT(*ALL) +
+                                TRG(*ALL)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+                          GOTO LOOP18
+             ENDDO
+                          GOTO LOOP18
+             ENDDO
+                          GOTO LOOP18
+EXIT18:
+
+/* 21C. End Journaling for global core files                 */
+LOOP19:      RCVF       OPNID(G5C)
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(EXIT19))
+             IF         COND(&G5C_SATYPE *NE 'PF') THEN(GOTO CMDLBL(LOOP19))
+
+             IF COND(((&G5C_SASARN = 'CAP734') *AND (&CAP734 = 'Y')) *OR +
+                    ((&G5C_SASARN = 'CAP735') *AND (&CAP735 = 'Y')) *OR +
+                    ((&G5C_SASARN = 'CAP702') *AND (&CAP702 = 'Y'))) THEN(DO)
+
+             IF         COND(&G5C_SATYPE *EQ 'PF') THEN(DO)
+             ENDJRNPF FILE(&DZLIB/&G5C_SAOBJ) JRN(&GJLIB/GPJRN)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             RMVPFTRG   FILE(&DZLIB/&G5C_SAOBJ) TRGTIME(*ALL) TRGEVENT(*ALL) +
+                                TRG(*ALL)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+                          GOTO LOOP19
+             ENDDO
+                          GOTO LOOP19
+             ENDDO
+                          GOTO LOOP19
+EXIT19:
+
+/* 21d. End Journaling for gloabl non core files             */
+LOOP20:      RCVF       OPNID(G5B)
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(EXIT20))
+             IF         COND(&G5B_SATYPE *NE 'PF') THEN(GOTO CMDLBL(LOOP20))
+
+             IF COND(((&G5B_SASARN = 'CAP734') *AND (&CAP734 = 'Y')) *OR +
+                    ((&G5B_SASARN = 'CAP735') *AND (&CAP735 = 'Y')) *OR +
+                    ((&G5B_SASARN = 'CAP702') *AND (&CAP702 = 'Y'))) THEN(DO)
+
+             IF         COND(&G5B_SATYPE *EQ 'PF') THEN(DO)
+             ENDJRNPF FILE(&DZLIB/&G5B_SAOBJ) JRN(&GJLIB/GPJRN)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             RMVPFTRG   FILE(&DZLIB/&G5B_SAOBJ) TRGTIME(*ALL) TRGEVENT(*ALL) +
+                                TRG(*ALL)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+                          GOTO LOOP20
+             ENDDO
+                          GOTO LOOP20
+             ENDDO
+                          GOTO LOOP20
+EXIT20:
+
+             GOTO       CMDLBL(END)
+
+END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited 2020')
+             ENDPGM
+

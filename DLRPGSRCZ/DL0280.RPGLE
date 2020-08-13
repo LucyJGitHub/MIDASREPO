@@ -13,7 +13,7 @@
       *                                                               *
       *                                                               *
       *****************************************************************
-      *** Code Stripped ***                                           **
+      *** Code Stripped ***                                           *
       /COPY DLCPYSRC,DL0280FHD5                                                             RT937392
       /COPY DLCPYSRC,DL0280FHD3                                                            BUG27027A
       /COPY DLCPYSRC,DL0280FHD1

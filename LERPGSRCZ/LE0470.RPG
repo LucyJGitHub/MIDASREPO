@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR1079480          Date 20Mar20               *
-      *  Prev Amend No. MD054869           Date 21Nov19               *
+      *  Last Amend No. MD056223           Date 15Jul20               *
+      *  Prev Amend No. AR1079480          Date 20Mar20               *
+      *                 MD054869           Date 21Nov19               *
       *                 MD053565           Date 01Oct19               *
       *                 MD051935           Date 22Sep18               *
       *                 MD051695           Date 08Aug18               *
@@ -208,6 +209,13 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD056223 - CLE031: Incorrect Posting narratives in           *
+      *             Fee postings with conversion                      *
+      *           - The amount and currency of the posting narratives *
+      *             of Cross currency settlements P and S records     *
+      *             whose narrative codes defined as 03 are now       *
+      *             formatted based on the format string defined in   *
+      *             Narrative Codes File SDNARRPD.                    *
       *  AR1079479 - DLREF missing leading 'L'.                       *
       *            - LE2 variable should be initialised again after   *
       *            - EXCPT IMBAL. (Child: AR1079480)                  *
@@ -821,6 +829,10 @@
      E                    SPRT      150 13 8                                                  CSC042
      E                    INCY      150  1                                                    CSC042
      E/COPY ZSRSRC,ZDATE2Z1                                               S01392
+      ***************************************************************                       MD056223
+      * Include subroutine ZSEDIT for amounts editing:                                      MD056223
+     E/COPY ZSRSRC,ZSEDITZ1                                                                 MD056223
+      ***************************************************************                       MD056223
 0073 E**********          ACOD        6  4 0             ACCOUNT CODES                        CGL029
      E                    ACOD        6 10 0             ACCOUNT CODES                        CGL029
 0074 E                    NCD         6  2               NARRATIVES
@@ -2203,12 +2215,14 @@
      I                                        4   4 ##FACD                S01522
      I                                        5   6 ##FAC2                S01522
      I                                        8  11 ##DTNR                                  AR989581
+     I                                        8  10 ##CURR                                  MD056223
      I                                        8  27 ##CRNM                S01522
      I                                        8  14 ##DT57                                  AR800608
      I                                        9  15 ##DT58                                  AR800608
      I                                       10  16 ##DT59                                  AR800608
      I                                       11  17 ##DT60                                  AR800608
      I                                       12  18 ##DT61                S01522
+     I                                       12  28 ##AMNT                                  MD056223
      I                                       13  19 ##DT62                                  AR800608
      I                                       14  20 ##DT56                                  AR800608
      I***************************************14  20 ##DT63         S01522 100817
@@ -2266,6 +2280,12 @@
      I              'SUMMARY   '                                          105261
      I/COPY WNCPYSRC,LE0470I001
      I********************************************************************S01522
+      *                                                                                     MD056223
+     I* Include subroutine ZSEDIT for amounts editing:                                      MD056223
+     I*                                                                                     MD056223
+     I/COPY ZSRSRC,ZSEDITZ2                                                                 MD056223
+      *                                                                                     MD056223
+     I********************************************************************                  MD056223
       ** Work variables                                                                       241519
      I              'LoanCustOriginPurch' C         WPARM                                     241519
      I              'LEC000471A'          C         WL471A                                    CLE134
@@ -6763,6 +6783,13 @@
 1293 C**         NCDN      COMP 48                       78
 1294 C**         NCDN      COMP 49                       79
 1295 C**         NCDN      COMP 50                       80
+      *                                                                                     MD056223
+     C                     MOVE 'N'       WNAR03  1                                         MD056223
+     C           NCDN      IFEQ '02'                                                        MD056223
+     C           NCDN      OREQ '03'                                                        MD056223
+     C                     MOVE 'Y'       WNAR03                                            MD056223
+     C                     ENDIF                                                            MD056223
+      *                                                                                     MD056223
 1296 C**
 1297 C**   IF NARRATIVE CODE 01 OBTAIN REPORT NAME FROM
 1298 C**   CLIENT FILE
@@ -7235,6 +7262,18 @@ A551 C*    ACCESS BRANCH CODE ARRAY FOR SETTLEMENT BRANCH TO OBTAIN       S01117
      C                     MOVE CRNMO     ##CRNM                          S01522
      C                     ENDIF                                          S01522
      C*                                                                   S01522
+      ** Include processing for narrative codes 02 and 03                                   MD056223
+     C           WNAR03    IFEQ 'Y'                                                         MD056223
+     C                     MOVE OTHC      @AJCD                                             MD056223
+     C                     EXSR AOCCY                                                       MD056223
+     C                     MOVE OTHC      ##CURR                                            MD056223
+     C                     MOVE OTHA      ZFLD15                                            MD056223
+     C                     MOVE A6NBDP    ZDECS                                             MD056223
+     C                     MOVE 'J'       ZECODE                                            MD056223
+     C                     EXSR ZSEDIT                                                      MD056223
+     C                     MOVE ZOUT21    ##AMNT                                            MD056223
+     C                     ENDIF                                                            MD056223
+      *                                                                                     MD056223
      C           *IN51     IFEQ *ON                                       S01522
      C           *IN53     OREQ *ON                                       S01522
      C                     MOVE DATE1     ##DT65                          S01522
@@ -8407,6 +8446,12 @@ A551 C*    ACCESS BRANCH CODE ARRAY FOR SETTLEMENT BRANCH TO OBTAIN       S01117
      C********************************************************************S01392
       *                                                                   S01408
      C/COPY WNCPYSRC,LE0470CCP3                                           S01408
+      ****************************************************************                      MD056223
+     C/EJECT                                                                                MD056223
+      ****************************************************************                      MD056223
+      * Include subroutine ZSEDIT for amounts editing:                                      MD056223
+     C/COPY ZSRSRC,ZSEDITZ3                                                                 MD056223
+      ****************************************************************                      MD056223
       *                                                                   S01408
      C/EJECT                                                              S01117
 1519 O**

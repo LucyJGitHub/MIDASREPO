@@ -24,7 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CAP735 - 24x7 APIs - GL Accounts API.                        *
+      *  CAP735 - 24x7 APIs - GL Accounts API                         *
       *  CAP734 - 24x7 APIs - SD Customer Details API                 *
       *  CAP702 - 24x7 APIs - Common Processing                       *
       *                                                               *

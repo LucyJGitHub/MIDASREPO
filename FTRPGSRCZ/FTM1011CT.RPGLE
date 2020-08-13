@@ -21,9 +21,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR928996A          Date 03May12               *
+      *  Prev Amend No. AR928996           Date 27Mar12               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. BUG24998           Date 17Jul09               *
+      *                 BUG24998           Date 17Jul09               *
       *                 BUG25046           Date 20Jul09               *
       *                 BUG24802           Date 08Jul09               *
       *                 CSW209             Date 01Apr09               *
@@ -46,6 +48,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
+      *             data structure field to have the correct length.  *
+      *             (Child: AR928997A)                                *
+      *  AR928996 - Data lost due to rate field :36: being truncated. *
+      *             (Child: AR928997)                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG24998 - Bank operation code is missing (Recompile)        *
       *  BUG25046 - Sender not mapped for MT101 STP                   *
@@ -68,7 +75,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -87,62 +94,62 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
      D/COPY MECPYSRC,ME1100_ILE
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
      D NBTYPE          C                   CONST(10)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * RFT Header details in File format
      D DRftHdr       E DS                  EXTNAME(FT101HPD)
- 
+
       * RFT Header details in Screen format
      D RftScnFmt     E DS                  EXTNAME(FT101HSPD)
      D PBRCH         E                     EXTFLD(PBRCA)
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** EXTERNAL DS FOR CURRENCY DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
      D*
@@ -206,26 +213,26 @@
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
      D AplyType        S              1    Dim(NBTYPE)
- 
+
       ** Parameters for ZALIGN
      D zalignok        S              1
      D zfield          S             16
      D zadec           S              1  0
      D zadig           S              2  0
- 
+
       ** Parameters for ZDATE1
      D DateIn          S              6A
      D DaynoOut        S              5P 0
      D DatFmt          S              1A
      D ErrorFlag       S              1A
- 
+
       ** Parameters for ME1330
      D Prefix          S             20A
      D SpecialC        S            256A
      D AplyValue       S            256A
      D RetCode         S                   Like(RetCodeIn)
      D TypeValue       S              1A
- 
+
       ** Message reference                                                      185107
      D MgmsgR          S                   LIKE(PhmsgR)                         185107
       ** +--------------------------------------+
@@ -267,7 +274,7 @@
      C                   Exsr      FLEMSG
      C                   Endif
      C                   Endif
- 
+
       *
       * Return
       *
@@ -433,15 +440,15 @@
      C                   Movel     PH25          DSTRAN
      C                   Eval      AUTHTX = TMLIN1
      C                   Endif
- 
+
       ** Map Swift ID
      C                   Eval      STID = PSNDR
       *                                                                         185107
       ** Message Reference                                                      185107
       *                                                                         185107
      C                   Z-ADD     MGMSGR        RHMSGR                         185107
- 
- 
+
+
      C                   Endsr
       *****************************************************************
       ** SETSCN - Set Output Screen Fields
@@ -645,7 +652,7 @@
       ** Message Reference                                                      185107
       *                                                                         185107
      C                   Z-ADD     RHMSGR        PRHMSGR                        185107
- 
+
       *
      C                   Endsr
       *****************************************************************
@@ -785,7 +792,7 @@
      C                   Move      PASITTP       ASITTP
      C                   Move      PCUSTTP       CUSTTP
      C                   Move      PSTID         STID
- 
+
       *                                                                         178384
       * User Data                                                               178384
      C                   MOVEL     PINUSER       INUSER                         178384
@@ -833,7 +840,7 @@
       ** APLYTRN - Apply translation
       *****************************************************************
      C     APLYTRN       Begsr
- 
+
      C                   Callb     'ME1330'
      C                   Parm                    TRCODE
      C                   Parm                    Prefix
@@ -842,10 +849,10 @@
      C                   Parm                    AplyValue
      C                   Parm                    RetCode
      C                   Parm                    TypeValue
- 
+
      C                   Eval      Prefix = *Blank
      C                   Eval      AplyType = *Blank
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT

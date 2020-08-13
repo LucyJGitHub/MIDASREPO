@@ -21,9 +21,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR928996A          Date 03May12               *
+      *  Prev Amend No. AR928996           Date 27Mar12               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. BUG24998           Date 17Jul09               *
+      *                 BUG24998           Date 17Jul09               *
       *                 CSW209             Date 01Apr09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -41,6 +43,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
+      *             data structure field to have the correct length.  *
+      *             (Child: AR928997A)                                *
+      *  AR928996 - Data lost due to rate field :36: being truncated. *
+      *             (Child: AR928997)                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG24998 - Bank operation code is missing (Recompile)        *
       *  CSW209 - SWIFT 2009 Changes                                  *
@@ -59,7 +66,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -78,64 +85,64 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
      D NBTYPE          C                   CONST(10)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
- 
+
+
       * RFT Details in File Format
      D DRftDtl       E DS                  EXTNAME(FT101DPD)
- 
+
       * RFT Header Details in Screen Format
      D RftScnFmt     E DS                  EXTNAME(FT101DSPD)
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** EXTERNAL DS FOR CURRENCY DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
      D P8FT            DS           128                                                       221538
       *                                                                                       221538
       ** Currency                                                                             221538
@@ -192,28 +199,28 @@
      D  WADCHK5              141    175                                                       221538
       *                                                                                       221538
      D/COPY MECPYSRC,ME1100_ILE
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
      D AplyType        S              1    Dim(NBTYPE)
- 
+
       ** Position of ',' into an amount
      D Comma           S              2  0
- 
+
       ** Parameters for ZALIGN
      D zalignok        S              1
      D zfield          S             16
      D zadec           S              1  0
      D zadig           S              2  0
- 
+
       ** Parameters for ZDATE1
      D DateIn          S              6A
      D DaynoOut        S              5P 0
      D DatFmt          S              1A
      D ErrorFlag       S              1A
- 
+
       ** Parameters for ME1330
      D****TRCODE       S
      D Prefix          S             20A
@@ -222,7 +229,7 @@
      D AplyValue       S            256A
      D RetCode         S                   Like(RetCodeIn)
      D TypeValue       S              1A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -763,8 +770,8 @@
       * Message Reference
       *
      C                   Z-add     RFTMSG        PRFTMRF
- 
- 
+
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -941,19 +948,19 @@
      C                   If        Comma <> 0
      C                   Eval       %subst(TTAMT:Comma:1) = '.'
      C                   Endif
- 
+
       * Format Amount
      C                   Move      TTCCY         @AJCD             3
      C                   EXSR      SRCURR
- 
+
      C                   Move      *Blanks       zfield
      C                   Move      TTAMT         zfield
      C                   Eval      zadec = A6NBDP
      C                   Eval      zadig = 15 - A6NBDP
      C                   Exsr      SRFAFL
- 
+
      C                   Move      zfield        TRNAMT
- 
+
      C                   Endif
       *
       * Remittance information
@@ -987,19 +994,19 @@
      C                   If        Comma <> 0
      C                   Eval       %subst(TTAMT:Comma:1) = '.'
      C                   Endif
- 
+
       * Format Amount
      C                   Move      TOCCY         @AJCD             3
      C                   EXSR      SRCURR
- 
+
      C                   Move      *Blanks       zfield
      C                   Move      TTAMT         zfield
      C                   Eval      zadec = A6NBDP
      C                   Eval      zadig = 15 - A6NBDP
      C                   Exsr      SRFAFL
- 
+
      C                   Move      zfield        TOOAMT
- 
+
      C                   Endif
       *
       * Details of charges
@@ -1029,7 +1036,7 @@
       * EXCHANGE RATE CANNOT BE MAPPED FOR AN 'RI' SWIFT MESSAGE
       * SINCE THIS TAG IS FOR XRATE BETWEEN ORIG AND TRANS AMOUNT
       * BUT FOR RI's  THE XRATE ON SCREEN IS CALC BETWEEN PAY & TRANS AMT
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -1394,7 +1401,7 @@
      C     SRCURR        Begsr
       *
      C                   If        @AJCD <> *Blanks
- 
+
      C                   Callb     'AOCURRR0'
      C                   Parm      *BLANK        @RTCD             7
      C                   Parm      '*KEY   '     @OPTN             7
@@ -1419,7 +1426,7 @@
       ** APLYTRN - Apply translation
       *****************************************************************
      C     APLYTRN       Begsr
- 
+
      C                   Callb     'ME1330'
      C                   Parm                    TRCODE
      C                   Parm                    Prefix
@@ -1428,10 +1435,10 @@
      C                   Parm                    AplyValue
      C                   Parm                    RetCode
      C                   Parm                    TypeValue
- 
+
      C                   Eval      Prefix = *Blank
      C                   Eval      AplyType = *Blank
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT

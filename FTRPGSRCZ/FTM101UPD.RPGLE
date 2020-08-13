@@ -11,8 +11,10 @@
       *                                                                    *
       *  (c) Finastra International Limited 2001                      *
       *                                                                    *
-      *  Last Amend No. CSW220             Date 09Mar20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR928996A          Date 03May12               *
+      *  Prev Amend No. AR928996           Date 27Mar12               *
+      *                 CSW220             Date 09Mar20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG24998           Date 17Jul09               *
       *                 CSW209             Date 01Apr09               *
@@ -54,6 +56,11 @@
       *                                                                    *
       *--------------------------------------------------------------------*
       *                                                                    *
+      *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
+      *             data structure field to have the correct length.  *
+      *             (Child: AR928997A)                                *
+      *  AR928996 - Data lost due to rate field :36: being truncated. *
+      *             (Child: AR928997)                                 *
       *  CSW220 - SWIFT Changes 2020 (Recompile)                      *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG24998 - Bank operation code is missing (Recompile)        *
@@ -180,63 +187,63 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
      D/COPY MECPYSRC,ME1100_ILE
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Array of subroutines stack
      D SrStack         S             15    DIM(30)
- 
+
       * Header record datastructure
      D HdrRcdIn      E DS                  EXTNAME(FT101HPD) PREFIX(SH_)
      D DtlRcdIn      E DS                  EXTNAME(FT101DPD) PREFIX(SD_)
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
      D q               S              2  0
- 
+
       ** Timestamp for the tranaction
      D Timestamp       S               Z
- 
+
       * External data structure for currency codes
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** Fisrt DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** External DS for bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
                                                                                               CSD015
@@ -260,10 +267,10 @@
                                                                                               CSD015
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                  CSD015
       ** Midas SD Customer Details File                                                       CSD015
- 
+
       ** External DS for MT101 MT102 control file
      D MEIRFT        E DS                  EXTNAME(MEIRFTPD) PREFIX(CK_)
- 
+
       ** External DS for message status
      D MEINFT        E DS                  EXTNAME(MEINFTPD)
       *
@@ -279,13 +286,13 @@
      D @@Date                  2      7
      D @@P_Ref                 8     13
      D @@Sett                 14     15
- 
+
       ** Parameters for ZDATE1                                                  178384
      D DateIn          S              6A                                        178384
      D DaynoOut        S              5P 0                                      178384
      D DatFmt          S              1A                                        178384
      D ErrorFlag       S              1A                                        178384
- 
+
       ** Parameters for FTM1013GN                                               178751
      D TrnType         S              2                                         178751
      D TrnId           S             15                                         178751
@@ -293,47 +300,47 @@
                                                                                 178751
       ** WORKING VARIABLES
       ** -----------------
- 
+
       ** Old RFT id
      D OldRftID        S                   Like(RFTID)
- 
+
       ** Old Transaction reference
      D OldTransID      S                   Like(TRNSID)
- 
+
       ** Calling Program (for Message Management and STP)
      D CallingPgm      S             10
- 
+
       ** Network (for Message Management and STP)
      D Network         S                   Like(PNWRK)
- 
+
       ** RFT Id (13 long)                                                       178751
      D RFTID13         S             13                                         178751
- 
+
       ** Message reference (ME1070 parameter)                                   185660
      D W0MSGREF        S              8P 0                                      185660
                                                                                 185660
       ** Message part (ME1070 parameter)                                        185660
      D W0MSGPRT        S              3P 0                                      185660
- 
+
       ** FLAGS
       ** -----
- 
+
       ** Dump requested if error in i/o operation
      D DumpReq         S              1
- 
+
       ** To indicate whether a header record is involved in the update
      D HdrInfo         S                   Like(DumpReq)
- 
+
       ** To indicate whether a detail record is involved in the update
      D DtlInfo         S                   Like(DumpReq)
- 
+
       ** To determine if main fields of an existing header matche
       ** with those passed in parameter
      D HdrMatch        S                   Like(DumpReq)
- 
+
       ** To make COMMIT without allowing the value of IdxErr                    177866
      D CommitChg       S                   Like(DumpReq)                        177866
- 
+
       ** INDEX
       ** -----
      D E               S              3P 0
@@ -382,7 +389,7 @@
      D WArrPtr         S              3S 0                                                    CSC022
      D WSkpComtRolbk   S              1A                                                      CSC022
       **                                                                                      CSC022
- 
+
       ** Switchable Features Flags                                                            CRE020
      D CRE020          S              1A   INZ('N')                                           CRE020
                                                                                               CRE020
@@ -407,14 +414,14 @@
      C* MAIN - MAIN BODY                                                   *
      C*                                                                    *
      C**********************************************************************
- 
+
       **  Set up subroutine stack name
      C                   Add       1             q
      C                   Movea     'MAIN'        SrStack(q)
- 
+
       ** INITIALIZE
      C                   Exsr      SrIni
- 
+
       *
       ** INSERT, AMEND, DELETE, AUTHORISE, REASSIGN
       *
@@ -424,7 +431,7 @@
      C     ActionCode    CasEq     'X'           SrAmdX
      C     ActionCode    CasEq     'R'           SrReass
      C                   EndCs
- 
+
      C                   Z-add     E             IdxErr
      C*****IdxErr        Ifeq      0                                            177866
      C*****CommitChg     Ifeq      'Y'                                    177866178186
@@ -433,13 +440,13 @@
      C*******************Else                                                   178186
      C*******************Rolbk                                                  178186
      C*******************Endif                                                  178186
- 
+
       **  Unwind subroutine stack name
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             q
- 
+
       * EXIT FROM PROGRAM
- 
+
      C                   RETURN
      C**********************************************************************
       /EJECT
@@ -449,22 +456,22 @@
      C*                                                                    *
      C**********************************************************************
      C     SrIni         BegSr
- 
+
       **  Set up subroutine stack name
      C                   Add       1             q
      C                   Movea     'SrIni'       SrStack(q)
- 
+
      C                   Movel     'Y'           CommitChg                      177866
      C                   Z-add     0             E
      C                   Movel     *BLANK        FldNameArr
      C                   Movel     *BLANK        MsgIdArr
      C                   Movel     *BLANK        MsgDtaArr
- 
+
       **  Unwind subroutine stack name
      C     SrIni_End     Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             q
- 
+
      C                   Exsr      RtvJob                                                   BUG15235
      C     UserPrf       Ifeq      '*STP'                                                   BUG15235
      C                   Movel     'Y'           DumpReq                                    BUG15235
@@ -480,31 +487,31 @@
      C*                                                                    *
      C**********************************************************************
      C     SrIns         BegSr
- 
+
       **  Set up subroutine stack name
      C                   Add       1             q
      C                   Movea     'SrIns'       SrStack(q)
- 
+
      C                   Select
      C     HdrInfo       WhenEq    'Y'
      C     DtlInfo       AndEq     'N'
      C                   Exsr      SrIH
- 
+
      C     HdrInfo       WhenEq    'Y'
      C     DtlInfo       AndEq     'Y'
      C                   Exsr      SrIHD
- 
+
      C     HdrInfo       WhenEq    'N'
      C     DtlInfo       AndEq     'Y'
      C                   Exsr      SrID
- 
+
      C                   EndSl
- 
+
       **  Unwind subroutine stack name
      C     SrIns_End     Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             q
- 
+
      C                   EndSr
      C**********************************************************************
       /EJECT
@@ -514,31 +521,31 @@
      C*                                                                    *
      C**********************************************************************
      C     SrAmd         BegSr
- 
+
       **  Set up subroutine stack name
      C                   Add       1             q
      C                   Movea     'SrAmd'       SrStack(q)
- 
+
      C                   Select
      C     HdrInfo       WhenEq    'Y'
      C     DtlInfo       AndEq     'N'
      C                   Exsr      SrAH
- 
+
      C     HdrInfo       WhenEq    'Y'
      C     DtlInfo       AndEq     'Y'
      C                   Exsr      SrAHD
- 
+
      C     HdrInfo       WhenEq    'N'
      C     DtlInfo       AndEq     'Y'
      C                   Exsr      SrAD
- 
+
      C                   EndSl
- 
+
       **  Unwind subroutine stack name
      C     SrAmd_End     Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             q
- 
+
      C                   EndSr
      C**********************************************************************
       /EJECT
@@ -548,11 +555,11 @@
      C*                                                                    *
      C**********************************************************************
      C     SrAmdX        BegSr
- 
+
       **  Set up subroutine stack name
      C                   Add       1             q
      C                   Movea     'SrAmdX'      SrStack(q)
- 
+
      C                   Callb     'FTM101CFM'                          90
      C                   Parm                    RetCodeIn
      C                   Parm                    RespMode
@@ -560,7 +567,7 @@
      C                   Parm                    SH_RFTID
      C                   Parm      SH_SNDREF     CK_SNDREF
      C                   Parm      SH_STID       CK_SNDIST
- 
+
      C     *IN90         Ifeq      '1'
       ** *ERROR                                                            *
      C                   Movel     '*ERROR'      RetCodeIn
@@ -593,7 +600,7 @@
      C                   Commit                                                  184191
      C                   EndIf                                                                CSC022
      C                   Endif
- 
+
       ** If Online Printing of Advice is on and is set in the system,                         CRE020
       ** update READVCPD                                                                      CRE020
                                                                                               CRE020
@@ -606,7 +613,7 @@
      C     SrAmdX_End    Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             q
- 
+
      C                   EndSr
      C**********************************************************************
       /EJECT
@@ -616,31 +623,31 @@
      C*                                                                    *
      C**********************************************************************
      C     SrDel         BegSr
- 
+
       **  Set up subroutine stack name
      C                   Add       1             q
      C                   Movea     'SrDel'       SrStack(q)
- 
+
      C                   Select
      C     HdrInfo       WhenEq    'Y'
      C     DtlInfo       AndEq     'N'
      C                   Exsr      SrDH
- 
+
      C     HdrInfo       WhenEq    'Y'
      C     DtlInfo       AndEq     'Y'
      C                   Exsr      SrDHD
- 
+
      C     HdrInfo       WhenEq    'N'
      C     DtlInfo       AndEq     'Y'
      C                   Exsr      SrDD
- 
+
      C                   EndSl
- 
+
       **  Unwind subroutine stack name
      C     SrDel_End     Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             q
- 
+
      C                   EndSr
      C**********************************************************************
       /EJECT
@@ -650,7 +657,7 @@
      C*                                                                    *
      C**********************************************************************
      C     SrReass       BegSr
- 
+
       **  Set up subroutine stack name
      C                   Add       1             q
      C                   Movea     'SrReass'     SrStack(q)
@@ -661,7 +668,7 @@
      C                   Exsr      RtvHdr2                                      177673
                                                                                 177673
      C     HdrFound      Ifeq      'Y'                                          177673
- 
+
      C*******************Movel     'N'           Unlocked                       177673
      C                   Movel     DumpReq       RtvDump
      C                   Movel     SD_RFTID      Rft_Id
@@ -706,14 +713,14 @@
      C                   Endif                                                  177673
                                                                                 177673
      C                   Endif
- 
+
      C                   Endif
- 
+
       **  Unwind subroutine stack name
      C     SrRea_End     Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             q
- 
+
      C                   EndSr
      C**********************************************************************
       /EJECT
@@ -723,26 +730,26 @@
      C*                                                                    *
      C**********************************************************************
      C     SrIH          BegSr
- 
+
       **  Set up subroutine stack name
      C                   Add       1             q
      C                   Movea     'SrIH'        SrStack(q)
- 
+
      C                   Movel     DumpReq       NfndDump
      C                   Movel     SH_SNDREF     SenderRef
      C                   Movel     SH_STID       SwiftID
      C                   Exsr      HdrNfnd
- 
+
      C     HdrFound      Ifeq      'N'
      C                   Exsr      SrMapH
      C                   Exsr      WriteH
      C                   Endif
- 
+
       **  Unwind subroutine stack name
      C     SrIH_End      Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             q
- 
+
      C                   EndSr
      C**********************************************************************
       /EJECT
@@ -752,26 +759,26 @@
      C*                                                                    *
      C**********************************************************************
      C     SrIHD         BegSr
- 
+
       **  Set up subroutine stack name
      C                   Add       1             q
      C                   Movea     'SrIHD'       SrStack(q)
- 
+
       ** This procedure is supposed to be  called by STP
- 
+
       ** By default theres a match with existing header and
       ** the header details passed in parameter
      C                   Movel     'Y'           HdrMatch
- 
+
      C                   Movel     'N'           NfndDump
      C                   Movel     SH_SNDREF     SenderRef
      C                   Movel     SH_STID       SwiftID
      C                   Exsr      HdrNfnd
- 
+
       ** Field passed in parameter come mainly from message
       ** management criteria maintenance (CRIT)
      C     HdrFound      Ifeq      'Y'
- 
+
       ** No error in this case
       ** Remove latest errors generated by S/R  HdrNfnd
      C     E             Dowgt     0
@@ -783,12 +790,12 @@
      C                   Leave
      C                   Endif
      C                   Enddo
- 
+
       ** No errors : allows commit                                              177866
      C     E             Ifeq      0                                            177866
      C                   Movel     'Y'           CommitChg                      177866
      C                   Endif                                                  177866
- 
+
       ** Retrieve the data                                                      177809
      C                   Movel     'Y'           Unlocked                       177809
      C                   Movel     DumpReq       RtvDump                        177809
@@ -803,7 +810,7 @@
       ** For S/R SrMapD, we need to store the ID of the request for
       ** transfer for each detail we want to insert.
      C                   Movel     RFTID         SH_RFTID
- 
+
      C     SH_PYTP       Ifne      PYTP
      C     SH_PYST       orne      PYST
      C     SH_BRCA       orne      BRCA
@@ -855,17 +862,17 @@
      C                   Exsr      SrMapH
      C                   Exsr      WriteH
      C                   Endif
- 
+
      C     HdrMatch      Ifeq      'Y'
      C                   Movel     DumpReq       NfndDump
      C                   Movel     SD_RFTID      Rft_ID
      C                   Movel     SD_TRNSID     TransID
      C                   Exsr      DtlNfnd
- 
+
      C     DtlFound      Ifeq      'N'
      C                   Exsr      SrMapD
      C                   Exsr      WriteD
- 
+
       ** If payment created through a message MT102
       ** Update status of the message
      C     SD_RFTMSG     Ifne      0
@@ -878,13 +885,13 @@
      C                   Exsr      SrFtst
      C                   Endif
      C                   Endif
- 
+
      C                   Endif
       **  Unwind subroutine stack name
      C     SrIHD_End     Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             q
- 
+
      C                   EndSr
      C**********************************************************************
       /EJECT
@@ -894,17 +901,17 @@
      C*                                                                    *
      C**********************************************************************
      C     SrID          BegSr
- 
+
       **  Set up subroutine stack name
      C                   Add       1             q
      C                   Movea     'SrID'        SrStack(q)
- 
+
      C                   Movel     'Y'           Unlocked
      C                   Movel     DumpReq       RtvDump
      C                   Movel     SH_SNDREF     SenderRef
      C                   Movel     SH_STID       SwiftID
      C                   Exsr      RtvHdr
- 
+
      C     HdrFound      Ifeq      'Y'
       ** For S/R SrMapD, we need to store the ID of the request for
       ** transfert for each detail we want to insert.
@@ -913,11 +920,11 @@
      C                   Movel     RFTID         Rft_ID
      C                   Movel     SD_TRNSID     TransID
      C                   Exsr      DtlNfnd
- 
+
      C     DtlFound      Ifeq      'N'
      C                   Exsr      SrMapD
      C                   Exsr      WriteD
- 
+
       ** If payment created through a message MT102
       ** Update status of the message
      C     SD_RFTMSG     Ifne      0
@@ -931,16 +938,16 @@
       ** Release the message
      C                   Exsr      RlsMsg
      C                   Endif
- 
+
      C                   Endif
- 
+
      C                   Endif
- 
+
       **  Unwind subroutine stack name
      C     SrID_End      Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             q
- 
+
      C                   EndSr
      C**********************************************************************
       /EJECT
@@ -950,17 +957,17 @@
      C*                                                                    *
      C**********************************************************************
      C     SrAH          BegSr
- 
+
       **  Set up subroutine stack name
      C                   Add       1             q
      C                   Movea     'SrAH'        SrStack(q)
- 
+
      C                   Movel     'N'           Unlocked
      C                   Movel     DumpReq       RtvDump
      C                   Movel     SH_SNDREF     SenderRef
      C                   Movel     SH_STID       SwiftID
      C                   Exsr      RtvHdr
- 
+
      C     HdrFound      Ifeq      'Y'
                                                                                               CSD015
       ** If Function Code is being monitored by Compliance Watch                              CSD015
@@ -1024,12 +1031,12 @@
      C                   Exsr      SrMapH
      C                   Exsr      UpdateH
      C                   Endif
- 
+
       **  Unwind subroutine stack name
      C     SrAH_End      Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             q
- 
+
      C                   EndSr
      C**********************************************************************
       /EJECT
@@ -1039,24 +1046,24 @@
      C*                                                                    *
      C**********************************************************************
      C     SrAHD         BegSr
- 
+
       **  Set up subroutine stack name
      C                   Add       1             q
      C                   Movea     'SrAHD'       SrStack(q)
- 
+
      C                   Movel     'N'           Unlocked
      C                   Movel     DumpReq       RtvDump
      C                   Movel     SH_SNDREF     SenderRef
      C                   Movel     SH_STID       SwiftID
      C                   Exsr      RtvHdr
- 
+
      C     HdrFound      Ifeq      'Y'
      C                   Movel     'N'           Unlocked
      C                   Movel     DumpReq       RtvDump
      C                   Movel     SD_RFTID      Rft_ID
      C                   Movel     SD_TRNSID     TransID
      C                   Exsr      RtvDtl
- 
+
      C     DtlFound      Ifeq      'Y'
                                                                                               CSD015
       ** If Function Code is being monitored by Compliance Watch                              CSD015
@@ -1165,14 +1172,14 @@
      C                   Exsr      SrMapD
      C                   Exsr      UpdateD
      C                   Endif
- 
+
      C                   Endif
- 
+
       **  Unwind subroutine stack name
      C     SrAHD_End     Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             q
- 
+
      C                   EndSr
      C**********************************************************************
       /EJECT
@@ -1182,7 +1189,7 @@
      C*                                                                    *
      C**********************************************************************
      C     SrAD          BegSr
- 
+
       **  Set up subroutine stack name
      C                   Add       1             q
      C                   Movea     'SrAD'        SrStack(q)
@@ -1190,14 +1197,14 @@
      C                   Movel     DumpReq       RtvDump
      C                   Movel     SD_RFTID      Rft_ID
      C                   Exsr      RtvHdr2
- 
+
      C     HdrFound      Ifeq      'Y'
      C                   Movel     'N'           Unlocked
      C                   Movel     DumpReq       RtvDump
      C                   Movel     SD_RFTID      Rft_ID
      C                   Movel     SD_TRNSID     TransID
      C                   Exsr      RtvDtl
- 
+
      C     DtlFound      Ifeq      'Y'
                                                                                               CSD015
       ** If Function Code is being monitored by Compliance Watch                              CSD015
@@ -1303,14 +1310,14 @@
      C                   Exsr      SrMapD
      C                   Exsr      UpdateD
      C                   Endif
- 
+
      C                   Endif
- 
+
       **  Unwind subroutine stack name
      C     SrAD_End      Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             q
- 
+
      C                   EndSr
      C**********************************************************************
       /EJECT
@@ -1320,16 +1327,16 @@
      C*                                                                    *
      C**********************************************************************
      C     SrDH          BegSr
- 
+
       **  Set up subroutine stack name
      C                   Add       1             q
      C                   Movea     'SrDH'        SrStack(q)
- 
+
      C                   Movel     'N'           Unlocked
      C                   Movel     DumpReq       RtvDump
      C                   Movel     SH_RFTID      Rft_ID
      C                   Exsr      RtvHdr2
- 
+
      C     HdrFound      Ifeq      'Y'
      C                   Delete    FT101HL3                             90
      C     *IN90         Ifeq      '1'
@@ -1342,7 +1349,7 @@
      C                   Movel     SrStack(q)    DBPROC
      C                   Exsr      *PSSR
      C                   Endif
- 
+
      C                   Movel     'N'           Unlocked
      C                   Movel     DumpReq       RtvDump
      C                   Movel     SH_RFTID      Rft_ID
@@ -1359,16 +1366,16 @@
      C                   Leave
      C                   Endif
      C                   Enddo
- 
+
       ** No errors : allows commit                                              177866
      C     E             Ifeq      0                                            177866
      C                   Movel     'Y'           CommitChg                      177866
      C                   Endif                                                  177866
      C                   Endif
- 
+
       ** Its possible to have a header record without any details
      C     DtlFound      Ifeq      'Y'
- 
+
      C                   Movel     SH_RFTID      Rft_ID
      C     *IN90         Doweq     '0'
      C                   Exsr      DeleteD
@@ -1381,7 +1388,7 @@
      C                   Movel     *BLANK        MsgStat
      C                   Exsr      SrFtst
      C                   Endif
- 
+
      C     Rft_ID        Reade     FT101DL0                             9190
      C     *IN91         Ifeq      '1'
      C                   Unlock    FT101DL0
@@ -1402,16 +1409,16 @@
      C                   Goto      SrDH_End
      C                   Endif
      C                   Enddo
- 
+
      C                   Endif
- 
+
      C                   Endif
- 
+
       **  Unwind subroutine stack name
      C     SrDH_End      Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             q
- 
+
      C                   EndSr
      C**********************************************************************
       /EJECT
@@ -1421,11 +1428,11 @@
      C*                                                                    *
      C**********************************************************************
      C     SrDHD         BegSr
- 
+
       **  Set up subroutine stack name
      C                   Add       1             q
      C                   Movea     'SrDHD'       SrStack(q)
- 
+
       ** *ERROR                                                            *
      C                   Movel     '*ERROR'      RetCodeIn
      C                   Movel     'FTM101UPD'   DBPGM
@@ -1434,12 +1441,12 @@
      C                   Movel     '*CALL'       DBKEY
      C                   Movel     SrStack(q)    DBPROC
      C                   Dump
- 
+
       **  Unwind subroutine stack name
      C     SrDHD_End     Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             q
- 
+
      C                   EndSr
      C**********************************************************************
       /EJECT
@@ -1449,17 +1456,17 @@
      C*                                                                    *
      C**********************************************************************
      C     SrDD          BegSr
- 
+
       **  Set up subroutine stack name
      C                   Add       1             q
      C                   Movea     'SrDD'        SrStack(q)
- 
+
      C                   Movel     'N'           Unlocked
      C                   Movel     DumpReq       RtvDump
      C                   Movel     SD_RFTID      Rft_ID
      C                   Movel     SD_TRNSID     TransID
      C                   Exsr      RtvDtl
- 
+
      C     DtlFound      Ifeq      'Y'
      C                   Exsr      DeleteD
      C     SD_RFTMSG     Ifne      0
@@ -1472,12 +1479,12 @@
      C                   Exsr      SrFtst
      C                   Endif
      C                   Endif
- 
+
       **  Unwind subroutine stack name
      C     SrDD_End      Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             q
- 
+
      C                   EndSr
      C**********************************************************************
       /EJECT
@@ -1487,11 +1494,11 @@
      C*                                                                    *
      C**********************************************************************
      C     SrMapH        BegSr
- 
+
       **  Set up subroutine stack name
      C                   Add       1             q
      C                   Movea     'SrMapH'      SrStack(q)
- 
+
      C     ActionCode    Ifeq      'I'
      C                   Clear                   FT101HD4
       *
@@ -1515,14 +1522,14 @@
      C*******************MOVEL     P_Ref_Ds      SH_RFTID                        177677
       *******************                                                        177677
      C*******************ENDIF                                                   177677
- 
+
       ***Retrieve*Transaction*Number**                                     177677
      C*****UserPrf       Ifeq      '*STP'                                  177677
      C*******************Move      SH_PYTP       Trns_Type                 177677
      C*******************Exsr      RtvTrn                                  177677
      C*******************Move      P_Ref_Ds      SH_RFTID                  177677
      C*******************Endif                                             177677
- 
+
      C                   Move      SH_RFTID      RFTID
       *                                                                          178751
       ** If sender's reference is blank, default it to RFT Id                    178751
@@ -1532,9 +1539,9 @@
      C                   Endif                                                   178751
       *                                                                          178751
      C                   Move      SH_SNDREF     SNDREF
- 
+
      C                   Endif
- 
+
      C                   Move      SH_STID       STID
      C                   Move      SH_PYTP       PYTP
      C                   Move      SH_PYST       PYST
@@ -1565,7 +1572,7 @@
      C                   MOVE      SH_RHMSGR     RHMSGR                         185107
      C**********         MOVE      SH_RSEQNO     RSEQNO                                221761 TDA020
      C                   MOVE      SH_RSEQNO     RSEQNOX                                      TDA020
- 
+
      C     ActionCode    Ifeq      'I'
      C                   Move      UserPrf       INUSER
      C                   Z-add     BJRDNB        INDATE
@@ -1599,12 +1606,12 @@
       *                                                                         178384
      C                   Move      PSRuntime     SH_UPDTIM
      C                   Endif
- 
+
       **  Unwind subroutine stack name
      C     SrMapH_End    Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             q
- 
+
      C                   EndSr
      C**********************************************************************
       /EJECT
@@ -1614,14 +1621,14 @@
      C*                                                                    *
      C**********************************************************************
      C     SrMapD        BegSr
- 
+
       **  Set up subroutine stack name
      C                   Add       1             q
      C                   Movea     'SrMapD'      SrStack(q)
- 
+
      C     ActionCode    Ifeq      'I'
      C                   Clear                   FT101DD0
- 
+
      C                   Move      SH_RFTID      RFTID
       *                                                                         178751
       ** Retrieve sequence number                                               178751
@@ -1637,9 +1644,9 @@
      C                   Endif                                                  178751
       *                                                                         178751
      C                   Move      SD_TRNSID     TRNSID
- 
+
      C                   Endif
- 
+
      C                   Move      SD_FXDREF     FXDREF
      C                   Move      SD_INSCA4     INSCA4
      C                   Move      SD_INSCB4     INSCB4
@@ -1707,21 +1714,21 @@
      C                   Move      SD_PYBCQS     PYBCQS
      C                   Move      SD_RFTMSQ     RFTMSQ
      C                   Move      SD_RFTMSG     RFTMSG
- 
+
       ** Retrieve the spot rate of the PAY currency
      C                   If        SD_PAYCCY <> *Blanks
      C                   Move      SD_PAYCCY     CcyIn
      C                   Exsr      RtvCcy
      C                   Z-add     A6SPRT        PYBCQS
      C                   Endif
- 
+
       ** Retrieve the spot rate of the Transfer currency
      C                   If        SD_TRNCCY <> *Blanks
      C                   Move      SD_TRNCCY     CcyIn
      C                   Exsr      RtvCcy
      C                   Z-add     A6SPRT        TFBCQS
      C                   Endif
- 
+
      C     ActionCode    Ifeq      'I'
      C                   Move      UserPrf       INUSER
      C                   Z-add     BJRDNB        INDATE
@@ -1740,12 +1747,12 @@
       *                                                                         178384
      C                   Move      PSRuntime     UPDTIM
      C                   Endif
- 
+
       **  Unwind subroutine stack name
      C     SrMapD_End    Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             q
- 
+
      C                   EndSr
      C**********************************************************************
       /EJECT
@@ -1755,11 +1762,11 @@
      C*                                                                    *
      C**********************************************************************
      C     RtvTrn        BegSr
- 
+
       **  Set up subroutine stack name
      C                   Add       1             q
      C                   Movea     'RtvTrn'      SrStack(q)
- 
+
       ** Inputs
       ** -------
       ** Transaction Type
@@ -1769,13 +1776,13 @@
       ** Transaction Number
       **                                         P_Ref_Ds
      C*******************Movel     *BLANK        P_Ref_Ds         15       177677
- 
+
      C                   Callb     'FTM1012GN'                            90
      C                   Parm                    RetCodeIn
      C                   Parm                    Trns_Type
      C*******************Parm                    P_Ref_Ds                       177677
      C                   Parm                    P_Ref_Ds         15            177677
- 
+
      C     *IN90         Ifeq      '1'
      C     RetCodeIn     Orne      *BLANK
       ** *ERROR
@@ -1787,14 +1794,14 @@
      C                   Movel     SrStack(q)    DBPROC
      C                   Exsr      *PSSR
      C                   Endif
- 
+
      C                   Movel     *BLANK        Trns_Type
- 
+
       **  Unwind subroutine stack name
      C     RtvTrn_End    Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             q
- 
+
      C                   EndSr
      C**********************************************************************
                                                                                 178751
@@ -1843,21 +1850,21 @@
      C*                                                                    *
      C**********************************************************************
      C     RtvJob        BegSr
- 
+
       **  Set up subroutine stack name
      C                   Add       1             q
      C                   Movea     'RtvJob'      SrStack(q)
- 
+
       ** Outputs
       ** -------
       ** User profile
      C     *Like         Define    INUSER        UserPrf
       ** Response Mode (S=Submitted, A=Interactive)
       **                                         RespMode
- 
+
      C                   Movel     *BLANK        UserPrf
      C                   Movel     *BLANK        RespMode          1
- 
+
      C                   Callb     'ZACRTVJOBA'                         90
      C                   Parm                    PSJobName
      C                   Parm                    PSUser
@@ -1873,7 +1880,7 @@
      C                   Movel     SrStack(q)    DBPROC
      C                   Exsr      *PSSR
      C                   Endif
- 
+
      C     JobType       Ifeq      'BATCH'
      C                   Movel(P)  '*STP'        UserPrf
      C                   Movel(P)  'S'           RespMode
@@ -1890,12 +1897,12 @@
      C                   MOVEL     USER          USERPRF                        CAP084
      C                   Movel(P)  'A'           RespMode                       CAP084
      C                   ENDIF                                                  CAP084
- 
+
       **  Unwind subroutine stack name
      C     RtvJob_End    Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             q
- 
+
      C                   EndSr
      C**********************************************************************
       /EJECT
@@ -1905,11 +1912,11 @@
      C*                                                                    *
      C**********************************************************************
      C     RtvCcy        BegSr
- 
+
       **  Set up subroutine stack name
      C                   Add       1             q
      C                   Movea     'RtvCcy'      SrStack(q)
- 
+
       ** Inputs
       ** -------
       ** Currency
@@ -1917,16 +1924,16 @@
       ** Outputs
       ** -------
       ** Fields of SDCURRPD
- 
+
      C                   Clear                   SDCURR
- 
+
      C                   Callb     'AOCURRR0'                           90
      C                   Parm      '*DBERR '     RtnCod            7
      C                   Parm      '*KEY   '     Option            7
      C                   Parm                    CcyIn
      C*****SDCURR        Parm      SDCURR        DSFDY                                        220004
      C     SDCURR        Parm      SDCURR        DSSDY                                        220004
- 
+
      C     RtnCod        Ifne      *BLANK
      C     *IN90         Oreq      '1'
       ** *ERROR
@@ -1938,15 +1945,15 @@
      C                   Movel     SrStack(q)    DBPROC
      C                   Exsr      *PSSR
      C                   Endif
- 
+
       ** Reset input variables
      C                   Movel     *BLANK        CcyIn
- 
+
       **  Unwind subroutine stack name
      C     RtvCcy_End    Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             q
- 
+
      C                   EndSr
      C**********************************************************************
       /EJECT
@@ -1956,7 +1963,7 @@
      C*                                                                    *
      C**********************************************************************
      C     HdrNfnd       BegSr
- 
+
       ** Inputs
       ** -------
       ** Sender's Reference
@@ -1969,16 +1976,16 @@
       ** -------
       ** Header found
       **                                         HdrFound
- 
+
       **  Set up subroutine stack name
      C                   Add       1             q
      C                   Movea     'HdrNfnd'     SrStack(q)
- 
+
      C                   Movel     'N'           HdrFound
      C     KRftHdr1      Klist
      C                   Kfld                    SwiftID
      C                   Kfld                    SenderRef
- 
+
      C     KRftHdr1      Setll     FT101HL4                               90
      C     *IN90         Ifeq      '1'
      C                   Movel     'Y'           HdrFound
@@ -1997,17 +2004,17 @@
      C                   Exsr      *PSSR
      C                   Endif
      C                   Endif
- 
+
       ** Reset input variables
      C                   Movel     *BLANK        NfndDump
      C                   Movel     *BLANK        SenderRef
      C                   Movel     *BLANK        SwiftID
- 
+
       **  Unwind subroutine stack name
      C     HdrNfn_End    Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             q
- 
+
      C                   EndSr
      C**********************************************************************
       /EJECT
@@ -2017,7 +2024,7 @@
      C*                                                                    *
      C**********************************************************************
      C     RtvHdr        BegSr
- 
+
       ** Inputs
       ** -------
       ** Sender's Reference
@@ -2033,14 +2040,14 @@
       ** Fields of FT101HPD
       ** Header found
       **                                         HdrFound
- 
+
       **  Set up subroutine stack name
      C                   Add       1             q
      C                   Movea     'RtvHdr'      SrStack(q)
- 
+
      C                   Clear                   FT101HD4
      C                   Movel     'Y'           HdrFound          1
- 
+
      C     KRftHdr1      Setll     FT101HL4                               90
      C     *IN90         Ifeq      '0'
      C                   Movel     'N'           HdrFound
@@ -2058,14 +2065,14 @@
      C                   Movel     SrStack(q)    DBPROC
      C                   Exsr      *PSSR
      C                   Endif
- 
+
      C                   Else
- 
+
      C     KRftHdr1      Reade     FT101HL4                             9190
      C     Unlocked      Ifeq      'Y'
      C                   Unlock    FT101HL4
      C                   Endif
- 
+
      C     *IN90         Ifeq      '1'
      C     *IN91         Oreq      '1'
      C                   Movel     'N'           DtlFound
@@ -2093,18 +2100,18 @@
      C                   Endif
      C                   Endif
      C                   Endif
- 
+
       ** Reset input variables
      C                   Movel     *BLANK        Unlocked
      C                   Movel     *BLANK        SenderRef
      C                   Movel     *BLANK        SwiftID
      C                   Movel     *BLANK        RtvDump
- 
+
       **  Unwind subroutine stack name
      C     RtvHdr_End    Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             q
- 
+
      C                   EndSr
      C**********************************************************************
       /EJECT
@@ -2114,7 +2121,7 @@
      C*                                                                    *
      C**********************************************************************
      C     RtvHdr2       BegSr
- 
+
       ** Inputs
       ** -------
       ** Request for Transfert ID
@@ -2128,14 +2135,14 @@
       ** Fields of FT101HPD
       ** Header found
       **                                         HdrFound
- 
+
       **  Set up subroutine stack name
      C                   Add       1             q
      C                   Movea     'RtvHdr2'     SrStack(q)
- 
+
      C                   Clear                   FT101HD0
      C                   Movel     'Y'           HdrFound          1
- 
+
      C     Rft_ID        Setll     FT101HL3                               90
      C     *IN90         Ifeq      '0'
      C                   Movel     'N'           HdrFound
@@ -2158,7 +2165,7 @@
      C     Unlocked      Ifeq      'Y'
      C                   Unlock    FT101HL3
      C                   Endif
- 
+
      C     *IN90         Ifeq      '1'
      C     *IN91         Oreq      '1'
      C                   Movel     'N'           HdrFound
@@ -2186,16 +2193,16 @@
      C                   Endif
      C                   Endif
      C                   Endif
- 
+
       ** Reset input variables
      C                   Movel     *BLANK        Unlocked
      C                   Movel     *BLANK        Rft_ID
- 
+
       **  Unwind subroutine stack name
      C     RtvHd2_End    Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             q
- 
+
      C                   EndSr
      C**********************************************************************
       /EJECT
@@ -2205,7 +2212,7 @@
      C*                                                                    *
      C**********************************************************************
      C     RtvDtl        BegSr
- 
+
       ** Inputs
       ** -------
       ** RFT identifier
@@ -2221,14 +2228,14 @@
       ** Fields of FT101DPD
       ** Detail found
       **                                         DtlFound
- 
+
       **  Set up subroutine stack name
      C                   Add       1             q
      C                   Movea     'RtvDtl'      SrStack(q)
- 
+
      C                   Clear                   FT101DD0
      C                   Movel     'Y'           DtlFound
- 
+
      C     KRftDtl1      Setll     FT101DL0                               90
      C     *IN90         Ifeq      '0'
      C                   Movel     'N'           DtlFound
@@ -2246,14 +2253,14 @@
      C                   Movel     SrStack(q)    DBPROC
      C                   Exsr      *PSSR
      C                   Endif
- 
+
      C                   Else
- 
+
      C     KRftDtl1      Reade     FT101DL0                             9190
      C     Unlocked      Ifeq      'Y'
      C                   Unlock    FT101DL0
      C                   Endif
- 
+
      C     *IN90         Ifeq      '1'
      C     *IN91         Oreq      '1'
      C                   Movel     'N'           DtlFound
@@ -2281,17 +2288,17 @@
      C                   Endif
      C                   Endif
      C                   Endif
- 
+
       ** Reset input variables
      C                   Movel     *BLANK        Unlocked          1
      C                   Movel     *BLANK        Rft_ID
      C                   Movel     *BLANK        TransID
- 
+
       **  Unwind subroutine stack name
      C     RtvDtl_End    Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             q
- 
+
      C                   EndSr
      C**********************************************************************
       /EJECT
@@ -2301,7 +2308,7 @@
      C*                                                                    *
      C**********************************************************************
      C     RtvDtl2       BegSr
- 
+
       ** Inputs
       ** -------
       ** Request for Transfert ID
@@ -2315,14 +2322,14 @@
       ** Fields of FT101DPD
       ** Detail found
       **                                         DtlFound
- 
+
       **  Set up subroutine stack name
      C                   Add       1             q
      C                   Movea     'RtvDtl2'     SrStack(q)
- 
+
      C                   Clear                   FT101DD0
      C                   Movel     'Y'           DtlFound          1
- 
+
      C     Rft_ID        Setll     FT101DL0                               90
      C     *IN90         Ifeq      '0'
      C                   Movel     'N'           DtlFound
@@ -2340,14 +2347,14 @@
      C                   Movel     SrStack(q)    DBPROC
      C                   Exsr      *PSSR
      C                   Endif
- 
+
      C                   Else
- 
+
      C     Rft_ID        Reade     FT101DL0                             9190
      C     Unlocked      Ifeq      'Y'
      C                   Unlock    FT101DL0
      C                   Endif
- 
+
      C     *IN90         Ifeq      '1'
      C     *IN91         Oreq      '1'
      C                   Movel     'N'           DtlFound
@@ -2375,17 +2382,17 @@
      C                   Endif
      C                   Endif
      C                   Endif
- 
+
       ** Reset input variables
      C                   Movel     *BLANK        Unlocked
      C                   Movel     *BLANK        Rft_ID
      C                   Movel     *BLANK        RtvDump
- 
+
       **  Unwind subroutine stack name
      C     RtvDt2_End    Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             q
- 
+
      C                   EndSr
      C**********************************************************************
       /EJECT
@@ -2395,7 +2402,7 @@
      C*                                                                    *
      C**********************************************************************
      C     DtlNfnd       BegSr
- 
+
       ** Inputs
       ** -------
       ** RFT identifier
@@ -2408,16 +2415,16 @@
       ** -------
       ** Detail found
       **                                         DtlFound
- 
+
       **  Set up subroutine stack name
      C                   Add       1             q
      C                   Movea     'DtlNfnd'     SrStack(q)
- 
+
      C                   Movel     'N'           DtlFound
      C     KRftDtl1      Klist
      C                   Kfld                    Rft_ID
      C                   Kfld                    TransID
- 
+
      C     KRftDtl1      Setll     FT101DL0                               90
      C     *IN90         Ifeq      '1'
      C                   Movel     'Y'           DtlFound
@@ -2436,17 +2443,17 @@
      C                   Exsr      *PSSR
      C                   Endif
      C                   Endif
- 
+
       ** Reset input variables
      C                   Movel     *BLANK        NfndDump
      C                   Movel     *BLANK        Rft_ID
      C                   Movel     *BLANK        TransID
- 
+
       **  Unwind subroutine stack name
      C     DtlNfn_End    Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             q
- 
+
      C                   EndSr
      C**********************************************************************
       /EJECT
@@ -2456,11 +2463,11 @@
      C*                                                                    *
      C**********************************************************************
      C     WriteH        BegSr
- 
+
       ** Inputs
       ** -------
       ** *NONE
- 
+
       **  Set up subroutine stack name
      C                   Add       1             q
      C                   Movea     'WriteH'      SrStack(q)
@@ -2495,7 +2502,7 @@
                                                                                               CSD015
      C                   ENDIF                                                                CSD015
      C                   ENDIF                                                                CSD015
- 
+
      C                   Write     FT101HD4                             90
      C     *IN90         Ifeq      '1'
       ** *ERROR                                                            *
@@ -2507,12 +2514,12 @@
      C                   Movel     SrStack(q)    DBPROC
      C                   Exsr      *PSSR
      C                   Endif
- 
+
       **  Unwind subroutine stack name
      C     WriteH_End    Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             q
- 
+
      C                   EndSr
      C**********************************************************************
       /EJECT
@@ -2522,11 +2529,11 @@
      C*                                                                    *
      C**********************************************************************
      C     WriteD        BegSr
- 
+
       ** Inputs
       ** -------
       ** *NONE
- 
+
       **  Set up subroutine stack name
      C                   Add       1             q
      C                   Movea     'WriteD'      SrStack(q)
@@ -2596,7 +2603,7 @@
      C                   ENDIF                                                                CSD015
      C                   ENDIF                                                                CSD015
      C                   ENDIF                                                                CSD015
- 
+
      C                   Write     FT101DD0                             90
      C     *IN90         Ifeq      '1'
       ** *ERROR                                                            *
@@ -2608,12 +2615,12 @@
      C                   Movel     SrStack(q)    DBPROC
      C                   Exsr      *PSSR
      C                   Endif
- 
+
       **  Unwind subroutine stack name
      C     WriteD_End    Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             q
- 
+
      C                   EndSr
      C**********************************************************************
       /EJECT
@@ -2623,15 +2630,15 @@
      C*                                                                    *
      C**********************************************************************
      C     UpdateH       BegSr
- 
+
       ** Inputs
       ** -------
       ** *NONE
- 
+
       **  Set up subroutine stack name
      C                   Add       1             q
      C                   Movea     'UpdateH'     SrStack(q)
- 
+
      C                   Update    FT101HD4                             90
      C     *IN90         Ifeq      '1'
       ** *ERROR                                                            *
@@ -2643,12 +2650,12 @@
      C                   Movel     SrStack(q)    DBPROC
      C                   Exsr      *PSSR
      C                   Endif
- 
+
       **  Unwind subroutine stack name
      C     UpdatH_End    Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             q
- 
+
      C                   EndSr
      C**********************************************************************
       /EJECT
@@ -2658,15 +2665,15 @@
      C*                                                                    *
      C**********************************************************************
      C     UpdateD       BegSr
- 
+
       ** Inputs
       ** -------
       ** *NONE
- 
+
       **  Set up subroutine stack name
      C                   Add       1             q
      C                   Movea     'UpdateD'     SrStack(q)
- 
+
      C                   Update    FT101DD0                             90
      C     *IN90         Ifeq      '1'
       ** *ERROR                                                            *
@@ -2678,12 +2685,12 @@
      C                   Movel     SrStack(q)    DBPROC
      C                   Exsr      *PSSR
      C                   Endif
- 
+
       **  Unwind subroutine stack name
      C     UpdatD_End    Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             q
- 
+
      C                   EndSr
      C**********************************************************************
       /EJECT
@@ -2693,15 +2700,15 @@
      C*                                                                    *
      C**********************************************************************
      C     UpdateH2      BegSr
- 
+
       ** Inputs
       ** -------
       ** *NONE
- 
+
       **  Set up subroutine stack name
      C                   Add       1             q
      C                   Movea     'UpdateH2'    SrStack(q)
- 
+
      C                   Update    FT101HD0                             90
      C     *IN90         Ifeq      '1'
       ** *ERROR                                                            *
@@ -2713,12 +2720,12 @@
      C                   Movel     SrStack(q)    DBPROC
      C                   Exsr      *PSSR
      C                   Endif
- 
+
       **  Unwind subroutine stack name
      C     UpdtH2_End    Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             q
- 
+
      C                   EndSr
      C**********************************************************************
       /EJECT
@@ -2728,15 +2735,15 @@
      C*                                                                    *
      C**********************************************************************
      C     UpdateD2      BegSr
- 
+
       ** Inputs
       ** -------
       ** *NONE
- 
+
       **  Set up subroutine stack name
      C                   Add       1             q
      C                   Movea     'UpdateD2'    SrStack(q)
- 
+
      C                   Update    FT101DD0                             90
      C     *IN90         Ifeq      '1'
       ** *ERROR                                                            *
@@ -2748,12 +2755,12 @@
      C                   Movel     SrStack(q)    DBPROC
      C                   Exsr      *PSSR
      C                   Endif
- 
+
       **  Unwind subroutine stack name
      C     UpdtD2_End    Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             q
- 
+
      C                   EndSr
      C**********************************************************************
       /EJECT
@@ -2763,15 +2770,15 @@
      C*                                                                    *
      C**********************************************************************
      C     DeleteD       BegSr
- 
+
       ** Inputs
       ** -------
       ** *NONE
- 
+
       **  Set up subroutine stack name
      C                   Add       1             q
      C                   Movea     'DeleteD'     SrStack(q)
- 
+
      C                   Delete    FT101DL0                             90
      C     *IN90         Ifeq      '1'
       ** *ERROR                                                            *
@@ -2783,12 +2790,12 @@
      C                   Movel     SrStack(q)    DBPROC
      C                   Exsr      *PSSR
      C                   Endif
- 
+
       **  Unwind subroutine stack name
      C     DeletD_End    Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             q
- 
+
      C                   EndSr
      C**********************************************************************
       /EJECT
@@ -2815,11 +2822,11 @@
      C     *Like         Define    FTFRGL        FundsFrom
       ** Funds To
      C     *Like         Define    FTTOGL        FundsTo
- 
+
       **  Set up subroutine stack name
      C                   Add       1             Q
      C                   Movea     'SrFtst'      SrStack(q)
- 
+
       **  Fill record format data structure with available data
      C                   Clear                   MEINFT
      C                   Movel     FundsFrom     FTFRGL
@@ -2845,7 +2852,7 @@
      C                   Movel     RFTID         FTOPRF
      C                   Endif
      C                   Endif
- 
+
      C                   Call      'ME1050'                             90
      C                   Parm                    TypeTrn           8
      C                   Parm                    CallingPgm
@@ -2853,7 +2860,7 @@
      C                   Parm                    Message
      C                   Parm                    MEINFT
      C                   Parm      *BLANKS       RtnCod
- 
+
      C     *IN90         Ifeq      '1'
      C     RtnCod        Oreq      '*ERROR*'
      C                   Add       1             E
@@ -2869,9 +2876,9 @@
      C                   Movel     SrStack(q)    DBPROC
      C                   Exsr      *PSSR
      C                   Endif
- 
+
      C                   Endif
- 
+
       ** Reset input variables
      C                   Z-add     0             MsgRefI
      C                   Z-add     0             MsgPartI
@@ -2880,12 +2887,12 @@
      C                   Movel     *BLANK        Message
      C                   Movel     *BLANK        FundsFrom
      C                   Movel     *BLANK        FundsTo
- 
+
       **  Unwind subroutine stack name
      C     Ftst_End      Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             Q
- 
+
      C                   EndSr
      C**********************************************************************
       /EJECT
@@ -2895,14 +2902,14 @@
       *                                                                    *
       **********************************************************************
      C     RlsMsg        Begsr
- 
+
       **  Set up subroutine stack name
      C                   Add       1             Q
      C                   Movea     'RlsMsg'      SrStack(q)
- 
+
      C                   Z-ADD     SD_RFTMSG     W0MSGREF                       185660
      C                   Z-ADD     SD_RFTMSQ     W0MSGPRT                       185660
- 
+
      C                   Call      'ME1070'                             90
      C                   Parm      '*DEL   '     Request           7
      C*******************Parm                    SD_RFTMSG                      185660
@@ -2925,12 +2932,12 @@
      C                   Movel     SrStack(q)    DBPROC
      C                   Exsr      *PSSR
      C                   Endif
- 
+
       **  Unwind subroutine stack name
      C     RMsg_End      Tag
      C                   Movea     *BLANKS       SrStack(q)
      C                   Sub       1             Q
- 
+
      C                   EndSr
       *****************************************************************                       CSD015
       /EJECT                                                          *                       CSD015
@@ -3667,63 +3674,63 @@
       **  PROGRAM PARAMETERS
       *
      C     *ENTRY        PLIST
- 
+
       ** INPUT PARAMETERS
- 
+
       ** Return Code
      C                   Parm                    RetCodeIn
- 
+
       ** Action Code
      C                   Parm                    ActionCode
- 
+
       ** Details of the header record (in file format)
      C                   Parm                    HdrRcdIn
- 
+
       ** Details of the detail record (in file format)
      C                   Parm                    DtlRcdIn
- 
+
       ** Flag to indicate whether a header record is involved in the update
      C                   Parm                    HdrInfo
- 
+
       ** Flag to indicate whether a detail record is involved in the update
      C                   Parm                    DtlInfo
- 
+
       ** Old Request for transfert ID (for Reassign mode)
      C                   Parm                    OldRftID
- 
+
       ** Old Transaction reference (for Reassign mode)
      C                   Parm                    OldTransID
- 
+
       ** Calling Program (for Message Management and STP)
      C                   Parm                    CallingPgm
- 
+
       ** Network (for Message Management and STP)
      C                   Parm                    Network
- 
+
       ** OUTPUT PARAMETERS
- 
+
       ** Errors produced during I/O operation
      C                   Parm                    IdxErr
      C                   Parm                    FldNameArr
      C                   Parm                    MsgIdArr
      C                   Parm                    MsgDtaArr
- 
+
      C                   Movel     *BLANK        RetCodeIn
- 
+
      C**********         Exsr      RtvJob                                                   BUG15235
      C*****UserPrf       Ifeq      '*STP'                                                   BUG15235
      C**********         Movel     'Y'           DumpReq                                    BUG15235
      C**********         Else                                                               BUG15235
      C**********         Movel     'N'           DumpReq                                    BUG15235
      C**********         Endif                                                              BUG15235
- 
+
       ** Access Bank Details
- 
+
      C                   Call      'AOBANKR0'
      C                   Parm      *Blanks       @RTCD
      C                   Parm      '*FIRST   '   @OPTN
      C     Sdbank        Parm      Sdbank        Dsfdy
- 
+
      C                   If        @RTCD <> *Blanks
      C                   Eval      dbfile = 'SDBANKPD'
      C                   Eval      dbase = 1
@@ -3937,7 +3944,7 @@
      C     KRftId        KLIST                                                                CSD015
      C                   KFLD                    SH_PYTP                                      CSD015
      C                   KFLD                    SH_RFTID                                     CSD015
- 
+
      C                   EndSr
      C**********************************************************************
       /EJECT

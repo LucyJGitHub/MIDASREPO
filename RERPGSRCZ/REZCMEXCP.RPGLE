@@ -37,8 +37,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *  Last Amend No. AR928996A          Date 03May12               *
+      *  Prev Amend No. AR928996           Date 27Mar12               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CRE075             Date 06Dec10               *
       *                 AR676213           Date 19Nov10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG24998           Date 17Jul09               *
@@ -54,6 +56,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
+      *             data structure field to have the correct length.  *
+      *             (Child: AR928997A)                                *
+      *  AR928996 - Data lost due to rate field :36: being truncated. *
+      *             (Child: AR928997)                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  AR676213 - Incorrect definition of CLGLAI field (Recompile)  *
@@ -68,12 +75,12 @@
       *           exceptions.  Created as part of CRE008.             *
       *                                                               *
       *****************************************************************
- 
+
      FREZSHLJ1  IF   E           K DISK
      FREZSHLL0  IF   E           K DISK
      F                                     RENAME(REZSHLD0:REZSHLDX)
      FRECMBRL1  IF   E           K DISK
- 
+
       *****************************************************************
       * Standard D Specifications
      D/COPY ZACPYSRC,RECMSTDD
@@ -114,12 +121,12 @@
      D  @GLAcsq               24     25                                                       CGL029
      D  @GLBlank16            26     35                                                       CGL029
      D  @IBAN                  2     35
- 
+
      D WVDAT           DS             6
      D  YY                     1      2
      D  MM                     3      4
      D  DD                     5      6
- 
+
      D WPSTA           S             15
      D @PSTA           S             15  0
      D WVDATD          S              6
@@ -132,7 +139,7 @@
      D KACCD           S             10  0                                                    CGL029
      D P@ACCD          S             10                                                       CGL029
       *****************************************************************
- 
+
       ** Define entry parameters
      C     *ENTRY        PLIST
       ** Return Code Parameter
@@ -179,16 +186,16 @@
      C                   KFLD                    KCCY
      C                   KFLD                    KACCD
      C                   KFLD                    KACSQ
- 
+
       *  Access Bank Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*DBERR  '    @RTCD             7
      C                   PARM      '*FIRST  '    @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       *  Access Cash Management Details
- 
+
      C                   CALLB     'AOCMANR0'
      C                   PARM      *BLANKS       @RTCD             7
      C                   PARM      '*FIRST  '    @OPTN             7
@@ -398,16 +405,16 @@
      C                   PARM      CLHIER        I_HIER            9 0
       * Hierarchy Type
      C                   PARM      *BLANK        I_HTYP            2
- 
+
      C                   PARM                    O_CMHD
      C                   PARM                    O_ZSHD
      C                   PARM                    O_GAHD
      C                   Endif
      C                   Endif
- 
+
       * End if error occurred in module
       * or if no record found
- 
+
      C     X_RTCD        IFEQ      '*ERROR'
      C     X_RTCD        OREQ      '*NOREC'
      C     *IN70         OREQ      '1'
@@ -533,7 +540,7 @@
      C**********************************************************************
      C*
      C     ChkBlockZBS   BEGSR
- 
+
       * Sweeping Blocked?
      C     KRECMBR       CHAIN     RECMBRL1                           99        *
      C  N99              MOVE      'Y'           WBlockZBS
@@ -545,13 +552,13 @@
      C**********************************************************************
      C*
      C     ChkCover      BEGSR
- 
+
       * If check for cover on top a/c is not done
       *  then top a/c balance & overdraft are not monitored
- 
+
      C                   Z-ADD     *ZERO         TopBalance       15 0
      C                   MOVE      *ALL'9'       TopOverDft       15 0
- 
+
      C     ZDCHKC        IFEQ      'Y'
      C                   CALLB     'RE100615'
      C                   PARM      *BLANK        X_RTCD
@@ -663,11 +670,11 @@
      C**********************************************************************
      C*
      C     ChkBackFwd    BEGSR
- 
+
       *  Determine External Forward and Back Value dates
      C                   MOVEL     CMEFVD        I_FVD
      C                   MOVEL     CMEBVD        I_BVD
- 
+
      C*  If Back Value Days is '00', consider deferred sweeps and
      C*  change number to 01.
      C                   If        %subst(I_BVD:1:2) = '00' OR
@@ -688,31 +695,31 @@
      C                   Endif
      C                   Endif
      C                   Endif
- 
+
      C                   CALLB     'REZFWDBCK'
- 
+
       * Return code
       * Error Message
      C                   PARM      *BLANK        X_RTCD
      C                   PARM      *BLANK        X_ERMS
       * INPUTS
- 
+
       * Forward value days
       * Back value days
      C                   PARM                    I_FVD             3
      C                   PARM                    I_BVD             3
- 
+
       * SDBANKPD
      C                   PARM                    SDBANK
- 
+
       * OUTPUTS
       * Forward value date
       * Back value date
      C                   PARM                    O_FVDate          5 0
      C                   PARM                    O_BVDate          5 0
- 
+
       * End if error occurred in module
- 
+
      C     X_RTCD        IFEQ      '*ERROR'
      C                   EVAL      X_ERMS = 'ERROR IN FORWARD AND BACK DAYS'
      C                   EXSR      *PSSR

@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056223           Date 15Jul20               *
-      *  Prev Amend No. MD051347           Date 12Mar20               *
+      *  Last Amend No. MD055733           Date 03Jul20               *      
+      *  Prev Amend No. MD056223           Date 15Jul20               *
+      *                 MD051347           Date 12Mar20               *
       *                 AR819229           Date 10Dec18               *
       *                 AR932652           Date 06Aug13               *
       *                 AR927395           Date 05Aug13               *
@@ -424,6 +425,9 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
+      *             components.                                       *
+      *           - Redeliver of MD050139.                            *      
       *  MD056223 - CLE031: Incorrect Posting narratives in           *
       *             Fee postings with conversion                      *
       *           - The amount and currency of the posting narratives *

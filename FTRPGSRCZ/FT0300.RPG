@@ -12,8 +12,13 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055849           Date 15May20               *
-      *  Prev Amend No. CSW220             Date 09Mar20               *
+      *  Last Amend No. AR928894           Date 05Mar12               *
+      *  Prev Amend No. AR937689           Date 15Mar12               *
+      *                 AR920363           Date 23Feb12               *
+      *                 AR928996A          Date 03May12               *
+      *                 AR928996           Date 27Mar12               *
+      *                 MD055849           Date 15May20               *
+      *                 CSW220             Date 09Mar20               *
       *                 MD055612           Date 09Apr20               *
       *                 MD046248           Date 27Oct17               *
       *                 CFT151             Date 21Mar14               *
@@ -138,6 +143,20 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR928894 - Correct settle/pay base currency equivalents for  *
+      *             OPs.                                              *
+      *             (Child: AR928897)                                 *
+      *  AR937689 - DB error when due to V#TOGL being blank         . *
+      *             SRB103 being called when error in validation      *
+      *             (Child: AR937690)                                 *
+      *  AR920363 - Ordering Bank details cleared during STP charges  *
+      *             defaulting.                                       *
+      *             (Child: AR922611)                                 *
+      *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
+      *             data structure field to have the correct length.  *
+      *             (Child: AR928997A)                                *
+      *  AR928996 - Data lost due to rate field :36: being truncated. *
+      *             (Child: AR928997)                                 *
       *  MD055849 - Incoming Messages other than MT103 updates FTM199 *
       *  CSW220 - SWIFT Changes 2020                                  *
       *  MD055612 -  Compilation Core error                           *
@@ -4794,6 +4813,7 @@
       ** Find out if this OP will potentially create a MT103.                               BUG24724
       *                                                                                     BUG24724
      C           CFT014    IFEQ 'Y'                                                         BUG24724
+     C           E#NOUP    ANDEQ*BLANKS                                                     AR937689
      C                     EXSR SRB103                                                      BUG24724
      C                     ENDIF                                                            BUG24724
       *
@@ -9284,6 +9304,15 @@
       *
      C                     Z-ADDD#TAMT    PBCQ
      C                     END
+      *                                                                                     AR928894
+      ** If Pay Currency is Base then set SBCQ to PBCQ                                      AR928894
+      ** else set PBCQ to SBCQ                                                              AR928894
+      *                                                                                     AR928894
+     C           PCCY      IFEQ V#BCCY                                                      AR928894
+     C                     Z-ADDPBCQ      SBCQ                                              AR928894
+     C                     ELSE                                                             AR928894
+     C                     Z-ADDSBCQ      PBCQ                                              AR928894
+     C                     END                                                              AR928894
       *
       *  Booking and originating branches
       *
@@ -20443,10 +20472,31 @@ a     *                                                                         
      C                     ADD  1         Q       50                      CFT009
      C                     MOVEL'DFOCHG'  @STK,Q                          CFT009
       *                                                                   CFT009
+     C           *LIKE     DEFN OPORBT    SVORBT                        AR920363
+     C           *LIKE     DEFN OPORB1    SVORB1                        AR920363
+     C           *LIKE     DEFN OPORB2    SVORB2                        AR920363
+     C           *LIKE     DEFN OPORB3    SVORB3                        AR920363
+     C           *LIKE     DEFN OPORB4    SVORB4                        AR920363
+     C           *LIKE     DEFN OPORB5    SVORB5                        AR920363
+      *                                                                 AR920363
+     C                     MOVELOPORBT    SVORBT                        AR920363
+     C                     MOVELOPORB1    SVORB1                        AR920363
+     C                     MOVELOPORB2    SVORB2                        AR920363
+     C                     MOVELOPORB3    SVORB3                        AR920363
+     C                     MOVELOPORB4    SVORB4                        AR920363
+     C                     MOVELOPORB5    SVORB5                        AR920363
+      *                                                                 AR920363
      C                     CLEAROTPYDS                                    CFT009
      C                     CLEAROTPXDS                                    CFT009
      C                     CLEARTRNDET                                    CFT009
      C                     CLEARTRNEXT                                    CFT009
+      *                                                                 AR920363
+     C                     MOVELSVORBT    OPORBT                        AR920363
+     C                     MOVELSVORB1    OPORB1                        AR920363
+     C                     MOVELSVORB2    OPORB2                        AR920363
+     C                     MOVELSVORB3    OPORB3                        AR920363
+     C                     MOVELSVORB4    OPORB4                        AR920363
+     C                     MOVELSVORB5    OPORB5                        AR920363
       *                                                                   CFT009
       * Move details into outgoing payment details DS                     CFT009
       *                                                                   CFT009
@@ -21151,6 +21201,15 @@ a     *                                                                         
       *                                                                   CFT009
      C                     Z-ADDD#TAMT    OTPBCQ                          CFT009
      C                     END                                            CFT009
+      *                                                                                     AR928894
+      ** If Pay Currency is Base then set SBCQ to PBCQ                                      AR928894
+      ** else set PBCQ to SBCQ                                                              AR928894
+      *                                                                                     AR928894
+     C           OTPCCY    IFEQ V#BCCY                                                      AR928894
+     C                     Z-ADDOTPBCQ    OTSBCQ                                            AR928894
+     C                     ELSE                                                             AR928894
+     C                     Z-ADDOTSBCQ    OTPBCQ                                            AR928894
+     C                     END                                                              AR928894
       *                                                                   CFT009
       *  Booking and originating branches                                 CFT009
       *                                                                   CFT009

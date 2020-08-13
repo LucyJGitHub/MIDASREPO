@@ -33,8 +33,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD050928           Date 15May18               *
+      *  Last Amend No. AR928996A          Date 03May12               *
+      *  Prev Amend No. AR928996           Date 27Mar12               *
+      *                 CSD102             Date 08Jan19               *
+      *                 MD050928           Date 15May18               *
       *                 MD047369A          Date 24Jan18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD042042           Date 14Feb17               *
@@ -100,6 +102,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
+      *             data structure field to have the correct length.  *
+      *             (Child: AR928997A)                                *
+      *  AR928996 - Data lost due to rate field :36: being truncated. *
+      *             (Child: AR928997)                                 *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD050928 - SP15_MQ: Unclear error message - Error validating *
       *              'Stamp Tax Amount' : Invalid Numeric Value       *

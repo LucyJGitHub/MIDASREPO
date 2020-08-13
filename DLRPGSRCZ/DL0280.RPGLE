@@ -7,7 +7,7 @@
       *                                                               *
       *  Midas - Dealing Module                                       *
       *                                                               *
-      *  DL0280 - DEALS FILE UPDATE                                   *
+      *  DL0280 -  DEALS FILE UPDATE                                  *
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *

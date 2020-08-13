@@ -19,6 +19,7 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
+      *  Last Amend No. JMI115             Date ddmmmyy               *
       *  Last Amend No. MD055516           Date 07Apr20               *
       *  Prev Amend No. MD054623           Date 14Jan20               *
       *                 MD050139           Date 23Mar18               *
@@ -149,6 +150,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  JMI115   - RTS Advice Changes                                *
+      *           - Amend PRTF/RE4118P1 layout as per client reqeust  *
+      *           - CHGPRTF FILE(RE4118P1)                            *
+      *           -  PAGESIZE(66 80 *ROWCOL) OVRFLW(66)               *
       *  MD055516 - RTS charge amount is not being rounded up.        *
       *             Added Half Adjust on the charge amount.           *
       *  MD054623 - Use the format 'Transation Number/Teller ID +     *
@@ -2144,6 +2149,7 @@
      C                     MOVE RETB      @RETB
      C                     MOVE SCCY1     SCCY2
      C                     MOVE ANAM      SANAM
+     C                     MOVE BBCNA1    OCUST                                               JMI115
      C                     MOVE SACNO1    SACNO2
      C                     MOVE '  '      @ACIN   2
       *
@@ -5318,7 +5324,8 @@
      C* FIELD, OTHERWISE JUST CLEAR THE OUTPUT FIELD.                     092429
      C*                                                                   092429
      C           NARRI     IFEQ *BLANKS                                   092429
-     C                     MOVE *BLANKS   NARRO                           092429
+     C***********          MOVE *BLANKS   NARRO                           092429              JMI115
+     C                     MOVE *BLANKS   NARRO  20                                           JMI115
      C                     ELSE                                           092429
      C                     MOVE NARRI     NARRO                           092429
      C                     ENDIF                                          092429
@@ -5332,6 +5339,18 @@
       *                                                                   S01408
      C/COPY WNCPYSRC,RE4118CP10                                           S01408
       *                                                                   S01408
+     C                     MOVE @CNUM     @@CNUM  6                                           JMI115
+     C                     CALL 'AOCUSTR0'                                                    JMI115
+     C                     PARM *BLANKS   @RTCD   7                                           JMI115
+     C                     PARM '*KEY   ' @OPTN   7                                           JMI115
+     C                     PARM @@CNUM    @KEY1  10                                           JMI115
+     C                     PARM *BLANKS   @KYST   7                                           JMI115
+     C           SDCUST    PARM SDCUST    DSSDY                                               JMI115
+      ** If record not found?                                                                 JMI115
+     C           @RTCD     IFEQ *BLANKS                                                       JMI115
+     C                     MOVE BBCNA1    OCUST                                               JMI115
+     C                     ENDIF                                                              JMI115
+      *                                                                                       JMI115
      C                     WRITEDETAIL
      C*                                                                   092429
      C                     CLEARNARRI                                     092429
@@ -5649,6 +5668,7 @@
       ** Perform close account condition check
      C                     MOVE SCCY1     SCCY2
      C                     MOVE ANAM      SANAM
+     C                     MOVE BBCNA1    OCUST                                               JMI115
      C                     MOVE SACNO1    SACNO2
      C                     MOVE SACNO1    @ACNO
      C                     MOVE '  '      @ACIN   2

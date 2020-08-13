@@ -20,8 +20,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD054623           Date 14Jan20               *
-      *  Prev Amend No. MD050139           Date 23Mar18               *
+      *  Last Amend No. JMI115             Date 28May20               *
+      *  Prev Amend No. MD054623           Date 14Jan20               *
+      *                 MD050139           Date 23Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD034451C          Date 02Mar16               *
       *                 CGL184             Date 07Dec16               *
@@ -152,6 +153,13 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  JMI115   - RTS Advice Changes                                *
+      *           - Intrusively remove code WRITEDETSIGN              *
+      *           - Intrusively remove code WRITECHARGE               *
+      *           - Add code WRITECHARGE1 & WRITECHARGE2              *
+      *           - Amend PRTF/RE4114P1 layout as per client reqeust  *
+      *           - CHGPRTF FILE(RE4114P1)                            *
+      *           -  PAGESIZE(66 80 *ROWCOL) OVRFLW(66)               *
       *  MD054623 - Use the format 'Transation Number/Teller ID +     *
       *             Narrative or Transaction Title if the             *
       *             RTSNarrFormat = 'Y'                               *
@@ -2038,6 +2046,8 @@ o    I**********                             16  18 @BRCA                       
      C                     MOVELBBCRNM    OCUST
      C                     ENDIF                                                              239242
       *                                                                                       239242
+      * Output Customer Name and Address Line 1                                               JMI115
+     C                     MOVELBBCNA1    OCUST                                               JMI115
      C                     MOVELBBACOC    @ACOF                           176510
      C*                                                                   S01408
      C/COPY WNCPYSRC,RE4114CCP8                                           S01408
@@ -2180,6 +2190,8 @@ o    I**********                             16  18 @BRCA                       
      C                     MOVELBBCRNM    OCUST                           CRT002
      C                     ENDIF                                                              239242
       *                                                                                       239242
+      * Output Customer Name and Address Line 1                                               JMI115
+     C                     MOVELBBCNA1    OCUST                                               JMI115
      C                     MOVELBKACCD    @ACOD                           CRT002
      C                     Z-ADD01        @ACSQ                           CRT002
       *                                                                   CRT002
@@ -6359,13 +6371,16 @@ o    I**********                             16  18 @BRCA                       
      C* FIELD, OTHERWISE JUST CLEAR THE OUTPUT FIELD.
      C*
      C           NARRI     IFEQ *BLANKS
-     C                     MOVE *BLANKS   NARRO
+     C***********          MOVE *BLANKS   NARRO                                               JMI115
+     C                     MOVE *BLANKS   NARRO  20                                           JMI115
      C                     ELSE
      C                     MOVE NARRI     NARRO
      C                     ENDIF
      C*
      C/COPY WNCPYSRC,RE4114C025
-     C                     WRITEDETAIL1
+     C***********          WRITEDETAIL1                                                       JMI115
+     C  N24                WRITEDETAIL1                                                       JMI115
+     C   24                WRITEDETAIL2                                                       JMI115
      C*
      C                     CLEARNARRI
      C                     CLEARNARRO
@@ -6416,7 +6431,9 @@ o    I**********                             16  18 @BRCA                       
       ** Print for Function 00H & 00K
      C           *IN23     IFEQ '1'
      C           *IN24     OREQ '1'
-     C                     WRITEDETCHEQ
+     C***********          WRITEDETCHEQ                                                       JMI115
+     C  N24                WRITEDETCHEQ                                                       JMI115
+     C   24                WRITEDETCHEQ1                                                      JMI115
      C                     END
       *
      C                     END
@@ -6434,7 +6451,11 @@ o    I**********                             16  18 @BRCA                       
      C                     ELSE
      C                     SETOF                     14
      C                     END
-     C                     WRITECHARGE
+     C*********************WRITECHARGE                                                        JMI115
+     C   14N24             WRITECHARGE1                                                       JMI115
+     C  N14N24             WRITECHARGE2                                                       JMI115
+     C   14 24             WRITECHARGE3                                                       JMI115
+     C  N14 24             WRITECHARGE4                                                       JMI115
      C                     END
       *
       ** Format total amount
@@ -6444,9 +6465,11 @@ o    I**********                             16  18 @BRCA                       
      C                     EXSR ZFRPED
      C                     MOVE ZOUT22    OAMT
       *
-     C                     WRITETOTAL
+     C*********            WRITETOTAL                                                         JMI115
+     C  N24                WRITETOTAL                                                         JMI115
+     C   24                WRITETOTAL1                                                        JMI115
       *
-     C                     WRITEDETSIGN
+     C*********************WRITEDETSIGN                                                       JMI115
      C/COPY WNCPYSRC,RE4114C011
      C                     CLOSERE4114P1
       *

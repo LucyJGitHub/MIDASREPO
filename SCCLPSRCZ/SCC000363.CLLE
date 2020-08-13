@@ -1,0 +1,218 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas SC 24x7 Start Intra Day Replication')           */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - 24x7 Layer API                                      */
+/*                                                                   */
+/*       SCC000363 - Midas SC 24x7 Start Intra Day Replication       */
+/*                                                                   */
+/*       (c) Finastra International Limited 2020                     */
+/*                                                                   */
+/*       Last Amend No. CAP702  *CREATE    Date 12May20              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CAP702 - 24x7 APIs - Common Processing.                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra +
+                          International Limited 2020')
+             DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10) VALUE('SCC000352 ')
+             DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5) VALUE(00001)
+             DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
+             DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
+             DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&POPTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&PSARD) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&CAP702) TYPE(*CHAR) LEN(1)
+
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
+             DCL        VAR(&DZLIB) TYPE(*CHAR) LEN(8)
+
+             DCL        VAR(&SVALK1) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL1) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK2) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL2) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK3) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL3) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK4) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL4) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK5) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL5) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK6) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL6) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK7) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL7) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK8) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL8) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK9) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL9) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&SVALK0) TYPE(*CHAR) LEN(20)
+             DCL        VAR(&SVAL10) TYPE(*CHAR) LEN(200)
+
+/**/
+/*    Global monitor message                                         */
+/**/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+
+             SNDPGMMSG  MSG('SCC000363 - 24x7 Start Intra Day Replication') +
+                          TOMSGQ(MRUNQ)
+
+/**/
+             CHGJOB     SWS(00000000)
+/**/
+
+/* Retrieve Zone prefix                                                            */
+             RTVDTAARA  DTAARA(SDSTAT *ALL) RTNVAR(&SDSTAT)
+
+/**/
+/* Check if CAP702 is ON */
+/**/
+             CHGVAR     VAR(&PRTCD) VALUE('       ')
+             CHGVAR     VAR(&POPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&PSARD) VALUE('CAP702')
+             CHGVAR     VAR(&CAP702) VALUE('N')
+
+             CALL       PGM(AOSARDR0) PARM(&PRTCD &POPTN &PSARD &SCSARD)
+
+             IF         COND(&PRTCD *EQ '       ') THEN(DO)
+                CHGVAR     VAR(&CAP702) VALUE('Y')
+             ENDDO
+
+/* Process only if CAP702 is ON  */
+
+             IF         COND(&CAP702 *EQ 'Y') THEN(DO)
+
+/* Get values for following system values */
+/* '24x7StartIntraDayRep' */
+/* '24x7ExitProgram' */
+
+                CALL       PGM(AOSVALR0) PARM(&PRTCD +
+                             '24x7StartIntraDayRep' &SVAL1 +
+                             '24x7ExitProgram' &SVAL2 +
+                             &SVALK3 &SVAL3 &SVALK4 &SVAL4 +
+                             &SVALK5 &SVAL5 &SVALK6 &SVAL6 &SVALK7 +
+                             &SVAL7 &SVALK8 &SVAL8 &SVALK9 &SVAL9 +
+                             &SVALK0 &SVAL10)
+
+/**/
+             CHGVAR     VAR(&PRE) VALUE(%SST(&SDSTAT 6 2))
+             CHGVAR     VAR(&DZLIB) VALUE(&PRE *TCAT 'DZLIB')
+
+/**/
+/*    Call program CB0160 to get value of restart indicator.         */
+/**/
+             CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
+
+/* If the '24x7ExitProgram' system value is not *NONE then call program */
+
+                   IF         COND(&SVAL2 *NE '*NONE') THEN(DO)
+                   CALL       PGM(&SVAL2) PARM('DAY')
+
+/**/
+/*    If no error occured in the program                             */
+/**/
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+/**/
+/** Call CB0150 to update restart indicator */
+/**/
+               CHGVAR     VAR(&STAT) VALUE('N')
+               CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+
+             ENDDO
+
+/**/
+/*    If no error occured in the program                             */
+/**/
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+/**/
+/** Call CB0150 to update restart indicator */
+/**/
+               CHGVAR     VAR(&STAT) VALUE('N')
+               CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+
+             ENDDO
+/**/
+/*    Database error processing                                      */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)
+                CHGVAR VAR(&MEM) VALUE(%SST(&LDA 134 50))
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                           TOMSGQ(MOPERQ MRUNQ)
+             ENDDO
+
+             ENDDO
+
+
+/* If the '24x7StartIntraDayRep' system value is not *NONE then call program */
+
+                   IF         COND(&SVAL1 *NE '*NONE') THEN(DO)
+                   CALL       PGM(&SVAL1)
+
+/**/
+/*    If no error occured in the program                             */
+/**/
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+/**/
+/** Call CB0150 to update restart indicator */
+/**/
+               CHGVAR     VAR(&STAT) VALUE('N')
+               CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+
+             ENDDO
+
+/**/
+/*    If no error occured in the program                             */
+/**/
+             IF         COND(%SWITCH(XXXXXX00)) THEN(DO)
+/**/
+/** Call CB0150 to update restart indicator */
+/**/
+               CHGVAR     VAR(&STAT) VALUE('N')
+               CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+
+             ENDDO
+/**/
+/*    Database error processing                                      */
+/**/
+             IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
+                RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)
+                CHGVAR VAR(&MEM) VALUE(%SST(&LDA 134 50))
+                SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
+                           TOMSGQ(MOPERQ MRUNQ)
+             ENDDO
+
+             ENDDO
+
+             CHGVAR     VAR(&STAT) VALUE('Y')
+/**/
+/** Call CB0150 to update restart indicator                          */
+/**/
+             CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
+
+             ENDDO
+
+
+             GOTO       CMDLBL(ENDPGM)
+
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+
+/* Abnormal termination */
+
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program SCC000363 ended +
+                          abnormally - see job log') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+
+ ENDPGM:
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International Limited +
+                          2020')
+             ENDPGM

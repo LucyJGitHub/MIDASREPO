@@ -1,0 +1,65 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas SC Journal Receiver Update Control')            */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC000353 - Midas SC Journal Receiver Update Control        */
+/*                                                                   */
+/*       Function: This program will check if new journal receiver   */
+/*                 has been attached and so then use new from        */
+/*                 receiver range and from entry sequence number     */
+/*                                                                   */
+/*       (c) Finastra International Limited 2020                     */
+/*                                                                   */
+/*       Last Amend No. CAP702  *CREATE    Date 12May20              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CAP702 - 24x7 APIs - Common Processing.                     */
+/*                                                                   */
+/*********************************************************************/
+             PGM        PARM(&JSEQNO &NXTJRC)
+/**/
+             DCL        VAR(&JSEQNO) TYPE(*DEC) LEN(10 0)
+             DCL        VAR(&NXTJRC) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra +
+                          International Limited 2020')
+             DCLF       FILE(SCCDJNPD)
+/**/
+/*    Global monitor message                                         */
+/**/
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
+                          CMDLBL(ABNOR))
+/**/
+             OVRDBF     FILE(SCCDJNPD) SHARE(*NO)
+             DLYJOB     DLY(30)
+/**/
+/*    Open and receive database file PF/SCCDJNPD                     */
+/**/
+             OPNDBF     FILE(SCCDJNPD) OPTION(*INP)
+             RCVF
+/**/
+/*    Set the Journal sequence number and the                        */
+/*       Next journal receiver from file.                            */
+/**/
+             CHGVAR     VAR(&JSEQNO) VALUE(&JOSEQN)
+             CHGVAR     VAR(&NXTJRC) VALUE(&JNRCN)
+/**/
+/*    Close database file PF/SCCDJNPD                                */
+/**/
+             CLOF       OPNID(SCCDJNPD)
+             GOTO       CMDLBL(END)
+/**/
+/*    Abnormal termination - batch job                               */
+/**/
+ ABNOR:
+             CHGJOB     SWS(XXXXXX11)
+             SNDPGMMSG  MSG('Program SCC000353 Ended Abnormally') +
+                          TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+/**/
+ END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International Limited +
+                          2020')
+             ENDPGM

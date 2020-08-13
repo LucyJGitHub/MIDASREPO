@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD055656           Date 20Apr20              */
-/*       Prev Amend No. CSD101             Date 07Dec18              */
+/*       Last Amend No. CAP702             Date 12May20              */
+/*       Prev Amend No. MD055656           Date 20Apr20              */
+/*                      CSD101             Date 07Dec18              */
 /*                      CSD102             Date 08Jan19              */
 /*                      MD050018           Date 05Nov18              */
 /*                      MD046248           Date 27Oct17              */
@@ -82,6 +83,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CAP702 - 24x7 APIs - Common Processing.                     */
 /*       MD055656 - OPAY messages sent via JMS API end in error      */
 /*                  (ERZ248)                                         */
 /*                  Add hook ERZ248_046                              */
@@ -251,6 +253,10 @@
              DCL        VAR(&APHEAD) TYPE(*CHAR) LEN(318)                                 /*CSD102*/
              DCL        VAR(&COBFL)  TYPE(*CHAR) LEN(08)                               /*AR1021983*/
 
+             DCL        VAR(&ND24X7) TYPE(*CHAR) LEN(5)                                   /*CAP702*/
+             DCL        VAR(&CAP702) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CAP702*/
+/*****       DCL        VAR(&ALCDTA) TYPE(*CHAR) LEN(8) VALUE('        ')   ***/          /*CAP702*/
+
 /* Parameters for call to MLC0030                                    */
              DCL        VAR(&PARM)  TYPE(*CHAR) LEN(1000)
 
@@ -261,15 +267,45 @@
              CHGVAR     VAR(&COBFL) VALUE(%SST(&APHEAD 73 08))                         /*AR1021983*/
 
              RTVDTAARA  DTAARA(MPHAS) RTNVAR(&MPHAS)
+
+             CHGVAR     VAR(&CAP702) VALUE('N')                                           /*CAP702*/
+             CALLPRC    PRC(AOSARDR0) PARM(&RTNCD '*VERIFY' 'CAP702' &SCSARD)             /*CAP702*/
+             IF         COND(&RTNCD *EQ ' ') THEN(CHGVAR +
+                          VAR(&CAP702) VALUE('Y'))                                        /*CAP702*/
+
+             IF         COND(&CAP702 = 'Y') THEN(DO)                                      /*CAP702*/
+             RTVDTAARA  DTAARA(SCND24X7) RTNVAR(&ND24X7)                                  /*CAP702*/
+             ENDDO           /*CAP702*/
+
 /**********  IF         COND(&MPHAS *NE 'A') THEN(DO)                 */               /*AR1021983*/
 /**********  IF         COND((&MPHAS *NE 'A') *AND (&COBFL *NE +
                           'MIDASCOB')) THEN(DO)                       */      /*AR1021983 MD019466*/
+/********    IF         COND(((&CAP702 *NE 'Y') *OR (&ND24X7 = 'DAY')) *OR +
+                            ((&CAP702 *EQ 'Y') *AND (&ND24X7 = 'NIGHT') *AND +
+                        (&ALCDTA = 'ALLOCATE'))) THEN(DO)   *****/                        /*CAP702*/
+             IF         COND((&CAP702 *EQ 'Y') *AND (&ND24X7 = 'DAY') *AND +
+                          (&MPHAS *EQ 'C')) THEN(DO)                                      /*CAP702*/
+             IF         COND((&MPHAS *NE 'A') *AND (&MPHAS *NE 'G') +
+                          *AND (&COBFL *NE 'MIDASCOB')) THEN(DO)                          /*CAP702*/
+                CHGVAR     VAR(&MSGARR) VALUE(' : : :The system is under+
+                             going transition to daytime mode. It will just +
+                             take a few seconds. Please try to submit your +
+                             transaction again after a few seconds:')             /*CAP702*/
+                GOTO       CMDLBL(END)                                            /*CAP702*/
+             ENDDO                                                                /*CAP702*/
+             ENDDO                                                                /*CAP702*/
+
+             IF         COND((&CAP702 *NE 'Y') *OR ((&ND24X7 *EQ 'DAY') *AND +
+                          (&MPHAS *NE 'A') *AND (&MPHAS *NE 'G') +
+                           *AND (&CAP702 *EQ 'Y'))) THEN(DO)                      /*CAP702*/
              IF         COND((&MPHAS *NE 'A') *AND (&MPHAS *NE 'G') +
                           *AND (&COBFL *NE 'MIDASCOB')) THEN(DO)                        /*MD019466*/
                 CHGVAR     VAR(&MSGARR) VALUE(' : : :Midas not in input +
                              cycle.  Entry prohibited:')
                 GOTO       CMDLBL(END)
              ENDDO
+
+             ENDDO       /*CAP702*/
 
 /* Reclaim resource                                                   */                  /*BG3913*/
              RCLRSC                                                                       /*BG3913*/

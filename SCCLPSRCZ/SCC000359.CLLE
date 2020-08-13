@@ -1,0 +1,278 @@
+/*********************************************************************/
+/*STD    CLPBASEMOD                                                  */
+/*EXI    TEXT('Midas SC 24x7 API Layer Setup')                       */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - System Control Module                               */
+/*                                                                   */
+/*       SCC000359 - Midas SC 24x7 API Layer setup                   */
+/*                   Restore PFs to DZLIB                            */
+/*                                                                   */
+/*       (c) Finastra International Limited 2020                     */
+/*                                                                   */
+/*       Last Amend No. CAP735             Date 12May20              */
+/*       Prev Amend No. CAP734             Date 12May20              */
+/*                      CAP702  *CREATE    Date 12May20              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CAP735 - 24x7 APIs - GL Accounts API.                       */
+/*       CAP734 - 24x7 APIs - SD Customer Details API                */
+/*       CAP702 - 24x7 APIs - Common Processing                      */
+/*                                                                   */
+/*********************************************************************/
+             PGM
+
+             DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&PREGG) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
+
+/* Variables for zone libs  */
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&DVLIB) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&DTLIB) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&DZLIB) TYPE(*CHAR) LEN(8)
+
+/* Variables for global libs  */
+             DCL        VAR(&GMLIB) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&GVLIB) TYPE(*CHAR) LEN(8)
+             DCL        VAR(&GPLIB) TYPE(*CHAR) LEN(9)
+             DCL        VAR(&GTALIB) TYPE(*CHAR) LEN(9)
+
+             DCL        VAR(&LNGTEN) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DVALLS) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DMALLS) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DPALLS) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&DTALLS) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GVALLS) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GMALLS) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GPALLS) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&GTALLS) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)
+             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)
+             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE(' ')
+             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)
+             DCL        VAR(&CAP702) TYPE(*CHAR) LEN(1) VALUE('N')
+             DCL        VAR(&CAP734) TYPE(*CHAR) LEN(1) VALUE('N')  /*CAP734*/
+             DCL        VAR(&CAP735) TYPE(*CHAR) LEN(1) VALUE('N')  /*CAP735*/
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                          Finastra International Limited +
+                          2020')
+
+/* Declare files for Loop9 to Loop12 */
+             DCLF       FILE(SCSRACTD) OPNID(S3C)
+             DCLF       FILE(SCSRABTD) OPNID(S3B)
+             DCLF       FILE(GPSRACTD) OPNID(G3C)
+             DCLF       FILE(GPSRABTD) OPNID(G3B)
+
+/* Retrieve Zone prefix                */
+             RTVDTAARA  DTAARA(SDSTAT *ALL) RTNVAR(&SDSTAT)
+/**/
+             CHGVAR     VAR(&PRE) VALUE(%SST(&SDSTAT 6 2))
+             CHGVAR     VAR(&DMLIB) VALUE(&PRE *TCAT 'DMLIB')
+             CHGVAR     VAR(&DPLIB) VALUE(&PRE *TCAT 'DPLIB')
+             CHGVAR     VAR(&DVLIB) VALUE(&PRE *TCAT 'DVLIB')
+             CHGVAR     VAR(&DTLIB) VALUE(&PRE *TCAT 'DTALIB')
+             CHGVAR     VAR(&DZLIB) VALUE(&PRE *TCAT 'DZLIB')
+
+             CHGVAR     VAR(&LNGTEN) VALUE(&PRE *TCAT 'BFMNGTEN')
+             CHGVAR     VAR(&DVALLS) VALUE(&PRE *TCAT 'SAVDVALL')
+             CHGVAR     VAR(&DMALLS) VALUE(&PRE *TCAT 'SAVDMALL')
+             CHGVAR     VAR(&DPALLS) VALUE(&PRE *TCAT 'SAVDPALL')
+             CHGVAR     VAR(&DTALLS) VALUE(&PRE *TCAT 'SAVDTALL')
+             CHGVAR     VAR(&GVALLS) VALUE(&PRE *TCAT 'SAVGVALL')
+             CHGVAR     VAR(&GMALLS) VALUE(&PRE *TCAT 'SAVGMALL')
+             CHGVAR     VAR(&GPALLS) VALUE(&PRE *TCAT 'SAVGPALL')
+             CHGVAR     VAR(&GTALLS) VALUE(&PRE *TCAT 'SAVGTALL')
+
+/* Retrieve Global prefix              */
+             CALL       PGM(GPRTVLIB) PARM(&PREGG)
+             CHGVAR     VAR(&GMLIB) VALUE(&PREGG *TCAT 'GMLIB')
+             CHGVAR     VAR(&GVLIB) VALUE(&PREGG *TCAT 'GVLIB')
+             CHGVAR     VAR(&GPLIB) VALUE(&PREGG *TCAT 'GPLIB')
+             CHGVAR     VAR(&GTALIB) VALUE(&PREGG *TCAT 'GTALIB')
+
+/**   CHECK FOR SWITCHABLE FEATURE CAP702     */
+
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')
+             CHGVAR     VAR(&SARD) VALUE('CAP702')
+
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SCSARD)
+
+             IF         COND(&RTCD *EQ '       ') THEN(DO)
+                CHGVAR     VAR(&CAP702) VALUE('Y')
+             ENDDO
+
+/**   CHECK FOR SWITCHABLE FEATURE CAP734     */     /*CAP734*/
+
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')  /*CAP734*/
+             CHGVAR     VAR(&SARD) VALUE('CAP734')   /*CAP734*/
+
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SCSARD)  /*CAP734*/
+
+             IF         COND(&RTCD = '       ') THEN(CHGVAR +
+                          VAR(&CAP734) VALUE('Y'))   /*CAP734*/
+
+/**   CHECK FOR SWITCHABLE FEATURE CAP735     */     /*CAP735*/
+
+             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')  /*CAP735*/
+             CHGVAR     VAR(&SARD) VALUE('CAP735')   /*CAP735*/
+
+             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SCSARD)  /*CAP735*/
+
+             IF         COND(&RTCD = '       ') THEN(CHGVAR +
+                          VAR(&CAP735) VALUE('Y'))   /*CAP735*/
+
+/* 12a. Restore SET of PF from zzDMLIB, zzDPLIB and zzDTALIB to zzDZLIB   */
+LOOP9:       RCVF       OPNID(S3C)
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(EXIT9))
+             IF         COND((&S3C_SADEPN *NE 'DM') *AND +
+                          (&S3C_SADEPN *NE 'DP') *AND (&S3C_SADEPN +
+                          *NE 'DT')) THEN(GOTO CMDLBL(LOOP9))
+
+             IF COND(((&S3C_SASARN = 'CAP734') *AND (&CAP734 = 'Y')) *OR +
+                    ((&S3C_SASARN = 'CAP735') *AND (&CAP735 = 'Y')) *OR +
+                    ((&S3C_SASARN = 'CAP702') *AND (&CAP702 = 'Y'))) THEN(DO)
+
+             IF         COND((&S3C_SADEPN *EQ 'DM') *AND +
+                          (&S3C_SATYPE *EQ 'PF')) THEN(DO)
+             RSTOBJ     OBJ(&S3C_SAOBJ) SAVLIB(&DMLIB) DEV(*SAVF) +
+                          SAVF(&LNGTEN/&DMALLS) PVTAUT(*YES) RSTLIB(&DZLIB)
+                          GOTO LOOP9
+             ENDDO
+
+             IF         COND((&S3C_SADEPN *EQ 'DP') *AND +
+                          (&S3C_SATYPE *EQ 'PF')) THEN(DO)
+             RSTOBJ     OBJ(&S3C_SAOBJ) SAVLIB(&DPLIB) DEV(*SAVF) +
+                          SAVF(&LNGTEN/&DPALLS) PVTAUT(*YES) RSTLIB(&DZLIB)
+                          GOTO LOOP9
+             ENDDO
+
+             IF         COND((&S3C_SADEPN *EQ 'DT') *AND +
+                          (&S3C_SATYPE *EQ 'PF')) THEN(DO)
+             RSTOBJ     OBJ(&S3C_SAOBJ) SAVLIB(&DTLIB) DEV(*SAVF) +
+                          SAVF(&LNGTEN/&DTALLS) PVTAUT(*YES) RSTLIB(&DZLIB)
+                          GOTO LOOP9
+             ENDDO
+
+                          GOTO LOOP9
+                ENDDO       /*CAP734*/
+                          GOTO LOOP9
+EXIT9:
+
+/* 13a. Restore SET of PF from zzDMLIB, zzDPLIB and zzDTALIB to zzDZLIB   */
+LOOP10:      RCVF       OPNID(S3B)
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(EXIT10))
+             IF         COND((&S3B_SADEPN *NE 'DM') *AND +
+                          (&S3B_SADEPN *NE 'DP') *AND (&S3B_SADEPN +
+                          *NE 'DT')) THEN(GOTO CMDLBL(LOOP10))
+
+             IF         COND(((&S3B_SASARN = 'CAP734') *AND (&CAP734 +
+                          = 'Y')) *OR ((&S3B_SASARN = 'CAP735') +
+                          *AND (&CAP735 = 'Y'))) THEN(DO) /*CAP734*/
+
+             IF         COND((&S3B_SADEPN *EQ 'DM') *AND +
+                          (&S3B_SATYPE *EQ 'PF')) THEN(DO)
+             RSTOBJ     OBJ(&S3B_SAOBJ) SAVLIB(&DMLIB) DEV(*SAVF) +
+                          SAVF(&LNGTEN/&DMALLS) PVTAUT(*YES) RSTLIB(&DZLIB)
+                          GOTO LOOP10
+             ENDDO
+
+             IF         COND((&S3B_SADEPN *EQ 'DP') *AND +
+                          (&S3B_SATYPE *EQ 'PF')) THEN(DO)
+             RSTOBJ     OBJ(&S3B_SAOBJ) SAVLIB(&DPLIB) DEV(*SAVF) +
+                          SAVF(&LNGTEN/&DPALLS) PVTAUT(*YES) RSTLIB(&DZLIB)
+                          GOTO LOOP10
+             ENDDO
+
+             IF         COND((&S3B_SADEPN *EQ 'DT') *AND +
+                          (&S3B_SATYPE *EQ 'PF')) THEN(DO)
+             RSTOBJ     OBJ(&S3B_SAOBJ) SAVLIB(&DTLIB) DEV(*SAVF) +
+                          SAVF(&LNGTEN/&DTALLS) PVTAUT(*YES) RSTLIB(&DZLIB)
+                          GOTO LOOP10
+             ENDDO
+                          GOTO LOOP10
+                ENDDO       /*CAP734*/
+                          GOTO LOOP10
+EXIT10:
+
+/* 14a. Restore SET of PF from ggGMLIB, ggGPLIB and ggGTALIB to ggDZLIB   */
+LOOP11:      RCVF       OPNID(G3C)
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(EXIT11))
+             IF         COND((&G3C_SADEPN *NE 'GM') *AND +
+                          (&G3C_SADEPN *NE 'GP') *AND (&G3C_SADEPN +
+                          *NE 'GT')) THEN(GOTO CMDLBL(LOOP11))
+
+             IF         COND(((&G3C_SASARN = 'CAP734') *AND (&CAP734 +
+                          = 'Y')) *OR ((&G3C_SASARN = 'CAP735') +
+                          *AND (&CAP735 = 'Y')) *OR ((&G3C_SASARN = +
+                          'CAP702') *AND (&CAP702 = 'Y'))) THEN(DO)
+
+             IF         COND((&G3C_SADEPN *EQ 'GM') *AND +
+                          (&G3C_SATYPE *EQ 'PF')) THEN(DO)
+             RSTOBJ     OBJ(&G3C_SAOBJ) SAVLIB(&GMLIB) DEV(*SAVF) +
+                          SAVF(&LNGTEN/&GMALLS) PVTAUT(*YES) RSTLIB(&DZLIB)
+                          GOTO LOOP11
+             ENDDO
+
+             IF         COND((&G3C_SADEPN *EQ 'GP') *AND +
+                          (&G3C_SATYPE *EQ 'PF')) THEN(DO)
+             RSTOBJ     OBJ(&G3C_SAOBJ) SAVLIB(&GPLIB) DEV(*SAVF) +
+                          SAVF(&LNGTEN/&GPALLS) PVTAUT(*YES) RSTLIB(&DZLIB)
+                          GOTO LOOP11
+             ENDDO
+
+             IF         COND((&G3C_SADEPN *EQ 'GT') *AND +
+                          (&G3C_SATYPE *EQ 'PF')) THEN(DO)
+             RSTOBJ     OBJ(&G3C_SAOBJ) SAVLIB(&GTALIB) DEV(*SAVF) +
+                          SAVF(&LNGTEN/&GTALLS) PVTAUT(*YES) RSTLIB(&DZLIB)
+                          GOTO LOOP11
+             ENDDO
+                          GOTO LOOP11
+                ENDDO       /*CAP734*/
+                          GOTO LOOP11
+EXIT11:
+
+/* 15a. Restore SET of PF from ggGMLIB, ggGPLIB and ggGTALIB to ggDZLIB   */
+LOOP12:      RCVF       OPNID(G3B)
+             MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(EXIT12))
+             IF         COND((&G3B_SADEPN *NE 'GM') *AND +
+                          (&G3B_SADEPN *NE 'GP') *AND (&G3B_SADEPN +
+                          *NE 'GT')) THEN(GOTO CMDLBL(LOOP12))
+
+             IF         COND(((&G3B_SASARN = 'CAP734') *AND (&CAP734 +
+                          = 'Y')) *OR ((&G3B_SASARN = 'CAP735') +
+                          *AND (&CAP735 = 'Y'))) THEN(DO) /*CAP734*/
+
+             IF         COND((&G3B_SADEPN *EQ 'GM') *AND +
+                          (&G3B_SATYPE *EQ 'PF')) THEN(DO)
+             RSTOBJ     OBJ(&G3B_SAOBJ) SAVLIB(&GMLIB) DEV(*SAVF) +
+                          SAVF(&LNGTEN/&GMALLS) PVTAUT(*YES) RSTLIB(&DZLIB)
+                          GOTO LOOP12
+             ENDDO
+
+             IF         COND((&G3B_SADEPN *EQ 'GP') *AND +
+                          (&G3B_SATYPE *EQ 'PF')) THEN(DO)
+             RSTOBJ     OBJ(&G3B_SAOBJ) SAVLIB(&GPLIB) DEV(*SAVF) +
+                          SAVF(&LNGTEN/&GPALLS) PVTAUT(*YES) RSTLIB(&DZLIB)
+                          GOTO LOOP12
+             ENDDO
+
+             IF         COND((&G3B_SADEPN *EQ 'GT') *AND +
+                          (&G3B_SATYPE *EQ 'PF')) THEN(DO)
+             RSTOBJ     OBJ(&G3B_SAOBJ) SAVLIB(&GTALIB) DEV(*SAVF) +
+                          SAVF(&LNGTEN/&GTALLS) PVTAUT(*YES) RSTLIB(&DZLIB)
+                          GOTO LOOP12
+             ENDDO
+                          GOTO LOOP12
+                ENDDO       /*CAP734*/
+                          GOTO LOOP12
+EXIT12:
+
+             GOTO       CMDLBL(END)
+
+END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
+                          Finastra International Limited 2020')
+             ENDPGM
+

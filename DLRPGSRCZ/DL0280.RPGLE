@@ -13,7 +13,7 @@
       *                                                               *
       *                                                               *
       *****************************************************************
-      *** Code Stripped ***                                           **
+      *** Code Stripped ***                                           *
       /COPY DLCPYSRC,DL0280FHD5                                                             RT937392
       /COPY DLCPYSRC,DL0280FHD3                                                            BUG27027A
       /COPY DLCPYSRC,DL0280FHD1
@@ -12791,6 +12791,7 @@
 2781 C* If Deposit Taken (IT,CD,TD) and System is Taxable                 080603
 2781 C*                                                                   080603
 2781 C     *IN25         IFEQ      *ON                                          B 001          08060
+     C     TAXI          ANDEQ     'Y'                                                      MD055158
       *                                                                   CDL006
       ** Or feature CDL006 installed.                                     CDL006
       *                                                                   CDL006

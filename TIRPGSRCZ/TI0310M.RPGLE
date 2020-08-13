@@ -19,7 +19,8 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. 262263             Date 18Dec09               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD055733           Date 03Jul20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD045010           Date 05Apr17               *
       *                 CRE095             Date 25Apr14               *
       *                 CRE090             Date 14Feb14               *
@@ -86,6 +87,9 @@
       *                                                               *
       *  262263 - Wrong value of OLDR and OLCR for GL accnts inserted *
       *           Initialised the fields to zero for ATYP <> R.       *
+      *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
+      *             components.                                       *
+      *           - Redeliver of MD050139.                            *
       *  MD046248 - Finastra Rebranding                               *
       *  MD045010 - Component LEC06A 10008 looping during COB caused  *
       *             by CGL184. Recompile due to changes in ZFRQB3.    *

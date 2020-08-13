@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR746232           Date 03Aug11               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 260291             Date 18May09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -41,6 +42,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR746232 - DLC0601D 00001. File Control Out of Balance.      *
+      *             Apply AR692676 (Child: AR746233)                  *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  260291 - Spot rate updated even when FWRTSpotRateUpd is 'N'. *
@@ -684,9 +687,12 @@
      C*                                                                                       CAP059
      C*****FWCHTP        IFEQ      'A'                                               CAP059 BUG12772
      C     RECIX         IFNE      '*'                                                        253283
+     C     FWCHTP        IFEQ      'A'                                                      AR746232
+     C     FWCHTP        OREQ      'I'                                                      AR746232
      C     NAMD          ADD       1             NAMD
      C                   MOVE      BJRDNB        LCD
      C                   UPDATE    FWDRTFDF
+     C                   ENDIF                                                              AR746232
      C                   ELSE                                                                 253283
      C**********         ENDIF                                                       CAP059 BUG12772
      C*                                                                                       CAP059

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD052399           Date 05Dec18               *
-      *  Prev Amend No. MD044093           Date 18Apr17               *
+      *  Last Amend No. CSD100             Date 03Aug17               *
+      *  Prev Amend No. MD052399           Date 05Dec18               *
+      *                 MD044093           Date 18Apr17               *
       *                 CGL177             Date 11Jan16               *
       *                 MD036274           Date 21Oct15               *
       *                 CGL157             Date 17Aug15               *
@@ -47,6 +48,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD100 - Patronymic and Gender Fields for Non-Account Holder *
       *  MD052399 - FATCA+CRS - Non-A/C Holder Maintenance  -Federal  *
       *             State Code is mandatory (even CER054 is OFF) and  *
       *             mandatory "Industry Code" field is protected      *
@@ -477,6 +479,9 @@
       *                                                                                       CER054
      C                   ENDIF                                                                CER048
       *                                                                                       CER048
+     C                   EVAL      NAPNYC = DDPNYC                                            CSD100
+     C                   EXSR      SrGENR                                                     CSD100
+      *                                                                                       CSD100
      C                   RETURN
  
       *****************************************************************
@@ -1977,6 +1982,47 @@
      C                   EXSR      SRUpdatErrs                                                CER054
       *                                                                                       CER054
      C                   ENDSR                                                                CER054
+      *****************************************************************                       CSD100
+     C/EJECT                                                                                  CSD100
+      *****************************************************************                       CSD100
+      * SrGENR -  Validate Gender                                     *                       CSD100
+      *                                                               *                       CSD100
+      * Called By - Main Processing                                   *                       CSD100
+      *                                                               *                       CSD100
+      * Calls - None                                                  *                       CSD100
+      *****************************************************************                       CSD100
+     C     SrGENR        BEGSR                                                                CSD100
+      *                                                                                       CSD100
+      ** Reset variables updated by each module                                               CSD100
+      *                                                                                       CSD100
+     C                   EXSR      SRResetErrs                                                CSD100
+     C                   EVAL      Err = *Zeros                                               CSD100
+     C                   IF        DDGENR = *BLANKS                                           CSD100
+     C                   EVAL      OKGENR = 'Y'                                               CSD100
+     C                   EVAL      NAGENR = *BLANKS                                           CSD100
+     C                   ENDIF                                                                CSD100
+      *                                                                                       CSD100
+     C                   IF        DDGENR <> *BLANKS                                          CSD100
+      *                                                                                       CSD100
+      ** Check if it is 'M', 'F' or 'U'.                                                      CSD100
+     C                   IF        DDGENR <> 'M' and DDGENR <> 'F'                            CSD100
+     C                             AND DDGENR <> 'U'                                          CSD100
+     C                   EVAL      OKGENR = 'N'                                               CSD100
+     C                   EVAL      Err = Err + 1                                              CSD100
+     C                   EVAL      FldNamXAr(Err) = 'DDGENR'                                  CSD100
+     C                   EVAL      MsgIdXAr (Err) = 'USS0750'                                 CSD100
+     C                   ELSE                                                                 CSD100
+     C                   EVAL      OKGENR = 'Y'                                               CSD100
+     C                   EVAL      NAGENR = DDGENR                                            CSD100
+     C                   ENDIF                                                                CSD100
+      *                                                                                       CSD100
+     C                   ENDIF                                                                CSD100
+      *                                                                                       CSD100
+      ** Update error info with that returned from Validation Module                          CSD100
+      *                                                                                       CSD100
+     C                   EXSR      SRUpdatErrs                                                CSD100
+      *                                                                                       CSD100
+     C                   ENDSR                                                                CSD100
       *****************************************************************                       CER054
       /EJECT                                                                                  CER048
       *****************************************************************

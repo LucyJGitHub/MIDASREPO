@@ -10,9 +10,10 @@
       *  GLAMAD1VL -  Account Master Details Validation               *
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
-      *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                                                               *	
+      *  Last Amend No. CER075             Date 14Sep17               *
+      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *                 CER050             Date 16Jun19               *
       *                 AR1021393          Date 13Nov18               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL184             Date 07Dec16               *
@@ -83,6 +84,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER075 - KWG 24c Reporting Branch Enhancement                *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate                          *
@@ -2420,6 +2422,8 @@
      C                   PARM                    WMsgDtXAr                                  BUG24157
       * KWG §24c reporting Y/N - Ok Flag                                                    BUG24157
      C                   PARM                    DD24COK                                    BUG24157
+      ** Branch                                                                               CER075
+     C                   PARM                    DDBRCA                                       CER075
                                                                                             BUG24157
       * Update error info with that returned from the validation module                     BUG24157
                                                                                             BUG24157

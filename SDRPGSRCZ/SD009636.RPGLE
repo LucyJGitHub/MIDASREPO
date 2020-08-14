@@ -13,13 +13,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. CER074             Date 11Aug17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG22521           Date 25Mar09               *
       *                 CER047  *CREATE    Date 19May08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER074 - New Authority Holder Link Types but Exclude from KWG*
+      *           24c Reporting (Recompile).                          *      
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG22521 - Cannot navigate to Link Types Maintenance         *

@@ -1,0 +1,136 @@
+      *****************************************************************                       FVT102
+      *                                                               *                       FVT102
+      *  Midas - /COPY Member (RPG)                                   *                       FVT102
+      *                                                               *                       FVT102
+      *  FVT102_053 - MC0420 - New Sr/GETACD and Sr/ANALYS            *                       FVT102
+      *                                                               *                       FVT102
+      *  (c) Finastra International Limited 2019                      *                       FVT102
+      *                                                               *                       FVT102
+      *  Last Amend No. FVT102  *CREATE    Date 10May17               *                       FVT102
+      *                                                               *                       FVT102
+      *---------------------------------------------------------------*                       FVT102
+      *                                                               *                       FVT102
+      *  FVT102 - Posting to P/L Multiple Retained Earnings           *                       FVT102
+      *                                                               *                       FVT102
+      *****************************************************************                       FVT102
+      *  GETACD -  Get the alternate P&L Account to post to.          *                       FVT102
+      *                                                               *                       FVT102
+      *            The new account code will be moved to ##ACOD that  *                       FVT102
+      *            will be used in SR/PRW01 to build the posting      *                       FVT102
+      *            narrative field 'to transfer to...'.               *                       FVT102
+      *            It will be used in SR/PRW02 as the Alternate       *                       FVT102
+      *            Profit and Loss account code, if it exists, to     *                       FVT102
+      *            post to.                                           *                       FVT102
+      *                                                               *                       FVT102
+      *  Called By:  Main Processing                                  *                       FVT102
+      *                                                               *                       FVT102
+      *  Calls    :  Nothing                                          *                       FVT102
+      *****************************************************************                       FVT102
+     C           GETACD    BEGSR                                                              FVT102
+      *                                                                                       FVT102
+      **  If FVT102 is present:                                                               FVT102
+      **  Read new Income/Expense mapping file and check whether the                          FVT102
+      **  account code being processed should be posted to a                                  FVT102
+      **  new P&L account or the default GL ICD P&L account.                                  FVT102
+      **  It will check for an exact match; then check within a range.                        FVT102
+      *                                                                                       FVT102
+     C                     MOVE *BLANKS   ##ACOD 10                                           FVT102
+     C           FVT102    IFEQ 'Y'                                                           FVT102
+     C                     MOVELXACOD     #WKACD 100                                          FVT102
+      **                                                                                      FVT102
+      ** Check if this is a Posting Income/Expense Account                                    FVT102
+     C           #WKACD    SETLLXXINEXL1                                                      FVT102
+     C           #WKACD    READEXXINEXL1                 55                                   FVT102
+      *                                                                                       FVT102
+      * If exact match found in mapping file, use that P&L account                            FVT102
+      *                                                                                       FVT102
+     C           *IN55     IFEQ '0'                                                           FVT102
+     C                     MOVE MAPLA1    ##ACOD                                              FVT102
+     C                     ELSE                                                               FVT102
+      *                                                                                       FVT102
+      * If no exact match, check most suitable range for P&L account                          FVT102
+      *                                                                                       FVT102
+     C           #WKACD    SETLLXXINEXL1                                                      FVT102
+     C                     READPXXINEXL1                 55                                   FVT102
+      *                                                                                       FVT102
+     C           *IN55     IFEQ '0'                                                           FVT102
+     C           #WKACD    IFGT MAINC1                                                        FVT102
+     C           #WKACD    ANDLEMAINC2                                                        FVT102
+     C                     MOVE MAPLA1    ##ACOD                                              FVT102
+     C                     END                                                                FVT102
+     C                     END                                                                FVT102
+      *                                                                                       FVT102
+     C                     END                                                                FVT102
+      *                                                                                       FVT102
+      * If feature FVT102 is switched off                                                     FVT102
+     C                     END                                                                FVT102
+      *                                                                                       FVT102
+      ** Setup default P&L Account Code in case FVT102 = 'N' OR                               FVT102
+      ** IN/EX Account does not exist in mapping file                                         FVT102
+      *                                                                                       FVT102
+     C           ##ACOD    IFEQ *BLANKS                                                       FVT102
+     C                     MOVE BKPLAC    ##ACOD                                              FVT102
+     C                     END                                                                FVT102
+      **                                                                                      FVT102
+     C                     ENDSR                                                              FVT102
+      *****************************************************************                       FVT102
+      /EJECT                                                                                  FVT102
+      *****************************************************************                       FVT102
+      *  ANALYS -  Access PCA 'Management A/c Analysis fields' for    *                       FVT102
+      *            the alternate Profit and Loss Accounts.            *                       FVT102
+      *                                                               *                       FVT102
+      *  Called By:   PRW02  -  Write to PCA file for each            *                       FVT102
+      *                         P&L account posting.                  *                       FVT102
+      *                                                               *                       FVT102
+      *  Calls    :                                                   *                       FVT102
+      *****************************************************************                       FVT102
+      *                                                                                       FVT102
+     C           ANALYS    BEGSR                                                              FVT102
+      *                                                                                       FVT102
+      **  Get 'Management A/c Analysis fields' using 'P&L A/c Code',                          FVT102
+      *                                                                                       FVT102
+     C                     CALL 'AOACODR0'                                                    FVT102
+     C                     PARM *BLANKS   PRTCD                                               FVT102
+     C                     PARM '*KEY   ' POPTN                                               FVT102
+     C                     PARM A#ACOD    PACCD  10                                           FVT102
+     C           SDACOD    PARM SDACOD    DSSDY                                               FVT102
+      *                                                                                       FVT102
+      **  If not found, set 'Management A/c Analysis fields' to 'N'                           FVT102
+      *                                                                                       FVT102
+     C           PRTCD     IFEQ '*NRF   '                                                     FVT102
+     C                     MOVE 'N'       A5MABK                                              FVT102
+     C                     MOVE 'N'       A5MAPR                                              FVT102
+     C                     MOVE 'N'       A5MAAC                                              FVT102
+     C                     ELSE                                                               FVT102
+     C           PRTCD     IFNE *BLANKS                                                       FVT102
+     C                     MOVEL'SDACODPD'WFILE   8        ************                       FVT102
+     C                     Z-ADD4         WBASE   30       * DBERR 04 *                       FVT102
+     C                     MOVELA#ACOD    WKEY   29        ************                       FVT102
+     C                     EXSR DBERR                                                         FVT102
+     C                     ENDIF                                                              FVT102
+      *                                                                                       FVT102
+      **  Blank Book if P&L A/c Analysis is not required                                      FVT102
+      *                                                                                       FVT102
+     C           A5MABK    IFNE 'Y'                                                           FVT102
+     C                     MOVE *BLANK    BOKC                                                FVT102
+     C                     ENDIF                                                              FVT102
+      *                                                                                       FVT102
+      **  Blank Product if P&L A/c Analysis is not required                                   FVT102
+      *                                                                                       FVT102
+     C           A5MAPR    IFNE 'Y'                                                           FVT102
+     C                     MOVE *BLANKS   OTST                                                FVT102
+     C                     MOVE *BLANKS   OTTP                                                FVT102
+     C                     ENDIF                                                              FVT102
+      *                                                                                       FVT102
+      **  Blank Assoc. Cust if P&L A/c Analysis is not required                               FVT102
+      *                                                                                       FVT102
+     C           A5MAAC    IFNE 'Y'                                                           FVT102
+     C                     MOVE *BLANKS   ASOC                                                FVT102
+     C                     ENDIF                                                              FVT102
+      *                                                                                       FVT102
+     C                     ENDIF                                                              FVT102
+      *                                                                                       FVT102
+     C                     ENDSR                                                              FVT102
+      *****************************************************************                       FVT102
+      * End of /COPY FVT102_053                                       *                       FVT102
+      *****************************************************************                       FVT102

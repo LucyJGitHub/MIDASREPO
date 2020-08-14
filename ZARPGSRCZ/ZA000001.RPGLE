@@ -23,8 +23,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT039             Date 28Sep12               *
+      *  Last Amend No. MD041126           Date 15Apr20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CFT039             Date 28Sep12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
@@ -40,6 +41,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
+      *           - Applied for MD055613.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT039 - SWIFT Mapping of Field Ordering Bank                *
       *           Amendment done to accommodate longer data           *
@@ -93,19 +96,23 @@
       ** +--------------------------------------+
  
       ** MQI named constants
-     D/COPY QMQM/QRPGLESRC,CMQR
+     D***/COPY*QMQM/QRPGLESRC,CMQR                                                          MD041126
+     D/COPY QMQM/QRPGLESRC,CMQG                                                             MD041126
  
       ** Object Descriptor
      D MQOD            DS
-     D/COPY QMQM/QRPGLESRC,CMQODR
+     D***/COPY*QMQM/QRPGLESRC,CMQODR                                                        MD041126
+     D/COPY QMQM/QRPGLESRC,CMQODG                                                           MD041126
  
       ** Message Descriptor
      D MQMD            DS
-     D/COPY QMQM/QRPGLESRC,CMQMDR
+     D***/COPY*QMQM/QRPGLESRC,CMQMDR                                                        MD041126
+     D/COPY QMQM/QRPGLESRC,CMQMDG                                                           MD041126
  
       ** Put message options
      D MQPMO           DS
-     D/COPY QMQM/QRPGLESRC,CMQPMOR
+     D***/COPY*QMQM/QRPGLESRC,CMQPMOR                                                       MD041126
+     D/COPY QMQM/QRPGLESRC,CMQPMOG                                                          MD041126
  
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
@@ -201,6 +208,16 @@
       ** Alpha version of the MQSeries reason code                                           248095A
      D ReasonA         S              9A                                                     248095A
                                                                                              248095A
+      ** MQ Parameters                                                                      MD041126
+     D HCONN           S             10I 0                                                  MD041126
+     D HANDLE          S             10I 0                                                  MD041126
+     D HOBJ            S             10I 0                                                  MD041126
+     D BUFLEN          S             10I 0                                                  MD041126
+     D CCODE           S             10I 0                                                  MD041126
+     D OCODE           S             10I 0                                                  MD041126
+     D REASON          S             10I 0                                                  MD041126
+     D OPTS            S             10I 0                                                  MD041126
+                                                                                            MD041126
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -308,19 +325,23 @@
       ** defined in CMQR; it contains 'MQSTR   '.  MQPUT is a named constant
       ** defined in CMQR; it contains 6.
      C                   EVAL      MDFMT = FMSTR
-     C                   EVAL      CID = MQPUT
+     C**********         EVAL      CID = MQPUT                                              MD041126
      C/COPY WNCPYSRC,ZAH00030
  
-     C                   CALL      'QMQM'
-     C                   PARM                    CID               9 0
-     C                   PARM                    HCONN             9 0
-     C                   PARM                    HOBJ              9 0
-     C                   PARM                    MQMD
-     C                   PARM                    MQPMO
-     C                   PARM                    BUFLEN            9 0
-     C                   PARM                    MQString
-     C                   PARM                    CCODE             9 0
-     C                   PARM                    REASON            9 0
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM                    CID               9 0                      MD041126
+     C**********         PARM                    HCONN             9 0                      MD041126
+     C**********         PARM                    HOBJ              9 0                      MD041126
+     C**********         PARM                    MQMD                                       MD041126
+     C**********         PARM                    MQPMO                                      MD041126
+     C**********         PARM                    BUFLEN            9 0                      MD041126
+     C**********         PARM                    MQString                                   MD041126
+     C**********         PARM                    CCODE             9 0                      MD041126
+     C**********         PARM                    REASON            9 0                      MD041126
+                                                                                            MD041126
+     C                   CALLP     MQPUT( HCONN : HOBJ : MQMD : MQPMO :                     MD041126
+     C                                    BUFLEN : %ADDR(MQString) :                        MD041126
+     C                                    CCODE : REASON )                                  MD041126
  
       ** If an error occured, put the MQSeries return code into this
       ** module's return code.
@@ -389,7 +410,7 @@
       ** defined in CMQR, and CID is the call identifier, which defines what
       ** kind of call is being made.
      C                   EVAL      OPTS = OOOUT + OOFIQ
-     C                   EVAL      CID = MQOPEN
+     C**********         EVAL      CID = MQOPEN                                             MD041126
  
       ** ODON is a subfield of the MQOD data structure, which holds the
       ** name of the queue to be opened.  It is declared in the CMQODR
@@ -402,15 +423,17 @@
       ** It also returns OCODE, a completion code, which tells us whether
       ** or not the call was successful, and REASON, which gives details
       ** if there was a failure.
-     C                   CALL      'QMQM'
-     C                   PARM                    CID               9 0
-     C                   PARM                    HCONN             9 0
-     C                   PARM                    MQOD
-     C                   PARM                    OPTS              9 0
-     C                   PARM                    HOBJ              9 0
-     C                   PARM                    OCODE             9 0
-     C                   PARM                    REASON            9 0
- 
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM                    CID               9 0                      MD041126
+     C**********         PARM                    HCONN             9 0                      MD041126
+     C**********         PARM                    MQOD                                       MD041126
+     C**********         PARM                    OPTS              9 0                      MD041126
+     C**********         PARM                    HOBJ              9 0                      MD041126
+     C**********         PARM                    OCODE             9 0                      MD041126
+     C**********         PARM                    REASON            9 0                      MD041126
+                                                                                            MD041126
+     C                   CALLP     MQOPEN( HCONN : MQOD : OPTS :                            MD041126
+     C                                     HOBJ : OCODE : REASON )                          MD041126
       *                                                                                      248095A
       ** Error processing                                                                    248095A
       *                                                                                      248095A
@@ -462,19 +485,21 @@
       ** options are to be used.  MQCLOS is a named constant indicating
       ** that the queue is to be closed.  Both are defined in CMQR.
      C                   EVAL      OPTS = CONONE
-     C                   EVAL      CID = MQCLOS
+     C**********         EVAL      CID = MQCLOS                                             MD041126
  
       ** The call returns CCODE, a completion code, which tells us whether
       ** or not the call was successful, and REASON, which gives details
       ** if there was a failure.
-     C                   CALL      'QMQM'
-     C                   PARM                    CID               9 0
-     C                   PARM                    HCONN             9 0
-     C                   PARM                    HOBJ              9 0
-     C                   PARM                    OPTS              9 0
-     C                   PARM                    CCODE             9 0
-     C                   PARM                    REASON            9 0
- 
+     C**********         CALL      'QMQM'                                                   MD041126
+     C**********         PARM                    CID               9 0                      MD041126
+     C**********         PARM                    HCONN             9 0                      MD041126
+     C**********         PARM                    HOBJ              9 0                      MD041126
+     C**********         PARM                    OPTS              9 0                      MD041126
+     C**********         PARM                    CCODE             9 0                      MD041126
+     C**********         PARM                    REASON            9 0                      MD041126
+                                                                                            MD041126
+     C                   CALLP     MQCLOSE(HCONN : HOBJ : OPTS :                            MD041126
+     C                                     CCODE : REASON)                                  MD041126
       *                                                                                      248095A
       ** Error processing                                                                    248095A
       *                                                                                      248095A
@@ -534,12 +559,18 @@
       *                                                                                      248095A
       ** Attempt to CONNECT to the MQ Manager                                                248095A
       *              ~~~~~~~                                                                 248095A
-     C                   CALL      'QMQM'                                                    248095A
-     C                   PARM      MQCONN        CID               9 0                       248095A
-     C                   PARM                    QMGR                                        248095A
-     C                   PARM      *ZERO         HANDLE            9 0                       248095A
-     C                   PARM      *ZERO         OCODE             9 0                       248095A
-     C                   PARM      *ZERO         REASON            9 0                       248095A
+     C**********         CALL      'QMQM'                                           248095A MD041126
+     C**********         PARM      MQCONN        CID               9 0              248095A MD041126
+     C**********         PARM                    QMGR                               248095A MD041126
+     C**********         PARM      *ZERO         HANDLE            9 0              248095A MD041126
+     C**********         PARM      *ZERO         OCODE             9 0              248095A MD041126
+     C**********         PARM      *ZERO         REASON            9 0              248095A MD041126
+                                                                                            MD041126
+     C                   Z-ADD     *ZERO         HANDLE                                     MD041126
+     C                   Z-ADD     *ZERO         OCODE                                      MD041126
+     C                   Z-ADD     *ZERO         REASON                                     MD041126
+     C                   CALLP     MQCONN( QMGR : HANDLE :                                  MD041126
+     C                                     OCODE : REASON )                                 MD041126
       *                                                                                      248095A
       ** Error processing                                                                    248095A
       *                                                                                      248095A
@@ -573,11 +604,15 @@
       *                                                                                      248095A
       **  Attempt to DISCONNECT from the MQ Manager                                          248095A
       *                                                                                      248095A
-     C                   CALL      'QMQM'                                                    248095A
-     C                   PARM      MQDISC        CID               9 0                       248095A
-     C                   PARM                    HCONN                                       248095A
-     C                   PARM      *ZERO         OCODE                                       248095A
-     C                   PARM      *ZERO         REASON                                      248095A
+     C**********         CALL      'QMQM'                                           248095A MD041126
+     C**********         PARM      MQDISC        CID               9 0              248095A MD041126
+     C**********         PARM                    HCONN                              248095A MD041126
+     C**********         PARM      *ZERO         OCODE                              248095A MD041126
+     C**********         PARM      *ZERO         REASON                             248095A MD041126
+                                                                                            MD041126
+     C                   Z-ADD     *ZERO         OCODE                                      MD041126
+     C                   Z-ADD     *ZERO         REASON                                     MD041126
+     C                   CALLP     MQDISC( HCONN : OCODE : REASON )                         MD041126
       *                                                                                      248095A
       ** Error processing                                                                    248095A
       *                                                                                      248095A

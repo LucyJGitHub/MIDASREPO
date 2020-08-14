@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CMG008             Date 20Feb20               *
-      *  Prev Amend No. CMG009             Date 24Oct19               *
+      *  Last Amend No. FVT101             Date 07Oct16               *
+      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *                 CMG009             Date 24Oct19               *
       *                 MD050696           Date 15May18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -53,6 +54,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  FVT101  - Field 61 Enhancement on SWIFT Statement Messages   *
+      *          - Added hooks:                                       *
+      *             WNCPYSRC,FVT101004                                *
+      *             WNCPYSRC,FVT101005                                *
+      *             WNCPYSRC,FVT101006                                *
+      *             WNCPYSRC,FVT101007                                *
+      *             WNCPYSRC,FVT101008                                *
+      *             WNCPYSRC,FVT101009                                *
+      *             WNCPYSRC,FVT101010                                *      
       *  CMG008 - SWIFT Character Translation Table                   *
       *  CMG009 - MT942 without Forward Value Postings.               *
       *  MD050696 - Multicash extended narratives from BuN interface  *
@@ -113,6 +123,7 @@
       *                                                                                     BUG25147
      FGLMNARL1  IF   E           K DISK                      INFSR(*PSSR)                   BUG25147
       ** Midas GL Journal Entry - MultiCash - Retrieval.                                    BUG25147
+     F/COPY WNCPYSRC,FVT101004                                                                FVT101
      F/COPY WNCPYSRC,GLH00180
      FSDNTTIL0  IF   E           K DISK                      INFSR(*PSSR)                     CGL152
       ** Midas SD Network Transaction Identifier.                                             CGL152
@@ -389,6 +400,7 @@
      C                   IF        WkModuleID = 'FT'                            Fund Transfer
      C                   EXSR      $FT0325
      C                   ENDIF
+     C/COPY WNCPYSRC,FVT101010                                                                FVT101
 
       ** Format Field 61 / Sub field 6
 
@@ -594,6 +606,7 @@
      C                   ENDSL
       ** Override MGSFD6 if found to exist in SDNTTIPD                                        CGL152
      C                   EXSR      $CGL152SFld6                                               CGL152
+     C/COPY WNCPYSRC,FVT101006                                                                FVT101
      C/COPY WNCPYSRC,GLH00203
 
       *    --------      -----
@@ -685,6 +698,7 @@
                                                                                               CRE008
      C                   WHEN      WkModuleID = 'BA'                            Batch Input
      C                   EVAL      MGSFD8 = '//' + 'G' + GLSPOS
+     C/COPY WNCPYSRC,FVT101008                                                                FVT101
 
      C                   WHEN      WkModuleID = 'GL'                            General Ledger
      C                   EVAL      MGSFD8 = '//' + 'G' +  %SUBST(GLSPOS:3:5)
@@ -746,6 +760,7 @@
 
      C                   WHEN      WkModuleID = 'BA'                            Batch Input
      C                   EVAL      MGSFD9 = GLPNAR
+     C/COPY WNCPYSRC,FVT101009                                                                FVT101
 
       **  Fund transfer
 
@@ -1276,6 +1291,7 @@
      C                   IF        P@RTCD = *BLANKS                                           CGL152
      C                   EVAL      CGL152 = 'Y'                                               CGL152
      C                   ENDIF                                                                CGL152
+     C/COPY WNCPYSRC,FVT101005                                                                FVT101
                                                                                               CMG008
       ** Check if feature CMG008 is installed                                                 CMG008
                                                                                               CMG008

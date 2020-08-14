@@ -12,8 +12,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 261691             Date 19Sep13               *
-      *  Prev Amend No. AR918264           Date 23Jan12               *
+      *  Last Amend No. AR921987           Date 22Feb12               *
+      *  Prev Amend No. AR962605           Date 01May12               *
+      *                 261691             Date 19Sep13               *
+      *                 AR918264           Date 23Jan12               *
       *                 AR907620           Date 14Feb12               *
       *                 AR928894           Date 05Mar12               *
       *                 AR937689           Date 15Mar12               *
@@ -146,6 +148,13 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR921987 - If Sender's Correspondent is decoded it must be   *
+      *             placed in Receiver's Correspondent for IN (if     *
+      *             Receiver's Correspondent is blank and Sender's    *
+      *             Correspondent is non-blank).                      *
+      *             (Child: AR921990)                                 *
+      *  AR962605   FT:STP'd payments missing record on UDF files     *
+      *             (Child:AR962606)                                  *
       *  261691 - Recompiled due to changes to /copy SFT0345S6.       *
       *         - Applied for MD011265.                               *
       *  AR918264 - Wherever possible always quote the Retail Ac/No   *
@@ -6359,6 +6368,12 @@
      C                     MOVELIPFRNT    IPFRID                                            BUG25944
      C                     WRITEINPAYQD0                                                    BUG25944
      C                     ENDIF                                                            BUG25944
+      ** User Defined Forms enabled                                                         AR962605
+     C           CSF003    IFEQ 'Y'                                                         AR962605
+     C                     CALL 'FTS0001'                                                   AR962605
+     C                     PARM *BLANKS   P@RTCD           Return Code                      AR962605
+     C                     PARM           PREF             Payment Reference                AR962605
+     C                     ENDIF                                                            AR962605
       *
       *  Update FT Refs network information
       *
@@ -8135,6 +8150,12 @@
      C                     MOVELOTFRNT    OTFRID                                            BUG25944
      C                     WRITEOTPAYQD0                                                    BUG25944
      C                     ENDIF                                                            BUG25944
+      ** User Defined Forms enabled                                                         AR962605
+     C           CSF003    IFEQ 'Y'                                                         AR962605
+     C                     CALL 'FTS0001'                                                   AR962605
+     C                     PARM *BLANKS   P@RTCD           Return Code                      AR962605
+     C                     PARM           PREF             Payment Reference                AR962605
+     C                     ENDIF                                                            AR962605
       *                                                                   S01408
      C/COPY WNCPYSRC,FT0300CCP4                                           S01408
       *                                                                   S01408
@@ -8660,6 +8681,8 @@
      C                     MOVELINMTPY    INMTPY
      C                     Z-ADDINMSGR    INMSGR
      C                     Z-ADDINKPRT    INKPRT
+     C                     Z-ADDINMSGR    IPMSGR                                            AR921987
+     C                     Z-ADDINKPRT    IPKPRT                                            AR921987
       *
       *  Book code and profit centre
       *
@@ -12328,6 +12351,17 @@ a     *                                                                         
      C                     MOVE 'N'       CSW220                                              CSW220
      C                     ENDIF                                                              CSW220
       *                                                                                       CSW220
+      ** Determine if CSF003 is installed                                                   AR962605
+     C                     MOVEL'N'       CSF003  1                                         AR962605
+     C                     CALL 'AOSARDR0'                                                  AR962605
+     C                     PARM '       ' @RTCD                                             AR962605
+     C                     PARM '*VERIFY' @OPTN                                             AR962605
+     C                     PARM 'CSF003'  @SARD                                             AR962605
+     C           SCSARD    PARM SCSARD    DSFDY                                             AR962605
+      *                                                                                     AR962605
+     C           @RTCD     IFEQ *BLANKS                                                     AR962605
+     C                     MOVEL'Y'       CSF003                                            AR962605
+     C                     ENDIF                                                            AR962605
       *
      CSR                   ENDSR
       *****************************************************************   CAC002
@@ -12620,30 +12654,38 @@ a     *                                                                         
      C********** TRCYCD    ANDEQS1SMCY                                               CFT002 AR918264
      C********** ##ACNO    ANDNE0                                                    CFT002 AR918264
      C           ##ACNO    WHNE 0                                                           AR918264
-     C                     MOVEL*BLANKS   S1SND                           CFT002
-     C                     MOVEL##ACNO    S1SND1                          CFT002
+     C***********          MOVEL*BLANKS   S1SND                                      CFT002 AR921987
+     C***********          MOVEL##ACNO    S1SND1                                     CFT002 AR921987
+     C                     MOVEL*BLANKS   S1RCCO                                            AR921987
+     C                     MOVEL##ACNO    S1RCCO                                            AR921987
       *                                                                   CFT002
       * If currency the same as settle and nostro, use nostro             CFT002
       *                                                                   CFT002
      C           ##NCCY    WHEQ S1SMCY                                    CFT002
      C           ##NONB    ANDNE*BLANKS                                   CFT002
-     C                     MOVEL*BLANKS   S1SND                           CFT002
-     C           ##NCCY    CAT  ##NONB    S1SND1    P                     CFT002
+     C**********           MOVEL*BLANKS   S1SND                                      CFT002 AR921987
+     C********** ##NCCY    CAT  ##NONB    S1SND1    P                                CFT002 AR921987
+     C                     MOVEL*BLANKS   S1RCCO                                            AR921987
+     C           ##NCCY    CAT  ##NONB    S1RCCO    P                                       AR921987
       *                                                                   CFT002
       * If currency the same use GL Account                               CFT002
       *                                                                   CFT002
      C           TRCYCD    WHEQ S1SMCY                                    CFT002
-     C                     MOVEL*BLANKS   S1SND                           CFT002
+     C**********           MOVEL*BLANKS   S1SND                                      CFT002 AR921987
+     C                     MOVEL*BLANKS   S1RCCO                                            AR921987
      C           BGMBIN    IFNE 'Y'                                       CFT002
      C                     MOVE '   '     TRCODE                          CFT002
      C                     END                                            CFT002
-     C                     MOVELTRCODE    S1SND1                          CFT002
+     C**********           MOVELTRCODE    S1SND1                                     CFT002 AR921987
+     C                     MOVELTRCODE    S1RCCO                                            AR921987
       *                                                                   CFT002
       * Use customer number                                               CFT002
       *                                                                   CFT002
      C                     OTHER                                          CFT002
-     C                     MOVEL*BLANKS   S1SND                           CFT002
-     C                     MOVELTRCNUM    S1SND1                          CFT002
+     C**********           MOVEL*BLANKS   S1SND                                      CFT002 AR921987
+     C**********           MOVELTRCNUM    S1SND1                                     CFT002 AR921987
+     C                     MOVEL*BLANKS   S1RCCO                                            AR921987
+     C                     MOVELTRCNUM    S1RCCO                                            AR921987
      C                     ENDSL                                          CFT002
      C                     ENDIF                                          CFT002
      C                     ENDIF                                          CFT002
@@ -16259,7 +16301,13 @@ a     *                                                                         
       * Receivers Correspondent                                           CGL009
       *                                                                   CGL009
      C           P54       IFNE *BLANKS                                   CGL009
+     C           P54       OREQ *BLANKS                                                     AR921987
+     C           P53       ANDNE*BLANKS                                                     AR921987
+     C           P54       IFNE *BLANKS                                                     AR921987
      C                     MOVELP54       DSTRAN                          CGL009
+     C                     ELSE                                                             AR921987
+     C                     MOVELP53       DSTRAN                                            AR921987
+     C                     ENDIF                                                            AR921987
      C*********************MOVELTMLIN1    INRCO1                    CGL009CFT014
      C*********************MOVELTMLIN2    INRCO2                    CGL009CFT014
      C*********************MOVELTMLIN3    INRCO3                    CGL009CFT014
@@ -21295,6 +21343,8 @@ a     *                                                                         
       *                                                                   CFT009
      C                     Z-ADDOPMSGR    OPMSGR                          CFT009
      C                     Z-ADDOPKPRT    OPKPRT                          CFT009
+     C                     Z-ADDOPMSGR    OTMSGR                                            AR921987
+     C                     Z-ADDOPKPRT    OTKPRT                                            AR921987
       *                                                                   CFT009
       ** Notified delivery currency and amount                            CFT009
       *                                                                   CFT009

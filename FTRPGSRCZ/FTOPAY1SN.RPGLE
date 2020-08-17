@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. ERZ248             Date 18Nov19               *
-      *  Prev Amend No. MD021318           Date 26Jul13               *
+      *  Last Amend No. MD056364           Date 10Aug20               *
+      *  Prev Amend No. ERZ248             Date 18Nov19               *
+      *                 MD021318           Date 26Jul13               *
       *                 262474             Date 29Jan13               *
       *                 ERZ123             Date 29Jan13               *
       *                 MD054131           Date 13Sep19               *
@@ -175,6 +176,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056364 - ERZ248: UETR is not wiped out in replicated       *
+      *             FT payments                                       *
+      *           - Amended hook FTH00661                             *
       *  ERZ248 - SWIFT UETR via OPAY API                             *
       *           Add hooks ERZ248_030->035                           *
       *           Amended hooks FTOPA1SC03, FTOPA1SC13, FTOPA1SC15,   *

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054117           Date 12Sep19               *
-      *  Prev Amend No. MD054095           Date 17Oct19               *
+      *  Last Amend No. MD031031           Date 24Feb15               *
+      *  Prev Amend No. MD054117           Date 12Sep19               *
+      *                 MD054095           Date 17Oct19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -117,6 +118,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031031 - F1DLNO missing in DLDLDnQD file for LDNI, NASP,   *
+      *             NASS, FRA, CIRS and SIRS. Write to extension file *
+      *             whether CLE025 is *ON or *OFF.                    *
       *  MD054117 - Principal change Increase/Decrease capability     *
       *  MD054095 - FRA/IRS: Impossible to input a CIRS deal with zero*
       *             rate                                              *
@@ -1329,13 +1333,13 @@
                                                                                               CLE025
       ** Set up deal extension file if Credit Lines is installed                              CLE025
                                                                                               CLE025
-     C                   IF        CLE025 = 'Y'                                               CLE025
+     C**********         IF        CLE025 = 'Y'                                      CLE025 MD031031
      C                   CLEAR                   DEALEXT                                      CLE025
      C                   MOVEL     IRVXSIR       DEALEXT                                      CLE025
      C                   MOVEL     RSDLNO        F1DLNO                                       CDL038
      C                   MOVEL     RSBRCA        F1BRCA                                       248452
      C                   WRITE     DLDLDGD0                                                   CLE025
-     C                   ENDIF                                                                CLE025
+     C**********         ENDIF                                                       CLE025 MD031031
       *
      C                   ENDSR
      C****************************************************************

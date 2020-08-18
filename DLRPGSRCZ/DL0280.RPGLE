@@ -9829,6 +9829,9 @@
      C   71              SETON                                            12                   LN071
      C/COPY WNCPYSRC,DL0280C714
      C*
+     C     NRBRTT        IFEQ      '  '                                                     MD031017
+     C                   MOVE      '00'          BRTT                                       MD031017
+     C                   ENDIF                                                              MD031017
 2150 C                   EXCEPT
      C                   SETOFF                                       OF                       S0111
      C                   Z-ADD     0             RPAGE1                                        S0111

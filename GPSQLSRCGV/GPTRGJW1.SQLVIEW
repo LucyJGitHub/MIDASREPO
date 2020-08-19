@@ -1,0 +1,68 @@
+/*******************************************************************************/
+/*                                                                             */
+/*       Midas - Global Processing                                             */
+/*                                                                             */
+/*       GPTRGJW0 - Midas GP Midas trigger programs Joint                      */
+/*                                                                             */
+/*       (c) Finastra International Limited 2020                               */
+/*                                                                             */
+/*       Last Amend No. MD055682 *CREATE   Date 31Jul20                        */
+/*                                                                             */
+/*-----------------------------------------------------------------------------*/
+/*                                                                             */
+/*       MD055682 - Deliverable Data Split for TRIG                            */
+/*                                                                             */
+/*******************************************************************************/
+                                                                                :
+  create view                                                                   :
+  **********/**********                                                         :
+                                                                                :
+  (                                                                             :
+       TRACTV                                                                   :
+     , TRFILE                                                                   :
+     , TRTIME                                                                   :
+     , TREVNT                                                                   :
+     , TRSEQ                                                                    :
+     , TRPGM                                                                    :
+     , TRPGML                                                                   :
+     , TRUNQI                                                                   :
+     , TRMMSN                                                                   :
+     , GUSARN                                                                   :
+     , SARN                                                                     :
+     , GUAVAL                                                                   :
+     , ENABLD                                                                   :
+     , TRMODE                                                                   :
+  )                                                                             :
+  as select                                                                     :
+       a.TRACTV                                                                 :
+     , a.TRFILE                                                                 :
+     , a.TRTIME                                                                 :
+     , a.TREVNT                                                                 :
+     , a.TRSEQ                                                                  :
+     , a.TRPGM                                                                  :
+     , a.TRPGML                                                                 :
+     , a.TRUNQI                                                                 :
+     , a.TRMMSN                                                                 :
+     , b.GUSARN                                                                 :
+     , c.SARN                                                                   :
+     , b.GUAVAL                                                                 :
+     , c.ENABLD                                                                 :
+     , a.TRMODE                                                                 :
+  from GPTRGJW0 AS a LEFT OUTER JOIN                                            :
+  GPSRTXTD AS b ON ( a.TRFILE = b.GUFILE AND a.TRTIME = b.GUTIME                :
+  and a.TREVNT = b.GUEVNT and a.TRSEQ = b.GUSEQ) LEFT OUTER JOIN                :
+  GPSRDXTD AS c ON ( b.GUSARN = c.SARN )                                        :
+                                                                                :
+  WHERE                                                                         :
+  ( b.GUSARN IS NULL ) OR                                                       :
+  ( b.GUSARN IS NOT NULL AND c.SARN IS NOT NULL AND b.GUAVAL = 'Y'              :
+  AND c.ENABLD = 'E' ) OR                                                       :
+  ( b.GUSARN IS NOT NULL AND c.SARN IS NULL AND b.GUAVAL = 'N' )                :
+                                                                                :
+                                                                                :
+  rcdfmt GPTRGJD1;                                                              :
+                                                                                :
+  label on table     **********/**********                                      :
+   is 'Midas GP Active trigger pgms by file/time/typ/seq';                      :
+                                                                                :
+/******************************************************************************/

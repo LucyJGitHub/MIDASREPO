@@ -13,19 +13,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  Last Amend No. MD054125A          Date 17Aug20               *
-      *  Prev Amend No. MD054125 *Create   Date 27Jul20               *
+      *  Last Amend No. MD054125 *CREATE   Date 27Jul20               *
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  MD054125A - When utility was run on May2020 DB,2020 GLHIBLPD *
-      *              records were not removed from file, resulting in *
-      *              postings to be added twice in the closing balance*
-      *              for 2020. It was hardcoded in utility to start   *
-      *              the process on Dec2018 and removed records for   *
-      *              2019 but not for the records after 2019.         *
-      *              Start processing on Nov2019 and ensure to remove *
-      *              records starting Nov2019 onwards.                *
       *  MD054125 - Datapatch to blank out Associated Customer (ASOC) *
       *             and merge the balances                            *
       *                                                               *
@@ -159,13 +150,6 @@
      C                   If        *IN51 = *Off
      C                   DELETE    @BPRED4
      C                   Endif
-     C                   Else                                                              MD054125A
-     C                   Move      '000000'      A_HBACNB                                  MD054125A
-     C     AKEY          CHAIN     GLAVBLL1                           50                   MD054125A
-     C                   If        *IN50 = *Off                                            MD054125A
-     C                   Move      *Blank        ABACNB                                    MD054125A
-     C                   UPDATE    @BPRED4                                                 MD054125A
-     C                   Endif                                                             MD054125A
      C                   Endif
       *
      C                   Else
@@ -186,19 +170,10 @@
      C                   UPDATE    @BORED6
       *
      C     AKEY          CHAIN     GLAVBLL0                           50
-     C**********         If        *IN50 = *On                                             MD054125A
-     C**********         Move      '000000'      A_HBACNB                                  MD054125A
-     C                   If        *IN50 = *Off and A_ABACNB = *Blank                      MD054125A
-     C                   Move      '000000'      A_ABACNB                                  MD054125A
-     C*****AKEY*         CHAIN     GLAVBLL1                           51                   MD054125A
-     C     ABKEY         CHAIN     GLAVBLL1                           51                   MD054125A
+     C                   If        *IN50 = *On
+     C                   Move      '000000'      A_HBACNB
+     C     AKEY          CHAIN     GLAVBLL1                           51
      C                   If        *IN51 = *Off
-     C                   DELETE    @BPRED4                                                 MD054125A
-     C                   Endif                                                             MD054125A
-     C                   Else                                                              MD054125A
-     C                   Move      '000000'      A_HBACNB                                  MD054125A
-     C     AKEY          CHAIN     GLAVBLL1                           50                   MD054125A
-     C                   If        *IN50 = *Off                                            MD054125A
      C                   Move      *Blank        ABACNB
      C                   UPDATE    @BPRED4
      C                   Endif
@@ -270,17 +245,14 @@
      C                   Write     UTFINTTL
      C                   Write     UTENDRPT
       *
-      ***Update*GLHBCGPD*and*change*Last*Posting*Date*to*31DEC2018*****                    MD054125A
-      ** Update GLHBCGPD and change Last Posting Date to 31Oct2019                         MD054125A
+      ** Update GLHBCGPD and change Last Posting Date to 31DEC2018
       *
      C                   If        *IN30 = *On
       *
      C     WCGCD         CHAIN     GLHBCGL0                           40
      C                   If        *IN40 = *Off
-     C**********         Eval      HCCPNB = 201812                                         MD054125A
-     C**********         Eval      HCLPDT = 17167235959                                    MD054125A
-     C                   Eval      HCCPNB = 201910                                         MD054125A
-     C                   Eval      HCLPDT = 17471235959                                    MD054125A
+     C                   Eval      HCCPNB = 201812
+     C                   Eval      HCLPDT = 17167235959
      C                   UPDATE    @BNREDZ
      C                   Endif
       *

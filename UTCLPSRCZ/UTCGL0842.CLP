@@ -9,14 +9,10 @@
 /*                                                                   */
 /*       (C) Finastra International Limited 2020                     */
 /*                                                                   */
-/*       Last Amend No. MD054125A          Date 17Aug20              */
-/*       Prev Amend No. MD054125 *CREATE   Date 27Jul20              */
-/*                      Xnnnnn             Date ddMmmYY              */
+/*       Last Amend No. MD054125           Date 27Jul20              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
-/*       MD054125A - Change the start date of records to be processed*/
-/*                   to Nov. 2019.                                   */
 /*       MD054125 - Datapatch to blank out Associated Customer (ASOC)*/
 /*                  and merge the balances.                          */
 /*                                                                   */
@@ -138,27 +134,18 @@
              SNDPGMMSG  MSG('UTGL0842A completed normally') TOPGMQ(*EXT) +
                           TOMSGQ(MOPERQ MRUNQ)
 
-/**Filter*postings*-*only*Posting*Date*and*Value*Date*after*31DEC2018 */               /*MD054125A*/
-/* Filter postings - only Posting Date and Value Date after 31OCT2019 */               /*MD054125A*/
+/* Filter postings - only Posting Date and Value Date after 31DEC2018 */
 
              IF         COND((&PARM *EQ 'U') *OR (&PARM *EQ 'u')) +
                           THEN(DO)
-/**********  CPYF       FROMFILE(APOSTPD) TOFILE(QTEMP/APOSTPDXX) + */                 /*MD054125A*/
-/**********               MBROPT(*REPLACE) CRTFILE(*YES) + */                          /*MD054125A*/
-/**********               INCREL((*IF PSTD *GT 17167) (*AND VALD + */                  /*MD054125A*/
-/**********               *GT 17167)) */                                               /*MD054125A*/
-/**********  CPYF       FROMFILE(GLACPHPD) TOFILE(QTEMP/GLACPHPDXX) + */               /*MD054125A*/
-/**********               MBROPT(*REPLACE) CRTFILE(*YES) + */                          /*MD054125A*/
-/**********               INCREL((*IF PSTD *GT 17167) (*AND VALD + */                  /*MD054125A*/
-/**********               *GT 17167)) */                                               /*MD054125A*/
              CPYF       FROMFILE(APOSTPD) TOFILE(QTEMP/APOSTPDXX) +
                           MBROPT(*REPLACE) CRTFILE(*YES) +
-                          INCREL((*IF PSTD *GT 17471) (*AND VALD +
-                          *GT 17471))                                                  /*MD054125A*/
+                          INCREL((*IF PSTD *GT 17167) (*AND VALD +
+                          *GT 17167))
              CPYF       FROMFILE(GLACPHPD) TOFILE(QTEMP/GLACPHPDXX) +
                           MBROPT(*REPLACE) CRTFILE(*YES) +
-                          INCREL((*IF PSTD *GT 17471) (*AND VALD +
-                          *GT 17471))                                                  /*MD054125A*/
+                          INCREL((*IF PSTD *GT 17167) (*AND VALD +
+                          *GT 17167))
              ENDDO
 
 /* Check if XXGLHIBLPD exists */
@@ -209,10 +196,8 @@
 
              MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(EOF))
 
-/**********  IF         COND(&HCLPDT *LT 17167235959) THEN(GOTO + */                   /*MD054125A*/
-/**********               CMDLBL(READ)) */                                             /*MD054125A*/
-             IF         COND(&HCLPDT *LT 17472235959) THEN(GOTO +
-                          CMDLBL(READ))                                                /*MD054125A*/
+             IF         COND(&HCLPDT *LT 17167235959) THEN(GOTO +
+                          CMDLBL(READ))
 
 /** Check if Control group exist as a member in GLHIBLPD  */
 
@@ -301,14 +286,10 @@
                           FROMMBR(*ALL) TOMBR(*FROMMBR) +
                           MBROPT(*REPLACE) CRTFILE(*YES)
 
-/**********  CPYF       FROMFILE(QTEMP/GLHIBLPDXY) + */                                /*MD054125A*/
-/**********               TOFILE(*LIBL/GLHIBLPD) FROMMBR(&HCCGCD) + */                 /*MD054125A*/
-/**********               TOMBR(*FROMMBR) MBROPT(*REPLACE) + */                        /*MD054125A*/
-/**********               CRTFILE(*NO) INCREL((*IF HBPDYR *NE '19')) */                /*MD054125A*/
              CPYF       FROMFILE(QTEMP/GLHIBLPDXY) +
                           TOFILE(*LIBL/GLHIBLPD) FROMMBR(&HCCGCD) +
                           TOMBR(*FROMMBR) MBROPT(*REPLACE) +
-                          CRTFILE(*NO) INCREL((*IF HBSPDD *LT '17472'))                /*MD054125A*/
+                          CRTFILE(*NO) INCREL((*IF HBPDYR *NE '19'))
 
              CALL       PGM(MCC0264) PARM(&HCCGCD)
              DLTOVR     FILE(*ALL)

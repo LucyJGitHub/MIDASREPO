@@ -18,7 +18,7 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD055528           Date 13Aug20               *      
+      *  Last Amend No. MD055528           Date 13Aug20               *
       *  Prev Amend No. MD052075           Date 07Jun19               *
       *                 CGL150             Date 13Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -44,7 +44,7 @@
       *  MD055528 - Corrective Batches value dates are overwritten by *
       *             Booking Date.                                     *
       *           - When corrective batches value dates are equal to  *
-      *             *BLANKS defaults value date to Booking Date       *      
+      *             *BLANKS defaults value date to Booking Date       *
       *  MD052075 - [CGL150] Warning message should be displayed when *
       *           the system defaults the value date.                 *
       *  CGL150 - Value date to back value date if prior to           *
@@ -182,7 +182,7 @@
       *
      C                   Z-ADD     *ZERO         Idx
      C                   Z-ADD     *ZERO         WIx
-     C                   Z-ADD     *ZERO         TMPVLDT           5 0                      MD055528     
+     C                   Z-ADD     *ZERO         TMPVLDT           5 0                      MD055528
       *
      C                   CLEAR                   WVLDT             5 0
      C                   CLEAR                   WRTCD             7
@@ -193,7 +193,7 @@
      C     DDBTNB        CHAIN     GLJEHQL0                                                 MD055528
      C                   IF        %FOUND                                                   MD055528
      C                   Z-ADD     HQBDTE        TMPVLDT                                    MD055528
-     C                   ENDIF                                                              MD055528     
+     C                   ENDIF                                                              MD055528
       *
       ** Validate Value Date of Retail Accounts.
       *
@@ -207,8 +207,7 @@
      C                   EVAL      PDaynoIn = WVLDT                                           CGL150
      C                   EXSR      SRDat2                                                     CGL150
      C                   MOVEL     PDateOut      DDVLDT                                     MD055528
-     C**********         ENDIF                                                       CGL150 MD055528     
-     C                   ENDIF                                                                CGL150
+     C**********         ENDIF                                                       CGL150 MD055528
      C                   Z-ADD     WVLDT         B2VLDT
       *
      C                   RETURN
@@ -233,7 +232,7 @@
      C                   EXSR      SRDat2                                                   MD055528
      C                   EVAL      DDVLDT = *BLANKS                                         MD055528
      C                   MOVE      PDateOut      DDVLDT                                     MD055528
-     C                   ELSE                                                               MD055528     
+     C                   ELSE                                                               MD055528
       *
       ** If blanks, default Value Date to rundate, then convert it
       ** to date format.
@@ -281,7 +280,7 @@
      C                   ENDIF
       *
      C                   ENDIF
-     C                   ENDIF                                                              MD055528      
+     C                   ENDIF                                                              MD055528
       *
      C     ESRProc       ENDSR
       *
@@ -656,7 +655,7 @@
       *
       ** Account details (DS)
      C                   PARM                    F1ACCT
-     C                   PARM                    DDBTNB            3                        MD055528      
+     C                   PARM                    DDBTNB            3                        MD055528
       *
       ** STANDING DATA
       ** =============
@@ -731,7 +730,7 @@
      C                   MOVE      'Y'           CSC054            1                        MD055528
      C                   ELSE                                                               MD055528
      C                   MOVE      'N'           CSC054                                     MD055528
-     C                   ENDIF                                                              MD055528      
+     C                   ENDIF                                                              MD055528
       *
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================

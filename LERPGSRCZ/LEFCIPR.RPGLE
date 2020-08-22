@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD044880           Date 15Jan18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD052591           Date 03Sep19               *
+      *  Prev Amend No. MD039655           Date 03Sep19               *
+      *                 MD044880           Date 15Jan18               *
+      *                 MD046248           Date 27Oct17               *
       *                 LLN022A            Date 03Jun15               *
       *                 LLN022             Date 03Jun15               *
       *                 CDL094             Date 11Jun14               *
@@ -50,6 +52,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD052591 - Added WIP timestamp in buffer to be consistent    *
+      *             with fix AR214087.                                *
+      *  MD039655 - Facility cannot be rejected.                      *
+      *             Pattern fix from MD-29208 and MD-34908.           *
+      *           - Applied for MD052591.                             *
       *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *
@@ -192,6 +199,7 @@
      D POPTN           S              7A                                                      CER001
      D PSARD           S              6A                                                      CER001
      D ULX004          S              1A                                                      CER001
+     D @WIPTmst        S             26                                                      MD052591
                                                                                               CER049
      DTranStamp        S             51A                                                      CER049
       ** Stamp Tax Details                                                                    CER049
@@ -332,6 +340,8 @@
      C                                           + TranStamp                                  CER049
      C                                           + CADetails                                  CLE147
      C                                           + InfData                                 BUG13297A
+     C                                           + @WIPTmst                                 MD052591
+     C                                           + @ACTRV                                   MD039655
      C                                           + InRecSttmt + InPaySttmt                  BUG10093
      C**********                                 + RegData + ExtData               BUG10093 MD044880
      C                                           + ExtData                                  MD044880
@@ -420,6 +430,10 @@
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetc           1
      C                   PARM                    DDPATH          200                       BUG13297A
+                                                                                            MD039655
+      ** Reject action                                                                      MD039655
+                                                                                            MD039655
+     C                   PARM                    @ACTRV            1                        MD039655
       *                                                                                      LLN022A
       ** Access SAR details file to determine if LLN007                                      LLN022A
       ** Bank of England Yellow Book Changes is installed.                                   LLN022A
@@ -575,6 +589,10 @@
      C                   PARM                    DDFCNO            2
       * (Midas) Branch
      C                   PARM                    DDBRCA            3
+                                                                                            MD039655
+      ** Reject action                                                                      MD039655
+                                                                                            MD039655
+     C                   PARM                    @ACTRV                                     MD039655
      C/COPY WNCPYSRC,LEH00356
  
       * OUTPUTS

@@ -27,8 +27,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD044880           Date 15Jan18               *
+      *  Last Amend No. MD039655           Date 03Sep19               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD044880           Date 15Jan18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD031146           Date 08Apr16               *
       *                 LLN022A            Date 03Jun15               *
@@ -82,6 +83,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039655 - Facility cannot be rejected.                      *
+      *             Pattern fix from MD-29208 and MD-34908.           *
+      *           - Applied for MD052591.                             *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
@@ -860,6 +864,7 @@
      C                                           + FCIPNotes + DDPATH                       BUG13174
      C                                           + TranStamp                                  CER049
      C                                           + CADetails                                  CLE147
+     C                                           + @ACTRV                                   MD039655
      C                                           + InfData                                  BUG13174
      C                                           + InRecSttmt                               BUG13174
      C                                           + InPaySttmt                                 CLE106
@@ -917,6 +922,10 @@
      C                   PARM                    DDFACT
      C                   PARM                    DDFCNO
      C                   PARM                    DDBRCA
+                                                                                            MD039655
+      ** Reject action                                                                      MD039655
+                                                                                            MD039655
+     C                   PARM                    @ACTRV                                     MD039655
      C/COPY WNCPYSRC,LEH00359
       *
       * OUTPUTS
@@ -1466,6 +1475,10 @@
       * Customer Extra Data file data
      C**********         PARM                    ExtData                                    BUG10093
      C                   PARM                    FCIPNotes                                  BUG10093
+                                                                                            MD039655
+      ** Reject action                                                                      MD039655
+                                                                                            MD039655
+     C                   PARM                    @ACTRV                                     MD039655
       * OUTPUTS
  
       *
@@ -1590,6 +1603,10 @@
      C                   PARM                    CSC011            1
       * CEU013
      C                   PARM                    CEU013            1
+                                                                                            MD039655
+      ** Reject Action Code                                                                 MD039655
+                                                                                            MD039655
+     C                   PARM                    @ACTRV                                     MD039655
  
       * OUTPUTS
       *
@@ -2131,6 +2148,7 @@
      C                   PARM                    APIRetc           1
      C                   PARM                    DDPATH          200                        BUG13174
      C                   PARM                    CADetails        33                          CLE147
+     C                   PARM                    @ACTRV            1                        MD039655
  
       ** Initialize SAR work flag and Commit flag                                             CSC022
      C                   Eval      CSC022      = 'N'                                          CSC022

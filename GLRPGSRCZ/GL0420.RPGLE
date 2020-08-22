@@ -14,8 +14,11 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. MD055733           Date 03Jul20               *
-      *  Prev Amend No. 220877             Date 22Mar19               *
+      *  Last Amend No. BUG25122B          Date 13Oct09               *
+      *  Prev Amend No. EFIXJM             Date 16Sep09               *
+      *                 BUG25122A          Date 02Sep09               *
+      *                 MD055733           Date 03Jul20               *
+      *                 220877             Date 22Mar19               *
       *                 CGL188             Date 19Feb18               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL184             Date 07Dec16               *
@@ -160,6 +163,9 @@
 0008 F*                                                               *
 0013 F*---------------------------------------------------------------*
       *                                                               *
+      *  BUG25122B - FOKFIX changes                                   *
+      *  EFIXJM    - Amendment to FOKFIX                              *
+      *  BUG25122A - Applied missing FOKFIX functionality             *
       *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
       *             components.                                       *
       *           - Redeliver of MD050139.                            *
@@ -616,6 +622,13 @@
      FGLAPSGL0  IF   E           K DISK                                         216937
      FSDCMANL0  IF   E           K DISK                                         216006
      FREGAHLJ2  IF   E           K DISK                                         216006
+     FGLNW94L5  IF   E           K DISK                                                    BUG25122A
+     F*                                Network Transaction                                 BUG25122A
+     F***GLNWACL5IF  E           K        DISK                                      BUG25122A EFIXJM
+     FGLNWACJ1  IF   E           K DISK                                                       EFXIJM
+     F*                                Network accounts - Account Number                   BUG25122A
+     F***SDNWRKL2IF  E           K        DISK                                      BUG25122A EFIXJM
+     F*                                Message Network Details                             BUG25122A
      F** Core hook for externalisation.                                   S01408
      F/COPY WNCPYSRC,GL0420FFPG                                           S01408
      F*                                                                   S01408
@@ -1016,6 +1029,12 @@
      I/COPY ZSRSRC,ZHOLELE                                                                   CGL061A
       *                                                                   S01408
      I/COPY WNCPYSRC,GL0420EEP2                                           S01408
+      *----------------------------------------------------------------------------------  BUG25122A
+     IGLNW94D0                                                                             BUG25122A
+      ** SAR File Details Accessed via access program AOSARDR0                             BUG25122A
+      *                                                                                    BUG25122A
+     I              QQACCD                      QQACCS                                     BUG25122A
+      *                                                                                    BUG25122A
       *                                                                   S01408
 0141 I*
 0142 I**
@@ -1436,6 +1455,26 @@
      C                   KFLD                    ACOD                                         216006
      C                   KFLD                    ACSQ                                         216006
      C                   KFLD                    BRCA                                         216006
+      * Incorporate FOKFIX from R4                                                         BUG25122A
+      *                                                                                    BUG25122A
+     C     KACNBY        KLIST                                                             BUG25122A
+     C                   KFLD                    BRCA                                      BUG25122A
+     C                   KFLD                    CNUM                                      BUG25122A
+     C                   KFLD                    CCY                                       BUG25122A
+     C                   KFLD                    ACOD                                      BUG25122A
+     C                   KFLD                    ACSQ                                      BUG25122A
+      *                                                                                    BUG25122A
+     C     KNW94         KLIST                                                             BUG25122A
+     C                   KFLD                    NANWRK                                    BUG25122A
+     C                   KFLD                    NABRCH                                    BUG25122A
+     C                   KFLD                    NACNUM                                    BUG25122A
+     C                   KFLD                    NACCY                                     BUG25122A
+     C                   KFLD                    NAACOD                                    BUG25122A
+     C                   KFLD                    NAACSQ                                    BUG25122A
+      *                                                                                    BUG25122A
+     C     KSDWK1        KLIST                                                             BUG25122A
+     C                   KFLD                    NANWRK                                    BUG25122A
+      *                                                                                    BUG25122A
 0361 C**
 0362 C**   SETUP NARRATIVE FIELDS.
 0363 C**
@@ -1699,6 +1738,38 @@
      C                   MOVE      *ON           *INKL                                       BG12511
      C                   ENDIF                                                                CGL046
       *                                                                   CFT004
+      **  Access SAR details file to see if CGL013 is installed                            BUG25122A
+      *                                                                                    BUG25122A
+     C                   CALL      'AOSARDR0'                                              BUG25122A
+     C                   PARM      *BLANKS       @RTCD                                     BUG25122A
+     C                   PARM      '*VERIFY'     @OPTN                                     BUG25122A
+     C                   PARM      'CGL013'      @SARD             6                       BUG25122A
+     C                   PARM                    UFFDY           200                       BUG25122A
+      *                                                                                    BUG25122A
+     C                   MOVE      'N'           CGL013            1                       BUG25122A
+      *                                                                                    BUG25122A
+     C     @RTCD         IFEQ      *BLANKS                                                 BUG25122A
+     C                   MOVE      'Y'           CGL013                                    BUG25122A
+     C                   ENDIF                                                             BUG25122A
+      *                                                                                    BUG25122A
+      **  Access SAR details file to see if CER030 is installed                            BUG25122A
+      *                                                                                    BUG25122A
+     C                   CALL      'AOSARDR0'                                              BUG25122A
+     C                   PARM      *BLANKS       @RTCD                                     BUG25122A
+     C                   PARM      '*VERIFY'     @OPTN                                     BUG25122A
+     C                   PARM      'CER030'      @SARD                                     BUG25122A
+     C     SCSARD        PARM      SCSARD        DSFDY                                     BUG25122A
+      *                                                                                    BUG25122A
+     C                   MOVE      'N'           CER030            1                       BUG25122A
+     C     @RTCD         IFEQ      *BLANKS                                                 BUG25122A
+     C                   MOVE      'Y'           CER030                                    BUG25122A
+     C                   ENDIF                                                             BUG25122A
+      *                                                                                    BUG25122A
+     C     CGL013        IFEQ      'Y'                                                     BUG25122A
+     C     CER030        OREQ      'Y'                                                     BUG25122A
+     C                   MOVEL     'Y'           MTFLAG            1                       BUG25122A
+     C                   ENDIF                                                             BUG25122A
+      *                                                                                    BUG25122A
       **  Access SAR details file to see if CFT004 is installed.          CFT004
       *                                                                   CFT004
      C                   CALL      'AOSARDR0'                                                 CFT004
@@ -3864,6 +3935,49 @@
      C**********           MOVE 'M'       ZFREQ                     S01413176080
      C                   MOVE      'L'           ZFREQ                                        176080
      C/COPY WNCPYSRC,GL0420C003
+      *                                                                                    BUG25122A
+      ** Incorporate GL0420C003 from R4                                                    BUG25122A
+      *                                                                                    BUG25122A
+     C     MTFLAG        IFEQ      'Y'                                                     BUG25122A
+     C     ATYP          ANDEQ     'R'                                                     BUG25122A
+      *                                                                                    BUG25122A
+      **Check if customers account record is in the Network Details File                   BUG25122A
+      *                                                                                    BUG25122A
+     C********** KACNBY    SETLLGLNWACL5                                                   BUG25122A
+     C********** KACNBY    READEGLNWACL5                 27                      BUG25122A    EFIXJM
+     C     KACNBY        SETLL     GLNWACJ1                                      BUG25122A    EFIXJM
+     C     KACNBY        READE     GLNWACJ1                               27                  EFIXJM
+      *                                                                                    BUG25122A
+      **Check if Multicash                                                                 BUG25122A
+      *                                                                                    BUG25122A
+     C     *IN27         IFEQ      '0'                                                     BUG25122A
+     C********** KSDWK1    CHAINSDNWRKL2             28                           BUG25122A   EFIXJM
+     C*                                                                                    BUG25122A
+     C********** *IN28     IFEQ '0'                                               BUG25122A   EFIXJM
+     C********** EDMCNW    ANDEQ'Y'                                              BUG25122A BUG25122B
+     C                   MOVEL     'Y'           MTCASH            1                       BUG25122A
+     C*                                                                                    BUG25122A
+     C********** KNW94     CHAINGLNW94L5             29                         BUG25122A     EFIXJM
+     C     KNW94         CHAIN     GLNW94L5                           24                      EFIXJM
+     C*                                                                         BUG25122A     EFIXJM
+     C********** *IN29     IFEQ '0'                                                           EFIXJM
+     C     *IN24         IFEQ      '0'                                                        EFIXJM
+     C     N40SFR        ANDNE     ' '                                                     BUG25122A
+     C     N40SFR        ANDNE     'E'                                                     BUG25122A
+      *                                                                                    BUG25122A
+     C                   MOVE      N40SFR        ZFREQ                                     BUG25122A
+     C                   ELSE                                                              BUG25122A
+     C                   MOVE      'M'           ZFREQ                                     BUG25122A
+     C                   ENDIF                                                             BUG25122A
+      *                                                                                    BUG25122A
+     C************         ENDIF                                                  BUG25122A   EFIXJM
+      *                                                                                    BUG25122A
+X    C*********  KACNBY    READEGLNWACL5                 27                      BUG25122A    EFIXJM
+X    C     KACNBY        READE     GLNWACJ1                               27                  EFIXJM
+     C                   ENDIF                                                             BUG25122A
+      *                                                                                    BUG25122A
+     C                   ENDIF                                                             BUG25122A
+      *                                                                                    BUG25122A
      C                   ELSE                                                                 S01413
      C                   MOVE      STFQ          ZFREQ                                        S01413
      C                   END                                                                  S01413

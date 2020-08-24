@@ -11,11 +11,14 @@
 /********(c)*Misys*International*Banking*Systems*Ltd.*2007************/        /*JMI113*/
 /*       (c) Finastra International Limited 2018                     */        /*JMI113*/
 /*                                                                   */
-/*       Last Amend No. JMI113             Date 22May18              */
-/*       Prev Amend No. JMI019  *CREATE    Date 21Feb07              */
+/*       Last Amend No. EMFIX5             Date 17Jun20              */
+/*       Prev Amend No. JMI113             Date 22May18              */
+/*                      JMI019  *CREATE    Date 21Feb07              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       EMFIX5 - Data queue XXGCMMDA does not exist, use MEGCMSDA   */
+/*                (JMI113)                                           */
 /*       JMI113 - MIdas GCMS Interface. Upgrade to FBM 2.1           */
 /*       JMI019 - MIdas-GCMS Interface                               */
 /*                                                                   */
@@ -161,8 +164,11 @@
                  CHGDTAARA  DTAARA(XXGCMMDA (29 1)) VALUE('B') /*JMI113*/
                ENDDO
 /*             CALL       PGM(QSNDDTAQ) PARM(MEGCMSDA *LIBL X'00001F' &VAR1) */ /*JMI113*/
-               CALL       PGM(QSNDDTAQ) PARM(XXGCMMDA *LIBL X'00001F' &VAR1) +
-                            /*JMI113*/
+/*             CALL       PGM(QSNDDTAQ) PARM(XXGCMMDA *LIBL X'00001F' &VAR1) + */
+/*                            *JMI113*  *EMFIX5*/
+               CALL       PGM(QSNDDTAQ) PARM(MEGCMSDA *LIBL X'00001F' &VAR1) +
+                            /*EMFIX5*/
+
                IF         COND(&MODE *EQ '*SYNCH') THEN(DO)
 
  RETRY3:           CHGVAR     VAR(&MSGID) VALUE(' ')

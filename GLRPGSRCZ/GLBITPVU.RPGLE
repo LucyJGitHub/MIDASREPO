@@ -96,7 +96,7 @@
       *                                                               *
       *  MD056412 - BITP API message not shows in Repair              *
       *             Queue - Batch Details. Pass BRBTNB to DDBTNB      *
-      *             after reading GLJENHL3.                           *
+      *             after reading GLJENHL3                            *
       *  MD046248 - Finastra Rebranding                               *
       *  MD048370 - User encounters an error "batch is already        *
       *             accepted" when amending/inserting a BITP whose    *

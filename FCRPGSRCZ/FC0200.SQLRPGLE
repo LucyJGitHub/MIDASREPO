@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD055265           Date 10Feb20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055681           Date 31Jul20               *
+      *  Prev Amend No. MD055265           Date 10Feb20               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD023136           Date 06Nov13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG27056           Date 10Mar10               *
@@ -43,6 +44,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD055265 - Deliverable Data Split for Report Control Facility*
       *  MD046248 - Finastra Rebranding                               *
       *  MD023136 - Dealing DLC0727 generates dump                    *
@@ -203,7 +205,8 @@
      D DSSDY         E DS                  EXTNAME(DSSDY)
       *                                                                                       CGL029
      D FCREPT        E DS                  EXTNAME(FCREPJW1)                                MD055265
-     D NullInds        s              5i 0 dim(19)                                          MD055265
+     D*NullInds*       s              5i 0 dim(19)                                 MD055265 MD055681
+     D NullInds        s              5i 0 dim(20)                                          MD055681
      C                   MOVEA     CPY@          BIS@             80
       /EJECT
      C     *ENTRY        PLIST

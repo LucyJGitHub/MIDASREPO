@@ -13,36 +13,38 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD055681           Date 31Jul20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CSC005  *CREATE    Date 08May98              */
+/*                      CSC005  *CREATE    Date 08May98              */
 /*                                                                   */
 /*       Called by: SCCRTKEY                                         */
 /*                  SCCRTKEYB                                        */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD055681 - Deliverable Data Split for SAR                   */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CSC005 - New suite of programs and files to permit          */
 /*                insertion of switchable features via passwords.    */
 /*                                                                   */
 /*********************************************************************/
- 
+
 /* These parameters correspond to the fields in SCSARSPD, which      */
 /* contains all core switchable features and details about release,  */
 /* release status, etc..                                             */
 /* Also includes unencrypted password.                               */
- 
+
              PGM        PARM(&SARN &PASS &NEWD &SARD &PRIM +
                           &CEMI &WRELL &WIREL &CLVL &RSTS +
                           &DFLT &MNTB &CHRG &FLRN &DOCN +
                           &HELP &CORE)
- 
+
              DCL        VAR(&SARN) TYPE(*CHAR) LEN(6)
              DCL        VAR(&PASS) TYPE(*CHAR) LEN(16)
              DCL        VAR(&NEWD) TYPE(*CHAR) LEN(1)
@@ -66,24 +68,24 @@
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /* If the non-core are updating their SAR file, do override */
              IF COND(&CORE *EQ 'B') THEN(DO)
-                OVRDBF     FILE(SCSARSL1) TOFILE(*LIBL/SCSARZL1)
+/***********    OVRDBF     FILE(SCSARSL1) TOFILE(*LIBL/SCSARZL1) */                     /*MD055681*/
              ENDDO
- 
+
 /* Call validation program */
              CALL       PGM(SC3100V) +
                         PARM(&SARN &PASS &NEWD &SARD &PRIM +
                           &CEMI &WRELL &WIREL &CLVL &RSTS +
                           &DFLT &MNTB &CHRG &FLRN &DOCN +
                           &HELP &CORE &RTNCDE)
- 
+
 /* If the RTNCDE is '*EMPT' one of the fields on the input command */
 /* was left blank. */
              IF         COND(&RTNCDE *EQ '*EMPT') THEN(DO)
@@ -93,12 +95,12 @@
                  CHGVAR     VAR(&ERROR) VALUE('Y')
                  GOTO       CMDLBL(ABNOR)
              ENDDO
- 
+
 /* If the RTNCDE is '*UPD' an error occurred when updating the */
 /* SAR details stored on file. This is because a SAR specified  */
 /* as core already exists on the non-core file or vice versa.  */
              IF         COND(&RTNCDE *EQ '*UPD') THEN(DO)
- 
+
 /*  Check necessary file exists */
 /*  Start CSC007 */
 /***************CHKOBJ  OBJ(*LIBL/UPJRNPD) OBJTYPE(*FILE) AUT(*CHANGE)*/
@@ -114,11 +116,11 @@
 /***************ENDDO */
 /*  End   CSC007 */
              ENDDO
- 
+
 /* If the RTNCDE is '*ENCR' an error occurred during encryption. */
 /* A character entered in the password was not valid.  */
              IF         COND(&RTNCDE *EQ '*ENCR') THEN(DO)
- 
+
 /*  Check necessary file exists */
 /*  Start CSC007 */
 /***************CHKOBJ     OBJ(*LIBL/UPJRNPD) OBJTYPE(*FILE) AUT(*USE)*/
@@ -133,11 +135,11 @@
 /***************ENDDO*/
 /*  End   CSC007 */
              ENDDO
- 
+
 /* If the RTNCDE is '*NUPD' update mode has been selected but the*/
 /* switchable feature is not already on file.  */
              IF         COND(&RTNCDE *EQ '*NUPD') THEN(DO)
- 
+
 /*  Check necessary file exists */
 /*  Start CSC007 */
 /***************CHKOBJ     OBJ(*LIBL/UPJRNPD) OBJTYPE(*FILE) AUT(*USE)*/
@@ -152,15 +154,15 @@
 /***************ENDDO*/
 /*  End   CSC007 */
              ENDDO
- 
+
  ABNOR:
 /*  Send message to cause CPF to pass earlier messages back         */
              IF         COND(&ERROR *EQ 'Y') THEN(SNDPGMMSG +
                           MSGID(CPF0002) MSGF(QCPFMSG) +
                           MSGTYPE(*ESCAPE))
- 
+
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
              ENDPGM

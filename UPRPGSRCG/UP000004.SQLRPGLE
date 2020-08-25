@@ -11,10 +11,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CUP040 *CREATE      Date 08Aug13              *
+      *  Last Amend No. MD055681           Date 31Jul20               *
+      *  Prev Amend No. CUP040 *CREATE      Date 08Aug13              *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055681 - Deliverable Data Split for SAR                    *
       *  CUP040 - New utility to remove Switchable Feature data.      *
       *                                                               *
       *****************************************************************
@@ -66,22 +68,27 @@
       *
      C     PSSRE         ENDSR
       *****************************************************************
+      * SCSAREPD, SCSARZPD are now removed from the array                                   MD055681
+      * replace SCSARSPD by SCSRSCTD                                                        MD055681
+      * add SCSRSXTD                                                                        MD055681
+      * replace SCSARDPD by SCSRDCTD                                                        MD055681
+      * add SCSRDXTD                                                                        MD055681
 ** FeatureData
 SCSARBPD  GBSARN
 SCSARCPD  ACSARN
-SCSARDPD  SARN
-SCSAREPD  SARN
+SCSRDCTD  SARN
+SCSRDXTD  SARN
 SCSARIPD  ADSARN
 SCSARMPD  AESARN
 SCSAROPD  AFSARN
 SCSARPPD  AKSARN
 SCSARRPD  AHSARN
-SCSARSPD  AXSARN
+SCSRSCTD  AXSARN
+SCSRSXTD  AXSARN
 SCSARTPD  GUSARN
 SCSARVPD  GSSARN
 SCSARWPD  GTSARN
 SCSARXPD  DSON
 SCSARXPD  DDON
-SCSARZPD  AXSARN
 SCPASSPD  P@SARN
 GPCSECPD  P@SARN

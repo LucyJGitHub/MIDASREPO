@@ -16,25 +16,27 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD055681           Date 31Jul20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CSC005  *CREATE    Date 08May98              */
+/*                      CSC005  *CREATE    Date 08May98              */
 /*                      XNNNNN             Date DDMmmYY              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD055681 - Deliverable Data Split for SAR                   */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CSC005 - New suite of programs and files to permit          */
 /*                insertion of switchable features via passwords.    */
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
+
              DCL        VAR(&DEVNM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&USER) TYPE(*CHAR) LEN(10)
@@ -45,47 +47,47 @@
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
- 
+
              DCLF       FILE(SC0440DF) RCDFMT(UIMENU1)
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              RTVJOBA    JOB(&DEVNM) USER(&USER) NBR(&NBR)
- 
+
  REDSP:      CHGVAR     VAR(&OPT) VALUE(0)
- 
+
              SNDRCVF    RCDFMT(UIMENU1)
- 
+
 /* If the user presses F3= Exit */
- 
+
              IF         COND(&IN03 *EQ '1') THEN(GOTO CMDLBL(END))
- 
+
 /* option one - keyed by SF number */
- 
+
              IF         COND(&OPT *EQ 1) THEN(DO)
-                OVRDBF     FILE(SCSARSPD) TOFILE(*LIBL/SCSARSL1)
+/**********     OVRDBF     FILE(SCSARSPD) TOFILE(*LIBL/SCSARSL1) */                     /*MD055681*/
                 CALL       PGM(*LIBL/SC0440) PARM(&OPT ' ')
              ENDDO
- 
+
 /* option two -  keyed by primary module*/
- 
+
              IF         COND(&OPT *EQ 2) THEN(DO)
-                OVRDBF     FILE(SCSARSPD) TOFILE(*LIBL/SCSARSL2)
+/**********     OVRDBF     FILE(SCSARSPD) TOFILE(*LIBL/SCSARSL2) */                     /*MD055681*/
                 CALL       PGM(*LIBL/SC0440) PARM(&OPT ' ')
              ENDDO
- 
+
 /* option three - keyed by release level*/
- 
+
              IF         COND(&OPT *EQ 3) THEN(DO)
-                OVRDBF     FILE(SCSARSPD) TOFILE(*LIBL/SCSARSL3)
+/**********     OVRDBF     FILE(SCSARSPD) TOFILE(*LIBL/SCSARSL3) */                     /*MD055681*/
                 CALL       PGM(*LIBL/SC0440) PARM(&OPT ' ')
              ENDDO
- 
+
              GOTO       CMDLBL(REDSP)
- 
+
  ABNOR:
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           SCC4000 ended abnormally - see job log') +

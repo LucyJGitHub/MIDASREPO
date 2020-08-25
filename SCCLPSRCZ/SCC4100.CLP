@@ -10,8 +10,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 05Feb18              */
-/*       Prev Amend No. MD048501           Date 08Nov17              */
+/*       Last Amend No. MD055681           Date 31Jul20              */
+/*       Prev Amend No. MD046248           Date 05Feb18              */
+/*                      MD048501           Date 08Nov17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -26,6 +27,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD055681 - Deliverable Data Split for SAR                   */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD048501 - System dumps on GP270000 due to missing LDA      */
 /*       CSC010 - Override SCSARSPD to SCSARZPD in non-core mode.    */
@@ -96,8 +98,8 @@
 
              IF         COND(&OPT *EQ 'B') THEN(DO)
                 CALL       PGM(SC0433) PARM(&RTNCDE)                      /*CSC010*/
-                OVRDBF     FILE(SCSARAJ0) TOFILE(SCSARZJ0)
-                OVRDBF     FILE(SCSARSL1) TOFILE(SCSARZL1)                /*CSC010*/
+/**********     OVRDBF     FILE(SCSARAJ0) TOFILE(SCSARZJ0)                              /*MD055681*/
+/**********     OVRDBF     FILE(SCSARSL1) TOFILE(SCSARZL1)                /*CSC010*/    /*MD055681*/
                 CHGVAR     VAR(&FLG) VALUE('B')
                 CALL       PGM(SC3010M) PARM(&FLG)
              ENDDO
@@ -113,7 +115,7 @@
 /* 'A' = Core processing for unreleased features                     */   /*CSC010*/
                                                                           /*CSC010*/
              IF         COND(&OPT *EQ 'A') THEN(DO)                       /*CSC010*/
-                OVRDBF     FILE(SCSARAJ0) TOFILE(SCSARBJ0)                /*CSC010*/
+/**********     OVRDBF     FILE(SCSARAJ0) TOFILE(SCSARBJ0)                /*CSC010*/    /*MD055681*/
                 CHGVAR     VAR(&FLG) VALUE('C')                           /*CSC010*/
                 CALL       PGM(SC3010M) PARM(&FLG)                        /*CSC010*/
              ENDDO                                                        /*CSC010*/

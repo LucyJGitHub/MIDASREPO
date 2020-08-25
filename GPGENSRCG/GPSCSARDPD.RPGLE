@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD048501           Date 08Nov17               *
+      *  Last Amend No. MD055681           Date 31Jul20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD048501           Date 08Nov17               *
       *                 MD023266           Date 07Nov13               *
       *                 CGP017             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD048501 - Internal failure on call to GPFIXGDT              *
       *  MD023266 - Dumps in CGL135 and CGL146 Switch-On (Recompile)  *
@@ -34,7 +36,7 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
 O    FGZSCSARDL1UF   E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
 O    F                                     USROPN
 O    FGZSCSARDPDO  A E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
@@ -43,9 +45,12 @@ O    F                                     USROPN
 O
 O    D Z_SCSARDPD    E DS                  EXTNAME(GZSCSARDPD)
 O    D G_SCSARDPD    E DS                  EXTNAME(GZSCSARDPD) PREFIX(G_)
- 
+     D SCSARD          DS                                                                   MD055681
+     D  XSAR                   1      6                                                     MD055681
+     D  XENBLD                21     21                                                     MD055681
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           50
@@ -54,7 +59,11 @@ O    D G_SCSARDPD    E DS                  EXTNAME(GZSCSARDPD) PREFIX(G_)
      C                   PARM                    I#TRAP            1
      C                   PARM                    I#BIMG         4000
      C                   PARM                    I#AIMG         4000
+     C                   PARM                    I#FILE           10                        MD055681
 O
+      * If file is bespoke or core, perform normal process                                  MD055681
+     C     I#FILE        IFEQ      'SCSRDCTD'                                               MD055681
+     C     I#FILE        OREQ      'SCSRDBTD'                                               MD055681
 O     * Global File Updates
 O
 O    C     I#BFAF        IFEQ      'B'
@@ -91,9 +100,41 @@ O    C                   ELSE
 O    C                   WRITE     W_SCSARDD0
 O    C                   ENDIF
 O    C                   ENDIF
- 
+
+     C                   ENDIF                                                              MD055681
+                                                                                            MD055681
+      * If file is extension                                                                MD055681
+     C     I#FILE        IFEQ      'SCSRDXTD'                                               MD055681
+O     * only consider 'update after'                                                        MD055681
+O                                                                                           MD055681
+O    C     I#BFAF        IFNE      'B'                                                      MD055681
+O                                                                                           MD055681
+O    C                   MOVEL     I#AIMG        SCSARD                                     MD055681
+O    C                   MOVEL     XSAR          SARN                                       MD055681
+Z    C                   MOVEL     I#ZONE        ZONE                                       MD055681
+O     * if feature has been disabled, delete GZ record                                      MD055681
+O    C     XENBLD        IFEQ      'D'                                                      MD055681
+O    C     K_GZSCSARDL1  CHAIN     SCSARDD0                           99                    MD055681
+O    C  N99              DELETE    SCSARDD0                                                 MD055681
+     C                   ENDIF                                                              MD055681
+                                                                                            MD055681
+O     * if feature has been enable, write GZ record                                         MD055681
+O    C     XENBLD        IFEQ      'E'                                                      MD055681
+O    C     K_GZSCSARDL1  CHAIN     SCSARDD0                           99                    MD055681
+O    C   99              MOVEL     SARN          G_SARN                                     MD055681
+O    C   99              MOVEL     *BLANKS       G_SARD                                     MD055681
+O    C   99              Z-ADD     0             G_LCD                                      MD055681
+O    C   99              MOVEL     'I'           G_TYLC                                     MD055681
+O    C   99              MOVEL     ZONE          G_ZONE                                     MD055681
+O    C   99              WRITE     W_SCSARDD0                                               MD055681
+     C                   ENDIF                                                              MD055681
+                                                                                            MD055681
+O    C                   ENDIF                                                              MD055681
+O    C                   ENDIF                                                              MD055681
+                                                                                            MD055681
+     C                   SETON                                        LR                    MD055681
      C                   RETURN
- 
+
      C/SPACE 5
       ********************************************************************
       * *INZSR - Initial subroutine called automatically at program start
@@ -112,7 +153,7 @@ O
 O    C     K_GZSCSARDL1  KLIST
 O    C                   KFLD                    ZONE
 O    C                   KFLD                    SARN
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -120,15 +161,15 @@ O    C                   KFLD                    SARN
       * *PSSR  --- ABNORMAL ERROR CONDITIONS
       *********************************************************************
      C     *PSSR         BEGSR
- 
+
      C     W#RUN         IFEQ      *BLANKS
- 
+
      C                   MOVE      'Y'           W#RUN             1
- 
+
      C                   MOVEL     '*ERROR'      I#RTCD
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
- 
+
      C                   DUMP
       *
       * If no identified cause of error
@@ -143,10 +184,10 @@ O    C                   KFLD                    SARN
      C                   EVAL      BUFFER = I#ERMS
      C                   CALL      'GPWRTELOG'
      C                   PARM                    BUFFER         4000
- 
+
      C                   SETON                                        LRU7U8
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *********************************************************************

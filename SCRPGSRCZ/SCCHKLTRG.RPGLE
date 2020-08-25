@@ -2,7 +2,8 @@
      H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
-/*EXI *  TEXT('Midas SC Check for 'Live' trigger')
+/**** *  TEXT('Midas SC Check for 'Live' trigger')                                          MD055681
+/*EXI *  TEXT('Midas SC Check for Live trigger')                                            MD055681
       *****************************************************************
       *                                                               *
       *  Midas - System Control Module                                *
@@ -11,15 +12,17 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055681           Date 31Jul20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CGP001  *CREATE    Date 23May03               *
+      *                 CGP001  *CREATE    Date 23May03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
       *  CGP001 - Global Processing                                   *
       *                                                               *
@@ -37,27 +40,27 @@
       * *INZSR - Initialise                                           *
       *                                                               *
       *****************************************************************
- 
+
      FSCTRIGJ0  IF   E           K DISK    INFSR(*PSSR)
- 
+
      D @RUN            S              1
- 
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#FILE           10
      C                   PARM                    I#TIME            1
      C                   PARM                    I#EVNT            1
      C                   PARM                    I#SEQ             2
      C                   PARM                    O#LIVE            1
- 
+
      C     SCTRIGJ0K     CHAIN     @TRIGJ0                            99
      C     *IN99         IFEQ      *OFF
      C                   MOVEL     'Y'           O#LIVE
      C                   ELSE
      C                   MOVEL     'N'           O#LIVE
      C                   ENDIF
- 
+
      C                   RETURN
       *****************************************************************
       /SPACE 5
@@ -65,13 +68,13 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     SCTRIGJ0K     KLIST
      C                   KFLD                    I#FILE
      C                   KFLD                    I#TIME
      C                   KFLD                    I#EVNT
      C                   KFLD                    I#SEQ
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -81,16 +84,16 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************

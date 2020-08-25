@@ -25,7 +25,7 @@
       *                                                               *
       *-------------------------------------------------------------- *
       *                                                               *
-      *  MD056327 - Facility cannot be closed                         *
+      *  MD056327 - Facility cannot be closed.                        *
       *           - Prevent record deletion in GPWTRAPPD if the       *
       *             T_ACTN field (Action Code) is equal to 'D' and    *
       *             record is stil found in GPTRAPPD.                 *

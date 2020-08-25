@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR830785           Date 07May13               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR830785           Date 07May13               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CSF011A            Date 28Nov11               *
@@ -41,6 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/StaWding Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  AR830785 - Looping on insert of accrued interest adjustment  *
       *             Extended core fix 263533. (Child: AR830786)       *
@@ -219,17 +221,17 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ***  Initialization
- 
+
      C                   EXSR      INIT
- 
+
       ***  Set output screen fields
- 
+
      C                   EXSR      SETFLD
- 
+
       ***  Return
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -509,7 +511,7 @@
       ***  Setup Sign of Amounts
       *
      C                   EVAL      WPRAM = 0
- 
+
      C                   if        PRAM < 0                                     Principal
      C                   Eval      DDPSIG = '-'
      C                   Z-SUB     PRAM          WPRAM
@@ -527,7 +529,7 @@
      C                   MOVE      ZFIELD        DDRPRI                         Principal Amount
       *
      C                   EVAL      WINTA = 0
- 
+
      C                   if        INTA < 0                                     Interest
      C                   Eval      DDISIG = '-'
      C                   Z-SUB     INTA          WINTA
@@ -545,7 +547,7 @@
      C                   MOVE      ZFIELD        DDRINT                         Interest Amount
       *
      C                   EVAL      WPNAM = 0
- 
+
      C                   if        PNAM < 0                                     Penality
      C                   Eval      DDRPIG = '-'
      C                   Z-SUB     PNAM          WPNAM
@@ -563,7 +565,7 @@
      C                   MOVE      ZFIELD        DDRPEN                         Penality Amount
       *
      C                   EVAL      WTAMT = 0
- 
+
      C                   if        TAMT < 0                                     Penality
      C                   Eval      DDRSIG = '-'
      C                   Z-SUB     TAMT          WTAMT

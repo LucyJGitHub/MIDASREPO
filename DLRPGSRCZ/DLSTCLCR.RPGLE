@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR821740           Date 29Aug11               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR821740           Date 29Aug11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -22,6 +23,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  AR821740 - COB - No stamp tax account keys generated         *
       *             (Recompile)                                       *
@@ -29,7 +31,7 @@
       *  CDL038 - Extended Deal Sub Type                              *
       *                                                               *
       *****************************************************************
- 
+
      FDLDKEYL0  IP   E           K DISK    INFSR(*PSSR) RENAME(DKEYSDPF: INF)
      FDLSTCLCRP1O    F  132        PRINTER INFSR(*PSSR) USROPN
      F                                     INFDS(SPOOL)
@@ -42,41 +44,41 @@
      FDKEYSZZ   UF   E             DISK    INFSR(*PSSR)  EXTIND(*INU1)
      F                                     PREFIX(W_)
      FDKEYSDP   O  A E             DISK    INFSR(*PSSR)  EXTIND(*INU1)
- 
- 
+
+
      D SPOOL           DS
       * FILE INFORMATION DATA STRUCTURE
      D  SFILE                 83     92
      D  SFNUM                123    124B 0
- 
- 
+
+
      D K_ACKEYAL     E DS                  EXTNAME(ACKEYAL) PREFIX(K_)
      D NCD                    38     49    DIM(6)
      D PRF                    50     55    DIM(6)
      D ACD                    97    156    DIM(6)
- 
- 
+
+
      D BRC             S              3    DIM(999)
      D BIC             S              6    DIM(999)
- 
- 
+
+
      D E_GEDLM       E DS                  EXTNAME(GEDLMPD) PREFIX(E_)
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
- 
+
+
      IINF           01
      I                                          BRCA          L3
      I                                          ECCY          L2
      I                                          DLNO          L1
- 
+
       ** Access branch details
- 
+
      C   L3              DO
      C                   EXSR      ACS_BRCA
      C                   IF        PrintFileOpen = 'Y'
@@ -88,38 +90,38 @@
      C                   OPEN      DLSTCLCRP1
      C                   EXSR      ZSFILE
      C                   ENDDO
- 
+
       ** Access currency details
- 
+
      C   L2              DO
      C                   EXSR      ACS_CCY
      C     A6NBDP        COMP      1                                    2021
      C     A6NBDP        COMP      2                                  23  22
      C                   ENDDO
- 
+
       ** Change of deal number
- 
+
      C   L1              DO
      C                   Z-ADD     1             CHLINE            1 0
      C                   EXSR      PAGECHG
      C                   EXCEPT    SPACE1
      C                   ENDDO
- 
+
       * Add a/c key to the account keys file DKEYSDP
- 
+
      C   U1              EXSR      WRT_DKEYSDP
- 
+
       * Generate shadow entries to GEDLMPD (Diagnostic use only)
- 
+
      C   U4              EXSR      WRT_GEDLMPD
- 
+
       * Report account key
- 
+
      C     REVI          COMP      1                                      60
      C                   Z-ADD     1             CHLINE            1 0
      C                   EXSR      PAGECHG
      C                   EXCEPT    REPORT
- 
+
      CLR                 IF        PrintFileOpen <> 'Y'
      CLR                 OPEN      DLSTCLCRP1
      CLR                 Z-ADD     2             CHLINE
@@ -131,7 +133,7 @@
      CLR                 EXCEPT    ENDOFREP
      CLR                 ENDIF
      CLR U1              EXSR      UPD_DKEYSZZ
- 
+
       /SPACE 5
       ********************************************************************
      C     ACS_BRCA      BEGSR
@@ -155,9 +157,9 @@
       /SPACE 5
       ********************************************************************
      C     ZSFILE        BEGSR
- 
+
       ** REPORT SPOOL FILE GENERATION
- 
+
      C                   Z-ADD     SFNUM         ZSNUM             6 0
      C                   CALL      'ZSFILE'
      C                   PARM                    SEQ               5
@@ -170,28 +172,28 @@
       /SPACE 5
       ********************************************************************
      C     PAGECHG       BEGSR
- 
+
      C                   ADD       CHLINE        LINENO
      C     LINENO        IFGT      59
      C                   ADD       1             PAGENO
      C                   EXCEPT    HEADINGS
      C     5             ADD       CHLINE        LINENO
      C                   ENDIF
- 
+
      C                   ENDSR
      C********************************************************************
       /SPACE 5
       ********************************************************************
      C     WRT_DKEYSDP   BEGSR
- 
+
       * Write an account key to DKEYSDP
- 
+
      C                   WRITE     DKEYSDPF
- 
+
       * Accumulate totals
- 
+
      C                   ADD       1             W_NORE
- 
+
      C     EAMT          DIV       1000          ZZAMT
      C     ZZAMT         IFLT      0
      C                   Z-SUB     ZZAMT         ZZAMT
@@ -206,23 +208,23 @@
       /SPACE 5
       ********************************************************************
      C     WRT_GEDLMPD   BEGSR
- 
+
      C     AKEY          CHAIN     ACKEYALF                           70
      C  N70K_RECI        COMP      'D'                                7070
      C     *IN70         CABEQ     *ON           NO_ACKEY
- 
+
       * Prepare entry
- 
+
      C                   CLEAR                   E_GEDLM
      C                   MOVEL     'P'           E_RECI
      C                   MOVEL     'GE-DL'       E_SPOS
- 
+
      C                   Z-ADD     1             X                 3 0
      C     X             DOWLE     6
- 
+
      C     PRF(X)        IFEQ      '1'
      C     PRF(X)        OREQ      '3'
- 
+
       * Branch
      C                   MOVEL     BRCA          E_BRCA
       * Customer
@@ -239,7 +241,7 @@
      C                   MOVEL     ECCY          E_CCY
       * Account Code
      C                   MOVEL     ACD(X)        E_ACOD
- 
+
       * Account sequence
      C     PRF(X)        IFEQ      '1'
      C                   Z-ADD     1             E_ACSQ
@@ -257,29 +259,29 @@
      C                   ELSE
      C                   Z-ADD     1             E_DRCR
      C                   ENDIF
- 
+
       * Deal number
      C                   MOVEL     DLNO          E_DLREF
- 
+
       * A/c key
      C                   MOVEL     AKEY          E_ACKEY
- 
+
       * Write a diagnostic entry to GEDLMPD
- 
+
      C                   WRITE     APOSTPDF
      C                   ENDIF
- 
+
      C                   ADD       1             X
      C                   ENDDO
- 
+
      C     NO_ACKEY      ENDSR
       ********************************************************************
       /SPACE 5
       ********************************************************************
      C     UPD_DKEYSZZ   BEGSR
- 
+
      C                   UPDATE    DKEYSZZF
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -542,26 +544,26 @@
       /SPACE 5
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRTCD             7
      C                   PARM      '*FIRST '     POPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C                   Z-ADD     90            LINENO            5 0
      C                   MOVEL     'N'           PrintFileOpen     1
- 
+
       ** Access DKEYSDP trailer
- 
+
      C     *INU1         IFEQ      *ON
      C                   READ      DKEYSZZ                                99
      C     *IN99         IFEQ      *ON
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   ENDIF
- 
+
       * Load up branch codes and BICN (if in diagnostic mode)
- 
+
      C     *INU4         IFEQ      *ON
      C     A8BRCD        SETLL     @A8REB1
      C                   Z-ADD     1             BR                4 0
@@ -573,7 +575,7 @@
      C                   READ      @A8REB1                                99
      C                   ENDDO
      C                   ENDIF
- 
+
      C                   ENDSR
       ********************************************************************
      ODLSTCLCRP1E            HEADINGS         02

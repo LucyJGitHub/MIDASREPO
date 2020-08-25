@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054211A          Date 02Oct19               *
-      *  Prev Amend No  MD054211           Date 18Sep19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD054211A          Date 02Oct19               *
+      *                 MD054211           Date 18Sep19               *
       *                 MD053611           Date 19Aug19               *
       *                 MD046248           Date 27Oct17               *
       *                 CER055             Date 06Dec10               *
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD054211A - Use OVRDBF for REIAC in GLVDBIT02.               *
       *  MD054211 - Confirm Authorize Insert in AMAD results in       *
       *             Serious Midas Error. Use OVRDBF for REIAC.        *
@@ -329,7 +331,8 @@
      C                   Z-ADD     VDTC          WWVCRC
      C                   END
       *
-     C     BRT           IFNE      0
+     C*****BRT**         IFNE      0                                                          CSD103
+     C     BRT           IFNE      *BLANKS                                                    CSD103
      C                   MOVE      BRT           WWRIB             2
       *
       ** Get Base Rate Codes

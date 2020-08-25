@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL094             Date 11Jun14               *
       *                 CSF011A            Date 28Nov11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -41,6 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions             *
       *           (Recompile)                                         *
@@ -78,115 +80,115 @@
       *    RESET for subsequent passes.                               *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Midas IR Valid Caps/Collars/Floors
      D CACFFilFmt    E DS                  EXTNAME(IRVCACFPD)
- 
+
       ** Midas IR Caps/Collars/Floors Format Definition File
      D CACFScnFmt    E DS                  EXTNAME(IRCACFPD)
- 
+
       ** Midas IR Caps/Collars/Floors Interface Data Format Definition File
      D CACFInfDta    E DS                  EXTNAME(IRRPIFPD)
- 
+
       ** Midas IR Caps/Collars/Floors Extra Data Layout File
      D CACFExtDta    E DS                  EXTNAME(IRCPEXPD)
- 
+
       ** Midas SD File Extended Settlement Instruction - Pay
      D PAYFilFmt     E DS                  EXTNAME(SDESFPPD)
- 
+
       ** Midas SD Screen Extended Settlement Instruction - Pay
      D PAYScnFmt     E DS                  EXTNAME(SDESSPPD)
- 
+
       ** Midas SD File Extended Settlement Instruction - Receive
      D RECFilFmt     E DS                  EXTNAME(SDESFRPD)
- 
+
       ** Midas SD Screen Extended Settlement Instruction - Receive
      D RECScnFmt     E DS                  EXTNAME(SDESSRPD)
- 
+
       ** Midas SD File Extended Settlement Instruction - FRA/IRS
      D FRIRFilFmt    E DS                  EXTNAME(SDESFFPD)
- 
+
       ** Midas SD Screen Extended Settlement Instruction - FRA/IRS
      D FRIRScnFmt    E DS                  EXTNAME(SDESSFPD)
- 
+
       ** External DS for Bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for Module details
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       ** External DS for Deal details
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
- 
+
       ** External DS for SAR details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
       ** Short DS for Access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Switchable features
      D CIR005          S              1A
      D CIR006          S              1A
      D CIR008          S              1A                                                      CIR008
- 
+
       ** Parameters for Access Object
      D PRTCD           S              7A
      D POPTN           S              7A
      D PSARD           S              6A
- 
+
       ** Other variable used
      D PActCode        S              1A                                                      CIR008
      D PDealStat       S             24A
@@ -196,23 +198,23 @@
       *                                                                                       CGL029
      D InRCCY          S              3A                                                     CSF011A
      D InPCCY          S              3A                                                     CSF011A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** Convert file fields into screen format
- 
+
      C                   EXSR      SRPROC
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -225,13 +227,13 @@
       *                                                               *
       *****************************************************************
      C     SRPROC        BEGSR
- 
+
      C                   EVAL      TRANSDTL = *BLANKS
      C**********         EVAL      #0ACCD = CHTP                                              CIR008
      C                   EVAL      #0ACCD = PActCode                                          CIR008
- 
+
      C                   EXSR      SRSETD
- 
+
      C                   CALLB     'IRCACFCVT'
      C                   PARM                    RetCodeOut
      C                   PARM                    PActCode
@@ -246,11 +248,11 @@
      C                   PARM                    PDealStat
       ***Sign*of Short Term Rate                                                     BUG5707 BUG6472
      C**********         PARM                    #0SIGN            1                 BUG5707 BUG6472
- 
+
      C                   IF        RetCodeOut <> *Blanks
      C                   EVAL      RetCodeIn = '*ERROR'
      C                   ELSE
- 
+
      C                   CALLB     'ZASETINCVT'
      C                   PARM                    PAYFilFmt
      C                   PARM                    RECFilFmt
@@ -260,15 +262,15 @@
      C                   PARM      *BLANKS       FRIRScnFmt
      C                   PARM      #0CUCY        InRCCY                                      CSF011A
      C                   PARM      #0CUCY        InPCCY                                      CSF011A
- 
+
      C                   EVAL      TRANSDTL = CACFScnFmt + RECScnFmt +
      C                                        PAYScnFmt + FRIRScnFmt +
      C                                        CACFInfDta + CACFExtDta
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -281,9 +283,9 @@
       *                                                               *
       *****************************************************************
      C     SRSETD        BEGSR
- 
+
       ** Payment Fields
- 
+
      C                   EVAL      FLPSTM = RPPSTM
      C                   EVAL      FLPONS = RPPONS
      C                   EVAL      FLPIBN = RPPIBN
@@ -312,9 +314,9 @@
      C                   EVAL      FLCVMR = RPCVMR
      C                   EVAL      FLPSCY = RPPSCY
      C                   EVAL      FLIC72 = RPIC72
- 
+
       ** Receipt Fields
- 
+
      C                   EVAL      FLRSTM = RPRSTM
      C                   EVAL      FLRONS = RPRONS
      C                   EVAL      FLRIBN = RPRIBN
@@ -327,9 +329,9 @@
       ** Move FRA/IRS Interface Non-Screen Data to InfData                                    CAP043
                                                                                               CAP043
      C                   MOVEL     RPAUTH        AUTH                                         CAP043
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -342,7 +344,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    RetCodeIn
      C                   PARM                    PActCode                                     CIR008
@@ -352,14 +354,14 @@
      C                   PARM                    FRIRScnFmt                                   CAP043
      C                   PARM                    CACFInfDta                                   CAP043
      C                   PARM                    TRANSDTL
- 
+
       ** Access Bank details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*FIRST '     POPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C                   IF        PRTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDBANKPD'
@@ -368,14 +370,14 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Access Module details
- 
+
      C                   CALL      'AOMMODR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*FIRST '     POPTN
      C     SDMMOD        PARM      SDMMOD        DSFDY
- 
+
      C                   IF        PRTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDMMODPD'
@@ -384,16 +386,16 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Access Dealing details
- 
+
      C**********         CALL      'AODEALR0'                                                 CGL029
      C                   CALL      'AODEALR1'                                                 CGL029
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*FIRST '     POPTN
      C*****SDDEAL        PARM      SDDEAL        DSFDY                                        CGL029
      C     SDDEAL        PARM      SDDEAL        DSSDY                                        CGL029
- 
+
      C                   IF        PRTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDDEALPD'
@@ -402,15 +404,15 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Check if FRA/IRS Business Day Convention is installed
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*VERIFY'     POPTN
      C                   PARM      'CIR005'      PSARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRTCD <> *BLANKS AND
      C                             PRTCD <> '*NRF   '
      C     *LOCK         IN        LDA
@@ -420,22 +422,22 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      CIR005 = 'Y'
      C                   ELSE
      C                   EVAL      CIR005 = 'N'
      C                   ENDIF
- 
+
       ** Check if Amortisation of Caps, Collars, Floors and
       ** Individual Compounding Swaps is installed
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*VERIFY'     POPTN
      C                   PARM      'CIR006'      PSARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRTCD <> *BLANKS AND
      C                             PRTCD <> '*NRF   '
      C     *LOCK         IN        LDA
@@ -445,7 +447,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      CIR006 = 'Y'
      C                   ELSE
@@ -475,12 +477,12 @@
      C                   ELSE                                                                 CIR008
      C                   EVAL      CIR008 = 'N'                                               CIR008
      C                   ENDIF                                                                CIR008
- 
+
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================
       ** The following /COPY sets these values.
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

@@ -11,12 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CLE042             Date 06Sep05               *
       *                 CSW037A            Date 02May05               *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -42,12 +44,12 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -59,112 +61,112 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------
       ** The following /COPY includes the standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **------------------------------------------------------------------
- 
+
       **------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Risk Participant Details in file format
      D LEPARTPDFmt   E DS                  EXTNAME(LEPARTPD)
- 
+
       ** Risk Participant Details in screen format
      D RPRT          E DS                  EXTNAME(LERPRTPD)
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Customer Details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Set output screen fields
- 
+
      C                   EXSR      SETFLD
- 
+
      C                   RETURN
- 
+
       /SPACE 5
       *****************************************************************
       ** Set output screen fields
       *****************************************************************
      C     SETFLD        BEGSR
- 
+
       *
       *  Primary facility
       ** ~~~~~~~~~~~~~~~~
      C                   MOVEL     CNUM          S#PMFC
      C                   MOVEL     FACT          S#PMFT
      C                   MOVEL     FCNO          S#PMFN
- 
+
       *  Syndicate member
       ** ~~~~~~~~~~~~~~~~
- 
+
      C                   MOVEL     MNUM          S#CNUM
- 
+
       *  Syndicate member details
       ** ~~~~~~~~~~~~~~~~~~~~~~~~
      C                   MOVE      *BLANK        @CNUM
@@ -183,7 +185,7 @@
      C                   MOVEL     @CNUM         DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   MOVEL     *BLANK        S#CSSN
      C                   MOVEL     BBCUST        S#CSSN
      C                   MOVEL     BBCSSN        S#CSNM
@@ -203,7 +205,7 @@
       *
       ** Introduced by details
       ** ~~~~~~~~~~~~~~~~~~~~~
- 
+
      C                   MOVE      *BLANK        @CNUM
      C                   MOVE      INUM          @CNUM
      C                   CALLB     'AOCUSTR0'
@@ -220,7 +222,7 @@
      C                   MOVEL     @CNUM         DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   MOVEL     BBCRNM        S#IRNM
      C                   MOVEL     BBCRTN        S#IRTN
       *
@@ -248,7 +250,8 @@
       *
       ** Fee base rate
       *
-     C     FEBR          IFEQ      *ZEROS
+     C*****FEBR          IFEQ      *ZEROS                                                     CSD103
+     C     FEBR          IFEQ      *BLANKS                                                    CSD103
      C                   MOVE      *BLANKS       S#FEBR
      C                   ELSE
      C                   MOVEL     FEBR          S#FEBR
@@ -275,7 +278,7 @@
      C                   MOVE      DRTP          S#DRTP
      C                   MOVE      DRST          S#DRST
      C                   MOVE      DRCL          S#DRCL                                       CLE042
- 
+
      C                   ENDSR
       *****************************************************************
      C/SPACE 5
@@ -301,7 +304,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -311,7 +314,7 @@
       *
       * Risk participant details in file format
      C                   PARM                    LEPARTPDFmt
- 
+
       * Prime Facility currency
       * Prime Facility currency decimal places
      C                   PARM                    FccyFCCY          3
@@ -321,13 +324,13 @@
       *
       * Risk Participant Details in screen format
      C                   PARM                    RPRT
- 
+
       * Syndicate member details
      C                   PARM                    S#CNUM            6
      C                   PARM                    S#CSNM           10
      C                   PARM                    S#SRNM           20
      C                   PARM                    S#SRTN           10
- 
+
       * Introducing customer details
      C                   PARM                    S#IRNM           20
      C                   PARM                    S#IRTN           10
@@ -351,9 +354,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5

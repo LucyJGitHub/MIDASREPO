@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD040876           Date 26Aug16               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD040876           Date 26Aug16               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL094             Date 11Jun14               *
       *                 CGL132             Date 01May13               *
@@ -29,10 +30,9 @@
       *                 BUG25877           Date 03Sep09               *
       *                 CER034A            Date 19May08               *
       *                 CER030             Date 20Nov08               *
-      * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. CSW209             Date 01Apr09               *
+      *  Prev Amend No. CSW209             Date 01Apr09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. 257681             Date 13Nov08               *
+      *                 257681             Date 13Nov08               *
       *                 257300             Date 21Oct08               *
       *                 256407             Date 04Sep08               *
       *                 247158             Date 18Apr07               *
@@ -80,6 +80,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD040876 - CRS MQ                                            *
       *  MD046248 - Finastra Rebranding                               *
@@ -139,16 +140,16 @@
       *  CAP006 - Splitting up of API functions into service programs *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Functions to be called
      F***APFUNCL0  IF   E             DISK    INFSR(*pssr)                                    257300
      FAPFUNCL0  IF   E           K DISK    INFSR(*pssr)                                       257300
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -160,57 +161,57 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structure.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes definitions for thefields
       ** #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member.
      D/COPY ZACPYSRC,PROCPARMS
       **--------------------------------------------------------------------------------------------
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The size of the arrays used below
      D*ArraySize****   C                   100                                                209905
      D ArraySize       C                   200                                                209905
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
      D/COPY WNCPYSRC,APH00036
- 
+
       ** +--- Named indicators -------------------------------------------+
       ** ¦                                                                ¦
       ** ¦ Map variable names to indicators to allow use of names instead ¦
@@ -228,32 +229,32 @@
      D pIndicator      S               *   INZ(%Addr(*In))
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      D FuncCdeArr      S              8A   DIM(ArraySize)
       ** Array of function codes, loaded from APFUNCPD in *inzsr
- 
+
      D PgmArr          S             10A   DIM(ArraySize)
       ** Array of programs to call, loaded from APFUNCPD in *inzsr
- 
+
      D ParmLstArr      S             10A   DIM(ArraySize)
       ** Array of parameter list codes, loaded from APFUNCPD in *inzsr
- 
+
      D OvrMbrArr       S             10A   DIM(ArraySize)
       ** Array of members to override to, loaded from APFUNCPD in *inzsr
- 
- 
+
+
      D APHead        E DS                  EXTNAME(APHEADPD)
       ** Incoming message header format
- 
+
      D PaySttmt      E DS                  EXTNAME(SDESSPPD)
       ** Pay Settlement Instructions
- 
+
      D RecSttmt      E DS                  EXTNAME(SDESSRPD)
       ** Receive Settlement Instructions
- 
+
      D FRASttmt      E DS                  EXTNAME(SDESSFPD)
       ** FRA/IRS Settlement Instructions
- 
+
      D PayStmtV      E DS                  EXTNAME(SDESSPPD) PREFIX(V)                        CIR003
       ** Pay Settlement Instructions  (Value date)                                            CIR003
                                                                                               CIR003
@@ -296,13 +297,13 @@
      D  Member                26     35
      D                        36     36    INZ(')')
      D/COPY WNCPYSRC,APH00071
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Incoming transaction blocks
      D Trans1          S            500A
      D Trans2          S                   LIKE(Trans1)
@@ -325,27 +326,27 @@
                                                                                 CDL007
       ** Non-screen Interface Data for Class 1 enhancement                      CDL007
      D InfData         S                   LIKE(Trans1)                         CDL007
- 
+
       ** Extra data for non-class 1 enhancements
      D ExtData         S                   LIKE(Trans1)
       *                                                                                       CER001
       ** Extra data for regional enhancements                                                 CER001
       *                                                                                       CER001
      D RegData         S                   LIKE(Trans1)                                       CER001
- 
+
       ** Other Depot Details for Securities Customer.                                         CSE022
       ** This totals to 150 additional other depot details from the incoming message.         CSE022
      D OthDData        S           4755A                                                      CSE022
                                                                                               CSE022
       ** Transaction type, from caller
      D TransactTp      S              8A
- 
+
       ** Command length for QCMDEXC
      D CommandLen      S             15P 5 INZ(36)
- 
+
       ** The array index (initialised in *inzsr, as it is first used there)
      D In              S              5P 0
- 
+
       ** Error message to send if an invalid parameter list code is             CAP031
       ** received                                                               CAP031
      D InvParmMsg      S            132A   inz('An invalid parameter code +     CAP031
@@ -356,7 +357,7 @@
      D DummyMsgF       S             10A                                        CAP031
                                                                                               BG5888
      D LoanType        S              4A                                                      BG5888
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -364,27 +365,27 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C     Start         TAG
       ** Note: the above tag is only there to force the first comments in
       ** the C-specs to appear after the D- or I-specs in compiled listings.
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Reset the array index (initialised in *inzsr)
      C                   RESET                   In
- 
+
       ** Use the received transaction type to access the functions-to-call
       ** details
      C     TransactTp    LOOKUP    FuncCdeArr(In)                         98
- 
+
      C                   IF        LookupSucc = False
- 
+
       ** Transaction type is not found; signal an error to the caller.
       ** *pssr will do this by setting the current module name up in the
       ** APDUMP field; it will also roll the transaction back; this is
@@ -393,23 +394,23 @@
       ** MQSeries before logging it to the exception errors file.
       ** *pssr also returns, so no further processing is required here.
      C                   EXSR      *pssr
- 
+
      C                   ENDIF
- 
+
       ** Apply the override to the ZAFLDNPD member required by the
       ** controller.
      C                   EXSR      ApplyOvr
- 
+
       ** Call the controller program retrieved from file, using the
       ** parameter list defined on the file.
- 
+
       ** The parameter list code is ten bytes indicating which of the
       ** Trans* parameters and which settlement parameters are expected
       ** by the called program.  The general form of these, with square
       ** brackets denoting optional characters, is:
- 
+
       **             Tn££-]m]£P]£R]£F]
- 
+
       ** where:
       **             T refers to the Trans* parameters
       **             n is the first of these to pass (normally 1)
@@ -417,7 +418,7 @@
       **             P means pass the pay settlement instructions
       **             R means pass the receive settlement instructions
       **             F means pass the FRA/IRS settlement instructions
- 
+
       ** So for example, if Trans1 to Trans5 inclusive, and all three
       ** sets of settlement instructions are to be passed, the parameter
       ** list code will be T1-5PRF.  If only Trans1 is to be passed the
@@ -425,16 +426,16 @@
       ** only Trans1 and Trans8 were to be passed, a code of T18 could be
       ** used.
       ** There is an additional set of parameters which is always passed.
- 
+
       ** The select group below includes tests for all the parameter list
       ** codes that are in use at the time of development.  It will
       ** have to be extended when new codes are used.  The CALLs use
       ** parameter lists defined in *inzsr.  The parameter lists have
       ** the same names as the parameter list codes, except that the '-'
       ** is replaced by a '_'.
- 
+
      C                   SELECT
- 
+
      C                   WHEN      ParmLstArr(In) = 'T1'
      C                   CALL      PgmArr(In)    T1
       *                                                                                      CER034A
@@ -444,13 +445,13 @@
                                                                                               CER001
      C                   WHEN      ParmLstArr(In) = 'T1RLX'                                   CER001
      C                   CALL      PgmArr(In)    T1RLX                                        CER001
- 
+
      C                   WHEN      ParmLstArr(In) = 'T12'
      C                   CALL      PgmArr(In)    T12
                                                                                               CER001
      C                   WHEN      ParmLstArr(In) = 'T12RLX'                                  CER001
      C                   CALL      PgmArr(In)    T12RLX                                       CER001
- 
+
      C                   WHEN      ParmLstArr(In) = 'T1-3'
      C                   CALL      PgmArr(In)    T1_3
                                                                                             BUG25877
@@ -459,13 +460,13 @@
                                                                                               CER001
      C                   WHEN      ParmLstArr(In) = 'T1-3RLX'                                 CER001
      C                   CALL      PgmArr(In)    T1_3RLX                                      CER001
- 
+
      C                   WHEN      ParmLstArr(In) = 'T1-8'
      C                   CALL      PgmArr(In)    T1_8
- 
+
      C                   WHEN      ParmLstArr(In) = 'T1PRF'
      C                   CALL      PgmArr(In)    T1PRF
- 
+
      C                   WHEN      ParmLstArr(In) = 'T1-5PRF'
      C                   CALL      PgmArr(In)    T1_5PRF
                                                                                 CDL007
@@ -477,7 +478,7 @@
                                                                                               CER001
      C                   WHEN      ParmLstArr(In) = 'T9PRFRLX'                                CER001
      C                   CALL      PgmArr(In)    T9PRFRLX                                     CER001
- 
+
      C                   WHEN      ParmLstArr(In) = 'T1-4'                      CAP031
      C                   CALL      PgmArr(In)    T1_4                           CAP031
                                                                                 CAP031
@@ -659,13 +660,13 @@
      C                   eval      APRETCODE = 'APCCALLCTL'                     CAP031
                                                                                 CAP031
      C                   dump                                                   CAP031
- 
+
      C                   ENDSL
- 
- 
+
+
      C                   RETURN
- 
- 
+
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -673,19 +674,19 @@
       * ApplyOvr - Apply member using QCMDEXC                         *
       *                                                               *
       *****************************************************************
- 
+
      C     ApplyOvr      BEGSR
- 
+
       ** Put the retrieved member name into the data structure
       ** subfield
      C                   EVAL      Member = OvrMbrArr(In)
- 
+
      C                   CALL      'QCMDEXC'
      C                   PARM                    Command
      C                   PARM                    CommandLen
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -697,9 +698,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *inzsr        BEGSR
- 
+
      C     *entry        PLIST
       ** Inputs to this procedure
       ** ------------------------
@@ -748,43 +749,43 @@
      C                   PARM                    #ProcPgm
      C                   PARM                    #ProcMod
      C                   PARM                    #ProcName
- 
+
      C/COPY WNCPYSRC,APH00038
- 
+
       ** Load the function code, program calling and member overrdiing
       ** information into three arrays
       ** -------------------------------------------------------------------
- 
+
       ** Initialise the array index
      C                   EVAL      In = 1
      C     *LOVAL        SETLL     APFUNCD0                                                   257300
- 
+
       ** Read each record from the function codes file:
      C                   DOU       EndOfFile = True
- 
+
      C                   READ      APFUNCL0                               99
      C                   IF        EndOfFile = True
      C                   LEAVE
      C                   ENDIF
- 
+
      C                   EVAL      FuncCdeArr(In) = AAFNCODE
      C                   EVAL      PgmArr(In)     = AACTLPGM
      C                   EVAL      ParmLstArr(In) = AAPARMSET
      C                   EVAL      OvrMbrArr(In)  = AAOVRMBR
- 
+
      C                   EVAL      In = In + 1
- 
+
      C                   ENDDO
- 
+
       ** Reinitialise the array index, to ensure that it has the correct
       ** reset value in the main body of the module.
      C                   EVAL      In = 1
      C/COPY WNCPYSRC,APH00073
- 
- 
+
+
       ** Parameter lists
       ** ---------------
- 
+
       ** Trans1-Trans5, Pay, Receive and FRA/IRS settlement instructions
      C     T1_5PRF       PLIST
      C                   PARM                    APHead
@@ -801,7 +802,7 @@
      C                   PARM                    #ProcPgm
      C                   PARM                    #ProcMod
      C                   PARM                    #ProcName
- 
+
       ** Trans1-Trans8, Pay, Receive and FRA/IRS settlement instructions                      CAP043
                                                                                               CAP043
      C     T1_8PRF1      PLIST                                                                CAP043
@@ -849,7 +850,7 @@
      C                   PARM                    #ProcPgm                                     CAP043
      C                   PARM                    #ProcMod                                     CAP043
      C                   PARM                    #ProcName                                    CAP043
- 
+
       ** Trans1-Trans8
      C     T1_8          PLIST
      C                   PARM                    APHead
@@ -867,7 +868,7 @@
      C                   PARM                    #ProcPgm
      C                   PARM                    #ProcMod
      C                   PARM                    #ProcName
- 
+
       ** Trans1-Trans3
      C     T1_3          PLIST
      C                   PARM                    APHead
@@ -903,7 +904,7 @@
      C                   PARM                    #ProcPgm                                     CER001
      C                   PARM                    #ProcMod                                     CER001
      C                   PARM                    #ProcName                                    CER001
- 
+
       ** Trans1
      C     T1            PLIST
      C                   PARM                    APHead
@@ -924,7 +925,7 @@
      C                   PARM                    #ProcPgm                                     CER001
      C                   PARM                    #ProcMod                                     CER001
      C                   PARM                    #ProcName                                    CER001
- 
+
       ** Trans1, Pay, Receive and FRA/IRS settlement instructions
      C     T1PRF         PLIST
      C                   PARM                    APHead
@@ -936,7 +937,7 @@
      C                   PARM                    #ProcPgm
      C                   PARM                    #ProcMod
      C                   PARM                    #ProcName
- 
+
       *                                                                                       CER001
       ** Trans1, Pay, Receive and FRA/IRS settlement instructions +                           CER001
       ** Regional Data                                                                        CER001
@@ -1089,7 +1090,7 @@
      C                   PARM                    #ProcPgm                                     CER001
      C                   PARM                    #ProcMod                                     CER001
      C                   PARM                    #ProcName                                    CER001
- 
+
       ** Trans1-Trans6                                                          CAP034
      C     T1_6          PLIST                                                  CAP034
      C                   PARM                    APHead                         CAP034
@@ -1495,16 +1496,16 @@
      C                   PARM                    #ProcPgm                                   MD040876
      C                   PARM                    #ProcMod                                   MD040876
      C                   PARM                    #ProcName                                  MD040876
- 
+
      C/COPY WNCPYSRC,APH00039
       **--------------------------------------------------------------------------------------------
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **--------------------------------------------------------------------------------------------
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

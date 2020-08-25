@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 05Feb18               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 05Feb18               *
+      *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 23Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing          *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -608,7 +610,8 @@
 
      c                   if        %found
 
-     c                   if        brt        <> 00
+     c**********         if        brt        <> 00                                           CSD103
+     c                   if        brt        <> *BLANKS                                      CSD103
      c                   eval      typintra    = 2
      c                   else
      c                   eval      typintra    = 1
@@ -623,7 +626,8 @@
      c                   eval      collater    = 110100
      c                   if        dealFound
 
-     c                   if           d#brtt  <> 00
+     c**********         if           d#brtt  <> 00                                           CSD103
+     c                   if           d#brtt  <> *blanks                                      CSD103
      c                             or d#notd  <> -999
      c                   eval      typintra    = 2
      c                   else

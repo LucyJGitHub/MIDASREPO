@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 235567             Date 12Mar20               *
-      *  Prev Amend No. MD054117           Date 12Sep19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. 235567             Date 12Mar20               *
+      *                 MD054117           Date 12Sep19               *
       *                 MD054095           Date 17Oct19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
@@ -120,10 +121,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  235567 - Ensure pay/rcv msgs are generated during I/C when   *
       *           VDEI is 'Y' and value date SSIs are amended.        *
       *           Initialise BefRecVal and AftRecVal on 'Authorise'.  *
-      *         - Applied for AR1041215. (Child: AR1041216)           *      
+      *         - Applied for AR1041215. (Child: AR1041216)           *
       *  MD054117 - Principal change Increase/Decrease capability     *
       *  MD054095 - FRA/IRS: Impossible to input a CIRS deal with zero*
       *             rate                                              *

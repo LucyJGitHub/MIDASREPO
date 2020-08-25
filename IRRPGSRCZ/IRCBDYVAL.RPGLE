@@ -14,12 +14,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CDL038             Date 10May05               *
       *                 CDL028             Date 07Feb05               *
       *                 CLE025             Date 20Oct03               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CDL038 - Extended Deal Sub Type (Recompile)                  *
@@ -67,57 +69,57 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D @EI             S              1    DIM(60)
      D MsgidAr         S                   LIKE(MsgIdArr) DIM(ArrayMax)
      D FldNameAr       S                   LIKE(FldNameArr) DIM(ArrayMax)
      D WMsgidAr        S                   LIKE(MsgIdArr) DIM(ArrayMax)
      D WFldNamAr       S                   LIKE(FldNameArr) DIM(ArrayMax)
- 
+
      D ValidDeal     E DS                  EXTNAME(IRVCIRSPD)
       ** Valid Cross Currency Interest Rate Swap
- 
+
      D PScrData      E DS                  EXTNAME(IRCBDYPD)
       ** Business Day Convention Format Definition File
      D  WCcy2                  1     30
      D  WCcy1                 35     64
      D  WCcy4                 65     94
      D  WCcy3                 99    128
- 
+
      D OKIRCBSDY     E DS                  EXTNAME(IRECIRSPD)
       ** Error File for IRS Cross Currency
      D   OkFlagDS2            53     62
@@ -128,7 +130,7 @@
      D   OkFlagPD2            85     85
      D   OkFlagAC2            86     86
      D   OkFlagDS3            87     96
- 
+
      D POkFlag         DS
      D   OkFlags1              1     10
      D   OkFlags2             11     20
@@ -138,18 +140,18 @@
      D   OkFlags6             33     42
      D   OkFlags7             43     43
      D   OkFlags8             44     44
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D E               S              2  0
      D C               S              2  0
      D X               S              2  0
      D Idx             S              2  0
      D WIdx            S              2  0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -157,45 +159,45 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C                   Eval      Idx = 0
      C                   Eval      WIdx = 0
- 
+
       /COPY WNCPYSRC,IRCIRSV105
       *  *-------------------------------*
       *  * Validate Convention Ccy (OUR) *
       *  *-------------------------------*
      C                   Exsr      SrORCcy
       /COPY WNCPYSRC,IRCIRSV106
- 
+
       /COPY WNCPYSRC,IRCIRSV107
       *  *---------------------------------------------*
       *  * Validate Payment Date and Amount Code (OUR) *
       *  *---------------------------------------------*
      C                   Exsr      SrOPyDt
       /COPY WNCPYSRC,IRCIRSV108
- 
+
       /COPY WNCPYSRC,IRCIRSV109
       *  *---------------------------------*
       *  * Validate Convention Ccy (THEIR) *
       *  *---------------------------------*
      C                   Exsr      SrTRCcy
       /COPY WNCPYSRC,IRCIRSV110
- 
+
       /COPY WNCPYSRC,IRCIRSV111
       *  *-----------------------------------------------*
       *  * Validate Payment Date and Amount Code (THEIR) *
       *  *-----------------------------------------------*
      C                   Exsr      SrTPyDt
       /COPY WNCPYSRC,IRCIRSV112
- 
+
      C                   MoveL     OkFlagDS1     OkFlags1
      C                   MoveL     OkFlagDS2     OkFlags2
      C                   MoveL     OkFlagPD1     OKFlags3
@@ -204,13 +206,13 @@
      C                   MoveL     OkFlagDS4     OkFlags6
      C                   MoveL     OkFlagPD2     OkFlags7
      C                   MoveL     OkFlagAC2     OkFlags8
- 
+
       ** Place validated fields to valid file.
- 
+
      C                   If        Idx = 0
      C                   Exsr      SrValid
      C                   Endif
- 
+
      C                   Return
       *****************************************************************
       /EJECT
@@ -223,20 +225,20 @@
       * Calls: SrRFCcy                                                *
       *                                                               *
       *****************************************************************
- 
+
      C     SrORCcy       Begsr
- 
+
      C                   MoveL     WCcy1         PRCcy
      C                   MoveL     WCcy2         PPCcy
      c                   MoveL     'O'           WLeg              1
- 
+
      C                   Exsr      SrRFCcy
- 
+
      C                   MoveL     PRCcy         WCcy1
      C                   MoveL     PPCcy         WCcy2
      C                   MoveL     OkFlag1       OkFlagDS1
      C                   MoveL     OkFlag2       OkFlagDS2
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -249,20 +251,20 @@
       * Calls: SrRFCcy                                                *
       *                                                               *
       *****************************************************************
- 
+
      C     SrTRCcy       Begsr
- 
+
      C                   MoveL     WCcy3         PRCcy
      C                   MoveL     WCcy4         PPCcy
      c                   MoveL     'T'           WLeg              1
- 
+
      C                   Exsr      SrRFCcy
- 
+
      C                   MoveL     PRCcy         WCcy3
      C                   MoveL     PPCcy         WCcy4
      C                   MoveL     OkFlag1       OkFlagDS3
      C                   MoveL     OkFlag2       OkFlagDS4
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -275,19 +277,19 @@
       * Calls: SrPayDt                                                *
       *                                                               *
       *****************************************************************
- 
+
      C     SrOPyDt       Begsr
- 
+
      C                   MoveL     SPDC1         PPyDt
      C                   MoveL     SAMC1         PAmCd
- 
+
      C                   Exsr      SrPayDt
- 
+
      C                   MoveL     PPyDt         SPDC1
      C                   MoveL     PAmCd         SAMC1
      C                   MoveL     OkFlagPD      OkFlagPD1
      C                   MoveL     OkFlagAM      OkFlagAC1
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -300,19 +302,19 @@
       * Calls: SrPayDt                                                *
       *                                                               *
       *****************************************************************
- 
+
      C     SrTPyDt       Begsr
- 
+
      C                   MoveL     SPDC2         PPyDt
      C                   MoveL     SAMC2         PAmCd
- 
+
      C                   Exsr      SrPayDt
- 
+
      C                   MoveL     PPyDt         SPDC2
      C                   MoveL     PAmCd         SAMC2
      C                   MoveL     OkFlagPD      OkFlagPD2
      C                   MoveL     OkFlagAM      OkFlagAC2
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -325,12 +327,12 @@
       * Calls: IRVBSDYCCY                                             *
       *                                                               *
       *****************************************************************
- 
+
      C     SrRFCcy       Begsr
- 
+
       * Reset variables updated by each module before each call
      C                   Exsr      RESETERRS
- 
+
      C                   CallB     'IRVBDYCCY'
      C                   Parm                    ReturnCode
      C                   Parm      'B'           PCode             1
@@ -343,7 +345,7 @@
      C                   Parm                    FldNameAr
      C                   Parm                    WMsgIdAr
      C                   Parm                    WFldNamAr
- 
+
      C                   Eval      X = 1
      C                   DoW       MsgIdAr(X) <> *Blanks
      C                   Eval      Idx = Idx + 1
@@ -357,7 +359,7 @@
      C                   Endif
      C                   Eval      X = X + 1
      C                   Enddo
- 
+
      C                   Eval      X = 1
      C                   DoW       WMsgIdAr(X) <> *Blanks
      C                   Eval      WIdx = WIdx + 1
@@ -371,7 +373,7 @@
      C                   Endif
      C                   Eval      X = X + 1
      C                   Enddo
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -384,12 +386,12 @@
       * Calls: IRVPYAMCNV                                             *
       *                                                               *
       *****************************************************************
- 
+
      C     SrPayDt       Begsr
- 
+
       * Reset variables updated by each module before each call
      C                   Exsr      RESETERRS
- 
+
      C                   CallB     'IRVPAMCNV'
      C                   Parm                    ReturnCode
      C                   Parm                    PPyDt             2
@@ -398,7 +400,7 @@
      C                   Parm                    OkFlagAM          1
      C                   Parm                    MsgIdAr
      C                   Parm                    FldNameAr
- 
+
      C                   Eval      X = 1
      C                   DoW       MsgIdAr(X) <> *Blanks
      C                   Eval      Idx = Idx + 1
@@ -412,7 +414,7 @@
      C                   Endif
      C                   Eval      X = X + 1
      C                   Enddo
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -425,9 +427,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrValid       Begsr
- 
+
       ** Leg 1
      C                   MoveL     SC1R1         RXC1R1
      C                   MoveL     SC2R1         RXC2R1
@@ -451,7 +453,7 @@
      C                   MoveL     SC0P1         RXC0P1
      C                   MoveL     SPDC1         RXPDC1
      C                   MoveL     SAMC1         RXAMC1
- 
+
       ** Leg 2
      C                   MoveL     SC1R2         RXC1R2
      C                   MoveL     SC2R2         RXC2R2
@@ -475,7 +477,7 @@
      C                   MoveL     SC0P2         RXC0P2
      C                   MoveL     SPDC2         RXPDC2
      C                   MoveL     SAMC2         RXAMC2
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -489,16 +491,16 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     RESETERRS     Begsr
- 
+
      C                   Reset                   MsgIdAr
      C                   Reset                   FldNameAr
      C                   Reset                   WMsgIdAr
      C                   Reset                   WFldNamAr
- 
+
      C                   Eval      ReturnCode = *Blanks
- 
+
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -511,9 +513,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        Begsr
- 
+
      C     *Entry        Plist
      C                   Parm                    RetCodeIn
      C                   Parm                    PActCode          1
@@ -524,15 +526,15 @@
      C                   Parm                    WMsgIdArr
      C                   Parm                    WFldNamArr
      C                   Parm                    PScrData
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   Endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

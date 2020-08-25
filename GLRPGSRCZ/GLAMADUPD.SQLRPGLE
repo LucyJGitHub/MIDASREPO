@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR891357A          Date 12Mar20               *
-      *  Prev Amend No. AR891357           Date 12Mar20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. AR891357A          Date 12Mar20               *
+      *                 AR891357           Date 12Mar20               *
       *                 CER050             Date 16Jun19               *
       *                 MD053470           Date 13Aug19               *
       *                 MD053978           Date 25Jul19               *
@@ -137,6 +138,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  AR891357A - RUNDT field is not existing on the module.       *
       *              Change LACD (Last Activity date) should be set to*
       *              rundate (BJRDNB field not RUNDT).                *
@@ -785,7 +787,8 @@
      D  S1BITF               127    127
      D  S1OLDR               137    139P 0
      D  S1INRT               146    151P 7
-     D  S1BRIS               152    153  0
+     D***S1BRIS               152    153  0                                                   CSD103
+     D  S1BRIS               152    153                                                       CSD103
      D  S1WRIS               154    159P 7
      D  S1AODR               160    165P 7
      D  S1WRUN               191    193P 0
@@ -3866,7 +3869,8 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
       ** Access Interest Type/Sub Type only if not zero
      C/COPY WNCPYSRC,GLAMADDC05
       *
-     C                   EVAL      S1BRIS=*ZERO
+     C**********         EVAL      S1BRIS=*ZERO                                               CSD103
+     C                   EVAL      S1BRIS=*BLANKS                                             CSD103
      C                   IF        RIDICT<>*ZERO or RIDCST<>*ZERO
      C                   EVAL      IntTyp=RIDICT
      C                   EVAL      IntSubTyp=RIDCST
@@ -3888,7 +3892,8 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
       *                                                                                       211648
       ** Access Midas Base Rate details DEBIT                                                 211648
       *                                                                                       211648
-     C     RT_BRT        IFNE      *ZEROS                                                     211648
+     C*****RT_BRT        IFNE      *ZEROS                                              211648 CSD103
+     C     RT_BRT        IFNE      *BLANKS                                                    CSD103
       *                                                                                       211648
      C                   MOVEL(P)  RT_BRT        @BSRC                                        211648
      C                   CALLB     'AOBSRTR0'                                                 211648
@@ -4283,8 +4288,10 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   EVAL      ST_RECI = 'R'
      C                   EVAL      S1WRIS = AMDRIS
      C                   EVAL      S1INRT = AMDRIS
-     C                   IF        AMDRIB = *ZEROS
-     C                   EVAL      S1BRIS = *ZERO
+     C**********         IF        AMDRIB = *ZEROS                                            CSD103
+     C                   IF        AMDRIB = *BLANKS                                           CSD103
+     C**********         EVAL      S1BRIS = *ZERO
+     C                   EVAL      S1BRIS = *BLANKS
      C                   ELSE
      C                   EVAL      S1BRIS = AMDRIB
      C**********         EVAL      S1INRT = WWDBRT + AMDRIS                            185230 216905
@@ -4354,7 +4361,8 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
       *
       ** Access Interest Type/Sub Type only if not zero
       *
-     C                   EVAL      S1BRIS=*ZERO
+     C**********         EVAL      S1BRIS=*ZERO                                               CSD103
+     C                   EVAL      S1BRIS=*BLANKS                                             CSD103
      C                   IF        RICICT<>*ZERO or RICCST<>*ZERO
      C                   EVAL      IntTyp=RICICT
      C                   EVAL      IntSubTyp=RICCST
@@ -4381,7 +4389,8 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
       *                                                                                       211648
       ** Access Midas Base Rate details CREDIT                                                211648
       *                                                                                       211648
-     C     RT_BRT        IFNE      *ZEROS                                                     211648
+     C*****RT_BRT        IFNE      *ZEROS                                              211648 CSD103
+     C     RT_BRT        IFNE      *BLANKS                                                    CSD103
       *                                                                                       211648
      C                   MOVEL(P)  RT_BRT        @BSRC                                        211648
      C                   CALLB     'AOBSRTR0'                                                 211648
@@ -4696,7 +4705,8 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   EVAL      S1WRIS = AMCRIS
      C                   EVAL      S1INRT = AMCRIS
      C                   IF        AMCRIB = *ZEROS
-     C                   EVAL      S1BRIS = *ZERO
+     C**********         EVAL      S1BRIS = *ZERO                                             CSD103
+     C                   EVAL      S1BRIS = *BLANKS                                           CSD103
      C                   ELSE
      C                   EVAL      S1BRIS = AMCRIB
      C**********         EVAL      S1INRT = WWCBRT + AMCRIS                            185230 216905
@@ -4754,7 +4764,8 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
       *                                                                                       CRE005
       ** Access Interest Type/Sub Type only if not zero                                       CRE005
       *                                                                                       CRE005
-     C                   EVAL      I1BRT =*ZERO                                               CRE005
+     C**********         EVAL      I1BRT =*ZERO                                        CRE005 CSD103
+     C                   EVAL      I1BRT =*BLANKS                                             CSD103
      C                   IF        RIDICT<>*ZERO or RIDCST<>*ZERO                             CRE005
      C                   EVAL      IntTyp=RIDICT                                              CRE005
      C                   EVAL      IntSubTyp=RIDCST                                           CRE005
@@ -4775,7 +4786,8 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
       *                                                                                       236976
       ** Access Midas Base Rate details DEBIT                                                 236976
       *                                                                                       236976
-     C     RT_BRT        IFNE      *ZEROS                                                     236976
+     C*****RT_BRT        IFNE      *ZEROS                                              236976 CSD103
+     C     RT_BRT        IFNE      *BLANKS                                                    CSD103
       *                                                                                       236976
      C                   MOVEL(P)  RT_BRT        @BSRC                                        236976
      C                   CALLB     'AOBSRTR0'                                                 236976
@@ -5029,7 +5041,8 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   EVAL      I1RTSP = AMDRIS                                            CRE005
      C                   EVAL      I1INRT = AMDRIS                                            CRE005
      C                   IF        AMDRIB = *ZEROS                                            CRE005
-     C                   EVAL      I1BRT  = *ZERO                                             CRE005
+     C**********         EVAL      I1BRT  = *ZERO                                      CRE005 CSD103
+     C                   EVAL      I1BRT  = *BLANKS                                           CSD103
      C                   ELSE                                                                 CRE005
      C                   EVAL      I1BRT  = AMDRIB                                            CRE005
      C                   EVAL      I1INRT = WWDBRT + AMDRIS                                   CRE005
@@ -5068,7 +5081,8 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
       *                                                                                       CRE005
       ** Access Interest Type/Sub Type only if not zero                                       CRE005
       *                                                                                       CRE005
-     C                   EVAL      I1BRT =*ZERO                                               CRE005
+     C**********         EVAL      I1BRT =*ZERO                                        CRE005 CSD103
+     C                   EVAL      I1BRT =*BLANKS                                             CSD103
      C                   IF        RICICT<>*ZERO or RICCST<>*ZERO                             CRE005
      C                   EVAL      IntTyp=RICICT                                              CRE005
      C                   EVAL      IntSubTyp=RICCST                                           CRE005
@@ -5089,7 +5103,8 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
       *                                                                                       236976
       ** Access Midas Base Rate details CREDIT                                                236976
       *                                                                                       236976
-     C     RT_BRT        IFNE      *ZEROS                                                     236976
+     C*****RT_BRT        IFNE      *ZEROS                                              236976 CSD103
+     C     RT_BRT        IFNE      *BLANKS                                                    CSD103
       *                                                                                       236976
      C                   MOVEL(P)  RT_BRT        @BSRC                                        236976
      C                   CALLB     'AOBSRTR0'                                                 236976
@@ -5340,7 +5355,8 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   EVAL      I1RTSP = AMCRIS                                            CRE005
      C                   EVAL      I1INRT = AMCRIS                                            CRE005
      C                   IF        AMCRIB = *ZEROS                                            CRE005
-     C                   EVAL      I1BRT  = *ZERO                                             CRE005
+     C**********         EVAL      I1BRT  = *ZERO                                      CRE005 CSD103
+     C                   EVAL      I1BRT  = *BLANKS                                           CSD103
      C                   ELSE                                                                 CRE005
      C                   EVAL      I1BRT  = AMCRIB                                            CRE005
      C                   EVAL      I1INRT = WWCBRT + AMCRIS                                   CRE005

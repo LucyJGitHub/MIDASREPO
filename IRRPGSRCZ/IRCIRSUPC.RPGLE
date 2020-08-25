@@ -12,12 +12,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CIR014             Date 11May06               *
+      *                 CIR014             Date 11May06               *
       *                 CSD027             Date 09Dec05               *
       *                 CDL038             Date 10May05               *
       *                 CAS008             Date 16Jun04               *
@@ -48,6 +49,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CIR014 - Mark to Market Cross-currency Interest Rate Swaps   *
       *           (Recompile)                                         *
@@ -90,7 +92,7 @@
      F                                     RENAME(IRVCIRSD0:IRVCIRSERR)
      FIRVXSIRL0 UF   E           K DISK                                                       CLE025
      F                                                                                        CLE025
- 
+
      FIRVDTSCL0 UF A E           K DISK    INFSR(*PSSR)                         CAP004
      F                                     RENAME(IRVDTSCD0:IRVDTSCD1)          CAP004
                                                                                 CAP004
@@ -118,7 +120,7 @@
      F                                     RENAME(IRVXSETD0:IRVEXSET0)                        CIR003
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,IRCIRSU008
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -137,19 +139,19 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **------------------------------------------------------------------------CAP006--------------
       ** The following /COPY line includes the definitions for fields           CAP006
       ** used in checking whether there are messages on the data queue.         CAP006
@@ -161,9 +163,9 @@
       ** ¦ =====================================¦
       ** +--------------------------------------+
      D DBerrUpd        C                   CONST('DB error in IRS API update')
- 
+
       *****************************************************************
- 
+
      D***ValIRCs       E DS                  EXTNAME(IRVDTSCPD)                        CAP004 CAP043
       **Our*Rate*Change*Dates*(IRCs)                                                   CAP004 CAP043
      D***IRCrecAlp               1    294                                              CAP004 CAP043
@@ -200,9 +202,9 @@
                                                                                               CLE025
      D IRVXSIR       E DS                  EXTNAME(IRVXSIRPD)                                 CLE025
       **  Externally described data structure for valid extension file                        CLE025
- 
+
      D IRCIRSUPC       DS             1    DTAARA(IRCIRSUPC)
- 
+
      D ExtSetVal     E DS                  EXTNAME(IRVXSETPD)  PREFIX(V)                      CIR003
      D ExtSetInt     E DS                  EXTNAME(IRVXSETPD)  PREFIX(I)                      CIR003
      D  RecStmtI              10     78                                                       CIR003
@@ -228,19 +230,19 @@
      D Return2         S              7A                                                      201589
      D Endjob          S              1A   INZ('Y')                                           201589
      D @Timestamp      S             26Z
- 
+
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                    CAP004
      D SCA_LCD       E                     EXTFLD(LCD)                          CAP004
       ** EXTERNAL DS FOR SAR DETAILS                                            CAP004
      D DSFDY         E DS                  EXTNAME(DSFDY)                       CAP004
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                     CAP004
                                                                                 CAP004
- 
+
       ** Screen/Server input flag (passed to IRCIRSUPD to indicate              CAP004
       ** source of transaction.                                                 CAP004
      D ScreenInpt      S              1A                                        CAP004
@@ -261,14 +263,14 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,IRCIRSU009
- 
+
       /EJECT
      C*****************************************************************
      C*                                                               *
@@ -277,7 +279,7 @@
      C*****************************************************************
                                                                                 CAP004
       /COPY WNCPYSRC,IRCIRSU001                                                 CAP004
- 
+
       ** Set up the name of the server/database updater data queue.             CAP006
      C                   EVAL      DtaQName = 'APCIRSDTQ'                       CAP006
                                                                                 CAP006
@@ -316,18 +318,18 @@
      C                   PARM                    Return
                                                                                 CAP004
       /COPY WNCPYSRC,IRCIRSU002                                                 CAP004
- 
+
       ** Position file cursor to start of file to prevent problems on
       ** later calls
      C     1             SETLL     IRVCIRSPD
- 
+
       ***READ*VALID*LOANS*&*DEPOSITS                                            CAP004
       ** READ VALID IRS                                                         CAP004
      C                   READ      IRVCIRSD0                              99    *
      C     *IN99         DOWEQ     '0'
                                                                                 CAP004
       /COPY WNCPYSRC,IRCIRSU003                                                 CAP004
- 
+
       ** Load the API Dump data area with as many fields from the message
       **  header as are available, so that dumps in any lowere level modules
       **  will include the key information
@@ -341,7 +343,7 @@
      C     WDLNO         CHAIN     IRVXSIRP0                          01                      CLE025
      C                   ENDIF                                                                CLE025
       /COPY WNCPYSRC,IRCIRSU004                                                 CAP004
- 
+
       ***If*Interest*Rate*Calendars*feature*is*on,*get*the*IRC*data                    CAP004 CAP043
       ***which*relates*to*this*transaction*from*the*Valid*IRC*file*and                 CAP004 CAP043
       ***load*into*the*relevent*parms*for*the*call*to*the*update*program.              CAP004 CAP043
@@ -448,7 +450,7 @@
       /COPY WNCPYSRC,IRCIRSU005                                                 CAP004
      C                   END                                                    CAP006
      C                   END
- 
+
       * COMIT UPDATES IF NO ERROR
      C     @@RTCD        IFEQ      '*ERROR '
      C     @@RTCD        OREQ      '*RECUPD'                                    CAP006
@@ -743,9 +745,9 @@
      C                   PARM                    DBError
      C                   PARM                    DummyMsgID
      C                   PARM                    DummyMsgF
- 
+
      C                   ENDIF
- 
+
       ** READ VALID FORWARD RATE AGREEMENTS
      C                   READ      IRVCIRSD0                              99    *
      C                   END
@@ -762,13 +764,13 @@
      C                   END
                                                                                 CAP004
       /COPY WNCPYSRC,IRCIRSU007                                                 CAP004
- 
+
       * EXIT FROM PROGRAM
      C                   RETURN
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,IRCIRSU010
- 
+
       /EJECT
       /COPY ZACPYSRC,PSSR_ILE                                                   CAP004
       ********************************************************************      CAP004
@@ -840,24 +842,24 @@
      C                   PARM                    Return2                                      201589
                                                                                               201589
       *  Lock allocation data area
- 
+
       *   The data area is allocated *SHRRD here and *EXCL whilst processing
       *    of the valid file is actually taking place.
       *   The function to submit this updater tries to get a *EXCL lock.
       *   The controller tries to get a *SHRRD lock.
- 
+
       *                         Submitter             Controller
       *                 Lock      Lock     Submitter     Lock     Controller
       *      Status    Status   Successful   Action   Successful    Action
       *      ------    ------   ---------- ---------  ----------  ----------
       *   Not running  None        Yes      Submit       Yes        Prompt
       *                                     updater                 updater
- 
+
       *   Running not  *SHRRD      No        None        Yes        Prompt
       *    processing                                               updater
- 
+
       *   Processing   *EXCL       No        None        No         None
- 
+
      C                   CALLB     'APCALCOBJ'
      C                   PARM                    Object
      C                   PARM                    Lib
@@ -867,7 +869,7 @@
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM                    Return
- 
+
       ** ACCESS SAR DETAILS FOR Interest Rate Calendars                         CAP004
       *                                                                         CAP004
      C                   CALL      'AOSARDR0'                                   CAP004
@@ -1008,10 +1010,10 @@
      C                   ELSE                                                                 CAP056
      C                   EVAL      CAP056 = 'N'                                               CAP056
      C                   ENDIF                                                                CAP056
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,IRCIRSU011
- 
+
      C                   ENDSR
      C****************************************************************
 **  CPY@

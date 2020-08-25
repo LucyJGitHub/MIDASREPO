@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD051347           Date 12Mar20               *
-      *  Prev Amend No. AR819229           Date 10Dec18               *       
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD051347           Date 12Mar20               *
+      *                 AR819229           Date 10Dec18               *
       *                 AR932652           Date 06Aug13               *
       *                 AR927395           Date 05Aug13               *
       *                 252101             Date 06Nov19               *
@@ -423,13 +424,14 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD051347 - Interest on a loan taken at the wrong date. Also  *
       *             update value of IBDT to zero if NIPD is less than *
       *             or equal to rundate. Additional fix to AR819229.  *
       *  AR819229 - Interest on a loan taken at the wrong date.       *
       *             Update value of IBDT with NIPD on SR/ROLLOV and   *
       *             SR/MROLL. (Child: AR823033)                       *
-      *           - Applied for MD051347                              *       
+      *           - Applied for MD051347                              *
       *  AR932652 - Error on withholding tax accrual when past due    *
       *             interest is manually repaid. Reverse fix BUG12852.*
       *             (Child: AR932655)                                 *
@@ -2739,7 +2741,8 @@
 0113 I                             P   50   56 0CPAM
 0114 I                                 57   57  INTC
 0115 I                             P   58   63 7INTRL
-0116 I                                 64   65 0BRTTL
+0116 I**********                       64   65 0BRTTL                                         CSD103
+0116 I                                 64   65  BRTTL                                         CSD103
 0117 I                             P   66   71 7BRTEL
 L118 I                             P   72   77 7RTSPL
 0119 I                             P   78   81 5MARG
@@ -3391,7 +3394,8 @@ L118 I                             P   72   77 7RTSPL
 0338 I                                 21   22 0PTYP
 0339 I                                 23   24  AMTP
 0340 I                                 25   26 0PRSQ
-0341 I                                 27   28 0BRTT
+0341 I**********                       27   28 0BRTT                                          CSD103
+0341 I                                 27   28  BRTT                                          CSD103
 0342 I                             P   29   34 7RTSP
 0343 I                                 35   37  CCY
 0344 I                             P   38   44 0PRAM
@@ -3881,7 +3885,8 @@ L118 I                             P   72   77 7RTSPL
       *                                                                   116330
      ILEHISTL0  NS                                                              116330
      I                                 18   22 0VDAT#H                          116330
-     I                                 46   47 0BRTT#H                          116330
+     I**********                       46   47 0BRTT#H                                 116330 CSD103
+     I                                 46   47  BRTT#H                                        CSD103
      I                             P   48   53 7BRTE#H                          116330
       *                                                                   116330
      ILEHISTL2  NS                                                              116330
@@ -9837,7 +9842,8 @@ L118 I                             P   72   77 7RTSPL
       *                                                                                       CLE134
 1450 C**   UPDATE WITH NEW BASE CODE AND RATE AND CALC NEW EFF.  RATE
 1451 C**
-1452 C                   Z-ADD     BRTT          BRTTL
+1452 C**********         Z-ADD     BRTT          BRTTL                                        CSD103
+1452 C                   MOVE      BRTT          BRTTL                                        CSD103
 1453 C                   Z-ADD     BRTE          BRTEL
      C                   EXSR      NEWSRT
       *                                                                   116330
@@ -9854,7 +9860,8 @@ L118 I                             P   72   77 7RTSPL
      C                   ENDIF                                                                 11633
       *                                                                                       CLE036
      C     CLE036        IFEQ      'Y'
-     C     BRTTL         IFEQ      0
+     C*****BRTTL         IFEQ      0                                                          CSD103
+     C     BRTTL         IFEQ      0                                                          CSD103
      C                   Z-ADD     BRTEL         BASRL
      C                   ELSE
      C                   Z-ADD     0             BASRL
@@ -9946,7 +9953,8 @@ L118 I                             P   72   77 7RTSPL
 1483 C**
 1484 C     INTAM         TAG                                                    ** INTAM TAG **
 1485 C**
-1486 C                   Z-ADD     BRTT          BRTTL
+1486 C**********         Z-ADD     BRTT          BRTTL                                        CSD103
+     C                   MOVE      BRTT          BRTTL                                        CSD103
 1487 C                   Z-ADD     BRTE          BRTEL
 1488 C                   Z-ADD     RTSP          RTSPL
 1489 C                   MOVE      SPIN          SPINL
@@ -9972,7 +9980,8 @@ L118 I                             P   72   77 7RTSPL
      C     LNRF          SETGT     LEHISTL0                                                    11633
      C     LNRF          READPE    LEHISTL0                               69                   11633
      C     *IN69         IFEQ      *OFF                                                        11633
-     C                   Z-ADD     BRTT#H        BRTTL                                         11633
+     C**********         Z-ADD     BRTT#H        BRTTL                                  11633 CSD103
+     C                   MOVE      BRTT#H        BRTTL                                        CSD103
      C                   Z-ADD     BRTE#H        BRTEL                                         11633
      C                   Z-ADD     VDAT#H        VDAT                                          11633
      C                   ENDIF                                                                 11633
@@ -9997,7 +10006,8 @@ L118 I                             P   72   77 7RTSPL
      C                   ENDIF                                                                 11633
       *                                                                                       CLE036
      C     CLE036        IFEQ      'Y'
-     C     BRTTL         IFEQ      0
+     C*****BRTTL         IFEQ      0                                                          CSD103
+     C     BRTTL         IFEQ      *BLANKS                                                    CSD103
      C                   Z-ADD     BRTEL         BASRL
      C                   ELSE
      C                   Z-ADD     0             BASRL
@@ -10075,7 +10085,8 @@ L118 I                             P   72   77 7RTSPL
       ** Allow to calculate interest rate when change indicator is R      156501
       *                                                                   156501
      C     *IN89         IFEQ      '0'                                                         15650
-     C     BRTTL         ANDNE     0                                                           15650
+     C*****BRTTL         ANDNE     0                                                    15650 CSD103
+     C     BRTTL         ANDNE     *BLANKS                                                    CSD103
      C     CHINL         ANDEQ     'R'                                                         15650
      C     *IN89         OREQ      '0'
      C     BASRL         ANDNE     0
@@ -11341,7 +11352,8 @@ L118 I                             P   72   77 7RTSPL
      C                   ENDIF                                                                 CLE00
       **                                                                  CLE004
       **   Update interest details if needed                              CLE004
-     C                   Z-ADD     BRTT          BRTTL                                         CLE00
+     C**********         Z-ADD     BRTT          BRTTL                                  CLE00 CSD103
+     C                   MOVE      BRTT          BRTTL                                        CSD103
      C                   Z-ADD     BRTE          BRTEL                                         CLE00
      C                   Z-ADD     RTSP          RTSPL                                         CLE00
      C                   MOVE      SPIN          SPINL                                         CLE00
@@ -11386,7 +11398,8 @@ L118 I                             P   72   77 7RTSPL
      C                   ENDIF                                                                 CLE00
       *                                                                                       CLE036
      C     CLE036        IFEQ      'Y'
-     C     BRTTL         IFEQ      0
+     C*****BRTTL         IFEQ      0                                                          CSD103
+     C     BRTTL         IFEQ      *BLANKS                                                    CSD103
      C                   Z-ADD     BRTEL         BASRL
      C                   ELSE
      C                   Z-ADD     0             BASRL
@@ -11436,7 +11449,8 @@ L118 I                             P   72   77 7RTSPL
      C     CEU020        IFEQ      'Y'                                                         14491
      C     AMTP#H        ANDEQ     'MC'                                                        14491
      C     RLCY          ANDNE     *BLANKS                                                     14491
-     C     BRTTL         ANDNE     *ZEROS                                                      14491
+     C*****BRTTL         ANDNE     *ZEROS                                               14491 CSD103
+     C     BRTTL         ANDNE     *BLANKS                                                    CSD103
      C     NBRA          ANDEQ     *ZEROS                                                      14491
      C                   Z-ADD     BRTTL         NBRA                                          14491
      C                   ENDIF                                                                 14491
@@ -11466,7 +11480,8 @@ L118 I                             P   72   77 7RTSPL
       ** Allow to calculate interest rate when change indicator is R      156501
       *                                                                   156501
      C     *IN89         IFEQ      '0'                                                         15650
-     C     BRTTL         ANDNE     0                                                           15650
+     C*****BRTTL         ANDNE     0                                                    15650 CSD103
+     C     BRTTL         ANDNE     *BLANKS                                                    CSD103
      C     CHINL         ANDEQ     'R'                                                         15650
      C                   MOVE      '1'           *IN89                                         15650
      C                   ENDIF                                                                 15650

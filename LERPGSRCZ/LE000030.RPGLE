@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD055874           Date 22May20               *
-      *  Prev Amend No. MD055685           Date 24Apr20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD055874           Date 22May20               *
+      *                 MD055685           Date 24Apr20               *
       *                 MD052994           Date 25Nov19               *
       *                 AR674226           Date 04Dec19               *
       *                 MD050457           Date 06Mar19               *
@@ -75,6 +76,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055874 - Reversal entries generated for retail account     *
       *             which is still attached to the facility. When the *
       *             facility of a retail account is changed, ensure   *

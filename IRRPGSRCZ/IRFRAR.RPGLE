@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD044506           Date 28Mar17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD044506           Date 28Mar17               *
       *                 CSW216             Date 14Mar16               *
       *                 MD029818           Date 03Dec14               *
       *                 CSW214             Date 03Dec14               *
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD044506 - MT300 98D trade execution date can not be before  *
       *             value date.                                       *
@@ -77,12 +79,12 @@
       *  CAP084 - Synchronous calling of APIs                         *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -93,73 +95,73 @@
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY includes the standard API declares:
      D/COPY ZACPYSRC,STDDECLARE
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
      D/COPY ZACPYSRC,ERR_ARRAYS
       **-----------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       **-----------------------------------------------------------------------
       ** Screen formats
       **-----------------------------------------------------------------------
- 
+
      D FRAScnFmt     E DS                  EXTNAME(IRFRAPD)
       * Deal in screen format
- 
+
      D ##RECS        E DS                  EXTNAME(SDESSRPD)
       * Receive settlement instructions in screen format
- 
+
      D ##PAYS        E DS                  EXTNAME(SDESSPPD)
       * Pay settlement instructions in screen format
- 
+
      D ##FRIS        E DS                  EXTNAME(SDESSFPD)
       * FRA/IRS settlement instructions in screen format
       *                                                                                      BUG6377
      D DSFDY         E DS                  EXTNAME(DSFDY)                                    BUG6377
       ** External DS for Bank Details                                                        BUG6377
      D SDBANK        E DS                  EXTNAME(SDBANKPD)                                 BUG6377
- 
+
       **-----------------------------------------------------------------------
       ** File formats
       **-----------------------------------------------------------------------
- 
+
      D FRAFilFmt     E DS                  EXTNAME(IRVFRAPD)
      D  FRREC                716    784
      D**FRPAY***             785   1343                                                      BUG2959
      D  FRPAY                785   1344                                                      BUG2959
      D  FRCNF               1345   1992                                                      BUG2959
       ** Deal in file format
- 
+
      D ##RECF        E DS                  EXTNAME(SDESFRPD)
      D**FLREC***               1     69                                                       TDA011
      D  FLREC                  1     75                                                       TDA011
       * Receive settlement instructions in file format
- 
+
      D ##PAYF        E DS                  EXTNAME(SDESFPPD)
      D**FLPAY***               1    559                                                       TDA011
      D  FLPAY                  1    565                                                       TDA011
       * Pay settlement instructions in file format
- 
+
      D ##FRIF        E DS                  EXTNAME(SDESFFPD)
      D  FLCNF                  1    650                                                      BUG2959
       * FRA/IRS settlement instructions in file format
- 
+
      ** FRA/IRS Interface Non-Screen Data                                                     CSW213
      D InfData       E DS                  EXTNAME(IRFRIFPD)                                  CSW213
                                                                                               CSW213
@@ -179,15 +181,15 @@
      D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                                CSW214
                                                                                               CSW213
       **-----------------------------------------------------------------------
- 
+
       ***Array*containing Timestamp initial value                                    235729 BUG18389
      D*STAMP****       S             26    DIM(1) CTDATA PERRCD(1)                   235729 BUG18389
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
- 
+
      D ZDATE           S              6  0                                                   BUG6377
      D ZDAYNO          S              5P 0                                                   BUG6377
      D SUINFD          S              6A                                                     BUG6377
@@ -206,7 +208,7 @@
      D CSW213          S              1                                                       CSW213
       **-----------------------------------------------------------------------
       ** +--- Start of main processing -----------------------------------+
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    AuthComp          1
      C                   PARM                    FwdBck            1
@@ -217,12 +219,12 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetc           1
- 
+
       * Set up the name of the primary and secondary message files from
       * which the message handler will get the messages
      C                   EVAL      MsgFArray(1) = 'DRSMM'
      C                   CLEAR                   PDlRILkpd                                    CSW213
- 
+
       *  Hook to enable non-core message files to be included
      C/COPY WNCPYSRC,IRFRAM01
       ** Access Bank Details                                                                 BUG6377
@@ -280,7 +282,7 @@
       *                                                                                       CSW213
      C                   ENDIF                                                                CSW213
       *                                                                                       CSW213
- 
+
       * If the action code is blank, enquire unless authorising
      C                   CLEAR                   FRAFilFmt
      C     SACCD         IFEQ      *BLANK
@@ -290,7 +292,7 @@
      C                   MOVEL     'E'           SACCD
      C                   ENDIF
      C                   ENDIF
- 
+
      C     FwdBck        IFEQ      'F'
      C                   MOVEL     'Y'           @RDFWD
      C                   MOVEL     'N'           @RDBCK
@@ -303,7 +305,7 @@
      C                   MOVEL     'N'           @RDBCK
      C                   ENDIF
      C                   ENDIF
- 
+
      C     @RDFWD        IFEQ      'Y'
      C     @RDBCK        OREQ      'Y'
      C                   EXSR      IRFRARED
@@ -333,9 +335,9 @@
       * Calculated Our/Their interest fix dates                                              BUG6377
      C                   EXSR      SrINFDCVT                                                 BUG6377
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        ReturnCode <> *BLANK
      C                   MOVEL     '0'           APIRetc
      C                   MOVEL     'SDLNO'       FldNameArr(1)
@@ -354,7 +356,7 @@
      C                   EVAL      DLRPIFS3In = DLRPIFScn3Fmt                                 CSW213
      C                   EVAL      DLRPIFS4In = DLRPIFScn4Fmt                                 CSW214
      C                   ENDIF                                                                CSW213
- 
+
       * Build buffer with required output
      C**********         EVAL                    Buffer = FRAScnfmt                          BUG2959
      C**********                                 + ##RECS  + ##PAYS                          BUG2959
@@ -373,7 +375,7 @@
      C                                           + ##FRIS                                    BUG2959
      C                                           + InfData                                    CSW213
      C                                           + InSwift2013                                CSW213
- 
+
      C                   SETON                                        LR
      C                   RETURN
       **********************************************************************
@@ -387,19 +389,19 @@
       *
       * Return code
      C                   PARM                    RetCodeOut
- 
+
       * Action code
      C                   PARM                    SACCD             1
- 
+
       * Deal number
      C                   PARM      DDDLNO_In     SDLNO             6
- 
+
       * Read forwards
      C                   PARM                    @RDFWD            1
- 
+
       * Read backwards
      C                   PARM                    @RDBCK            1
- 
+
       ** Switchable feature CIR008
      C                   PARM                    CIR008
       *
@@ -407,18 +409,18 @@
       *
       * Error meassage
      C                   PARM      *BLANK        @ERRMS            7
- 
+
       * Deal number read
      C                   PARM      *BLANK        @DLNOR            6
- 
+
      C                   ENDSR
       **********************************************************************
      C     IRFRARTV      BEGSR
- 
+
      C                   RESET                   RetCodeOut
       *
      C                   CALLB     'IRFRARTV'
- 
+
       * INPUTS
       * Return code
      C                   PARM                    RetCodeIn
@@ -441,7 +443,7 @@
      C                   PARM                    SBRCA             3
       *  Switchable feature CIR008
      C                   PARM                    CIR008
- 
+
       * OUTPUTS
       * (Current) deal in file format
      C                   PARM                    FRAFilFmt
@@ -457,11 +459,11 @@
      C                   PARM                    MsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
      C                   ENDSR
       **********************************************************************
      C     IRFRACVT      BEGSR
- 
+
      C                   RESET                   RetCodeOut
       *
      C                   CALLB     'IRFRACVT'
@@ -473,7 +475,7 @@
       *
       * Deal in file format
      C                   PARM                    FRAFilFmt
- 
+
       ** Switchable feature CIR008
      C                   PARM                    CIR008
       *
@@ -484,7 +486,7 @@
       *
       * Deal Status
      C                   PARM                    DDSTS            24
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD051346           Date 17Jul18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD051346           Date 17Jul18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD033488           Date 12Mar15               *
       *                 CIR018             Date 11Aug14               *
       *                 CIR017             Date 10Apr14               *
@@ -54,6 +55,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD051346 - The system does not allow to change the maturity  *
       *             date in OIS deal.                                 *
       *           - Ensure zero short term rate is accepted by the    *
@@ -179,50 +181,50 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSDABBCL0  IF   E           K DISK    INFSR(*PSSR)                                       CDL029
       ** Midas SD Authorised Booking Branches for Customers)                                  CDL029
                                                                                               CDL029
       * Hook to enable non-core files to be included
      F/COPY WNCPYSRC,IRCACFV001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
@@ -234,118 +236,118 @@
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of OK Flags for the Rate Fixing Convention
      D ArrRtFxOK       S              1A   DIM(10)
- 
+
       ** Array of OK Flags for Payment and Rate Change Convention
      D ArrPymtOK       S              1A   DIM(10)
- 
+
       ** Current Caps/Collars/Floors deal Screen format
      D CrIRScnFmt    E DS                  EXTNAME(IRCACFPD)
      D                                     PREFIX(@)
- 
+
       ** New Caps/Collars/Floors deal Screen format
      D NwIRScnFmt    E DS                  EXTNAME(IRCACFPD)
      D   DSPymtCcys          205    234
      D   DSRtFxCcys          239    268
      D   DSBsDyConv          205    268
- 
+
       ** Valid Caps/Collars/Floors deal File format
      D NwIRFilFmt    E DS                  EXTNAME(IRVCACFPD)
      D   FilPymtCcys        2063   2092
      D   FilRtFxCcys        2097   2126
      D   FilBsDyConv        2063   2126
- 
+
       ** Caps/Collars/Floors Extra Data Layout - File (D/B) format
      D ExtData       E DS                  EXTNAME(IRCPEXPD)
- 
+
       ** Caps/Collars/Floors deal OK Indicators
      D OKFlags       E DS                  EXTNAME(IRECACFPD)
      D   DSPymtOK             40     49
      D   DSRtFxOK             52     61
- 
+
       ** External DS for Bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for Module details
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       ** External DS for Deal details
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
- 
+
       ** External DS for General Ledger details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
      D  QQACCD1      E                     EXTFLD(QQACCD)                                     CGL029
- 
+
       ** External DS for Trading details
      D SDTRAD        E DS                  EXTNAME(SDTRADPD)
      D  QQACCD2      E                     EXTFLD(QQACCD)                                     CGL029
- 
+
       ** External DS for FRA/IRS ICD details
      D SDFAIS        E DS                  EXTNAME(SDFAISPD)
- 
+
       ** External DS for SAR details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
       ** External DS for Deal Subtype details
      D SDDLST        E DS                  EXTNAME(SDDLSTPD)
- 
+
       ** External DS for Branch details
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
- 
+
       ** External DS for Broker details
      D SDBROK        E DS                  EXTNAME(SDBROKPD)
- 
+
       ** External DS for Customer details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      D  QQDFAC1      E                     EXTFLD(QQDFAC)                                     CGL029
- 
+
       ** External DS for Currency details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** External DS for Book details
      D SDBOOK        E DS                  EXTNAME(SDBOOKPD)
- 
+
       ** External DS for Nostro details
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
      D  QQACCD3      E                     EXTFLD(QQACCD)                                     CGL029
- 
+
       ** Short DS for access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** ZMUSER data area
      D ZMUSER        E DS                  EXTNAME(ZMUSER)
- 
+
       ** Fees/Buy-Outs in Screen format
      D IRFEBO        E DS                  EXTNAME(IRFEBOPD)
      D                                     PREFIX(FB_)
- 
+
       ** Fees/Buy-Outs OK Indicators
      D OKFEBO        E DS                  EXTNAME(IREFEBOPD)
      D                                     PREFIX(FB_)
- 
+
       ** Data structure for Fees/Buy-Outs details
      D/COPY QWINDSRC,IRSIRSGDTA
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D CDL006          S              1A   EXPORT
      D CIR001          S              1A
      D CIR005          S              1A
@@ -379,7 +381,7 @@
      D WarnMsg3        S                   LIKE(#MsgID)
      D WarnMsgDta      S                   LIKE(#MsgData)
      D WIdx            S              3P 0
- 
+
      D W_A8RDFC        S              1A
      D W_CIR001        S              1A
      D W_EINR          S             11P 7
@@ -408,7 +410,7 @@
      D WThCcyOK        S              1A
      D StubDyNo        S              5P 0                                                    CDL028
      D StubRtNo        S             11P 7                                                    CDL028
- 
+
       ** Average Rate Method                                                                  222373
      D SAVRAM          S              1A                                                      222373
                                                                                               CDL029
@@ -426,7 +428,7 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
@@ -442,7 +444,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       /COPY WNCPYSRC,IRCACFV003
                                                                                               CAP084
       ** Check whether user is a web browser user, if so overwrite                            CAP084
@@ -454,7 +456,7 @@
      C                   EVAL      PSUSER = USER                                              CAP084
      C                   ENDIF                                                                CAP084
                                                                                               CAP084
- 
+
       ** Default Sub Type and Class                                                           CDL038
      C                   IF        CDL038 = 'Y'                                              BUG9717
      C                   EXSR      DSUBTCLAS                                                  CDL038
@@ -463,183 +465,183 @@
       /COPY WNCPYSRC,IRCACFV004
      C                   EXSR      SrSubtyp
       /COPY WNCPYSRC,IRCACFV005
- 
+
       ** Validate Booking Branch
       /COPY WNCPYSRC,IRCACFV006
      C                   EXSR      SrBkgBrch
       /COPY WNCPYSRC,IRCACFV007
- 
+
       ** Validate Deal Date
       /COPY WNCPYSRC,IRCACFV008
      C                   EXSR      SrDlDate
       /COPY WNCPYSRC,IRCACFV009
- 
+
       ** Validate Broker Code
       /COPY WNCPYSRC,IRCACFV010
      C                   EXSR      SrBroker
       /COPY WNCPYSRC,IRCACFV011
- 
+
       ** Validate Brokerage Amount
       /COPY WNCPYSRC,IRCACFV012
      C                   EXSR      SrBrokerage
       /COPY WNCPYSRC,IRCACFV013
- 
+
       ** Validate Linked Reference Number
       /COPY WNCPYSRC,IRCACFV014
      C                   EXSR      SrLinkRef
       /COPY WNCPYSRC,IRCACFV015
- 
+
       ** Validate Customer Number
       /COPY WNCPYSRC,IRCACFV016
      C                   EXSR      SrCustNum
       /COPY WNCPYSRC,IRCACFV017
- 
+
       ** Validate Value Date
       /COPY WNCPYSRC,IRCACFV018
      C                   EXSR      SrValDate
       /COPY WNCPYSRC,IRCACFV019
- 
+
       ** Validate Maturity Date
       /COPY WNCPYSRC,IRCACFV020
      C                   EXSR      SrMatDate
       /COPY WNCPYSRC,IRCACFV021
- 
+
       ** Validate Account Sequence Number
       /COPY WNCPYSRC,IRCACFV022
      C                   EXSR      SrAcSeq
       /COPY WNCPYSRC,IRCACFV023
- 
+
       ** Validate Currency
       /COPY WNCPYSRC,IRCACFV024
      C                   EXSR      SrCurCode
       /COPY WNCPYSRC,IRCACFV025
- 
+
       ** Validate Amount
       /COPY WNCPYSRC,IRCACFV026
      C                   EXSR      SrAmount
       /COPY WNCPYSRC,IRCACFV027
- 
+
       ** Validate Federal Funds Indicator
       /COPY WNCPYSRC,IRCACFV028
      C                   EXSR      SrFedFund
       /COPY WNCPYSRC,IRCACFV029
- 
+
       ** Validate Base Currency Rate
       /COPY WNCPYSRC,IRCACFV030
      C                   EXSR      SrBsCurRt
       /COPY WNCPYSRC,IRCACFV031
- 
+
       ** Validate Book Code
       /COPY WNCPYSRC,IRCACFV032
      C                   EXSR      SrBook
       /COPY WNCPYSRC,IRCACFV033
- 
+
       ** Validate Calculation Method
       /COPY WNCPYSRC,IRCACFV034
      C                   EXSR      SrCalcMeth
       /COPY WNCPYSRC,IRCACFV035
- 
+
       ** Validate Taxable Indicator
       /COPY WNCPYSRC,IRCACFV036
      C                   EXSR      SrTaxInd
       /COPY WNCPYSRC,IRCACFV037
- 
+
       ** Validate Profit Center
       /COPY WNCPYSRC,IRCACFV038
      C                   EXSR      SrProfCtr
       /COPY WNCPYSRC,IRCACFV039
- 
+
       ** Validate Originating Branch
       /COPY WNCPYSRC,IRCACFV040
      C                   EXSR      SrOrigBrch
       /COPY WNCPYSRC,IRCACFV041
- 
+
       ** Validate Buy/Sell Indicator
       /COPY WNCPYSRC,IRCACFV042
      C                   EXSR      SrBuySell
       /COPY WNCPYSRC,IRCACFV043
- 
+
       ** Validate Base Rate
       /COPY WNCPYSRC,IRCACFV044
      C                   EXSR      SrBaseRt
       /COPY WNCPYSRC,IRCACFV045
- 
+
       ** Validate Spread Rate
       /COPY WNCPYSRC,IRCACFV046
      C                   EXSR      SrSprdRt
       /COPY WNCPYSRC,IRCACFV047
- 
+
       ** Validate Spread Indicator
       /COPY WNCPYSRC,IRCACFV048
      C                   EXSR      SrSprdInd
       /COPY WNCPYSRC,IRCACFV049
- 
+
       ** Validate Rate Fix Days
       /COPY WNCPYSRC,IRCACFV050
      C                   EXSR      SrRtFxDay
       /COPY WNCPYSRC,IRCACFV051
- 
+
       ** Validate Rate Change Date
       /COPY WNCPYSRC,IRCACFV052
      C                   EXSR      SrRtChgDt
       /COPY WNCPYSRC,IRCACFV053
- 
+
       ** Validate Rate Change Frequency
       /COPY WNCPYSRC,IRCACFV054
      C                   EXSR      SrRtChgFq
       /COPY WNCPYSRC,IRCACFV055
- 
+
       ** Validate Rate Change Day
       /COPY WNCPYSRC,IRCACFV056
      C                   EXSR      SrRtChgDay
       /COPY WNCPYSRC,IRCACFV057
- 
+
       ** Validate Interest Payment Date
       /COPY WNCPYSRC,IRCACFV058
      C                   EXSR      SrIntPyDt
       /COPY WNCPYSRC,IRCACFV059
- 
+
       ** Validate Interest Payment Frequency
       /COPY WNCPYSRC,IRCACFV060
      C                   EXSR      SrIntPyFq
       /COPY WNCPYSRC,IRCACFV061
- 
+
       ** Validate Interest Payment Day
       /COPY WNCPYSRC,IRCACFV062
      C                   EXSR      SrIntPyDay
       /COPY WNCPYSRC,IRCACFV063
- 
+
       ** Validate Short Term Rate (but value is written to file as
       ** Effective Interest Rate)
       /COPY WNCPYSRC,IRCACFV064
      C                   EXSR      SrEffIntRt
       /COPY WNCPYSRC,IRCACFV065
- 
+
       ** Validate Ceiling and Floor Rates
       /COPY WNCPYSRC,IRCACFV066
      C                   EXSR      SrClFlRat
       /COPY WNCPYSRC,IRCACFV067
- 
+
       ** Validate Average Rate Method
       /COPY WNCPYSRC,IRCACFV068
      C                   EXSR      SrAvRtMth
       /COPY WNCPYSRC,IRCACFV069
- 
+
       ** Validate Up-front Premium Value Date
       /COPY WNCPYSRC,IRCACFV070
      C                   EXSR      SrUpFVD
       /COPY WNCPYSRC,IRCACFV071
- 
+
       ** Validate Up-front Premium Fee Amount
       /COPY WNCPYSRC,IRCACFV072
      C                   EXSR      SrUpFFE
       /COPY WNCPYSRC,IRCACFV073
- 
+
       ** Setup additional fields for the Valids file
       /COPY WNCPYSRC,IRCACFV074
      C                   EXSR      SrSetupVld
       /COPY WNCPYSRC,IRCACFV075
- 
+
       ** Validate CDL028 fields                                                               CDL028
      C                   IF        CDL028 = 'Y'                                               CDL028
       ** Validate Start Date                                                                  CDL028
@@ -674,7 +676,7 @@
      C                   ENDIF                                                                CDL028
                                                                                               CDL028
      C                   RETURN
- 
+
       * Hook to enable non-core subroutines to be included
      C/COPY WNCPYSRC,IRCACFV076
       *****************************************************************
@@ -683,9 +685,9 @@
       *  SrSubtyp - Validate Deal Subtype                             *
       *****************************************************************
      C     SrSubtyp      BEGSR
- 
+
      C                   EXSR      SrResetErrs
- 
+
      C                   CALLB     'MMVDLSTYPE'
       ** Parameters:
       **    Return code                          (output)
@@ -696,7 +698,7 @@
      C                   PARM                    MsgID1
      C                   PARM                    #0DLST
      C                   PARM                    SDDLST
- 
+
      C*******************IF        MsgID1 = *BLANKS                                           CDL038
      C*******************EVAL      OKDLST = 'Y'                                               CDL038
      C*******************EVAL      RPDLST = #0DLST                                            CDL038
@@ -742,9 +744,9 @@
      C                   ENDIF                                                                CDL038
      C                   ENDIF                                                                CDL038
      C                   ENDIF                                                                CDL038
- 
+
      C                   EXSR      SrUpdatErrs
- 
+
      C     ESrSubtyp     ENDSR
       *****************************************************************
       /EJECT                                                                                  CDL038
@@ -776,9 +778,9 @@
       *  SrBkgBrch - Validate Booking Branch                          *
       *****************************************************************
      C     SrBkgBrch     BEGSR
- 
+
      C                   EXSR      SrResetErrs
- 
+
      C                   CALLB     'MMVBKGBRCH'
       ** Parameters:
       **    Return code                          (output)
@@ -801,7 +803,7 @@
      C                   PARM                    RespMode
      C                   PARM                    RPBRCA
      C                   PARM                    SDBRCH
- 
+
      C                   IF        MsgID1 = *BLANKS
      C                   EVAL      OKBRCA = 'Y'
      C*                  GOTO      ESrBkgBrch                                                 CDL029
@@ -811,9 +813,9 @@
      C                   EVAL      FldNamXAr(1) = '#0BRCA'                                    CDL038
      C                   EVAL      OKBRCA = 'N'
      C                   ENDIF
- 
+
      C                   EXSR      SrUpdatErrs
- 
+
      C**********         IF        CDL029 ='Y'                                        CDL029 BUG6124
       **********                                                                      CDL029 BUG6124
      C*****KBRANCHAUTH   CHAIN     SDABBCL0                           91              CDL029 BUG6124
@@ -835,9 +837,9 @@
       *  SrDlDate - Validate Deal Date                                *
       *****************************************************************
      C     SrDlDate      BEGSR
- 
+
      C                   EXSR      SrResetErrs
- 
+
      C                   CALLB     'MMVDLDATE'
       ** Parameters:
       **    Return code                          (output)
@@ -862,35 +864,35 @@
      C                   PARM                    WarnGlobal
      C                   PARM                    BJLCCY
      C                   PARM                    A8LCCD
- 
+
      C                   IF        MsgID1 = *BLANKS AND MsgID2 = *BLANKS
      C                             AND WarnMsg1 = *BLANKS
      C                   EVAL      OKDDAT = 'Y'
      C                   GOTO      ESrDlDate
      C                   ENDIF
- 
+
      C                   IF        MsgID1 <> *BLANKS
      C                   EVAL      J = J + 1
      C                   EVAL      MsgIDXAr(J) = MsgID1
      C                   EVAL      FldNamXAr(J) = '#0DDAT'
      C                   EVAL      OKDDAT = 'N'
      C                   ENDIF
- 
+
      C                   IF        MsgID2 <> *BLANKS
      C                   EVAL      J = J + 1
      C                   EVAL      MsgIDXAr(J) = MsgID2
      C                   EVAL      FldNamXAr(J) = '#0DDAT'
      C                   EVAL      OKDDAT = 'N'
      C                   ENDIF
- 
+
      C                   IF        WarnMsg1 <> *BLANKS
      C                   EVAL      WMsgIDXAr(1) = WarnMsg1
      C                   EVAL      WFldNmXAr(1) = '#0DDAT'
      C                   EVAL      OKDDAT = 'W'
      C                   ENDIF
- 
+
      C                   EXSR      SrUpdatErrs
- 
+
      C     ESrDlDate     ENDSR
       *****************************************************************
       /EJECT
@@ -898,9 +900,9 @@
       *  SrBroker - Validate Broker Code                              *
       *****************************************************************
      C     SrBroker      BEGSR
- 
+
      C                   EXSR      SrResetErrs
- 
+
      C                   CALLB     'MMVBROKCDE'
       ** Parameters:
       **    Return code                          (output)
@@ -915,7 +917,7 @@
      C                   PARM                    WBrokCcy
      C                   PARM                    WBrokCcyDp
      C                   PARM                    SDBROK
- 
+
      C                   IF        MsgID1 = *BLANKS
      C                   EVAL      OKBRKC = 'Y'
      C                   EVAL      RPBRKC = #0BRKC
@@ -925,9 +927,9 @@
      C                   EVAL      FldNamXAr(1) = '#0BRKC'
      C                   EVAL      OKBRKC = 'N'
      C                   ENDIF
- 
+
      C                   EXSR      SrUpdatErrs
- 
+
      C     ESrBroker     ENDSR
       *****************************************************************
       /EJECT
@@ -935,9 +937,9 @@
       *  SrBrokerage - Validate Broker Code                           *
       *****************************************************************
      C     SrBrokerage   BEGSR
- 
+
      C                   EXSR      SrResetErrs
- 
+
      C                   CALLB     'ZAVBROKAGE'
       ** Parameters:
       **    Return code                          (output)
@@ -958,28 +960,28 @@
      C                   PARM                    A9BRCY
      C                   PARM                    RPBAGE
      C                   PARM                    BNDCSP
- 
+
      C                   IF        MsgID1 = *BLANKS AND MsgID2 = *BLANKS
      C                   EVAL      OKBAGE = 'Y'
      C                   GOTO      ESrBrokerage
      C                   ENDIF
- 
+
      C                   IF        MsgID1 <> *BLANKS
      C                   EVAL      J = J + 1
      C                   EVAL      MsgIDXAr(J) = MsgID1
      C                   EVAL      FldNamXAr(J) = '#0BAGE'
      C                   EVAL      OKBAGE = 'N'
      C                   ENDIF
- 
+
      C                   IF        MsgID2 <> *BLANKS
      C                   EVAL      J = J + 1
      C                   EVAL      MsgIDXAr(J) = MsgID2
      C                   EVAL      FldNamXAr(J) = '#0BAGE'
      C                   EVAL      OKBAGE = 'N'
      C                   ENDIF
- 
+
      C                   EXSR      SrUpdatErrs
- 
+
      C     ESrBrokerage  ENDSR
       *****************************************************************
       /EJECT
@@ -987,9 +989,9 @@
       *  SrLinkRef - Validate Linked Reference Number                 *
       *****************************************************************
      C     SrLinkRef     BEGSR
- 
+
      C                   EXSR      SrResetErrs
- 
+
      C                   CALLB     'MMVLINKREF'
       ** Parameters:
       **    Return code                          (output)
@@ -1000,7 +1002,7 @@
      C                   PARM                    MsgID1
      C                   PARM                    #0LNKD
      C                   PARM                    BNDCSP
- 
+
      C                   IF        MsgID1 = *BLANKS
      C                   EVAL      OKLNKD = 'Y'
      C                   MOVE      #0LNKD        RPLNKDN
@@ -1010,9 +1012,9 @@
      C                   EVAL      FldNamXAr(1) = '#0LNKD'
      C                   EVAL      OKLNKD = 'N'
      C                   ENDIF
- 
+
      C                   EXSR      SrUpdatErrs
- 
+
      C     ESrLinkRef    ENDSR
       *****************************************************************
       /EJECT
@@ -1020,9 +1022,9 @@
       *  SrCustNum - Validate Customer Number or Shortname            *
       *****************************************************************
      C     SrCustNum     BEGSR
- 
+
      C                   EXSR      SrResetErrs
- 
+
      C                   CALLB     'IRVCUSTNUM'
       ** Parameters:
       **    Return code                          (output)
@@ -1037,7 +1039,7 @@
       * customer format                                                                      BUG5443
       * N = customer number, else customer shortname                                         BUG5443
      C                   PARM                    CustFormat        1                         BUG5443
- 
+
      C                   IF        MsgID1 = *BLANKS
      C                   EVAL      OKCNUM = 'Y'
      C                   MOVE      BBCUST        RPCNUM
@@ -1047,7 +1049,7 @@
      C                   EVAL      FldNamXAr(1) = '#0CNUM'
      C                   EVAL      OKCNUM = 'N'
      C                   ENDIF
- 
+
      C                   IF        CDL029 ='Y'                                               BUG6124
      C                             AND OKCNUM = 'Y'                                         BUG10704
       *                                                                                      BUG6124
@@ -1077,7 +1079,7 @@
      C                   END                                                                 BUG6124
       *                                                                                      BUG6124
      C                   EXSR      SrUpdatErrs
- 
+
      C     ESrCustNum    ENDSR
       *****************************************************************
       /EJECT
@@ -1085,9 +1087,9 @@
       *  SrValDate - Validate Value Date                              *
       *****************************************************************
      C     SrValDate     BEGSR
- 
+
      C                   EXSR      SrResetErrs
- 
+
      C/COPY WNCPYSRC,IRH00079
      C                   CALLB     'IRVIRSVDAT'
       ** Parameters:
@@ -1132,35 +1134,35 @@
      C                   PARM                    PaySetMeth
      C                   PARM                    PayNostro
      C/COPY WNCPYSRC,IRH00080
- 
+
      C                   IF        MsgID1 = *BLANKS AND
      C                             WarnMsg1 = *BLANKS AND WarnMsg2 = *BLANKS
      C                   EVAL      OKVDAT = 'Y'
      C                   GOTO      ESrValDate
      C                   ENDIF
- 
+
      C                   IF        MsgID1 <> *BLANKS
      C                   EVAL      MsgIDXAr(1) = MsgID1
      C                   EVAL      FldNamXAr(1) = '#0VDAT'
      C                   EVAL      OKVDAT = 'N'
      C                   ENDIF
- 
+
      C                   IF        WarnMsg1 <> *BLANKS
      C                   EVAL      J = J + 1
      C                   EVAL      WMsgIDXAr(J) = WarnMsg1
      C                   EVAL      WFldNmXAr(J) = '#0VDAT'
      C                   EVAL      OKVDAT = 'W'
      C                   ENDIF
- 
+
      C                   IF        WarnMsg2 <> *BLANKS
      C                   EVAL      J = J + 1
      C                   EVAL      WMsgIDXAr(J) = WarnMsg2
      C                   EVAL      WFldNmXAr(J) = '#0VDAT'
      C                   EVAL      OKVDAT = 'W'
      C                   ENDIF
- 
+
      C                   EXSR      SrUpdatErrs
- 
+
      C     ESrValDate    ENDSR
       *****************************************************************
       /EJECT
@@ -1168,9 +1170,9 @@
       *  SrMatDate - Validate Maturity Date                           *
       *****************************************************************
      C     SrMatDate     BEGSR
- 
+
      C                   EXSR      SrResetErrs
- 
+
      C                   CALLB     'IRVMATDATE'
       ** Parameters:
       **    Return code                          (output)
@@ -1207,35 +1209,35 @@
      C                   PARM                    RPMDAT
      C                   PARM      *BLANKS       WThCcy
      C                   PARM      *BLANKS       WThCcyOK
- 
+
      C                   IF        MsgID1 = *BLANKS AND
      C                             WarnMsg1 = *BLANKS AND WarnMsg2 = *BLANKS
      C                   EVAL      OKMDAT = 'Y'
      C                   GOTO      ESrMatDate
      C                   ENDIF
- 
+
      C                   IF        MsgID1 <> *BLANKS
      C                   EVAL      MsgIDXAr(1) = MsgID1
      C                   EVAL      FldNamXAr(1) = '#0MDAT'
      C                   EVAL      OKMDAT = 'N'
      C                   ENDIF
- 
+
      C                   IF        WarnMsg1 <> *BLANKS
      C                   EVAL      J = J + 1
      C                   EVAL      WMsgIDXAr(J) = WarnMsg1
      C                   EVAL      WFldNmXAr(J) = '#0MDAT'
      C                   EVAL      OKMDAT = 'W'
      C                   ENDIF
- 
+
      C                   IF        WarnMsg2 <> *BLANKS
      C                   EVAL      J = J + 1
      C                   EVAL      WMsgIDXAr(J) = WarnMsg2
      C                   EVAL      WFldNmXAr(J) = '#0MDAT'
      C                   EVAL      OKMDAT = 'W'
      C                   ENDIF
- 
+
      C                   EXSR      SrUpdatErrs
- 
+
      C     ESrMatDate    ENDSR
       *****************************************************************
       /EJECT
@@ -1243,9 +1245,9 @@
       *  SrAcSeq - Validate Account Sequence Number                   *
       *****************************************************************
      C     SrAcSeq       BEGSR
- 
+
      C                   EXSR      SrResetErrs
- 
+
      C                   CALLB     'MMVACSEQ'
       ** Parameters:
       **    Return code                          (output)
@@ -1258,7 +1260,7 @@
      C                   PARM                    #0CDAS
      C                   PARM                    RPCDAS
      C                   PARM                    BNDCSP
- 
+
      C                   IF        MsgID1 = *BLANKS
      C                   EVAL      OKCDAS = 'Y'
      C                   GOTO      ESrAcSeq
@@ -1267,9 +1269,9 @@
      C                   EVAL      FldNamXAr(1) = '#0CDAS'
      C                   EVAL      OKCDAS = 'N'
      C                   ENDIF
- 
+
      C                   EXSR      SrUpdatErrs
- 
+
      C     ESrAcSeq      ENDSR
       *****************************************************************
       /EJECT
@@ -1277,9 +1279,9 @@
       *  SrCurCode - Validate Currency Code                           *
       *****************************************************************
      C     SrCurCode     BEGSR
- 
+
      C                   EXSR      SrResetErrs
- 
+
      C                   CALLB     'ZAVCURCODE'
       ** Parameters:
       **    Return code                          (output)
@@ -1290,7 +1292,7 @@
      C                   PARM                    MsgID1
      C                   PARM                    #0CUCY
      C                   PARM                    SDCURR
- 
+
      C                   IF        MsgID1 = *BLANKS
      C                   EVAL      OKCUCY = 'Y'
      C                   EVAL      RPUCUCY = #0CUCY
@@ -1301,9 +1303,9 @@
      C                   EVAL      FldNamXAr(1) = '#0CUCY'
      C                   EVAL      OKCUCY = 'N'
      C                   ENDIF
- 
+
      C                   EXSR      SrUpdatErrs
- 
+
      C     ESrCurCode    ENDSR
       *****************************************************************
       /EJECT
@@ -1311,9 +1313,9 @@
       *  SrAmount - Validate Amount                                   *
       *****************************************************************
      C     SrAmount      BEGSR
- 
+
      C                   EXSR      SrResetErrs
- 
+
      C                   CALLB     'MMVAMOUNT'
       ** Parameters:
       **    Return code                          (output)
@@ -1334,7 +1336,7 @@
      C                   PARM                    BNDCSP
      C                   PARM                    #0ACCD                                     AR569568
      C                   PARM                    CDL006                                     AR569568
- 
+
      C                   IF        MsgID1 = *BLANKS
      C                   EVAL      OKPAMT = 'Y'
      C                   Z-ADD     WAmt15        RPUPAMT
@@ -1345,9 +1347,9 @@
      C                   EVAL      FldNamXAr(1) = '#0PAMT'
      C                   EVAL      OKPAMT = 'N'
      C                   ENDIF
- 
+
      C                   EXSR      SrUpdatErrs
- 
+
      C     ESrAmount     ENDSR
       *****************************************************************
       /EJECT
@@ -1355,11 +1357,11 @@
       *  SrFedFund - Validate Federal Funds Indicator                 *
       *****************************************************************
      C     SrFedFund     BEGSR
- 
+
      C                   EXSR      SrResetErrs
      C                   BITOFF    '01234567'    RPUDSTI
      C                   BITOFF    '01234567'    RPTDSTI
- 
+
      C                   CALLB     'MMVFEDFUND'
       ** Parameters:
       **    Return code                          (output)
@@ -1372,7 +1374,7 @@
      C                   PARM                    #0FEFI
      C                   PARM                    #0CUCY
      C                   PARM                    BLUSCY
- 
+
      C                   IF        MsgID1 = *BLANKS
      C                   IF        #0FEFI = 'Y'
      C                   BITON     '2'           RPUDSTI
@@ -1380,15 +1382,15 @@
      C                   ENDIF
      C                   EVAL      OKFEFI = 'Y'
      C                   GOTO      ESrFedFund
- 
+
      C                   ELSE
      C                   EVAL      MsgIDXAr(1) = MsgID1
      C                   EVAL      FldNamXAr(1) = '#0FEFI'
      C                   EVAL      OKFEFI = 'N'
      C                   ENDIF
- 
+
      C                   EXSR      SrUpdatErrs
- 
+
      C     ESrFedFund    ENDSR
       *****************************************************************
       /EJECT
@@ -1396,7 +1398,7 @@
       *  SrBsCurRt - Validate Base Currency Rate                      *
       *****************************************************************
      C     SrBsCurRt     BEGSR
- 
+
      C     #0ACCD        IFEQ      'I'                                                        221963
      C     #0ACCD        OREQ      'A'                                                        221963
      C     RPORED        ANDEQ     BJRDNB                                                     221963
@@ -1405,7 +1407,7 @@
      C     #0BCXR        ANDNE     @#0BCXR                                                    221963
       *                                                                                       221963
      C                   EXSR      SrResetErrs
- 
+
      C                   CALLB     'IRVBCURRAT'
       ** Parameters:
       **    Return code                          (output)
@@ -1423,7 +1425,7 @@
      C                   PARM                    BJCYCD
      C                   PARM                    RPUBCXR
      C                   PARM                    BNDCSP                                       245692
- 
+
      C                   IF        MsgID1 = *BLANKS
      C                   EVAL      OKBCXR = 'Y'
      C                   EVAL      RPTBCXR = RPUBCXR
@@ -1434,11 +1436,11 @@
      C*******************EVAL      FldNamXAr = '#0BCXR'                                       CDL038
      C                   EVAL      OKBCXR = 'N'
      C                   ENDIF
- 
+
      C                   EXSR      SrUpdatErrs
       *                                                                                       221963
      C                   ENDIF                                                                221963
- 
+
      C     ESrBsCurRt    ENDSR
       *****************************************************************
       /EJECT
@@ -1446,9 +1448,9 @@
       *  SrBook - Validate Book Code                                  *
       *****************************************************************
      C     SrBook        BEGSR
- 
+
      C                   EXSR      SrResetErrs
- 
+
      C                   CALLB     'IRVBOOKCDE'
       ** Parameters:
       **    Return code                          (output)
@@ -1461,7 +1463,7 @@
      C                   PARM                    #0BOKC
      C                   PARM                    SDBOOK
      C                   PARM                    WDayBasis
- 
+
      C                   IF        MsgID1 = *BLANKS
      C                   EVAL      OKBOKC = 'Y'
      C                   EVAL      RPBOKC = #0BOKC
@@ -1471,9 +1473,9 @@
      C                   EVAL      FldNamXAr(1) = '#0BOKC'
      C                   EVAL      OKBOKC = 'N'
      C                   ENDIF
- 
+
      C                   EXSR      SrUpdatErrs
- 
+
      C     ESrBook       ENDSR
       *****************************************************************
       /EJECT
@@ -1481,9 +1483,9 @@
       *  SrCalcMeth - Validate Calculation Method                     *
       *****************************************************************
      C     SrCalcMeth    BEGSR
- 
+
      C                   EXSR      SrResetErrs
- 
+
      C                   CALLB     'IRVIRSINTC'
       ** Parameters:
       **    Return code                          (output)
@@ -1496,7 +1498,7 @@
      C                   PARM      'N'           W_CIR001
      C                   PARM      *BLANKS       WIntPyFq
      C                   PARM                    #0ICBS
- 
+
      C                   IF        MsgID1 = *BLANKS
      C                   EVAL      OKICBS = 'Y'
      C                   MOVE      #0ICBS        RPUICBS
@@ -1507,9 +1509,9 @@
      C                   EVAL      FldNamXAr(1) = '#0ICBS'
      C                   EVAL      OKICBS = 'N'
      C                   ENDIF
- 
+
      C                   EXSR      SrUpdatErrs
- 
+
      C     ESrCalcMeth   ENDSR
       *****************************************************************
       /EJECT
@@ -1517,9 +1519,9 @@
       *  SrTaxInd - Validate Taxable Indicator                        *
       *****************************************************************
      C     SrTaxInd      BEGSR
- 
+
      C                   EXSR      SrResetErrs
- 
+
      C                   CALLB     'ZAVTAXIND'
       ** Parameters:
       **    Return code                          (output)
@@ -1532,7 +1534,7 @@
      C                   PARM                    OKCNUM
      C                   PARM                    #0TAXI
      C                   PARM                    BBTAIN
- 
+
      C                   IF        MsgID1 = *BLANKS
      C                   IF        #0TAXI = 'Y'
      C                   EVAL      RPTAXI = 'Y'
@@ -1541,15 +1543,15 @@
      C                   ENDIF
      C                   EVAL      OKTAXI = 'Y'
      C                   GOTO      ESrTaxInd
- 
+
      C                   ELSE
      C                   EVAL      MsgIDXAr(1) = MsgID1
      C                   EVAL      FldNamXAr(1) = '#0TAXI'
      C                   EVAL      OKTAXI = 'N'
      C                   ENDIF
- 
+
      C                   EXSR      SrUpdatErrs
- 
+
      C     ESrTaxInd     ENDSR
       *****************************************************************
       /EJECT
@@ -1557,12 +1559,12 @@
       *  SrProfCtr - Validate Profit Center                           *
       *****************************************************************
      C     SrProfCtr     BEGSR
- 
+
      C                   IF        #0PRFC <> *BLANKS OR
      C                             #0PRFC = *BLANKS AND
      C                             OKBOKC = 'Y' AND OKDLST = 'Y'
      C                   EXSR      SrResetErrs
- 
+
      C                   CALLB     'ZAVPROFITC'
       ** Parameters:
       **    Return code                          (output)
@@ -1597,7 +1599,7 @@
      C                   PARM                    PSUser
      C                   PARM                    OKCNUM
      C                   PARM                    BGN0ST
- 
+
      C                   IF        MsgID1 = *BLANKS
      C                   EVAL      OKPRFC = 'Y'
      C                   EVAL      RPPRFC = #0PRFC
@@ -1607,10 +1609,10 @@
      C                   EVAL      FldNamXAr(1) = '#0PRFC'
      C                   EVAL      OKPRFC = 'N'
      C                   ENDIF
- 
+
      C                   EXSR      SrUpdatErrs
      C                   ENDIF
- 
+
      C     ESrProfCtr    ENDSR
       *****************************************************************
       /EJECT
@@ -1618,9 +1620,9 @@
       *  SrOrigBrch - Validate Originating Branch                     *
       *****************************************************************
      C     SrOrigBrch    BEGSR
- 
+
      C                   EXSR      SrResetErrs
- 
+
      C                   CALLB     'ZAVORGBRCH'
       ** Parameters:
       **    Return code                          (output)
@@ -1641,7 +1643,7 @@
      C                   PARM                    BKOBRU
      C                   PARM                    BKOBUV
      C                   PARM                    RespMode
- 
+
      C                   IF        MsgID1 = *BLANKS
      C                   EVAL      OKORBR = 'Y'
      C                   EVAL      RPORBR = #0ORBR
@@ -1651,9 +1653,9 @@
      C                   EVAL      FldNamXAr(1) = '#0ORBR'
      C                   EVAL      OKORBR = 'N'
      C                   ENDIF
- 
+
      C                   EXSR      SrUpdatErrs
- 
+
      C     ESrOrigBrch   ENDSR
       *****************************************************************
       /EJECT
@@ -1661,10 +1663,10 @@
       *  SrBuySell - Validate Buy/Sell Indicator                      *
       *****************************************************************
      C     SrBuySell     BEGSR
- 
+
      C                   EXSR      SrResetErrs
      C                   EVAL      WOurTheir = *BLANK
- 
+
      C                   CALLB     'IRVBUYSELL'
       ** Parameters:
       **    Return code                          (output)
@@ -1673,7 +1675,7 @@
      C                   PARM                    RetCodeOut
      C                   PARM                    MsgID1
      C                   PARM                    #0BYSL
- 
+
      C                   IF        MsgID1 = *BLANKS
      C                   IF        #0DTYP = 'RP' AND #0BYSL = 'B' OR
      C                             #0DTYP = 'RR' AND #0BYSL = 'B' OR
@@ -1685,15 +1687,15 @@
      C                   EVAL      OKBYSL = 'Y'
      C                   EVAL      RPBYSL = #0BYSL
      C                   GOTO      ESrBuySell
- 
+
      C                   ELSE
      C                   EVAL      MsgIDXAr(1) = MsgID1
      C                   EVAL      FldNamXAr(1) = '#0BYSL'
      C                   EVAL      OKBYSL = 'N'
      C                   ENDIF
- 
+
      C                   EXSR      SrUpdatErrs
- 
+
      C     ESrBuySell    ENDSR
       *****************************************************************
       /EJECT
@@ -1701,9 +1703,9 @@
       *  SrBaseRt - Validate Base Rate                                *
       *****************************************************************
      C     SrBaseRt      BEGSR
- 
+
      C                   EXSR      SrResetErrs
- 
+
      C                   CALLB     'IRVBRATCDE'
       ** Parameters:
       **    Return code                          (output)
@@ -1728,7 +1730,7 @@
      C                   PARM      *BLANKS       WRtChgFq
      C                   PARM                    #0DTYP
      C                   PARM                    CIR007
- 
+
      C                   IF        MsgID1 = *BLANKS
      C                   SELECT
      C                   WHEN      WOurTheir = 'O'
@@ -1738,15 +1740,15 @@
      C                   ENDSL
      C                   EVAL      OKBRTT = 'Y'
      C                   GOTO      ESrBaseRt
- 
+
      C                   ELSE
      C                   EVAL      MsgIDXAr(1) = MsgID1
      C                   EVAL      FldNamXAr(1) = '#0BRTT'
      C                   EVAL      OKBRTT = 'N'
      C                   ENDIF
- 
+
      C                   EXSR      SrUpdatErrs
- 
+
      C     ESrBaseRt     ENDSR
       *****************************************************************
       /EJECT
@@ -1754,9 +1756,9 @@
       *  SrSprdRt - Validate Spread Rate                              *
       *****************************************************************
      C     SrSprdRt      BEGSR
- 
+
      C                   EXSR      SrResetErrs
- 
+
      C                   CALLB     'IRVSPRRATE'
       ** Parameters:
       **    Return code                          (output)
@@ -1776,7 +1778,7 @@
      C                   PARM                    #0DTYP
      C                   PARM                    W_RTSP
      C                   PARM                    BNDCSP                                       245692
- 
+
      C                   IF        MsgID1 = *BLANKS
      C                   SELECT
      C                   WHEN      WOurTheir = 'O'
@@ -1786,15 +1788,15 @@
      C                   ENDSL
      C                   EVAL      OKRTSP = 'Y'
      C                   GOTO      ESrSprdRt
- 
+
      C                   ELSE
      C                   EVAL      MsgIDXAr(1) = MsgID1
      C                   EVAL      FldNamXAr(1) = '#0RTSP'
      C                   EVAL      OKRTSP = 'N'
      C                   ENDIF
- 
+
      C                   EXSR      SrUpdatErrs
- 
+
      C     ESrSprdRt     ENDSR
       *****************************************************************
       /EJECT
@@ -1802,9 +1804,9 @@
       *  SrSprdInd - Validate Spread Indicator                        *
       *****************************************************************
      C     SrSprdInd     BEGSR
- 
+
      C                   EXSR      SrResetErrs
- 
+
      C                   CALLB     'IRVSPRDIND'
       ** Parameters:
       **    Return code                          (output)
@@ -1817,7 +1819,7 @@
      C                   PARM                    #0SPIN
      C                   PARM                    #0RTSP
      C                   PARM                    #0BRTT
- 
+
      C                   IF        MsgID1 = *BLANKS
      C                   SELECT
      C                   WHEN      WOurTheir = 'O'
@@ -1827,15 +1829,15 @@
      C                   ENDSL
      C                   EVAL      OKSPIN = 'Y'
      C                   GOTO      ESrSprdInd
- 
+
      C                   ELSE
      C                   EVAL      MsgIDXAr(1) = MsgID1
      C                   EVAL      FldNamXAr(1) = '#0SPIN'
      C                   EVAL      OKSPIN = 'N'
      C                   ENDIF
- 
+
      C                   EXSR      SrUpdatErrs
- 
+
      C     ESrSprdInd    ENDSR
       *****************************************************************
       /EJECT
@@ -1843,9 +1845,9 @@
       *  SrRtFxDay - Validate Rate Fix Days                           *
       *****************************************************************
      C     SrRtFxDay     BEGSR
- 
+
      C                   EXSR      SrResetErrs
- 
+
      C                   CALLB     'IRVRTFXDAY'
       ** Parameters:
       **    Return code                          (output)
@@ -1872,7 +1874,7 @@
      C                   PARM                    #0DTYP
      C                   PARM                    CIR007
      C                   PARM                    #0AVRM
- 
+
      C                   IF        MsgID1 = *BLANKS
      C                   SELECT
      C                   WHEN      WOurTheir = 'O'
@@ -1882,15 +1884,15 @@
      C                   ENDSL
      C                   EVAL      OKFRFD = 'Y'
      C                   GOTO      ESrRtFxDay
- 
+
      C                   ELSE
      C                   EVAL      MsgIDXAr(1) = MsgID1
      C                   EVAL      FldNamXAr(1) = '#0FRFD'
      C                   EVAL      OKFRFD = 'N'
      C                   ENDIF
- 
+
      C                   EXSR      SrUpdatErrs
- 
+
      C     ESrRtFxDay    ENDSR
       *****************************************************************
       /EJECT
@@ -1898,17 +1900,17 @@
       *  SrRtChgDt - Validate Rate Change Date                        *
       *****************************************************************
      C     SrRtChgDt     BEGSR
- 
+
       ** If Business Day Convention enhancement is installed and this
       ** was called from the CTL module, validate BDC fields first
- 
+
      C                   IF        CIR005 = 'Y' AND ModeOfOp = '*FRONT'
      C                   EXSR      SrBusDyCcy
      C                   EXSR      SrPyAmtConv
      C                   ENDIF
- 
+
      C                   EXSR      SrResetErrs
- 
+
       ** Use field that is 128 long due to change in IRSBDYPD                                 CIR017
       ** The entry parm for IRVRTCHGDT is the IRSBDYPD layout                                 CIR017
       **                                                                                      CIR017
@@ -1991,7 +1993,7 @@
       ** Reset original field for subsequent processing                                       CIR017
      C                   EVAL      DSBsDyConv = BsDayConv                                     CIR017
       **                                                                                      CIR017
- 
+
      C                   IF        MsgID1 = *BLANKS AND WarnMsg1 = *BLANKS
      C                             AND WarnMsg2 = *BLANKS AND WarnMsg3 = *BLANKS
      C                   SELECT
@@ -2005,13 +2007,13 @@
      C                   EVAL      OKNICD = 'Y'
      C                   GOTO      ESrRtChgDt
      C                   ENDIF
- 
+
      C                   IF        MsgID1 <> *BLANKS
      C                   EVAL      MsgIDXAr(1) = MsgID1
      C                   EVAL      FldNamXAr(1) = '#0NICD'
      C                   EVAL      OKNICD = 'N'
      C                   ENDIF
- 
+
      C                   IF        WarnMsg1 <> *BLANKS OR
      C                             WarnMsg2 = *BLANKS OR
      C                             WarnMsg3 = *BLANKS
@@ -2024,21 +2026,21 @@
      C                   EVAL      RPTICFD = W_ICFD
      C                   ENDSL
      C                   ENDIF
- 
+
      C                   IF        WarnMsg1 <> *BLANKS
      C                   EVAL      J = J + 1
      C                   EVAL      WMsgIDXAr(J) = WarnMsg1
      C                   EVAL      WFldNmXAr(J) = '#0NICD'
      C                   EVAL      OKNICD = 'W'
      C                   ENDIF
- 
+
      C                   IF        WarnMsg2 <> *BLANKS
      C                   EVAL      J = J + 1
      C                   EVAL      WMsgIDXAr(J) = WarnMsg2
      C                   EVAL      WFldNmXAr(J) = '#0NICD'
      C                   EVAL      OKNICD = 'W'
      C                   ENDIF
- 
+
      C                   IF        WarnMsg3 <> *BLANKS
      C                   EVAL      J = J + 1
      C                   EVAL      WMsgIDXAr(J) = WarnMsg3
@@ -2046,9 +2048,9 @@
      C                   EVAL      WFldNmXAr(J) = '#0NICD'
      C                   EVAL      OKNICD = 'W'
      C                   ENDIF
- 
+
      C                   EXSR      SrUpdatErrs
- 
+
      C     ESrRtChgDt    ENDSR
       *****************************************************************
       /EJECT
@@ -2056,9 +2058,9 @@
       *  SrRtChgFq - Validate Rate Change Frequency                   *
       *****************************************************************
      C     SrRtChgFq     BEGSR
- 
+
      C                   EXSR      SrResetErrs
- 
+
      C                   CALLB     'IRVRTCHGFQ'
       ** Parameters:
       **    Return code                          (output)
@@ -2080,7 +2082,7 @@
      C                   PARM      'O'           WChar1A
      C                   PARM                    #0DTYP
      C                   PARM                    CIR007
- 
+
      C                   IF        MsgID1 = *BLANKS
      C                   SELECT
      C                   WHEN      WOurTheir = 'O'
@@ -2090,15 +2092,15 @@
      C                   ENDSL
      C                   EVAL      OKICFR = 'Y'
      C                   GOTO      ESrRtChgFq
- 
+
      C                   ELSE
      C                   EVAL      MsgIDXAr(1) = MsgID1
      C                   EVAL      FldNamXAr(1) = '#0ICFR'
      C                   EVAL      OKICFR = 'N'
      C                   ENDIF
- 
+
      C                   EXSR      SrUpdatErrs
- 
+
      C     ESrRtChgFq    ENDSR
       *****************************************************************
       /EJECT
@@ -2106,9 +2108,9 @@
       *  SrRtChgDay - Validate Rate Change Day                        *
       *****************************************************************
      C     SrRtChgDay    BEGSR
- 
+
      C                   EXSR      SrResetErrs
- 
+
      C                   CALLB     'IRVRTCHGDY'
       ** Parameters:
       **    Return code                          (output)
@@ -2131,7 +2133,7 @@
      C                   PARM                    W_ICFD
      C                   PARM                    #0DTYP
      C                   PARM                    CIR007
- 
+
      C                   IF        MsgID1 = *BLANKS
      C                   SELECT
      C                   WHEN      WOurTheir = 'O'
@@ -2141,15 +2143,15 @@
      C                   ENDSL
      C                   EVAL      OKICFD = 'Y'
      C                   GOTO      ESrRtChgDay
- 
+
      C                   ELSE
      C                   EVAL      MsgIDXAr(1) = MsgID1
      C                   EVAL      FldNamXAr(1) = '#0ICFD'
      C                   EVAL      OKICFD = 'N'
      C                   ENDIF
- 
+
      C                   EXSR      SrUpdatErrs
- 
+
      C     ESrRtChgDay   ENDSR
       *****************************************************************
       /EJECT
@@ -2157,9 +2159,9 @@
       *  SrIntPyDt - Validate Interest Payment Date                   *
       *****************************************************************
      C     SrIntPyDt     BEGSR
- 
+
      C                   EXSR      SrResetErrs
- 
+
      C                   CALLB     'IRVINTPYDT'
       ** Parameters:
       **    Return code                          (output)
@@ -2210,7 +2212,7 @@
      C                   PARM                    WarnMsgDta
      C     SDGELR        PARM                    SDGELR
      C                   PARM                    SDBANK
- 
+
      C                   IF        MsgID1 = *BLANKS AND WarnMsg1 = *BLANKS
      C                   SELECT
      C                   WHEN      WOurTheir = 'O'
@@ -2221,13 +2223,13 @@
      C                   EVAL      OKNIPD = 'Y'
      C                   GOTO      ESrIntPyDt
      C                   ENDIF
- 
+
      C                   IF        MsgID1 <> *BLANKS
      C                   EVAL      MsgIDXAr(1) = MsgID1
      C                   EVAL      FldNamXAr(1) = '#0NIPD'
      C                   EVAL      OKNIPD = 'N'
      C                   ENDIF
- 
+
      C                   IF        WarnMsg1 <> *BLANKS
      C                   EVAL      WMsgIDXAr(1) = WarnMsg1
      C                   EVAL      WMsgDtXAr(1) = WarnMsgDta
@@ -2240,9 +2242,9 @@
      C                   EVAL      RPTNIPD = W_NIPD
      C                   ENDSL
      C                   ENDIF
- 
+
      C                   EXSR      SrUpdatErrs
- 
+
      C     ESrIntPyDt    ENDSR
       *****************************************************************
       /EJECT
@@ -2250,9 +2252,9 @@
       *  SrIntPyFq - Validate Interest Payment Frequency              *
       *****************************************************************
      C     SrIntPyFq     BEGSR
- 
+
      C                   EXSR      SrResetErrs
- 
+
      C                   CALLB     'IRVINTPYFQ'
       ** Parameters:
       **    Return code                          (output)
@@ -2279,7 +2281,7 @@
      C                   PARM                    #0ICFR
      C                   PARM                    #0DTYP
      C                   PARM                    CIR007
- 
+
      C                   IF        MsgID1 = *BLANKS AND MsgID2 = *BLANKS
      C                   SELECT
      C                   WHEN      WOurTheir = 'O'
@@ -2290,23 +2292,23 @@
      C                   EVAL      OKIPFR = 'Y'
      C                   GOTO      ESrIntPyFq
      C                   ENDIF
- 
+
      C                   IF        MsgID1 <> *BLANKS
      C                   EVAL      J = J + 1
      C                   EVAL      MsgIDXAr(J) = MsgID1
      C                   EVAL      FldNamXAr(J) = '#0IPFR'
      C                   EVAL      OKIPFR = 'N'
      C                   ENDIF
- 
+
      C                   IF        MsgID2 <> *BLANKS
      C                   EVAL      J = J + 1
      C                   EVAL      MsgIDXAr(J) = MsgID2
      C                   EVAL      FldNamXAr(J) = '#0IPFR'
      C                   EVAL      OKIPFR = 'N'
      C                   ENDIF
- 
+
      C                   EXSR      SrUpdatErrs
- 
+
      C     ESrIntPyFq    ENDSR
       *****************************************************************
       /EJECT
@@ -2314,9 +2316,9 @@
       *  SrIntPyDay - Validate Interest Payment Day                   *
       *****************************************************************
      C     SrIntPyDay    BEGSR
- 
+
      C                   EXSR      SrResetErrs
- 
+
      C                   CALLB     'IRVINTPYDY'
       ** Parameters:
       **    Return code                          (output)
@@ -2339,7 +2341,7 @@
      C                   PARM                    W_NICD
      C                   PARM                    W_NIPD
      C                   PARM                    W_ICFD
- 
+
      C                   IF        MsgID1 = *BLANKS AND MsgID2 = *BLANKS
      C                   SELECT
      C                   WHEN      WOurTheir = 'O'
@@ -2350,23 +2352,23 @@
      C                   EVAL      OKIPFD = 'Y'
      C                   GOTO      ESrIntPyDay
      C                   ENDIF
- 
+
      C                   IF        MsgID1 <> *BLANKS
      C                   EVAL      J = J + 1
      C                   EVAL      MsgIDXAr(J) = MsgID1
      C                   EVAL      FldNamXAr(J) = '#0IPFD'
      C                   EVAL      OKIPFD = 'N'
      C                   ENDIF
- 
+
      C                   IF        MsgID2 <> *BLANKS
      C                   EVAL      J = J + 1
      C                   EVAL      MsgIDXAr(J) = MsgID2
      C                   EVAL      FldNamXAr(J) = '#0IPFD'
      C                   EVAL      OKIPFD = 'N'
      C                   ENDIF
- 
+
      C                   EXSR      SrUpdatErrs
- 
+
      C     ESrIntPyDay   ENDSR
       *****************************************************************
       /EJECT
@@ -2375,9 +2377,9 @@
       *               to the file as Effective Interest Rate)         *
       *****************************************************************
      C     SrEffIntRt    BEGSR
- 
+
      C                   EXSR      SrResetErrs
- 
+
      C                   CALLB     'IRVSTERMRT'
       ** Parameters:
       **    Return code                          (output)
@@ -2432,7 +2434,7 @@
      C**********         PARM                    #0CUCY                            BUG11457 MD033488
      C                   PARM                    RPORED                                     MD051346
      C                   PARM                    #0ACCD                                     MD051346
- 
+
      C                   IF        MsgID1 = *BLANKS
      C                   SELECT
      C                   WHEN      #0AVRM = 'Y'
@@ -2446,7 +2448,7 @@
      C                   ENDSL
      C                   EVAL      OKEINR = 'Y'
      C                   GOTO      ESrEffIntRt
- 
+
      C                   ELSE
      C                   IF        MsgID1 = 'MMA0032' AND #0AVRM = 'Y'
      C                   EVAL      MsgID1 = 'MMA1302'
@@ -2455,9 +2457,9 @@
      C                   EVAL      FldNamXAr(1) = '#0EINR'
      C                   EVAL      OKEINR = 'N'
      C                   ENDIF
- 
+
      C                   EXSR      SrUpdatErrs
- 
+
      C     ESrEffIntRt   ENDSR
       *****************************************************************
       /EJECT
@@ -2465,9 +2467,9 @@
       *  SrClFlRat - Validate Ceiling and Floor Rates                 *
       *****************************************************************
      C     SrClFlRat     BEGSR
- 
+
      C                   EXSR      SrResetErrs
- 
+
      C                   CALLB     'IRVCLFLRAT'
       ** Parameters:
       **    Return code                          (output)
@@ -2487,7 +2489,7 @@
      C                   PARM                    RPFLRAT
      C                   PARM                    RPCLRAT
      C                   PARM                    BNDCSP                                       245692
- 
+
      C                   IF        MsgID1 = *BLANKS AND MsgID2 = *BLANKS
      C                   IF        #0DTYP = 'RF'
      C                   Z-ADD     *HIVAL        RPCLRAT
@@ -2500,7 +2502,7 @@
      C                   EVAL      OKFRAT = 'Y'
      C                   GOTO      ESrClFlRat
      C                   ENDIF
- 
+
      C                   IF        MsgID1 <> *BLANKS
      C                   EVAL      J = J + 1
      C                   EVAL      MsgIDXAr(J) = MsgID1
@@ -2513,16 +2515,16 @@
      C                   EVAL      OKFRAT = 'N'
      C                   ENDSL
      C                   ENDIF
- 
+
      C                   IF        MsgID2 <> *BLANKS
      C                   EVAL      J = J + 1
      C                   EVAL      MsgIDXAr(J) = MsgID2
      C                   EVAL      FldNamXAr(J) = '#0FRAT'
      C                   EVAL      OKFRAT = 'N'
      C                   ENDIF
- 
+
      C                   EXSR      SrUpdatErrs
- 
+
      C     ESrClFlRat    ENDSR
       *****************************************************************
       /EJECT
@@ -2530,9 +2532,9 @@
       *  SrAvRtMth - Validate Average Rate Method                     *
       *****************************************************************
      C     SrAvRtMth     BEGSR
- 
+
      C                   EXSR      SrResetErrs
- 
+
      C                   CALLB     'IRVAVRTMTH'
       ** Parameters:
       **    Return code                          (output)
@@ -2541,7 +2543,7 @@
      C                   PARM                    RetCodeOut
      C                   PARM                    MsgID1
      C                   PARM                    #0AVRM
- 
+
      C                   IF        MsgID1 = *BLANKS
      C                   IF        #0AVRM = 'Y'
      C                   BITON     '3'           RPUDSTI
@@ -2549,15 +2551,15 @@
      C                   END
      C                   EVAL      OKAVRM = 'Y'
      C                   GOTO      ESrAvRtMth
- 
+
      C                   ELSE
      C                   EVAL      MsgIDXAr(1) = MsgID1
      C                   EVAL      FldNamXAr(1) = '#0AVRM'
      C                   EVAL      OKAVRM = 'N'
      C                   ENDIF
- 
+
      C                   EXSR      SrUpdatErrs
- 
+
      C     ESrAvRtMth    ENDSR
       *****************************************************************
       /EJECT
@@ -2566,14 +2568,14 @@
       *            only if CIR006 is off                              *
       *****************************************************************
      C     SrUpFVD       BEGSR
- 
+
      C                   IF        CIR006 = 'Y'
      C                   GOTO      ESrUpFVD
      C                   ENDIF
- 
+
      C                   EXSR      SrUpFInit
      C                   EXSR      SrResetErrs
- 
+
      C                   CALLB     'IRVUPVD01'
       ** Parameters:
       **    Return code                          (output)
@@ -2610,12 +2612,12 @@
      C                   PARM                    WMsgDtXAr
      C                   PARM                    OKFEBO
      C                   PARM                    Data
- 
+
      C                   EVAL      OKPUPVD = FB_OKUFVD
      C                   EVAL      RPUPVD = #1UPVD
- 
+
      C                   EXSR      SrUpdatErrs
- 
+
      C     ESrUpFVD      ENDSR
       *****************************************************************
       /EJECT
@@ -2624,13 +2626,13 @@
       *            only if CIR006 is off                              *
       *****************************************************************
      C     SrUpFFE       BEGSR
- 
+
      C                   IF        CIR006 = 'Y'
      C                   GOTO      ESrUpFFE
      C                   ENDIF
- 
+
      C                   EXSR      SrResetErrs
- 
+
      C                   CALLB     'IRVUPFE01'
       ** Parameters:
       **    Return code                          (output)
@@ -2658,13 +2660,13 @@
      C                   PARM                    OKFEBO
      C                   PARM                    Data
      C                   PARM                    BNDCSP                                       245692
- 
+
      C                   EVAL      OKPUPFE = FB_OKUFEE
      C                   EVAL      RPUPFE = #1UPFE
      C                   EVAL      #0PUPFE = FB_SUFEE
- 
+
      C                   EXSR      SrUpdatErrs
- 
+
      C     ESrUpFFE      ENDSR
       *****************************************************************
       /EJECT
@@ -2672,23 +2674,23 @@
       * SrUpFInit - Initialise Up-front fields needed for validation  *
       *****************************************************************
      C     SrUpFInit     BEGSR
- 
+
      C                   CLEAR                   Data
      C                   EVAL      OKFEBO = *ALL'Y'
- 
+
      C                   EVAL      PWPSCY = #0CUCY
      C                   EVAL      PWRSCY = #0CUCY
      C                   EVAL      PWPNLOC = BJSLCD
      C                   EVAL      PWRNLOC = BJSLCD
      C                   Z-ADD     A6NBDP        PWUCDP
      C                   Z-ADD     A6NBDP        PWTCDP
- 
+
      C                   EVAL      #1DDAT = RPDDAT
      C                   EVAL      #1VDAT = RPVDAT
      C                   EVAL      #1MDAT = RPMDAT
      C                   EVAL      #1USEN = PaySetMeth
      C                   EVAL      #1TSEN = RecSetMeth
- 
+
      C                   EVAL      FB_SUFVD = #0PUPVD
      C                   EVAL      FB_SUFEE = #0PUPFE
      C                   IF        #0PUPVD = *BLANKS AND
@@ -2701,7 +2703,7 @@
      C                   EVAL      FB_SUFPR = 'R'
      C                   ENDIF
      C                   ENDIF
- 
+
      C     ESrUpFInit    ENDSR
       *****************************************************************
       /EJECT
@@ -2710,12 +2712,12 @@
       *               (if VAL was called from CTL module)             *
       *****************************************************************
      C     SrBusDyCcy    BEGSR
- 
+
      C                   EXSR      SrResetErrs
- 
+
      C                   MOVE      DSRtFxCcys    WRtFxCcys
      C                   MOVE      DSPymtCcys    WPymtCcys
- 
+
      C                   CALLB     'IRVBDYCCY'
       ** Parameters:
       **    Return code                          (output)
@@ -2740,7 +2742,7 @@
      C                   PARM                    FldNamXAr
      C                   PARM                    WMsgIdXAr
      C                   PARM                    WFldNmXAr
- 
+
      C                   EVAL      J = 1
      C                   DOW       FldNamXAr(J) <> *BLANKS
      C                   SELECT
@@ -2787,18 +2789,18 @@
      C                   ENDSL
      C                   EVAL      J = J + 1
      C                   ENDDO
- 
+
      C                   IF        WFldNmXAr(1) = 'SC1R'
      C                   EVAL      WFldNmXAr(1) = '#0C1R1'
      C                   ENDIF
- 
+
      C                   MOVEA     ArrPymtOK     DSPymtOK
      C                   MOVEA     ArrRtFxOK     DSRtFxOK
      C                   EVAL      FilPymtCcys = WPymtCcys
      C                   EVAL      FilRtFxCcys = WRtFxCcys
- 
+
      C                   EXSR      SrUpdatErrs
- 
+
      C     ESrBusDyCcy   ENDSR
       *****************************************************************
       /EJECT
@@ -2807,9 +2809,9 @@
       *                Amount Convention                              *
       *****************************************************************
      C     SrPyAmtConv   BEGSR
- 
+
      C                   EXSR      SrResetErrs
- 
+
      C                   CALLB     'IRVPAMCNV'
       ** Parameters:
       **    Return code                          (output)
@@ -2826,7 +2828,7 @@
      C                   PARM                    OKAMC1
      C                   PARM                    MsgIdXAr
      C                   PARM                    FldNamXAr
- 
+
      C                   EVAL      J = 1
      C                   DOW       FldNamXAr(J) <> *BLANKS
      C                   SELECT
@@ -2837,16 +2839,16 @@
      C                   ENDSL
      C                   EVAL      J = J + 1
      C                   ENDDO
- 
+
      C                   IF        OKPDC1 = 'Y'
      C                   EVAL      RPPDC1 = #0PDC1
      C                   ENDIF
      C                   IF        OKAMC1 = 'Y'
      C                   EVAL      RPAMC1 = #0AMC1
      C                   ENDIF
- 
+
      C                   EXSR      SrUpdatErrs
- 
+
      C     ESrPyAmtConv  ENDSR
       *****************************************************************
       /EJECT
@@ -3180,10 +3182,10 @@
       *  SrSetupVld - Setup Additional Fields needed for Valids File  *
       *****************************************************************
      C     SrSetupVld    BEGSR
- 
+
      C                   EVAL      RPDTYP = #0DTYP
      C                   EVAL      FilBsDyConv = DSBsDyConv
- 
+
      C     ESrSetupVld   ENDSR
       *****************************************************************
       /EJECT
@@ -3192,7 +3194,7 @@
       *                from each validation module.                   *
       *****************************************************************
      C     SrResetErrs   BEGSR
- 
+
      C                   EVAL      RetCodeOut = *BLANKS
      C                   EVAL      MsgID1 = *BLANKS
      C                   EVAL      MsgID2 = *BLANKS
@@ -3200,7 +3202,7 @@
      C                   EVAL      WarnMsg2 = *BLANKS
      C                   EVAL      WarnMsg3 = *BLANKS
      C                   EVAL      WarnMsgDta = *BLANKS
- 
+
      C                   EVAL      J = *ZERO
      C                   EVAL      FldNamXAr = *BLANKS
      C                   EVAL      MsgIDXAr  = *BLANKS
@@ -3208,7 +3210,7 @@
      C                   EVAL      WFldNmXAr = *BLANKS
      C                   EVAL      WMsgIDXAr = *BLANKS
      C                   EVAL      WMsgDtXAr = *BLANKS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3217,9 +3219,9 @@
       *                back from each validation module.              *
       *****************************************************************
      C     SrUpdatErrs   BEGSR
- 
+
       ** Update error fields/message IDs/message data (arrays)
- 
+
      C                   EVAL      I = 1
      C     *BLANK        LOOKUP    FldNameArr(I)                          80
      C                   IF        *IN80 = *ON
@@ -3227,15 +3229,15 @@
      C                   MOVEA     MsgIDXAr      MsgIdArr(I)
      C                   MOVEA     MsgDtaXAr     MsgDtaArr(I)
      C                   ENDIF
- 
+
       ** Set Error Index
- 
+
      C                   EVAL      I = 1
      C     *BLANK        LOOKUP    FldNameArr(I)                          80
      C                   EVAL      Idx = I - 1
- 
+
       ** Update warning fields/message IDs/message data (arrays)
- 
+
      C                   EVAL      I = 1
      C     *BLANK        LOOKUP    WFldNamArr(I)                          80
      C                   IF        *IN80 = *ON
@@ -3243,13 +3245,13 @@
      C                   MOVEA     WMsgIDXAr     WMsgIDArr(I)
      C                   MOVEA     WMsgDtXAr     WMsgDtaArr(I)
      C                   ENDIF
- 
+
       ** Set Warning Index
- 
+
      C                   EVAL      I = 1
      C     *BLANK        LOOKUP    WFldNamArr(I)                          80
      C                   EVAL      WIdx = I - 1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3257,9 +3259,9 @@
       * *INZSR - Program Initialisation Routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       ** Inputs:
       **    Mode of Operation Received from Controller
       **    Response Mode
@@ -3307,7 +3309,7 @@
      C                   PARM                    CIR005
      C                   PARM                    CIR006
      C                   PARM                    CIR007
- 
+
       ** Outputs:
       **    Caps/Collars/Floors deal OK Indicators
       **    Error fields from/to caller
@@ -3337,16 +3339,16 @@
      C                   KFLD                    W0BRCD            3                         CDL029A
      C                   KFLD                    W0CUST            6                         CDL029A
      C                   KFLD                    #0BRCA                                       CDL029
- 
+
       ** Check if Dealing Fiduciary is installed (variable CDL006
       ** is exported to MMVAMOUNT validation module)
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CDL006'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        @RTCD <> *BLANKS AND
      C                             @RTCD <> '*NRF   '
      C                   EVAL      DBKEY = 'CDL006'
@@ -3354,7 +3356,7 @@
      C                   EVAL      DBASE = 001
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        @RTCD = *BLANKS
      C                   EVAL      CDL006 = 'Y'
      C                   ELSE
@@ -3416,7 +3418,7 @@
      C                   IF        @RTCD = *BLANKS                                            CDL028
      C                   EVAL      CDL028 = 'Y'                                               CDL028
      C                   ENDIF                                                                CDL028
- 
+
       ** Access SAR details file to determine if CDL038 is switched on                       BUG9717
                                                                                              BUG9717
      C                   CALLB     'AOSARDR0'                                                BUG9717
@@ -3446,10 +3448,10 @@
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** Hook to enable non-core initial processing to be included
      C/COPY WNCPYSRC,IRCACFV077
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR937578A          Date 04Apr12               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR937578A          Date 04Apr12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CLE147             Date 17Oct11               *
       *                 AR787620           Date 10Jun11               *
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  AR937578A - In Collateral and Credit Lines Enquiry, availed  *
       *              loans are both in reservation and exposure       *
@@ -77,93 +79,93 @@
       *           use as APIs. Facility input Transaction Details     *
       *                                                               *
       *****************************************************************
- 
+
      FLEIFCIPPD O  A E             DISK    INFSR(*pssr)
      F                                     COMMIT
- 
+
      FZATRNERRPDO  A E             DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for arrays
       ** specific to API *CTL modules.
      D/COPY ZACPYSRC,APICTLARR
       **--------------------------------------------------------------------------------------------
- 
+
       * Facility in Screen Format
      D FacScnPrim    E DS                  EXTNAME(LEFCPPPD)
      D FacScnSeco    E DS                  EXTNAME(LEFCSPPD)
- 
+
       * Error indicators
      D OKFcPrim      E DS                  EXTNAME(LEEFCIPPD)
      D OKFcSeco      E DS                  EXTNAME(LEEFCISPD)
- 
+
       ** Facility FM Details in file format
      D FCLTYFMFmt    E DS                  EXTNAME(FCLTYFM) PREFIX(FM)
       ** Facility FN Details in file format
      D FCLTYFNFmt    E DS                  EXTNAME(FCLTYFN) PREFIX(FN)
- 
+
       * Valid Facility FM layout
      D ValidFacm     E DS                  EXTNAME(LEVFCIMPD)
       * Valid Facility FN layout
      D ValidFacn     E DS                  EXTNAME(LEVFCINPD) PREFIX(V_)
- 
+
       * (Current) Facility in Screen Format - Primary Details
      D CurFcPrim     E DS                  EXTNAME(LEFCPPPD)
      D                                     PREFIX(C_)
       * (Current) Facility in Screen Format - Secondary Details
      D CurFcSeco     E DS                  EXTNAME(LEFCSPPD)
      D                                     PREFIX(C_)
- 
+
       ** Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for API ICD
      D SDAPI         E DS                  EXTNAME(SDAPIPD)
- 
+
       ** EXTERNAL DS FOR SAR DETAILS
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Data structure for passing a parameter to synon screen
       ** handling program.
- 
+
       ** IN Message Format
      D P#INMF        E DS                  EXTNAME(LEF1MFPD)
      D QQRONS1       E                     EXTFLD(QQRONS)                                     CGL029
      D QQPONS1       E                     EXTFLD(QQPONS)                                     CGL029
- 
+
       ** OUT Message Format
      D P#OUMF        E DS                  EXTNAME(LEF2MFPD)
- 
+
      D                 DS
      D  DDDTX5                 1      5
      D  DDDTX6                 1      6                                                      BUG3723
@@ -197,83 +199,83 @@
      D  DDCY10A               28     30
      D  DDCY11A               31     33
      D  DDCY12A               34     36
- 
+
       /SPACE 5
- 
+
       * Initialisation
      C                   EXSR      INITPR
- 
+
       ** Map incoming data into the screen fields
- 
+
      C                   EXSR      MAPFLD
- 
+
       ** Validate action code
- 
+
      C                   EXSR      ValidateAc
- 
+
       *  If error in validation of action code, fail this input
- 
+
      C     Idx           IFNE      0
      C                   GOTO      INVALID
      C                   ENDIF
- 
+
       *  Processing depends upon Action Code
- 
+
      C                   SELECT
- 
+
       * Inserts
       *  ======
- 
+
      C     DDACTN        WHENEQ    'I'
- 
+
      C                   EXSR      ValidateTR
- 
+
       *  Amends, Authorise, Reverse, Close
       *  =================================
- 
+
      C     DDACTN        WHENEQ    'A'
      C     DDACTN        OREQ      'R'
      C     DDACTN        OREQ      'C'
      C     DDACTN        OREQ      'X'
- 
+
      C                   EXSR      ValidateTR
- 
+
      C                   EXSR      ValdateAmd
- 
+
      C                   ENDSL
- 
+
      C     INVALID       TAG
- 
+
       ** Do updates for this transaction
       ** according to whether it is valid or invalid
- 
+
      C     Idx           IFEQ      0
      C                   EXSR      UPDAT_VAL
      C                   ENDIF
      C     Idx           IFNE      0
      C                   EXSR      UPDAT_INVAL
      C                   ENDIF
- 
+
       **  Terminate program
- 
+
      C                   SETON                                        LR
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
       **  Map the input data read from the transmitted message.
       *****************************************************************
      C     MAPFLD        BEGSR
- 
+
      C                   MOVEL     F1RPLC        RPLOC             1
       *
       ** Facility details
       *
      C                   CLEAR                   FacScnPrim
      C                   CLEAR                   FacScnSeco
- 
+
       ** First screen
      C                   MOVE      F1ACTN        DDACTN
       *
@@ -284,40 +286,40 @@
      C                   ELSE
      C                   MOVE      *BLANK        DDFCNO
      C                   ENDIF
- 
+
      C                   MOVEL     F1BRCA        DDBRCA
      C                   MOVEL     F1FCCY        DDFCCY
      C                   MOVEL     F1FAMT        DDFAMT
      C                   MOVEL     F1OVPC        DDOVPC
      C                   MOVEL     F1FCTI        DDFCTI
- 
+
      C                   MOVEL     F1DTAP        DDDTAP
      C                   MOVE      F1DTAP        W#TWO             2
      C                   MOVE      W#TWO         DDDTAP
- 
+
      C                   MOVEL     F1RVCR        DDRVCR
      C                   MOVEL     F1MCCY        DDMCCY
      C                   MOVEL     F1SECI        DDSECI
- 
+
      C                   MOVEL     F1DTEX        DDDTEX
      C                   MOVE      F1DTEX        W#TWO             2
      C                   MOVE      W#TWO         DDDTEX
- 
+
      C                   MOVEL     F1CRSK        DDCRSK
      C                   MOVEL     F1MCSI        DDMCSI
      C                   MOVEL     F1NACD        DDNACD
      C                   MOVEL     F1MBFC        DDMBFC
- 
+
      C                   MOVEL     F1DLFS        DDDLFS
      C                   MOVE      F1DLFS        W#TWO             2
      C                   MOVE      W#TWO         DDDLFS
- 
+
      C                   MOVEL     F1NOMR        DDNOMR
- 
+
      C                   MOVEL     F1RVDT        DDRVDT
      C                   MOVE      F1RVDT        W#TWO             2
      C                   MOVE      W#TWO         DDRVDT
- 
+
      C                   MOVEL     F1RVFR        DDRVFR
      C                   MOVEL     F1RVDY        DDRVDY
      C                   MOVEL     F1ACOF        DDACOF
@@ -334,7 +336,7 @@
      C                   MOVEL     F1BTIN        DDBTIN
      C                   MOVEL     F1BLDY        DDBLDY
      C                   MOVEL     F1ACSQ        DDACSQ
- 
+
       ** Second screen
      C                   MOVEL     F1SYIN        DDSYIN
      C                   MOVEL     F1SYCP        DDSYCP
@@ -370,19 +372,19 @@
      C                   MOVEL     DDCY10A       DDCY10
      C                   MOVEL     DDCY11A       DDCY11
      C                   MOVEL     DDCY12A       DDCY12
- 
+
      C                   MOVEL     F1COMD        DDCOMD
      C                   MOVE      F1COMD        W#TWO             2
      C                   MOVE      W#TWO         DDCOMD
- 
+
      C                   MOVEL     F1CDTE        DDCDTE
      C                   MOVE      F1CDTE        W#TWO             2
      C                   MOVE      W#TWO         DDCDTE
- 
+
      C                   MOVEL     F1AVLD        DDAVLD
      C                   MOVE      F1AVLD        W#TWO             2
      C                   MOVE      W#TWO         DDAVLD
- 
+
      C                   MOVEL     F1LPTP        DDLPTP
      C                   MOVE      F1LPBR        DDLPBR
      C                   MOVE      F1LPAM        DDLPAM
@@ -391,28 +393,28 @@
      C                   MOVEL     F1DFST        DDDFST
      C                   MOVEL     F1CAXR        DDCAXR
      C                   MOVEL     F1CMDI        DDCMDI
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
       * Validate the action
       *****************************************************************
      C     ValidateAc    BEGSR
- 
+
      C                   CALLB     'LEFCIPRTV'
       *
       * INPUTS
       *
       ** Return Code
      C                   PARM      *BLANK        RetCodeIn
- 
+
       * Mode
      C                   PARM                    P#MODE            1
       * Response mode
      C                   PARM      ' '           RESPMODE          1
- 
+
       * Action, Front office, customer, facility type, facility number, branch
      C                   PARM                    DDACTN
      C                   PARM                    FOTRID           20
@@ -424,19 +426,19 @@
      C/COPY WNCPYSRC,LEH00355
       *
       * OUTPUTS
- 
+
       * Facility FM Details in file format
      C                   PARM                    FCLTYFMFmt
       * Facility FN Details in file format
      C                   PARM                    FCLTYFNFmt
- 
+
       * Action, customer, facility type and facility number OK indicators
      C                   PARM                    DDACTNok
      C                   PARM                    DDCSSNok
      C                   PARM                    DDFACTok
      C                   PARM                    DDFCNOok
      C/COPY WNCPYSRC,LEH00316
- 
+
       * Reactivation indicator
      C                   PARM                    WREAC             1
       * New expiry date
@@ -449,11 +451,11 @@
       *
       * Array index (3P0) from/to caller
      C                   PARM      *zero         Idx
- 
+
       ** TNLU used in 'record updated by another WS' checking
- 
+
      C                   Z-ADD     FMTNLU        H#TNLU
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -461,9 +463,9 @@
       * Validate transaction
       *****************************************************************
      C     ValidateTr    BEGSR
- 
+
       * Validate Facility Primary details
- 
+
      C                   EXSR      ValdFcPrim
       *
       *  If error in validation, fail this input
@@ -471,9 +473,9 @@
      C     Idx           IFNE      0
      C                   GOTO      EValidTr
      C                   END
- 
+
       * Validate Facility Secondary details
- 
+
      C                   EXSR      ValdFcSeco
       *
       *  If error in validation, fail this input
@@ -481,7 +483,7 @@
      C     Idx           IFNE      0
      C                   GOTO      EValidTr
      C                   END
- 
+
      C     EValidTr      ENDSR
       *****************************************************************
       /SPACE 5
@@ -491,11 +493,11 @@
       *                                                               *
       *****************************************************************
      C     ValdFcPrim    BEGSR
- 
+
      C                   CALLB     'LEFCIP1VL'
- 
+
       * INPUTS
- 
+
       * Response mode
      C                   PARM                    RespMode          1
       * Mode
@@ -518,7 +520,7 @@
      C                   PARM                    CLE007            1
       * CLE014
      C                   PARM                    CLE014            1
- 
+
       * Front office inputs (if mode = 'B' or ModeOfop = FRONT)
      C                   PARM                    F1PCOB            3
      C                   PARM                    F1TNRF           15
@@ -528,57 +530,57 @@
       * Customer Extra Data file data
      C                   PARM                    ExtData         500
       * OUTPUTS
- 
+
       *
       ** Facility Primary Details OK inds
      C                   PARM                    OKFcPrim
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx
- 
+
       * Valid Facility FM layout (DS) from/to caller
      C                   PARM                    ValidFacm
- 
+
       * Valid Facility FN layout (DS) from/to caller
      C                   PARM                    ValidFacn
- 
+
       * Facility amount has changed
      C                   PARM                    FacAmChg          1
- 
+
       * Table OAM to be updated
      C                   PARM                    UpdOam            1
- 
+
       * Start date used in the other validation module
      C                   PARM                    W#DTAP            5
- 
+
       * Expiry date used in the other validation module
      C                   PARM                    W#DTEX            5
- 
+
       * Facility decimal places used in the other validation module
      C                   PARM                    W#NBDP            1
- 
+
       * CA currency used in the other validation module
      C                   PARM                    WCACCY            3
- 
+
       * Facilty amount
      C                   PARM                    W#FAMT           13 0
- 
+
       * Account officer to default
      C                   PARM                    WBLACF            1
       * Credit Agreement Change Flag                                                          CLE147
      C                   PARM                    CADetails        33                          CLE147
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -588,11 +590,11 @@
       *                                                               *
       *****************************************************************
      C     ValdFcSeco    BEGSR
- 
+
      C                   CALLB     'LEFCIP2VL'
- 
+
       * INPUTS
- 
+
       * Response mode
      C                   PARM                    RespMode          1
       ** Facility Primary Details
@@ -642,36 +644,36 @@
      C                   PARM                    CSC011            1
       * CEU013
      C                   PARM                    CEU013            1
- 
+
       * OUTPUTS
       *
       ** Facility Primary Details OK inds
      C                   PARM                    OKFcSeco
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx
- 
+
       * Valid Facility FN layout (DS) from/to caller
      C                   PARM                    ValidFacm
- 
+
       * Valid Facility FN layout (DS) from/to caller
      C                   PARM                    ValidFacn
       * Facility amount has changed                                                           222373
      C                   PARM                    FacAmChg          1                          222373
       * Table OAM to be updated                                                               222373
      C                   PARM                    UpdOam            1                          222373
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -679,11 +681,11 @@
       * Validate amendments
       *****************************************************************
      C     ValdateAmd    BEGSR
- 
+
       ** This subroutine calls a procedure which checks whether it
       ** was valid to amend any of the fields which have been
       ** changed.
- 
+
      C                   CALLB     'LEFCIPCVT'
       *
       * INPUTS
@@ -701,7 +703,7 @@
       * Facility Details in screen format
      C                   PARM                    FacScnPrim
      C                   PARM                    FacScnSeco
- 
+
      C                   CALLB     'LEFCIPAMD'
       *
       * INPUTS
@@ -753,16 +755,16 @@
       *
       * Reset of Fields in Error Required (Y/N)
      C                   PARM      'N'           ResetErrs         1
- 
+
       ** If any errors overwrite previous error information
- 
+
      C                   IF        AmIdx <> 0
      C                   MOVEA     AmMsgIdArr    MsgidArr
      C                   MOVEA     AmFldNamAr    FldNameArr
      C                   MOVEA     AmMsgDtaAr    MsgDtaArr
      C                   Z-ADD     AmIdx         Idx
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -770,33 +772,33 @@
       * Updates - if invalid transaction
       *****************************************************************
      C     UPDAT_INVAL   BEGSR
- 
+
       ** If repair in back-office
- 
+
      C     RPLOC         IFEQ      'B'
- 
+
       ** Write to the invalid (repair) files
- 
+
      C                   CALL      'LEC0215'
      C                   PARM                    DDREPN
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    DDTMESTMP
- 
+
      C                   EVAL      DDFOTRANID = F1TNRF
      C                   EVAL      DDFOASOCID = *BLANKS
      C                   EVAL      DDRPRLOCN  = 'B'
- 
+
      C                   WRITE     LEIFCIPD0
      C                   EXSR      W_ZATRNERR
- 
+
       ** Commit the database changes
- 
+
      C                   COMMIT
- 
+
      C                   ENDIF
- 
+
       ** Get the text for the first error message
- 
+
      C                   MOVEL     MsgIDArr(1)   ZAMSID
      C     ZAMSID        IFNE      *BLANK
      C                   CALL      'Y2RVMGC'                            9999
@@ -806,9 +808,9 @@
      C                   PARM      *BLANK        ZAMSDA          132
      C                   PARM      *BLANK        ZAMSTX          132
      C                   ENDIF
- 
+
       ** Set up the returned message format
- 
+
      C                   MOVE      F1MSGT        F2MSGT
      C                   MOVE      F1TRUS        F2TRUS
      C                   MOVE      F1TRWS        F2TRWS
@@ -824,7 +826,7 @@
      C                   MOVE      F1CNUM        F2CNUM
      C                   MOVE      F1FACT        F2FACT
      C                   MOVE      F1FCNO        F2FCNO
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -832,28 +834,28 @@
       * Updates - if valid transaction
       *****************************************************************
      C     UPDAT_VAL     BEGSR
- 
+
       ** Update the database
- 
+
      C                   EXSR      UPD_DBASE
- 
+
       ** If there were errors, rollback any database changes and increment
       ** the error index by 1 to drive the 'invalid' record processing
- 
+
      C     RetCodeOut    IFNE      *BLANK
- 
+
      C                   ADD       1             Idx
- 
+
      C                   ROLBK
- 
+
      C                   ELSE
- 
+
       ** Commit the database changes
- 
+
      C                   COMMIT
- 
+
       ** Set up the returned message format
- 
+
      C                   MOVE      F1MSGT        F2MSGT
      C                   MOVE      F1TRUS        F2TRUS
      C                   MOVE      F1TRWS        F2TRWS
@@ -871,9 +873,9 @@
      C                   ELSE
      C                   MOVE      F1FCNO        F2FCNO
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -888,10 +890,10 @@
       *
       ** Return Code
      C                   PARM      *BLANK        RetCodeOut
- 
+
       * Mode
      C                   PARM                    P#MODE            1
- 
+
       * Valid Facility file FM
      C                   PARM                    ValidFacm
       * Valid Facility file FN
@@ -903,7 +905,7 @@
      C                   PARM                    BJRDNB
       * TNLU of funding participant record on FCLTYFM/FN
      C                   PARM                    H#TNLU            5 0
- 
+
       *
       * OUTPUTS
       *
@@ -922,7 +924,7 @@
       * Array index (3P0) from/to caller
      C                   PARM      *zero         WIdx              3 0
       * Facility sequence assigned
- 
+
      C**********         PARM                    A_FCNO            2                          222373
       *
      C                   ENDSR
@@ -932,16 +934,16 @@
       * Write to the transaction errors file                          *
       *****************************************************************
      C     W_ZATRNERR    BEGSR
- 
+
      C                   MOVE      DDREPN        ##REPN            5
      C                   EVAL      ABFOTRNID  = 'LE' + ##REPN
      C                   EVAL      ABMIDASMOD = 'LE'
      C                   EVAL      ABMSGFILE  = ZAMSGF
      C                   EVAL      ABTMESTMP  = DDTMESTMP
- 
+
       *  Do while error messages found
       *  Write error messages to file
- 
+
      C                   Z-ADD     1             #C                2 0
      C     #C            DOWLE     ArrayMax
      C     FldNameArr(#C)ANDNE     *BLANKS
@@ -950,7 +952,7 @@
      C                   WRITE     ZATRNERRD0
      C                   ADD       1             #C
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -977,7 +979,7 @@
      C                   MOVEL     @OPTN         DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Access API ICD via access program
       *  (database error handling done in access program)
      C                   CALLB     'AOAPIR0'
@@ -991,29 +993,29 @@
      C                   MOVEL     @OPTN         DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   MOVEL     'LERMSGF '    ZAMSGF
- 
+
       ** Determine if CLE002 is installed
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE002'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CLE002            1
      C                   ELSE
      C                   MOVEL     'Y'           CLE002
      C                   ENDIF
- 
+
       ** Determine if CLE005 is installed
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE005'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CLE005            1
      C                   ELSE
@@ -1026,7 +1028,7 @@
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE006'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CLE006            1
      C                   ELSE
@@ -1039,7 +1041,7 @@
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE007'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CLE007            1
      C                   ELSE
@@ -1052,7 +1054,7 @@
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE008'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CLE008            1
      C                   ELSE
@@ -1065,7 +1067,7 @@
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE014'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CLE014            1
      C                   ELSE
@@ -1078,7 +1080,7 @@
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CSC011'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CSC011            1
      C                   ELSE
@@ -1091,13 +1093,13 @@
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CEU013'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CEU013            1
      C                   ELSE
      C                   MOVEL     'Y'           CEU013
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5

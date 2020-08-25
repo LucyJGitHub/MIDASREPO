@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD036070           Date 19Oct15               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD036070           Date 19Oct15               *
       *                 CDL094             Date 11Jun14               *
       *                 CSD095             Date 08Apr14               *
       *                 CSF011A            Date 28Nov11               *
@@ -63,6 +64,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD036070 - No way to go back to main deal details screen     *
       *             after reaching settlement screen.  Introduce new  *
@@ -118,7 +120,7 @@
       *           structure to use as APIs.                           *
       *                                                               *
       *****************************************************************
- 
+
      F/COPY WNCPYSRC,IRFRASF001
       *****************************************************************
       ** +--------------------------------------+
@@ -138,49 +140,49 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the FRA/IRS standard declares
      D***/COPY IRCPYSRC,STDDECLARE                                                          BUG11376
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Array to hold Commitment Job Names                                                    CSC022
      D CmtJobNArr      S             10A   DIM(10)                                            CSC022
                                                                                               CSC022
@@ -192,49 +194,49 @@
      D**WkCrAutDet          2191   2202                                                CIR008 CGL029
      D  WkCrAutDet          2201   2212                                                       CGL029
       * Current Deal in File Format
- 
+
      D CrDlScnFmt    E DS                  EXTNAME(IRFRAPD)
       * (Current) Deal in Screen Format
      D                                     PREFIX(@)
- 
+
      D NwDlFilFmt    E DS                  EXTNAME(IRVFRAPD)
       * New Deal in File Format
      D  FRREC                716    784
      D  FRPAY                785   1343
      D  FRIRS               1345   1992
      D  WkNwAutDet          2093   2104                                                       CIR008
- 
+
      D NwDlScnFmt    E DS                  EXTNAME(IRFRAPD)
       * New Deal in Screen Format
- 
+
      D IREFRA        E DS                  EXTNAME(IREFRAPD)
       * Error indicators
- 
- 
+
+
      D ##RECF        E DS                  EXTNAME(SDESFRPD)
       ** FILE RECEIVE INSTRUCTIONS
      D**FLREC***               1     69                                                       CGL029
      D  FLREC                  1     75                                                       CGL029
- 
+
      D ##PAYF        E DS                  EXTNAME(SDESFPPD)
       *** FILE PAYMENT INSTRUCTIONS
      D**FLPAY***               1    559                                                       CGL029
      D  FLPAY                  1    565                                                       CGL029
- 
+
      D ##FRIF        E DS                  EXTNAME(SDESFFPD)
       ** FILE FRA/IRS INSTRUCTIONS
      D**FLFRA******************1    648                                         CSW097
      D  FLFRA                  1    650                                         CSW097
- 
+
      D ##RECS        E DS                  EXTNAME(SDESSRPD)
       ** SCREEN RECEIVE INSTRUCTIONS
- 
+
      D ##PAYS        E DS                  EXTNAME(SDESSPPD)
       ** SCREEN PAYMENT INSTRUCTIONS
- 
+
      D ##FRIS        E DS                  EXTNAME(SDESSFPD)
       ** SCREEN FRA/IRS INSTRUCTIONS
- 
+
      D @SETIN          DS
       ** Receive / Pay Settlement Currency, Method & Nostro
      D  @@RSCY                 1      3
@@ -247,7 +249,7 @@
      D  @@PSCY                24     26                                                       CGL029
      D  @@PSTM                27     28  0                                                    CGL029
      D  @@PONS                29     46                                                       CGL029
- 
+
      D @CCI@M          DS
       ** CURRENT CONTROL INDICATORS FOR MAIN DETAIL SCREEN
      D  @EKYFD                 1      1
@@ -257,16 +259,16 @@
      D  @EINKJ                 5      5
      D  @EINKN                 6      6
      D  @EINKP                 7      7
- 
+
      D @PCI@M          DS             7
       ** PREVIOUS CONTROL INDICATORS FOR MAIN DETAIL SCREEN
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** MIDAS MODULES DETAILS ACCESSED VIA ACCESS PROGRAM
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CIR008
      D  SCLCD        E                     EXTFLD(LCD)                                        CIR008
       ** SC Switchable features                                                               CIR008
@@ -281,18 +283,18 @@
                                                                                 CAP004
      D ExtData       E DS                  EXTNAME(IRFREXPD)                    CAP004
       * IR FRA Extra Data - File (D/B) format                                   CAP004
- 
+
      D/COPY QWINDSRC,IRFRASIDTA
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Response Mode, passed as a constant parameter to the VAL module
       ** This is always 'S' for Synchronous
      D RespMode        S              1A   INZ('S')
- 
+
      D CIR008          S              1                                                       CIR008
      D CAP056          S              1                                                       CAP056
      D PRetCode        S              7                                                       CIR008
@@ -313,14 +315,14 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,IRFRASI008
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -388,10 +390,10 @@
      C                   MOVE      '1'           *INLR
      C                   END
       *****************************************************************
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,IRFRASI009
- 
+
       /EJECT
       *****************************************************************
       * SCRN@M - PROCESS SCREEN: MAIN DETAILS
@@ -2170,7 +2172,7 @@
      C                   EXSR      IFDS@M
      C                   EXSR      IFKS@M
       *
- 
+
       ** Access SAR details file to determine if Commitment Control                           CSC022
       ** Changes is switched on.                                                              CSC022
      C                   CallB     'AOSARDR0'                                                 CSC022
@@ -2209,7 +2211,7 @@
       *                                                                                       CSC022
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,IRFRASI010
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

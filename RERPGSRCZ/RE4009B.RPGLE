@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE073             Date 06Dec10               *
       *                 CER055             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing          *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
@@ -33,37 +35,37 @@
       *  CRE015 - Retail Term and Notice Accounts                     *
       *                                                               *
       *****************************************************************
- 
+
       ** Account Master Detail definition file
- 
+
      D ACPRIM        E DS                  EXTNAME(GLAMADPD)
- 
+
       ** Acc.Debit Interest/Ov.Definition File
- 
+
      D ACDEBT        E DS                  EXTNAME(GLAMDIPD)
- 
+
       ** Acc.Credit Int./Chrg. Definition File
- 
+
      D ACCRDT        E DS                  EXTNAME(GLAMCIPD)
- 
+
       ** Previous Acc.Debit Interest/Ov.Definition File
- 
+
      D PRDEBT        E DS                  EXTNAME(GLAMDIPD) PREFIX(PR_)
- 
+
       ** Previous Acc.Credit Int./Chrg. Definition File
- 
+
      D PRCRDT        E DS                  EXTNAME(GLAMCIPD) PREFIX(PR_)
- 
+
       ** Rate changes to be actioned
- 
+
      D REPFMT        E DS                  EXTNAME(REPRPNPD)
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D LDA           E DS                  EXTNAME(LDA) DTAARA(LDA)
- 
+
       ** MAIN PROCESSING
- 
+
      C                   MOVE      *BLANKS       SXRIB             2
      C                   MOVE      *BLANKS       SXSIG             1
      C                   MOVE      *BLANKS       SXRIS            12
@@ -76,26 +78,26 @@
      C                   MOVE      *BLANKS       SXNCD             2
      C                   MOVE      *BLANKS       SXACP            21
      C                   MOVE      *BLANKS       SXRBR             3
- 
+
       ** Get effective rates
- 
+
      C                   EXSR      CALRAT
- 
+
       ** DR pickup
- 
+
      C     DDACTN        IFEQ      'I'
      C     DDACTN        OREQ      'A'
      C     DDACTN        OREQ      'E'
- 
+
       ** Rates
- 
+
      C                   MOVEL     PDRIB         PXRIB             2
      C                   MOVE      PDRIS         PXRIS            11 7
      C                   MOVEL     PDICT         PXICT             2
      C                   Z-ADD     PDCST         PXCST             5 0
- 
+
       ** Other details
- 
+
      C                   Z-ADD     E2DRIC        PXRIC             1 0
      C                   MOVEL     E2DRIF        PXRIF             1
      C                   MOVEL     E2DRDY        PXRDY             4
@@ -104,9 +106,9 @@
      C                   MOVEL     E2RTTD        PRTTX             5
      C                   MOVEL     E2DYBD        PDYBX             1
      C                   MOVEL     E2DRST        PXRST             1
- 
+
      C                   EXSR      GENPIC
- 
+
      C                   MOVE(P)   SXRIB         DDDRIB
      C                   MOVE(P)   SXRIS         DDDRIS
      C                   MOVE(P)   SXSIG         DDDSIG
@@ -119,7 +121,7 @@
      C                   MOVE(P)   SXRBR         DDDRBR
      C                   MOVE(P)   SXACP         DDDACP
      C                   MOVEL     *BLANKS       DDDRCD
- 
+
      C     DDDRIB        IFNE      PR_DDDRIB
      C     DDDRIS        ORNE      PR_DDDRIS
      C     DDDSIG        ORNE      PR_DDDSIG
@@ -130,25 +132,25 @@
      C                   ELSE
      C                   Z-ADD     BJRDNB        ZDAYNO
      C                   ENDIF
- 
+
      C                   CALL      'ZDATE2'
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    BJDFIN
      C                   PARM                    ZDATE             6 0
      C                   PARM                    ZADATE            7
- 
+
      C                   MOVEL     ZDATE         DDDRCD
      C                   ENDIF
- 
+
       ** CR Pickup
- 
+
      C                   MOVEL     PCRIB         PXRIB             2
      C                   Z-ADD     PCRIS         PXRIS            11 7
      C                   MOVEL     PCICT         PXICT             2
      C                   Z-ADD     PCCST         PXCST             5 0
- 
+
       ** Other details
- 
+
      C                   Z-ADD     E2CRIC        PXRIC             1 0
      C                   MOVEL     E2CNIR        PXNIR             1
      C                   MOVEL     E2CRIF        PXRIF             1
@@ -158,9 +160,9 @@
      C                   MOVEL     E2RTTC        PRTTX             5
      C                   MOVEL     E2DYBC        PDYBX             1
      C                   MOVEL     E2CRST        PXRST             1
- 
+
      C                   EXSR      GENPIC
- 
+
      C                   MOVE(P)   SXRIB         DDCRIB
      C                   MOVE(P)   SXRIS         DDCRIS
      C                   MOVE(P)   SXSIG         DDCSIG
@@ -173,7 +175,7 @@
      C                   MOVE(P)   SXRBR         DDCRBR
      C                   MOVE(P)   SXACP         DDCACP
      C                   MOVEL     *BLANKS       DDCRCD
- 
+
      C     DDCRIB        IFNE      PR_DDCRIB
      C     DDCRIS        ORNE      PR_DDCRIS
      C     DDCSIG        ORNE      PR_DDCSIG
@@ -184,20 +186,20 @@
      C                   ELSE
      C                   Z-ADD     BJRDNB        ZDAYNO
      C                   ENDIF
- 
+
      C                   CALL      'ZDATE2'
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    BJDFIN
      C                   PARM                    ZDATE             6 0
      C                   PARM                    ZADATE            7
- 
+
      C                   MOVEL     ZDATE         DDCRCD
      C                   ENDIF
- 
+
      C                   END
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -206,13 +208,13 @@
       *                                                               *
       *****************************************************************
      C     CALRAT        BEGSR
- 
+
       ** If there is a periodic rate fixing, then the effective rate
       ** must be calculated
- 
+
      C     'P'           IFEQ      E2DNIR
      C     'P'           OREQ      E2CNIR
- 
+
      C     DDACTN        IFEQ      'I'
      C                   MOVEL     'INSER'       P@MODE
      C                   ELSE
@@ -222,25 +224,27 @@
      C                   PARM                    REPFMT
      C                   PARM                    R@RTCD            7
      C                   PARM                    P@MODE            5
- 
+
       ** Effective debit rates
- 
-     C                   PARM                    X1DRIB            2 0
+
+     C**********         PARM                    X1DRIB            2 0                        CSD103
+     C                   PARM                    X1DRIB            2                          CSD103
      C                   PARM                    X1DRIS           11 7
      C                   PARM                    X1DICT            2 0
      C                   PARM                    X1DCST            5 0
- 
+
       ** Effective credit rates
- 
-     C                   PARM                    X1CRIB            2 0
+
+     C**********         PARM                    X1CRIB            2 0                        CSD103
+     C                   PARM                    X1CRIB            2                          CSD103
      C                   PARM                    X1CRIS           11 7
      C                   PARM                    X1CICT            2 0
      C                   PARM                    X1CCST            5 0
- 
+
      C                   ENDIF
- 
+
       ** Debit rates (for fixed rate, use effective rate)
- 
+
      C     'P'           IFEQ      E2DNIR
      C                   Z-ADD     X1DRIB        PDRIB             2 0
      C                   Z-ADD     X1DRIS        PDRIS            11 7
@@ -252,9 +256,9 @@
      C                   Z-ADD     E2DICT        PDICT
      C                   Z-ADD     E2DCST        PDCST
      C                   ENDIF
- 
+
       ** Credit rates (for fixed rate, use effective rate)
- 
+
      C     'P'           IFEQ      E2CNIR
      C                   Z-ADD     X1CRIB        PCRIB             2 0
      C                   Z-ADD     X1CRIS        PCRIS            11 7
@@ -266,7 +270,7 @@
      C                   Z-ADD     E2CICT        PCICT
      C                   Z-ADD     E2CCST        PCCST
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -276,7 +280,7 @@
       *                                                               *
       *****************************************************************
      C     GENPIC        BEGSR
- 
+
      C                   MOVEL     *BLANKS       SXRIB
      C     PXRIB         IFNE      '00'
      C                   MOVEL     PXRIB         SXRIB
@@ -310,18 +314,18 @@
      C     PXCST         IFNE      0
      C                   MOVEL     PXCST         SXCST
      C                   END
- 
+
      C                   MOVEL     PXRIC         SXRIC
      C                   MOVEL     *BLANKS       SNXID
      C     PNXID         IFNE      *ZERO
      C                   Z-ADD     PNXID         ZDAYNO
- 
+
      C                   CALL      'ZDATE2'
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    BJDFIN
      C                   PARM                    ZDATE             6 0
      C                   PARM                    ZADATE            7
- 
+
      C                   MOVEL     ZDATE         SNXID
      C                   ENDIF
      C     E2MDAT        IFLT      26664
@@ -350,30 +354,30 @@
       *                                                               *
       *****************************************************************
      C     NEDIT         BEGSR
- 
+
       ** Use standard routine to check and format
- 
+
      C                   MOVE(P)   ZFIELD        ZAFLD1           16
- 
+
      C                   CALL      'ZALIGN'
      C                   PARM      *BLANKS       ZRTN              7
      C                   PARM                    ZFIELD           16
      C                   PARM                    ZADEC             1 0
      C                   PARM                    ZADIG             2 0
      C                   PARM                    ZAFLD            16
- 
+
      C     ZRTN          IFEQ      *BLANKS
      C                   MOVE      ZAFLD         ZFLD15
- 
+
      C                   CALL      'ZSEDIT'
      C                   PARM                    ZFLD15           15 0
      C                   PARM      ZADEC         ZDECS             1 0
      C                   PARM                    ZECODE            1
      C                   PARM                    ZOUT21           21
- 
+
      C     16            SUBST     ZOUT21:5      ZAFLD1
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -383,7 +387,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    ACPRIM
      C                   PARM                    ACDEBT
@@ -392,16 +396,16 @@
      C                   PARM                    PRCRDT
      C                   PARM                    REPFMT
      C                   PARM                    PRTCD
- 
+
       ** Access bank details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRTCD             7
      C                   PARM      '*FIRST'      POPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database error
- 
+
      C                   IF        PRTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY = POPTN
@@ -410,7 +414,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -420,13 +424,13 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
- 
+
      C                   DUMP
      C                   CALL      'DBERRCTL'
      C                   RETURN
- 
+
      C                   ENDSR

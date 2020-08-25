@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD051152           Date 02Aug18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD051152           Date 02Aug18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD051152 - FRA/IRS Interest Calculation Basis 6.             *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
@@ -354,7 +356,8 @@
      D STORE           S              4P 0
      D STWRK           S              4P 0
      D STYR            S              2P 0
-     D SVBRTT          S              2P 0
+     D***SVBRTT          S              2P 0                                                  CSD103
+     DSVBRTT           S              2A                                                      CSD103
      D SVEINR          S             11P 7
      D SWIPRD          S             13P 0
      D SWKINT          S             13P 0
@@ -2063,7 +2066,8 @@
      C                   Z-ADD     MDAT          SZEDAT
      C                   Z-ADD     UICBS         SZICB
 
-     C                   IF        UBRTT <> *ZERO
+     C**********         IF        UBRTT <> *ZERO                                             CSD103
+     C                   IF        UBRTT <> *BLANKS                                           CSD103
      C                   EVAL      SZFLT = UEINR
      C                   EVAL      SZFIX = TEINR
      C                   TESTB     '1'           UDSTI                    31
@@ -2111,7 +2115,8 @@
      C                   Z-ADD     0             AMAD
      C                   Z-ADD     0             AMTA
 
-     C                   IF        UBRTT <> *ZERO
+     C**********         IF        UBRTT <> *ZERO                                             CSD103
+     C                   IF        UBRTT <> *BLANKS                                           CSD103
      C                   TESTB     '0'           UDNSI                    30
 
      C                   IF        *IN30 = *ON
@@ -2269,7 +2274,8 @@
       ** Put Accrual Amounts in the appropriate details field (reverse
       ** amounts if the amount is being paid).
 
-     C     UBRTT         IFNE      0
+     C*****UBRTT         IFNE      0                                                          CSD103
+     C     UBRTT         IFNE      *BLANKS                                                    CSD103
      C     SZFLT         IFGE      SZFIX
      C                   Z-SUB     WAMAD         AMAD
      C                   Z-SUB     WAMTA         AMTA
@@ -2279,7 +2285,8 @@
      C                   ENDIF
      C                   ENDIF
 
-     C     TBRTT         IFNE      0
+     C*****TBRTT         IFNE      0                                                          CSD103
+     C     TBRTT         IFNE      *BLANKS                                                    CSD103
      C     SZFLT         IFGT      SZFIX
      C                   Z-ADD     WAMAD         TAMAD
      C                   Z-ADD     WAMTA         TAMTA
@@ -2335,7 +2342,8 @@
      C                   EVAL      AMAD = *ZERO
      C                   EVAL      AMTA = *ZERO
 
-     C                   IF        UBRTT <> 0
+     C**********         IF        UBRTT <> 0                                                 CSD013
+     C                   IF        UBRTT <> *BLANKS                                           CSD103
      C                   TESTB     '0'           UDNSI                    30
 
      C                   IF        *IN30 = *ON
@@ -2348,7 +2356,8 @@
      C                   MOVE      'Y'           URTPI
      C                   ENDIF
 
-     C                   IF        TBRTT <> 0
+     C**********         IF        TBRTT <> 0                                                 CSD103
+     C                   IF        TBRTT <> *BLANKS                                           CSD103
      C                   TESTB     '0'           TDNSI                    30
 
      C                   IF        *IN30 = *ON
@@ -3004,7 +3013,8 @@
      C                   EVAL      AMAD = *ZERO
      C                   EVAL      AMTA = *ZERO
 
-     C                   IF        UBRTT <> *ZERO
+     C**********         IF        UBRTT <> *ZERO                                             CSD103
+     C                   IF        UBRTT <> *BLANKS                                           CSD103
 
      C                   TESTB     '0'           UDNSI                    30
 
@@ -3034,7 +3044,8 @@
      C                   EVAL      TEINR = FSTEFR
 
      C                   EVAL      SVEINR = TEINR
-     C                   EVAL      TBRTT = *ZERO
+     C**********         EVAL      TBRTT = *ZERO                                              CSD103
+     C                   EVAL      TBRTT = *BLANKS                                            CSD103
      C                   EVAL      TEINR = *ZERO
 
       ** Set Accrual to Date to earliest date present.
@@ -3307,7 +3318,8 @@
      C                   Z-ADD     0             UBRTT
      C                   MOVE      'N'           URTPI
 
-     C                   IF        TBRTT <> 0
+     C**********         IF        TBRTT <> 0                                                 CSD103
+     C                   IF        TBRTT <> *BLANKS                                           CSD103
      C                   TESTB     '0'           TDNSI                    30
 
      C                   IF        *IN30 = *ON
@@ -3601,7 +3613,8 @@
      C                   Z-ADD     0             AMAD
      C                   Z-ADD     0             AMTA
 
-     C                   IF        UBRTT <> *ZERO
+     C**********         IF        UBRTT <> *ZERO                                             CSD103
+     C                   IF        UBRTT <> *BLANKS                                           CSD103
      C                   TESTB     '0'           UDNSI                    30
      C                   TESTB     '4'           UDSTI                    34
 
@@ -3641,7 +3654,8 @@
 
       ** Provider's Details are ours.
 
-     C     UBRTT         IFNE      0
+     C*****UBRTT         IFNE      0                                                          CSD103
+     C     UBRTT         IFNE      *BLANKS                                                    CSD103
 
       ** Set Accrual to Date to the earliest date present.
 
@@ -3679,7 +3693,8 @@
 
       ** Provider's Details are theirs.
 
-     C     TBRTT         IFNE      0
+     C*****TBRTT         IFNE      0                                                          CSD103
+     C     TBRTT         IFNE      *BLANKS                                                    CSD103
 
       ** Set Accrual to Date to the earliest date present.
 
@@ -3731,17 +3746,20 @@
 
      C                   Z-ADD     0             ZINTR
 
-     C     UBRTT         IFNE      0
+     C*****UBRTT         IFNE      0                                                          CSD103
+     C     UBRTT         IFNE      *BLANKS                                                    CSD103
      C     *IN30         ANDEQ     *ON
      C     UEINR         ANDGT     CLRAT
      C     *IN31         ANDEQ     *OFF
 
-     C     UBRTT         OREQ      0
+     C*****UBRTT         OREQ      0                                                          CSD103
+     C     UBRTT         OREQ      *BLANKS                                                    CSD103
      C     *IN30         ANDEQ     *ON
      C     TEINR         ANDGT     CLRAT
      C     *IN31         ANDEQ     *ON
 
-     C     UBRTT         IFNE      0
+     C*****UBRTT         IFNE      0                                                          CSD103
+     C     UBRTT         IFNE      *BLANKS                                                    CSD103
      C     UEINR         SUB       CLRAT         ZIRATE
      C                   ELSE
      C     TEINR         SUB       CLRAT         ZIRATE
@@ -3778,17 +3796,20 @@
 
      C                   IF        *IN34 = *ON
 
-     C     UBRTT         IFEQ      0
+     C*****UBRTT         IFEQ      0                                                          CSD103
+     C     UBRTT         IFEQ      *BLANKS                                                    CSD103
      C     *IN30         ANDEQ     *ON
      C     FLRAT         ANDGT     TEINR
      C     *IN31         ANDEQ     *OFF
 
-     C     UBRTT         ORNE      0
+     C*****UBRTT         ORNE      0                                                          CSD103
+     C     UBRTT         ORNE      *BLANKS                                                    CSD103
      C     *IN30         ANDEQ     *ON
      C     FLRAT         ANDGT     UEINR
      C     *IN31         ANDEQ     *ON
 
-     C     UBRTT         IFNE      0
+     C*****UBRTT         IFNE      0                                                          CSD103
+     C     UBRTT         IFNE      *BLANKS                                                    CSD103
      C     FLRAT         SUB       UEINR         ZIRATE
      C                   ELSE
      C     FLRAT         SUB       TEINR         ZIRATE
@@ -3838,17 +3859,20 @@
 
      C     WACTD         IFGE      REPCD
 
-     C     UBRTT         IFNE      0
+     C*****UBRTT         IFNE      0                                                          CSD103
+     C     UBRTT         IFNE      *BLANKS                                                    CSD103
      C     *IN30         ANDEQ     *ON
      C     UEINR         ANDGT     CLRAT
      C     *IN31         ANDEQ     *OFF
 
-     C     UBRTT         OREQ      0
+     C*****UBRTT         OREQ      0                                                          CSD103
+     C     UBRTT         OREQ      *BLANKS                                                    CSD103
      C     *IN30         ANDEQ     *ON
      C     TEINR         ANDGT     CLRAT
      C     *IN31         ANDEQ     *ON
 
-     C     UBRTT         IFNE      0
+     C*****UBRTT         IFNE      0                                                          CSD103
+     C     UBRTT         IFNE      *BLANKS                                                    CSD103
      C     UEINR         SUB       CLRAT         ZIRATE
      C                   ELSE
      C     TEINR         SUB       CLRAT         ZIRATE
@@ -3885,17 +3909,20 @@
 
      C                   IF        *IN34 = *ON
 
-     C     UBRTT         IFEQ      0
+     C*****UBRTT         IFEQ      0                                                          CSD103
+     C     UBRTT         IFEQ      *BLANKS                                                    CSD103
      C     *IN30         ANDEQ     *ON
      C     FLRAT         ANDGT     TEINR
      C     *IN31         ANDEQ     *OFF
 
-     C     UBRTT         ORNE      0
+     C*****UBRTT         ORNE      0                                                          CSD103
+     C     UBRTT         ORNE      *BLANKS                                                    CSD103
      C     *IN30         ANDEQ     *ON
      C     FLRAT         ANDGT     UEINR
      C     *IN31         ANDEQ     *ON
 
-     C     UBRTT         IFNE      0
+     C*****UBRTT         IFNE      0                                                          CSD103
+     C     UBRTT         IFNE      *BLANKS                                                    CSD103
      C     FLRAT         SUB       UEINR         ZIRATE
      C                   ELSE
      C     FLRAT         SUB       TEINR         ZIRATE
@@ -3951,17 +3978,20 @@
 
      C                   Z-ADD     0             ZINTR
 
-     C     TBRTT         IFNE      0
+     C*****TBRTT         IFNE      0                                                          CSD103
+     C     TBRTT         IFNE      *BLANKS                                                    CSD103
      C     *IN30         ANDEQ     *ON
      C     TEINR         ANDGT     CLRAT
      C     *IN31         ANDEQ     *OFF
 
-     C     TBRTT         OREQ      0
+     C*****TBRTT         OREQ      0                                                          CSD103
+     C     TBRTT         OREQ      *BLANKS                                                    CSD103
      C     *IN30         ANDEQ     *ON
      C     UEINR         ANDGT     CLRAT
      C     *IN31         ANDEQ     *ON
 
-     C     TBRTT         IFNE      0
+     C*****TBRTT         IFNE      0                                                          CSD103
+     C     TBRTT         IFNE      *BLANKS                                                    CSD103
      C     TEINR         SUB       CLRAT         ZIRATE
      C                   ELSE
      C     UEINR         SUB       CLRAT         ZIRATE
@@ -3999,17 +4029,20 @@
 
      C     *IN34         IFEQ      *ON
 
-     C     TBRTT         IFEQ      0
+     C*****TBRTT         IFEQ      0                                                          CSD103
+     C     TBRTT         IFEQ      *BLANKS                                                    CSD103
      C     *IN30         ANDEQ     *ON
      C     FLRAT         ANDGT     UEINR
      C     *IN31         ANDEQ     *OFF
 
-     C     TBRTT         ORNE      0
+     C*****TBRTT         ORNE      0                                                          CSD103
+     C     TBRTT         ORNE      *BLANKS                                                    CSD103
      C     *IN30         ANDEQ     *ON
      C     FLRAT         ANDGT     TEINR
      C     *IN31         ANDEQ     *ON
 
-     C     TBRTT         IFNE      0
+     C*****TBRTT         IFNE      0                                                          CSD103
+     C     TBRTT         IFNE      *BLANKS                                                    CSD103
      C     FLRAT         SUB       TEINR         ZIRATE
      C                   ELSE
      C     FLRAT         SUB       UEINR         ZIRATE
@@ -4055,7 +4088,8 @@
       ** Calculate the Interest to Accrue.
 
      C                   Z-ADD     ZIEND         ZIBEG
-     C     UBRTT         IFNE      0
+     C*****UBRTT         IFNE      0                                                          CSD103
+     C     UBRTT         IFNE      *BLANKS                                                    CSD103
      C                   Z-ADD     ACTD          ZIEND
      C                   ELSE
      C                   Z-ADD     TACTD         ZIEND
@@ -4067,17 +4101,20 @@
 
      C     TEINR         IFGT      CLRAT
 
-     C     TBRTT         IFNE      0
+     C*****TBRTT         IFNE      0                                                          CSD103
+     C     TBRTT         IFNE      *BLANKS                                                    CSD103
      C     *IN30         ANDEQ     *ON
      C     TEINR         ANDGT     CLRAT
      C     *IN31         ANDEQ     *OFF
 
-     C     TBRTT         OREQ      0
+     C*****TBRTT         OREQ      0                                                          CSD103
+     C     TBRTT         OREQ      *BLANKS                                                    CSD103
      C     *IN30         ANDEQ     *ON
      C     UEINR         ANDGT     CLRAT
      C     *IN31         ANDEQ     *ON
 
-     C     TBRTT         IFNE      0
+     C*****TBRTT         IFNE      0                                                          CSD103
+     C     TBRTT         IFNE      *BLANKS                                                    CSD103
      C     TEINR         SUB       CLRAT         ZIRATE
      C                   ELSE
      C     UEINR         SUB       CLRAT         ZIRATE
@@ -4117,17 +4154,20 @@
 
      C                   IF        *IN34 = *ON
 
-     C     TBRTT         IFEQ      0
+     C*****TBRTT         IFEQ      0                                                          CSD103
+     C     TBRTT         IFEQ      *BLANKS                                                    CSD103
      C     *IN30         ANDEQ     *ON
      C     FLRAT         ANDGT     UEINR
      C     *IN31         ANDEQ     *OFF
 
-     C     TBRTT         ORNE      0
+     C*****TBRTT         ORNE      0                                                          CSD103
+     C     TBRTT         ORNE      *BLANKS                                                    CSD103
      C     *IN30         ANDEQ     *ON
      C     FLRAT         ANDGT     TEINR
      C     *IN31         ANDEQ     *ON
 
-     C     TBRTT         IFNE      0
+     C*****TBRTT         IFNE      0                                                          CSD103
+     C     TBRTT         IFNE      *BLANKS                                                    CSD103
      C     FLRAT         SUB       TEINR         ZIRATE
      C                   ELSE
      C     FLRAT         SUB       UEINR         ZIRATE
@@ -4175,7 +4215,8 @@
      C                   EVAL      TAMAD = WTAMAD + TAIAN + TAITC +
      C                             TAIAP - TIPRD
 
-     C     UBRTT         IFNE      0
+     C*****UBRTT         IFNE      0                                                          CSD103
+     C     UBRTT         IFNE      *BLANKS                                                    CSD103
      C     TAMAD         SUB       AMAD          AMAD
      C                   Z-ADD     0             TAMAD
      C     TAMTA         SUB       AMTA          AMTA
@@ -4256,7 +4297,8 @@
      C                   Z-ADD     0             AMTA
      C                   Z-ADD     0             TEINR
 
-     C     UBRTT         IFNE      0
+     C*****UBRTT         IFNE      0                                                          CSD103
+     C     UBRTT         IFNE      *BLANKS                                                    CSD103
      C                   TESTB     '0'           UDNSI                    30
      C                   TESTB     '4'           UDSTI                    34
 
@@ -4298,7 +4340,8 @@
 
       ** The Provider's Details are ours.
 
-     C                   IF        UBRTT <> 0
+     C**********         IF        UBRTT <> 0                                                 CSD103
+     C                   IF        UBRTT <> *BLANKS                                           CSD103
 
       ** Set Accrual to Date to the earliest date present.
 
@@ -4336,7 +4379,8 @@
 
       ** The Provider's Details are theirs.
 
-     C                   IF        TBRTT <> *ZERO
+     C**********         IF        TBRTT <> *ZERO                                             CSD103
+     C                   IF        TBRTT <> *BLANKS                                           CSD103
 
       ** Set Accrual to Date to the earliest date present.
 
@@ -4388,17 +4432,20 @@
 
      C                   Z-ADD     0             ZINTR
 
-     C     UBRTT         IFNE      0
+     C*****UBRTT         IFNE      0                                                          CSD103
+     C     UBRTT         IFNE      *BLANKS                                                    CSD103
      C     *IN30         ANDEQ     *ON
      C     UEINR         ANDGT     CLRAT
      C     *IN31         ANDEQ     *OFF
 
-     C     UBRTT         OREQ      0
+     C*****UBRTT         OREQ      0                                                          CSD103
+     C     UBRTT         OREQ      *BLANKS                                                    CSD103
      C     *IN30         ANDEQ     *ON
      C     TEINR         ANDGT     CLRAT
      C     *IN31         ANDEQ     *ON
 
-     C     UBRTT         IFNE      0
+     C*****UBRTT         IFNE      0                                                          CSD103
+     C     UBRTT         IFNE      *BLANKS                                                    CSD103
      C     UEINR         SUB       CLRAT         ZIRATE
      C                   ELSE
      C     TEINR         SUB       CLRAT         ZIRATE
@@ -4436,17 +4483,20 @@
 
      C     *IN34         IFEQ      *ON
 
-     C     UBRTT         IFEQ      0
+     C*****UBRTT         IFEQ      0                                                          CSD103
+     C     UBRTT         IFEQ      *BLANKS                                                    CSD103
      C     *IN30         ANDEQ     *ON
      C     FLRAT         ANDGT     TEINR
      C     *IN31         ANDEQ     *OFF
 
-     C     UBRTT         ORNE      0
+     C*****UBRTT         ORNE      0                                                          CSD103
+     C     UBRTT         ORNE      *BLANKS                                                    CSD103
      C     *IN30         ANDEQ     *ON
      C     FLRAT         ANDGT     UEINR
      C     *IN31         ANDEQ     *ON
 
-     C     UBRTT         IFNE      0
+     C*****UBRTT         IFNE      0                                                          CSD103
+     C     UBRTT         IFNE      0                                                          CSD103
      C     FLRAT         SUB       UEINR         ZIRATE
      C                   ELSE
      C     FLRAT         SUB       TEINR         ZIRATE
@@ -4497,17 +4547,20 @@
 
      C     WACTD         IFGE      REPCD
 
-     C     UBRTT         IFNE      0
+     C*****UBRTT         IFNE      0                                                          CSD103
+     C     UBRTT         IFNE      *BLANKS                                                    CSD103
      C     *IN30         ANDEQ     *ON
      C     UEINR         ANDGT     CLRAT
      C     *IN31         ANDEQ     *OFF
 
-     C     UBRTT         OREQ      0
+     C*****UBRTT         OREQ      0                                                          CSD103
+     C     UBRTT         OREQ      *BLANKS                                                    CSD103
      C     *IN30         ANDEQ     *ON
      C     TEINR         ANDGT     CLRAT
      C     *IN31         ANDEQ     *ON
 
-     C     UBRTT         IFNE      0
+     C*****UBRTT         IFNE      0                                                          CSD103
+     C     UBRTT         IFNE      *BLANKS                                                    CSD103
      C     UEINR         SUB       CLRAT         ZIRATE
      C                   ELSE
      C     TEINR         SUB       CLRAT         ZIRATE
@@ -4544,17 +4597,20 @@
 
      C     *IN34         IFEQ      *ON
 
-     C     UBRTT         IFEQ      0
+     C*****UBRTT         IFEQ      0                                                          CSD103
+     C     UBRTT         IFEQ      *BLANKS                                                    CSD103
      C     *IN30         ANDEQ     *ON
      C     FLRAT         ANDGT     TEINR
      C     *IN31         ANDEQ     *OFF
 
-     C     UBRTT         ORNE      0
+     C*****UBRTT         ORNE      0                                                          CSD103
+     C     UBRTT         ORNE      *BLANKS                                                    CSD103
      C     *IN30         ANDEQ     *ON
      C     FLRAT         ANDGT     UEINR
      C     *IN31         ANDEQ     *ON
 
-     C     UBRTT         IFNE      0
+     C*****UBRTT         IFNE      0                                                          CSD103
+     C     UBRTT         IFNE      *BLANKS                                                    CSD103
      C     FLRAT         SUB       UEINR         ZIRATE
      C                   ELSE
      C     FLRAT         SUB       TEINR         ZIRATE
@@ -4610,17 +4666,20 @@
 
      C                   Z-ADD     0             ZINTR
 
-     C     TBRTT         IFNE      0
+     C*****TBRTT         IFNE      0                                                          CSD103
+     C     TBRTT         IFNE      *BLANKS                                                    CSD103
      C     *IN30         ANDEQ     *ON
      C     TEINR         ANDGT     CLRAT
      C     *IN31         ANDEQ     *OFF
 
-     C     TBRTT         OREQ      0
+     C*****TBRTT         OREQ      0                                                          CSD103
+     C     TBRTT         OREQ      *BLANKS                                                    CSD103
      C     *IN30         ANDEQ     *ON
      C     UEINR         ANDGT     CLRAT
      C     *IN31         ANDEQ     *ON
 
-     C     TBRTT         IFNE      0
+     C*****TBRTT         IFNE      0                                                          CSD103
+     C     TBRTT         IFNE      *BLANKS                                                    CSD103
      C     TEINR         SUB       CLRAT         ZIRATE
      C                   ELSE
      C     UEINR         SUB       CLRAT         ZIRATE
@@ -4658,17 +4717,20 @@
 
      C     *IN34         IFEQ      *ON
 
-     C     TBRTT         IFEQ      0
+     C*****TBRTT         IFEQ      0                                                          CSD103
+     C     TBRTT         IFEQ      *BLANKS                                                    CSD103
      C     *IN30         ANDEQ     *ON
      C     FLRAT         ANDGT     UEINR
      C     *IN31         ANDEQ     *OFF
 
-     C     TBRTT         ORNE      0
+     C*****TBRTT         ORNE      0                                                          CSD103
+     C     TBRTT         ORNE      *BLANKS                                                    CSD103
      C     *IN30         ANDEQ     *ON
      C     FLRAT         ANDGT     TEINR
      C     *IN31         ANDEQ     *ON
 
-     C     TBRTT         IFNE      0
+     C*****TBRTT         IFNE      0                                                          CSD103
+     C     TBRTT         IFNE      *BLANKS                                                    CSD103
      C     FLRAT         SUB       TEINR         ZIRATE
      C                   ELSE
      C     FLRAT         SUB       UEINR         ZIRATE
@@ -4721,17 +4783,20 @@
 
      C     TEINR         IFGT      CLRAT
 
-     C     TBRTT         IFNE      0
+     C*****TBRTT         IFNE      0                                                          CSD103
+     C     TBRTT         IFNE      *BLANKS                                                    CSD103
      C     *IN30         ANDEQ     *ON
      C     TEINR         ANDGT     CLRAT
      C     *IN31         ANDEQ     *OFF
 
-     C     TBRTT         OREQ      0
+     C*****TBRTT         OREQ      0                                                          CSD103
+     C     TBRTT         OREQ      *BLANKS                                                    CSD103
      C     *IN30         ANDEQ     *ON
      C     UEINR         ANDGT     CLRAT
      C     *IN31         ANDEQ     *ON
 
-     C     TBRTT         IFNE      0
+     C*****TBRTT         IFNE      0                                                          CSD103
+     C     TBRTT         IFNE      *BLANKS                                                    CSD103
      C     TEINR         SUB       CLRAT         ZIRATE
      C                   ELSE
      C     UEINR         SUB       CLRAT         ZIRATE
@@ -4768,17 +4833,20 @@
 
      C                   IF        *IN34 = *ON
 
-     C     TBRTT         IFEQ      0
+     C*****TBRTT         IFEQ      0                                                          CSD103
+     C     TBRTT         IFEQ      *BLANKS                                                    CSD103
      C     *IN30         ANDEQ     *ON
      C     FLRAT         ANDGT     UEINR
      C     *IN31         ANDEQ     *OFF
 
-     C     TBRTT         ORNE      0
+     C*****TBRTT         ORNE      0                                                          CSD103
+     C     TBRTT         ORNE      *BLANKS                                                    CSD103
      C     *IN30         ANDEQ     *ON
      C     FLRAT         ANDGT     TEINR
      C     *IN31         ANDEQ     *ON
 
-     C     TBRTT         IFNE      0
+     C*****TBRTT         IFNE      0                                                          CSD103
+     C     TBRTT         IFNE      *BLANKS                                                    CSD103
      C     FLRAT         SUB       TEINR         ZIRATE
      C                   ELSE
      C     FLRAT         SUB       UEINR         ZIRATE
@@ -4826,7 +4894,8 @@
      C                   EVAL      TAMAD = WTAMAD + TAIAN + TAITC +
      C                             TAIAP - TIPRD
 
-     C     UBRTT         IFNE      0
+     C*****UBRTT         IFNE      0                                                          CSD103
+     C     UBRTT         IFNE      *BLANKS                                                    CSD103
      C     TAMAD         SUB       AMAD          AMAD
      C                   Z-ADD     0             TAMAD
      C     TAMTA         SUB       AMTA          AMTA
@@ -5566,8 +5635,10 @@
 
      C                   EVAL      NOTD = *ZERO
      C                   EVAL      INTR = *ZERO
-     C                   EVAL      UBRTT = *ZERO
-     C                   EVAL      TBRTT = *ZERO
+     C**********         EVAL      UBRTT = *ZERO                                              CSD103
+     C**********         EVAL      TBRTT = *ZERO                                              CSD103
+     C                   EVAL      UBRTT = *BLANKS                                            CSD103
+     C                   EVAL      TBRTT = *BLANK                                             CSD103
      C                   EVAL      TEINR = *ZERO
      C                   EVAL      URTPI = *BLANK
      C                   EVAL      TRTPI = *BLANK
@@ -6105,8 +6176,10 @@
      C                   EVAL      NORCDC = RCDC
      C                   EVAL      NOBRCA = BRCA
      C                   EVAL      NOCMPYM = A8CMCD
-     C                   EVAL      NOUBRTT = *ZERO
-     C                   EVAL      NOTBRTT = *ZERO
+     C**********         EVAL      NOUBRTT = *ZERO                                            CSD103
+     C**********         EVAL      NOTBRTT = *ZERO                                            CSD103
+     C                   EVAL      NOUBRTT = *BLANKS                                          CSD103
+     C                   EVAL      NOTBRTT = *BLANKS                                          CSD103
      C                   EVAL      NOURTPI = 'N'
      C                   EVAL      NOTRTPI = 'N'
      C                   EVAL      NOFLRIND = 'N'
@@ -6143,8 +6216,10 @@
      C                   EVAL      NORCDC = RCDC
      C                   EVAL      NOBRCA = BRCA
      C                   EVAL      NOCMPYM = A8CMCD
-     C                   EVAL      NOUBRTT = *ZERO
-     C                   EVAL      NOTBRTT = *ZERO
+     C**********         EVAL      NOUBRTT = *ZERO                                            CSD103
+     C**********         EVAL      NOTBRTT = *ZERO                                            CSD103
+     C                   EVAL      NOUBRTT = *BLANKS                                          CSD103
+     C                   EVAL      NOTBRTT = *BLANKS                                          CSD103
      C                   EVAL      NOURTPI = 'N'
      C                   EVAL      NOTRTPI = 'N'
      C                   EVAL      NOFLRIND = 'N'
@@ -6325,8 +6400,10 @@
      C                   EVAL      NORCDC = RCDC
      C                   EVAL      NOBRCA = BRCA
      C                   EVAL      NOCMPYM = A8CMCD
-     C                   EVAL      NOUBRTT = *ZERO
-     C                   EVAL      NOTBRTT = *ZERO
+     C**********         EVAL      NOUBRTT = *ZERO                                            CSD103
+     C**********         EVAL      NOTBRTT = *ZERO                                            CSD103
+     C                   EVAL      NOUBRTT = *BLANKS                                          CSD103
+     C                   EVAL      NOTBRTT = *BLANKS                                          CSD103
      C                   EVAL      NOURTPI = 'N'
      C                   EVAL      NOTRTPI = 'N'
      C                   EVAL      NOFLRIND = 'N'

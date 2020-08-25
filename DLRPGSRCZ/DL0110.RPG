@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056099           Date 26Jun20               *
-      *  Prev Amend No. MD055446           Date 04Apr20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD056099           Date 26Jun20               *
+      *                 MD055446           Date 04Apr20               *
       *                 MD054943           Date 21Feb20               *
       *                 MD054648           Date 04Nov19               *
       *                 MD053295           Date 13Apr19               *
@@ -318,7 +319,8 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD056099 - DL cancellation report additonal fix
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *  MD056099 - DL cancellation report additonal fix              *
       *  MD055446 - There are parties and fields missing from the BRT *
       *             details tab in Customer Input plus date of birth  *
       *             issues.                                           *
@@ -1694,7 +1696,8 @@
 0298 I                                    P  49  550PCPL
      I/COPY WNCPYSRC,DL0110I019
 0299 I                                       56  56 INTC
-0300 I                                       63  640BRTT
+0300 I**********                             63  640BRTT                                      CSD103
+     I                                       63  64 BRTT                                      CSD103
 0301 I                                    P  65  707BRTE
 0302 I                                    P  71  767RTSP
 0303 I                                    P  77  827INTR
@@ -2083,7 +2086,8 @@
      I                                       53  53 TAXI                  S01119
      I                                       54  56 UCUCY                 S01119
      I                                    P  57  630UPAMT                 S01119
-     I                                       64  650UBRTT                 S01119
+     I**********                             64  650UBRTT                 S01119              CSD103
+     I                                       64  65 UBRTT                                     CSD103
      I                                    P  66  717USTRT                 S01119
      I                                    P  72  777UBRTE                 S01119
      I                                    P  78  837URTSP                 S01119
@@ -2115,7 +2119,8 @@
      I                                    P 191 1970UTAXM                 S01119
      I                                      198 200 TCUCY                 S01119
      I                                    P 201 2070TPAMT                 S01119
-     I                                      208 2090TBRTT                 S01119
+     I**********                            208 2090TBRTT                 S01119              CSD103
+     I                                      208 209 TBRTT                                     CSD103
      I                                    P 210 2157TSTRT                 S01119
      I                                    P 216 2217TBRTE                 S01119
      I                                    P 222 2277TRTSP                 S01119
@@ -2227,7 +2232,8 @@
      I                                       16  17 DTYP                  AUS009
      I                                       18  19 DLST                  AUS009
      I                                       20  21 AMTP                  AUS009
-     I                                       23  240BRTTDA                AUS009
+     I**********                             23  240BRTTDA                AUS009              CSD103
+     I                                       23  24 BRTTDA                                    CSD103
      I                                    P  25  307RTSPDA                AUS009
      I                                       31  33 CCY                   AUS009
      I                                    P  34  400DAAM                  AUS009
@@ -5624,16 +5630,22 @@
      C*                                                     1             S01157
      C** If both base rate codes blank, then fixed/fixed    1             S01157
      C*                                                     1             S01157
-     C           UBRTT     IFEQ 0                          B*2            S01157
-     C           TBRTT     ANDEQ0                           *2            S01157
+     C********** UBRTT     IFEQ 0                          B*2            S01157              CSD103
+     C********** TBRTT     ANDEQ0                           *2            S01157              CSD103
+     C           UBRTT     IFEQ *BLANKS                    B*2            S01157              CSD103
+																									
+     C           TBRTT     ANDEQ*BLANKS                     *2            S01157              CSD103
      C                     ADD  1         P                 *2            S01157
      C                     MOVE '0'       *IN72             *2            S01157
      C                     ELSE                            X*2            S01157
      C*                                                     *2            S01157
      C** else, if both non-blank, then floating/floating    *2            S01157
      C*                                                     *2            S01157
-     C           UBRTT     IFGT 0                          B**3           S01157
-     C           TBRTT     ANDGT0                           **3           S01157
+     C********** UBRTT     IFGT 0                          B**3           S01157              CSD103
+     C********** TBRTT     ANDGT0                           **3           S01157              CSD103
+     C           UBRTT     IFNE *BLANKS                    B**3           S01157              CSD103
+																									
+     C           TBRTT     ANDNE*BLANKS                     **3           S01157              CSD103
      C                     ADD  2         P                 **3           S01157
      C                     MOVE '0'       *IN72             **3           S01157
      C                     ELSE                            X**3           S01157
@@ -5942,7 +5954,8 @@
       *                                                                                       CIR011
      C           CIR011    IFNE 'Y'                                                           CIR011
       *                                                                                       CIR011
-     C           UBRTT     IFNE 0                                         S01119
+     C********** UBRTT     IFNE 0                                         S01119              CSD103
+     C           UBRTT     IFNE *BLANKS                                                       CSD103
      C                     Z-ADDUINFD     ZDAYNO                          S01119
      C                     ELSE                                           S01119
      C                     Z-ADDTINFD     ZDAYNO                          S01119
@@ -5950,7 +5963,8 @@
      C/COPY WNCPYSRC,DL0110C015
       *                                                                                       CIR011
      C                     ELSE                                                               CIR011
-     C           UBRTT     IFNE 0                                                             CIR011
+     C********** UBRTT     IFNE 0                                                      CIR011 CSD103
+     C           UBRTT     IFNE *BLANKS                                                       CSD103
      C                     Z-ADDUINFD     ZINDT                                               CIR011
      C                     MOVE UCUCY     WUCCY   3                                           CIR011
      C                     ELSE                                                               CIR011
@@ -6225,7 +6239,8 @@
       ** indicator is off                                                 CDL006
      C** indicator 20 redefined for this checking.                        056425
      C*                                                                   056425
-     C           BRTT      IFEQ *ZERO                                     056425
+     C********** BRTT      IFEQ *ZERO                                     056425              CSD103
+     C           BRTT      IFEQ *BLANKS                                                       CSD103
      C           DTYP      ANDNE'CD'                                      056425
      C           DTYP      ANDNE'DT'                                      CDL006
      C           DTYP      ANDNE'LT'                                      CDL006
@@ -6239,7 +6254,8 @@
       *                                                                                      BUG4271
       ** Include fixed deposits with base rate code *NE to zero.                             BUG4271
       *                                                                                      BUG4271
-     C           BRTT      ORNE *ZERO                                                        BUG4271
+     C********** BRTT      ORNE *ZERO                                                 BUG4271 CSD103
+     C           BRTT      ORNE *BLANKS                                                       CSD103
      C           DTYP      ANDEQ'TD'                                                         BUG4271
      C           JFLID     ANDNE'Y'                                                          BUG4271
       *                                                                                      BUG4271
@@ -6308,7 +6324,8 @@
 1115 C***   IF RATE CODE & SPREAD RATE ARE NON-ZERO; SETON 58 TO PRINT    048160
 1115 C***                                                                 048160
 1115 C           *IN04     IFEQ '1'                                       048160
-1115 C           BRTT      IFNE 0                                         048160
+1115 C********** BRTT      IFNE 0                                         048160              CSD103
+1115 C           BRTT      IFNE *BLANKS                                                       CSD103
 1115 C           RTSP      ORNE 0                                         048160
 1115 C                     MOVE '0'       *IN58                           048160
 1115 C                     END                                            048160
@@ -6324,7 +6341,8 @@
      C*  SET OFF FIRST/LAST DAY AND FRONT-UP INTEREST INDICATORS          S01392
      C*                                                                   S01392
      C           *IN58     IFEQ '1'                                       S01392
-     C           BRTT      ANDNE*ZERO                                     S01392
+     C********** BRTT      ANDNE*ZERO                                     S01392              CSD103
+     C           BRTT      ANDNE*BLANKS                                                       CSD103
      C                     MOVE '0'       *IN11                           S01392
      C                     MOVE '0'       *IN84                           S01392
      C                     END                                            S01392
@@ -8324,7 +8342,8 @@
      C*    - IF 'OUR BASE RATE TYPE' NON-ZERO  (ie FLOATING RATE)         S01119
      C** NOTE: If deal is a floor bought, then use 'our' details          S01157
      C*                                                                   S01119
-     C           UBRTT     IFNE 0                                         S01119
+     C********** UBRTT     IFNE 0                                         S01119              CSD103
+     C           UBRTT     IFNE *BLANKS                                                       CSD103
      C           DTYP      OREQ 'RF'                                      S01157
      C           BYSL      ANDEQ'B'                                       S01157
      C*                                                                   S01119
@@ -8528,7 +8547,8 @@
      C*    - 'THEIR BASE RATE TYPE' NON-ZERO  (ie FLOATING RATE)          S01119
      C** NOTE: If deal is a floor sold, use 'their' details               S01157
      C*                                                                   S01119
-     C           TBRTT     IFNE 0                                         S01119
+     C********** TBRTT     IFNE 0                                         S01119              CSD103
+     C           TBRTT     IFNE *BLANKS                                                       CSD103
      C           DTYP      OREQ 'RF'                                      S01157
      C           BYSL      ANDEQ'S'                                       S01157
      C*                                                                   S01119
@@ -8791,7 +8811,8 @@
      C** Fixed-floating                                                   CIR001
      C*                                                                   CIR001
      C           *IN72     IFEQ '1'                                       CIR001
-     C           UBRTT     IFEQ *ZERO                                     CIR001
+     C********** UBRTT     IFEQ *ZERO                                     CIR001              CSD103
+     C           UBRTT     IFEQ *BLANKS                                                       CSD103
      C                     MOVELADN,2     ADNAR1                          CIR001
      C/COPY WNCPYSRC,DL0110C123
      C                     ELSE                                           CIR001
@@ -8913,7 +8934,8 @@
      C** Fixed-floating                                                   CIR001
      C*                                                                   CIR001
      C           *IN72     IFEQ '1'                                       CIR001
-     C           TBRTT     IFEQ *ZERO                                     CIR001
+     C********** TBRTT     IFEQ *ZERO                                     CIR001              CSD103
+     C           TBRTT     IFEQ *BLANKS                                                       CSD103
      C                     MOVELADN,1     ADNAR1                          CIR001
      C/COPY WNCPYSRC,DL0110C129
      C                     ELSE                                           CIR001
@@ -8934,7 +8956,8 @@
      C** Fixed-Floating                                                   CIR001
      C*                                                                   CIR001
      C           *IN72     IFEQ '1'                                       CIR001
-     C           TBRTT     IFEQ *ZERO                                     CIR001
+     C********** TBRTT     IFEQ *ZERO                                     CIR001              CSD103
+     C           TBRTT     IFEQ *BLANKS                                                       CSD103
      C                     MOVELADN,2     ADNAR1                          CIR001
      C/COPY WNCPYSRC,DL0110C132
      C                     ELSE                                           CIR001
@@ -9053,7 +9076,8 @@
      C*                                                                   S01157
      C** If our base rate code is blank, then we are fixed payer          S01157
      C*                                                                   S01157
-     C           UBRTT     IFEQ 0                                         S01157
+     C********** UBRTT     IFEQ 0                                         S01157              CSD103
+     C           UBRTT     IFEQ *BLANKS                                                       CSD103
      C                     MOVE @APYR     @FXPYR 20                       S01157
      C                     MOVE @BPYR     @FLPYR 20                       S01157
      C                     Z-ADDUEINR     @FXDRT 117                      S01157
@@ -10553,7 +10577,8 @@ TA06 CORN62 51             MOVELPAY       ADD
      C                     MOVE *ON       *IN95                                               CDL033
       *                                                                                      BUG9171
       ** If not a floating rate deal, then suppress printing of Fl details                   BUG9171
-     C           BRTT      IFEQ *ZEROS                                                       BUG9171
+     C********** BRTT      IFEQ *ZEROS                                                BUG9171 CSD103
+     C           BRTT      IFEQ *BLANKS                                                       CSD103
      C                     MOVE *OFF      *IN95                                              BUG9171
      C                     ENDIF                                                             BUG9171
       *                                                                                       CDL033
@@ -10707,7 +10732,8 @@ TA06 CORN62 51             MOVELPAY       ADD
       *                                                                                       CDL033
       ** IF 'BASE RATE TYPE' NON-ZERO  (ie FLOATING RATE)                                     CDL033
       *                                                                                       CDL033
-     C           BRTT      IFNE *ZEROS                                                        CDL033
+     C********** BRTT      IFNE *ZEROS                                                 CDL033 CSD103
+     C           BRTT      IFNE *BLANKS                                                       CSD103
       *                                                                                       CDL033
       ** Get 'Base rate description'                                                          CDL033
       *                                                                                       CDL033
@@ -11931,7 +11957,8 @@ TA06 CORN62 51             MOVELPAY       ADD
      C**   GET BASE RATE                                                  AUS009
      C*                                                                   AUS009
      C           RCDT      IFEQ 'C'                                       AUS009
-     C           BRTT      IFNE *ZEROS                                    AUS009
+     C********** BRTT      IFNE *ZEROS                                    AUS009              CSD103
+     C           BRTT      IFNE *BLANKS                                                       CSD103
      C*                                                                   AUS009
      C** Call access program for Base Rate details                        AUS009
      C*                                                                   AUS009
@@ -11957,12 +11984,14 @@ TA06 CORN62 51             MOVELPAY       ADD
      C           BACBSR    IFNE *ZEROS                                    AUS009
      C                     MOVE BACBSR    BRTET#                          AUS009
      C                     MOVEL'0'       BRTET#                          AUS009
+																									
      C                     END                                            AUS009
      C                     END                                            AUS009
      C                     ELSE                                           AUS009
      C                     Z-ADD0         BACBSR                          AUS009
      C                     MOVE BACBSR    BRTET#                          AUS009
      C                     MOVEL'0'       BRTET#                          AUS009
+																									
      C                     END                                            AUS009
      C*                                                                   AUS009
      C*    SET UP SPREAD RATE                                             AUS009
@@ -11972,7 +12001,8 @@ TA06 CORN62 51             MOVELPAY       ADD
      C                     END                                            AUS009
      C*                                                                   AUS009
      C*    DETERMINE TOTAL INTEREST RATE                                  AUS009
-     C           BRTT      IFNE *ZEROS                                    AUS009
+     C********** BRTT      IFNE *ZEROS                                    AUS009              CSD103
+     C           BRTT      IFNE *BLANKS                                                       CSD103
      C           RTSP      ADD  BACBSR    TOTRT                           AUS009
      C/COPY WNCPYSRC,DL0110C315
       *                                                                                       CDL033
@@ -12003,7 +12033,8 @@ TA06 CORN62 51             MOVELPAY       ADD
      C           RCDTT     IFEQ 'A'                                       AUS009
      C           AMTP      IFEQ 'SC'                                      AUS009
      C                     Z-ADD0         DAMRT                           AUS009
-     C           BRTTDA    IFNE 0                                         AUS009
+     C********** BRTTDA    IFNE 0                                         AUS009              CSD103
+     C           BRTTDA    IFNE *BLANKS                                                       CSD103
      C*                                                                   AUS009
      C** Call access program for Base Rate details                        AUS009
      C*                                                                   AUS009

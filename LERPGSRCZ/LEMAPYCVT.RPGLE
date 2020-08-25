@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR830785           Date 07May13               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR830785           Date 07May13               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CSF011A            Date 28Nov11               *
@@ -41,6 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  AR830785 - Looping on insert of accrued interest adjustment  *
       *             Extended core fix 263533. (Child: AR830786)       *
@@ -831,7 +833,8 @@
       *                                                                                       CLE035
       ***  Determine rate                                                                     CLE035
       *                                                                                       CLE035
-     C                   IF        FC_LPBR <> 0                                               CLE035
+     C**********         IF        FC_LPBR <> 0                                        CLE035 CSD103
+     C                   IF        FC_LPBR <> *BLANKS                                         CSD103
       *                                                                                       CLE035
       ***  Read Base rate details                                                             CLE035
       *                                                                                       CLE035
@@ -858,7 +861,8 @@
       *
       ***  Determine rate
       *
-     C                   if        FC_LPBR <> 0                                 Late Penality B Rate
+     C**********         if        FC_LPBR <> 0                          Late Penality B Rate CSD103
+     C                   if        FC_LPBR <> *BLANKS                                         CSD103
       *
       ***  Read Base rate details
       *

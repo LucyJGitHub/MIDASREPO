@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR891357A          Date 12Mar20               *
-      *  Prev Amend No. AR891357           Date 12Mar20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. AR891357A          Date 12Mar20               *
+      *                 AR891357           Date 12Mar20               *
       *                 CER050             Date 16Jun19               *
       *                 MD053470           Date 13Aug19               *
       *                 MD053978           Date 25Jul19               *
@@ -137,6 +138,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  AR891357A - RUNDT field is not existing on the module.       *
       *              Change LACD (Last Activity date) should be set to*
       *              rundate (BJRDNB field not RUNDT).                *
@@ -2577,9 +2579,11 @@
      C                   EVAL      BR_CICT=*ZEROS
      C                   EVAL      BR_CCST=*ZEROS
      C                   EVAL      BX_ATAODR=*ZEROS
-     C                   EVAL      BA_DRIB=*ZEROS
+     C**********         EVAL      BA_DRIB=*ZEROS                                             CSD103
+     C                   EVAL      BA_DRIB=*BLANKS                                            CSD103
      C                   EVAL      BA_DRIS=*ZEROS
-     C                   EVAL      BA_CRIB=*ZEROS
+     C**********         EVAL      BA_CRIB=*ZEROS                                             CSD103
+     C                   EVAL      BA_CRIB=*BLANKS                                            CSD103
      C                   EVAL      BA_CRIS=*ZEROS
       *                                                                                      CRE005
       *                                                                                      CRE005
@@ -3811,7 +3815,8 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
       *
       ** Output only if no Flat Rate
       *
-     C                   IF        AMDRIB=*ZEROS and AMDRIS=*ZEROS
+     C**********         IF        AMDRIB=*ZEROS and AMDRIS=*ZEROS                            CSD103
+     C                   IF        AMDRIB=*BLANKS and AMDRIS=*ZEROS                           CSD103
      C                   IF        RIDICT<>BR_DICT or RIDCST<>BR_DCST
      C/COPY WNCPYSRC,GLAMADDC04
       *
@@ -4283,7 +4288,8 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   EVAL      ST_RECI = 'R'
      C                   EVAL      S1WRIS = AMDRIS
      C                   EVAL      S1INRT = AMDRIS
-     C                   IF        AMDRIB = *ZEROS
+     C**********         IF        AMDRIB = *ZEROS                                            CSD103
+     C                   IF        AMDRIB = *BLANKS                                           CSD103
      C                   EVAL      S1BRIS = *ZERO
      C                   ELSE
      C                   EVAL      S1BRIS = AMDRIB
@@ -4301,7 +4307,8 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
       *
       ** Output only if no Flat Rate
       *
-     C                   IF        AMCRIB=*ZEROS and AMCRIS=*ZEROS
+     C**********         IF        AMCRIB=*ZEROS and AMCRIS=*ZEROS                            CSD103
+     C                   IF        AMCRIB=*BLANKS and AMCRIS=*ZEROS                           CSD103
      C                   IF        RICICT<>BR_CICT or RICCST<>BR_CCST
       *
       ** Get next available transaction number
@@ -4695,7 +4702,8 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   EVAL      ST_RECI = 'R'
      C                   EVAL      S1WRIS = AMCRIS
      C                   EVAL      S1INRT = AMCRIS
-     C                   IF        AMCRIB = *ZEROS
+     C**********         IF        AMCRIB = *ZEROS                                            CSD103
+     C                   IF        AMCRIB = *BLANKS                                           CSD103
      C                   EVAL      S1BRIS = *ZERO
      C                   ELSE
      C                   EVAL      S1BRIS = AMCRIB
@@ -4730,7 +4738,8 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
       *                                                                                       CRE005
       ** Output only if no Flat Rate                                                          CRE005
       *                                                                                       CRE005
-     C                   IF        AMDRIB=*ZEROS and AMDRIS=*ZEROS                            CRE005
+     C**********         IF        AMDRIB=*ZEROS and AMDRIS=*ZEROS                     CRE005 CSD103
+     C                   IF        AMDRIB=*BLANKS and AMDRIS=*ZEROS                           CSD103
      C                   IF        RIDICT<>BR_DICT or RIDCST<>BR_DCST                         CRE005
       *                                                                                       CRE005
       *                                                                                       CRE005
@@ -5028,7 +5037,8 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   EVAL      I1RECI = 'R'                                               CRE005
      C                   EVAL      I1RTSP = AMDRIS                                            CRE005
      C                   EVAL      I1INRT = AMDRIS                                            CRE005
-     C                   IF        AMDRIB = *ZEROS                                            CRE005
+     C**********         IF        AMDRIB = *ZEROS                                     CRE005 CSD103
+     C                   IF        AMDRIB = *BLANKS                                           CSD103
      C                   EVAL      I1BRT  = *ZERO                                             CRE005
      C                   ELSE                                                                 CRE005
      C                   EVAL      I1BRT  = AMDRIB                                            CRE005
@@ -5047,7 +5057,8 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
       *                                                                                       CRE005
       ** Output only if no Flat Rate                                                          CRE005
       *                                                                                       CRE005
-     C                   IF        AMCRIB=*ZEROS and AMCRIS=*ZEROS                            CRE005
+     C**********         IF        AMCRIB=*ZEROS and AMCRIS=*ZEROS                     CRE005 CSD103
+     C                   IF        AMCRIB=*BLANKS and AMCRIS=*ZEROS                           CSD103
      C                   IF        RICICT<>BR_CICT or RICCST<>BR_CCST                         CRE005
       *                                                                                       CRE005
       ** Get next available transaction number                                                CRE005
@@ -5339,7 +5350,8 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   EVAL      I1RECI = 'R'                                               CRE005
      C                   EVAL      I1RTSP = AMCRIS                                            CRE005
      C                   EVAL      I1INRT = AMCRIS                                            CRE005
-     C                   IF        AMCRIB = *ZEROS                                            CRE005
+     C**********         IF        AMCRIB = *ZEROS                                     CRE005 CSD103
+     C                   IF        AMCRIB = *BLANKS                                           CSD103
      C                   EVAL      I1BRT  = *ZERO                                             CRE005
      C                   ELSE                                                                 CRE005
      C                   EVAL      I1BRT  = AMCRIB                                            CRE005
@@ -7052,7 +7064,8 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
       ** Access Midas Base Rate details DEBIT
       *
      C                   EVAL      W#DBRT=*ZERO                                               216905
-     C     AMDRIB        IFNE      *ZEROS
+     C*****AMDRIB        IFNE      *ZEROS                                                     CSD103
+     C     AMDRIB        IFNE      *BLANKS                                                    CSD103
       *
      C                   MOVEL(P)  AMDRIB        @BSRC
      C                   CALLB     'AOBSRTR0'
@@ -7077,7 +7090,8 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
       ** Access Midas Base Rate details CREDIT
       *
      C                   EVAL      W#CBRT=*ZERO                                               216905
-     C     AMCRIB        IFNE      *ZEROS
+     C*****AMCRIB        IFNE      *ZEROS                                                     CSD103
+     C     AMCRIB        IFNE      *BLANKS                                                    CSD103
       *
      C                   MOVEL(P)  AMCRIB        @BSRC
      C                   CALLB     'AOBSRTR0'

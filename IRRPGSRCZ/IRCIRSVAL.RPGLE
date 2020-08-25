@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD053400           Date 03Jul19               *
-      *  Prev Amend No. MD051346           Date 17Jul18               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD053400           Date 03Jul19               *
+      *                 MD051346           Date 17Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD033488           Date 12Mar15               *
       *                 CIR018             Date 11Aug14               *
@@ -96,6 +97,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD053400 - Details are not correctly reverted back when the  *
       *             amended transaction is rejected in WIP. Skip      *
       *             validation if action is Reject.                   *
@@ -215,10 +217,10 @@
                                                                                               CDL029
      FSDABBCL0  IF   E           K DISK    INFSR(*PSSR)                                       CDL029
       ** Midas SD Authorised Booking Branches for Customers)                                  CDL029
- 
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,IRCIRSV099
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -237,55 +239,55 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
       ** EXTERNAL DS FOR DEALING DETAILS
       *
@@ -315,29 +317,29 @@
                                                                                               CAS001
      D SDPORT        E DS                  EXTNAME(SDPORTPD)
       **  Data structure for Portfolio Management ICD File
- 
+
      D SDPLCS        E DS                  EXTNAME(SDPLCSPD)
       ** External data structure for portfolio management details
- 
+
      D SDDLST        E DS                  EXTNAME(SDDLSTPD)
       ** EXTERNAL DS FOR DEAL SUBTYPE DETAILS
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       ** External data structure for customer details
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** External data structure for currency details
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       ** External data structure for branch details
      D  QQDFAC1      E                     EXTFLD(QQDFAC)                                     CGL029
- 
+
      D SDBROK        E DS                  EXTNAME(SDBROKPD)
       ** External data structure for broker details
- 
+
      D SDBOOK        E DS                  EXTNAME(SDBOOKPD)
       ** External data structure for book details
- 
+
      D SDFAIS        E DS                  EXTNAME(SDFAISPD)
       ** External data structure for FRA/IRS I.C.D. details
      I*
@@ -346,10 +348,10 @@
      I*
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)                     CSC011
       ** 24X7 status data area                                                                CSC011
                                                                                               CSC011
@@ -360,14 +362,14 @@
       * Valid Deals layout
      D  RXBDY               2063   2190                                         CIR005
       ** Business Day Convention Cross Currency fields file format              CIR005
- 
+
      D ValidXDeal    E DS                  EXTNAME(IRVXSIRPD)                                 CLE025
       * Valid Deals layout                                                                    CLE025
                                                                                               CLE025
      D ZMUSER          DS            17
      D  BRC                   11     13
      D  DEPT                  14     16
- 
+
      D TranIn        E DS                  EXTNAME(IRCIRSPD)
       * Incoming Transaction
                                                                                 CIR005
@@ -402,12 +404,12 @@
       * (Current) Deal in Screen Format                                                       185057
      D DealScnFmt    E DS                  EXTNAME(IRCIRSPD)                                  185057
      D                                     PREFIX(@)                                          185057
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Error message fields received as parameters
      D     Msg1        S                   LIKE(#MsgID)
      D     Msg2        S                   LIKE(#MsgID)
@@ -416,29 +418,29 @@
      D     Msg5        S                   LIKE(#MsgID)
      D     Msg6        S                   LIKE(#MsgID)
      D     Msg7        S                   LIKE(#MsgID)
- 
+
       ** Warning error message fields received as parameters
      D     WMSGID1     S                   LIKE(#MsgID)
      D     WMSGID2     S                   LIKE(#MsgID)
      D     WMSGID3     S                   LIKE(#MsgID)
      D     WMSGID4     S                   LIKE(#MsgID)
      D     WMSGID5     S                   LIKE(#MsgID)
- 
+
       ** Error message substitution data received as a parameter
      D MSGDATA         S                   LIKE(#MsgData)
                                                                                 CIR005
       ** Warning message data to be passed back to the calling module           CIR005
      D  WMsgData       S                   LIKE(#MsgData)                       CIR005
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of of warning message ids etc
      D WIdx            S              3P 0
                                                                                              CIR018
      D PActCode        S              1A                                                     CIR018
      D POred           S              5A                                                     CIR018
- 
+
       ** Flags to indicate whether transaction fields are valid
       ** These have been declared for all DL1600D3 fields, some may not
       **  actually be needed if the field is not used/not validated
@@ -538,34 +540,34 @@
      D**SCpRBkOK**********************1A                                                      CDL038
      D**SFAcOOK***********************1A                                                      CDL038
      D**SSPiOK************************1A                                                      CDL038
- 
+
       ** Flag to indicate if Exchange Indicators are valid
      D  SExInOK                       1A
- 
+
       ** Flag to indicate Base Currency Equivalent fields are within
       ** 10% of each other
      D  SBCcyEqOK                     1A
- 
+
       ** Flag(s) to indicate if combinations of transaction fields are valid
      D  DDDltStpOK                    1A
- 
+
       ** Error flags from Dates validation routine
      D ErrDealDat      S              1A   INZ('N')
      D ErrValDate      S              1A   INZ('N')
      D ErrMatDate      S              1A   INZ('N')
      D ErrNxInDat      S              1A   INZ('N')
- 
+
       ** Default Round Down indicators for Branch & Currency
      D BrRdfc          S              1A
- 
+
       ** Day Basis field, required by IRVBOOKCDE for Caps/Collars validation
       ** (Not set up in this program)
      D DayBasis        S              1A
- 
+
       ** Day number field, required by various modules for Caps/Collars
       ** (Not used in this program)
      D ZDAYX           S              2  0
- 
+
       ** Receive / Pay Settlement Method & Nostro
      D RecSetCcy       S              3A
      D RecSetMeth      S              2S 0
@@ -575,37 +577,37 @@
      D PaySetMeth      S              2S 0
      D***PayNostro       S             12A                                                    CGL029
      D PayNostro       S             18A                                                      CGL029
- 
+
       ** Broker currency decimal places  (used by MMVBROKCDE)
       ** Not needed in this program other than as a parm for MMVBROKCDE
      D BrokCcyDp       S              1  0
- 
+
       ** Broker currency (used by MMVBROKCDE)
       ** Not needed in this program other than as a parm for MMVBROKCDE
      D BrokCcy         S              3A
- 
+
       ** Deal date in Midas Day number format (set up by IRVIRSVDAT)
      D   MidasDDat     S              5P 0
- 
+
       ** A code to indicate the calling function to the lower level modules
      D IRS             S              4A   INZ('CIRS')
- 
+
       ** Average Rate Method, required by various modules for Caps/Collars
       ** (Not used in this program)
      D SAVRAM          S              1A   INZ('N')
- 
+
       ** Response Mode, received as a parameter from the common header
      D RespMode        S              1A
- 
+
       ** Amount field in 15,0 format required by MMVAMOUNT
      D Amount15        S             15  0
- 
+
       ** Our/Their currency spot base rates & decimal places from SDCURRPD
      D    OurCcySpot   S             13  8
      D    OurCcyDecP   S              1S 0
      D    ThrCcySpot   S             13  8
      D    ThrCcyDecP   S              1S 0
- 
+
       ** Validate Business Day Convention flag                                  CIR005
      D WValBDC         S              1A                                        CIR005
                                                                                 CIR005
@@ -721,14 +723,14 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,IRCIRSV100
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -739,11 +741,11 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       /COPY WNCPYSRC,IRCIRSV001                                                 CAP004
                                                                                 CAP004
       * Call Validation Modules in Sequence
- 
+
       *  *-----------------------------------------------------*
       *  * Validation and Generation of Deal Number.           *
       *  *-----------------------------------------------------*
@@ -775,14 +777,14 @@
      C                   IF        CDL038 = 'Y'                                              BUG9717
      C                   EXSR      DSUBTCLAS                                                  CDL038
      C                   ENDIF                                                               BUG9717
- 
+
       *  *-------------------------------*
       *  * Validate Deal Sub-Type        *  #01
       *  *-------------------------------*
- 
+
       * Reset variables updated by each module before each call
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV002                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'MMVDLSTYPE'
@@ -790,7 +792,7 @@
      C                   PARM                    MSG1
      C                   PARM                    SDLST
      C                   PARM                    SDDLST
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SDLST '
@@ -827,20 +829,20 @@
      C*******************ENDIF                                                         186676 CDL038
                                                                                               186676
      C                   ENDIF
- 
+
       ***Use*the*return*code's value to set the field's OK flag                               CDL038
      C*******************CALLB     'ZASETOKFLG'                                               CDL038
      C*******************PARM                    SDlStOK                                      CDL038
      C*******************PARM                    ReturnCode                                   CDL038
      C*******************PARM                    WarnGlobal                                   CDL038
- 
+
       /COPY WNCPYSRC,IRCIRSV003                                                 CAP004
                                                                                 CAP004
       *  *------------------------*
       *  * Validate Branch Code   *  #02
       *  *------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV004                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'MMVBKGBRCH'
@@ -854,7 +856,7 @@
      C                   PARM                    RespMode
      C                   PARM                    RXBRCA
      C                   PARM                    SDBRCH
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SBRCA'
@@ -872,21 +874,21 @@
      C**********         END                                                          CDL029 BUG6124
       **********                                                                      CDL029 BUG6124
      C**********         END                                                          CDL029 BUG6124
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    SBRCAOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV005                                                 CAP004
                                                                                 CAP004
       *  *------------------------*
       *  * Validate Deal Date     *  #03
       *  *------------------------*
- 
+
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV006                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'MMVDLDATE'
@@ -905,7 +907,7 @@
      C                   PARM                    BJLCCY
       ** Local location code (3A, from SDBRCHPD)
      C                   PARM                    A8LCCD
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SDDAT'
@@ -916,26 +918,26 @@
      C                   EVAL      FldNameArr(Idx) = 'SDDAT'
      C                   EVAL      MsgIDArr(Idx) = MSG2
      C                   ENDIF
- 
+
      C     WMSGID1       IFNE      *BLANK
      C                   ADD       1             WIdx
      C                   EVAL      WFldNamArr(WIdx) = 'SDDAT'
      C                   EVAL      WMsgIDArr(WIdx) = WMSGID1
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    SDDatOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV007                                                 CAP004
                                                                                 CAP004
       *  *------------------------*
       *  * Validate Broker Code   *  #04
       *  *------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV008                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'MMVBROKCDE'
@@ -945,26 +947,26 @@
      C                   PARM                    BrokCcy
      C                   PARM                    BrokCcyDp
      C                   PARM                    SDBROK
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SBRKC'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    SBrkCOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV009                                                 CAP004
                                                                                 CAP004
       *  *------------------------*
       *  * Validate Brokerage     *  #05
       *  *------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV010                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'ZAVBROKAGE'
@@ -978,32 +980,32 @@
      C                   PARM                    RXBAGE
       ** Decimal separator (1A, from SDDEALPD, via caller)
      C                   PARM                    BNDCSP
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SBAGE'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
      C     MSG2          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SBAGE'
      C                   EVAL      MsgIDArr(Idx) = MSG2
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    SBageOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV011                                                 CAP004
                                                                                 CAP004
       *  *----------------------------------*
       *  * Validate Linked Reference Number *  #06
       *  *----------------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV012                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'MMVLINKREF'
@@ -1012,26 +1014,26 @@
      C                   PARM                    SLNKDN
       ** Decimal separator (1A, from SDDEALPD, via caller)
      C                   PARM                    BNDCSP
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SLNKDN'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    SLnkDNOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV013                                                 CAP004
                                                                                 CAP004
       *  *------------------------*
       *  * Validate Customer      *  #07
       *  *------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV014                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'IRVCUSTNUM'
@@ -1043,24 +1045,24 @@
       * customer format                                                                      BUG5443
       * N = customer number, else customer shortname                                         BUG5443
      C                   PARM                    CustFormat        1                         BUG5443
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SCNUM'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
      C** set up file field
      C     ReturnCode    IFEQ      *BLANK
      C                   MOVE      BBCUST        RXCNUM
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    SCNumOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       *                                                                                      BUG6124
      C                   IF        CDL029 ='Y'                                               BUG6124
      C                             AND SCNumOK = 'Y'                                        BUG10704
@@ -1099,7 +1101,7 @@
       *  * Validate Value Date    *  #08
       *  *------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV016                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'IRVIRSVDAT'
@@ -1126,38 +1128,38 @@
      C                   PARM                    PaySetMeth                     pay settle meth
      C                   PARM                    PayNostro
      C/COPY WNCPYSRC,IRH00081
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SVDAT'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
      C     WMSGID1       IFNE      *BLANK
      C                   ADD       1             WIdx
      C                   EVAL      WFldNamArr(WIdx) = 'SVDAT'
      C                   EVAL      WMsgIDArr(WIdx) = WMSGID1
      C                   ENDIF
- 
+
      C     WMSGID2       IFNE      *BLANK
      C                   ADD       1             WIdx
      C                   EVAL      WFldNamArr(WIdx) = 'SVDAT'
      C                   EVAL      WMsgIDArr(WIdx) = WMSGID2
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    SVDatOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV017                                                 CAP004
                                                                                 CAP004
       *  *-----------------------*
       *  * Validate Our Currency *  #09
       *  *-----------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV018                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'ZAVCURCODE'
@@ -1166,32 +1168,32 @@
      C                   PARM                    SUCUCY
      C*******************PARM                    SDCURR                                       CSD006
      C     SDCURR        PARM                    DSSDY                                        CSD006
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SUCUCY'
      C                   EVAL      MsgIDArr(Idx) = MSG1
- 
+
      C                   ELSE
       ** Store 'our currency' spot rate & number of decimal places.
      C                   Z-ADD     A6SPRT        OurCcySpot
      C                   Z-ADD     A6NBDP        OurCcyDecP
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    SuCucyOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV019                                                 CAP004
                                                                                 CAP004
- 
+
       *  *-------------------------*
       *  * Validate Their Currency *  #09.5
       *  *-------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV020                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'ZAVCURCODE'
@@ -1200,31 +1202,31 @@
      C                   PARM                    STCUCY
      C*******************PARM                    SDCURR                                       CSD006
      C     SDCURR        PARM                    DSSDY                                        CSD006
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'STCUCY'
      C                   EVAL      MsgIDArr(Idx) = MSG1
- 
+
      C                   ELSE
       ** Store 'their currency' spot rate & number of decimal places.
      C                   Z-ADD     A6SPRT        ThrCcySpot
      C                   Z-ADD     A6NBDP        ThrCcyDecP
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    StCucyOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV021                                                 CAP004
                                                                                 CAP004
       *  *------------------------*
       *  * Validate Maturity Date *  #10
       *  *------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV022                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'IRVMATDATE'
@@ -1246,19 +1248,19 @@
      C                   PARM                    RXMDAT
      C                   PARM                    STCUCY
      C                   PARM                    StCucyOK
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SMDAT'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
      C     WMSGID1       IFNE      *BLANK
      C                   ADD       1             WIdx
      C                   EVAL      WFldNamArr(WIdx) = 'SMDAT'
      C                   EVAL      WMsgIDArr(WIdx) = WMSGID1
      C                   ENDIF
- 
+
      C     WMSGID2       IFNE      *BLANK
      C                   ADD       1             WIdx
      C                   EVAL      WFldNamArr(WIdx) = 'SMDAT'
@@ -1280,20 +1282,20 @@
      C                   ENDIF                                                                184560
      C                   ENDIF                                                                184560
      C                   ENDIF                                                                184560
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    SMDatOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV023                                                 CAP004
                                                                                 CAP004
       *  *-----------------------------------*
       *  * Validate Account Sequence Number  *  #11
       *  *-----------------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV024                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'MMVACSEQ'
@@ -1303,26 +1305,26 @@
      C                   PARM                    RXCDAS
       ** Currency separator (1A, from SDDEALPD, via caller)
      C                   PARM                    BNDCSP
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SCDAS'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    SCdasOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV025                                                 CAP004
                                                                                 CAP004
       *  *------------------------*
       *  * Validate Book Code     *  #12
       *  *------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV026                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'IRVBOOKCDE'
@@ -1332,26 +1334,26 @@
      C                   PARM                    SDBOOK
       ** Day Basis field used for Caps/Collars processing only.
      C                   PARM                    DayBasis
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SBOKC'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    SBokcOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV027                                                 CAP004
                                                                                 CAP004
       *  *----------------------------*
       *  * Validate Taxable Indicator *  #13
       *  *----------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV028                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'ZAVTAXIND'
@@ -1360,19 +1362,19 @@
      C                   PARM                    SCNumOK
      C                   PARM                    STAXI
      C                   PARM                    BBTAIN
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'STAXI'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    STaxIOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV029                                                 CAP004
                                                                                 CAP004
       *  *---------------------------*
@@ -1387,7 +1389,7 @@
      C                             SPrfC = *Blanks                              179732
       *                                                                         179732
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV030                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'ZAVPROFITC'
@@ -1407,19 +1409,19 @@
      C                   PARM                    PSUser
      C                   PARM                    SCNumOK
      C                   PARM                    BGN0ST
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SPRFC'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    SPrfCOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV031                                                 CAP004
                                                                                 CAP004
       * Endif statement for SBokCOK and SDlstOK = 'Y'                           179732
@@ -1429,7 +1431,7 @@
       *  * Validate Originating Branch *  #15
       *  *-----------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV032                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'ZAVORGBRCH'
@@ -1442,26 +1444,26 @@
      C                   PARM                    BKOBRU
      C                   PARM                    BKOBUV
      C                   PARM                    RespMode
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SORBR'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    SOrBrOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV033                                                 CAP004
                                                                                 CAP004
       *  *------------------------------*
       *  * Validate Exchange Indicators *  #16
       *  *------------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV034                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'IRVEXCHIND'
@@ -1507,21 +1509,21 @@
      C                   ENDIF                                                                CIR003
       *                                                                                       CIR003
      C                   ELSE                                                                 CIR003
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SVDEI'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   EVAL      SVDEIOK = 'N'
      C                   ENDIF
- 
+
      C     MSG2          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SMDEI'
      C                   EVAL      MsgIDArr(Idx) = MSG2
      C                   EVAL      SMDEIOK = 'N'
      C                   ENDIF
- 
+
      C     MSG3          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SPDEI'
@@ -1530,13 +1532,13 @@
      C                   ENDIF
       *                                                                                       CIR003
      C                   ENDIF                                                                CIR003
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    SExInOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV035                                                 CAP004
                                                                                 CAP004
       *  *----------------------------*                                                       CLE025
@@ -1641,7 +1643,7 @@
       *  * Validate Our Amount   *  #17
       *  *-----------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV036                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'MMVAMOUNT'
@@ -1656,7 +1658,7 @@
      C                   PARM                    BNDCSP
      C                   PARM                    PActnCde                                   AR569568
      C                   PARM                    CDL006                                     AR569568
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SUPAMT'
@@ -1665,13 +1667,13 @@
       ** Set up output field in 13,0 format
      C                   Z-ADD     Amount15      RXUPAMT
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    SuPAmtOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV037                                                 CAP004
                                                                                 CAP004
       *  *--------------------------------------*
@@ -1689,19 +1691,19 @@
      C                   PARM                    SUCUCY
       ** US Currency code
      C                   PARM                    BLUSCY
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SUFFI'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    SuFFIOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV039                                                 CAP004
                                                                                 CAP004
       *  *------------------------------------------*
@@ -1718,7 +1720,7 @@
      C     SUBCXR        ANDNE     @SUBCXR                                                    221963
       *                                                                                       187606
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV040                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'IRVBCURRAT'
@@ -1731,13 +1733,13 @@
      C                   PARM                    BJCYCD
      C                   PARM                    RXUBCXR
      C                   PARM                    BNDCSP                                       245692
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SUBCXR'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    SuBCXROK
@@ -1745,14 +1747,14 @@
      C                   PARM                    WarnGlobal
       *                                                                                       187606
      C                   ENDIF                                                                187606
- 
+
       /COPY WNCPYSRC,IRCIRSV041                                                 CAP004
                                                                                 CAP004
       *  *------------------------------------------*
       *  * Validate Our Interest Calculation Basis  *  #20
       *  *------------------------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV042                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'IRVIRSINTC'
@@ -1761,19 +1763,19 @@
      C                   PARM                    CIR001
      C                   PARM                    SUIPFR
      C                   PARM                    SUICBS
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SUICBS'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    SuICBsOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV043                                                 CAP004
                                                                                 CAP004
       ** If CAS001 is on and deal sub type is ok, then validate                               CAS001
@@ -1878,7 +1880,8 @@
                                                                                               CAS005
       ** Prevent defaulting if the leg is not attached to a base rate                         CAS005
                                                                                               CAS005
-     C                   IF        SUBRTT = *BLANKS OR SUBRTT = '00'                          CAS005
+     C**********         IF        SUBRTT = *BLANKS OR SUBRTT = '00'                   CAS005 CSD103
+     C                   IF        SUBRTT = *BLANKS                                           CSD103
      C                   IF        WkSOFYC = *BLANKS                                          CAS005
      C                   EVAL      SOFYC = *BLANKS                                            CAS005
      C                   EVAL      RXOFYC = *BLANKS                                           225997
@@ -1904,7 +1907,8 @@
       ** If the leg is not attached to a base rate, forward yield curve must                  CAS005
       ** not be populated                                                                     CAS005
                                                                                               CAS005
-     C                   IF        (SUBRTT = *BLANKS OR SUBRTT = '00') AND                    CAS005
+     C**********         IF        (SUBRTT = *BLANKS OR SUBRTT = '00') AND             CAS005 CSD103
+     C                   IF        SUBRTT = *BLANKS                                           CSD103
      C                             SOFYC <> *BLANKS                                           CAS005
      C                   EVAL      ReturnCode = 'Error'                                       CAS005
      C                   EVAL      Idx = Idx + 1                                              CAS005
@@ -1996,7 +2000,7 @@
       *  * Validate Our Base Rate Code  *  #21
       *  *------------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV044                                                 CAP004
                                                                                 CAP004
      C                   EVAL      PRatChgFq = SUICFR                                         CIR007
@@ -2013,32 +2017,32 @@
      C                   PARM                    PRatChgFq                                    CIR007
      C                   PARM      SDTYP         PDealTyp                                     CIR007
      C                   PARM                    CIR007                                       CIR007
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SUBRTT'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
      C     MSG2          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SUBRTT'
      C                   EVAL      MsgIDArr(Idx) = MSG2
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    SuBrttOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV045                                                 CAP004
                                                                                 CAP004
       *  *------------------------------*
       *  * Validate Our Spread Rate     *  #22
       *  *------------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV046                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'IRVSPRRATE'
@@ -2051,26 +2055,26 @@
      C                   PARM      SDTYP         PDealTyp                                     CAP055
      C                   PARM                    RXURTSP
      C                   PARM                    BNDCSP                                       245692
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SURTSP'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    SuRtSpOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV047                                                 CAP004
                                                                                 CAP004
       *  *-------------------------------*
       *  * Validate Our Spread Indicator *  #23
       *  *-------------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV048                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'IRVSPRDIND'
@@ -2079,26 +2083,26 @@
      C                   PARM                    SUSPIN
      C                   PARM                    SURTSP
      C                   PARM                    SUBRTT
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SUSPIN'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    SuSpInOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV049                                                 CAP004
                                                                                 CAP004
       *  *----------------------------*
       *  * Validate Our Rate Fix Days *  #24
       *  *----------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV050                                                 CAP004
                                                                                 CAP004
      C                   EVAL      PRatChgFq = SUICFR                                         CIR007
@@ -2116,19 +2120,19 @@
      C                   PARM      SDTYP         PDealTyp                                     CIR007
      C                   PARM                    CIR007                                       CIR007
      C                   PARM                    SAVRAM                                       CAP055
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SUFRFD'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    SuFRFDOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV051                                                 CAP004
                                                                                 CAP004
       *  *-------------------------------*
@@ -2189,7 +2193,7 @@
      C                   ENDDO                                                  CIR005
       *                                                                         CIR005
      C                   ENDIF                                                  CIR005
- 
+
       /COPY WNCPYSRC,IRCIRSV052                                                 CAP004
                                                                                 CAP004
      C                   EVAL      PRatChgFq = SUICFR                                         CIR007
@@ -2248,7 +2252,7 @@
      C                   PARM                    CIR007                                       CIR007
      C                   PARM                    PActCode                                     CIR018
      C                   PARM                    POred                                        CIR018
- 
+
       ** Reset original field for subsequent processing                                       CIR017
      C**********         EVAL      BsDayLeg1 = BsDayConv                             CIR017 MD026686
      C                   EVAL      BsDayLeg1 = BsDayConv128                          CIR017 MD026686
@@ -2258,13 +2262,13 @@
      C                   EVAL      FldNameArr(Idx) = 'SUNICD'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
      C     WMSGID1       IFNE      *BLANK
      C                   ADD       1             WIdx
      C                   EVAL      WFldNamArr(WIdx) = 'SUNICD'
      C                   EVAL      WMsgIDArr(WIdx) = WMSGID1
      C                   ENDIF
- 
+
      C     WMSGID2       IFNE      *BLANK
      C                   ADD       1             WIdx
      C                   EVAL      WFldNamArr(WIdx) = 'SUNICD'
@@ -2277,7 +2281,7 @@
      C                   EVAL      WMsgIDArr(WIdx) = WMSGID3                    CIR005
      C                   EVAL      WMsgDtaArr(WIdx) = WMsgData                  CIR005
      C                   ENDIF                                                  CIR005
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    SuNICDOK
@@ -2285,14 +2289,14 @@
      C                   PARM                    WarnGlobal
                                                                                              BUG7325
      C                   EndIf                                                               BUG7325
- 
+
       /COPY WNCPYSRC,IRCIRSV053                                                 CAP004
                                                                                 CAP004
       *  *------------------------------------*
       *  * Validate Our Rate Change Frequency *  #26
       *  *------------------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV054                                                 CAP004
                                                                                 CAP004
      C                   EVAL      PActnCde = SACCD                                           CIR007
@@ -2309,26 +2313,26 @@
      C                   PARM      'O'           POTInd                                       CIR007
      C                   PARM      SDTYP         PDealTyp                                     CIR007
      C                   PARM                    CIR007                                       CIR007
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SUICFR'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    SuICFROK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV055                                                 CAP004
                                                                                 CAP004
       *  *-------------------------------------------------*
       *  * Validate Our Rate Change Frequency Day in Month *  #27
       *  *-------------------------------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV056                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'IRVRTCHGDY'
@@ -2344,26 +2348,26 @@
      C                   PARM                    RXUICFD
      C                   PARM      SDTYP         PDealTyp                                     CIR007
      C                   PARM                    CIR007                                       CIR007
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SUICFD'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    SuICFDOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV057                                                 CAP004
                                                                                 CAP004
       *  *------------------------------*
       *  * Validate Our Short Term Rate *  #28
       *  *------------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV058                                                 CAP004
                                                                                 CAP004
      C                   EVAL      PRatChgFq = SUICFR                                         CIR007
@@ -2400,26 +2404,26 @@
      C**********         PARM                    SUCUCY                            BUG11457 MD033488
      C                   PARM                    RXORED                                     MD051346
      C                   PARM                    SACCD                                      MD051346
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SUEINR'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    SuEInROK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV059                                                 CAP004
                                                                                 CAP004
       *  *------------------------------------*
       *  * Validate Our Interest Payment Date *  #29
       *  *------------------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV060                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'IRVINTPYDT'
@@ -2453,7 +2457,7 @@
      C** General Ledger ICD data accessed in ZFREQB (called from IRVINTPYDT)
      C     SDGELR        PARM                    SDGELR
      C     SDBANK        PARM                    SDBANK                         CIR005
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SUNIPD'
@@ -2466,20 +2470,20 @@
      C                   EVAL      WMsgIDArr(WIdx) = WMsgId1                    CIR005
      C                   EVAL      WMsgDtaArr(WIdx) = WMsgData                  CIR005
      C                   ENDIF                                                  CIR005
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    SuNIPDOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV061                                                 CAP004
                                                                                 CAP004
       *  *-----------------------------------------*
       *  * Validate Our Interest Payment Frequency *  #30
       *  *-----------------------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV062                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'IRVINTPYFQ'
@@ -2496,32 +2500,32 @@
      C                   PARM                    SUICFR
      C                   PARM      SDTYP         PDealTyp                                     CIR007
      C                   PARM                    CIR007                                       CIR007
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SUIPFR'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
      C     MSG2          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SUIPFR'
      C                   EVAL      MsgIDArr(Idx) = MSG2
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    SuIPFrOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV063                                                 CAP004
                                                                                 CAP004
       *  *------------------------------------------------------*
       *  * Validate Our Interest Payment Frequency Day in Month *  #31
       *  *------------------------------------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV064                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'IRVINTPYDY'
@@ -2538,32 +2542,32 @@
      C                   PARM                    RXUNICD
      C                   PARM                    RXUNIPD
      C                   PARM                    RXUICFD
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SUIPFD'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
      C     MSG2          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'SUIPFD'
      C                   EVAL      MsgIDArr(Idx) = MSG2
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    SuIPFDOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV065                                                 CAP004
                                                                                 CAP004
       *  *-------------------------*
       *  * Validate Their Amount   *  #32
       *  *-------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV066                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'MMVAMOUNT'
@@ -2578,7 +2582,7 @@
      C                   PARM                    BNDCSP
      C                   PARM                    PActnCde                                   AR569568
      C                   PARM                    CDL006                                     AR569568
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'STPAMT'
@@ -2587,13 +2591,13 @@
       ** Set up output field in 13,0 format
      C                   Z-ADD     Amount15      RXTPAMT
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    StPAmtOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV067                                                 CAP004
                                                                                 CAP004
       *  *----------------------------------------*
@@ -2611,19 +2615,19 @@
      C                   PARM                    STCUCY
       ** US Currency code
      C                   PARM                    BLUSCY
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'STFFI'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    StFFIOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV069                                                 CAP004
                                                                                 CAP004
       *  *--------------------------------------------*
@@ -2640,7 +2644,7 @@
      C     STBCXR        ANDNE     @STBCXR                                                    221963
       *                                                                                       187606
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV070                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'IRVBCURRAT'
@@ -2653,13 +2657,13 @@
      C                   PARM                    BJCYCD
      C                   PARM                    RXTBCXR
      C                   PARM                    BNDCSP                                       245692
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'STBCXR'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    StBCXROK
@@ -2667,7 +2671,7 @@
      C                   PARM                    WarnGlobal
       *                                                                                       187606
      C                   ENDIF                                                                187606
- 
+
       /COPY WNCPYSRC,IRCIRSV071                                                 CAP004
                                                                                 CAP004
       *  *------------------------------------------------------------*
@@ -2679,7 +2683,7 @@
      C     ACTNCD        IFEQ      'I'                                                        187606
       *                                                                                       187606
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV072                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'IRVCURAMT'
@@ -2700,7 +2704,7 @@
      C                   PARM                    RXTBCXR
      C                   PARM                    RXUPAMT
      C                   PARM                    RXTPAMT
- 
+
       *                                                                                       215904
       ** A warning message will be issued instead of an error message                         215904
       *                                                                                       215904
@@ -2718,7 +2722,7 @@
      C                   EVAL      WFldNamArr(WIdx) = 'STBCXR'                                215904
      C                   EVAL      WMsgIDArr(WIdx) = MSG1                                     215904
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    SBCcyEqOK
@@ -2726,14 +2730,14 @@
      C                   PARM                    WarnGlobal
       *                                                                                       187606
      C                   ENDIF                                                                187606
- 
+
       /COPY WNCPYSRC,IRCIRSV073                                                 CAP004
                                                                                 CAP004
       *  *--------------------------------------------*
       *  * Validate Their Interest Calculation Basis  *  #36
       *  *--------------------------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV074                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'IRVIRSINTC'
@@ -2742,19 +2746,19 @@
      C                   PARM                    CIR001
      C                   PARM                    STIPFR
      C                   PARM                    STICBS
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'STICBS'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    StICBsOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV075                                                 CAP004
                                                                                 CAP004
       ** If CAS001 is on, validate yield curve                                                CAS001
@@ -2858,7 +2862,8 @@
                                                                                               CAS005
       ** Prevent defaulting if the leg is not attached to a base rate                         CAS005
                                                                                               CAS005
-     C                   IF        STBRTT = *BLANKS OR STBRTT = '00'                          CAS005
+     C**********         IF        STBRTT = *BLANKS OR STBRTT = '00'                   CAS005 CSD103
+     C                   IF        STBRTT = *BLANKS                                           CSD103
      C                   IF        WkSTFYC = *BLANKS                                          CAS005
      C                   EVAL      STFYC = *BLANKS                                            CAS005
      C                   EVAL      RXTFYC = *BLANKS                                           225997
@@ -2884,7 +2889,8 @@
       ** If the leg is not attached to a base rate, forward yield curve must                  CAS005
       ** not be populated                                                                     CAS005
                                                                                               CAS005
-     C                   IF        (STBRTT = *BLANKS OR STBRTT = '00') AND                    CAS005
+     C**********         IF        (STBRTT = *BLANKS OR STBRTT = '00') AND             CAS005 CSD103
+     C                   IF        STBRTT = *BLANKS AND                                       CSD103
      C                             STFYC <> *BLANKS                                           CAS005
      C                   EVAL      ReturnCode = 'Error'                                       CAS005
      C                   EVAL      Idx = Idx + 1                                              CAS005
@@ -2976,7 +2982,7 @@
       *  * Validate their Base Rate Code  *  #37
       *  *--------------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV076                                                 CAP004
                                                                                 CAP004
      C                   EVAL      PRatChgFq = STICFR                                         CIR007
@@ -2993,32 +2999,32 @@
      C                   PARM                    PRatChgFq                                    CIR007
      C                   PARM      SDTYP         PDealTyp                                     CIR007
      C                   PARM                    CIR007                                       CIR007
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'STBRTT'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
      C     MSG2          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'STBRTT'
      C                   EVAL      MsgIDArr(Idx) = MSG2
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    StBrttOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV077                                                 CAP004
                                                                                 CAP004
       *  *--------------------------------*
       *  * Validate their Spread Rate     *  #38
       *  *--------------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV078                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'IRVSPRRATE'
@@ -3031,26 +3037,26 @@
      C                   PARM      SDTYP         PDealTyp                                     CAP055
      C                   PARM                    RXTRTSP
      C                   PARM                    BNDCSP                                       245692
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'STRTSP'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    StRtSpOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV079                                                 CAP004
                                                                                 CAP004
       *  *---------------------------------*
       *  * Validate their Spread Indicator *  #39
       *  *---------------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV080                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'IRVSPRDIND'
@@ -3059,26 +3065,26 @@
      C                   PARM                    STSPIN
      C                   PARM                    STRTSP
      C                   PARM                    STBRTT
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'STSPIN'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    StSpInOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV081                                                 CAP004
                                                                                 CAP004
       *  *------------------------------*
       *  * Validate their Rate Fix Days *  #40
       *  *------------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV082                                                 CAP004
                                                                                 CAP004
      C                   EVAL      PRatChgFq = STICFR                                         CIR007
@@ -3096,19 +3102,19 @@
      C                   PARM      SDTYP         PDealTyp                                     CIR007
      C                   PARM                    CIR007                                       CIR007
      C                   PARM                    SAVRAM                                       CAP055
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'STFRFD'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    StFRFDOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV083                                                 CAP004
                                                                                 CAP004
       *  *---------------------------------*
@@ -3169,7 +3175,7 @@
      C                   ENDDO                                                  CIR005
       *                                                                         CIR005
      C                   ENDIF                                                  CIR005
- 
+
       /COPY WNCPYSRC,IRCIRSV084                                                 CAP004
                                                                                 CAP004
      C                   EVAL      PRatChgFq = STICFR                                         CIR007
@@ -3228,7 +3234,7 @@
      C                   PARM                    CIR007                                       CIR007
      C                   PARM                    PActCode                                     CIR018
      C                   PARM                    POred                                        CIR018
- 
+
       ** Reset original field for subsequent processing                                       CIR017
      C**********         EVAL      BsDayLeg2 = BsDayConv                             CIR017 MD026686
      C                   EVAL      BsDayLeg2 = BSDayConv128                                 MD026686
@@ -3238,13 +3244,13 @@
      C                   EVAL      FldNameArr(Idx) = 'STNICD'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
      C     WMSGID1       IFNE      *BLANK
      C                   ADD       1             WIdx
      C                   EVAL      WFldNamArr(WIdx) = 'STNICD'
      C                   EVAL      WMsgIDArr(WIdx) = WMSGID1
      C                   ENDIF
- 
+
      C     WMSGID2       IFNE      *BLANK
      C                   ADD       1             WIdx
      C                   EVAL      WFldNamArr(WIdx) = 'STNICD'
@@ -3257,7 +3263,7 @@
      C                   EVAL      WMsgIDArr(WIdx) = WMSGID3                    CIR005
      C                   EVAL      WMsgDtaArr(WIdx) = WMsgData                  CIR005
      C                   ENDIF                                                  CIR005
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    StNICDOK
@@ -3265,14 +3271,14 @@
      C                   PARM                    WarnGlobal
                                                                                              BUG7325
      C                   EndIf                                                               BUG7325
- 
+
       /COPY WNCPYSRC,IRCIRSV085                                                 CAP004
                                                                                 CAP004
       *  *--------------------------------------*
       *  * Validate their Rate Change Frequency *  #42
       *  *--------------------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV086                                                 CAP004
                                                                                 CAP004
      C                   EVAL      PActnCde = SACCD                                           CIR007
@@ -3289,26 +3295,26 @@
      C                   PARM      'T'           POTInd                                       CIR007
      C                   PARM      SDTYP         PDealTyp                                     CIR007
      C                   PARM                    CIR007                                       CIR007
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'STICFR'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    StICFROK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV087                                                 CAP004
                                                                                 CAP004
       *  *---------------------------------------------------*
       *  * Validate their Rate Change Frequency Day in Month *  #43
       *  *---------------------------------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV088                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'IRVRTCHGDY'
@@ -3324,26 +3330,26 @@
      C                   PARM                    RXTICFD
      C                   PARM      SDTYP         PDealTyp                                     CIR007
      C                   PARM                    CIR007                                       CIR007
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'STICFD'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    StICFDOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV089                                                 CAP004
                                                                                 CAP004
       *  *--------------------------------*
       *  * Validate their Short Term Rate *  #44
       *  *--------------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV090                                                 CAP004
                                                                                 CAP004
      C                   EVAL      PRatChgFq = STICFR                                         CIR007
@@ -3380,26 +3386,26 @@
      C**********         PARM                    STCUCY                            BUG11457 MD033488
      C                   PARM                    RXORED                                     MD051346
      C                   PARM                    SACCD                                      MD051346
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'STEINR'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    StEInROK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV091                                                 CAP004
                                                                                 CAP004
       *  *--------------------------------------*
       *  * Validate their Interest Payment Date *  #45
       *  *--------------------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV092                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'IRVINTPYDT'
@@ -3433,7 +3439,7 @@
      C** General Ledger ICD data accessed in ZFREQB (called from IRVINTPYDT)
      C     SDGELR        PARM                    SDGELR
      C     SDBANK        PARM                    SDBANK                         CIR005
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'STNIPD'
@@ -3446,20 +3452,20 @@
      C                   EVAL      WMsgIDArr(WIdx) = WMsgId1                    CIR005
      C                   EVAL      WMsgDtaArr(WIdx) = WMsgData                  CIR005
      C                   ENDIF                                                  CIR005
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    StNIPDOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV093                                                 CAP004
                                                                                 CAP004
       *  *-------------------------------------------*
       *  * Validate their Interest Payment Frequency *  #46
       *  *-------------------------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV094                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'IRVINTPYFQ'
@@ -3476,32 +3482,32 @@
      C                   PARM                    STICFR
      C                   PARM      SDTYP         PDealTyp                                     CIR007
      C                   PARM                    CIR007                                       CIR007
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'STIPFR'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
      C     MSG2          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'STIPFR'
      C                   EVAL      MsgIDArr(Idx) = MSG2
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    StIPFrOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV095                                                 CAP004
                                                                                 CAP004
       *  *--------------------------------------------------------*
       *  * Validate their Interest Payment Frequency Day in Month *  #47
       *  *--------------------------------------------------------*
      C                   EXSR      RESETERRS
- 
+
       /COPY WNCPYSRC,IRCIRSV096                                                 CAP004
                                                                                 CAP004
      C                   CALLB     'IRVINTPYDY'
@@ -3518,25 +3524,25 @@
      C                   PARM                    RXTNICD
      C                   PARM                    RXTNIPD
      C                   PARM                    RXTICFD
- 
+
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'STIPFD'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
- 
+
      C     MSG2          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'STIPFD'
      C                   EVAL      MsgIDArr(Idx) = MSG2
      C                   ENDIF
- 
+
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    StIPFDOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
- 
+
       /COPY WNCPYSRC,IRCIRSV097                                                 CAP004
                                                                                 CAP004
       *  *-----------------------------------------*                            CSW097
@@ -3949,18 +3955,18 @@
       *  *-------------------------------------------------------*
       *  * If no errors set up outstanding fields for valid file *
       *  *-------------------------------------------------------*
- 
+
      C                   IF        Idx = 0
      C                   EXSR      SetupValid
      C                   ENDIF
- 
+
       /COPY WNCPYSRC,IRCIRSV098                                                 CAP004
                                                                                 CAP004
      C                   RETURN
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,IRCIRSV101
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3972,9 +3978,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       * Mode of operation                                                       CIR005
      C                   PARM                    ModeOfOp                       CIR005
@@ -4023,7 +4029,7 @@
      C                   KFLD                    W0BRCD            3                         CDL029A
      C                   KFLD                    W0CUST            6                         CDL029A
      C                   KFLD                    SBRCA                                        CDL029
- 
+
       * File / Data area Accesses required for calling parameters
       * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      C*
@@ -4037,7 +4043,7 @@
      C     *LOCK         IN        LDA
      C                   MOVEL     'IRCIRSVAL'   DBPGM
      C                   OUT       LDA
- 
+
       ** Access Dealing details via access program
       *  (database error handling done in access program)
      C**********         CALLB     'AODEALR0'                                                 CGL029
@@ -4059,14 +4065,14 @@
      C                   PARM      '*FIRST '     @OPTN             7
      C*****SDGELR        PARM      SDGELR        DSFDY                                        CGL029
      C     SDGELR        PARM      SDGELR        DSSDY                                        CGL029
- 
+
       ** Access Trading Details via access program
       *  (database error handling done in access program)
      C                   CALLB     'AOTRADR0'
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDTRAD        PARM      SDTRAD        DSFDY
- 
+
       ** Call Access Program for FRA/IRS I.C.D. details
       *
      C                   CALL      'AOFAISR0'
@@ -4445,7 +4451,7 @@
      C                   IF        PRTCD = *BLANKS                                            CDL028
      C                   EVAL      CDL028 = 'Y'                                               CDL028
      C                   ENDIF                                                                CDL028
- 
+
       ** Access SAR details file to determine if CDL038 is switched on                       BUG9717
                                                                                              BUG9717
      C                   CALLB     'AOSARDR0'                                                BUG9717
@@ -4474,10 +4480,10 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,IRCIRSV102
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4491,9 +4497,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     RESETERRS     BEGSR
- 
+
      C                   RESET                   Msg1
      C                   RESET                   Msg2
      C                   RESET                   Msg3
@@ -4501,17 +4507,17 @@
      C                   RESET                   Msg5
      C                   RESET                   Msg6
      C                   RESET                   Msg7
- 
+
      C                   RESET                   WMsgID1
      C                   RESET                   WMsgID2
      C                   RESET                   WMsgID3
      C                   RESET                   WMsgID4
- 
+
      C                   RESET                   MSGDATA
      C                   RESET                   WMsgData                       CIR005
- 
+
      C                   EVAL      ReturnCode= *Blanks
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT                                                                                  CDL038
@@ -4545,14 +4551,14 @@
       *    Valid file record.                                         *
       *                                                               *
       *****************************************************************
- 
+
      C     SETUPVALID    BEGSR
- 
+
       * Other RSxxxx fields are set up during the individual date
       *  validation, such as the ones where the input & database formats
       *  are different, e.g. dates, amounts.
       * This SR sets up the fields with the same (or compatible) attributes
- 
+
      C********           MOVE      RXDLNO        DealNumber
      C                   MOVE      SDTYP         RXDTYP
      C                   MOVE      SDLST         RXDLST
@@ -4577,19 +4583,19 @@
      C                   MOVE      STICFR        RXTICFR
      C                   MOVE      STIPFR        RXTIPFR
      C                   MOVE      SCAIN         RXCAIN                         CSW097
- 
+
       ** Taxable Indicator - default 'N' to file if blank entered.
      C     STAXI         IFEQ      'Y'
      C                   MOVE      'Y'           RXTAXI
      C                   ELSE
      C                   MOVE      'N'           RXTAXI
      C                   END
- 
+
       **Federal Funds Indicator is a bit setting
      C     SUFFI         IFEQ      'Y'
      C                   BITON     '2'           RXUDSTI
      C                   END
- 
+
      C     STFFI         IFEQ      'Y'
      C                   BITON     '2'           RXTDSTI
      C                   END
@@ -4611,7 +4617,7 @@
       ** Class                                                                                CDL038
       *                                                                                       CDL038
      C                   MOVE      SCLAS         RXCLAS                                       CDL038
- 
+
      C                   ENDSR
       *****************************************************************
       ***/EJECT                                                                        CAS001 226002
@@ -5264,7 +5270,7 @@
       *
      C     #C9           ENDSR
       /EJECT
- 
+
       *****************************************************************
       /EJECT
       ********************************************************************

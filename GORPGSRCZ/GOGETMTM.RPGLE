@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -181,7 +183,8 @@
      D W#PAMT          S             13  0
      D FixRate         S             11  7
      D FltRate         S             11  7
-     D W#BRTT          S              2  0
+     D*W#BRTT***       S              2  0                                                    CSD103
+     D W#BRTT          S              2                                                       CSD103
      D W#EINR          S             11  7
      D W#ICBS          S              1  0
      D W#INFD          S              5  0
@@ -279,10 +282,12 @@
  
       ** Get floating side fields
  
-     C     UBRTT         IFNE      *ZERO
+     C*****UBRTT         IFNE      *ZERO                                                      CSD103
+     C     UBRTT         IFNE      *BLANKS                                                    CSD103
      C                   MOVE      UCUCY         W#CUCY
      C                   Z-ADD     UPAMT         W#PAMT
-     C                   Z-ADD     UBRTT         W#BRTT
+     C**********         Z-ADD     UBRTT         W#BRTT                                       CSD103
+     C                   MOVE      UBRTT         W#BRTT                                       CSD103
      C                   Z-ADD     UEINR         W#EINR
      C                   Z-ADD     UICBS         W#ICBS
      C                   Z-ADD     UINFD         W#INFD
@@ -292,7 +297,8 @@
      C                   ELSE
      C                   MOVE      TCUCY         W#CUCY
      C                   Z-ADD     TPAMT         W#PAMT
-     C                   Z-ADD     TBRTT         W#BRTT
+     C**********         Z-ADD     TBRTT         W#BRTT                                       CSD103
+     C                   MOVE      TBRTT         W#BRTT                                       CSD103
      C                   Z-ADD     TEINR         W#EINR
      C                   Z-ADD     TICBS         W#ICBS
      C                   Z-ADD     TINFD         W#INFD

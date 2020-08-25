@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR896408           Date 31Jan19               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. AR896408           Date 31Jan19               *
+      *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD031311           Date 13Jun16               *
       *                 MD041034           Date 05Sep16               *
@@ -70,6 +71,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  AR896408 - Validation in subroutine VCDTE                    *
       *             (Validate Closing Date) is only executed for      *
       *             syndicated facilities thus DTEX                   *
@@ -1692,7 +1694,7 @@
       *                                                                                       CLE106
      C     DDLPBR        IFEQ      *BLANKS                                                    CLE106
      C     DDLPRT        ANDEQ     *BLANKS                                                    CLE106
-     C     DDLPBR        OREQ      '0'                                                      BUG22100
+     C*****DDLPBR        OREQ      '0'                                               BUG22100 CSD103
      C     DDLPRT        ANDEQ     '0'                                                      BUG22100
      C                   Move      'N'           DDLPFROK                                     CLE106
      C                   Add       1             Idx                                          CLE106

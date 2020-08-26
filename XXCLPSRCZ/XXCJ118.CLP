@@ -11,11 +11,14 @@
 /********(c)*Misys*International*Banking*Systems*Ltd.*2007************/  /*JMI108*/
 /*       (c) Finastra International Limited 2018                     */  /*JMI108*/
 /*                                                                   */
-/*       Last Amend No. JMI108             Date 31May18              */
-/*       Prev Amend No. TFJ011  *CREATE    Date 23Jan07              */
+/*       Last Amend No. FIX999             Date 24Aug20              */
+/*       Prev Amend No. JMI108             Date 31May18              */
+/*                      TFJ011  *CREATE    Date 23Jan07              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       FIX999 - IDNOTRECP contains previous dates eg 14Aug,18Aug,  */
+/*                19Aug. Shld only reflect 19Aug20.                  */
 /*       JMI108 - Account Balance Pooling. Upgrade to FBM 2.1        */
 /*       TFJ011 - Account Balance Pooling                            */
 /*                                                                   */
@@ -59,7 +62,8 @@
              CLRPFM     FILE(GLPSOTPP) /*JMI108*/
              MONMSG     MSGID(CPF0000 MCH0000)
 /*           CLRPFM     FILE(GLRODLPP)   */ /*JMI108*/
-             CLRPFM     FILE(GLRODLPP) /*JMI108*/
+/*****       CLRPFM     FILE(GLRODLPP)  *JMI108*        *******/ /*FIX999*/
+             CLRPFM     FILE(XXRODLPP) /*FIX999*/
              MONMSG     MSGID(CPF0000 MCH0000)
 
 /* Call Outgoing Reconcile Data Details */

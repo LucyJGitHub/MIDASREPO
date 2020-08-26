@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD040876           Date 26Aug16               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD040876           Date 26Aug16               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL094             Date 11Jun14               *
       *                 CGL132             Date 01May13               *
@@ -30,9 +31,9 @@
       *                 CER034A            Date 19May08               *
       *                 CER030             Date 20Nov08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. CSW209             Date 01Apr09               *
+      *                 CSW209             Date 01Apr09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. 257681             Date 13Nov08               *
+      *                 257681             Date 13Nov08               *
       *                 257300             Date 21Oct08               *
       *                 256407             Date 04Sep08               *
       *                 247158             Date 18Apr07               *
@@ -80,6 +81,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD040876 - CRS MQ                                            *
       *  MD046248 - Finastra Rebranding                               *

@@ -9,7 +9,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD056352 - ERZ247: Our commission is not displayed           *
+      *  MD056352 - ERZ247: Our commission is not displayed for       *
+      *             incoming messages.                                *
       *  MD055398A-Duplicate 0.00 (ERZ247)                            *
       *  MD055398 -Duplicate 0.00 (ERZ247)                            *
       *  ERZ247 - Field 71F in MT103 for GPI                          *

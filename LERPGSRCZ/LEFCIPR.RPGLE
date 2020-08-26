@@ -99,24 +99,24 @@
       *  CAP084 - Midas Plus API development                          *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       **--------------------------------------------------------------------------------------------
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** SCREEN FORMATS
       **--------------------------------------------------------------------------------------------
- 
+
      D FacmScnFmt    E DS                  EXTNAME(LEFCPPPD)
       ***  New Fclty in Screen Format - Screen 1
       *
@@ -155,11 +155,11 @@
       *                                                                                     BUG10093
       ** Facility Input Extra Data Layout                                                   BUG10093
       *                                                                                     BUG10093
- 
+
       **--------------------------------------------------------------------------------------------
       ** FILE FORMATS
       **--------------------------------------------------------------------------------------------
- 
+
      D FacmFilFmt    E DS                  EXTNAME(FCLTYFM)
       ***  Current Fclty in File Format FM
      D                                     PREFIX(FM)
@@ -186,12 +186,12 @@
       *                                                                                       CER001
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                  CSF011
       ** External DS for Customer Details                                                     CSF011
- 
+
       **--------------------------------------------------------------------------------------------
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
      D CLE106          S              1A                                                      CLE106
@@ -199,7 +199,7 @@
      D POPTN           S              7A                                                      CER001
      D PSARD           S              6A                                                      CER001
      D ULX004          S              1A                                                      CER001
-     D @WIPTmst        S             26                                                      MD052591
+     D @WIPTmst        S             26                                                     MD052591
                                                                                               CER049
      DTranStamp        S             51A                                                      CER049
       ** Stamp Tax Details                                                                    CER049
@@ -210,9 +210,9 @@
                                                                                               CSF011
      DCADetails        S             33A                                                      CLE147
       ** Credit Agreement Details                                                             CLE147
- 
+
       **--------------------------------------------------------------------------------------------
- 
+
       * If the action code is blank, enquire unless authorising
      C                   CLEAR                   FacmFilFmt
      C                   CLEAR                   FacnFilFmt
@@ -223,7 +223,7 @@
      C                   MOVEL     'E'           DDACTN
      C                   ENDIF
      C                   ENDIF
- 
+
      C     FwdBck        IFEQ      'F'
      C                   MOVEL     'Y'           @RDFWD
      C                   MOVEL     'N'           @RDBCK
@@ -236,7 +236,7 @@
      C                   MOVEL     'N'           @RDBCK
      C                   ENDIF
      C                   ENDIF
- 
+
      C     @RDFWD        IFEQ      'Y'
      C     @RDBCK        OREQ      'Y'
      C                   EXSR      LEFCIPRED
@@ -317,9 +317,9 @@
      C                   CLEAR                   RegData                                      CER001
      C                   ENDIF                                                                CER001
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     @ERRMS        IFNE      *BLANK
      C                   MOVEL     '0'           APIRetc
      C                   MOVEL     'DDDLNO'      FldNameArr(1)
@@ -329,7 +329,7 @@
       ** Population of Facility Customer Details                                              CSF011
                                                                                               CSF011
      C                   EXSR      SrPopCust                                                  CSF011
- 
+
       * Build buffer with required output
      C                   EVAL           Buffer = FACMScnFmt + FACNScnFmt
      C                                           + DsUpScnFmt                                 CLE106
@@ -346,7 +346,7 @@
      C**********                                 + RegData + ExtData               BUG10093 MD044880
      C                                           + ExtData                                  MD044880
      C                                           + RegData                                  MD044880
- 
+
      C                   SETON                                        LR
      C                   RETURN
       *****************************************************************                       CSF011
@@ -450,7 +450,7 @@
      C                   IF        @RTCD = *Blanks                                           LLN022A
      C                   EVAL      LLN007 = 'Y'                                              LLN022A
      C                   ENDIF                                                               LLN022A
- 
+
       ** Set up the name of the primary and secondary message files from
       ** which the message handler will get the messages
      C                   EVAL      MsgFArray(1) = 'LERMSGF '
@@ -470,7 +470,7 @@
      C                   ELSE                                                                 CLE106
      C                   MOVE      'N'           CLE106                                       CLE106
      C                   ENDIF                                                                CLE106
- 
+
       *  Hook to enable non-core message files to be included
      C/COPY WNCPYSRC,LEFCIPM01
       *                                                                                      LLN022A
@@ -495,7 +495,7 @@
      C                   EVAL      ULX004  = 'Y'                                              CER001
      C                   ENDIF                                                                CER001
      C                   ENDSR
- 
+
       **********************************************************************
      C     LEFCIPRED     BEGSR
       *
@@ -549,23 +549,23 @@
       ***  Front Office Fclty Read
      C                   PARM                    @FTRED           20
       *
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
       **********************************************************************
      C     LEFCIPRTV     BEGSR
- 
+
      C                   MOVEL     DDCSSN        CNUM              6
- 
- 
+
+
      C                   CALLB     'LEFCIPRTV'
- 
+
       * INPUTS
- 
+
       * Return code
      C                   PARM                    ReturnCode
- 
+
       * Mode = '*FRONT' (FRONT OFFICE TRANSACTION INTERFACE)
       * Mode = '      ' (NOT FRONT OFFICE TRANSACTION INTERFACE)
      C                   PARM                    ModeofOp          6
@@ -573,10 +573,10 @@
       * Response mode
      C**********         PARM      ' S'          APRESPMODE        1                          CLE041
      C                   PARM      'S'           APRESPMODE        1                          CLE041
- 
+
       * Action Code
      C                   PARM                    DDACTN            1
- 
+
       * Front Office Transaction ID
      C                   PARM                    FOTRID           20
       * Front Office User
@@ -594,17 +594,17 @@
                                                                                             MD039655
      C                   PARM                    @ACTRV                                     MD039655
      C/COPY WNCPYSRC,LEH00356
- 
+
       * OUTPUTS
- 
+
       * (Current) Facility FM in file format
      C                   PARM                    FacmFilFmt
       * (Current) Facility FN in file format
      C                   PARM                    FacnFilFmt
- 
+
       * OK - Action code
      C                   PARM                    DDActnOK          1
- 
+
       * OK - Customer number
      C                   PARM                    DDCSSNOK          1
       * OK - Facility type
@@ -616,15 +616,15 @@
      C                   PARM                    WREAC             1
       * New expiry date
      C                   PARM                    WNDTEX            5
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -644,11 +644,11 @@
       /EJECT                                                                                  CER001
       *****************************************************************
      C     LEFCIPCVT     BEGSR
- 
+
      C                   CALLB     'LEFCIPCVT'
- 
+
       * Match parameter list.... obviously
- 
+
       * INPUTS
       * Return Code
      C                   PARM                    ReturnCode
@@ -657,16 +657,16 @@
       * Facility FN in file formats
      C                   PARM                    FacnFilFmt
       *
- 
+
       * Output parameters
       *
       * Facility in screen format
      C                   PARM                    FacmScnFmt
      C                   PARM                    FacnScnFmt
- 
+
       ** AMEND CHECKING
      C                   RESET                   ReturnCode
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT

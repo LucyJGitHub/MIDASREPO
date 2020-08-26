@@ -1407,7 +1407,8 @@
       *                                                                                       CLE035
       ***  Determine rate                                                                     CLE035
       *                                                                                       CLE035
-     C                   IF        FC_LPBR <> 0                                               CLE035
+     C**********         IF        FC_LPBR <> 0                                        CLE035 CSD103
+     C                   IF        FC_LPBR <> *BLANKS                                         CSD103
       *                                                                                       CLE035
       ***  Read Base rate details                                                             CLE035
       *                                                                                       CLE035
@@ -1434,7 +1435,8 @@
       *
       ***  Determine rate
       *
-     C                   if        FC_LPBR <> 0
+     C**********         if        FC_LPBR <> 0                                               CSD103
+     C                   if        FC_LPBR <> *BLANKS                                         CSD103
       *
       ***  Read Base rate details
       *

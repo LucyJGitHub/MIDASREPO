@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MG000484           Date 15Jul19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MG000484           Date 15Jul19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CTI006             Date 31Mar14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -39,6 +40,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MG000484 - Rate Change should not be generated if New Base   *
       *             Rate has the same value as the previous history   *
       *             record.                                           *
@@ -753,7 +755,8 @@
                                                                                               245028
      C     BAVDNR        IFLE      BAVDRC                                                     245028
      C                   MOVE      BACYCD        WCYCD             3                          245028
-     C                   MOVE      BABSRC        WBSRC             2 0                        245028
+     C**********         MOVE      BABSRC        WBSRC             2 0                 245028 CSD103
+     C                   MOVE      BABSRC        WBSRC             2                          CSD103
      C     BAVDNR        SUB       1             WVDNR             5 0                        245028
                                                                                               245028
      C     BSHSKY        SETGT     SDBSHSL1                                                   245028

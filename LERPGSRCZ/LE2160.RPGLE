@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 260183             Date 29Oct15               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  260183 - LEC2460 failed because LF/LELOANL2 can't find       *
@@ -265,7 +267,8 @@
      D WRun            S              1A
      D WError          S              1A
      D WWorkAll        S              1A
-     D WWorkBase       S              2S 0
+     D*WWorkBase       S              2S 0                                                    CSD103
+     D WWorkBase       S              2A                                                      CSD103
      D WWorkCcy        S              3A
      D WBaseRate       S             11P 7
      D WFixedRate      S             11P 7
@@ -577,7 +580,8 @@
      C                   IF        (*IN10 = *OFF)
      C**********         IF        (L0CHIN <> 'R')                                            235907
      C**********                   OR (L0NBRA = 0 AND L0BRTT = 0)                             235907
-     C                   IF        (L0NBRA = 0 AND L0BRTT = 0)                                235907
+     C**********         IF        (L0NBRA = 0 AND L0BRTT = 0)                         235907 CSD103
+     C                   IF        (L0NBRA = *BLANKS AND L0BRTT = *BLANKS)                    CSD103
      C                   EVAL      WZMsgID = 'LER0408'
      C                   EXSR      SRSndMsg
      C                   EVAL      *IN21 = *ON
@@ -652,9 +656,11 @@
       ** Base Rate Code **
       ********************
       *
-     C                   EVAL      WWorkBase = 0
+     C**********         EVAL      WWorkBase = 0                                              CSD103
+     C                   EVAL      WWorkBase = *BLANKS                                        CSD103
       ** If Next Base Rate Type is present
-     C                   IF        L0NBRA <> 0
+     C**********         IF        L0NBRA <> 0                                                CSD103
+     C                   IF        L0NBRA <> *BLANKS                                          CSD103
      C                   EVAL      WWorkBase = L0NBRA
       ** If Next Base Rate Type is NOT present, check Next Rate/Spread
      C                   ELSE
@@ -684,7 +690,8 @@
      C                   EVAL      WRateFixedInd = *BLANK
       *
       ** If Next Base Rate Type OR Base Rate Code is used
-     C                   IF        WWorkBase <> 0
+     C**********         IF        WWorkBase <> 0                                             CSD103
+     C                   IF        WWorkBase <> *BLANKS                                       CSD103
       *
      C                   MOVE      WWorkBase     PBASE
      C                   CALL      'AOBSRTR0'
@@ -855,7 +862,8 @@
      C                   PARM      *BLANKS       PRtnCde
      C                   PARM      '*KEY   '     POption
      C                   PARM      WWorkCcy      PCYCD
-     C                   PARM                    PBaseP            2 0
+     C**********         PARM                    PBaseP            2 0                        CSD103
+     C                   PARM                    PBaseP            2                          CSD103
      C                   PARM      PDayNbr       PDayNo            5 0
      C     SDBSHS        PARM                    SDBSHS
       *

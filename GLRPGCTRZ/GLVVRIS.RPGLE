@@ -12,13 +12,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CRE015  *CREATE    Date 18Dec09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding                              *
       *  CRE015 - Retail Term and Notice Accounts                     *
@@ -127,7 +129,8 @@
  
       ** AOBSHSR0 Parameters
      D P@CCY           S              3A
-     D P@BSRT          S              2  0
+     D*P@BSRT***       S              2  0                                                    CSD103
+     D P@BSRT          S              2A                                                      CSD103
      D P@DATE          S              5  0
  
       ** ZSEDIT Parameters

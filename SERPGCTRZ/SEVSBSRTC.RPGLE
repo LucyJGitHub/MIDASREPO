@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -39,6 +40,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -149,7 +151,8 @@
      D PCycd           S              3A
      D PBsrc           S              2A
  
-     D WBasCd          S              2P 0
+     D*WBasCd***       S              2P 0                                                    CSD103
+     D WBasCd          S              2A                                                      CSD103
      D PMode           S              6A
       *
       ** Redisplay screen
@@ -172,7 +175,8 @@
       *
       ** Initialise work variables.
      C                   EVAL      IDx = 0
-     C                   Z-ADD     *ZEROS        WBasCd
+     C**********         Z-ADD     *ZEROS        WBasCd                                       CSD103
+     C                   MOVE      *BLANKS       WBasCd                                       CSD103
       *
       ** Validate base rate code
       *
@@ -186,7 +190,8 @@
      C                   ENDIF
  
      C                   IF        OKBASC <> 'N'
-     C                   Z-ADD     WBasCd        S1BASC
+     C**********         Z-ADD     WBasCd        S1BASC                                       CSD103
+     C                   MOVE      WBasCd        S1BASC                                       CSD103
      C                   ENDIF
  
      C                   RETURN

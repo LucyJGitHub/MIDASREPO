@@ -42,7 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CSD103 - LIBOR Deregulation - Common Layer/StaWding Data     *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  AR830785 - Looping on insert of accrued interest adjustment  *
       *             Extended core fix 263533. (Child: AR830786)       *
@@ -221,17 +221,17 @@
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ***  Initialization
-
+ 
      C                   EXSR      INIT
-
+ 
       ***  Set output screen fields
-
+ 
      C                   EXSR      SETFLD
-
+ 
       ***  Return
-
+ 
      C                   RETURN
       *
       *****************************************************************
@@ -511,7 +511,7 @@
       ***  Setup Sign of Amounts
       *
      C                   EVAL      WPRAM = 0
-
+ 
      C                   if        PRAM < 0                                     Principal
      C                   Eval      DDPSIG = '-'
      C                   Z-SUB     PRAM          WPRAM
@@ -529,7 +529,7 @@
      C                   MOVE      ZFIELD        DDRPRI                         Principal Amount
       *
      C                   EVAL      WINTA = 0
-
+ 
      C                   if        INTA < 0                                     Interest
      C                   Eval      DDISIG = '-'
      C                   Z-SUB     INTA          WINTA
@@ -547,7 +547,7 @@
      C                   MOVE      ZFIELD        DDRINT                         Interest Amount
       *
      C                   EVAL      WPNAM = 0
-
+ 
      C                   if        PNAM < 0                                     Penality
      C                   Eval      DDRPIG = '-'
      C                   Z-SUB     PNAM          WPNAM
@@ -565,7 +565,7 @@
      C                   MOVE      ZFIELD        DDRPEN                         Penality Amount
       *
      C                   EVAL      WTAMT = 0
-
+ 
      C                   if        TAMT < 0                                     Penality
      C                   Eval      DDRSIG = '-'
      C                   Z-SUB     TAMT          WTAMT
@@ -833,7 +833,8 @@
       *                                                                                       CLE035
       ***  Determine rate                                                                     CLE035
       *                                                                                       CLE035
-     C                   IF        FC_LPBR <> 0                                               CLE035
+     C**********         IF        FC_LPBR <> 0                                        CLE035 CSD103
+     C                   IF        FC_LPBR <> *BLANKS                                         CSD103
       *                                                                                       CLE035
       ***  Read Base rate details                                                             CLE035
       *                                                                                       CLE035
@@ -860,7 +861,8 @@
       *
       ***  Determine rate
       *
-     C                   if        FC_LPBR <> 0                                 Late Penality B Rate
+     C**********         if        FC_LPBR <> 0                          Late Penality B Rate CSD103
+     C                   if        FC_LPBR <> *BLANKS                                         CSD103
       *
       ***  Read Base rate details
       *

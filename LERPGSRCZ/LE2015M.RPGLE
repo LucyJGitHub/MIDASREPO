@@ -1,0 +1,182 @@
+     H        1
+      *****************************************************************
+/*STD *  RPGBASE                                                      *
+/*EXI *  TEXT('Midas LE Risk Participant / Assignment Drop')
+      *****************************************************************
+      *                                                               *
+      *  Midas - Customer Lending Module                              *
+      *                                                               *
+      *  LE0462 - Risk Participant / Assignment Drop                  *
+      *                                                               *
+      *  Function: To drop risk participants and assignments which    *
+      *   (COB)    have been previously identified as being related   *
+      *            to a facility which is being dropped.              *
+      *                                                               *
+      *  Called By: LEC0606B - LE Risk Participant / Assignment Drop  *
+      *                                                               *
+      *  (c) Finastra International Limited 2001                      *
+      *                                                               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      * Bank Fusion Midas 1.4 Base -----------------------------------*
+      * Midas Plus 1.4 Base 04 ---------------------------------------*
+      * Midas Plus 1.4 Base ------------------------------------------*
+      * Midas Plus 1.3 ----------- Base ------------------------------*
+      *                 CSD027             Date 09Dec05               *
+      *                 CLE042             Date 06Sep05               *
+      *                 CLE106             Date 09May05               *
+      * Midas Release 4.01 -------------------------------------------*
+      *                 CAP070             Date 08Mar02               *
+      * Midas Release 4 --------------- Base -------------------------*
+      * Midas DBA 3.00 ---------------- Base -------------------------*
+      *                 120277 *CREATE     Date 24Feb99               *
+      *                                                               *
+      *---------------------------------------------------------------*
+      *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *  MD046248 - Finastra Rebranding                               *
+      *  CSD027 - Conversion Of Customer Number to Alpha              *
+      *  CLE042 - Extended Loan Sub Type (Recompile)                  *
+      *  CLE106 - Syndication Manager                                 *
+      *  CAP070 - Conversion of LE inputs into modular structure to   *
+      *           use as APIs. Recompile over changed LEPARTPD        *
+      *  120277 - Risk Participant/Assignment need to be dropped when *
+      *           the related facility is dropped                     *
+      *                                                               *
+      *****************************************************************
+     F*
+     FLEPARTL3UF  E           K        DISK
+     F*
+     FLEEPRTPDIF  E                    DISK
+     F            LEPARTD0                          KRENAMELEEPRTD0
+     F/EJECT
+     F*****************************************************************
+     F*                                                               *
+     F*  F U N C T I O N   O F   I N D I C A T O R S                  *
+     F*                                                               *
+     F*                                                               *
+     F* 90-99 - Used by Standard Subroutines                          *
+     F*                                                               *
+     F* U7-U8 - Data Base Error                                       *
+     F*    U8 - File Controls out of Balance                          *
+     F*                                                               *
+     F*****************************************************************
+     F/SPACE 3
+     F*****************************************************************
+     F*                                                               *
+     F*  S U B R O U T I N E   I N D E X                              *
+     F*                                                               *
+     F*  INIT   - First Cycle Calcs                                   *
+     F*  *PSSR  - To Handle Abnormal Error Conditions                 *
+     F*                                                               *
+     F*****************************************************************
+     F/EJECT
+     E                    CPY@    1   1 80
+      **
+     IPSDS       SDS
+     I** PROGRAM STATUS DATA STRUCTURE - REQUIRED FOR DUMP
+     I                                      244 253 JOB
+     I                                      254 263 USER
+     I*
+     ILDA       E DSLDA
+     I** LOCAL DATA AREA TO IDENTIFY DATABASE ERRORS AND TO DETERMINE
+     I** TYPE OF RUN
+     I*
+     C                     MOVEACPY@      BIS@   80
+     C*
+     C***  MAIN PROCESSING
+     C*
+     C***  CALLS:     INIT,*PSSR
+     C*
+     C***  FIRST CYCLE CALCS
+     C*
+     C           *IN50     IFEQ '0'
+     C                     EXSR INIT
+     C                     END
+     C*
+     C***  Read first participant to be dropped
+     C*
+     C                     READ LEEPRTPD                 68
+     C*
+     C** Do while end of file not encountered
+     C*
+     C           *IN68     DOWEQ'0'
+     C*
+     C                     MOVELBRCA      WBRCA
+     C**********           Z-ADDCNUM      WCNUM                                               CSD027
+     C                     MOVE CNUM      WCNUM                                               CSD027
+     C                     Z-ADDFACT      WFACT
+     C                     Z-ADDFCNO      WFCNO
+     C**********           Z-ADDMNUM      WMNUM                                               CSD027
+     C                     MOVE MNUM      WMNUM                                               CSD027
+     C                     MOVELPRTR      WPRTR                                               CLE106
+     C*
+     C           PRTKEY    CHAINLEPARTL3             67
+     C*
+     C** If record found
+     C*
+     C           *IN67     IFEQ '0'
+     C                     DELETLEPARTL3
+     C                     END
+     C*
+     C                     READ LEEPRTPD                 68
+     C*
+     C                     ENDDO
+     C                     SETON                     LR
+     C********************************************************************
+     C*
+     C***  INIT SUBROUTINE - FIRST CYCLE CALCS
+     C*
+     C***  CALLED BY: MAIN PROCESSING
+     C*
+     C***  CALLS:     *PSSR,TERM
+     C*
+     C           INIT      BEGSR                           ** INIT **
+     C*
+     C***  DEFINE LDA
+     C*
+     C           *NAMVAR   DEFN           LDA
+     C                     IN   LDA
+     C           *LIKE     DEFN BRCA      WBRCA
+     C           *LIKE     DEFN CNUM      WCNUM
+     C           *LIKE     DEFN FACT      WFACT
+     C           *LIKE     DEFN FCNO      WFCNO
+     C           *LIKE     DEFN MNUM      WMNUM
+     C           *LIKE     DEFN PRTR      WPRTR                                               CLE106
+     C*
+     C** Key List for LEPARTL3
+     C*
+     C           PRTKEY    KLIST
+     C                     KFLD           WBRCA
+     C                     KFLD           WCNUM
+     C                     KFLD           WFACT
+     C                     KFLD           WFCNO
+     C                     KFLD           WMNUM
+     C                     KFLD           WPRTR                                               CLE106
+     C*
+     C                     SETON                     50    1ST.CYCLE IND.
+     C*
+     C           INITEN    ENDSR                           ** INITEN **
+     C*
+     C********************************************************************
+     C*
+     C***  *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS
+     C*
+     C***  CALLED FROM: AFTER ABNORNAL OPERATION OCCURS
+     C*
+     C***  CALLS: NOTHING
+     C*
+     C********************************************************************
+     C*
+     C           *PSSR     BEGSR                           ** *PSSR **
+     C*
+     C           @RUN      IFEQ *BLANKS
+     C                     MOVE 'Y'       @RUN    1
+     C                     DUMP
+     C                     END
+     C*
+     C                     ENDSR                           ** *PSSR **
+     C********************************************************************
+     C*
+** CPY@   **      OBJECT COPYRIGHT
+(c) Finastra International Limited 2001

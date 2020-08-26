@@ -11,12 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CDL038             Date 10May05               *
       *                 CDL028             Date 07Feb05               *
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -273,14 +275,16 @@
       ** FIRST RATE CHANGE IS ON VALUE DATE
       ** IMPORT INITIAL BASE RATE CHANGE (ON VALUE DATE)
       *
-     C     W#BRTT        IFNE      *ZERO
+     C*****W#BRTT        IFNE      *ZERO                                                      CSD103
+     C     W#BRTT        IFNE      *BLANKS                                                    CSD103
      C                   EXSR      IMP_BC_I
      C                   ENDIF
       *
       * IF FLOATING RATE
       * IMPORT BASE RATE CHANGE EVENTS
       *
-     C     W#BRTT        IFNE      *ZERO
+     C*****W#BRTT        IFNE      *ZERO                                                      CSD103
+     C     W#BRTT        IFNE      *BLANKS                                                    CSD103
      C     W#NICD        ANDNE     *ZERO
      C     W#NICD        ANDLT     MDAT
       *
@@ -588,7 +592,8 @@
      C                   MOVEL     'BC'          E_EVTP
       *
       * Base Rate Code
-     C                   Z-ADD     W#BRTT        E_BRTT
+     C**********         Z-ADD     W#BRTT        E_BRTT                                       CSD103
+     C                   MOVE      W#BRTT        E_BRTT                                       CSD103
       *
       * Rate Type
      C                   TESTB     '0'           W#DNSI                   99
@@ -659,7 +664,8 @@
      C                   MOVEL     'BC'          E_EVTP
       *
       * Base Rate Code
-     C                   Z-ADD     W#BRTT        E_BRTT
+     C**********         Z-ADD     W#BRTT        E_BRTT                                       CSD103
+     C                   MOVE      W#BRTT        E_BRTT                                       CSD103
       *
       * Base Rate & Rate Type
       *
@@ -747,7 +753,8 @@
      C                   MOVEL     'BC'          E_EVTP
       *
       * Base Rate Code
-     C                   Z-ADD     W#BRTT        E_BRTT
+     C**********         Z-ADD     W#BRTT        E_BRTT                                       CSD103
+     C                   MOVE      W#BRTT        E_BRTT                                       CSD103
       *
       * Base Rate & Rate Type
       *
@@ -1162,7 +1169,8 @@
       *
      C                   MOVE      UCUCY         W#CUCY            3
      C                   Z-ADD     UPAMT         W#PAMT           13 0
-     C                   Z-ADD     UBRTT         W#BRTT            2 0
+     C**********         Z-ADD     UBRTT         W#BRTT            2 0                        CSD103
+     C                   MOVE      UBRTT         W#BRTT            2                          CSD103
      C                   Z-ADD     UBRTE         W#BRTE           11 7
      C                   Z-ADD     URTSP         W#RTSP           11 7
      C                   Z-ADD     UEINR         W#EINR           11 7
@@ -1207,7 +1215,8 @@
       *
      C                   MOVE      TCUCY         W#CUCY            3
      C                   Z-ADD     TPAMT         W#PAMT           13 0
-     C                   Z-ADD     TBRTT         W#BRTT            2 0
+     C**********         Z-ADD     TBRTT         W#BRTT            2 0                        CSD103
+     C                   MOVE      TBRTT         W#BRTT            2                          CSD103
      C                   Z-ADD     TBRTE         W#BRTE           11 7
      C                   Z-ADD     TRTSP         W#RTSP           11 7
      C                   Z-ADD     TEINR         W#EINR           11 7

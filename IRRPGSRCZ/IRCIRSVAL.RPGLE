@@ -1880,7 +1880,8 @@
                                                                                               CAS005
       ** Prevent defaulting if the leg is not attached to a base rate                         CAS005
                                                                                               CAS005
-     C                   IF        SUBRTT = *BLANKS OR SUBRTT = '00'                          CAS005
+     C**********         IF        SUBRTT = *BLANKS OR SUBRTT = '00'                   CAS005 CSD103
+     C                   IF        SUBRTT = *BLANKS                                           CSD103
      C                   IF        WkSOFYC = *BLANKS                                          CAS005
      C                   EVAL      SOFYC = *BLANKS                                            CAS005
      C                   EVAL      RXOFYC = *BLANKS                                           225997
@@ -1906,7 +1907,8 @@
       ** If the leg is not attached to a base rate, forward yield curve must                  CAS005
       ** not be populated                                                                     CAS005
                                                                                               CAS005
-     C                   IF        (SUBRTT = *BLANKS OR SUBRTT = '00') AND                    CAS005
+     C**********         IF        (SUBRTT = *BLANKS OR SUBRTT = '00') AND             CAS005 CSD103
+     C                   IF        SUBRTT = *BLANKS                                           CSD103
      C                             SOFYC <> *BLANKS                                           CAS005
      C                   EVAL      ReturnCode = 'Error'                                       CAS005
      C                   EVAL      Idx = Idx + 1                                              CAS005
@@ -2860,7 +2862,8 @@
                                                                                               CAS005
       ** Prevent defaulting if the leg is not attached to a base rate                         CAS005
                                                                                               CAS005
-     C                   IF        STBRTT = *BLANKS OR STBRTT = '00'                          CAS005
+     C**********         IF        STBRTT = *BLANKS OR STBRTT = '00'                   CAS005 CSD103
+     C                   IF        STBRTT = *BLANKS                                           CSD103
      C                   IF        WkSTFYC = *BLANKS                                          CAS005
      C                   EVAL      STFYC = *BLANKS                                            CAS005
      C                   EVAL      RXTFYC = *BLANKS                                           225997
@@ -2886,7 +2889,8 @@
       ** If the leg is not attached to a base rate, forward yield curve must                  CAS005
       ** not be populated                                                                     CAS005
                                                                                               CAS005
-     C                   IF        (STBRTT = *BLANKS OR STBRTT = '00') AND                    CAS005
+     C**********         IF        (STBRTT = *BLANKS OR STBRTT = '00') AND             CAS005 CSD103
+     C                   IF        STBRTT = *BLANKS AND                                       CSD103
      C                             STFYC <> *BLANKS                                           CAS005
      C                   EVAL      ReturnCode = 'Error'                                       CAS005
      C                   EVAL      Idx = Idx + 1                                              CAS005

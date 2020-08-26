@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR674226           Date 04Dec19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. AR674226           Date 04Dec19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 AR745803           Date 19Apr11               *
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  AR674226 - Manual transaction reached 999. Increase the size *
       *             of utilisation sequence no. and transaction       *
       *             sequence. (Child: AR674227)                       *
@@ -1295,7 +1297,9 @@
  
      C                   EVAL      WRollFlg = 'N'
      C                   IF        CLRLDT < FWDT
-     C                   IF        CLNBRA > 0 or CLNRTS > 0 or CLNSIN <> *BLANKS
+     C**********         IF        CLNBRA > 0 or CLNRTS > 0 or CLNSIN <> *BLANKS              CSD103
+     C                   IF        CLNBRA <> *BLANKS or CLNRTS > 0                            CSD103
+     C                             or CLNSIN <> *BLANKS                                       CSD103
      C**********                   or CLNCAS > 0                                              CLE106
      C                             or CLNCAS > 0 or CLNBSR > 0                                CLE106
      C                   EVAL      WRollFlg = 'Y'
@@ -1314,7 +1318,8 @@
      C                   IF        LAVDAT <> WSavAmdDate or CLRLDT < LAVDAT
      C                              and WRollFlg = 'Y'
      C                   IF        WRollFlg = 'Y' and CLRLDT < LAVDAT
-     C                   IF        CLNBRA > 0
+     C**********         IF        CLNBRA > 0                                                 CSD103
+     C                   IF        CLNBRA <> *BLANKS                                          CSD103
      C                   MOVE      CLNBRA        PNBRA
      C                   CALL      'AOBSRTR0'
      C                   PARM      *BLANKS       PRtCd

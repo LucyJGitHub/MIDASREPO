@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE154             Date 07Aug12               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE154             Date 07Aug12               *
       *                 CLE141             Date 08Feb16               *
       *                 MD031736           Date 02Mar15               *
       *                 AR820967           Date 10May13               *
@@ -62,6 +63,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
       *  CLE141 - Currency and Location Business Day Convention       *
@@ -255,7 +257,8 @@
       *
      ID#BSKY      DS
      I                                        1   3 CCY
-     I                                        4   50W#BSRC
+     I**********                              4   50W#BSRC                                    CSD103
+     I                                        4   5 W#BSRC                                    CSD103
      IACCY        DS                             30                                           CLE141
      I                                        1   3 C1PR                                      CLE141
      I                                        4   6 C2PR                                      CLE141
@@ -302,7 +305,8 @@
      C                     MOVE AMTP      W#AMTP
      C                     MOVE VDAT      W#VDAT
      C                     MOVE LASN      W#LASN                          117928
-     C                     Z-ADDBRTT      W#BSRC
+     C**********           Z-ADDBRTT      W#BSRC                                              CSD103
+     C                     MOVE BRTT      W#BSRC                                              CSD103
      C                     Z-ADDBRTE      W#BRTE 117                                        BUG23206
      C                     Z-ADDBASR      W#BASR 117                                        BUG23206
       *
@@ -352,9 +356,11 @@
      C*  If Rollover Date = Last Multi-ccy Rollover Date, this is         CLE004
      C*  a multi-currency rollover                                        CLE004
      C*                                                                                       235034
-     C           NBRA      IFEQ 0                                                             235034
+     C********** NBRA      IFEQ 0                                                      235034 CSD103
+     C           NBRA      IFEQ *BLANKS                                                       CSD103
      C           NRTS      ANDEQ0                                                             235034
-     C                     Z-ADDBRTT      NBRA                                                235034
+     C**********           Z-ADDBRTT      NBRA                                         235034 CSD103
+     C                     MOVE BRTT      NBRA                                                CSD103
      C                     MOVE ICBS      NCAS                                                235034
      C                     MOVE SPIN      NSIN                                                235034
      C                     MOVE CHIN      NCHI                                                235034
@@ -368,7 +374,8 @@
       *                                                                   CLE004
      C                     MOVE RLDT      W#VDAT
      C                     MOVE *ZEROS    W#LASN                          117928
-     C                     Z-ADDNBRA      W#BSRC
+     C**********           Z-ADDNBRA      W#BSRC                                              CSD103
+     C                     MOVE NBRA      W#BSRC                                              CSD103
      C                     EXSR DELHIS
      C                     EXSR WRTHIS
       *
@@ -440,10 +447,12 @@
       * do not delete subsequent BR records.
      C           W#AMTP    IFEQ 'RO'
      C           AMTP      ANDEQ'RO'
-     C           W#BSRC    ANDEQ*ZERO
+     C********** W#BSRC    ANDEQ*ZERO                                                         CSD103
+     C           W#BSRC    ANDEQ*BLANKS                                                       CSD103
      C           W#AMTP    OREQ 'MC'                                      CLE004
      C           AMTP      ANDEQ'MC'                                      CLE004
-     C           W#BSRC    ANDEQ*ZERO                                     CLE004
+     C********** W#BSRC    ANDEQ*ZERO                                     CLE004              CSD103
+     C           W#BSRC    ANDEQ*BLANKS                                                       CSD103
      C                     LEAVE
      C                     ENDIF
       *
@@ -481,7 +490,8 @@
      C                     Z-ADD*ZEROS    RTSP                                                243251
      C                     ENDIF                                                              243251
       *                                                                                       243251
-     C           W#BSRC    IFNE *ZERO
+     C********** W#BSRC    IFNE *ZERO                                                         CSD103
+     C           W#BSRC    IFNE *BLANKS                                                       CSD103
       *
       * Get most recent record for currency/code, not later than
       * value date; a record should exist.
@@ -589,7 +599,8 @@
      C***********          Z-ADD38        PRSQ                            117928
      C                     MOVE W#AMTP    AMTP                            117928
      C                     Z-ADD39        PRSQ                            117928
-     C                     Z-ADDW#BSRC    BRTT                            116331
+     C**********           Z-ADDW#BSRC    BRTT                            116331              CSD103
+     C                     MOVE W#BSRC    BRTT                                                CSD103
      C                     Z-ADD2         MRIN
      C                     Z-ADDW#VDAT    VDAT
      C                     MOVE W#LASN    LASN                            117928
@@ -650,10 +661,12 @@
       * write rollover rec ONLY.
      C           W#AMTP    IFEQ 'RO'
      C           AMTP      ANDEQ'RO'
-     C           W#BSRC    ANDEQ*ZERO
+     C********** W#BSRC    ANDEQ*ZERO                                                         CSD103
+     C           W#BSRC    ANDEQ*BLANKS                                                       CSD103
      C           W#AMTP    OREQ 'MC'                                      CLE004
      C           AMTP      ANDEQ'MC'                                      CLE004
-     C           W#BSRC    ANDEQ*ZERO                                     CLE004
+     C********** W#BSRC    ANDEQ*ZERO                                     CLE004              CSD103
+     C           W#BSRC    ANDEQ*BLANKS                                                       CSD103
      C                     ELSE
       *
      C           CHIN      IFEQ 'D'

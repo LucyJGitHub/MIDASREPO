@@ -1108,24 +1108,32 @@
      C                   CLEAR                   DEALS
      C                   CLEAR                   DEALEXT                                      CLE025
      C                   EVAL      FSOSDT = *ZEROS                                           BUG7535
-     C                   EVAL      FSOS1B = *ZEROS                                           BUG7535
+     C**********         EVAL      FSOS1B = *ZEROS                                    BUG7535 CSD103
+     C                   EVAL      FSOS1B = *BLANKS                                           CSD103
      C                   EVAL      FSOS1D = *ZEROS                                           BUG7535
-     C                   EVAL      FSOS2B = *ZEROS                                           BUG7535
+     C**********         EVAL      FSOS2B = *ZEROS                                    BUG7535 CSD103
+     C                   EVAL      FSOS2B = *BLANKS                                           CSD103
      C                   EVAL      FSOS2D = *ZEROS                                           BUG7535
      C                   EVAL      FSOEDT = *ZEROS                                           BUG7535
-     C                   EVAL      FSOE1B = *ZEROS                                           BUG7535
+     C**********         EVAL      FSOE1B = *ZEROS                                    BUG7535 CSD103
+     C                   EVAL      FSOE1B = *BLANKS                                           CSD103
      C                   EVAL      FSOE1D = *ZEROS                                           BUG7535
-     C                   EVAL      FSOE2B = *ZEROS                                           BUG7535
+     C**********         EVAL      FSOE2B = *ZEROS                                    BUG7535 CSD103
+     C                   EVAL      FSOE2B = *BLANKS                                           CSD103
      C                   EVAL      FSOE2D = *ZEROS                                           BUG7535
      C                   EVAL      FSTSDT = *ZEROS                                           BUG7535
-     C                   EVAL      FSTS1B = *ZEROS                                           BUG7535
+     C**********         EVAL      FSTS1B = *ZEROS                                    BUG7535 CSD103
+     C                   EVAL      FSTS1B = *BLANKS                                           CSD103
      C                   EVAL      FSTS1D = *ZEROS                                           BUG7535
-     C                   EVAL      FSTS2B = *ZEROS                                           BUG7535
+     C**********         EVAL      FSTS2B = *ZEROS                                    BUG7535 CSD103
+     C                   EVAL      FSTS2B = *BLANKS                                           CSD103
      C                   EVAL      FSTS2D = *ZEROS                                           BUG7535
      C                   EVAL      FSTEDT = *ZEROS                                           BUG7535
-     C                   EVAL      FSTE1B = *ZEROS                                           BUG7535
+     C**********         EVAL      FSTE1B = *ZEROS                                    BUG7535 CSD103
+     C                   EVAL      FSTE1B = *BLANKS                                           CSD103
      C                   EVAL      FSTE1D = *ZEROS                                           BUG7535
-     C                   EVAL      FSTE2B = *ZEROS                                           BUG7535
+     C**********         EVAL      FSTE2B = *ZEROS                                    BUG7535 CSD103
+     C                   EVAL      FSTE2B = *BLANKS                                           CSD103
      C                   EVAL      FSTE2D = *ZEROS                                           BUG7535
 
       ** Initialise "before" status of deal for on-line updates.
@@ -2281,7 +2289,8 @@
       *
       * Base Rate Code for Sequencing
       *
-     C                   Z-ADD     *ZEROS        BRSQ
+     C**********         Z-ADD     *ZEROS        BRSQ                                         CSD103
+     C                   MOVE      *BLANKS       BRSQ                                         CSD103
       *
       ** Start Date Current Average Period                                                  BUG7217R
       *                                                                                     BUG7217R
@@ -2863,7 +2872,8 @@
       *
       * Base Rate Code for Sequencing
       *
-     C                   Z-ADD     *ZEROS        BRSQ
+     C**********         Z-ADD     *ZEROS        BRSQ                                         CSD103
+     C                   MOVE      *BLANKS       BRSQ                                         CSD103
       *
      C                   IF        UINFD >= BJRDNB                                          MD036601
      C                             and UINFD <= UNICD                                       MD036601

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE073             Date 06Dec10               *
       *                 CER055             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing          *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
@@ -225,14 +227,16 @@
  
       ** Effective debit rates
  
-     C                   PARM                    X1DRIB            2 0
+     C**********         PARM                    X1DRIB            2 0                        CSD103
+     C                   PARM                    X1DRIB            2                          CSD103
      C                   PARM                    X1DRIS           11 7
      C                   PARM                    X1DICT            2 0
      C                   PARM                    X1DCST            5 0
  
       ** Effective credit rates
  
-     C                   PARM                    X1CRIB            2 0
+     C**********         PARM                    X1CRIB            2 0                        CSD103
+     C                   PARM                    X1CRIB            2                          CSD103
      C                   PARM                    X1CRIS           11 7
      C                   PARM                    X1CICT            2 0
      C                   PARM                    X1CCST            5 0

@@ -14,12 +14,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. CRE015  *CREATE    Date 18Dec09               *
+      *                 CRE015  *CREATE    Date 18Dec09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE015 - Retail Term and Notice Accounts                     *
       *                                                               *
@@ -101,7 +103,8 @@
      D  RAT11                 61     66P 7
  
      D #BALN           S             15  0
-     D #INTY           S              2  0
+     D*#INTY****       S              2  0                                                    CSD103
+     D #INTY           S              2                                                       CSD103
      D #INSB           S              5  0
      D #VDAT           S              5  0
  
@@ -121,10 +124,12 @@
      C     *ENTRY        PLIST
      C                   PARM                    RETCODE           7
      C                   PARM                    PCCY              3
-     C                   PARM                    PDIC              2 0
+     C**********         PARM                    PDIC              2 0                        CSD103
+     C                   PARM                    PDIC              2                          CSD103
      C                   PARM                    PDST              5 0
      C                   PARM                    PDNIR             1
-     C                   PARM                    PCIC              2 0
+     C**********         PARM                    PCIC              2 0                        CSD103
+     C                   PARM                    PCIC              2                          CSD103
      C                   PARM                    PCST              5 0
      C                   PARM                    PCNIR             1
      C                   PARM                    PVDT              5 0
@@ -162,7 +167,8 @@
  
      C     BASKE2        KLIST
      C                   KFLD                    HSCCY             3
-     C                   KFLD                    HSRAT             2 0
+     C**********         KFLD                    HSRAT             2 0                        CSD103
+     C                   KFLD                    HSRAT             2                          CSD103
      C                   KFLD                    HVDAT             5 0
  
      C     H2KEY         KLIST
@@ -191,13 +197,15 @@
  
       ** If Credit Interest type/subtype specified and periodic fixing
  
-     C     PCIC          IFNE      0
+     C*****PCIC*         IFNE      0                                                          CSD103
+     C     PCIC          IFNE      *BLANKS                                                    CSD103
      C     PCNIR         ANDEQ     'P'
  
       ** If balance is negative then in credit
  
      C     PDRCR         IFEQ      'CR'
-     C                   Z-ADD     PCIC          #INTY
+     C**********         Z-ADD     PCIC          #INTY                                        CSD103
+     C                   MOVE      PCIC          #INTY                                        CSD103
      C                   Z-ADD     PCST          #INSB
      C                   EXSR      GETRA2
      C                   ENDIF
@@ -205,13 +213,15 @@
  
       ** If Debit Interest type/subtype specified and periodic fixing
  
-     C     PDIC          IFNE      0
+     C*****PDIC*         IFNE      0                                                          CSD103
+     C     PDIC          IFNE      *BLANKS                                                    CSD103
      C     PDNIR         ANDEQ     'P'
  
       ** If balance is positive then in debit
  
      C     PDRCR         IFEQ      'DR'
-     C                   Z-ADD     PDIC          #INTY
+     C**********         Z-ADD     PDIC          #INTY                                        CSD103
+     C                   MOVE      PDIC          #INTY                                        CSD103
      C                   Z-ADD     PDST          #INSB
      C                   EXSR      GETRA2
      C                   ENDIF
@@ -237,7 +247,8 @@
  
      C                   MOVE      WBALN         #BALN
      C                   MOVE      #BALN         PBALN
-     C                   MOVE      #INTY         PINTY             2 0
+     C**********         MOVE      #INTY         PINTY             2 0                        CSD103
+     C                   MOVE      #INTY         PINTY             2                          CSD103
      C                   MOVE      #INSB         PINSB             5 0
      C                   MOVE      PVDT          #VDAT
      C                   MOVE      #VDAT         PVDAT             5 0
@@ -360,7 +371,8 @@
      C     GETBAS        BEGSR
  
      C                   Z-ADD     0             BASRAT           11 7
-     C     HBRT          IFNE      0
+     C*****HBRT*         IFNE      0                                                          CSD103
+     C     HBRT          IFNE      *BLANKS                                                    CSD103
  
      C                   MOVE      PCCY          BSCCY
      C                   MOVE      HBRT          BSRAT

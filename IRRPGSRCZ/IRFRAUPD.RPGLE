@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -88,6 +89,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
@@ -1481,10 +1483,13 @@
       *
       * Base Rate Code for Sequencing
       *
-     C     FRUBRTT       IFNE      *ZEROS
-     C                   Z-ADD     FRUBRTT       BRSQ
+     C*****FRUBRTT       IFNE      *ZEROS                                                     CSD103
+     C     FRUBRTT       IFNE      *BLANKS                                                    CSD103
+     C**********         Z-ADD     FRUBRTT       BRSQ                                         CSD103
+     C                   MOVEL     FRUBRTT       BRSQ                                         CSD103
      C                   ELSE
-     C                   Z-ADD     FRTBRTT       BRSQ
+     C**********         Z-ADD     FRTBRTT       BRSQ                                         CSD103
+     C                   MOVEL     FRTBRTT       BRSQ                                         CSD103
      C                   END
       *
       * Our/Their Last Rate Change Date                                        CPL002

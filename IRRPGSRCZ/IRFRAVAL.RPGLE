@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR569568           Date 22Nov12               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR569568           Date 22Nov12               *
       *                 CER059             Date 19Jul10               *
       *                 BUG22478           Date 27Jan09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -71,6 +72,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  AR569568 - CDL006 is not being passed causing zero amount to *
       *             be valid in Insert.  But in amendment, it will    *
@@ -2008,14 +2010,16 @@
      C                   Z-ADD     RatFixDays    FRUFRFD                        CAP004
      C                   MOVE      SRFRTE        FRUBRTT
      C                   Z-ADD     *ZEROS        FRTFRFD
-     C                   Z-ADD     *ZEROS        FRTBRTT
+     C**********         Z-ADD     *ZEROS        FRTBRTT                                      CSD103
+     C                   MOVEL     *BLANKS       FRTBRTT                                      CSD103
  
      C                   ELSE
      C*******            MOVE      SUFRFD        FRTFRFD                        CAP004
      C                   Z-ADD     RatFixDays    FRTFRFD                        CAP004
      C                   MOVE      SRFRTE        FRTBRTT
      C                   Z-ADD     *ZEROS        FRUFRFD
-     C                   Z-ADD     *ZEROS        FRUBRTT
+     C**********         Z-ADD     *ZEROS        FRUBRTT                                      CSD103
+     C                   MOVEL     *BLANKS       FRUBRTT                                      CSD103
      C                   END
  
       **Federal Funds Indicator is a bit setting

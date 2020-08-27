@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD025682           Date 19Aug14               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD025682           Date 19Aug14               *
       *                 MD022705           Date 04Oct13               *
       *                 CLE134             Date 01Aug12               *
       *                 CGO001AB           Date 06Aug12               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD025682 - Set CGZONE to A8ZONE                              *
       *  MD022705 - Duplicate records in GZFCLTLVPD                   *

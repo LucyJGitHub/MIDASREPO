@@ -38,8 +38,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. 260405             Date 04Apr20               *
-      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. 260405             Date 04Apr20               *
+      *                 MD054028           Date 05Sep19               *
       *                 CER050             Date 16Jun19               *
       *                 CSD101             Date 07Dec18               *
       *                 CSD102             Date 08Jan19               *
@@ -72,6 +73,7 @@
       *           	                                                    *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  260405 - BRT Participation Date of Birth field is missing.   *
       *           Upgrade fix 235425. Recompile over changed SDCBRTPD.*
       *         - Applied for MD055446.                               *
@@ -1862,7 +1864,8 @@
      C                   ENDIF                                                                CRE030
       *
      C     X_RCCY        IFEQ      DDCCY
-     C     DRIB          IFEQ      *ZEROS
+     C*****DRIB*         IFEQ      *ZEROS                                                     CSD103
+     C     DRIB          IFEQ      *BLANKS                                                    CSD103
      C                   MOVEL     *BLANKS       DDDRIB
      C                   ELSE
      C                   MOVE      DRIB          DDDRIB
@@ -1870,7 +1873,8 @@
       *
       ** If not the same Ccy - Check Base Type is valid for other Ccy
      C                   ELSE
-     C     DRIB          IFNE      *ZEROS
+     C*****DRIB*         IFNE      *ZEROS                                                     CSD103
+     C     DRIB          IFNE      *BLANKS                                                    CSD103
      C                   MOVE      DRIB          WWRIB             2
       *
       ** Get Base Rate Codes
@@ -1908,7 +1912,8 @@
      C                   ENDIF
       *
      C     X_RCCY        IFEQ      DDCCY
-     C     CRIB          IFEQ      *ZEROS
+     C*****CRIB*         IFEQ      *ZEROS                                                     CSD103
+     C     CRIB          IFEQ      *BLANKS                                                    CSD103
      C                   MOVEL     *BLANKS       DDCRIB
      C                   ELSE
      C                   MOVE      CRIB          DDCRIB
@@ -1916,7 +1921,8 @@
       *
       ** If not the same Ccy - Check Base Type is valid for other Ccy
      C                   ELSE
-     C     CRIB          IFNE      *ZEROS
+     C*****CRIB*         IFNE      *ZEROS                                                     CSD103
+     C     CRIB          IFNE      *BLANKS                                                    CSD103
      C                   MOVE      CRIB          WWRIB
       *
       ** Get Base Rate Codes

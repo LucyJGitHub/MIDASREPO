@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -922,7 +924,8 @@
      C                   Z-ADD     OtherAmount   K_OTHA
      C                   MOVEL     OtherCurrency K_OTHC
      C   01              Z-ADD     EXRT          K_EXRT
-     C   02              Z-ADD     BRTT          K_BRTT
+     C***02*****         Z-ADD     BRTT          K_BRTT                                       CSD103
+     C   02              MOVEL     BRTT          K_BRTT                                       CSD103
      C   02              Z-ADD     BRTE          K_BRTE
      C   02              Z-ADD     RTSP          K_RTSP
      C   02              Z-ADD     INTR          K_INTR

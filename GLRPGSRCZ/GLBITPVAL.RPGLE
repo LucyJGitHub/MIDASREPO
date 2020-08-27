@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD053869           Date 07Jan20               *
-      *  Prev Amend No. MD052075           Date 07Jun19               *
+      *  Last Amend No. MD055528           Date 13Aug20               *      
+      *  Prev Amend No. MD053869           Date 07Jan20               *
+      *                 MD052075           Date 07Jun19               *
       *                 CGL148             Date 13Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 LLN022A            Date 03Jun15               *
@@ -69,6 +70,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055528 - Corrective Batches value dates are overwritten by *
+      *             Booking Date.                                     *
+      *           - When corrective batches value dates are equal to  *
+      *             *BLANKS defaults value date to Booking Date       *      
       *  MD053869 - Do not validate batch item on delete.             *
       *  MD052075 - [CGL150] Warning message should be displayed when *
       *           the system defaults the value date.                 *
@@ -1281,6 +1286,7 @@
       *
       ** Account details (DS)
      C                   PARM                    F1ACCT
+     C                   PARM                    DDBTNB                                     MD055528      
       *
       ** STANDING DATA
       ** =============
@@ -1348,6 +1354,7 @@
       *
       ** Account details (DS)
      C                   PARM                    F1ACCT
+     C                   PARM                    DDBTNB                                     MD055528     
       *
       ** STANDING DATA
       ** =============

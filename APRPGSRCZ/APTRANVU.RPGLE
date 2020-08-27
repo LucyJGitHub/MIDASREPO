@@ -2453,10 +2453,6 @@ RGC  D RPIF4LN         S              4  0                                      
      C     LEIFLn        SUBST     BUFFER:Bfp    DDPATH          200                        BUG13174
      C                   ADD       200           Bfp                                        BUG13174
                                                                                             MD039655
-      ** Restore Authorise Reversal Action Code                                             MD039655
-                                                                                            MD039655
-     C     1             SUBST     BUFFER:Bfp    @ACTRV                                     MD039655
-     C                   ADD       1             Bfp                                        MD039655
                                                                                               CER049
       ** Stamp Tax fields                                                                     CER049
                                                                                               CER049
@@ -2486,6 +2482,11 @@ RGC  D RPIF4LN         S              4  0                                      
      C     FCEXLn        SUBST     BUFFER:Bfp    ExtData                                    MD044880
      C                   ADD       FCEXLn        Bfp                                        MD044880
                                                                                             MD044880
+      ** Restore Authorise Reversal Action Code                                             MD039655
+                                                                                            MD039655
+     C     1             SUBST     BUFFER:Bfp    @ACTRV                                     MD039655
+     C                   ADD       1             Bfp                                        MD039655
+                                                                                            MD039655
      C     FCRXLn        SUBST     BUFFER:Bfp    RegData                                    BUG10093
      C                   ADD       FCRXLn        Bfp                                        BUG10093
                                                                                             BUG10093
@@ -2518,7 +2519,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    DDPATH                                     BUG13174
      C                   PARM                    CADetails                                    CLE147
      C                   PARM                    @ACTRV                                     MD039655
-     
+
       * Loan Input
 
      C     TransTYPE     WHENEQ    'CLIP'

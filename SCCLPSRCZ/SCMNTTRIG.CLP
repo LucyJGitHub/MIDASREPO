@@ -9,8 +9,10 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CCB022             Date 06Aug12              */
+/*       Last Amend No. MD055682           Date 31Jul20              */
+/*       Prev Amend No. MD055681           Date 31Jul20              */
+/*                      MD046248           Date 27Oct17              */
+/*                      CCB022             Date 06Aug12              */
 /*                      261725             Date 27Jul12              */
 /*                      AR725021           Date 14Mar11              */
 /*                      BUG27884           Date 08Jul10              */
@@ -33,6 +35,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD055682 - Deliverable Data Split for TRIG                  */
+/*       MD055681 - Deliverable Data Split for SAR                   */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CCB022 - COB Restructure - COB File Manager                 */
 /*       261725 - Added WRKOBJLCK command if file locking occurs.    */
@@ -63,7 +67,7 @@
 /*********************************************************************/
 /**********  PGM        PARM(&FUNC &FILE &LIVE)                                        */ /*CPK020*/
              PGM        PARM(&ACTION &FILE &TRIGTYPE)                                     /*CPK020*/
- 
+
 /**Function*is:*A*to*ADD,************R*to*REMOVE,*********************/ /*             */ /*CPK020*/
 /***************D*to*DISPLAY*active,*E*to*DISPLAY*inactive************/ /*             */ /*CPK020*/
 /***************X*to*REMOVE*ALL*for*a*specified*file******************/ /*             */ /*CPK020*/
@@ -72,19 +76,19 @@
 /*                                                           */
 /**Live*is:*****Y*to*process*only*live*triggers***********************/ /*             */ /*CPK020*/
 /***************N*to*process*all*triggers*(live*or*not)***************/ /*             */ /*CPK020*/
- 
+
 /**********  DCL        VAR(&FUNC) TYPE(*CHAR) LEN(1)                                  */ /*CPK020*/
              DCL        VAR(&ACTION) TYPE(*CHAR) LEN(12)                                  /*CPK020*/
              DCL        VAR(&FILE) TYPE(*CHAR) LEN(10)
 /**********  DCL        VAR(&LIVE) TYPE(*CHAR) LEN(1)                                  */ /*CPK020*/
              DCL        VAR(&TRIGTYPE) TYPE(*CHAR) LEN(9)                                 /*CPK020*/
- 
+
 /************DCL        VAR(&SYPR) TYPE(*CHAR) LEN(2)                                   /*BG5090R1*/
              DCL        VAR(&TNAM) TYPE(*CHAR) LEN(258)
- 
+
              DCL        VAR(&TIME) TYPE(*CHAR) LEN(10)
              DCL        VAR(&EVNT) TYPE(*CHAR) LEN(10)
- 
+
 /**********  DCL        VAR(&TRGLIV) TYPE(*CHAR) LEN(1)                                */ /*CPK020*/
              DCL        VAR(&TRGACT) TYPE(*CHAR) LEN(1)
              DCL        VAR(&NBRRCDS) TYPE(*DEC) LEN(10 0)                              /*BG5090R1*/
@@ -105,21 +109,22 @@
                                                                                           /*CCB022*/
              DCL        VAR(&SPECMSG) TYPE(*CHAR) LEN(400)                                /*CCB022*/
              DCL        VAR(&SPECFLAG) TYPE(*CHAR) LEN(1)                                 /*CCB022*/
- 
-             DCLF       FILE(SCTRIGJ0)
- 
+
+/**********  DCLF       FILE(SCTRIGJ0) */                                               /*MD055682*/
+             DCLF       FILE(SCTRGJW1) ALWNULL(*YES)                                    /*MD055682*/
+
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2003')
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              OVRMSGF    MSGF(MIDAS) TOMSGF(GBMIDAS)                                     /*BG5090R1*/
-             OVRDBF     FILE(SCTRIGJ0) SHARE(*NO)                                        /*BUG3379*/
+/**********  OVRDBF     FILE(SCTRIGJ0) SHARE(*NO) */                           /*BUG3379**MD055682*/
                                                                                          /*BUG3379*/
              RTVJOBA    TYPE(&JOBTYPE)
              CHGJOB     SWS(00000000)
@@ -131,9 +136,9 @@
                           '*RMVALLTRIG' *OR &ACTION = '*RMVTRIG' *OR +
                           &ACTION = '*ADDTRIG')) THEN(CALL +
                           PGM(GOC0002) PARM('END  ' '*LIBL     ' ' '))       /*BUG6550*/ /*BG18886*/
- 
+
 /************RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYPR)                              /*BG5090R1*/
- 
+
 /* Create temporary file to hold error messages. */                                       /*CPK020*/
              DLTF       FILE(QTEMP/UPERRMQT)                                              /*CPK020*/
              MONMSG     MSGID(CPF2105)                                                    /*CPK020*/
@@ -146,32 +151,32 @@
              CRTPF      FILE(QTEMP/SCTRIGQT) RCDLEN(400) +
                           TEXT('Temporary file for holding error +
                           messages') LVLCHK(*NO)                                          /*CCB022*/
- 
+
 /**********  IF         COND(&FUNC *= 'A' *AND &FUNC *= 'R' *AND +                     */ /*CPK020*/
 /**********               &FUNC *= 'D' *AND &FUNC *= 'E' *AND +                        */ /*CPK020*/
 /**********               &FUNC *= 'X') THEN(GOTO +                                    */ /*CPK020*/
 /**********               CMDLBL(ABNOR))                                               */ /*CPK020*/
- 
+
 /**********  IF         COND(&LIVE *= 'Y' *AND &LIVE *= 'N') +                         */ /*CPK020*/
 /**********               THEN(GOTO CMDLBL(ABNOR))                                     */ /*CPK020*/
- 
+
 /**********  IF         COND(&FUNC = 'A' *AND &LIVE *= 'Y') +                          */ /*CPK020*/
 /**********               THEN(GOTO CMDLBL(ABNOR))                                     */ /*CPK020*/
- 
+
 /**********  IF         COND(&FUNC = 'X' *AND &FILE = '        ') +                    */ /*CPK020*/
 /**********               THEN(GOTO CMDLBL(ABNOR))                                     */ /*CPK020*/
- 
+
 /**********  IF         COND(&FUNC = 'X') THEN(GOTO CMDLBL(REMOVEALL))                 */ /*CPK020*/
              IF         COND(&ACTION *EQ '*RMVALLTRIG') THEN(GOTO +
                           CMDLBL(REMOVEALL))                                              /*CPK020*/
- 
+
 AGAIN:
 /**Set*work*variables*to*previous*value*from*SCTRIGJ0. */                    /*CPK020*/ /*BG5090R1*/
 /************CHGVAR     VAR(&WFILE) VALUE(&TRFILE)                           /*CPK020*/ /*BG5090R1*/
 /************CHGVAR     VAR(&WTIME) VALUE(&TRTIME)                           /*CPK020*/ /*BG5090R1*/
 /************CHGVAR     VAR(&WEVNT) VALUE(&TREVNT)                           /*CPK020*/ /*BG5090R1*/
 /************CHGVAR     VAR(&WSEQ) VALUE(&TRSEQ)                            /*BUG5090*/ /*BG5090R1*/
- 
+
              RCVF
              MONMSG     MSGID(CPF0864) EXEC(GOTO CMDLBL(CHECK))                         /*BG5090R1*/
 /************MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(CHECK))                         /*BG5090R1*/
@@ -180,7 +185,7 @@ AGAIN:
 /************             &WTIME *OR &TREVNT *NE &WEVNT) THEN(DO)           /*BG5090R*/ /*BG5090R1*/
 /************CHGVAR     VAR(&WFLAG) VALUE('N')                              /*BG5090R*/ /*BG5090R1*/
 /************ENDDO                                                          /*BG5090R*/ /*BG5090R1*/
- 
+
 /**If*the*new*fields*match*the*previous*values*then*do*not*atttempt*to**/    /*CPK020*/ /*BG5090R1*/
 /***process*trigger.                                                   */    /*CPK020*/ /*BG5090R1*/
 /************IF         COND(&TRFILE *EQ &WFILE *AND &TRTIME *EQ +                      /*BG5090R1*/
@@ -190,27 +195,27 @@ AGAIN:
 /**********               &WTIME *AND &TREVNT *EQ &WEVNT) THEN(DO)   */           /*CPK020 BUG5090*/
 /************   GOTO       CMDLBL(AGAIN)                                     /*CPK020*/ /*BG5090R1*/
 /************ENDDO                                                           /*CPK020*/ /*BG5090R1*/
- 
+
 /**********  IF         COND(&LIVE = 'Y' *AND &TRACTV *= 'Y') +                        */ /*CPK020*/
 /**********               THEN(GOTO CMDLBL(AGAIN))                                     */ /*CPK020*/
              IF         COND(&TRIGTYPE *EQ '*LIVETRIG' *AND &TRACTV +
                           *NE 'Y') THEN(GOTO CMDLBL(AGAIN))                               /*CPK020*/
- 
+
 /**********  IF         COND(&FUNC *= 'R') THEN(+                                      */ /*CPK020*/
 /**********  CHGVAR     VAR(&TRSEQ) VALUE('01'))                           */ /*BUG3379*/ /*CPK020*/
- 
+
 /**Check*For*'Live'*Trigger**/ /*                                                      */ /*CPK020*/
 /**********  CALL       PGM(SCCHKLTRG) PARM(&TRFILE &TRTIME &TREVNT +                  */ /*CPK020*/
 /**********               &TRSEQ &TRGLIV)                                              */ /*CPK020*/
- 
+
 /**********  IF         COND(&LIVE = 'Y' *AND &TRGLIV *= 'Y') +                        */ /*CPK020*/
 /**********               THEN(GOTO CMDLBL(AGAIN))                                     */ /*CPK020*/
- 
+
              IF         COND(&TRTIME = 'A') THEN(CHGVAR VAR(&TIME) +
                           VALUE('*AFTER'))
              IF         COND(&TRTIME = 'B') THEN(CHGVAR VAR(&TIME) +
                           VALUE('*BEFORE'))
- 
+
              IF         COND(&TREVNT = 'I') THEN(CHGVAR VAR(&EVNT) +
                           VALUE('*INSERT'))
              IF         COND(&TREVNT = 'D') THEN(CHGVAR VAR(&EVNT) +
@@ -219,14 +224,14 @@ AGAIN:
                           VALUE('*UPDATE'))
              IF         COND(&TREVNT = 'R') THEN(CHGVAR VAR(&EVNT) +
                           VALUE('*READ'))
- 
+
 /************CHGVAR     VAR(&TNAM) VALUE(&SYPR *CAT '_' *CAT +                          /*BG5090R1*/
 /************             &TRFILE *TCAT '_' *CAT &TRTIME *CAT +                         /*BG5090R1*/
 /************             '_' *CAT &TREVNT *CAT '_' *CAT &TRSEQ)                        /*BG5090R1*/
              CHGVAR     VAR(&TNAM) VALUE(&TRFILE *TCAT '_' *CAT +
                           %SST(&TIME 2 9) *TCAT '_' *CAT %SST(&EVNT +
                           2 9))                                                         /*BG5090R1*/
- 
+
 /* Display if active */
 /**********  IF         COND(&FUNC = 'D') THEN(DO)                                     */ /*CPK020*/
 /**********     IF         COND(&FILE = '        ' *OR &FILE = &TRFILE) +              */ /*CPK020*/
@@ -241,7 +246,7 @@ AGAIN:
                                 *TCAT ' is ACTIVE') TOMSGQ(MRUNQ))
                 ENDDO
              ENDDO
- 
+
 /* Display if NOT active */
 /**********  IF         COND(&FUNC = 'E') THEN(DO)                                     */ /*CPK020*/
 /**********     IF         COND(&FILE = '        ' *OR &FILE = &TRFILE) +              */ /*CPK020*/
@@ -256,7 +261,7 @@ AGAIN:
                                 *TCAT ' is NOT ACTIVE') TOMSGQ(MRUNQ))
                 ENDDO
              ENDDO
- 
+
 /* Remove */
 /**********  IF         COND(&FUNC = 'R') THEN(DO)                                     */ /*CPK020*/
 /**********     IF         COND(&FILE = '        ' *OR &FILE = &TRFILE) +              */ /*CPK020*/
@@ -265,10 +270,27 @@ AGAIN:
                 IF         COND(&FILE *EQ '*ALL' *OR &FILE *EQ &TRFILE) +
                              THEN(DO)                                                     /*CPK020*/
                                                                                           /*CCB022*/
-                   IF         COND(&TRFILE *EQ 'SCSARDPD' *OR &TRFILE +
+/**********        IF         COND(&TRFILE *EQ 'SCSARDPD' *OR &TRFILE +
                                 *EQ 'SCTRIGPD' *OR &TRFILE *EQ +
                                 'SDMMIDPD' *OR &TRFILE *EQ 'SCSARTPD') +
-                                THEN(DO)                                                  /*CCB022*/
+                                THEN(DO) */                                     /*CCB022**MD055681*/
+/**********        IF         COND(&TRFILE *EQ 'SCSRDCTD' *OR &TRFILE +
+                                *EQ 'SCSRDBTD' *OR &TRFILE     +
+                                *EQ 'SCSRDXTD' *OR &TRFILE     +
+                                *EQ 'SCTRIGPD' *OR &TRFILE *EQ +
+                                'SDMMIDPD' *OR &TRFILE *EQ 'SCSARTPD') +
+                                THEN(DO) */                                   /*MD055681**MD055682*/
+                   IF         COND(&TRFILE *EQ 'SCSRDCTD' *OR &TRFILE +
+                                *EQ 'SCSRDBTD' *OR &TRFILE     +
+                                *EQ 'SCSRDXTD' *OR &TRFILE     +
+                                *EQ 'SCTRGCTD' *OR &TRFILE     +
+                                *EQ 'SCTRGBTD' *OR &TRFILE     +
+                                *EQ 'SCTRGXTD' *OR &TRFILE     +
+                                *EQ 'SDMMIDPD' *OR &TRFILE     +
+                                *EQ 'SCSRTCTD' *OR &TRFILE     +
+                                *EQ 'SCSRTBTD' *OR &TRFILE     +
+                                *EQ 'SCSRTXTD') +
+                                THEN(DO)                                                /*MD055682*/
                       CHGVAR     VAR(&SPECMSG) VALUE('*SPECIAL  RMVPFTRG +
                                    FILE(' *CAT &TRFILE *CAT ') TRG(' *CAT +
                                    &TNAM *CAT ')')                                        /*CCB022*/
@@ -322,7 +344,7 @@ AGAIN:
                    MONMSG     MSGID(CPF0000)
                 ENDDO
              ENDDO
- 
+
 /* Add */
 /**********  IF         COND(&FUNC = 'A') THEN(DO)                                     */ /*CPK020*/
 /**********     IF         COND(&FILE = '        ' *OR &FILE = &TRFILE) +              */ /*CPK020*/
@@ -331,10 +353,27 @@ AGAIN:
                 IF         COND(&FILE *EQ '*ALL' *OR &FILE *EQ &TRFILE) +
                              THEN(DO)                                                     /*CPK020*/
                                                                                           /*CCB022*/
-                   IF         COND(&TRFILE *EQ 'SCSARDPD' *OR &TRFILE +
+/**********        IF         COND(&TRFILE *EQ 'SCSARDPD' *OR &TRFILE +
                                 *EQ 'SCTRIGPD' *OR &TRFILE *EQ +
                                 'SDMMIDPD' *OR &TRFILE *EQ 'SCSARTPD') +
-                                THEN(DO)                                                  /*CCB022*/
+                                THEN(DO) */                                     /*CCB022**MD055681*/
+/**********        IF         COND(&TRFILE *EQ 'SCSRDCTD' *OR &TRFILE +
+                                *EQ 'SCSRDBTD' *OR &TRFILE     +
+                                *EQ 'SCSRDXTD' *OR &TRFILE     +
+                                *EQ 'SCTRIGPD' *OR &TRFILE *EQ +
+                                'SDMMIDPD' *OR &TRFILE *EQ 'SCSARTPD') +
+                                THEN(DO) */                                   /*MD055681**MD055682*/
+                   IF         COND(&TRFILE *EQ 'SCSRDCTD' *OR &TRFILE +
+                                *EQ 'SCSRDBTD' *OR &TRFILE     +
+                                *EQ 'SCSRDXTD' *OR &TRFILE     +
+                                *EQ 'SCTRGCTD' *OR &TRFILE     +
+                                *EQ 'SCTRGBTD' *OR &TRFILE     +
+                                *EQ 'SCTRGXTD' *OR &TRFILE     +
+                                *EQ 'SDMMIDPD' *OR &TRFILE     +
+                                *EQ 'SCSRTCTD' *OR &TRFILE     +
+                                *EQ 'SCSRTBTD' *OR &TRFILE     +
+                                *EQ 'SCSRTXTD') +
+                                THEN(DO)                                                /*MD055682*/
                       CHGVAR     VAR(&SPECMSG) VALUE('*SPECIAL  ADDPFTRG +
                                    FILE(' *CAT &TRFILE *CAT ') TRGTIME(' +
                                    *CAT &TIME *CAT ') TRGEVENT(' *CAT +
@@ -416,12 +455,12 @@ AGAIN:
                    MONMSG     MSGID(CPF0000)
                 ENDDO
              ENDDO
- 
+
              GOTO       CMDLBL(AGAIN)
- 
+
  REMOVEALL:
 /* Remove All Triggers for a Specified File */
- 
+
 /* Check if any triggers present                                                     */ /*BG5090R1*/
                    DSPFD      FILE(&FILE) TYPE(*TRG) OUTPUT(*OUTFILE) +
                                 OUTFILE(QTEMP/CHKANYTRG) OUTMBR(*FIRST +
@@ -462,7 +501,7 @@ AGAIN:
                    DLCOBJ     OBJ((&FILE *FILE *EXCL))
                    MONMSG     MSGID(CPF0000)
 /**********        GOTO       CMDLBL(END)                                                 /*CPK020*/
- 
+
 CHECK:
                                                                                           /*CCB022*/
 /* Call program to process add/rmv trigger commands from SCTRIGQT */                      /*CCB022*/
@@ -478,28 +517,28 @@ CHECK:
              ENDDO                                                                        /*CUP022*/
              CHGSPLFA   FILE(UP008010P1) SPLNBR(*LAST) +
                           USRDTA(&GENPGM)                                                 /*CPK020*/
- 
+
              IF         COND(&ALCOBJERR = 'Y') THEN(CHGJOB +
                           SWS(00000011))                                                  /*CPK020*/
              IF         COND(&ALCOBJERR = 'Y') THEN(GOTO CMDLBL(ABNOR))                 /*BG5090R1*/
 /**********  IF         COND(%SWITCH(XXXXXX00)) THEN(DO)                                  /*CPK020*/
                 GOTO       CMDLBL(END)
 /**********  ENDDO                                                                        /*CPK020*/
- 
+
  ABNOR:
              CHGJOB     SWS(XXXXXX11)
- 
+
 /* Abnormal termination - batch job */
- 
+
              IF         COND(&JOBTYPE = '0') THEN(DO)
                SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                             SCMNTTRIG ended abnormally - see job log') +
                             TOMSGQ(MOPERQ MRUNQ)
                MONMSG     MSGID(CPF0000 MCH0000)
              ENDDO
- 
+
 /* Abnormal termination - interactive job */
- 
+
              IF         COND(&JOBTYPE = '1') THEN(DO)
                 RTVMSG     MSGID(MEM5007) MSGF(MIDAS) MSG(&MSGDTA)                      /*BG5090R1*/
                 MONMSG     MSGID(CPF0000)                                                 /*CUP099*/
@@ -511,7 +550,7 @@ CHECK:
 /************             TOPGMQ(*EXT) TOMSGQ(MOPERQ)                                   /*BG5090R1*/
 /************   MONMSG     MSGID(CPF0000 MCH0000)                                       /*BG5090R1*/
              ENDDO
- 
+
 END:
 /************IF         COND((&JOBTYPE = '0') & (&ACTION = +             */ /*BUG6550*/ /*BG18886*/
 /************             '*RMVALLTRIG'***&ACTION = '*RMVTRIG'***+       */ /*BUG6550*/ /*BG18886*/
@@ -538,7 +577,7 @@ END:
                           SWS(XXXXXX11))                                                  /*244609*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
              RCLRSC
              MONMSG     MSGID(CPF0000 MCH0000)
              ENDPGM

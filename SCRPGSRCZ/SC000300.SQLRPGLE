@@ -11,17 +11,19 @@
       *                                                               *
       *  ((c) Finastra International Limited 2014                     *
       *                                                               *
-      *  Last Amend No. MD024398*CREATE    Date 14Feb14               *
+      *  Last Amend No. MD055681           Date 31Jul20               *
+      *  Prev Amend No. MD024398*CREATE    Date 14Feb14               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD024398 - API Performance Optimisation                      *
       *                                                               *
       *****************************************************************
       /EJECT
 
       ** Core switchable features
-     FSCSARDL0  IF   E           K DISK    INFSR(*PSSR)
+     F*SCSARDL0* IF   E           K DISK    INFSR(*PSSR)                                    MD055681
 
      D Ix              S              5S 0
      D Buffer          S          32000A
@@ -29,6 +31,7 @@
 
      D PRetRn          S              7A
      D PassOn          S              1A
+     D SCSARD        E DS                  EXTNAME(SCSRDJW0)                                MD055681
 
       ** Check all features on SCSARDPD have valid passwords.
 
@@ -44,17 +47,40 @@
 
       ** Read through core features and add to buffer
 
-     C     *LOVAL        SETLL     @SARDL0                                99
-     C                   READ      @SARDL0                                99
+     C******LOVAL        SETLL     @SARDL0                                99                MD055681
+     C**********         READ      @SARDL0                                99                MD055681
+     C/EXEC SQL                                                                             MD055681
+     C+ declare ACursor insensitive scroll cursor for                                       MD055681
+     C+ select * from SCSRDJW0                                                              MD055681
+     C+ order by SARN                                                                       MD055681
+     C/END-EXEC                                                                             MD055681
+                                                                                            MD055681
+     C/EXEC SQL                                                                             MD055681
+     C+ open ACursor                                                                        MD055681
+     C/END-EXEC                                                                             MD055681
+                                                                                            MD055681
+     C/EXEC SQL                                                                             MD055681
+     C+ fetch next from ACursor into :SCSARD                                                MD055681
+     C/END-EXEC                                                                             MD055681
+                                                                                            MD055681
 
      C                   EVAL      Ix = 1
-     C                   DOU       %EoF
-     C                   EVAL      %Subst(Buffer:Ix:6) = ABSARN
+     C**********         DOU       %EoF                                                     MD055681
+     C                   DOW       SQLCODE = 0                                              MD055681
+     C**********         EVAL      %Subst(Buffer:Ix:6) = ABSARN                             MD055681
+     C                   EVAL      %Subst(Buffer:Ix:6) = SARN                               MD055681
      C                   EVAL      Ix =Ix +6
-     C                   READ      @SARDL0                                99
+     C**********         READ      @SARDL0                                99                MD055681
      C
+     C/EXEC SQL                                                                             MD055681
+     C+ fetch next from ACursor into :SCSARD                                                MD055681
+     C/END-EXEC                                                                             MD055681
      C                   ENDDO
 
+     C/EXEC SQL                                                                             MD055681
+     C+ close ACursor                                                                       MD055681
+     C/END-EXEC                                                                             MD055681
+                                                                                            MD055681
       ** Store buffer for later use by AOSARDR0.  This code will always create
       ** a single record in SCSARHTD, whether or not it exists already.
 

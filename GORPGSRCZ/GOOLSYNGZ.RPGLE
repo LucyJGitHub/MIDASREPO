@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CMG008             Date 20Feb20               *
-      *  Prev Amend No. MD055147           Date 24Jan20               *
+      *  Last Amend No. MD055681           Date 31Jul20               *
+      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *                 MD055147           Date 24Jan20               *
       *                 CLE070             Date 19Jun19               *
       *                 MD054605           Date 17Oct19               *
       *                 CSD101             Date 07Dec18               *
@@ -110,6 +111,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055681 - Deliverable Data Split for SAR                    *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD055147 - No replication of SDSVL* if triggers are not      *
       *             attached.                                         *

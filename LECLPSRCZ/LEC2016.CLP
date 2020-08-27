@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD054605           Date 17Oct19              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD055681           Date 31Jul20              */
+/*       Prev Amend No. MD054605           Date 17Oct19              */
+/*                      MD046248           Date 27Oct17              */
 /*                      CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -45,6 +46,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD055681 - Deliverable Data Split for SAR                   */
 /*       MD054605 - Deliverable Data Split for SDSVALPD              */
 /*       MD046248 - Finastra Rebranding                              */
 /*  CCB020 - COB Restructure - Secondary COB Infrastructure         */
@@ -266,7 +268,7 @@
 /**********               RCVRNG(&STRRCV *CURRENT) FROMENT(&LJNSQ) +*/                  /*MD054605*/
 /**********               JRNCDE((U) (R)) ENTTYP(PT UP DL UR DR YJ +*/                  /*MD054605*/
 /**********               YE) DELAY(*NEXTENT)                       */           /*CLE035 MD054605*/
-             RCVJRNE    JRN(ICJRN) EXITPGM(LE2016) FILE((FCLTYFM) +
+/**********  RCVJRNE    JRN(ICJRN) EXITPGM(LE2016) FILE((FCLTYFM) +
                           (FCLTYFN) (CLOANCL) (CLOANCK) (LOAMSDK) +
                           (ACCNTAB) (SDMMODPD) (SDBANKPD) +
                           (SDGELRPD) (SDRETLPD) (SDCLNDPD) +
@@ -283,7 +285,25 @@
                           (LEFEED) (SCSARDPD) (SDSVLXTD)) +
                           RCVRNG(&STRRCV *CURRENT) FROMENT(&LJNSQ) +
                           JRNCDE((U) (R)) ENTTYP(PT UP DL UR DR YJ +
-                          YE) DELAY(*NEXTENT)                                           /*MD054605*/
+                          YE) DELAY(*NEXTENT) */                              /*MD054605**MD055681*/
+             RCVJRNE    JRN(ICJRN) EXITPGM(LE2016) FILE((FCLTYFM) +
+                          (FCLTYFN) (CLOANCL) (CLOANCK) (LOAMSDK) +
+                          (ACCNTAB) (SDMMODPD) (SDBANKPD) +
+                          (SDGELRPD) (SDRETLPD) (SDCLNDPD) +
+                          (SDPORTPD) (SDCUSTPD) (SDALTNPD) +
+                          (SDFACTPD) (SDBRCHPD) (SDCURRPD) +
+                          (SDCTRYPD) (SDINDSPD) (SDACOFPD) +
+                          (SDPRFCPD) (SDPRFMPD) (SDBOOKPD) +
+                          (SDLOANPD) (SDBSRTPD) (SDBSHSPD) +
+                          (SDNOSTPD) (SDCNSTPD) (SDEXSTPD) +
+                          (PMPORTPD) (SDPLCSPD) (SDHOLPD) +
+                          (SDCODEPD) (SDTRADPD) (SDCCSYPD) (LETISPPD) +
+                          (LEPARTPD) (SDPCACPD) (LEFCAMPD) +
+                          (LESTALPD) (LEFEEAD) (SDFEEPD) (MUSERDD) +
+                          (LEFEED) (SCSRDXTD) (SDSVLXTD)) +
+                          RCVRNG(&STRRCV *CURRENT) FROMENT(&LJNSQ) +
+                          JRNCDE((U) (R)) ENTTYP(PT UP DL UR DR YJ +
+                          YE) DELAY(*NEXTENT)                                           /*MD055681*/
 /**/
 /* If lock prevents access to the journal or no new entries on ICJRN */
 /**/

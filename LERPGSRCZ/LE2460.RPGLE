@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054105           Date 27Jan20               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD054105           Date 27Jan20               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 260183             Date 29Oct15               *
       *                 CLE141             Date 01Mar16               *
@@ -52,6 +53,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD054105 - Rate fixing of loans at rollover is incorrect.    *
       *             Correct the data type of parameter PZDaysFwd from *
       *             packed to zoned by using PZDaysFwdS instead.      *
@@ -235,7 +237,8 @@
       ** +--------------------------------------+
 
      D WRUN            S              1
-     D WWorkBase       S              2S 0
+     D*WWorkBase       S              2S 0                                                    CSD103
+     D WWorkBase       S              2                                                       CSD103
      D WWorkCcy        S              3
      D WRateFixedInd   S              1
      D WFixedRate      S             11P 7
@@ -334,10 +337,12 @@
       ** Base Rate **
       ***************
       *
-     C                   EVAL      WWorkBase = 0
+     C**********         EVAL      WWorkBase = 0                                              CSD103
+     C                   EVAL      WWorkBase = *BLANKS                                        CSD103
      C                   SELECT
       ** Next Base Rate Type is present
-     C                   WHEN      L0NBRA <> 0
+     C**********         WHEN      L0NBRA <> 0                                                CSD103
+     C                   WHEN      L0NBRA <> *BLANKS                                          CSD103
      C                   EVAL      WWorkBase = L0NBRA
       ** Next Rate/Spread is also zero, then old base rate continues
      C                   WHEN      L0NRTS = 0
@@ -379,7 +384,8 @@
       *
       ** If Next Base Rate Type or Base Rate Code is used
       *
-     C                   IF        WWorkBase <> 0
+     C**********         IF        WWorkBase <> 0                                             CSD103
+     C                   IF        WWorkBase <> *BLANKS                                       CSD103
       *
      C                   MOVE      WWorkBase     PBase
      C                   CALL      'AOBSRTR0'
@@ -483,7 +489,8 @@
      C                   PARM      *BLANKS       PRtnCde
      C                   PARM      '*KEY   '     POption
      C                   PARM      WWorkCcy      PCYCD
-     C                   PARM                    PBaseP            2 0
+     C**********         PARM                    PBaseP            2 0                        CSD103
+     C                   PARM                    PBaseP            2                          CSD103
      C                   PARM      PDayNbr       PDayNo            5 0
      C     SDBSHS        PARM                    SDBSHS
       *

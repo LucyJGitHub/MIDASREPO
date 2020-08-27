@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR937578A          Date 04Apr12               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR937578A          Date 04Apr12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CLE147             Date 17Oct11               *
       *                 AR787620           Date 10Jun11               *
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  AR937578A - In Collateral and Credit Lines Enquiry, availed  *
       *              loans are both in reservation and exposure       *

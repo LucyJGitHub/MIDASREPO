@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD034449           Date 24Jan19               *      
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD034449           Date 24Jan19               *
       *                 MD052213           Date 26Oct18               *
       *                 MD051873           Date 14Sep18               *
       *                 MD027418           Date 18Jul18               *
@@ -98,6 +99,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD034449 - Used ZA0841 instead of ZALIGN for negative spread *
       *           - Applied for MD052515                              *
@@ -2312,7 +2314,8 @@
      C**********                   CLE035 = 'Y' and SVBRTT <> 0                      CLE035 BUG10392
      C                   If        CLE036 = 'N' or                                          BUG10392
      C                             CLE036 = 'Y' and SVBRTE <> 0 or                          BUG10392
-     C                             CLE036 = 'Y' and SVBRTT <> 0                             BUG10392
+     C**********                   CLE036 = 'Y' and SVBRTT <> 0                      BUG10392 CSD103
+     C                             CLE036 = 'Y' and SVBRTT <> *BLANKS                         CSD103
      C                   IF        CAM_RTSP <> 0 OR
      C                             (CAM_RTSP = 0 AND DDATYP = 'SC' AND
      C                              DDACTN <> 'A')
@@ -2339,7 +2342,8 @@
       *                                                                                       CLE035
      C*                  If        CLE035 = 'Y'                                               CLE035
      C                   IF        CLE036 = 'Y'                                             MD035672
-     C                   IF        SVBRTT = 0 and SVBRTE = 0                         CLE035 MD035672
+     C**********         IF        SVBRTT = 0 and SVBRTE = 0                         MD035672 CSD103
+     C                   IF        SVBRTT = *BLANKS and SVBRTE = 0                            CSD103
      C                             and SVBASR = 0                                           MD035672
      C                   MOVE      'N'           DDRTSPOK                            CLE035 MD035672
      C                   ADD       1             Idx                                 CLE035 MD035672
@@ -2374,7 +2378,8 @@
      C**********                   CLE035 = 'Y' and SVBRTT <> 0 or                   CLE035 BUG10392
      C**********                   CLE035 = 'Y' and SVBRTE <> 0                      CLE035 BUG10392
      C                   If        CLE036 = 'N' or                                          BUG10392
-     C                             (CLE036 = 'Y' and SVBRTT <> 0) or               BUG10392 MD035672
+     C**********                   (CLE036 = 'Y' and SVBRTT <> 0) or                 MD035672 CSD103
+     C                             (CLE036 = 'Y' and SVBRTT <> *BLANKS) or                    CSD103
      C                             (CLE036 = 'Y' and SVBRTE <> 0) or               BUG10392 MD035672
      C                             (CLE036 = 'Y' and SVBASR <> 0)                           MD035672
      C**********         CALLB     'ZALIGN'                                                 MD034449
@@ -2463,7 +2468,8 @@
       *                                                                                       CLE035
       ** Base rate and base rate code are both zeroes                                         CLE035
       *                                                                                       CLE035
-     C                   If        SVBRTT = 0 and  SVBRTE = 0                                 CLE035
+     C**********         If        SVBRTT = 0 and  SVBRTE = 0                          CLE035 CSD103
+     C                   If        SVBRTT = *BLANKS and  SVBRTE = 0                           CSD103
      C                   If        SVRTSP <> 0 OR                                             CLE035
      C                             (SVRTSP = 0 AND DDATYP = 'SC' AND                          CLE035
      C                              DDACTN <> 'A')                                            CLE035
@@ -2490,7 +2496,8 @@
       *                                                                                       CLE035
      C**********         If        CLE035 = 'Y'                                      CLE035 BUG10392
      C                   If        CLE036 = 'Y'                                             BUG10392
-     C                   If        SVBRTT <>0  or SVBRTE <> 0                                 CLE035
+     C**********         If        SVBRTT <>0  or SVBRTE <> 0                          CLE035 CSD103
+     C                   If        SVBRTT <> *BLANKS or SVBRTE <> 0                           CSD103
      C                   MOVE      'N'           DDFXRTOK                                     CLE035
      C                   ADD       1             Idx                                          CLE035
      C                   EVAL      FldNameArr(Idx) = 'DDFXRT'                                 CLE035
@@ -2504,8 +2511,10 @@
      C     DDATYP        Ifeq      'SC'                                                       CLE035
      C**********         If        CLE035 = 'N'  or                                  CLE035 BUG10392
      C**********                   CLE035 = 'Y' and SVBRTT = 0 and SVBRTE = 0        CLE035 BUG10392
-     C                   If        CLE036 = 'N'  or                                         BUG10392
-     C                             CLE036 = 'Y' and SVBRTT = 0 and SVBRTE = 0               BUG10392
+     C**********         If        CLE036 = 'N'  or                                  BUG10392 CSD103
+     C**********                   CLE036 = 'Y' and SVBRTT = 0 and SVBRTE = 0        BUG10392 CSD103
+     C                   If        CLE036 = 'N' or CLE036 = 'Y' and                           CSD103
+     C                             SVBRTT = *BLANKS and SVBRTE = 0                            CSD103
      C                   CALLB     'ZALIGN'                                                   CLE035
      C                   PARM      *BLANK        ZALIGNok                                     CLE035
      C                   PARM      DDFXRT        ZFIELD                                       CLE035
@@ -4619,7 +4628,8 @@
       *
       ** If loan has base rate or there is previous 'BC'...
      C     WBSRC         IFNE      *BLANKS
-     C     WBSRC         ANDNE     '00'
+     C*****WBSRC         ANDNE     '00'                                                       CSD103
+     C     WBSRC         ANDNE     *BLANKS                                                    CSD103
      C*****CLE035        OREQ      'Y'                                               CLE035 BUG10392
      C     CLE036        OREQ      'Y'                                                      BUG10392
      C     WBRTE         ANDNE     *ZERO                                                      CLE035
@@ -5733,8 +5743,10 @@
      C                   EVAL      PBaseRate = %CHAR(SVBRTE)                                  CRE073
      C                   ENDIF                                                                CRE073
                                                                                               CRE073
-     C                   IF        SVBRTT <> *ZERO                                            CRE073
-     C                   EVAL      PBaseCode = %CHAR(SVBRTT)                                  CRE073
+     C**********         IF        SVBRTT <> *ZERO                                     CRE073 CSD103
+     C**********         EVAL      PBaseCode = %CHAR(SVBRTT)                           CRE073 CSD103
+     C                   IF        SVBRTT <> *BLANKS                                          CSD103
+     C                   EVAL      PBaseCode = SVBRTT                                         CSD103
      C                   ENDIF                                                                CRE073
                                                                                               CRE073
      C                   CALL      'ZAVCSPSG'                                                 CRE073

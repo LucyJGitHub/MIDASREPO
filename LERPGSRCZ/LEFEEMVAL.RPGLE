@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD053942           Date 23Jul19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD053942           Date 23Jul19               *
+      *                 CER050             Date 16Jun19               *
       *                 MD053837           Date 28Aug19               *
       *                 MD021377           Date 18Jul18               *
       *                 CLE071             Date 18Jul18               *
@@ -111,6 +112,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD053942 - Incorrect defaulting of DDEXRT for loan fees. Add *
       *             exchange rate default process for loan fee only   *
       *             when fee currency not equal to loan currency.     *

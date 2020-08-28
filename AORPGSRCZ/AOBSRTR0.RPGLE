@@ -2,53 +2,55 @@
       *****************************************************************
 /***D ***RPG***********************************************************   CAP002
 /*STD *  RPGBASEMOD                                                   *
-/*EXI *  TEXT('Midas AO Base rate codes')
-     F********************************************************************
-     F*                                                                  *
+/*EXI *  TEXT('Midas AO Base rate codes')                             *
+     F*****************************************************************
+     F*                                                               *
      F*  Midas  ACCESS OBJECTS                                        LN0357
-     F*                                                                  *
-     F*     AOBSRTR0 - READ ACCESS TO BASE RATE CODES                    *
-     F*                                                                  *
+     F*                                                               *
+     F*     AOBSRTR0 - READ ACCESS TO BASE RATE CODES                 *
+     F*                                                               *
       *  (c) Finastra International Limited 2001                      *
-     F*                                                                  *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+     F*                                                               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
-      *  Prev Amend No. CSD006             Date 17May01               *
+      *                 CSD006             Date 17May01               *
       *                 CAP038             Date 17Mar00               *
       * Midas DBA 3.00 ---------------- Base -------------------------*
       *                    CSW097             Date 20May99            *
-     F*                    CAP002             Date 01May98            *  *
-     F*                    CSW005             DATE 05DEC96               *
-     F*                    S01461             DATE 11FEB94               *LN0357
-     F*                    LN0357             DATE 12JUN90               *LN0357
-     F*                    LN0212             DATE 22/05/90              *LN0212
-     F*                    S01230             DATE 07/01/90              *LN0212
-     F*                    S01230             DATE 23/11/00              *S01230
-     F*                    S01230             DATE 06/11/00              *S01230
-     F*                                                                  *
-     F********************************************************************S01230
+     F*                    CAP002             Date 01May98            *
+     F*                    CSW005             DATE 05DEC96            *
+     F*                    S01461             DATE 11FEB94            *   LN0357
+     F*                    LN0357             DATE 12JUN90            *   LN0357
+     F*                    LN0212             DATE 22/05/90           *   LN0212
+     F*                    S01230             DATE 07/01/90           *   LN0212
+     F*                    S01230             DATE 23/11/00           *   S01230
+     F*                    S01230             DATE 06/11/00           *   S01230
+     F*                                                               *
+     F*****************************************************************   S01230
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
-      *  CSD006 - Use long DS with SDBSRTPD.                             *
-      *  CAP038 - Conversion of SD inputs into modular structure         *
-      *           to use as APIs.                                        *
-      *           Recompiled over changed SDBSRTPD.                      *
-      *  CSW097 - SWIFT 1997 Changes for FRAIRS MT34* and MT36*.         *
+      *  CSD006 - Use long DS with SDBSRTPD.                          *
+      *  CAP038 - Conversion of SD inputs into modular structure      *
+      *           to use as APIs.                                     *
+      *           Recompiled over changed SDBSRTPD.                   *
+      *  CSW097 - SWIFT 1997 Changes for FRAIRS MT34* and MT36*.      *
       *           Recompiled over changed SDBSRTR0.                   *
       *  CAP002 - Member converted from an OPM program to an ILE      *
       *           module and an ILE *PGM member of the same name has  *
       *           been created (in AOPGMSRC).                         *
       *           ILE modules can make a bound call to the module.    *
       *           OPM programs can make a dynamic call to the *PGM.   *
-     F*     CSW005 - RECOMPILED OVER CHANGED SDBSRTPD.                   *
-     F*     S01461 - RECOMPILED OVER CHANGED SDBSRTPD.                   *
-     F*     LN0357 - CHANGE SD0560S TO SD0170S                           *LN0357
-     F*     LN0212 - FORMAT OF LOGICAL FILE SDBSRTL1 HAS CHANGED         *LN0212
-     F*     S01230 - STANDARDISE ACCES PROGRAMS                          *S01230
+     F*     CSW005 - RECOMPILED OVER CHANGED SDBSRTPD.                *
+     F*     S01461 - RECOMPILED OVER CHANGED SDBSRTPD.                *
+     F*     LN0357 - CHANGE SD0560S TO SD0170S                        *   LN0357
+     F*     LN0212 - FORMAT OF LOGICAL FILE SDBSRTL1 HAS CHANGED      *   LN0212
+     F*     S01230 - STANDARDISE ACCES PROGRAMS                       *   S01230
      F*
      F* ID F  C  H  L  FUNCTION OF INDICATORS
      F*

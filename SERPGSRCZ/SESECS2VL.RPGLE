@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD035962           Date 25May16               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD035962           Date 25May16               *
       *                 MD000091           Date 16May13               *
       *                 AR1077984          Date 17Jan13               *
       *                 AR750169           Date 17Sep12               *
@@ -61,6 +62,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD035962 - NCD incorrectly defaulted to maturity date. Make  *
       *             sure next coupon date is defaulted first before   *

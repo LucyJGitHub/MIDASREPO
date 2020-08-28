@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD050457           Date 06Mar19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055481           Date 12Aug20               *
+      *  Prev Amend No. MD050457           Date 06Mar19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CLE139             Date 06Dec10               *
@@ -70,6 +71,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055481 - Use Original borrower on report for participation *
+      *             purchased loans when system set up is 'O'         *
+      *             (Original Borrower).                              *
       *  MD050457 - Do not process DBERR when customer is closed.     *
       *             Patterned fic from 263371.                        *
       *  MD046248 - Finastra Rebranding                               *
@@ -308,6 +312,8 @@
      ISCSARD    E DSSCSARDPD                                              CLE005
       ** External DS for SAR Details                                      CLE005
       *
+     I              'LoanCustOriginPurch' C         WPARM                                   MD055481
+      *                                                                                     MD055481
      C/EJECT
      C                     MOVEACPY@      BIS@   80
       *
@@ -743,6 +749,7 @@
       *
       ** MBIN IFNE 'Y' end
      C                     END
+     C                     SETOF                     36                                     MD055481
      C                     MOVE FEDIND    @DUE    1
      C           FEDIND    CASEQ'A'       C0000            OVERDUE
      C                     END
@@ -912,6 +919,45 @@
      C                     ELSE                                                               CLE134
      C                     MOVE 'N'       CLE134  1                                           CLE134
      C                     ENDIF                                                              CLE134
+      *                                                                                     MD055481
+      ** Check System Value: Use Original Borrower or Purchased From?                       MD055481
+      ** Set up parameter so access object checks LoanCustOriginPurch                       MD055481
+      *                                                                                     MD055481
+     C                     MOVELWPARM     SVALK1                                            MD055481
+      *                                                                                     MD055481
+     C                     CALL 'AOSVALR0'                                                  MD055481
+     C                     PARM           RTNCDE  7                                         MD055481
+     C                     PARM           SVALK1 20                                         MD055481
+     C                     PARM           SVAL1 200                                         MD055481
+     C                     PARM           SVALK2 20                                         MD055481
+     C                     PARM           SVAL2 200                                         MD055481
+     C                     PARM           SVALK3 20                                         MD055481
+     C                     PARM           SVAL3 200                                         MD055481
+     C                     PARM           SVALK4 20                                         MD055481
+     C                     PARM           SVAL4 200                                         MD055481
+     C                     PARM           SVALK5 20                                         MD055481
+     C                     PARM           SVAL5 200                                         MD055481
+     C                     PARM           SVALK6 20                                         MD055481
+     C                     PARM           SVAL6 200                                         MD055481
+     C                     PARM           SVALK7 20                                         MD055481
+     C                     PARM           SVAL7 200                                         MD055481
+     C                     PARM           SVALK8 20                                         MD055481
+     C                     PARM           SVAL8 200                                         MD055481
+     C                     PARM           SVALK9 20                                         MD055481
+     C                     PARM           SVAL9 200                                         MD055481
+     C                     PARM           SVALK0 20                                         MD055481
+     C                     PARM           SVAL10200                                         MD055481
+      *                                                                                     MD055481
+      ** If the system value is not found then default value to 'P'                         MD055481
+      *                                                                                     MD055481
+     C           RTNCDE    IFNE *BLANKS                                                     MD055481
+     C                     MOVE 'P'       PPCUST                                            MD055481
+     C                     ELSE                                                             MD055481
+      *                                                                                     MD055481
+      ** Isolate the first character of SVAL1 which = 'P' or 'O'.                           MD055481
+      *                                                                                     MD055481
+     C                     MOVELSVAL1     PPCUST  1                                         MD055481
+     C                     ENDIF                                                            MD055481
       *                                                                   153792
      C                     ENDSR
      C/EJECT
@@ -1025,6 +1071,9 @@
      C                     MOVE FCUS      CNUM                            153792
      C                     MOVE FTYP      FACT                            153792
      C                     MOVE FSEQ      FCNO                            153792
+     C           PPCUST    IFEQ 'O'                                                         MD055481
+     C                     EXSR ORIGB                                                       MD055481
+     C                     ENDIF                                                            MD055481
      C                     ENDIF                                          153792
      C                     ENDIF                                          153792
       *                                                                   153792
@@ -1177,6 +1226,9 @@
      C                     MOVE FCUS      CNUM                            153792
      C                     MOVE FTYP      FACT                            153792
      C                     MOVE FSEQ      FCNO                            153792
+     C           PPCUST    IFEQ 'O'                                                         MD055481
+     C                     EXSR ORIGB                                                       MD055481
+     C                     ENDIF                                                            MD055481
      C                     ENDIF                                          153792
      C                     ENDIF                                          153792
       *                                                                   153792
@@ -1316,6 +1368,9 @@
      C                     MOVE FCUS      CNUM                            153792
      C                     MOVE FTYP      FACT                            153792
      C                     MOVE FSEQ      FCNO                            153792
+     C           PPCUST    IFEQ 'O'                                                         MD055481
+     C                     EXSR ORIGB                                                       MD055481
+     C                     ENDIF                                                            MD055481
      C                     ENDIF                                          153792
      C                     ENDIF                                          153792
       *                                                                   153792
@@ -1711,6 +1766,9 @@
      C                     MOVE FCUS      CNUM                            153792
      C                     MOVE FTYP      FACT                            153792
      C                     MOVE FSEQ      FCNO                            153792
+     C           PPCUST    IFEQ 'O'                                                         MD055481
+     C                     EXSR ORIGB                                                       MD055481
+     C                     ENDIF                                                            MD055481
      C                     ENDIF                                          153792
      C                     ENDIF                                          153792
       *                                                                   153792
@@ -1972,6 +2030,23 @@
       *                                                                   153792
      C                     ENDSR                                          153792
       *                                                                   153792
+      ********************************************************************                  MD055481
+     C/TITLE SR/ORIGB - Display Original Borrower on report                                 MD055481
+      ********************************************************************                  MD055481
+     C           ORIGB     BEGSR                                                            MD055481
+      *                                                                                     MD055481
+      ** If participation purchased and system value is using Original Borrower             MD055481
+      *                                                                                     MD055481
+     C                     MOVE *BLANKS   POLNO                                             MD055481
+     C           PTYP      IFEQ 64                                                          MD055481
+     C           PTYP      OREQ 65                                                          MD055481
+     C           PTYP      OREQ 68                                                          MD055481
+     C           PTYP      OREQ 71                                                          MD055481
+     C                     MOVE '1'       *IN36                                             MD055481
+     C                     MOVE OLNO      POLNO                                             MD055481
+     C                     ENDIF                                                            MD055481
+      *                                                                                     MD055481
+     C                     ENDSR                                                            MD055481
       ********************************************************************
       *
       *  *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS

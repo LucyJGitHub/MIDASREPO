@@ -15,8 +15,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD052216           Date 04Apr19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD055481           Date 12Aug20               *
+      *  Prev Amend No. MD052216           Date 04Apr19               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR990753           Date 25Jan13               *
       *                 CLE134             Date 01Aug12               *
@@ -90,6 +91,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD055481 - Use Original borrower on report for participation *
+      *             purchased loans when system set up is 'O'         *
+      *             (Original Borrower).                              *
       *  MD052216 - Lending Fee's Payment Due and Taken Day           *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
@@ -197,6 +201,15 @@
       ** Midas LE Set. Allocations by Transaction File                                        CLE034
       *                                                                                       CLE034
      FLEFEEQL0IF  E           K        DISK                                                 MD052216
+     FCLOAN   IF  E           K        DISK                                                 MD055481
+     F            CLOANHHF                          KIGNORE                                 MD055481
+     F            CLOANCKF                          KIGNORE                                 MD055481
+     F            CLOANZ1F                          KIGNORE                                 MD055481
+     FMLOAN   IF  E           K        DISK                                                 MD055481
+     F            CLOANHHF                          KIGNORE                                 MD055481
+     F            CLOANCKF                          KIGNORE                                 MD055481
+     F            CLOANZ1F                          KIGNORE                                 MD055481
+     F            CLOANCLF                          KRENAMEMCLONCLF                         MD055481
      F/COPY WNCPYSRC,LEH00554
      FLER140P1O   E             80     PRINTER      KINFDS SPOOL      UC
       * Lending Fees Input Today - audit
@@ -261,6 +274,23 @@
      I              SEQ                             SASEQ                                     CLE034
      I              CCY                             SACCY                                     CLE038
       *                                                                                       CLE034
+     ICLOANCLF                                                                              MD055481
+      ** Rename fields                                                                      MD055481
+     I              RECI                            CRECI                                   MD055481
+     I              LNRF                            CLNRF                                   MD055481
+     I              RCDT                            CRCDT                                   MD055481
+     I              PTYP                            CPTYP                                   MD055481
+     I              LASQ                            CLASQ                                   MD055481
+     I              OLNO                            COLNO                                   MD055481
+     IMCLONCLF                                                                              MD055481
+      ** Rename fields                                                                      MD055481
+     I              RECI                            MRECI                                   MD055481
+     I              LNRF                            MLNRF                                   MD055481
+     I              RCDT                            MRCDT                                   MD055481
+     I              PTYP                            MPTYP                                   MD055481
+     I              LASQ                            MLASQ                                   MD055481
+     I              OLNO                            MOLNO                                   MD055481
+      *                                                                                     MD055481
      I            DS
      I* Fee amount editing
      I                                        1  130@DSAMT
@@ -385,6 +415,8 @@
      IDSSDY     E DSDSSDY
       ** Second DS for access programs, long data structure
       *
+     I              'LoanCustOriginPurch' C         WPARM                                   MD055481
+      *                                                                                     MD055481
      C/EJECT
       *
       ** Set up copyright statement
@@ -436,6 +468,11 @@
      C                     KFLD           FEFSEQ                                              CLE034
      C/COPY WNCPYSRC,LEH00555
       *                                                                                       CLE034
+     C                     MOVE 'A'       KRCDT                                             MD055481
+     C           KCLOAN    KLIST                                                            MD055481
+     C                     KFLD           FELOAN                                            MD055481
+     C                     KFLD           KRCDT   1                                         MD055481
+      *                                                                                     MD055481
      C                     SETOF                     80
       *
      C/COPY WNCPYSRC,LER140CCP1                                           S01408
@@ -444,6 +481,29 @@
      C           *IN01     IFEQ '0'
      C                     EXSR B0000
      C                     END
+      *                                                                                     MD055481
+     C                     SETOF                     56                                     MD055481
+     C           FELOAN    IFNE *BLANKS                                                     MD055481
+     C           PPCUST    ANDEQ'O'                                                         MD055481
+     C                     MOVE *BLANKS   POLNO                                             MD055481
+      *                                                                                     MD055481
+      ** Check on MCLONCL if loan is not found in CLOANCL                                   MD055481
+      *                                                                                     MD055481
+     C           KCLOAN    CHAINCLOAN                88                                     MD055481
+     C           *IN88     IFEQ '0'                                                         MD055481
+     C                     MOVE COLNO     WOLNO   6                                         MD055481
+     C                     MOVE CPTYP     WPTYP   20                                        MD055481
+     C                     EXSR ORIGB                                                       MD055481
+     C                     ELSE                                                             MD055481
+     C           KCLOAN    CHAINMLOAN                88                                     MD055481
+     C           *IN88     IFEQ '0'                                                         MD055481
+     C                     MOVE MOLNO     WOLNO                                             MD055481
+     C                     MOVE MPTYP     WPTYP                                             MD055481
+     C                     EXSR ORIGB                                                       MD055481
+     C                     ENDIF                                                            MD055481
+     C                     ENDIF                                                            MD055481
+     C                     ENDIF                                                            MD055481
+      *                                                                                     MD055481
      C                     ADD  1         @REC    50
      C           FECAPI    IFEQ 'Y'                                                        AR750543A
      C                     ADD  1         @CPREC  50                                       AR750543A
@@ -759,6 +819,46 @@
      C                     MOVE 'N'       CLE073                                              CLE073
      C                     ENDIF                                                              CLE073
       *                                                                                       CLE073
+      *                                                                                     MD055481
+      ** Check System Value: Use Original Borrower or Purchased From?                       MD055481
+      ** Set up parameter so access object checks LoanCustOriginPurch                       MD055481
+      *                                                                                     MD055481
+     C                     MOVELWPARM     SVALK1                                            MD055481
+      *                                                                                     MD055481
+     C                     CALL 'AOSVALR0'                                                  MD055481
+     C                     PARM           RTNCDE  7                                         MD055481
+     C                     PARM           SVALK1 20                                         MD055481
+     C                     PARM           SVAL1 200                                         MD055481
+     C                     PARM           SVALK2 20                                         MD055481
+     C                     PARM           SVAL2 200                                         MD055481
+     C                     PARM           SVALK3 20                                         MD055481
+     C                     PARM           SVAL3 200                                         MD055481
+     C                     PARM           SVALK4 20                                         MD055481
+     C                     PARM           SVAL4 200                                         MD055481
+     C                     PARM           SVALK5 20                                         MD055481
+     C                     PARM           SVAL5 200                                         MD055481
+     C                     PARM           SVALK6 20                                         MD055481
+     C                     PARM           SVAL6 200                                         MD055481
+     C                     PARM           SVALK7 20                                         MD055481
+     C                     PARM           SVAL7 200                                         MD055481
+     C                     PARM           SVALK8 20                                         MD055481
+     C                     PARM           SVAL8 200                                         MD055481
+     C                     PARM           SVALK9 20                                         MD055481
+     C                     PARM           SVAL9 200                                         MD055481
+     C                     PARM           SVALK0 20                                         MD055481
+     C                     PARM           SVAL10200                                         MD055481
+      *                                                                                     MD055481
+      ** If the system value is not found then default value to 'P'                         MD055481
+      *                                                                                     MD055481
+     C           RTNCDE    IFNE *BLANKS                                                     MD055481
+     C                     MOVE 'P'       PPCUST                                            MD055481
+     C                     ELSE                                                             MD055481
+      *                                                                                     MD055481
+      ** Isolate the first character of SVAL1 which = 'P' or 'O'.                           MD055481
+      *                                                                                     MD055481
+     C                     MOVELSVAL1     PPCUST  1                                         MD055481
+     C                     ENDIF                                                            MD055481
+      *                                                                                     MD055481
      C                     ENDSR
      C/EJECT
       ********************************************************************
@@ -2033,6 +2133,23 @@
       *                                                                                       CLE034
      C                     ENDSR                                                              CLE034
      C/EJECT                                                                                  CLE034
+      ********************************************************************                  MD055481
+     C/TITLE SR/ORIGB - Display Original Borrower on report                                 MD055481
+      ********************************************************************                  MD055481
+     C           ORIGB     BEGSR                                                            MD055481
+      *                                                                                     MD055481
+      ** If participation purchased and system value is using Original Borrower             MD055481
+      *                                                                                     MD055481
+     C                     MOVE *BLANKS   POLNO                                             MD055481
+     C           WPTYP     IFEQ 64                                                          MD055481
+     C           WPTYP     OREQ 65                                                          MD055481
+     C           WPTYP     OREQ 68                                                          MD055481
+     C           WPTYP     OREQ 71                                                          MD055481
+     C                     MOVE '1'       *IN56                                             MD055481
+     C                     MOVE WOLNO     POLNO                                             MD055481
+     C                     ENDIF                                                            MD055481
+      *                                                                                     MD055481
+     C                     ENDSR                                                            MD055481
       ********************************************************************
       *
       *  *PSSR --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS

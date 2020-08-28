@@ -2332,7 +2332,8 @@
       ** Error in REHRDJ
  
      C     *IN99         IFEQ      '1'
-     C     DRIB          ANDEQ     *ZEROS
+     C*****DRIB*         ANDEQ     *ZEROS                                                     CSD103
+     C     DRIB          ANDEQ     *BLANKS                                                    CSD103
      C     DRIS          ANDEQ     *ZEROS
      C                   MOVE      '0'           *IN99
      C                   END
@@ -2400,7 +2401,8 @@
       ** Error in REHRCJ
  
      C     *IN99         IFEQ      '1'
-     C     CRIB          ANDEQ     *ZEROS
+     C*****CRIB*         ANDEQ     *ZEROS                                                     CSD103
+     C     CRIB          ANDEQ     *BLANKS                                                    CSD103
      C     CRIS          ANDEQ     *ZEROS
      C                   MOVE      '0'           *IN99
      C                   END

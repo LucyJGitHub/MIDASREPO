@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. D046248            Date 27Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CER055             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CER055 - Penalty Interest on Exceeding Overdraft Limit       *
@@ -83,8 +85,10 @@
       *
      C     *IN99         DOWEQ     *OFF
       *
-     C     DRIB          IFNE      *ZERO
-     C     CRIB          ORNE      *ZERO
+     C*****DRIB*         IFNE      *ZERO                                                      CSD103
+     C     DRIB          IFNE      *BLANKS                                                    CSD103
+     C*****CRIB*         ORNE      *ZERO                                                      CSD103
+     C     CRIB          ORNE      *BLANKS                                                    CSD103
       *
      C     KACNT         SETLL     ACCNTBY0                               99
       *
@@ -189,7 +193,8 @@
       ** margin rate override has not been set up
      C** Note if the rate/spread is zero, margin will default to zero
       *
-     C     DRIB          IFNE      *ZEROS
+     C*****DRIB*         IFNE      *ZEROS                                                     CSD103
+     C     DRIB          IFNE      *BLANKS                                                    CSD103
      C     ATOVRD        ANDNE     'Y'
      C                   Z-ADD     DRIS          ATDRMG
      C                   Z-ADD     BJRDNB        ATDRMD
@@ -197,7 +202,8 @@
      C                   MOVEL     'Y'           UPDATE
      C                   ENDIF
       *
-     C     CRIB          IFNE      *ZEROS
+     C*****CRIB*         IFNE      *ZEROS                                                     CSD103
+     C     CRIB          IFNE      *BLANKS                                                    CSD103
      C     ATOVRC        ANDNE     'Y'
      C                   Z-SUB     CRIS          ATCRMG
      C                   Z-ADD     BJRDNB        ATCRMD

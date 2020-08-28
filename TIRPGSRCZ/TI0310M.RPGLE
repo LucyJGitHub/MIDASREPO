@@ -927,7 +927,8 @@
      C                   Z-ADD     BJRDNB        AB_LACD                                      CTI005
      C                   Z-ADD     0             AB_LISP                                      CTI005
      C                   Z-ADD     0             AB_RRNM                                      CTI005
-     C                   Z-ADD     0             AB_DRIB                                      CTI005
+     C**********         Z-ADD     0             AB_DRIB                               CTI005 CSD103
+     C                   MOVE      *BLANKS       AB_DRIB                                      CSD103
      C                   Z-ADD     0             AB_DRIS                                      CTI005
      C                   Z-ADD     BJRDNB        AB_DRCD                                      CTI005
      C                   Z-ADD     0             AB_DRIC                                      CTI005
@@ -945,9 +946,11 @@
      C                   MOVE      ' '           AB_DDIS                                      CTI005
      C                   Z-ADD     BJRDNB        AB_DDIA                                      CTI005
      C                   Z-ADD     BJRDNB        AB_OLDR                                      CTI005
-     C                   Z-ADD     0             AB_OLDB                                      CTI005
+     C**********         Z-ADD     0             AB_OLDB                               CTI005 CSD103
+     C                   MOVE      *BLANKS       AB_OLDB                                      CSD103
      C                   Z-ADD     0             AB_OLDS                                      CTI005
-     C                   Z-ADD     0             AB_CRIB                                      CTI005
+     C**********         Z-ADD     0             AB_CRIB                               CTI005 CSD103
+     C                   MOVE      *BLANKS       AB_CRIB                                      CSD103
      C                   Z-ADD     0             AB_CRIS                                      CTI005
      C                   Z-ADD     BJRDNB        AB_CRCD                                      CTI005
      C                   Z-ADD     0             AB_CRIC                                      CTI005
@@ -965,7 +968,8 @@
      C                   MOVE      ' '           AB_CDIS                                      CTI005
      C                   Z-ADD     BJRDNB        AB_DCIA                                      CTI005
      C                   Z-ADD     BJRDNB        AB_OLCR                                      CTI005
-     C                   Z-ADD     0             AB_OLCB                                      CTI005
+     C**********         Z-ADD     0             AB_OLCB                               CTI005 CSD103
+     C                   MOVE      *BLANKS       AB_OLCB                                      CSD103
      C                   Z-ADD     0             AB_OLCS                                      CTI005
      C                   Z-ADD     BJRDNB        AB_LCD                                       CTI005
      C                   MOVE      'I'           AB_CHTP                                      CTI005

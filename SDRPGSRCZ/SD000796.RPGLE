@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD052645           Date 29May19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD052645           Date 29May19               *
       *                 MD046248           Date 05Feb18               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 15Feb17               *
@@ -62,6 +63,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD052645 - Cannot enquire customer with 'N' Threshold Method *
       *  MD046248 - Finastra Rebranding                               *

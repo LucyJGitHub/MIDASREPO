@@ -5410,7 +5410,8 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   ELSE                                                               AR871763
      C                   MOVEL(P)  AMCRIB        @BSRC                                      AR871763
      C                   ENDIF                                                              AR871763
-     C                   IF        @BSRC <> '00'                                            AR883751
+     C**********         IF        @BSRC <> '00'                                     AR883751 CSD103
+     C                   IF        @BSRC <> *BLANKS                                           CSD103
      C                   CALLB     'AOBSRTR0'                                               AR871763
      C                   PARM      '*MSG    '    @RTCD                                      AR871763
      C                   PARM      '*KEY    '    @OPTN                                      AR871763

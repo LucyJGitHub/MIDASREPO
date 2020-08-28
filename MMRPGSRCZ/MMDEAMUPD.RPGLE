@@ -346,7 +346,8 @@
      C/COPY WNCPYSRC,MMDEAMDC02
       *
       ** BASE RATE CODE
-     C                   Z-ADD     *ZERO         BRTT
+     C**********         Z-ADD     *ZERO         BRTT                                         CSD103
+     C                   MOVE      *BLANKS       BRTT                                         CSD103
       *
       ** RATE/SPREAD
      C                   Z-ADD     IGINTR        RTSP

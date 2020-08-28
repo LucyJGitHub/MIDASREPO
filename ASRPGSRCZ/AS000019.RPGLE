@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -257,7 +259,8 @@
      D PZAmtCo         S             15  0
      D WKCycd          S              3
      D WkEvCtDt        S              5P 0
-     D WBRTT           S              2  0
+     D*WBRTT****       S              2  0                                                    CSD103
+     D WBRTT           S              2A                                                      CSD103
      D WINFD           S              5  0
      D WFXRT           S             11  7
  
@@ -687,14 +690,16 @@
       *
      C                   SELECT
      C                   WHEN      JFSPRTP = 'FV'
-     C                   IF        UBRTT = *ZEROS
+     C**********         IF        UBRTT = *ZEROS                                             CSD103
+     C                   IF        UBRTT = *BLANKS                                            CSD103
      C                   EVAL      XXMRAT = UEINR
      C                   ELSE
      C                   EVAL      XXMRAT = TEINR
      C                   ENDIF
       *
      C                   WHEN      JFSPRTP = 'CF'
-     C                   IF        UBRTT = *ZEROS
+     C**********         IF        UBRTT = *ZEROS                                             CSD103
+     C                   IF        UBRTT = *BLANKS                                            CSD103
      C                   EVAL      XXMRAT = TEINR
      C                   ELSE
      C                   EVAL      XXMRAT = UEINR
@@ -874,11 +879,13 @@
      C                   Z-ADD     0             WFRART
       *
      C                   IF        BYSL = 'B'
-     C                   Z-ADD     TBRTT         WBRTT
+     C**********         Z-ADD     TBRTT         WBRTT                                        CSD103
+     C                   MOVE      TBRTT         WBRTT                                        CSD103
      C                   Z-ADD     TEINR         WFXRT
      C                   Z-ADD     TINFD         WINFD
      C                   ELSE
-     C                   Z-ADD     UBRTT         WBRTT
+     C**********         Z-ADD     UBRTT         WBRTT                                        CSD103
+     C                   MOVE      UBRTT         WBRTT                                        CSD103
      C                   Z-ADD     UEINR         WFXRT
      C                   Z-ADD     UINFD         WINFD
      C                   ENDIF

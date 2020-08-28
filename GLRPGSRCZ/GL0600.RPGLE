@@ -12,7 +12,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
       *  Prev Amend No. MD055382           Date 02Apr20               *
       *                 AR954846           Date 09Jan20               *
       *                 255478A            Date 03Oct19               *
@@ -27,7 +27,7 @@
       *                 MD035554           Date 25May16               *
       *                 MD037046           Date 12Feb16               *
       *                 CRE095             Date 25Apr14               *
-      *                 MD031057           Date 24Feb15             *
+      *                 MD031057           Date 24Feb15               *
       *                 240699             Date 19Aug14               *
       *                 MD028392           Date 14Jul14               *
       *                 CRE090             Date 14Feb14               *

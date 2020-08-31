@@ -857,7 +857,8 @@
      C** ERROR IN REHRDJ                                                                      217184
      C*                                                                                       217184
      C     *IN99         IFEQ      '1'                                                        217184
-     C     DRIB          ANDEQ     *ZEROS                                                     217184
+     C*****DRIB*         ANDEQ     *ZEROS                                              217184 CSD103
+     C     DRIB          ANDEQ     *BLANKS                                                    CSD103
      C     DRIS          ANDEQ     *ZEROS                                                     217184
      C     OLDR          ORNE      *ZEROS                                                     217184
      C                   MOVE      '0'           *IN99                                        217184
@@ -914,7 +915,8 @@
      C** ERROR IN REHRCJ                                                                      217184
      C*                                                                                       217184
      C     *IN99         IFEQ      '1'                                                        217184
-     C     CRIB          ANDEQ     *ZEROS                                                     217184
+     C*****CRIB*         ANDEQ     *ZEROS                                              217184 CSD103
+     C     CRIB          ANDEQ     *BLANKS                                                    CSD103
      C     CRIS          ANDEQ     *ZEROS                                                     217184
      C     OLCR          ORNE      *ZEROS                                                     217184
      C                   MOVE      '0'           *IN99                                        217184

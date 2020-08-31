@@ -743,14 +743,16 @@
       *****************************************************************
      C     GETACC        BEGSR
  
-     C                   Z-ADD     0             CRIB
+     C**********         Z-ADD     0             CRIB                                         CSD103
+     C                   MOVE      *BLANKS       CRIB                                         CSD103
      C                   Z-ADD     0             CRIS
      C                   Z-ADD     0             CRIC
      C                   Z-ADD     0             CRCD
      C                   MOVE      *BLANKS       CRIF
      C                   Z-ADD     0             CRDY
      C                   Z-ADD     0             NCID
-     C                   Z-ADD     0             DRIB
+     C**********         Z-ADD     0             DRIB                                         CSD103
+     C                   MOVE      *BLANKS       DRIB                                         CSD103
      C                   Z-ADD     0             DRIS
      C                   Z-ADD     0             DRIC
      C                   Z-ADD     0             DRCD

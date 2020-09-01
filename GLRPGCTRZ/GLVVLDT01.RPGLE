@@ -258,7 +258,7 @@
      C                   EXSR      SRValNum
       *                                                                                     MD055528
      C                   ENDIF
-     C                   ENDIF                                                              MD055528     
+     C                   ENDIF                                                              MD055528
       *
       ** If entry is numeric and is in valid format, perform
       ** Value Date Account validation.
@@ -500,7 +500,7 @@
       *
       ** Account details (DS)
      C                   PARM                    F1ACCT
-     C                   PARM                    DDBTNB            3                        MD055528     
+     C                   PARM                    DDBTNB            3                        MD055528
       *
       ** STANDING DATA
       ** =============
@@ -583,7 +583,7 @@
      C                   MOVE      'Y'           CGL150            1                          CGL150
      C                   ELSE                                                                 CGL150
      C                   MOVE      'N'           CGL150                                       CGL150
-     C                   ENDIF     															  CGL150	
+     C                   ENDIF                                                                CGL150
       *                                                                                     MD055528
       ** Access Switchable Features file to check if CSC054 is                              MD055528
       ** installed                                                                          MD055528
@@ -598,7 +598,7 @@
      C                   MOVE      'Y'           CSC054            1                        MD055528
      C                   ELSE                                                               MD055528
      C                   MOVE      'N'           CSC054                                     MD055528
-     C                   ENDIF                                                              MD055528                                                                 
+     C                   ENDIF                                                              MD055528
       *                                                                         CGL010
       ** Access General Ledger details                                          CGL010
       *                                                                         CGL010

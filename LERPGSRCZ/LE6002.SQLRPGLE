@@ -806,7 +806,8 @@
      C                   MOVE      'CLOANCL '    DBFILE
      C                   GOTO      END
      C                   ELSE
-     C                   MOVE      BRTT          BRTTPH            2 0
+     C**********         MOVE      BRTT          BRTTPH            2 0                        CSD103
+     C                   MOVE      BRTT          BRTTPH            2                          CSD103
       *
      C     PTFR          IFNE      *BLANKS                                      - B2
      C     BGPFMG        ANDEQ     'Y'
@@ -2961,8 +2962,10 @@
       * EFFECTIVE INTEREST RATE IS TO BE UPDATED
      C     AMTPLA        COMP      'BC'                                   87
      C  N87              GOTO      SPREAD
-     C     BRTTLA        COMP      0                                  87
-     C   87              MOVE      BRTTLA        BRTKEY            2 0
+     C*****BRTTLA        COMP      0                                  87                      CSD103
+     C***87*****         MOVE      BRTTLA        BRTKEY            2 0                        CSD103
+     C     BRTTLA        COMP      *BLANKS                            87                      CSD103
+     C   87              MOVE      BRTTLA        BRTKEY            2                          CSD103
      C   87              EXSR      SRBRTD
      C   87
      CAN 55              SETON                                        U7U8      * DBERR 24 *
@@ -3300,7 +3303,8 @@
       *
       * CHECK IF NEW BASE RATE APPLICABLE
      C     CHIN          COMP      'R'                                    88
-     C     NBRA          COMP      0                                  87
+     C*****NBRA*         COMP      0                                  87                      CSD103
+     C     NBRA          COMP      *BLANKS                            87                      CSD103
      C   88              MOVE      BRTT          BRTKEY
      C     *IN88         Ifeq      *On
      C     Brtkey        andeq     0
@@ -3357,7 +3361,8 @@
       *
       * CHECK IF NEW BASE RATE APPLICABLE
      C     CHIN          COMP      'R'                                    88
-     C     NBRA          COMP      0                                  87
+     C*****NBRA*         COMP      0                                  87                      CSD103
+     C     NBRA          COMP      *BLANKS                            87                      CSD103
      C   88              MOVE      BRTT          BRTKEY
      C   87              MOVE      NBRA          BRTKEY
      C  N88

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD032884           Date 09Jun15               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD032884           Date 09Jun15               *
       *                 CAP208             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD032884 - Performance enhancement for GOCXCLTS. Recompiled  *
       *             due to change in GOPOSNPD.                        *
@@ -35,69 +37,69 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
      FGPPOSNPD  O    E           K DISK    INFSR(*PSSR) USROPN  COMMIT
      F                                     RENAME(GOPOSND0:GPPOSND0)
- 
+
      FGOPOSNPD  O    E           K DISK    INFSR(*PSSR) USROPN
- 
- 
+
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
- 
+
+
      D FBPS          E DS                  EXTNAME(POSTNKD)
      D MARKTX        E DS                  EXTNAME(MARKTD)  PREFIX(MK_)
      D INTYPX        E DS                  EXTNAME(INTYPD)  PREFIX(IN_)
- 
- 
+
+
       ** T R A N S A C T I O N    D E T A I L S
      D T_TRAP        E DS                  EXTNAME(GPTRAPPD)
       ** P O S I T I O N    D E T A I L S
      D P_POSN        E DS                  EXTNAME(GPPOSNPD)
- 
- 
+
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
- 
+
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7            * RETURN CODE
      C                   PARM                    I#ERMS           50            * ERROR MESSAGE
       * INPUTS
      C                   PARM                    I#LOC             4
      C                   PARM                    I#CCID           10 0
- 
+
      C                   PARM                    I#RDNB            5 0
      C                   PARM                    I#DNWD            5 0
      C                   PARM                    I#PCOD            5 0
- 
+
      C                   PARM                    FBPS
      C                   PARM                    MARKTX
      C                   PARM                    INTYPX
- 
+
       * SETUP TRANSACTION INDEX RECORD
- 
+
      C                   EXSR      SETUP_TRAP
- 
+
       * WRITE TRADE DATE POSITION
- 
+
      C                   MOVEL     'T'           Trade_Value       1
      C                   EXSR      WRITE_BAL
- 
+
       * WRITE VALUE DATE POSITION
- 
+
      C                   MOVEL     'V'           Trade_Value
      C                   EXSR      WRITE_BAL
- 
+
       * WRITE TRANSACTION INDEX RECORD
       * Commitment Cycle ID
      C                   Z-ADD     I#CCID        T_CCID
      C                   EXSR      WRITE_TRAP
- 
+
       * RETURN
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -120,7 +122,7 @@
      C                   PARM                    INTYPX
       * OUTPUTS
      C                   PARM                    T_TRAP
- 
+
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOSETFBPS'
      C                   EXSR      *PSSR
@@ -133,11 +135,11 @@
       * WRITE TRANSACTION INDEX RECORD
       *****************************************************************
      C     WRITE_TRAP    BEGSR
- 
+
      C                   MOVEL     'Y'           I#CUSTDEFLT
- 
+
       /COPY GOCPYSRC,GOWRTTRAP
- 
+
      C                   ENDSR
       *****************************************************************
      C/SPACE 5
@@ -210,14 +212,14 @@
       * *INZSR
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
       * Open files
      C     I#LOC         IFEQ      'GLOB'
      C                   OPEN      GPPOSNPD
      C                   ELSE
      C                   OPEN      GOPOSNPD
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5

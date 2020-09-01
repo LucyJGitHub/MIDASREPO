@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. 258638             Date 30Aug19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. 258638             Date 30Aug19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD032884           Date 09Jun15               *
       *                 261324             Date 24Apr13               *
       *                 CRE073             Date 06Dec10               *
@@ -41,6 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *   258638 - GOC0020 00011 failed with various dumps due to     *
       *            blank Interest Calculation Method.                 *
       *          - Applied for MD-53803.                              *
@@ -114,7 +116,7 @@
 
 
       ** The size of the detail arrays
-     D ArrSizDet       C                   CONST(360) 
+     D ArrSizDet       C                   CONST(360)
 
       * WORK ARRAYS OF EVENT DATES AND DATA
      D #arevdt_WK    E DS                  EXTNAME(DEEVDTPD) PREFIX(WK)

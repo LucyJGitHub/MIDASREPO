@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054870           Date 17Jan20               *
-      *  Prev Amend No. MD052663           Date 04Feb19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD054870           Date 17Jan20               *
+      *                 MD052663           Date 04Feb19               *
       *                 MD051197           Date 05Jun18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD032884           Date 09Jun15               *
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD054870 - Management Limit Exposure for contingent account  *
       *             is incorrect                                      *
       *  MD052663 - Database error: Not authorized to object CREABCQ  *

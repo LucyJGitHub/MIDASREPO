@@ -16,14 +16,16 @@
       *                                                               *
       *  Called By: SCTRIGGER                                         *
       *                                                               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BG3697  *CREATE    Date 23May04               *
+      *  Prev Amend No. BG3697  *CREATE    Date 23May04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  BG3697 - Convert TI SQL triggers to RPG                      *
       *                                                               *
       *****************************************************************

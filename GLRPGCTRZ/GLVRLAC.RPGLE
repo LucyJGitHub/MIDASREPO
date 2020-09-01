@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CRE114             Date 19Feb18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR1001991          Date 06Aug12               *
+      *  Prev Amend No. CRE114             Date 19Feb18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD042377           Date 01Dec16               *
       *                 MD034451C          Date 02Mar16               *
       *                 MD041157           Date 09Aug16               *
@@ -60,6 +61,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1001991 - Cannot close a/cs. Error message "MsgId RE75964 -*
+      *              Ac cannot be mbr of Group A/c Hierarchy" is      *
+      *              encounter. Accounts are allowed to be closed if  *
+      *              removed from ZS hierarchy and GA hierarchy. Fix  *
+      *              partially patterned in GEMS Fix 249548.          *
+      *              (Child:AR1001992)                                *
       *  CRE114   - Modulus 10 for Retail Account Number (FOB006)     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD042377 - Error RE71053 should only be validated against a  *
@@ -207,6 +214,7 @@
       ** LF to allow a chain on prime linked account                                          226550
       *                                                                                       226550
      FRELINKJ2  IF   E           K DISK    INFSR(*PSSR)                                       226550
+     FREACCML1  IF   E           K DISK    INFSR(*PSSR)                                    AR1001991
      FSWACB     IF   E           K DISK    INFSR(*PSSR)                                       263834
      F                                     IGNORE(SWACSSAF)                                   263834
      F                                     IGNORE(SWACSSCF)                                   263834
@@ -773,6 +781,11 @@
      C*                                                                         216306
      C     KSTAND        CHAIN     REGAMXL1                           80        216306
      C     *IN80         IfEq      '0'                                          216306
+      *                                                                                    AR1001991
+      ** Check if member id 'live' in hierachy members                                     AR1001991
+      *                                                                                    AR1001991
+     C     GMEID         CHAIN     REACCML1                           80                   AR1001991
+     C     *IN80         IfEq      '0'                                                     AR1001991
      C                   Move      'N'           DDCUSNOk                       216306
      C                   Move      'N'           DDCcyOk                        216306
      C                   Move      'N'           DDACodOk                       216306
@@ -782,9 +795,15 @@
      C                   Movel     'DDAcNo'      FldNamXAr(Idx)                 216306
      C                   Movel     'RE75964'     MsgIDXAr(Idx)                  216306
      C                   EndIf                                                  216306
+     C                   EndIf                                                             AR1001991
      C*                                                                         216306
      C     KSTAND        CHAIN     REZSMXL1                           80        216306
      C     *IN80         IfEq      '0'                                          216306
+      *                                                                                    AR1001991
+      ** Check if member id 'live' in hierachy members                                     AR1001991
+      *                                                                                    AR1001991
+     C     ZMMEID        CHAIN     REACCML1                           80                   AR1001991
+     C     *IN80         IfEq      '0'                                                     AR1001991
      C                   Move      'N'           DDCUSNOk                       216306
      C                   Move      'N'           DDCcyOk                        216306
      C                   Move      'N'           DDACodOk                       216306
@@ -794,6 +813,7 @@
      C                   Movel     'DDAcNo'      FldNamXAr(Idx)                 216306
      C                   Movel     'RE75965'     MsgIDXAr(Idx)                  216306
      C                   EndIf                                                  216306
+     C                   EndIf                                                             AR1001991
       *
       ** ACCOUNT CANNOT BE AN ALTERNATIVE ACCOUNT
      C                   IF        ATYP = 'R'                                               MD042377

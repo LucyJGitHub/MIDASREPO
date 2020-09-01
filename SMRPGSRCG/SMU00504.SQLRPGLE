@@ -25,6 +25,29 @@
      D PNewBFLib       S             10A
      D PReturn         S              1A
 
+      ** Parameter variables for access object GPAOSVALR0
+     D PRtCd           S              7A   INZ(*BLANKS)
+     D PSysVal01       S             20A   INZ(*BLANKS)
+     D PSysValCurS01   S            200A   INZ(*BLANKS)
+     D PSysVal02       S             20A   INZ(*BLANKS)
+     D PSysValCurS02   S            200A   INZ(*BLANKS)
+     D PSysVal03       S             20A   INZ(*BLANKS)
+     D PSysValCurS03   S            200A   INZ(*BLANKS)
+     D PSysVal04       S             20A   INZ(*BLANKS)
+     D PSysValCurS04   S            200A   INZ(*BLANKS)
+     D PSysVal05       S             20A   INZ(*BLANKS)
+     D PSysValCurS05   S            200A   INZ(*BLANKS)
+     D PSysVal06       S             20A   INZ(*BLANKS)
+     D PSysValCurS06   S            200A   INZ(*BLANKS)
+     D PSysVal07       S             20A   INZ(*BLANKS)
+     D PSysValCurS07   S            200A   INZ(*BLANKS)
+     D PSysVal08       S             20A   INZ(*BLANKS)
+     D PSysValCurS08   S            200A   INZ(*BLANKS)
+     D PSysVal09       S             20A   INZ(*BLANKS)
+     D PSysValCurS09   S            200A   INZ(*BLANKS)
+     D PSysVal10       S             20A   INZ(*BLANKS)
+     D PSysValCurS10   S            200A   INZ(*BLANKS)
+
       ** Program work variables
      D RecType         S              3A
      D TableName       S             50A
@@ -38,6 +61,7 @@
      D PreMarker       S           1500A   VARYING INZ
      D PostMarker      S           1500A   VARYING INZ
      D PZone           S              2A
+     D PGlobalSysID    S              2A
      D WZone           S              2A
      D WSQLError       S              1A
      D WRun            S              1A
@@ -63,6 +87,40 @@
      C+ fetch first 1 rows only
      C/end-exec
 
+      ** Retrieve global system prefix
+     C                   EVAL      PSysVal01 = 'BrgMidasGlobalPrefix'
+
+     C                   CALL      'GPAOSVALR0'
+     C                   PARM      *Blank        PRtCd
+     C                   PARM                    PSysVal01
+     C                   PARM                    PSysValCurS01
+     C                   PARM                    PSysVal02
+     C                   PARM                    PSysValCurS02
+     C                   PARM                    PSysVal03
+     C                   PARM                    PSysValCurS03
+     C                   PARM                    PSysVal04
+     C                   PARM                    PSysValCurS04
+     C                   PARM                    PSysVal05
+     C                   PARM                    PSysValCurS05
+     C                   PARM                    PSysVal06
+     C                   PARM                    PSysValCurS06
+     C                   PARM                    PSysVal07
+     C                   PARM                    PSysValCurS07
+     C                   PARM                    PSysVal08
+     C                   PARM                    PSysValCurS08
+     C                   PARM                    PSysVal09
+     C                   PARM                    PSysValCurS09
+     C                   PARM                    PSysVal10
+     C                   PARM                    PSysValCurS10
+
+      ** Error routine - Retrieval of SysVal failed
+     C                   IF        PRtCd <> *BLANKS
+     C                   EVAL      DBASE = 001
+     C                   EXSR      *PSSR
+     C                   ENDIF
+
+     C                   MOVEL     PSysValCurS01 PGlobalSysID
+
       ** Read all records from Schema Migration Driver File
      C/exec SQL
      C+ declare BFMG cursor for
@@ -86,7 +144,7 @@
      C                   DOW       SQLCOD <> 100
 
      C                   IF        SQLCOD <> 0 and SQLCOD <> 100
-     C                   EVAL      DBASE = 001
+     C                   EVAL      DBASE = 002
      C                   EXSR      *PSSR
      C                   ENDIF
 
@@ -98,7 +156,8 @@
      C                             RecType = 'UPD' or
      C                             RecType = 'DEL'
 
-     C                   IF        RecType = 'INS'
+     C                   IF        RecType = 'INS' and
+     C                             UniqueFld <> *BLANKS
 
       /free
         SQLStmt = 'insert into ' + %trim(PNewBFLib) + '/' + %trim(TableName)
@@ -153,7 +212,7 @@
 
       ** If atleast one failed SQL, then end program abnormally
      C                   IF        WErrFlag = 'Y'
-     C                   EVAL      DBASE = 002
+     C                   EVAL      DBASE = 003
      C                   EXSR      *PSSR
      C                   ENDIF
 
@@ -212,6 +271,21 @@
      C                                       %trim(PZone) +
      C                                       %trim(PostMarker)
      C                   EVAL      Marker = %scan( '<ZZ>' : SQLStmt )
+     C                   ENDDO
+
+      ** Scan for marker <GG> and replace with Midas Global System Prefix
+     C                   EVAL      Marker = %scan( '<GG>' : SQLStmt )
+     C                   DOW       Marker > 0
+     C                   EVAL      PreMarker = ''
+     C                   EVAL      PostMarker = ''
+     C                   EVAL      PreMarker  = %subst( SQLStmt : 1 :
+     C                                                  Marker-1 )
+     C                   EVAL      PostMarker = %subst( SQLStmt  :
+     C                                                  Marker+4 )
+     C                   EVAL      SQLStmt = %trim(PreMarker) +
+     C                                       %trim(PGlobalSysID) +
+     C                                       %trim(PostMarker)
+     C                   EVAL      Marker = %scan( '<GG>' : SQLStmt )
      C                   ENDDO
 
      C                   ENDSR
@@ -277,7 +351,7 @@
 
      C                   IF        SQLCOD <> 0 and SQLCOD <> 100
      C                   EVAL      PReturn = 'E'
-     C                   EVAL      DBASE = 003
+     C                   EVAL      DBASE = 004
      C                   EXSR      *PSSR
      C                   ENDIF
 

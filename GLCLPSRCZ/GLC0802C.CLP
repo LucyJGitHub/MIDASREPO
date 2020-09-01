@@ -10,8 +10,9 @@
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*           1989                                                    */
 /*                                                                   */
-/*       Last Amend No. CER059             Date 19Jul10              */
-/*       Prev Amend No. BUG23582           Date 13Apr08              */
+/*       Last Amend No. LUC137             Date 28Aug20              */
+/*       Prev Amend No. CER059             Date 19Jul10              */
+/*                      BUG23582           Date 13Apr08              */
 /*                      CER037             Date 19May08              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      CAP204             Date 15Feb10              */
@@ -43,6 +44,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       LUC137 - Include Non-Auto Settle Loans Events on GL0580     */
+/*                Amend hook GLC0802C07, GLC0802C02                  */
+/*                Add hook LUC137_001                                */
 /*       CER059 - German Feature Upgrade to Delhi                    */
 /*       BUG23582 - Records in REBNODPD are not cleared              */
 /*       CER037 - Creation of the Extract File for the Online        */
@@ -80,7 +84,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*********** PGM        PARM(&PARM)                                   /*S01117*/
- 
+
 /* &RLEV IS STANDARD RCF PARM NOT USED IN THIS PROGRAM  */            /*S01117*/
              PGM        PARM(&PARM &RSEQ &RLEV &RENT)                 /*S01117*/
 /**/
@@ -126,7 +130,7 @@
 /*  Check if TI module is switched on  */                             /*CTI001*/
              IF         COND(%SST(&FMT 103 1) *EQ 'Y') THEN(CHGVAR +
                           VAR(&TION) VALUE('Y'))                      /*CTI001*/
- 
+
                                                                       /*S01473*/
 /* Access switchable features file to see if feature S01473     */    /*S01473*/
 /* is installed  */                                                   /*S01473*/
@@ -187,6 +191,7 @@
              OVRDBF     FILE(NOSEXCC) SEQONLY(*YES 100)               /*E193  */
 /*           OVRDBF     FILE(NOSEXES) SEQONLY(*YES 100)  *  /*E193 */ /*E36449*/
              OVRDBF     FILE(NOSEXSE) SEQONLY(*YES 100)               /*E193  */
+/*/COPY WNCPYSRC,LUC137_001                                           /*LUC137*/
 /**/                                                                  /*E193  */
 /************CALL       PGM(DL0554)                     */ /*E193  */ /*E22608*/
              CALL       PGM(GL0554)                                   /*E22608*/

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055528           Date 13Aug20               *      
-      *  Prev Amend No. MD053869           Date 07Jan20               *
+      *  Last Amend No. MD056479           Date 01Sep20               *
+      *  Prev Amend No. MD055528           Date 13Aug20               *      
+      *                 MD053869           Date 07Jan20               *
       *                 MD052075           Date 07Jun19               *
       *                 CGL148             Date 13Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -70,6 +71,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056479 -  Cannot accept batch due to calculated hash       *
+      *              not recalculated after deleting batch item       *
       *  MD055528 - Corrective Batches value dates are overwritten by *
       *             Booking Date.                                     *
       *           - When corrective batches value dates are equal to  *
@@ -405,8 +408,14 @@
 
       /COPY WNCPYSRC,GLBITPV004
 
+     C                   EXSR      SRACID                                                   MD056479
      C                   IF        DDACTN <> 'D'                                            MD053869
-     C                   EXSR      SRACID
+     C                   MOVE      ' '           DDAcidOK                                   MD056479
+     C                   MOVE      ' '           DDCycdOK                                   MD056479
+     C                   MOVE      ' '           DDAccdOK                                   MD056479
+     C                   MOVE      ' '           DDAcsnOK                                   MD056479
+     C                   MOVE      ' '           DDIbcaOK                                   MD056479
+     C**********         EXSR      SRACID                                                   MD056479
      C                   ENDIF                                                              MD053869
      C**********         If        CGL037 = 'Y'                                        BG9009 237621
      C**********         ExSr      ChkRetAc                                            BG9009 237621
@@ -418,8 +427,10 @@
 
       /COPY WNCPYSRC,GLBITPV006
 
+     C                   EXSR      SRPTAM                                                   MD056479
      C                   IF        DDACTN <> 'D'                                            MD053869
-     C                   EXSR      SRPTAM
+     C                   MOVE      ' '           DDPtamOK                                   MD056479
+     C**********         EXSR      SRPTAM                                                   MD056479
      C                   ENDIF                                                              MD053869
 
       /COPY WNCPYSRC,GLBITPV007

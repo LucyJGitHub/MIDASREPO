@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD046737           Date 15Aug17              */
+/*       Last Amend No. 258347             Date 04Apr12              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD046737           Date 15Aug17              */
 /*                      MD033971           Date 05Aug15              */
 /*                      MD031262           Date 13Feb15              */
 /*                      AR1092065A         Date 15Mar13              */
@@ -76,6 +77,8 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       258347   - SCKOBJLCB failed. End job CM_GAC_REP.            */
+/*                - Applied for AR927020 (Child: AR927022)           */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD046737 - User gets kicked back to command line when       */
 /*                  starting COB.                                    */
@@ -934,6 +937,36 @@ TAGUSC01:                                                                       
                 DLCOBJ     OBJ((FXCLSSTAT *DTAARA *SHRRD))            /*CDL008*/
              ENDDO                                                    /*CDL008*/
                                                                       /*CDL008*/
+/**/                                                                                      /*258347*/
+/* Access switchable features file to check if CRE008 is on */                            /*258347*/
+/**/                                                                                      /*258347*/
+             CHGVAR     VAR(&SRTCD) VALUE('       ')                                      /*258347*/
+             CHGVAR     VAR(&SOPTN) VALUE('*VERIFY')                                      /*258347*/
+             CHGVAR     VAR(&SSARD) VALUE('CRE008')                                       /*258347*/
+             CALL       PGM(AOSARDR0) PARM(&SRTCD &SOPTN &SSARD +
+                           &SSCSARD)                                                      /*258347*/
+/**/                                                                                      /*258347*/
+/* If CRE008 is on, end job CM_GAC_REP  */                                                /*258347*/
+/**/                                                                                      /*258347*/
+             IF         COND(&SRTCD *EQ '       ') THEN(DO)                               /*258347*/
+                                                                                          /*258347*/
+                ALCOBJ     OBJ((CMDTA *DTAARA *SHRRD))                                    /*258347*/
+                MONMSG     MSGID(CPF0000)                                                 /*258347*/
+                RTVDTAARA  DTAARA(CMDTA (1 10)) RTNVAR(&JOB)                              /*258347*/
+                RTVDTAARA  DTAARA(CMDTA (11 10)) RTNVAR(&USR)                             /*258347*/
+                RTVDTAARA  DTAARA(CMDTA (21 6)) RTNVAR(&NBR)                              /*258347*/
+                ENDJOB     JOB(&NBR/&USR/&JOB) OPTION(*IMMED) +
+                                 LOGLMT(0)                                                /*258347*/
+                MONMSG     MSGID(CPF0000)                                                 /*258347*/
+                CHGDTAARA  DTAARA(CMDTA (1 10)) +
+                              VALUE('          ')                                         /*258347*/
+                CHGDTAARA  DTAARA(CMDTA (11 10)) +
+                              VALUE('          ')                                         /*258347*/
+                CHGDTAARA  DTAARA(CMDTA (21 6)) +
+                              VALUE('      ')                                             /*258347*/
+                DLCOBJ     OBJ((CMDTA *DTAARA *SHRRD))                                    /*258347*/
+             ENDDO                                                                        /*258347*/
+                                                                                          /*258347*/
              CHGVAR     VAR(&SRTCD) VALUE('       ')                                      /*CGL030*/
              CHGVAR     VAR(&SOPTN) VALUE('*VERIFY')                                      /*CGL030*/
              CHGVAR     VAR(&SSARD) VALUE('CGL030')                                       /*CGL030*/

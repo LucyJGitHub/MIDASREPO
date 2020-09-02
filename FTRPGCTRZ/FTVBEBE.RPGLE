@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD021337           Date 25May16               *
+      *  Last Amend No. MD026333           Date 29Apr14               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD021337           Date 25May16               *
       *                 CSW215             Date 06Apr15               *
       *                 AR924684           Date 10Nov14               *
       *                 AR924563           Date 05Nov14               *
@@ -65,6 +66,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD026333 - Beneficiary field on Settlement screen allows     *
+      *             closed customer. Call AOCUSTR1 instead to return  *
+      *             and validate BBCLST and or BBDTDL fields.         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD021337 - Payment cannot be authorised due to blank BNCT.   *
       *             Set BNCT field if OKBnc fields is not 'N'.        *
@@ -280,6 +284,7 @@
                                                                                               CFT032
       * Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
+     D DSLDY         E DS                  EXTNAME(DSLDY)                                   MD026333
  
      D/COPY FTCPYSRC,SFTADDRILE
  
@@ -544,18 +549,25 @@
      C                             AND WIND2 = 'Y'                                          MD027201
       *
       *  Call to access pgm for Customer details
-     C                   CALLB     'AOCUSTR0'
+     C**********         CALLB     'AOCUSTR0'                                               MD026333
+     C                   CALLB     'AOCUSTR1'                                               MD026333
      C                   Parm      *Blanks       C#RTCD
      C                   Parm      '*KEY   '     C#OPTN
      C                   Parm                    C#CNUM
      C                   Parm      *Blanks       C#KYST
-     C     SDCUST        Parm      *Blanks       DSSDY
+     C*****SDCUST        Parm      *Blanks       DSSDY                                      MD026333
+     C     SDCUST        PARM      *BLANKS       DSLDY                                      MD026333
       *                                                                                     BUG13161
      C                   If        C#RTCD = '*NRF   '                                       BUG13161
      C                   Move      'N'           OKBnc1                                     BUG13161
      C                   Add       1             Idx                                        BUG13161
      C                   MOVEL     'SBNC1 '      FldNamXAr(Idx)                             BUG13161
+     C                   IF        BBDTDL <> 0 OR                                           MD026333
+     C                             BBCLST = 'Y'                                             MD026333
+     C                   MOVEL     'FTM7119'     MsgIdXAr(Idx)                              MD026333
+     C                   ELSE                                                               MD026333
      C                   Movel     'MMA1054'     MsgIdXAr(Idx)                              BUG13161
+     C                   ENDIF                                                              MD026333
      C                   Else                                                               BUG13161
       *                                                                                     BUG13161
  

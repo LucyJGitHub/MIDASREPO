@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CLE134             Date 01Aug12               *
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -45,7 +47,7 @@
       /EJECT
      FDealsDC   IF   E             Disk    Prefix(A2)
       * MM Deals
- 
+
      FDlDIRHpd  UF A E             Disk
       ** Deal Interest Rate History
       /EJECT
@@ -64,23 +66,23 @@
       *
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
- 
+
      D Dsfdy         E DS                  extname(DSFDY)
      D Dssdy         E DS                  extname(DSSDY)
       ** Data Structures used by access objects
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @RUN            S              1
      D P@Begin         S                   Like(A2Hisd)
      D P@End           S                   Like(A2Hisd)
@@ -89,21 +91,22 @@
      D P@Rate          S                   Like(A2IntR)
      D P@Interest      S             30  9
       /EJECT
- 
+
       ** Main Processing
- 
+
      C                   Read      DealsDC                                LR
      C                   DoW       *InLR = *Off
- 
+
       ** Write Interest Rate History record for live deals
- 
-     C                   If        A2RECI = 'D' and A2BRTT <> 0
+
+     C**********         If        A2RECI = 'D' and A2BRTT <> 0                               CSD103
+     C                   If        A2RECI = 'D' and A2BRTT <> *BLANKS                         CSD103
      C                   ExSr      Write_IRH
      C                   EndIf
- 
+
      C                   Read      DealsDC                                LR
      C                   EndDo
- 
+
      C                   Return
       /Eject
       *******************************************************************
@@ -113,11 +116,11 @@
       *  Called by: Main processing
       *
       *******************************************************************
- 
+
      C     Write_IRH     BegSr
- 
+
       ** Populate fields not implicitly filled
- 
+
      C                   Eval      A2HisD = BjRdNb
      C                   Eval      A2CyCd = A2CCY
      C                   Eval      A2Brt = A2BRTT
@@ -126,7 +129,7 @@
      C                   ExSr      Sr_GlintC
      C                   Z-Add(H)  P@Interest    A2AId1
      C                   Write     DlDIRHd0
- 
+
      C                   EndSr
       /Eject
       *******************************************************************
@@ -136,16 +139,16 @@
       *  Called by: Main processing
       *
       *******************************************************************
- 
+
      C     Sr_GlIntC     BegSr
- 
+
      C                   Eval      P@Begin = A2IACD
      C                   Eval      P@End = BjRdNb
      C                   Eval      P@Basis = A2ICBs
      C                   Eval      P@Amount = A2Pcpl
      C                   Eval      P@Rate = A2IntR
      C                   CallB     'GLINTC'      PL_GlIntC
- 
+
      C                   EndSr
       /EJECT
       *****************************************************************
@@ -157,11 +160,11 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *InzSr        BegSr
- 
+
       ** Parameter list for interest calculation
- 
+
      C     PL_GlIntC     Plist
      C                   Parm                    P@Begin
      C                   Parm                    P@End
@@ -169,25 +172,25 @@
      C                   Parm                    P@Amount
      C                   Parm                    P@Rate
      C                   Parm                    P@Interest
- 
+
       ** Access Bank Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database error.
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     @OPTN         DBKEY
      C                   MOVEL     'SDBANKPD'    DBFILE
      C                   Z-ADD     001           DBASE
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EndSr
- 
+
       *********************************************************************
       /EJECT
       *********************************************************************
@@ -202,23 +205,23 @@
       * Calls: None                                                       *
       *                                                                   *
       *********************************************************************
- 
+
      C     *PSSR         BegSr
- 
+
      C                   DUMP
- 
+
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
- 
+
      C                   CALLB     'DBERRCTL'
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   EndSr
- 
+
       ********************************************************************

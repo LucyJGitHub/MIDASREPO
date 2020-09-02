@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR927395           Date 05Aug13               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. AR927395           Date 05Aug13               *
+      *                 CER050             Date 16Jun19               *
       *                 MD054035           Date 03Sep19               *
       *                 MD054317           Date 09Sep19               *
       *                 CSD102             Date 08Jan19               *
@@ -119,6 +120,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  AR927395 - Wrong COF repayment when loan had rate changes.   *
       *             Compute corresponding COFA when PD interest is    *
       *             paid off. (Child: AR927398)                       *
@@ -4289,7 +4291,8 @@
      C                   Z-ADD     0             INTA
      C                   Z-ADD     0             RTSP                                       MD029048
      C                   Z-ADD     0             PRSQ
-     C                   Z-ADD     0             BRTT
+     C**********         Z-ADD     0             BRTT                                         CSD103
+     C                   MOVE      *BLANKS       BRTT                                         CSD103
      C                   Z-ADD     0             FEAM
      C                   MOVE      CCYL          CCY
      C                   MOVE      BRCA          BRCA

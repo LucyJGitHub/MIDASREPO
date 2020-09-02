@@ -15,8 +15,9 @@
       *  If file T_MLMTRAN is changed, this will need to be changed   *
       *  as well                                                      *
       *                                                               *
-      *  Last Amend No. 262796             Date 03Feb20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. 262796             Date 03Feb20               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR466512           Date 19Aug14               *
       *                 CLE148             Date 23Jul12               *
       *                 AR733372           Date 05Apr11               *
@@ -41,6 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  262796 - READE not functioning.  Changed to CHAIN            *
       *         - Applied for MD054701.                               *
       *  MD046248 - Finastra Rebranding                               *

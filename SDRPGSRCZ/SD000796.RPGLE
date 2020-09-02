@@ -2099,10 +2099,12 @@
      C**********         IF        LDBL < 0                                       BUG24018 BUG24018A
      C                   IF        LDBL > 0                                                BUG24018A
      C                   ADD       DRIS          IARATE                                     BUG24018
-     C                   Z-ADD     DRIB          IDCBR                                      BUG24018
+     C**********         Z-ADD     DRIB          IDCBR                               BUG24018 CSD103
+     C                   MOVE      DRIB          IDCBR                                        CSD103
      C                   ELSE                                                               BUG24018
      C                   ADD       CRIS          IARATE                                     BUG24018
-     C                   Z-ADD     CRIB          IDCBR                                      BUG24018
+     C**********         Z-ADD     CRIB          IDCBR                               BUG24018 CSD103
+     C                   MOVE      CRIB          IDCBR                                        CSD103
      C                   ENDIF                                                              BUG24018
       * Base Rate                                                                           BUG24018
      C                   IF        IDCBR > *ZERO                                            BUG24018
@@ -2343,7 +2345,8 @@
       *                                                                                     BUG24018
      C                   IF        TSDLLN > *ZEROS                                          BUG24018
       *                                                                                     BUG24018
-     C                   IF        BRTT <> 0                                                BUG24018
+     C**********         IF        BRTT <> 0                                         BUG24018 CSD103
+     C                   IF        BRTT <> *BLANKS                                            CSD103
      C                   EVAL      @@AMTW  = (BRTE + RTSP) * 10000000                       BUG24018
      C                   ELSE                                                               BUG24018
      C                   EVAL      @@AMTW  = RTSP * 10000000                                BUG24018

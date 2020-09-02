@@ -1336,7 +1336,8 @@
      C                   Z-ADD     0             WTAMT
      C                   Z-ADD     0             WSETP
      C                   MOVE      *BLANKS       WTSEN
-     C                   IF        WBRTT <> '00'
+     C**********         IF        WBRTT <> '00'                                              CSD103
+     C                   IF        WBRTT <> *BLANKS                                           CSD103
      C                   CALLB     'AOBSRTR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY    '    @OPTN
@@ -1377,7 +1378,8 @@
       ** SC Loan Amendment
  
      C                   MOVE      'SC'          WAMTP
-     C                   MOVE      *ZEROS        WBRTT
+     C**********         MOVE      *ZEROS        WBRTT                                        CSD103
+     C                   MOVE      *BLANKS       WBRTT                                        CSD103
      C                   IF        NSEIN <> 'Y'
      C                   Z-ADD     AYPRSP        WRTSP
      C                   ELSE
@@ -1413,7 +1415,8 @@
       ** MR Manual Repayment
  
      C                   MOVE      'MR'          WAMTP
-     C                   MOVE      *ZEROS        WBRTT
+     C**********         MOVE      *ZEROS        WBRTT                                        CSD103
+     C                   MOVE      *BLANKS       WBRTT                                        CSD103
      C                   Z-ADD     0             WRTSP
      C                   Z-ADD     NPDPR         WPRAM
      C                   Z-ADD     NPDIN         WINTA
@@ -3930,7 +3933,8 @@
      C                   EVAL      L_CLBRTE = AUCBRT
      C                   ENDSL
  
-     C                   IF        L_CLBRTT <> 0
+     C**********         IF        L_CLBRTT <> 0                                              CSD103
+     C                   IF        L_CLBRTT <> *BLANKS                                        CSD103
      C                   MOVE      L_CLCCY       @KEY1
      C                   MOVE      L_CLBRTT      @KEY2
      C                   CALLB     'AOBSRTR0'
@@ -3952,7 +3956,8 @@
      C                   ENDIF
      C                   ENDIF
  
-     C                   IF        L_CLBRTT = 0
+     C**********         IF        L_CLBRTT = 0                                               CSD103
+     C                   IF        L_CLBRTT = *BLANKS                                         CSD103
      C                   ELSE
      C                   IF        L_CLVDAT < BAVDNR
      C                   EVAL      L_CLBRTE = BACBSR
@@ -4025,12 +4030,15 @@
      C                   ENDSL
  
      C                   SELECT
-     C                   WHEN      L_CLBRTT = 0 AND L_CLBRTE = 0
+     C**********         WHEN      L_CLBRTT = 0 AND L_CLBRTE = 0                              CSD103
+     C                   WHEN      L_CLBRTT = *BLANKS AND L_CLBRTE = 0                        CSD103
      C                   EVAL      L_CLCHIN = *BLANKS
  
-     C                   WHEN      L_CLBRTT <> 0 AND
+     C**********         WHEN      L_CLBRTT <> 0 AND                                          CSD103
+     C                   WHEN      L_CLBRTT <> *BLANKS                                        CSD103
      C                             RecordType = FeeLoan OR
-     C                             L_CLBRTT <> 0 AND
+     C**********                   L_CLBRTT <> 0 AND                                          CSD103
+     C                             L_CLBRTT <> *BLANKS                                        CSD103
      C                             RecordType = FeeFacility
      C                             OR (L_CLBRTE <> 0
      C                             AND RecordType = FeeLoan)
@@ -4039,7 +4047,8 @@
      C**********         EVAL      L_CLCHIN = AUCRIN                                        AR719589
      C                   EVAL      L_CLCHIN = AUBSRI                                        AR719589
  
-     C                   WHEN      L_CLBRTT <> 0 AND
+     C**********         WHEN      L_CLBRTT <> 0 AND                                          CSD103
+     C                   WHEN      L_CLBRTT <> *BLANKS                                        CSD103
      C                             RecordType = Loan
      C                             OR (L_CLBRTE <> 0
      C                             AND RecordType = Loan)
@@ -4176,7 +4185,8 @@
      C                   MOVE      'N'           L_CLRDFC
      C                   ENDIF
  
-     C                   Z-ADD     0             L_CLNBRA
+     C**********         Z-ADD     0             L_CLNBRA                                     CSD103
+     C                   MOVE      *BLANKS       L_CLNBRA                                     CSD103
      C                   Z-ADD     0             L_CLNRTS
      C                   MOVE      *BLANKS       L_CLNSIN
      C                   Z-ADD     0             L_CLNCAS

@@ -107,7 +107,7 @@
       * Read next record on SCSARTPD.
      C**********         READ      GPSARTL0                               41                MD055682
      C/EXEC SQL                                                                             MD055682
-     C+ fetch next from ACursor into :SCSART                                                MD055682
+     C+ fetch next from ACursor into :GPSART                                                MD055682
      C/END-EXEC                                                                             MD055682
       * If the Switchable Feature does not match the entry parameter
       *  then set on *IN41 to end DO loop.

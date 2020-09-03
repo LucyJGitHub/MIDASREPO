@@ -3304,7 +3304,8 @@
 
      C                   EVAL      *IN30 = *ON
 
-     C                   Z-ADD     SVBRTT        TBRTT
+     C**********         Z-ADD     SVBRTT        TBRTT                                        CSD103
+     C                   MOVE      SVBRTT        TBRTT                                        CSD103
      C                   Z-ADD     SVEINR        TEINR
 
      C                   MOVE      TCUCY         CCY
@@ -3315,7 +3316,8 @@
      C                   Z-ADD     0             INTR
      C                   Z-ADD     0             AMAD
      C                   Z-ADD     0             AMTA
-     C                   Z-ADD     0             UBRTT
+     C**********         Z-ADD     0             UBRTT                                        CSD103
+     C                   MOVE      *BLANKS       UBRTT                                        CSD103
      C                   MOVE      'N'           URTPI
 
      C**********         IF        TBRTT <> 0                                                 CSD103

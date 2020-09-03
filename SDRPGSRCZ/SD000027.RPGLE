@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -51,15 +53,15 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Midas GL Account Postings Detail File
      FAPOSTPD   UF   E             DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
       ** Midas LE Lending Fees Tomorrows Account Keys - Detail File
      FPSTTOM    UF   E             DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -78,34 +80,34 @@
       **                                    181 1830DBASE
       **                                    184 193 DBMOD
       **                                    194 203 DBPROC
- 
+
       ** Data Area giving Installation Control Details
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
       ** Program Status Data Structure
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D WRUN            S              1
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -116,19 +118,19 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
      C     *DTAARA       DEFINE                  RUNDAT
      C                   IN        RUNDAT
- 
+
       ** Initialise new fields
- 
+
      C     1             SETLL     APOSTPD
      C                   READ      APOSTPD                                01
- 
+
      C                   DOW       *IN01 = *OFF
      C                   EVAL      ACKEY = *BLANKS
      C                   EVAL      FEEFLG = *BLANKS
@@ -179,7 +181,7 @@
       *
      C                   COMMIT
      C                   EVAL      *INLR = *ON
- 
+
       *********************************************************************
       /EJECT
       *********************************************************************
@@ -194,19 +196,19 @@
       * Calls: DBERRCTL                                                   *
       *                                                                   *
       *********************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRUN = *BLANK
      C                   EVAL      WRUN = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       ********************************************************************

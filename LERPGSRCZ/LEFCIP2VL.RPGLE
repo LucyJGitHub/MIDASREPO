@@ -672,6 +672,21 @@
      C                   MOVE      DDRTS4        DDRTS4A                                    MD048074
      C                   MOVE      DDRTS5        DDRTS5A                                    MD048074
      C                   MOVE      DDRTS6        DDRTS6A                                    MD048074
+     C                   MOVE      DDRTS7        DDRTS7A                                    MD048074
+     C                   MOVE      DDRTS8        DDRTS8A                                    MD048074
+     C                   MOVE      DDRTS9        DDRTS9A                                    MD048074
+     C                   MOVE      DDRTS0        DDRTS0A                                    MD048074
+     C                   MOVE      DDRTSA        DDRTSAA                                    MD048074
+     C                   MOVE      DDRTSB        DDRTSBA                                    MD048074
+     C                   MOVE      DDRTSC        DDRTSCA                                    MD048074
+     C                   MOVE      DDRTSD        DDRTSDA                                    MD048074
+     C                   MOVE      DDRTSE        DDRTSEA                                    MD048074
+     C                   MOVE      DDRTSF        DDRTSFA                                    MD048074
+     C                   MOVE      DDRTSG        DDRTSGA                                    MD048074
+     C                   MOVE      DDRTSH        DDRTSHA                                    MD048074
+     C                   MOVE      DDRTSI        DDRTSIA                                    MD048074
+     C                   MOVE      DDRTSJ        DDRTSJA                                    MD048074
+     C                   MOVE      DDRTSK        DDRTSKA                                    MD048074
       *                                                                                     MD048074
      C                   MOVEL     DDRTX6        FPRTPS                                     MD039655
      C                   MOVEL     DDRLPD        FPRLPD                                     MD039655

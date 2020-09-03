@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. 258901             Date 22May20               *
-      *  Prev Amend No. 247907             Date 22May20               *
+      *  Last Amend No. MD056627           Date 02Sep20               *
+      *  Prev Amend No. 258901             Date 22May20               *
+      *                 247907             Date 22May20               *
       *                 247524             Date 22May20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD049746           Date 15Mar18               *
@@ -126,6 +127,10 @@
       *                 CAP084  *CREATE    Date 14Jul03               *
       *                                                               *
       *---------------------------------------------------------------*
+      *  MD056627 - Settlement details not defaulted when Origin      *
+      *             branch or Profit centre is sent via SE JMS API.   *
+      *           - Exclude validating fields Origin branch and Profit*
+      *             centre in DS/TranInSett during SSI defaulting.    *
       *  258901 - Error in tax amount for charges and commissions.    *
       *  247524 - Securities Trades - charges are not defaulted and   *
       *           not calculated.                                     *
@@ -3200,7 +3205,59 @@
      C*****************  If        TranInExch = *blanks                             BUG8690 BUG10021
      C****************             and TranInSett = *blanks                         BUG8690 BUG10021
      C****************             and TranInChCm = *blanks                         BUG8690 BUG10021
-     C                   If        TranInSett = *blanks                                     BUG10021
+     C**********         If        TranInSett = *blanks                            BUG10021 MD056627
+      *                                                                                     MD056627
+      ** Exclude validation of Origin branch (DDORBR) and Profit centre                     MD056627
+      ** centre (DDPRFC) fields since these are part of trade main details                  MD056627
+      ** and not settlement details.                                                        MD056627
+      *                                                                                     MD056627
+     C                   If        (DDSMTH = *blanks                                        MD056627
+     C                             and DDPYFM = *blanks                                     MD056627
+     C                             and DDPFSN = *blanks                                     MD056627
+     C                             and DDPFNM = *blanks                                     MD056627
+     C                             and DDPFTN = *blanks                                     MD056627
+     C                             and DDPFAN = *blanks                                     MD056627
+     C                             and DDPFSW = *blanks                                     MD056627
+     C                             and DDPYFB = *blanks                                     MD056627
+     C                             and DDPAYT = *blanks                                     MD056627
+     C                             and DDPTSN = *blanks                                     MD056627
+     C                             and DDPTNM = *blanks                                     MD056627
+     C                             and DDPTTN = *blanks                                     MD056627
+     C                             and DDPTAN = *blanks                                     MD056627
+     C                             and DDPTSW = *blanks                                     MD056627
+     C                             and DDPYTB = *blanks                                     MD056627
+     C                             and DDTDFA = *blanks                                     MD056627
+     C                             and DDFASN = *blanks                                     MD056627
+     C                             and DDFANM = *blanks                                     MD056627
+     C                             and DDFATN = *blanks                                     MD056627
+     C                             and DDFASW = *blanks                                     MD056627
+     C                             and DDASNM = *blanks                                     MD056627
+     C                             and DDDELF = *blanks                                     MD056627
+     C                             and DDDFSN = *blanks                                     MD056627
+     C                             and DDDFNM = *blanks                                     MD056627
+     C                             and DDDFTN = *blanks                                     MD056627
+     C                             and DDDFSW = *blanks                                     MD056627
+     C                             and DDDELT = *blanks                                     MD056627
+     C                             and DDDTSN = *blanks                                     MD056627
+     C                             and DDDTNM = *blanks                                     MD056627
+     C                             and DDDTTN = *blanks                                     MD056627
+     C                             and DDDTSW = *blanks                                     MD056627
+     C                             and DDDFFA = *blanks                                     MD056627
+     C                             and DDVFSN = *blanks                                     MD056627
+     C                             and DDVFNM = *blanks                                     MD056627
+     C                             and DDVFTN = *blanks                                     MD056627
+     C                             and DDVFSW = *blanks                                     MD056627
+     C                             and DDDTFA = *blanks                                     MD056627
+     C                             and DDVTSN = *blanks                                     MD056627
+     C                             and DDVTNM = *blanks                                     MD056627
+     C                             and DDVTTN = *blanks                                     MD056627
+     C                             and DDVTSW = *blanks                                     MD056627
+     C                             and DDTDSI = *blanks                                     MD056627
+     C                             and DDCLTY = *blanks                                     MD056627
+     C                             and DDICCY = *blanks                                     MD056627
+     C                             and DDPRYC = *blanks                                     MD056627
+     C                             and DDPCOD = *blanks                                     MD056627
+     C                             and DDAUTS = *blanks)                                    MD056627
      C**********                   and TranInChCm = *blanks                        BUG10021 MD049746
      C                             or TranInChCm = *blanks                                  MD049746
                                                                                              BUG8690
@@ -3834,7 +3891,59 @@
      C********           END                                                                BUG10021
 
       ** SETTLEMENT INSTRUCTION DEFAULTING
-     C                   IF        TranInSett = *BLANKS                                     MD049746
+     C**********         IF        TranInSett = *BLANKS                            MD049746 MD056627
+      *                                                                                     MD056627
+      ** Exclude validation of Origin branch (DDORBR) and Profit centre                     MD056627
+      ** centre (DDPRFC) fields since these are part of trade main details                  MD056627
+      ** and not settlement details.                                                        MD056627
+      *                                                                                     MD056627
+     C                   If        (DDSMTH = *blanks                                        MD056627
+     C                             and DDPYFM = *blanks                                     MD056627
+     C                             and DDPFSN = *blanks                                     MD056627
+     C                             and DDPFNM = *blanks                                     MD056627
+     C                             and DDPFTN = *blanks                                     MD056627
+     C                             and DDPFAN = *blanks                                     MD056627
+     C                             and DDPFSW = *blanks                                     MD056627
+     C                             and DDPYFB = *blanks                                     MD056627
+     C                             and DDPAYT = *blanks                                     MD056627
+     C                             and DDPTSN = *blanks                                     MD056627
+     C                             and DDPTNM = *blanks                                     MD056627
+     C                             and DDPTTN = *blanks                                     MD056627
+     C                             and DDPTAN = *blanks                                     MD056627
+     C                             and DDPTSW = *blanks                                     MD056627
+     C                             and DDPYTB = *blanks                                     MD056627
+     C                             and DDTDFA = *blanks                                     MD056627
+     C                             and DDFASN = *blanks                                     MD056627
+     C                             and DDFANM = *blanks                                     MD056627
+     C                             and DDFATN = *blanks                                     MD056627
+     C                             and DDFASW = *blanks                                     MD056627
+     C                             and DDASNM = *blanks                                     MD056627
+     C                             and DDDELF = *blanks                                     MD056627
+     C                             and DDDFSN = *blanks                                     MD056627
+     C                             and DDDFNM = *blanks                                     MD056627
+     C                             and DDDFTN = *blanks                                     MD056627
+     C                             and DDDFSW = *blanks                                     MD056627
+     C                             and DDDELT = *blanks                                     MD056627
+     C                             and DDDTSN = *blanks                                     MD056627
+     C                             and DDDTNM = *blanks                                     MD056627
+     C                             and DDDTTN = *blanks                                     MD056627
+     C                             and DDDTSW = *blanks                                     MD056627
+     C                             and DDDFFA = *blanks                                     MD056627
+     C                             and DDVFSN = *blanks                                     MD056627
+     C                             and DDVFNM = *blanks                                     MD056627
+     C                             and DDVFTN = *blanks                                     MD056627
+     C                             and DDVFSW = *blanks                                     MD056627
+     C                             and DDDTFA = *blanks                                     MD056627
+     C                             and DDVTSN = *blanks                                     MD056627
+     C                             and DDVTNM = *blanks                                     MD056627
+     C                             and DDVTTN = *blanks                                     MD056627
+     C                             and DDVTSW = *blanks                                     MD056627
+     C                             and DDTDSI = *blanks                                     MD056627
+     C                             and DDCLTY = *blanks                                     MD056627
+     C                             and DDICCY = *blanks                                     MD056627
+     C                             and DDPRYC = *blanks                                     MD056627
+     C                             and DDPCOD = *blanks                                     MD056627
+     C                             and DDAUTS = *blanks)                                    MD056627
 
      C     DDACTN        IFEQ      'I'
 

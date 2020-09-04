@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2006')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SM Add records to new user files')
@@ -9,7 +9,7 @@
       *                                                               *
       *  SM001071 - Add records to new user files                     *
       *                                                               *
-      *  (c) Finastra International Limited 2006                      *
+      *  (c) Misys International Banking Systems Ltd. 2006            *
       *                                                               *
       *  Last Amend No. MD046248           Date 05Feb18               *
       *  Prev Amend No. A1084804           Date 29Jan13               *

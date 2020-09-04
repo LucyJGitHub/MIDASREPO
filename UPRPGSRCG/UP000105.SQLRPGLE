@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2015')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2015')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UP IBM objects to be actioned maintenance')
@@ -9,7 +9,7 @@
       *                                                               *
       *  UP000105 - IBM objects to be actioned maintenance            *
       *                                                               *
-      *  (c) Finastra International Limited 2015                      *
+      *  (c) Misys International Banking Systems Ltd. 2015            *
       *                                                               *
       *  Last Amend No. CUP042   *CREATE   Date 02Jan15               *
       *  Prev Amend No. xxxxxxxx           Date ddMmmyy               *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2006')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
       *****************************************************************
 /*XBIA*  OVRDBF FILE(SM000040F) TOFILE(UPFFDSTPD)                     *                     BUG27793
 /*XBIB*  OVRDBF FILE(SM000040M) TOFILE(UPMBRLTPD)                     *                     BUG27793
@@ -14,7 +14,7 @@
       *             a Customer Number field contained 000000 then it  *
       *             is set to blank.                                  *
       *                                                               *
-      *  (c) Finastra International Limited 2006                      *
+      *  (c) Misys International Banking Systems Ltd. 2006            *
       *                                                               *
       *  Last Amend No. CUP003             Date 02Aug10               *
       *  Prev Amend No. BUG27793           Date 07Jun10               *
@@ -206,7 +206,7 @@
      C                   ENDIF
      C                   EVAL      ObjName = CNFILE
      C                   EVAL      SQLFail = ' '
-
+ 
      C                   DOU       %EOF or SingleMode = 'Y'
       *
       * Only process file if it hasn't already been processed.
@@ -465,7 +465,7 @@
      C                   OPEN      SM000040M
      C                   READ      SM000040M
      C     1             SETLL     SM000040M
-
+ 
      C     MultiMbrE     ENDSR
       /EJECT
       *****************************************************************

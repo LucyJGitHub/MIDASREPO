@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2014')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UP Report on files with shared format')
@@ -9,7 +9,7 @@
       *                                                               *
       *  UP0025 - Report on files with shared formats                 *
       *                                                               *
-      *  (c) Finastra International Limited 2014                      *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
       *  Last Amend No. CUP042             Date 12Dec14               *
       *  Prev Amend No. CUP041   *REWRITE  Date 24Jun14               *

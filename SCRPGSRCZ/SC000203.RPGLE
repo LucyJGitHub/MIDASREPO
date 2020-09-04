@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2011')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SC Schemas/Libraries Restore Setup')             *
@@ -12,7 +12,7 @@
       *  Function:  This module displays a list of schemas/libraries  *
       *             available for restoration on Input Cycle Re-Open  *
       *                                                               *
-      *  (c) Finastra International Limited 2011                      *
+      *  (c) Misys International Banking Systems Ltd. 2011            *
       *                                                               *
       *  Last Amend No. CSD102             Date 08Jan19               *
       *  Prev Amend No. CBF002  *CREATE    Date 04Jul11               *
@@ -969,4 +969,4 @@
       *  subroutine
       *****************************************************************
 ** CPY@
-(c) Finastra International Limited 2011
+(c) Misys International Banking Systems Ltd. 2011

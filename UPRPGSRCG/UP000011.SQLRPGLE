@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2011')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UP Report errors on the Bridge driving file')
@@ -9,7 +9,7 @@
       *                                                               *
       *  UP000011 - Report errors on the Bridge driving file          *
       *                                                               *
-      *  (c) Finastra International Limited 2011                      *
+      *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
       *  Last Amend No. CUP041   *CREATE   Date 03Sep11               *
       *  Prev Amend No. xxxxxx             Date ddMmmyy               *

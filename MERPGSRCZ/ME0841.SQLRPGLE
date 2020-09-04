@@ -1248,7 +1248,7 @@
 
      X/COPY WNCPYSRC,ME0840X001
 ** CPY@   **      Object copyright
-(c) Finastra International Limited 2019
+(c) Misys International Banking Systems Ltd. 2001
 **  ASTS
 Status
 Priority

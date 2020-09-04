@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2011')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SM Upload to BF - Entitlements')
@@ -9,7 +9,7 @@
       *                                                               *
       *  SM000060 - Upload to BF - Entitlements                       *
       *                                                               *
-      *  (c) Finastra International Limited 2011                      *
+      *  (c) Misys International Banking Systems Ltd. 2011            *
       *                                                               *
       *  Last Amend No. MD022486           Date 20Sep13               *
       *  Prev Amend No. MD020456           Date 23May13               *

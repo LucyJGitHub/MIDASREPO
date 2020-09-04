@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD050212           Date 02Apr18               *
-      *  Prev Amend No. MD051532           Date 13Jul18               *
+      *  Last Amend No. MD055373           Date 14Jul20               *
+      *  Prev Amend No. MD050212           Date 02Apr18               *
+      *                 MD051532           Date 13Jul18               *
       *                 MD051299           Date 19Jun18               *
       *                 MD044880           Date 15Jan18               *
       *                 MD046248           Date 27Oct17               *
@@ -63,6 +64,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055373 - Audit trail not available                         *
+      *           - Added DDIUSR and DDAUSR fields in the buffer.     *
       *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD051532 - BOE details changed after authorisation           *
       *  MD051299 - Serious Midas Error occurs during insert,         *
@@ -314,7 +317,8 @@
      D FillerBuf       S           5096A                                                    MD041996
      D***FillerBufEx2    S           8951A                                             CSW213 CGL132
      D***FillerBufEx2    S           5980A                                           CGL132 MD044880
-     D FillerBufEx2    S           5915A                                                    MD044880
+     D***FillerBufEx2    S           5915A                                         MD044880 MD055373
+     D FillerBufEx2    S           5895A                                                    MD055373
      D FillerBufEx3    S           9999A                                                      CSW213
      D***FillerBufEx4    S           6898A                                           CSW213 MD041996
      D***FillerBufEx4    S           5974A                                         MD041996 MD044880
@@ -328,6 +332,8 @@
                                                                                               CER049
      D PCrsdF          S            219A   DIM(30)                                          MD051299
                                                                                             MD051299
+     D NewPROFUser     S             20A                                                    MD055373
+                                                                                            MD055373
       **--------------------------------------------------------------------------------------------
 
      C                   CLEAR                   CrCuFilFmt
@@ -447,6 +453,7 @@
      C**********                             + Filler65                            MD051299 MD051532
      C                                       + ExtData                                      MD051532
      C                                       + CrsdDets                                     MD051299
+     C                                       + NewPROFUser                                  MD055373
      C                                       + FillerBufEx2                                   CSW213
                                                                                               CSW213
      C                   EVAL      BufferEx3 = FillerBufEx3                                   CSW213

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2012')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SC Update User Report Title of PEA Bank Dtls')   *
@@ -11,7 +11,7 @@
       *  Function:  This program updates User Report Title of PEA     *
       *             system's SDBANKPD file                            *
       *                                                               *
-      *  (c) Finastra International Limited 2012                      *
+      *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
       *  Last Amend No. AR1009800 *CREATE  Date 20Nov12               *
       *                                                               *
@@ -30,25 +30,25 @@
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** Midas SC Mutually Exclusive objects
      FSCPURTPD  IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(P1:2)
-
+ 
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
-
+ 
       ** External DS for bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
-
+ 
       ** Access object parameters
      D PRetCode        S              7A
      D POption         S              7A
-
+ 
       ** Work variables
      D WRun            S              1A
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -152,4 +152,4 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Finastra International Limited 2012
+(c) Misys International Banking Systems Ltd. 2012

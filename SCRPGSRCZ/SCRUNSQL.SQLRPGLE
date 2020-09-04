@@ -1,4 +1,4 @@
-     H COPYRIGHT('(c) Finastra International Limited 2012')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
      H DftActGrp(*No) ActGrp(*Caller)
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
@@ -9,7 +9,7 @@
       *                                                               *
       *  SCRUNSQL - Run dynamic SQL statement                         *
       *                                                               *
-      *  (c) Finastra International Limited 2012                      *
+      *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
       *  Last Amend No. CGL127  *CREATE    Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -67,16 +67,16 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     *PSSR         BEGSR
-
+ 
      C                   DUMP
-
+ 
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
-
+ 
      C                   ENDSR
-
+ 
       ********************************************************************

@@ -9,7 +9,7 @@
       *                                                               *
       *  UP0098 - Merge two driving files                             *
       *                                                               *
-      *  (c) Finastra International Limited 2001                      *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
       *  Last Amend No. CUP042 *REWRITE    Date 20May15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -267,7 +267,7 @@
       *
      C                   EVAL      *INLR = *ON
      C                   RETURN
-
+ 
      C     PSSRE         ENDSR
       *
       ********************************************************************

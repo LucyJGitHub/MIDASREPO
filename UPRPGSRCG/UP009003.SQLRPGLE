@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2013')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
       *****************************************************************
 /*XBIA*  OVRDBF FILE(UPAFCPO) TOFILE(UPAFCPPD)                        *
 /*XBIB*  OVRDBF FILE(UPAFCPN) TOFILE(UPAFCPPD)                        *
@@ -11,7 +11,7 @@
       *                                                               *
       *  UP009003 - Compare two Action Files                          *
       *                                                               *
-      *  (c) Finastra International Limited 2013                      *
+      *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
       *  Last Amend No. A1084804 *CREATE   Date 30Jan13               *
       *  Prev Amend No. xxxxxxxx           Date ddMmmyy               *

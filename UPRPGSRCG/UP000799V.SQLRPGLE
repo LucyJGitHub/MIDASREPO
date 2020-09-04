@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2004')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UP Action File handler - validity checker')
@@ -11,7 +11,7 @@
       *              Check if the file exists on UPACTFPD and whether *
       *              it uses the new methodology.                     *
       *                                                               *
-      *  (c) Finastra International Limited 2004                      *
+      *  (c) Misys International Banking Systems Ltd. 2004            *
       *                                                               *
       *  Last Amend No. CUP040  *REWRITE   Date 01Mar13               *
       *  Prev Amend No. CUP021             Date 09Feb11               *

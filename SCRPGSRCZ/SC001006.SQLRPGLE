@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2012')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SC Add Removed members back to logical files')
@@ -10,7 +10,7 @@
       *  SC001006 - Midas SC Add Removed members back to logical      *
       *             files                                             *
       *                                                               *
-      *  (c) Finastra International Limited 2012                      *
+      *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
       *  Last Amend No. MD024006A *REWRITE Date 08Jan14               *
       *  Prev Amend No. MD023005           Date 23Oct13               *
@@ -57,7 +57,7 @@
      D Recursive       S              1
       *
      D FMBR          E DS                  EXTNAME(SCFMBRTD)
-
+ 
       *****************************************************************
      C/EJECT
       *****************************************************************
@@ -65,15 +65,15 @@
       *  MAIN processing                                              *
       *                                                               *
       *****************************************************************
-
+ 
       ** Add back members
-
+ 
      C                   EXSR      ADDMBR
-
+ 
       ** Change back Logical file access path to *IMMED
-
+ 
      C                   EXSR      CHGIMD
-
+ 
      C                   EVAL      *INLR = *ON
      C                   RETURN
       *****************************************************************
@@ -84,7 +84,7 @@
       *                                                               *
       *****************************************************************
      C     ADDMBR        BEGSR
-
+ 
      C/exec SQL
      C+ declare Update cursor for
      C+ select distinct
@@ -125,7 +125,7 @@
      C+ close Update
      C/end-exec
       *
-
+ 
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -135,7 +135,7 @@
       *                                                               *
       *****************************************************************
      C     CHGIMD        BEGSR
-
+ 
      C/EXEC SQL
      C+ declare ICursor insensitive scroll cursor for
      C+ select
@@ -146,20 +146,20 @@
      C+ for read only
      C+ optimize for 1 row
      C/END-EXEC
-
+ 
      C/EXEC SQL
      C+ open ICursor
      C/END-EXEC
-
+ 
      C/EXEC SQL
      C+ fetch next from ICursor into
      C+   :WCFile
      C+  ,:WCMaint
      C/END-EXEC
-
+ 
      C                   DOW       SQLCODE = 0
      C                   IF        WCFile <> *BLANKS
-
+ 
      C                   SELECT
      C                   WHEN      WCMaint = 'R'
      C                   EVAL      AccPthMaint  = '*REBLD'
@@ -174,14 +174,14 @@
      C                   PARM      '*CHG'        Action
      C                   PARM      AccPthMaint   ActionType
      C                   ENDIF
-
+ 
      C/EXEC SQL
      C+ fetch next from ICursor into
      C+   :WCFile
      C+  ,:WCMaint
      C/END-EXEC
      C                   ENDDO
-
+ 
      C/EXEC SQL
      C+ close ICursor
      C/END-EXEC
@@ -194,7 +194,7 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
-
+ 
      C     Recursive     IFEQ      *BLANKS
      C                   MOVE      'Y'           Recursive
      C                   DUMP
@@ -202,6 +202,6 @@
      C                   EVAL      *INU8 = *ON
      C                   RETURN
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************

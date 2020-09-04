@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2013')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas GL Data Take On for GLACNTTD')
@@ -12,7 +12,7 @@
       *  Function:  This program will populate the GLACNTTD from      *
       *             ACCNTAB and GLACNTQD files.                       *
       *                                                               *
-      *  (c) Finastra International Limited 2013                      *
+      *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
       *  Last Amend No. MD020772           Date 30Sep13               *
       *  Prev Amend No. MD020656 *CREATE   Date 30Sep13               *
@@ -26,9 +26,9 @@
       *             ACCNTAB and GLACNTQD to improve performance.      *
       *                                                               *
       *****************************************************************
-
+ 
       ** Execute SQL statement
-
+ 
      C/EXEC SQL
      C+ INSERT INTO GPACNTTD
      C+ SELECT
@@ -102,9 +102,9 @@
      C+ WHERE CU.A6NBDP = 0
       ** End of   MD020772
      C/END-EXEC
-
+ 
      C                   EVAL      *INLR = *ON
      C                   RETURN
-
+ 
       /EJECT
-
+ 

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2011')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SM Check that users are correct')
@@ -9,7 +9,7 @@
       *                                                               *
       *  SM000036 - Check that users are correct                      *
       *                                                               *
-      *  (c) Finastra International Limited 2011                      *
+      *  (c) Misys International Banking Systems Ltd. 2011            *
       *                                                               *
       *  Last Amend No. CBF005   *CREATE   Date 04Jul11               *
       *                                                               *
@@ -25,11 +25,11 @@
      D NbrRcds         S              7  0
       *
      D Recursive       S              1    INZ('N')
-
+ 
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
-
+ 
      C     *ENTRY        PLIST
      C                   PARM                    PUser01
      C                   PARM                    PUser02

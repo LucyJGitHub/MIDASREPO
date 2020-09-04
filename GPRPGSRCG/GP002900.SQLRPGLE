@@ -1,6 +1,6 @@
      H DEBUG
      H DFTACTGRP(*NO) ACTGRP(*CALLER)
-     H COPYRIGHT('(c) Finastra International Limited 2014')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas GP Send T_MSWIP/T_MSRPRQ transaction status')

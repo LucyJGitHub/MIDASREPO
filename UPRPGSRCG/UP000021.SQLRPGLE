@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2013')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UP Upgrade data areas and data queues')
@@ -9,7 +9,7 @@
       *                                                               *
       *  UP000021 - Upgrade data areas and data queues                *
       *                                                               *
-      *  (c) Finastra International Limited 2013                      *
+      *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
       *  Last Amend No. MD034982           Date 14Jul15               *
       *  Prev Amend No. CUP041   *CREATE   Date 11Sep13               *

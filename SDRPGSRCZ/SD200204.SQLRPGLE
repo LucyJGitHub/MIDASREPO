@@ -1767,7 +1767,7 @@
       ** an external data area
       *****************************************************************
 **  CPY@
-(c) Finastra International Limited 2009
+(c) Misys International Banking Systems Ltd. 2009
 ** @YD  USED BY SR. ZDATE9 - YEARS, IN DAYS, CUMULATIVE IN 4 YEAR SPAN
 00366007310109601461
 ** @MD  USED BY SR. ZDATE9 - MONTHS IN DAYS CUMULATIVE THROUGH YEAR

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2011')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SM Report of reference users')
@@ -9,7 +9,7 @@
       *                                                               *
       *  SM000033 - Report reference users                            *
       *                                                               *
-      *  (c) Finastra International Limited 2011                      *
+      *  (c) Misys International Banking Systems Ltd. 2011            *
       *                                                               *
       *  Last Amend No. CBF005   *CREATE   Date 04Jul11               *
       *                                                               *

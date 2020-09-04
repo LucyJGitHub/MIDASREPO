@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2011')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
       *****************************************************************
 /*XBI *  OVRDBF FILE(SMENTLQT) TOFILE(SFENTLV0)                       *
 /*XBI *  OVRDBF FILE(SMGPMPQT) TOFILE(SFGPMPV0)                       *
@@ -13,7 +13,7 @@
       *                                                               *
       *  SM000049 - Midas SM Report Permission by User from extract   *
       *                                                               *
-      *  (c) Finastra International Limited 2011                      *
+      *  (c) Misys International Banking Systems Ltd. 2011            *
       *                                                               *
       *  Last Amend No. CBF005   *CREATE   Date 04Jul11               *
       *                                                               *

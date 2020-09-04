@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2007')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UP Update global static data files')
@@ -9,7 +9,7 @@
       *                                                               *
       *  UP003008 - Update global static data files                   *
       *                                                               *
-      *  (c) Finastra International Limited 2007                      *
+      *  (c) Misys International Banking Systems Ltd. 2007            *
       *                                                               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -95,13 +95,13 @@
       ** The following /COPY contains the standard program status
       ** subroutine, excluding a bound call to the DBERRCTL module.
      C/COPY ZACPYSRC,PSSR_ILENE
-
+ 
      C                   SetOn                                        LR
      C                   Return
-
+ 
      C                   EndSR
-
+ 
       **---------------------------------------------------------------
       *****************************************************************
 **  CPY@
-(c) Finastra International Limited 2007
+(c) Misys International Banking Systems Ltd. 2007

@@ -1,6 +1,6 @@
       *****************************************************************
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2015')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2015')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
       *****************************************************************
@@ -9,7 +9,7 @@
       *                                                               *
       *  SMU00305 - Update AF to control UTMENUPD records             *
       *                                                               *
-      *  (c) Finastra International Limited 2015                      *
+      *  (c) Misys International Banking Systems Ltd. 2015            *
       *                                                               *
       *  Last Amend No. CUP041  *CREATE    Date 10Mar15               *
       *                                                               *

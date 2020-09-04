@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2004')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
       *****************************************************************
 /*XBIA*  CRTSRCPF FILE(QTEMP/CRTOBJSQF) RCDLEN(112) MBR(CRTOBJSQL)    *
 /*XBIB*  RNMOBJ OBJ(QTEMP/CRTOBJSQF) OBJTYPE(*FILE)                   *
@@ -17,7 +17,7 @@
       *             in T_WIPCF and created new versions of them       *
       *             with *REFZONE replaced with the zone name.        *
       *                                                               *
-      *  (c) Finastra International Limited 2004                      *
+      *  (c) Misys International Banking Systems Ltd. 2004            *
       *                                                               *
       *  Last Amend No. MD029086           Date 21Aug14               *
       *  Prev Amend No. BUG27884           Date 08Jul10               *
@@ -53,14 +53,14 @@
       *                                                               *
       *****************************************************************
      FCRTOBJSQL IF A E             DISK    USROPN
-
+ 
       * General variables
-
+ 
      D CommandString   S             80
      D Wrun            S              1
-
+ 
       * QCMDEXC parameters
-
+ 
      D CmdStrRunSQL    S             66
      D CmdLenRunSQL    S             15  5 INZ(66)
      D CmdStrClrSQL    S             37
@@ -71,16 +71,16 @@
      D CmdLen10kSQL    S             15  5 INZ(42)                                          MD029086
       *
      D myWC_ID         S              9  0                                                  MD029086
-
+ 
       * SQL statment building blocks for delete processing
-
+ 
      D*DeleteString****C***                'DELETE FROM T_WIPCF WHERE WC_ZONE ='              BG4033
      D DeleteString01  C                   'DELETE FROM T_WIPCF WHERE WC_ZONE '               BG4033
      D*DeleteString02  C                   '!= '''' AND WC_ZONE IS NOT NULL AND'     BG4033 BUG18305
      D*DeleteString03  C                   ' WC_ZONE != '                            BG4033 BUG18305
      D DeleteString02  C                   '<> '''' AND WC_ZONE IS NOT NULL AND'            BUG18305
      D DeleteString03  C                   ' WC_ZONE <> '                                   BUG18305
-
+ 
       * SQL statment building blocks for alter processing                                     BG4033
                                                                                               BG4033
      D AlterString01   C                   'ALTER TABLE T_WIPCF ALTER COLUMN '                BG4033
@@ -88,7 +88,7 @@
      D AlterString02   C                   'WC_ID restart with 10000'                       MD029086
                                                                                               BG4033
       * SQL statment building blocks for insert processing
-
+ 
      D InsertString01  C                   'INSERT INTO T_WIPCF'
      D InsertString02  C                   'OVERRIDING USER VALUE'
      D InsertString03  C                   '(SELECT (SELECT MAX(WC_ID) FROM '
@@ -109,14 +109,14 @@
      D InsertString11  C                   'WC_BOFLD3, WC_BOFLD4, WC_BOFLD5 '                 CPK025
      D InsertString12  C                   'FROM T_WIPCF,GPZONEPD '                           CPK025
      D InsertString13  C                   'WHERE WC_ZONE = '                                 CPK025
-
+ 
       * RUNSQL statement building blocks
-
+ 
      D RUNSQL_Cmd      C                   'RUNSQLSTM SRCFILE(QTEMP/CRTOBJSQL) +
      D                                     SRCMBR(CRTOBJSQL) COMMIT(*NONE)'
-
+ 
       * CLRPFM statement building blocks
-
+ 
      D CLRSQL_Cmd      C                   'CLRPFM FILE(CRTOBJSQL) +
      D                                     MBR(CRTOBJSQL)'
       *
@@ -130,7 +130,7 @@
       **********                                                                              BG4033
      C******ENTRY        PLIST                                                                BG4033
      C**********         PARM                    ZoneName         10                          BG4033
-
+ 
      C/exec sql whenever sqlerror go to TAGSQLERR                                           MD029086
      C/end-exec                                                                             MD029086
       *
@@ -138,21 +138,21 @@
      C                   EVAL      CmdStrClrSQL = CLRSQL_Cmd
      C                   EVAL      CmdStrMAXSQL = RRSTMAX_Cmd                               MD029086
      C                   EVAL      CmdStr10kSQL = RRST10k_Cmd                               MD029086
-
+ 
       * Create the work SRCPF in QTEMP
-
+ 
      C                   CALL      'UPC000798'
-
+ 
       * Clear the SQL member
       *
      C                   CALL      'QCMDEXC'
      C                   PARM                    CmdStrClrSQL
      C                   PARM                    CmdLenClrSQL
-
+ 
       * Build the SQL row deletion statement
-
+ 
      C                   OPEN      CRTOBJSQL
-
+ 
      C**********         EVAL      CommandString = DeleteString + ' ' +                       BG4033
      C**********                   '''' + ZoneName + ''''                                     BG4033
                                                                                               BG4033
@@ -180,15 +180,15 @@
      C                             '''' + 'GLOBAL' + ''''                                   BUG15756
                                                                                               BG4033
      C                   WRITE     CRTOBJSQF                                                  BG4033
-
+ 
      C                   EVAL      SRCDTA = CommandString
-
+ 
      C                   WRITE     CRTOBJSQF
-
+ 
       * Execute the SQL row deletion statement
-
+ 
      C                   CLOSE     CRTOBJSQL
-
+ 
      C                   CALL      'QCMDEXC'
      C                   PARM                    CmdStrRunSQL
      C                   PARM                    CmdLenRunSQL
@@ -207,7 +207,7 @@
      C                   PARM                    CmdStr10kSQL                               MD029086
      C                   PARM                    CmdLen10kSQL                               MD029086
      C                   ENDIF                                                              MD029086
-
+ 
       * Clear the SQL member                                                                  BG4033
       *                                                                                       BG4033
      C                   CALL      'QCMDEXC'                                                  BG4033
@@ -239,67 +239,67 @@
      C                   CALL      'QCMDEXC'                                                  BG4033
      C                   PARM                    CmdStrRunSQL                                 BG4033
      C                   PARM                    CmdLenRunSQL                                 BG4033
-
+ 
       * Clear the SQL member
-
+ 
      C                   CALL      'QCMDEXC'
      C                   PARM                    CmdStrClrSQL
      C                   PARM                    CmdLenClrSQL
-
+ 
       * Build the SQL row addition statement
-
+ 
      C                   OPEN      CRTOBJSQL
-
+ 
       * Insert command line 1
-
+ 
      C                   EVAL      SRCDTA = InsertString01
-
+ 
      C                   WRITE     CRTOBJSQF
-
+ 
       * Insert command line 2
-
+ 
      C                   EVAL      SRCDTA = InsertString02
-
+ 
      C                   WRITE     CRTOBJSQF
-
+ 
       * Insert command line 3
-
+ 
      C                   EVAL      SRCDTA = InsertString03
-
+ 
      C                   WRITE     CRTOBJSQF
-
+ 
       * Insert command line 4
-
+ 
      C                   EVAL      SRCDTA = InsertString04
-
+ 
      C                   WRITE     CRTOBJSQF
-
+ 
       * Insert command line 5
-
+ 
      C                   EVAL      SRCDTA = *BLANKS
      C                   EVAL      SRCDTA = InsertString05
-
+ 
      C                   WRITE     CRTOBJSQF
-
+ 
       * Insert command line 6
-
+ 
      C                   EVAL      SRCDTA = *BLANKS
      C                   EVAL      SRCDTA = InsertString06
-
+ 
      C                   WRITE     CRTOBJSQF
-
+ 
       * Insert command line 7
-
+ 
      C                   EVAL      SRCDTA = *BLANKS
      C                   EVAL      SRCDTA = InsertString07
-
+ 
      C                   WRITE     CRTOBJSQF
-
+ 
       * Insert command line 8
-
+ 
      C                   EVAL      SRCDTA = *BLANKS
      C                   EVAL      SRCDTA = InsertString08
-
+ 
      C                   WRITE     CRTOBJSQF
                                                                                               CPK025
       * Insert command line 8a                                                                CPK025
@@ -308,32 +308,32 @@
      C                   EVAL      SRCDTA = InsertString8a                                    CPK025
                                                                                               CPK025
      C                   WRITE     CRTOBJSQF                                                  CPK025
-
+ 
       * Insert command line 9
-
+ 
      C                   EVAL      SRCDTA = *BLANKS
      C**********         EVAL      SRCDTA = InsertString09 + ' ' +                            BG4033
      C**********                   '''' + ZoneName + ''''                                     BG4033
      C                   EVAL      SRCDTA = InsertString09                                    BG4033
-
+ 
      C                   WRITE     CRTOBJSQF
-
+ 
       * Insert command line 10
-
+ 
      C                   EVAL      SRCDTA = *BLANKS
      C                   EVAL      SRCDTA = InsertString10
-
+ 
      C                   WRITE     CRTOBJSQF
-
+ 
       * Insert command line 11
-
+ 
      C                   EVAL      SRCDTA = *BLANKS
      C                   EVAL      SRCDTA = InsertString11
-
+ 
      C                   WRITE     CRTOBJSQF
-
+ 
       * Insert command line 12
-
+ 
      C                   EVAL      SRCDTA = *BLANKS                                           CPK025
      C                   EVAL      SRCDTA = InsertString12                                    CPK025
                                                                                               CPK025
@@ -350,17 +350,17 @@
                                                                                               CPK025
      C                   EVAL      SRCDTA = *BLANKS
      C                   EVAL      SRCDTA = '''' + '*REFZONE' + ''')'
-
+ 
      C                   WRITE     CRTOBJSQF
-
+ 
       * Execute the SQL row addition statement
-
+ 
      C                   CLOSE     CRTOBJSQL
-
+ 
      C                   CALL      'QCMDEXC'
      C                   PARM                    CmdStrRunSQL
      C                   PARM                    CmdLenRunSQL
-
+ 
      C                   EVAL      *INLR = *ON
      C
      C                   RETURN

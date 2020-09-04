@@ -18,7 +18,7 @@
       *                                                               *
       *  Component of: SP6GL0003 Service Program                      *
       *                                                               *
-      *  (c) Finastra International Limited 2005                      *
+      *  (c) Misys Internaional Banking Systems Ltd. 2005             *
       *                                                               *
       *  Last Amend No. MD046248           Date 27Oct17               *
       *  Prev Amend No. CRE075             Date 06Dec10               *
@@ -46,16 +46,16 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
-
+ 
       **
       ** The following /COPY line includes the LDA layout,
       ** the copyright array definition,
@@ -67,48 +67,48 @@
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Program Status Data Structure
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
-
+ 
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
      D/COPY ZACPYSRC,PROCPARMS
-
+ 
       ** The following /COPY line includes the definitions for error &
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       **
       **   Named constants
       **   ===============
       **
      D LETTER          C                   'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
      D NUMBER          C                   '0123456789'
-
+ 
       **
       **   Arrays and Data Structures
       **   ==========================
       **
       ** External DS for account details
      D ACCNT         E DS                  EXTNAME(ACCNTAB)
-
+ 
       ** Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
-
+ 
       **Data structure for Correction Account
      D                 DS
      D**********W6LXCOAC               1     15                                               CER001
@@ -119,7 +119,7 @@
      D**********W#ACSQ                14     15                                               CER001
      D  W#ACOD                10     19                                                       CER001
      D  W#ACSQ                20     21                                                       CER001
-
+ 
       **
       **   Declared variables
       **   ==================
@@ -131,7 +131,7 @@
      D #6LXWECOAM      S             15  0
      D #1CCY           S              3A
      D #MsgID1         S              7A
-
+ 
       ** Define parameters for call module
      D @CUST           S              6A
      D @CCYD           S              3A
@@ -140,8 +140,8 @@
      D @ACSN           S              2A
      D @BRCA           S              3A
      D @RETL           S             10A
-
-
+ 
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -266,7 +266,7 @@
      C                   ENDIF
       *
      C                   RETURN
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************

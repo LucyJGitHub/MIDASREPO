@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2012')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SC Trigger Program for CoB Opt Manager')
@@ -10,7 +10,7 @@
       *  SC001003 - Midas SC Trigger Program for CoB Optimisation     *
       *             Manager                                           *
       *                                                               *
-      *  (c) Finastra International Limited 2012                      *
+      *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
       *  Last Amend No. CUP040             Date 06Mar14               *
       *  Prev Amend No. MD024412           Date 04Feb14               *
@@ -41,7 +41,7 @@
       /EJECT
       *****************************************************************
      FSDMMIDL1  IF   E           K DISK
-
+ 
      D PMode           S              4
      D PLFName         S             10
      D PMbrName        S             10
@@ -50,7 +50,7 @@
      D PRtcd           S              7
      D POptn           S              7
      D PSard           S              6
-
+ 
      D WFomminTmp      S              1
      D WPrevFile       S             10
      D WPrevMbr        S             10
@@ -62,7 +62,7 @@
      D WMTotRow        S              4  0
      D WFTotRow        S              4  0
      D WSQLRtcd        S              4  0
-
+ 
      D PARM1           DS
       * Physical file name
      D  PFLNAME                1     10
@@ -79,54 +79,54 @@
       * Length of the after image of the record
      D  ALEN                  69     72B 0
      D  EntryData            117  10117A
-
+ 
      D PARM2           DS
      D  LENG                   1      4B 0
-
+ 
      D SDMMID        E DS                  EXTNAME(SDMMIDPD)
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D***SCCOMJ*     E DS                  EXTNAME(SCCOMJK0)                                  CUP040
      D SCCOMJ        E DS                  EXTNAME(SCCOMJW0)                                  CUP040
-
+ 
       ** Main Processing
-
+ 
       ** Entry Parameters
-
+ 
      C     *ENTRY        PLIST
      C                   PARM                    PARM1
      C                   PARM                    PARM2
-
+ 
       ** Recover before image
-
+ 
      C     BOFF          ADD       1             OffSet            5 0
      C     BLen          SUBST     PARM1:OffSet  I#BIMG         4000
-
+ 
       ** Recover after image
-
+ 
      C     AOFF          ADD       1             OffSet
      C     ALen          SUBST     PARM1:OffSet  I#AIMG         4000
-
+ 
       ** If file is SDMMIDPD and action is update.
       ** Global Updates - BEFORE/AFTER image
       ** TRGEVENT: '1'=INSERT, '2'=DELETE, '3'=UPDATE
-
+ 
      C                   IF        PFLNAME  = 'SDMMIDPD' and
      C                             TRGEVENT = '3'
-
+ 
       ** Check before and after image for FOMMIN change
-
+ 
      C                   EVAL      SDMMID = I#BIMG
      C                   EVAL      WFomminTmp = FOMMIN
      C                   EVAL      SDMMID = I#AIMG
-
+ 
       ** If FOMMIN has changed, check if it has records on SCCOMJK0
       ** then process complex conditions.
-
+ 
      C                   IF        FOMMIN <> WFomminTmp
-
+ 
       ** Read through the records of SCCOMJK0
-
+ 
      C/EXEC SQL
      C+ declare ACursor insensitive scroll cursor for
      C**select***from*SCCOMJK0*                                                               CUP040
@@ -134,73 +134,73 @@
      C+ where FMTYPE = 'F' and FMDEL = 'N'
      C+ order by FMTYPE, FMNAME, FMCSEQ, FMMBR, FMCCSQ
      C/END-EXEC
-
+ 
      C/EXEC SQL
      C+ open ACursor
      C/END-EXEC
-
+ 
      C/EXEC SQL
      C+ fetch next from ACursor into :SCCOMJ
      C/END-EXEC
-
+ 
      C                   EVAL      WSQLRtcd = SQLCODE
-
+ 
       ** When a record is read, check if at least one record in its
       ** complex condition sequence exists a Module-File-Member record.
       ** If none exists, do not process the record.
-
+ 
      C                   EXSR      CHKMOD
-
+ 
      C                   EVAL      WPrevFile = FMNAME
      C                   EVAL      WPrevMbr = FMMBR
      C                   EVAL      WIgnore = 'N'
      C                   EVAL      WPrcsd = 'N'
      C                   EVAL      FMCPLX = *BLANKS
-
+ 
      C                   DOW       WSQLRtcd = 0
      C                   IF        WMTotRow > 0
      C                   EXSR      SRPROCES
      C                   EVAL      WPrcsd = 'Y'
      C                   ENDIF
-
+ 
      C/EXEC SQL
      C+ fetch next from ACursor into :SCCOMJ
      C/END-EXEC
-
+ 
      C                   EVAL      WSQLRtcd = SQLCODE
      C                   EXSR      CHKMOD
      C                   ENDDO
-
+ 
       ** Process the last set of complex condition group
       ** if at least one satisfied the conditions above.
-
+ 
      C                   IF        WPrcsd = 'Y'
      C                   EVAL      FMNAME = *BLANKS
      C                   EVAL      FMMBR = *BLANKS
      C                   EXSR      SRPROCES
      C                   ENDIF
-
+ 
      C/EXEC SQL
      C+ close ACursor
      C/END-EXEC
-
+ 
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** If file is SCSARDPD and action is update.
       ** TRGEVENT: '1'=INSERT, '2'=DELETE, '3'=UPDATE
-
+ 
      C                   IF        PFLNAME  = 'SCSARDPD' AND
      C                             (TRGEVENT = '1' OR TRGEVENT = '2')
-
+ 
      C                   IF        TRGEVENT = '1'
      C                   EVAL      SCSARD = I#AIMG
      C                   ELSE
      C                   EVAL      SCSARD = I#BIMG
      C                   ENDIF
-
+ 
       ** Read through the records of SCCOMJK0
-
+ 
      C/EXEC SQL
      C+ declare BCursor insensitive scroll cursor for
      C**select***from*SCCOMJK0*                                                               CUP040
@@ -208,58 +208,58 @@
      C+ where FMTYPE = 'F' and FMDEL = 'N'
      C+ order by FMTYPE, FMNAME, FMCSEQ, FMMBR, FMCCSQ
      C/END-EXEC
-
+ 
      C/EXEC SQL
      C+ open BCursor
      C/END-EXEC
-
+ 
      C/EXEC SQL
      C+ fetch next from BCursor into :SCCOMJ
      C/END-EXEC
-
+ 
      C                   EVAL      WSQLRtcd = SQLCODE
-
+ 
       ** When a record is read, check if at least one record in its
       ** complex condition sequence exists a Module-File-Member record.
       ** If none exists, do not process the record.
-
+ 
      C                   EXSR      CHKFEAT
-
+ 
      C                   EVAL      WPrevFile = FMNAME
      C                   EVAL      WPrevMbr = FMMBR
      C                   EVAL      WIgnore = 'N'
      C                   EVAL      WPrcsd = 'N'
      C                   EVAL      FMCPLX = *BLANKS
-
+ 
      C                   DOW       WSQLRtcd = 0
      C                   IF        WFTotRow > 0
      C                   EXSR      SRPROCES
      C                   EVAL      WPrcsd = 'Y'
      C                   ENDIF
-
+ 
      C/EXEC SQL
      C+ fetch next from BCursor into :SCCOMJ
      C/END-EXEC
-
+ 
      C                   EVAL      WSQLRtcd = SQLCODE
      C                   EXSR      CHKFEAT
      C                   ENDDO
-
+ 
       ** Process the last set of complex condition group
       ** if at least one satisfied the conditions above.
-
+ 
      C                   IF        WPrcsd = 'Y'
      C                   EVAL      FMNAME = *BLANKS
      C                   EVAL      FMMBR = *BLANKS
      C                   EXSR      SRPROCES
      C                   ENDIF
-
+ 
      C/EXEC SQL
      C+ close BCursor
      C/END-EXEC
-
+ 
      C                   ENDIF
-
+ 
      C                   EVAL      *INLR = *ON
      C                   RETURN
       *****************************************************************
@@ -272,9 +272,9 @@
       *                                                               *
       *****************************************************************
      C     SRPROCES      BEGSR
-
+ 
       ** Process Complex Conditions
-
+ 
      C                   IF        WPrcsd = 'Y' AND
      C                             (WPrevFile <> FMNAME OR
      C                             WPrevMbr <> FMMBR)
@@ -288,17 +288,17 @@
      C                   EVAL      WIgnore = 'N'
      C                   EVAL      FMCPLX = *BLANKS
      C                   ENDIF
-
+ 
       ** If WIgnore = 'Y', condition was already met.
       ** No need to process further.
-
+ 
      C                   IF        WIgnore = 'N'
-
+ 
       ** Check the status of Switchable Feature or Module
       ** against FMCOND if it is satisfied.
-
+ 
      C                   EXSR      SRCHKSTS
-
+ 
      C                   IF        FMCPLX = *BLANKS
      C                   EVAL      WAnd = WStat
      C                   ENDIF
@@ -355,9 +355,9 @@
       *                                                               *
       *****************************************************************
      C     SRCHKSTS      BEGSR
-
+ 
       ** If Switchable Feature is specified.
-
+ 
      C                   IF        FMFEAT <> *BLANKS
      C
      C                   CALL      'AOSARDR0'
@@ -365,7 +365,7 @@
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      FMFEAT        PSard
      C     SCSARD        PARM      SCSARD        DSFDY
-
+ 
      C                   EVAL      WStat = '0'
      C                   IF        PRtcd = *BLANKS AND FMCOND = '*ON'
      C                   EVAL      WStat = '1'
@@ -373,15 +373,15 @@
      C                   IF        PRtcd <> *BLANKS AND FMCOND = '*OFF'
      C                   EVAL      WStat = '1'
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
       ** If Module Name is specified.
-
+ 
      C                   IF        FMMOD <> *BLANKS
-
+ 
      C     FMMOD         CHAIN     SDMMIDL1
-
+ 
      C                   EVAL      WStat = '0'
      C                   IF        FOMMIN = 'Y' AND FMCOND = '*ON'
      C                   EVAL      WStat = '1'
@@ -389,9 +389,9 @@
      C                   IF        FOMMIN = 'N' AND FMCOND = '*OFF'
      C                   EVAL      WStat = '1'
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       *                                                               *
@@ -399,17 +399,17 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
      C     KMODFM        KLIST
      C                   KFLD                    FOMMSN
      C                   KFLD                    FMNAME
      C                   KFLD                    FMMBR
-
+ 
      C     KFEATFM       KLIST
      C                   KFLD                    SARN
      C                   KFLD                    FMNAME
      C                   KFLD                    FMMBR
-
+ 
      C                   ENDSR
       *****************************************************************
       *                                                               *
@@ -420,7 +420,7 @@
       *                                                               *
       *****************************************************************
      C     CHKMOD        BEGSR
-
+ 
      C/EXEC SQL
      C+ declare MCursor insensitive scroll cursor for
      C**select***from*SCCOMJK0*                                                               CUP040
@@ -431,15 +431,15 @@
      C+ and FMTYPE = 'F'
      C+ and FMDEL = 'N'
      C/END-EXEC
-
+ 
      C/EXEC SQL
      C+ open MCursor
      C/END-EXEC
-
+ 
      C/EXEC SQL
      C+ get diagnostics :WMTotRow = DB2_NUMBER_ROWS
      C/END-EXEC
-
+ 
      C/EXEC SQL
      C+ close MCursor
      C/END-EXEC
@@ -453,7 +453,7 @@
       *                                                               *
       *****************************************************************
      C     CHKFEAT       BEGSR
-
+ 
      C/EXEC SQL
      C+ declare FCursor insensitive scroll cursor for
      C**select***from*SCCOMJK0*                                                               CUP040
@@ -464,18 +464,18 @@
      C+ and FMTYPE = 'F'
      C+ and FMDEL = 'N'
      C/END-EXEC
-
+ 
      C/EXEC SQL
      C+ open FCursor
      C/END-EXEC
-
+ 
      C/EXEC SQL
      C+ get diagnostics :WFTotRow = DB2_NUMBER_ROWS
      C/END-EXEC
-
+ 
      C/EXEC SQL
      C+ close FCursor
      C/END-EXEC
-
+ 
      C                   ENDSR
       *****************************************************************

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2013')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SM Initialise AUTOAUTH')
@@ -13,7 +13,7 @@
       *             setup (permissions and entitlements) for          *
       *             AUTOAUTH profile                                  *
       *                                                               *
-      *  (c) Finastra International Limited 2013                      *
+      *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
       *  Last Amend No. MD020456           Date 23May13               *
       *  Prev Amend No. MD018386C          Date 23Apr13               *
@@ -44,29 +44,29 @@
      D RoleExists      S              2  0 INZ(0)
      D GroupId         S             20
      D DynaSQL         S            256    INZ('')
-
+ 
       /free
-
+ 
        // MAIN
        //---------------------------------*
-
+ 
        // Check if AUTOAUTH role already exists
          Exec SQL
               Select count(*) into :RoleExists
               from BFTB_ORGANISATIONGRP
               where BFGROUPNAME = 'AUTOAUTH';
-
+ 
          If RoleExists = 0;
               ExSr CreateRole;
          EndIf;
-
+ 
          ExSr ResetRole;
          ExSr RevokeCurrAuth;
          ExSr ApplyAuth;
-
+ 
          *INLR = *ON;
          Return;
-
+ 
        // SUBROUTINES
        //---------------------------------*
        //-------------------*
@@ -81,24 +81,24 @@
                 values
                 ( 'AUTOAUTH', 'Auto-Authorise Profile', 1, 0
                 , 'AUTOAUTH', 'system');                                                 //MD018386C
-
+ 
          // Populate audit fields, if exists
            DynaSQL = 'Update BFTB_ORGANISATIONGRP '
                      + 'set BFRECCREATEDBY = ''system'''
                      + ', BFRECCREATEDON = now() '
        //**********  + 'where BFGROUPID = ''AUTOAUTH''';                                 //MD018386C
                      + 'where BFGROUPIDPK = ''AUTOAUTH''';                               //MD018386C
-
+ 
            Exec SQL
                 Prepare ORAudit from :DynaSQL;
-
+ 
            If SQLCode = 0;
               Exec SQL
                    Execute ORAudit;
            EndIf;
-
+ 
          EndSr;
-
+ 
        //-------------------*
        // Reset Role        |
        //-------------------*
@@ -108,12 +108,12 @@
                 select BFGROUPIDPK into :GroupId
                 from BFTB_ORGANISATIONGRP
                 where BFGROUPNAME = 'AUTOAUTH';
-
+ 
          //Update permissions attached to AUTOAUTH role
            Exec SQL
                 Delete from BFTB_GROUPPERMMAP
                 where BFGROUPID = :GroupId;
-
+ 
            Exec SQL
                 Insert into BFTB_GROUPPERMMAP
                 (BFIDPK, BFPERMISSIONID, VERSIONNUM, BFGROUPID)
@@ -130,36 +130,36 @@
                   left join BFTB_RESOURCEPERM C
                          on B.PMARTF = C.BFRESOURCEID
                   where B.PMACTC in ('E', 'X'));
-
+ 
          // Populate audit fields, if exists
            DynaSQL = 'Update BFTB_GROUPPERMMAP '
                      + 'set BFRECCREATEDBY = ''system'''
                      + ', BFRECCREATEDON = now() '
          //**********+ 'where BFGROUPID = ' + GroupId;                                   //MD018386C
                      + 'where BFGROUPID = ''' + GroupId + '''';                          //MD018386C
-
+ 
            Exec SQL
                 Prepare GPAudit from :DynaSQL;
-
+ 
            If SQLCode = 0;
               Exec SQL
                    Execute GPAudit;
            EndIf;
-
+ 
          EndSr;
-
+ 
        //---------------------------*
        // Revoke Current Authority  |
        //---------------------------*
          BegSr RevokeCurrAuth;
          // Revoke AUTOAUTH of roles/entitlements, if any
-
+ 
            Exec SQL
                 Delete from BFTB_ORGGROUPUSER where BFUSERNAME = 'AUTOAUTH';
            Exec SQL
                 Delete from BFTB_ENTITLEMENTS where BFUSERNAME = 'AUTOAUTH';
          EndSr;
-
+ 
        //---------------------*
        // Re/Apply Authority  |
        //---------------------*
@@ -173,7 +173,7 @@
                   , :GroupId
                   , 'AUTOAUTH'
                   , 0 );
-
+ 
            Exec SQL
                 Insert into BFTB_ENTITLEMENTS
                   ( BFIDPK, BFGROUPNAME, BFENTITLEMENTTYPE, BFENTITLEMENTVALUE
@@ -188,39 +188,39 @@
                    , 0
                    , A8BRNM
                    from GZSDBRCHPD );
-
+ 
          // Populate audit fields, if exists
            DynaSQL = 'Update BFTB_ENTITLEMENTS '
                      + 'set BFRECCREATEDBY = ''system'''
                      + ', BFRECCREATEDON = now() '
                      + 'where BFUSERNAME = ''AUTOAUTH''';
-
+ 
            Exec SQL
                 Prepare ENAudit from :DynaSQL;
-
+ 
            If SQLCode = 0;
               Exec SQL
                    Execute ENAudit;
            EndIf;
-
+ 
            DynaSQL = 'Update BFTB_ORGGROUPUSER '
                      + 'set BFRECCREATEDBY = ''system'''
                      + ', BFRECCREATEDON = now() '
                      + 'where BFUSERNAME = ''AUTOAUTH''';
-
+ 
            Exec SQL
                 Prepare OGAudit from :DynaSQL;
-
+ 
            If SQLCode = 0;
               Exec SQL
                    Execute OGAudit;
            EndIf;
-
+ 
          EndSr;
-
-
-
+ 
+ 
+ 
       /end-free
-
+ 
       *****************************************************************
       /EJECT

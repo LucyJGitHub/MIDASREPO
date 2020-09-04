@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2011')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SM Upload to BF - Zones')
@@ -9,7 +9,7 @@
       *                                                               *
       *  SM000053 - Midas SM Upload to BF - Zones                     *
       *                                                               *
-      *  (c) Finastra International Limited 2011                      *
+      *  (c) Misys International Banking Systems Ltd. 2011            *
       *                                                               *
       *  Last Amend No. AR1085933          Date 06Feb13               *
       *  Prev Amend No. AR989186           Date 06Feb13               *

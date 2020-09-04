@@ -418,6 +418,6 @@ e1   C                   ENDIF
       /COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Finastra International Limited 2014
+(c) Misys International Banking Systems Ltd. 2014
 ** FREQ - ARRAY For Frequency validation
 DWFSMTRBLATQXY

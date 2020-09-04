@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD052075           Date 07Jun19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. MD055373           Date 14Jul20               *
+      *  Prev Amend No. MD052075           Date 07Jun19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD050928A          Date 28Jun18               *
       *                 MD050928           Date 15May18               *
       *                 MD050345           Date 04Apr18               *
@@ -218,6 +219,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055373 - Audit trail not available                         *
+      *           - Include DDIUSR and DDAUSR fields on TransInEx2.   *
       *  MD052075 - [CGL150] Warning message should be displayed when *
       *           the system defaults the value date.                 *
       *  CSD102 - Password Length Extension                           *
@@ -648,6 +651,7 @@
      D  TransFTCR                          LIKE(SDFTCR)                                       CGL132
      D  TransCUEX                          LIKE(SDCUEX)                                     MD044880
      D  TransCRSH                          LIKE(SDCRSS)                                       CGL157
+     D  TransPROFUser                20A                                                    MD055373
                                                                                               CSW213
      D TransInEx3      DS          9999                                                       CSW213
      D  TransCARS              1   9999                                                       CSW213
@@ -7274,6 +7278,11 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      Bfp  += SDEXLn                                           MD044880
      C                   EVAL      TransCRSH = %SUBST(BufferEx2:Bfp:CRSSLn)                   CGL157
      C                   EVAL      Bfp  += CRSSLn                                             CGL157
+      *                                                                                     MD055373
+      ** Insert User and Amend User fields                                                  MD055373
+     C                   EVAL      TransPROFUser = %SUBST(BufferEx2:Bfp:20)                 MD055373
+     C                   EVAL      Bfp  += 20                                               MD055373
+      *                                                                                     MD055373
      C                   EVAL      BFEX2Ln -= Bfp                                           MD022093
                                                                                             MD022093
      C                   ENDSR                                                              MD022093

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2004')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
       *****************************************************************
 /*STD *  RPGSQLMOD                                                    *
 /*EXI *  TEXT('Midas TI SDTIACPD Trigger - HBPF TI account types')
@@ -12,7 +12,7 @@
       *  Function:  This program updates/adds/deletes a record in     *
       *             HBPF for TI Account types                         *
       *                                                               *
-      *  (c) Finastra International Limited 2004                      *
+      *  (c) Misys International Banking Systems Ltd. 2004            *
       *                                                               *
       *  Called By: SCTRIGGER                                         *
       *                                                               *
@@ -27,9 +27,9 @@
       *  BG3697 - Convert TI SQL triggers to RPG                      *
       *                                                               *
       *****************************************************************
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
      D PARM1           DS
       * Physical file name
      D  PFLNAME                1     10
@@ -46,31 +46,31 @@
       * Length of the after image of the record
      D  ALEN                  69     72B 0
      D  EntryData            117  10117A
-
+ 
      D PARM2           DS
      D  LENG                   1      4B 0
-
+ 
       * DS to define TI account fields
      DTIACFormat     E DS                  ExtName(SDTIACPD)
-
+ 
       * 'Before' variables for SQL key details and update checking
      DBTIACNo          S             10
      DBTIACDetails     S             30
-
+ 
       *****************************************************************
      C/EJECT
       *****************************************************************
-
+ 
       * Entry parameters
-
+ 
      C     *ENTRY        PLIST
      C                   PARM                    PARM1
      C                   PARM                    PARM2
-
+ 
       * Recover before and after image
      C     BOFF          ADD       1             OffSet            5 0
      C     BLen          SUBST     PARM1:OffSet  I#BIMG         4000
-
+ 
      C     AOFF          ADD       1             OffSet
      C     ALen          SUBST     PARM1:OffSet  I#AIMG         4000
       *
@@ -78,13 +78,13 @@
      C                   Eval      TIACFormat = I#BIMG
      C                   Eval      BTIACNo = GDC5AT
      C                   Eval      BTIACDetails = GDC5DS
-
+ 
       * Get after image
      C                   Eval      TIACFormat = I#AIMG
-
+ 
       * Set SQL return code
      C                   Eval      SQLCOD = 0
-
+ 
       * Trigger event types:
       * '1'=Insert, '2'=Delete, '3'=Update
       *
@@ -124,10 +124,10 @@
      C                   If        SQLCOD <> 0
      C                   ExSR      *PSSR
      C                   EndIf
-
+ 
      C                   SetOn                                        LR
      C                   Return
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -135,11 +135,11 @@
       ** The following /COPY contains the standard program status
       ** subroutine, excluding a bound call to the DBERRCTL module.
      C/COPY ZACPYSRC,PSSR_ILENE
-
+ 
      C                   SetOn                                        LR
      C                   Return
-
+ 
      C                   EndSR
-
+ 
       **---------------------------------------------------------------
       *****************************************************************

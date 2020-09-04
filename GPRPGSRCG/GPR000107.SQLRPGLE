@@ -144,4 +144,4 @@
 
       *****************************************************************
 ** CPY@
-(c) Finastra International Limited 2005
+(c) Misys International Banking Systems Ltd. 2005

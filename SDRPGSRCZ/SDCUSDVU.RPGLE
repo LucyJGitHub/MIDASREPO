@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD050212           Date 02Apr18               *
+      *  Last Amend No. MD055373           Date 14Jul20               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD050212           Date 02Apr18               *
       *                 MD023188           Date 20Sep18               *
       *                 MD051305           Date 19Jun18               *
       *                 MD050345           Date 04Apr18               *
@@ -146,6 +147,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055373 - Audit trail not available                         *
+      *           - Receive and process the DDIUSR and DDAUSR fields  *
+      *             from APTRANVU.                                    *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD050212 - Replication processing for SDCUSTXC (Recompile)   *
       *  MD023188 - European tax status disappears after re-inserting *
@@ -888,6 +892,7 @@
      D  TransFTCR                          LIKE(SDFTCR)                                       CGL132
      D  TransCUEX                          LIKE(ExtData)                                    MD044880
      D  TransCRSS                          LIKE(SDCRSS)                                       CGL157
+     D  TransUser                    20A                                                    MD055373
                                                                                               CSW213
      D TransInEx3      DS          9999                                                       CSW213
      D  TransCARS              1   9999                                                       CSW213
@@ -1096,7 +1101,8 @@
      D***FillerBufEx2    S           8951A                                             CSW213 CGL132
      D***FillerBufEx2    S           5980A                                           CGL132 MD044880
      D***FillerBufEx2    S           5915A                                           MD044880 CGL157
-     D FillerBufEx2    S           5591A                                                      CGL157
+     D***FillerBufEx2    S           5591A                                           CGL157 MD055373
+     D FillerBufEx2    S           5571A                                                    MD055373
      D FillerBufEx3    S           9999A                                                      CSW213
      D***FillerBufEx4    S           6898A                                           CSW213 MD041996
      D***FillerBufEx4    S           5974A                                         MD041996 MD044880
@@ -1513,6 +1519,7 @@
      C                                       + TranInFTCR                                     CGL132
      C                                       + ExtData                                      MD044880
      C                                       + TranInCRSS                                     CGL157
+     C                                       + TransUser                                    MD055373
      C                                       + FillerBufEx2                                   CSW213
                                                                                               CSW213
      C                   EVAL      BufferEx3 = FillerBufEx3                                   CSW213
@@ -4434,6 +4441,8 @@
      C                   PARM      *BLANKS       PTransType                                   CSD028
      C                   PARM      *BLANKS       DACTN             1                          CSD028
      C                   PARM                    CTI006                                     MD030956
+     C                   PARM                    TransUser                                  MD055373
+     C                   PARM                    AAUTH                                      MD055373
                                                                                               CER059
      C                   IF        @RTCD = *BLANKS                                            CER059
      C                             AND (DDACTN <> 'D'                                       AR741363

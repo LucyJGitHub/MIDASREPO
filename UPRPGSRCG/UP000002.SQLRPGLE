@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2011')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Add new action file processing')                       *
@@ -9,7 +9,7 @@
       *                                                               *
       *  UP000002 - Add new Action File processing                    *
       *                                                               *
-      *  (c) Finastra International Limited 2011                      *
+      *  (c) Misys International Banking Systems Ltd. 2011            *
       *                                                               *
       *  Last Amend No. CUP040             Date 06Mar13               *
       *  Prev Amend No. Ar863945 *CREATE   Date 11Nov11               *

@@ -564,7 +564,7 @@
      C                   ENDSR
       ********************************************************************
 **  CPY@
-(c) Finastra International Limited 2011
+(c) Misys International Banking Systems Ltd. 2011
 **  ErrMsgAr
 Option not valid. You can only enter 1 or 2
 Entry not a valid entry on file

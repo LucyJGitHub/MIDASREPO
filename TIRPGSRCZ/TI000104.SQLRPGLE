@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2004')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
       *****************************************************************
 /*STD *  RPGSQLMOD                                                    *
 /*EXI *  TEXT('Midas TI SDNOSTPD Trigger - GJPF Nostros')
@@ -12,7 +12,7 @@
       *  Function:  This program updates/adds/deletes a record in     *
       *             GJPF for Nostros                                  *
       *                                                               *
-      *  (c) Finastra International Limited 2004                      *
+      *  (c) Misys International Banking Systems Ltd. 2004            *
       *                                                               *
       *  Called By: SCTRIGGER                                         *
       *                                                               *
@@ -41,9 +41,9 @@
       *  BG3697 - Convert TI SQL triggers to RPG                      *
       *                                                               *
       *****************************************************************
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
      D PARM1           DS
       * Physical file name
      D  PFLNAME                1     10
@@ -60,36 +60,36 @@
       * Length of the after image of the record
      D  ALEN                  69     72B 0
      D  EntryData            117  10117A
-
+ 
      D PARM2           DS
      D  LENG                   1      4B 0
-
+ 
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       ** External DS for Customer Details
-
+ 
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * Long DS for Access Programs
-
+ 
       * Parameter for access to Customer Details
      D PCustNo         S             10A
      D PErrInf         S              7A
-
+ 
       * DS to define Nostro fields
      DNOSTFormat     E DS                  ExtName(SDNOSTPD)
-
+ 
       * 'Before' variables for SQL key details and update checking
      DBNostro          S              6
      DBAccount         S             34
      D**********BOurAc           S             14                                             237768
      DBOurAc           S             34                                                       237768
      DAOurAc           S             34                                                       237768
-
+ 
       * Work variables, GJPF fields
      D WKACSN          S              2
      DGJNostro         S              6
      DGJAccount        S             34
      DNostro           S             10
-
+ 
      D Run             PR                  ExtPgm('QCMDEXC')                                  237768
      D cmdstr                      3000A   Const Options(*VarSize)                            237768
      D cmdlen                        15P 5 Const                                              237768
@@ -98,17 +98,17 @@
       *****************************************************************
      C/EJECT
       *****************************************************************
-
+ 
       * Entry parameters
-
+ 
      C     *ENTRY        PLIST
      C                   PARM                    PARM1
      C                   PARM                    PARM2
-
+ 
       * Recover before and after image
      C     BOFF          ADD       1             OffSet            5 0
      C     BLen          SUBST     PARM1:OffSet  I#BIMG         4000
-
+ 
      C     AOFF          ADD       1             OffSet
      C     ALen          SUBST     PARM1:OffSet  I#AIMG         4000
       *                                                                                       237768
@@ -134,19 +134,19 @@
      C                   Endif                                                                237768
      C                   Eval      BOurAc = A7OACN                                            237768
      C                   EndIf                                                                BG7590
-
+ 
       * Get after image
      C                   Eval      NostFormat = I#AIMG
-
+ 
       * Set SQL return code
      C                   Eval      SQLCOD = 0
-
+ 
       * Trigger event types:
       * '1'=Insert, '2'=Delete, '3'=Update
-
+ 
       * Get additional details for amends and inserts
      C                   If        TrgEvent <> '2'
-
+ 
       * Access SDCUSTPD to get account name
      C                   Call      'AOCUSTR0'
      C                   Parm      *BLANKS       @RtCd
@@ -236,7 +236,7 @@
      C+ GJOAN  = :AOurAc                                                                      237768
      C+ WHERE GJNST = :BNostro
      C/END-EXEC
-
+ 
      C                   EndIf
      C                   EndIf
       *
@@ -244,10 +244,10 @@
      C                   If        SQLCOD <> 0
      C                   ExSR      *PSSR
      C                   EndIf
-
+ 
      C                   SetOn                                        LR
      C                   Return
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -255,11 +255,11 @@
       ** The following /COPY contains the standard program status
       ** subroutine, excluding a bound call to the DBERRCTL module.
      C/COPY ZACPYSRC,PSSR_ILENE
-
+ 
      C                   SetOn                                        LR
      C                   Return
-
+ 
      C                   EndSR
-
+ 
       **---------------------------------------------------------------
       *****************************************************************

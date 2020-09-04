@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD031234           Date 16May19               *
+      *  Last Amend No. MD055373           Date 14Jul20               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD031234           Date 16May19               *
       *                 MD020755           Date 16May19               *
       *                 MD050212           Date 02Apr18               *
       *                 MD051563           Date 19Jul18               *
@@ -144,6 +145,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055373 - Audit trail not available                         *
+      *           - Receive and process the DDIUSR and DDAUSR fields  *
+      *             from SDCUSDVU.                                    *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD031234 - Marketing information not updated on CLINTCB      *
       *             when inserting customer.                          *
@@ -996,6 +1000,14 @@
       ** Valid Curency/Time of Netting Details File                                        AR1086546
      D CTNMF         E DS                  EXTNAME(SDCTNMPD)                               AR1086546
                                                                                            AR1086546
+      *                                                                                     MD055373
+      ** Insert User (DDIUSR) and Amend User (DDAUSR) details layout                        MD055373
+     D SDVTransUser    DS                                                                   MD055373
+     D  SDIUSER                      10A                                                    MD055373
+     D  SDAUSER                      10A                                                    MD055373
+      *                                                                                     MD055373
+     D  SDAAUTH        S              1A                                                    MD055373
+      *                                                                                     MD055373
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
@@ -2926,7 +2938,9 @@
      C**********         MOVE      WKUSER        BBIUSR                           AR679445 MD027492A
                                                                                            MD027492A
      C                   EVAL      BBIUSR = WLUSER                                         MD027492A
+     C                   IF        SDAAUTH <> 'Y'                                           MD055373
      C                   EVAL      BBXUSR = WKUSER                                         MD027492A
+     C                   ENDIF                                                              MD055373
       *
       ** Update the SWIFT 2007 field details when CSW207 is on                                CSW207
      C**********         IF        CSW207 = 'Y' OR BGN4ST = 'Y'                      CSW207 BUG15138
@@ -2949,6 +2963,8 @@
      C                   ENDIF                                                                CSW207
      C**********         ENDIF                                                       CSW207 BUG15138
       *                                                                                       CSW207
+     C                   EVAL      BBIUSR = SDIUSER                                         MD055373
+      *                                                                                     MD055373
       ** WRITE NEW CUSTOMER
 
      C                   WRITE     @BBREBG
@@ -4118,7 +4134,9 @@
      C**********         MOVE      WKUSER        BBAUSR                           AR679445 MD027492A
                                                                                            MD027492A
      C                   EVAL      BBAUSR = WLUSER                                         MD027492A
+     C                   IF        SDAAUTH <> 'Y'                                           MD055373
      C                   EVAL      BBXUSR = WKUSER                                         MD027492A
+     C                   ENDIF                                                              MD055373
       *
       ** Update the SWIFT 2007 field details when CSW207 is on                                CSW207
      C**********         IF        CSW207 = 'Y' OR BGN4ST = 'Y'                      CSW207 BUG15138
@@ -4162,6 +4180,8 @@
      C                   ENDIF                                                                CSW207
      C**********         ENDIF                                                       CSW207 BUG15138
       *                                                                                       CSW207
+     C                   EVAL      BBAUSR = SDAUSER                                         MD055373
+      *                                                                                     MD055373
       ** UPDATE RECORD
 
      C                   IF        CSD028 = 'Y' AND PTransType = 'AUTH'                       CSD028
@@ -6910,6 +6930,8 @@
      C                   PARM                    PTransType                                   CSD028
      C                   PARM                    DACTN             1                          CSD028
      C                   PARM                    CTI006            1                        MD030956
+     C                   PARM                    SDVTransUser                               MD055373
+     C                   PARM                    SDAAUTH                                    MD055373
       ** Acceptance Mode                                                                      CSD031
      C**********         PARM                    PAccMde                             CSD031 BUG13525
       ** Update (Y/N)                                                                         CSD031

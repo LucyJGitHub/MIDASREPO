@@ -125,4 +125,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Finastra International Limited 2018
+(c) Misys International Banking Systems Ltd. 2018

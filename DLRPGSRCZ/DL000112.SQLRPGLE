@@ -229,4 +229,4 @@
      C/COPY ZACPYSRC,PSSR_ILEB
      C/EJECT
 **  CPY@
-(c) Finastra International Limited 2017
+(c) Misys International Banking Systems Ltd. 2017

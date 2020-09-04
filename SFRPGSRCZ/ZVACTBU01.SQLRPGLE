@@ -25,7 +25,7 @@
       *                                                               *
       *  Calls: None                                                  *
       *                                                               *
-      *  (c) Finastra International Limited 2013                      *
+      *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
       *  Last Amend No. MD022997           Date 23Oct13               *
       *                                                               *
@@ -62,12 +62,12 @@
       ** External data area for user name
      D ZMUSER          DS            17
      D  ZMUSR                  1     10
-
+ 
      D PSDS           SDS
      D  USRID                254    263
-
+ 
      D/COPY WNCPYSRC,ZVACTBUI01
-
+ 
      D R_Count         S              4  0
      D SQL_Err         S              1A
      D I#RTCD          S              7A
@@ -79,7 +79,7 @@
      D O#DNWD          S              5S 0
      D O#BCCY          S              3A
      D O#NJOB          S              1S 0
-
+ 
       *
      D LDA           E DS           256    EXTNAME(LDA)
       ** Local data area for database error details
@@ -95,7 +95,7 @@
       *
      IGPMENUD0
      I              MIAAC10                     MIAA10
-
+ 
       *
      C     CSD031        IFEQ      'Y'
      C     *INU1         ANDEQ     *ON
@@ -116,10 +116,10 @@
      C     ZMUSR         IFNE      *BLANKS
      C                   MOVEL     ZMUSR         USRID
      C                   ENDIF
-
+ 
      C                   EXSR      GetZone
      C                   EXSR      ChkAuth
-
+ 
      C/COPY WNCPYSRC,ZVACTBUC01
      C/COPY WNCPYSRC,ZVACTBUC02
       *
@@ -154,9 +154,9 @@
      C                   PARM                    O#DNWD
      C                   PARM                    O#BCCY
      C                   PARM                    O#NJOB
-
+ 
       ** Check for error in access object
-
+ 
      C                   IF        I#RTCD <> *BLANKS
      C                   MOVEL     'ZVACTBU01'   DBPGM
      C                   MOVEL     'GPZONEPD'    DBFILE
@@ -164,7 +164,7 @@
      C                   MOVEL     *BLANKS       DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C     GetZnEnd      ENDSR
       *****************************************************************
       /EJECT
@@ -176,36 +176,36 @@
      C     ChkAuth       BEGSR
       *
      C                   EVAL      ERR = 1
-
+ 
      C/EXEC SQL WHENEVER SQLERROR GOTO CheckEnd
      C/END-EXEC
-
+ 
      C/EXEC SQL WHENEVER NOT FOUND GOTO CheckEnd
      C/END-EXEC
-
+ 
      C/EXEC SQL
      C+  SELECT Count(*) into :R_Count from MIVW_PerMM
      C+         WHERE INDX = :UNQCDE AND ACA = :ZACTN
      C+            AND USRP = :USRID AND ZONE = :O#ZONE
      C/END-EXEC
-
+ 
       ** IF NO RECORD FOR THE ACTION, CHECK IF USER IS AUTHORISE TO OTHER ACTION
      C                   IF        R_Count < 1
-
+ 
      C/EXEC SQL
      C+  SELECT Count(*) into :R_Count from MIVW_PerMM
      C+         WHERE INDX = :UNQCDE AND USRP = :USRID
      C+            AND ZONE = :O#ZONE
      C/END-EXEC
-
+ 
      C                   IF        R_COUNT > 0
      C                   EVAL      ERR = 2
      C                   ENDIF
-
+ 
      C                   ELSE
      C                   EVAL      ERR = 0
      C                   ENDIF
-
+ 
      C     CheckEnd      ENDSR
       *****************************************************************
       /EJECT
@@ -240,7 +240,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
      C                   PARM                    ZACTN             1
      C                   PARM                    ERR               1 0

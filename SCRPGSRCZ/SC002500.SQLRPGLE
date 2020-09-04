@@ -1,6 +1,6 @@
 /*******************************************************************************/
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2006')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('MQ Series Interface to MidasPlus - Housekeeping')
@@ -10,7 +10,7 @@
       *                                                               *
       *  SC002500 - MQ Series Interface to MidasPlus - Housekeeping   *
       *                                                               *
-      *  (c) Finastra International Limited 2006                      *
+      *  (c) Misys International Banking Systems Ltd. 2006            *
       *                                                               *
       *  Last Amend No. MD027365           Date 19Aug14               *
       *  Prev Amend No. CLE148             Date 23Jul12               *
@@ -122,7 +122,7 @@
      C                   ENDIF
       *
       ** Check for error in SQL execution
-
+ 
      C                   IF        SQLCOD <> 0  And SQLCOD <> 100
      C                   MOVEL     'SC002500'    DBPGM
      C                   MOVEL     APEXTN        DBFILE
@@ -131,7 +131,7 @@
       *
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C                   READ      APMNEXPD                               80
      C                   ENDDO
       *
@@ -147,13 +147,13 @@
      C     DELRTN        BEGSR
       *
       * Prepare SQL statement
-
+ 
      C/EXEC SQL
      C+ PREPARE S1 FROM :WSTRSQL
      C/END-EXEC
-
+ 
       * Execute SQL statement
-
+ 
      C/EXEC SQL
      C+ EXECUTE S1
      C/END-EXEC
@@ -179,6 +179,6 @@
      C                   ENDSR
       *
       *****************************************************************
-
+ 
 **  CPY@
-(c) Finastra International Limited 2006
+(c) Misys International Banking Systems Ltd. 2006

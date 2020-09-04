@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2014')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SM Generic implementation program')
@@ -9,7 +9,7 @@
       *                                                               *
       *  SM000031 - Generic implementation program                    *
       *                                                               *
-      *  (c) Finastra International Limited 2014                      *
+      *  (c) Misys International Banking Systems Ltd. 2014            *
       *                                                               *
       *  Last Amend No. CUP042   *CREATE    Date 03Nov14              *
       *                                                               *

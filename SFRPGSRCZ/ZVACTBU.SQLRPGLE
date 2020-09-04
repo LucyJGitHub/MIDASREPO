@@ -26,7 +26,7 @@
       *                                                               *
       *  Calls: None                                                  *
       *                                                               *
-      *  (c) Finastra International Limited 2011                      *
+      *  (c) Misys International Banking Systems Ltd. 2011            *
       *                                                               *
       *  Any changes made to this program may also need to be         *
       *  incorporated in ZBACTBU.                                     *
@@ -111,7 +111,7 @@
      FGPMENUL0  IF   E           K DISK    INFSR(*PSSR)
      F                                     USROPN
      F                                     RENAME(SFMENUD0:GPMENUD0)
-
+ 
      D** EXTERNAL DATA AREA OF MENU ITEM REQUESTED
       *
      D ZMITEM          DS
@@ -120,15 +120,15 @@
       ** External data area for user name
      D ZMUSER          DS            17
      D  ZMUSR                  1     10
-
+ 
      D PSDS           SDS
      D  USRID                254    263
-
+ 
      D/COPY WNCPYSRC,ZVACTBUI01
-
+ 
      D R_Count         S              4  0
      D SQL_Err         S              1A
-
+ 
      D*SDSTAT***     E DS           256    EXTNAME(SDSTAT)                                    CCB020
       ***Standing*Data*Data*Structure**********************************                       CCB020
       *****************************************************************                       CCB020
@@ -149,7 +149,7 @@
       *
      IGPMENUD0
      I              MIAAC10                     MIAA10
-
+ 
       *
      C     CSD031        IFEQ      'Y'
      C     *INU1         ANDEQ     *ON
@@ -170,9 +170,9 @@
      C     ZMUSR         IFNE      *BLANKS
      C                   MOVEL     ZMUSR         USRID
      C                   ENDIF
-
+ 
      C                   EXSR      ChkAuth
-
+ 
      C/COPY WNCPYSRC,ZVACTBUC01
      C/COPY WNCPYSRC,ZVACTBUC02
       *
@@ -266,13 +266,13 @@
      C     ChkAuth       BEGSR
       *
      C                   EVAL      ERR = 1
-
+ 
      C/EXEC SQL WHENEVER SQLERROR GOTO CheckEnd
      C/END-EXEC
-
+ 
      C/EXEC SQL WHENEVER NOT FOUND GOTO CheckEnd
      C/END-EXEC
-
+ 
      C/EXEC SQL
      C+  SELECT Count(*) into :R_Count from MIVW_PerMM
      C**********WHERE PMINDX = :UNQCDE AND PMACTC = :ZACTN                                  AR867641
@@ -281,10 +281,10 @@
      C+         WHERE INDX = :UNQCDE AND ACA = :ZACTN                                       AR867641
      C+            AND BRCB = :ZBR   AND USRP = :USRID                                      AR867641
      C/END-EXEC
-
+ 
       ** IF NO RECORD FOR THE ACTION, CHECK IF USER IS AUTHORISE TO OTHER ACTION
      C                   IF        R_Count < 1
-
+ 
      C/EXEC SQL
      C+  SELECT Count(*) into :R_Count from MIVW_PerMM
      C**********WHERE PMINDX = :UNQCDE                                                      AR867641
@@ -293,15 +293,15 @@
      C+         WHERE INDX = :UNQCDE                                                        AR867641
      C+            AND BRCB = :ZBR   AND USRP = :USRID                                      AR867641
      C/END-EXEC
-
+ 
      C                   IF        R_COUNT > 0
      C                   EVAL      ERR = 2
      C                   ENDIF
-
+ 
      C                   ELSE
      C                   EVAL      ERR = 0
      C                   ENDIF
-
+ 
      C     CheckEnd      ENDSR
       *****************************************************************
       /EJECT
@@ -336,7 +336,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
      C                   PARM                    ZACTN             1
      C                   PARM                    ZBR               3

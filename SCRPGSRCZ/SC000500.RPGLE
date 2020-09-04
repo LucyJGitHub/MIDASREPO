@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2001')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SC Get Latest Journal Sequence Number')
@@ -9,7 +9,7 @@
       *                                                               *
       *  SC000500 - Get Latest Journal Entry Sequence Number          *
       *                                                               *
-      *  (c) Finastra International Limited 2001                      *
+      *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -50,7 +50,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
       ** Data Replication Journal Sequence Number files
      FSCJSN0PD  UF A E             DISK    INFSR(*PSSR) USROPN
      F                                     COMMIT
@@ -81,7 +81,7 @@
      FSCJSN9PD  UF A E             DISK    INFSR(*PSSR) USROPN
      F                                     RENAME(SCJSN0D0:SCJSN0D9)
      F                                     COMMIT
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -89,13 +89,13 @@
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
       ** Copyright array, LDA layout, etc.
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Program Status Data Structure
      D/COPY ZACPYSRC,PSDS
-
+ 
      D WArrCmtJob      S             10A   DIM(10)                                            CSC022
       ** Array for Commitment Job Names                                                       CSC022
                                                                                               CSC022
@@ -114,18 +114,18 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
-
+ 
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
      D PBatchNum       S              1
      D PSeqNum         S             10A
      D WSeq            S             10A   INZ('0000000001')
@@ -134,7 +134,7 @@
      D CSC022          S              1A   Inz                                                CSC022
      D WSkipCommit     S              1A   Inz                                                CSC022
      D WPtr            S              2S 0 Inz                                                CSC022
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -144,14 +144,14 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
-
+ 
       ** Select file to be processed
      C                   SELECT
-
+ 
      C                   WHEN      PBatchNum = '0'
      C                   OPEN      SCJSN0PD
      C     1             CHAIN     SCJSN0PD                           80
@@ -162,7 +162,7 @@
      C                   WRITE     SCJSN0D0
      C                   ENDIF
      C                   CLOSE     SCJSN0PD
-
+ 
      C                   WHEN      PBatchNum = '1'
      C                   OPEN      SCJSN1PD
      C     1             CHAIN     SCJSN1PD                           80
@@ -173,7 +173,7 @@
      C                   WRITE     SCJSN0D1
      C                   ENDIF
      C                   CLOSE     SCJSN1PD
-
+ 
      C                   WHEN      PBatchNum = '2'
      C                   OPEN      SCJSN2PD
      C     1             CHAIN     SCJSN2PD                           80
@@ -184,7 +184,7 @@
      C                   WRITE     SCJSN0D2
      C                   ENDIF
      C                   CLOSE     SCJSN2PD
-
+ 
      C                   WHEN      PBatchNum = '3'
      C                   OPEN      SCJSN3PD
      C     1             CHAIN     SCJSN3PD                           80
@@ -195,7 +195,7 @@
      C                   WRITE     SCJSN0D3
      C                   ENDIF
      C                   CLOSE     SCJSN3PD
-
+ 
      C                   WHEN      PBatchNum = '4'
      C                   OPEN      SCJSN4PD
      C     1             CHAIN     SCJSN4PD                           80
@@ -206,7 +206,7 @@
      C                   WRITE     SCJSN0D4
      C                   ENDIF
      C                   CLOSE     SCJSN4PD
-
+ 
      C                   WHEN      PBatchNum = '5'
      C                   OPEN      SCJSN5PD
      C     1             CHAIN     SCJSN5PD                           80
@@ -217,7 +217,7 @@
      C                   WRITE     SCJSN0D5
      C                   ENDIF
      C                   CLOSE     SCJSN5PD
-
+ 
      C                   WHEN      PBatchNum = '6'
      C                   OPEN      SCJSN6PD
      C     1             CHAIN     SCJSN6PD                           80
@@ -228,7 +228,7 @@
      C                   WRITE     SCJSN0D6
      C                   ENDIF
      C                   CLOSE     SCJSN6PD
-
+ 
      C                   WHEN      PBatchNum = '7'
      C                   OPEN      SCJSN7PD
      C     1             CHAIN     SCJSN7PD                           80
@@ -239,7 +239,7 @@
      C                   WRITE     SCJSN0D7
      C                   ENDIF
      C                   CLOSE     SCJSN7PD
-
+ 
      C                   WHEN      PBatchNum = '8'
      C                   OPEN      SCJSN8PD
      C     1             CHAIN     SCJSN8PD                           80
@@ -250,7 +250,7 @@
      C                   WRITE     SCJSN0D8
      C                   ENDIF
      C                   CLOSE     SCJSN8PD
-
+ 
      C                   WHEN      PBatchNum = '9'
      C                   OPEN      SCJSN9PD
      C     1             CHAIN     SCJSN9PD                           80
@@ -261,11 +261,11 @@
      C                   WRITE     SCJSN0D9
      C                   ENDIF
      C                   CLOSE     SCJSN9PD
-
+ 
      C                   ENDSL
-
+ 
       ** Return to calling program
-
+ 
       *                                                                                       CSC022
       ** COMMIT data if either of the following is true:                                      CSC022
       ** 1. Commitment Control Changes switch is OFF; or                                      CSC022
@@ -278,7 +278,7 @@
      C                   COMMIT
      C                   EndIf                                                                CSC022
      C                   EVAL      *INLR = '1'
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -287,9 +287,9 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
       ** Entry parameter, batch number
-
+ 
      C     *ENTRY        PLIST
      C                   PARM                    ReturnCd
      C                   PARM                    PBatchNum
@@ -348,7 +348,7 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
-
+ 
      C                   IF        RunBefore = *BLANK
      C                   DUMP
       *
@@ -371,8 +371,8 @@
      C                   EVAL      RunBefore = 'Y'
      C                   RETURN
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
 **  CPY@
-(c) Finastra International Limited 2001
+(c) Misys International Banking Systems Ltd. 2001

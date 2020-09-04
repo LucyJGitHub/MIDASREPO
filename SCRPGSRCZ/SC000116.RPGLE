@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2012')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SC PEA Transfer Transaction data')               *
@@ -16,7 +16,7 @@
       *  Calls - Java MQ Client methods: sndMessage                   *
       *          AOSVALR0                                             *
       *                                                               *
-      *  (c) Finastra International Limited 2012                      *
+      *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
       *  Last Amend No. AR1043780          Date 07Feb13               *
       *  Prev Amend No. AR1034553          Date 16Oct12               *
@@ -49,23 +49,23 @@
       ** Standard D-specs
       ** ================
       **
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** Constant to hold input parameter for AOSVALR0.
-
+ 
      D JavaPath        C                   Const('JavaPathStem')
      D JavaHome        C                   Const('JavaHome')                                AR992769
      D*Path1****       C                   Const('/com.ibm.mq.jar')                AR992769 AR995693
@@ -74,7 +74,7 @@
      D*Path4****       C                   Const('/midaslogger.jar')               AR992769 AR995693
      D*Path5****       C                   Const('/spring-2.5.6.jar')              AR992769 AR995693
      D*Path6****       C                   Const('/frwkdataaccess.jar')            AR992769 AR995693
-
+ 
       ** Array for Path declaration                                                         AR995693
                                                                                             AR995693
      D*PathArr**       S             50    DIM(27) CTDATA PERRCD(1)               AR995693 AR1034553
@@ -82,7 +82,7 @@
      D PathArr         S             50    DIM(39) CTDATA PERRCD(1)                        AR1043780
                                                                                             AR995693
       ** Prototype Java methods to be called
-
+ 
      D SendMsg         PR              O   EXTPROC(*JAVA:
      D                                     'com.misys.midas.midasplus.logger.ut-
      D                                     il.PEATransactionPlayback':
@@ -94,25 +94,25 @@
      D                                     EXTPROC(*JAVA:
      D                                     'java.lang.String':
      D                                     'getBytes')
-
+ 
       ** Prototype Definition for setting classpath
-
+ 
      D PutEnv          PR            10I 0 EXTPROC('putenv')
      D  pEnv                           *   VALUE OPTIONS(*STRING)
-
+ 
      D GetEnv          PR              *   EXTPROC('getenv')
      D  gEnv                           *   VALUE OPTIONS(*STRING)
-
+ 
      D WPtr            S               *
      D WStr            S           1024A   BASED(WPtr)
-
+ 
       ** MQ Connection parameters
-
+ 
      D retmsg          S               O   CLASS(*JAVA:
      D                                      'java.lang.String')
-
+ 
       ** Parameter variables
-
+ 
      D PRetCode        S             10A
      D PrtCd           S              7A
      D PSysVal01       S             20A
@@ -135,9 +135,9 @@
      D PCurSet09       S            200A
      D PSysVal10       S             20A
      D PCurSet10       S            200A
-
+ 
       ** Work Variables
-
+ 
      D WRetCode        S             10I 0
      D WPath           S            200A
      D WSavPath        S           1024A
@@ -150,30 +150,30 @@
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--- Start of Main processing -------------------------------+
       ** ¦                                                            ¦
       ** ¦ Initial processing is performed automatically: the *INZSR  ¦
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
-
+ 
       ** Save and Set CLASSPATH environment variable.
       ** and JAVA_HOME variable                                                             AR992769
-
+ 
      C                   EXSR      SRSetCPath
      C                   EXSR      SRSetJHome                                               AR992769
-
+ 
       ** Start processing of data.
-
+ 
      C                   EXSR      SRProcess
-
+ 
       ** Restore CLASSPATH enviroment variable.
       ** and JAVA_HOME variable                                                             AR992769
-
+ 
      C                   EXSR      SRRstCPath
      C                   EXSR      SRRstJHome                                               AR992769
-
+ 
      C                   EVAL      *INLR = *ON
      C                   RETURN
       *****************************************************************
@@ -184,10 +184,10 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
      C                   PARM                    PRetCode
-
+ 
      C                   CALL      'AOSVALR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      JavaPath      PSysVal01
@@ -211,14 +211,14 @@
      C                   PARM                    PCurSet09
      C                   PARM                    PSysVal10
      C                   PARM                    PCurSet10
-
+ 
      C                   IF        PrtCd   = *BLANKS
      C                             AND PCurSet01 <> *BLANKS
      C                             AND PCurSet02 <> *BLANKS                                 AR992769
      C                   EVAL      WPath   = PCurSet01
      C                   EVAL      WHome   = PCurSet02                                      AR992769
      C                   ENDIF
-
+ 
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -228,19 +228,19 @@
       *                                                              *
       ****************************************************************
      C     SRProcess     BEGSR
-
+ 
       ** Call SendMessage to transfer the data to destination system
-
+ 
      C                   EVAL      retmsg   = SendMsg()
      C                   EVAL      PRetCode = GetError(retmsg)
-
+ 
      C                   IF        PRetCode <> *BLANKS
-
+ 
      C                   EXSR      SRRstCPath
      C                   EXSR      SRRstJHome                                               AR992769
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -250,10 +250,10 @@
       *                                                              *
       ****************************************************************
      C     SRSetCPath    BEGSR
-
+ 
      C                   EVAL      WPtr     = GetEnv('CLASSPATH')
      C                   EVAL      WSavPath = WStr
-
+ 
      C**********         EVAL      WNewPath = 'CLASSPATH='                                  AR995693
      C**********                              + %TRIMR(WPath)                               AR995693
      C**********                              + '/lib/ext'                                  AR995693
@@ -282,7 +282,7 @@
      C                   ENDFOR                                                             AR995693
                                                                                             AR995693
      C                   EVAL      WRetCode = PutEnv(%TRIM(WNewPath))
-
+ 
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -292,11 +292,11 @@
       *                                                              *
       ****************************************************************
      C     SRRstCPath    BEGSR
-
+ 
      C                   EVAL      WNewPath = 'CLASSPATH='
      C                                        + %TRIMR(WSavPath)
      C                   EVAL      WRetCode = PutEnv(%TRIM(WNewPath))
-
+ 
      C                   ENDSR
       ****************************************************************                      AR992769
       /EJECT                                                                                AR992769
@@ -342,12 +342,12 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
-
+ 
      C                   DUMP
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
-
+ 
      C                   RETURN
      C                   ENDSR
 ** PathArr                                                                                  AR995693

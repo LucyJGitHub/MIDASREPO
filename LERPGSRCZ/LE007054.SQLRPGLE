@@ -917,7 +917,7 @@
       *****************************************************************
 
 **  CPY@
-(c) Finastra International Limited 2012
+(c) Misys International Banking Systems Ltd. 2012
 **   SVAL  -  SYSTEM VALUES ARRAY
 Settlement09Customer
 Settlement09AccCode

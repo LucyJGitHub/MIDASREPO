@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('((c) Finastra International Limited 2001')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ZA Calc no of interest days between 2 dates')    *

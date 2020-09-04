@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2015')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2015')
       *****************************************************************
 /*XBIA*  OVRDBF FILE(UDFOLD) TOFILE(UPFFDSTPD)                        *
 /*XBIB*  OVRDBF FILE(UDFNEW) TOFILE(UPFFDSTPD)                        *
@@ -11,7 +11,7 @@
       *                                                               *
       *  UP000026 - Update UDF tables (including T_UDFDEF)            *
       *                                                               *
-      *  (c) Finastra International Limited 2015                      *
+      *  (c) Misys International Banking Systems Ltd. 2015            *
       *                                                               *
       *  Last Amend No. MD034724   *CREATE   Date 03Jun15             *
       *  Prev Amend No. xxxxxx             Date ddMmmyy               *

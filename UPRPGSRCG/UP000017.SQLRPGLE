@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2013')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UP Upgrade physicals and tables')
@@ -9,7 +9,7 @@
       *                                                               *
       *  UP000017 - Upgrade physicals and tables                      *
       *                                                               *
-      *  (c) Finastra International Limited 2013                      *
+      *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
       *  Last Amend No. MD051849           Date 11Dec18               *
       *  Prev Amend No. CUP041   *CREATE   Date 11Sep13               *

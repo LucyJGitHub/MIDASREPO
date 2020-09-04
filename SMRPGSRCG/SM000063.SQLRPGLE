@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2013')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SM Initialise ggBFMADM')
@@ -13,7 +13,7 @@
       *             setup (permissions and entitlements) for          *
       *             ggBFMADM profile                                  *
       *                                                               *
-      *  (c) Finastra International Limited 2013                      *
+      *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
       *  Last Amend No. MD020456           Date 23May13               *
       *  Prev Amend No. MD018386C          Date 23Apr13               *
@@ -80,21 +80,21 @@
      D   P@VL10                     200A   CONST
       *
       /free
-
+ 
        // MAIN
        //---------------------------------*
-
+ 
        // Purge pre-existing ggBFMADM User/s
          Exec SQL
               Delete
               from BFTB_USER
               where BFNAMEPK like '%BFMADM';
-
+ 
          Exec SQL
               Delete
               from BFTB_ZONEUSER
               where BFUSERID like '%BFMADM';
-
+ 
        // Purge pre-existing ggBFMSUP User/s                                             //MD018386B
          Exec SQL                                                                        //MD018386B
               Delete                                                                     //MD018386B
@@ -105,27 +105,27 @@
               Delete                                                                     //MD018386B
               from BFTB_ZONEUSER                                                         //MD018386B
               where BFUSERID like '%BFMSUP';                                             //MD018386B
-
+ 
          ExSr CreateUser;
-
+ 
        // Check if ggBFMADM role already exists
          Exec SQL
               Select count(*) into :RoleExists
               from BFTB_ORGANISATIONGRP
               where BFGROUPNAME = 'BFMADMIN';
-
+ 
          If RoleExists = 0;
               ExSr CreateRole;
          EndIf;
-
+ 
          ExSr ResetRole;
          ExSr RevokeCurrAuth;
          ExSr ApplyAuth;
-
+ 
          Exec SQL
               Delete from BFTB_PERSISTENTTAG
               where BFPERSISTENTTAGSIDPK = 'BF';
-
+ 
          Exec SQL
               Insert into BFTB_PERSISTENTTAG
               (BFPERSISTENTTAGSIDPK, BFWEBSERVICEAVAILABILITY, BFISPAUSED,
@@ -142,37 +142,37 @@
                          bfusername = trim(bfusername);                                  //MD018386C
          Exec SQL Update BFTB_GROUPPERMMAP set BFGROUPID = trim(BFGROUPID);              //MD018386C
          Exec SQL Update BFTB_ENTITLEMENTS set BFUSERNAME = trim(BFUSERNAME);            //MD018386C
-
+ 
          *INLR = *ON;
          Return;
-
+ 
        // SUBROUTINES
        //---------------------------------*
        //-------------------*
        // Create User       |
        //-------------------*
          BegSr CreateUser;
-
+ 
            GPAOSVALR0(SysValRet
                       :'BrgMidasGlobalPrefix'
                       :wGPrefSVal
                       :' ':' ':' ':' '
                       :' ':' ':' ':' ':' ':' ':' '
                       :' ':' ':' ':' ':' ':' ':' ');
-
+ 
            AdminUser = %trim(wGPrefSval) + 'BFMADM';
            SupvsUser = %trim(wGPrefSval) + 'BFMSUP';                                     //MD018386B
-
+ 
            Exec SQl
                 select ZOMSYS into :UserZone
                 from GPZONEPD
                 fetch first 1 rows only;
-
+ 
            Exec SQl
                 select A8BRCD into :DefBranch
                 from GZSDBRCHPD
                 fetch first 1 rows only;
-
+ 
            Exec SQL
                 Insert into BFTB_USER
                 ( BFNAMEPK, BFZONE, VERSIONNUM, BFUSERTYPE
@@ -197,14 +197,14 @@
        //*******,*0, 'en', 'GB', 'BF Midas BFTC Admin Profile', 'GB' );                  //MD018386B
                 , 'system', Now(), Now()                                                 //MD018386B
                 , 'en', 'GB', 'BF Midas BFTC Admin Profile', 'GB' );                     //MD018386B
-
+ 
            Exec SQL
                 Insert into BFTB_ZONEUSER
                 ( BFUSERID, BFLINKIDPK, BFZONE, VERSIONNUM)
        //*******( select :AdminUser, 'ADM' || ZOMSYS, ZOMSYS, 0 from GPZONEPD);           //MD020456
                 ( select :AdminUser, concat('ADM',ZOMSYS)                                 //MD020456
                        , ZOMSYS, 0 from GPZONEPD);                                        //MD020456
-
+ 
            Exec SQL                                                                      //MD018386B
                 Insert into BFTB_ZONEUSER                                                //MD018386B
                 ( BFUSERID, BFLINKIDPK, BFZONE, VERSIONNUM)                              //MD018386B
@@ -214,7 +214,7 @@
                                                                                          //MD018386B
            Exec SQL
                 Delete from BFTB_USER
-
+ 
                 where BFNAMEPK = 'system';
            Exec SQL
                 Insert into BFTB_USER
@@ -234,9 +234,9 @@
        //*******,*0, 'en', 'GB', 'BF Midas System', 'GB' );                              //MD018386B
                 , 'system', Now(), Now()                                                 //MD018386B
                 , 'en', 'GB', 'BF Midas System', 'GB' );                                 //MD018386B
-
+ 
          EndSr;
-
+ 
        //-------------------*
        // Create Role       |
        //-------------------*
@@ -252,23 +252,23 @@
                 ( 'BFMADMIN', 'BF Midas Admin Profile', 1, 0
        //*******,*'BFMADMIN', 'system');                                                 //MD018386B
                 , 'BFMADMIN', 'system', Now(), Now());                                   //MD018386B
-
+ 
          // Populate audit fields, if exists
            DynaSQL = 'Update BFTB_ORGANISATIONGRP '
                      + 'set BFRECCREATEDBY = ''system'''
                      + ', BFRECCREATEDON = now() '
        //**********  + 'where BFGROUPID = ''AUTOAUTH''';                                  //MD020456
                      + 'where BFGROUPIDPK = ''AUTOAUTH''';                                //MD020456
-
+ 
            Exec SQL
                 Prepare ORAudit from :DynaSQL;
-
+ 
            If SQLCode = 0;
               Exec SQL
                    Execute ORAudit;
            EndIf;
          EndSr;
-
+ 
        //-------------------*
        // Reset Role        |
        //-------------------*
@@ -278,12 +278,12 @@
                 select BFGROUPIDPK into :GroupId
                 from BFTB_ORGANISATIONGRP
                 where BFGROUPNAME = 'BFMADMIN';
-
+ 
          //Update permissions attached to BFMADMIN role
            Exec SQL
                 Delete from BFTB_GROUPPERMMAP
                 where BFGROUPID = :GroupId;
-
+ 
            Exec SQL
                 Insert into BFTB_GROUPPERMMAP
                 (BFIDPK, BFPERMISSIONID, VERSIONNUM, BFGROUPID)
@@ -298,30 +298,30 @@
          //**********     where BFIDPK like 'BFTC%')                                     //MD018386B
                           where BFIDPK like 'BFTC%' or BFIDPK like 'BFWS%' )             //MD018386B
                 as A );
-
+ 
          // Populate audit fields, if exists
            DynaSQL = 'Update BFTB_GROUPPERMMAP '
                      + 'set BFRECCREATEDBY = ''system'''
                      + ', BFRECCREATEDON = now() '
          //**********+ 'where BFGROUPID = ' + GroupId;                                   //MD018386C
                      + 'where BFGROUPID = ''' + GroupId + '''';                          //MD018386C
-
+ 
            Exec SQL
                 Prepare GPAudit from :DynaSQL;
-
+ 
            If SQLCode = 0;
               Exec SQL
                    Execute GPAudit;
            EndIf;
-
+ 
          EndSr;
-
+ 
        //---------------------------*
        // Revoke Current Authority  |
        //---------------------------*
          BegSr RevokeCurrAuth;
          // Revoke ggBFMADM of roles/entitlements, if any
-
+ 
            Exec SQL
                 Delete from BFTB_ORGGROUPUSER where BFUSERNAME like '%BFMADM';
            Exec SQL
@@ -331,7 +331,7 @@
            Exec SQL                                                                      //MD018386B
                 Delete from BFTB_ENTITLEMENTS where BFUSERNAME like '%BFMSUP';           //MD018386B
          EndSr;
-
+ 
        //---------------------*
        // Re/Apply Authority  |
        //---------------------*
@@ -349,7 +349,7 @@
                   , :GroupId
                   , :AdminUser
                   , 0 );
-
+ 
            Exec SQL
                 Insert into BFTB_ENTITLEMENTS
                   ( BFIDPK, BFGROUPNAME, BFENTITLEMENTTYPE, BFENTITLEMENTVALUE
@@ -364,7 +364,7 @@
                    , 0
                    , A8BRNM
                    from GZSDBRCHPD );
-
+ 
            Exec SQL                                                                      //MD018386B
                 Insert into BFTB_ENTITLEMENTS                                            //MD018386B
                   ( BFIDPK, BFGROUPNAME, BFENTITLEMENTTYPE, BFENTITLEMENTVALUE           //MD018386B
@@ -386,33 +386,33 @@
                      + ', BFRECCREATEDON = now() '
                      + 'where BFUSERNAME = ''' + AdminUser + '''';
            DynaSQL = %trim(DynaSQL) + ' or BFUSERNAME = ''' + SupvsUser + '''';          //MD018386B
-
+ 
            Exec SQL
                 Prepare ENAudit from :DynaSQL;
-
+ 
            If SQLCode = 0;
               Exec SQL
                    Execute ENAudit;
            EndIf;
-
+ 
            DynaSQL = 'Update BFTB_ORGGROUPUSER '
                      + 'set BFRECCREATEDBY = ''system'''
                      + ', BFRECCREATEDON = now() '
                      + 'where BFUSERNAME = ''' + AdminUser + '''';
            DynaSQL = %trim(DynaSQL) + ' or BFUSERNAME = ''' + SupvsUser + '''';          //MD018386B
-
+ 
            Exec SQL
                 Prepare OGAudit from :DynaSQL;
-
+ 
            If SQLCode = 0;
               Exec SQL
                    Execute OGAudit;
            EndIf;
-
+ 
          EndSr;
-
+ 
       /end-free
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************

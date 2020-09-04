@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2014')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SM Build up job description library list')
@@ -9,7 +9,7 @@
       *                                                               *
       *  SM000052 - Build up job description library list             *
       *                                                               *
-      *  (c) Finastra International Limited 2014                      *
+      *  (c) Misys International Banking Systems Ltd. 2014            *
       *                                                               *
       *  Last Amend No. CUP042   *CREATE    Date 05Nov14              *
       *                                                               *

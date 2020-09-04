@@ -23,7 +23,7 @@
       *                                                               *
       *  Calls: None                                                  *
       *                                                               *
-      *  (c) Finastra International Limited 2011                      *
+      *  (c) Misys International Banking Systems Ltd. 2011            *
       *                                                               *
       *  Any changes made to this program may also need to be         *
       *  incorporated in ZBACTU.                                      *
@@ -112,9 +112,9 @@
      D  DBKEY                142    170
      D  DBPGM                171    180
      D  DBASE                181    183  0
-
+ 
      D R_Count         S              4  0
-
+ 
      D*SDSTAT***     E DS           256    EXTNAME(SDSTAT)                                    CCB020
       ***Standing*Data*Data*Structure**********************************                       CCB020
       *****************************************************************                       CCB020
@@ -169,7 +169,7 @@
      C     SDBANK        PARM      SDBANK        DSFDY
      C*
      C                   MOVE      BJSBRC        ZBR               3
-
+ 
      C                   EXSR      ChkAuth
       *
      C     *DTAARA       DEFINE                  LDA
@@ -251,13 +251,13 @@
      C     ChkAuth       BEGSR
       *
      C                   EVAL      ERR = 1
-
+ 
      C/EXEC SQL WHENEVER SQLERROR GOTO CheckEnd
      C/END-EXEC
-
+ 
      C/EXEC SQL WHENEVER NOT FOUND GOTO CheckEnd
      C/END-EXEC
-
+ 
      C/EXEC SQL
      C+  SELECT Count(*) into :R_Count from MIVW_PerMM
      C**********WHERE PMINDX = :UNQCDE AND PMACTC = :ZACTN                                  AR867641
@@ -265,11 +265,11 @@
      C+         WHERE INDX = :UNQCDE AND ACA = :ZACTN                                       AR867641
      C+            AND BRCB = :ZBR   AND USRP = :USRID                                      AR867641
      C/END-EXEC
-
+ 
      C                   IF        R_COUNT > 0
      C                   EVAL      ERR = 0
      C                   ENDIF
-
+ 
      C     CheckEnd      ENDSR
       *****************************************************************
       /EJECT

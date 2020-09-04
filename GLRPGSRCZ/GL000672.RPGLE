@@ -9,7 +9,7 @@
       *                                                               *
       *  GL000672 - Midas GL FATCA Closed Accounts Balances           *
       *                                                               *
-      *  (c) Finastra International Limited 2014                      *
+      *  (c) Misys International Banking Systems Ltd. 2014            *
       *                                                               *
       *  Last Amend No. MD052097           Date 08Oct18               *
       *  Prev Amend No. MD051779           Date 01Oct18               *

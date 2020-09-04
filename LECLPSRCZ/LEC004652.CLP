@@ -6,7 +6,7 @@
 /*                                                                   */
 /*       LEC004652 - Midas LE PDP Prepare Available Balance Files    */
 /*                                                                   */
-/*       (c) Finastra International Limited 2017                     */
+/*       (c) Misys International Banking Systems Ltd. 2017           */
 /*                                                                   */
 /*       Last Amend No. MD36674  *Create   Date 24Nov15              */
 /*                                                                   */
@@ -24,9 +24,9 @@
 
       DCL    VAR(&CNAM) TYPE(*CHAR) LEN(10)
       DCL    VAR(&CSEQ) TYPE(*DEC) LEN(5)
-      DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Finastra International Limited +
-                          2017')
+      DCL    VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
+                 Misys International Banking +
+                          Systems Ltd. 2017.')
 
       MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
 
@@ -68,6 +68,6 @@ ERROR:
 
 ENDPGM:
       CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                   Finastra International Limited')
+                   Misys International Banking Systems Ltd.')
 
       ENDPGM

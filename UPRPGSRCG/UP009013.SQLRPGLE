@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2013')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UP Resequence unique numbers for CB* files')
@@ -10,7 +10,7 @@
       *  UP009013 - Resequence unique numbers for CB* files, part of  *
       *             *MRG option                                       *
       *                                                               *
-      *  (c) Finastra International Limited 2013                      *
+      *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
       *  Last Amend No. A1084804 *CREATE   Date 01Feb13               *
       *  Prev Amend No. xxxxxxxx           Date ddMmmyy               *
@@ -117,7 +117,7 @@
      C
      C                   EVAL      SpecStart = 16 + Len
      C                   EXSR      ResetUnique
-
+ 
      C                   EVAL      ResetUnq3 = ResetUnq3 - 1
       *
      C/exec SQL

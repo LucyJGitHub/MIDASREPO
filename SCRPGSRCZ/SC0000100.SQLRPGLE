@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2003')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
       *****************************************************************
 /*S*D ***RPGBASEBND****************************************************                     AR989143
 /*STD *  RPGSQLBND                                                    *                     AR989143
@@ -15,7 +15,7 @@
       *                                                               *
       *  Called By: SCC0000100 - Option Selection Screen              *
       *                                                               *
-      *  (c) Finastra International Limited 2003                      *
+      *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
       *  Last Amend No. CCB020             Date 06Aug12               *
       *  Prev Amend No. AR989143           Date 13Jun12               *
@@ -76,13 +76,13 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
      F**MACBR***  IF A E           K DISK                                             BUG9969 CBF005
      F**GZMACBRL2 IF*A*E******     K DISK    RENAME(MACBRDDF:GZMACBRDDF)              BUG9969 CBF005
      F**********                             PREFIX(G_)                               BUG9969 CBF005
      F**GPMACBR*  IF   E           K DISK    RENAME(MACBRDDF:GPMACBRDDF)             BUG11755 CBF005
      F**********                             PREFIX(H_)                              BUG11755 CBF005
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -108,10 +108,10 @@
      D*RUNDAT***     E DS                  EXTNAME(RUNDAT)                                  AR989143
       *
       ** Data Area giving Installation Control Details
-
+ 
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
@@ -120,31 +120,31 @@
       ** D specs of the following types should be inserted after the
       ** relevant box.  *** Remove this text afterwards. ***
       ** +-----------------------------------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
      DDSSDY          E DS
      DMENU           E DS                  EXTNAME(SFMENUPD)
-
+ 
      DZMITEM         E DS                  EXTNAME(ZMITEM)
-
+ 
      DGrpCode          DS
      D Group                   1      4  0
      D Code                    5      8
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
      D @RUN            S              1
      D WFSEL           S             10
      D UniqueID        S             10
@@ -163,7 +163,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
@@ -179,10 +179,10 @@
      C**********         IF        AGDFF = 'M'                                              AR989143
      C**********         EVAL      *IN98 = *ON                                              AR989143
      C**********         END                                                                AR989143
-
+ 
      C                   Eval      UniqueID = WFSEL
      C                   Eval      Option = '*KEY'
-
+ 
      C                   CALL      'AOMENUR0'
      C                   PARM                    ReturnCode                     B:Return code
      C                   PARM                    Option                         I:Option
@@ -212,7 +212,7 @@
      C                   EVAL      DBPROC =  'Main'
      C                   OUT       LDA
      C                   EXSR      *PSSR
-
+ 
      C                   Endif
       *                                                                                       CCB020
       ** Check MPHAS for phase G and if action is valid to run                                CCB020
@@ -294,7 +294,7 @@
      C     *LOCK         IN        ZMITEM
      C                   EVAL      INDX = MIINDX
      C                   OUT       ZMITEM
-
+ 
      C                   EVAL      *INLR = *ON
      C                   RETURN
       *****************************************************************
@@ -308,14 +308,14 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     *INZSR        BEGSR
-
+ 
      C     *entry        PLIST
      C                   PARM                    WFSEL
      C                   PARM                    RtnCall
      C                   PARM                    Mphas                                        CCB020
-
+ 
      C*****UsrKey        KLIST                                                        BUG9969 CBF005
      C**********         KFLD                    PSUSER                               BUG9969 CBF005
      C**********         KFLD                    WFSEL                                BUG9969 CBF005

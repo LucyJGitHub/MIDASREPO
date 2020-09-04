@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2004')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
       *****************************************************************
 /*STD *  RPGSQLMOD                                                    *
 /*EXI *  TEXT('Midas TI SDHOLPD Trigger - CVPF Calendars')
@@ -12,7 +12,7 @@
       *  Function:  This program updates/adds/deletes a record in     *
       *             CVPF for Calendars                                *
       *                                                               *
-      *  (c) Finastra International Limited 2004                      *
+      *  (c) Misys International Banking Systems Ltd. 2004            *
       *                                                               *
       *  Called By: SCTRIGGER                                         *
       *                                                               *
@@ -32,12 +32,12 @@
       *  BG3697 - Convert TI SQL triggers to RPG                      *
       *                                                               *
       *****************************************************************
-
+ 
      FSDHOLL3   IF   E           K DISK
      FSDHOLL9   IF   E           K DISK                                                       BG4499
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
      D Parm1           DS
       * Physical file name
      D  PFLNAME                1     10
@@ -54,34 +54,34 @@
       * Length of the after image of the record
      D  ALEN                  69     72B 0
      D  EntryData            117  10117A
-
+ 
      D Parm2           DS
      D  LENG                   1      4B 0
-
+ 
      DHOLFormat      E DS                  ExtName(SDHOLPD)
      D HOLDIY                 17    382
-
+ 
       ** External data structure for currency details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
-
+ 
       ** External data structure for location details
      D SDLOCN        E DS                  EXTNAME(SDLOCNPD)
-
+ 
       ** External data structure for bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
-
+ 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for Access Programs, Short Data Structure
-
+ 
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Second DS for Access Programs, Long Data Structure
-
+ 
       * 'Before' variables for SQL key details
      D KCVYOC          S              9  0
      D KCVCCY          S              3
      D KCVCCYN         S              3
      D KCVCNA          S              2
-
+ 
       * Intermediate variables for CVPF
      D WCVYOC          S              9  0
      D WCVCCY          S              3
@@ -92,7 +92,7 @@
      D WCVDOO          S              9  0
      D WCVCNA          S              2
      D WCVYNA          S              1
-
+ 
       * Work variables
      D HOLARR          S              1    DIM(366)
      D DIYARR          S              1    DIM(366)
@@ -112,17 +112,17 @@
       ********************************************************************
      C/EJECT
       ********************************************************************
-
+ 
       * Entry parameters
-
+ 
      C     *ENTRY        PLIST
      C                   Parm                    Parm1
      C                   Parm                    Parm2
-
+ 
       * Recover before and after image
      C     BOFF          ADD       1             OffSet            5 0
      C     BLen          SUBST     Parm1:OffSet  I#BIMG         4000
-
+ 
      C     AOFF          ADD       1             OffSet
      C     ALen          SUBST     Parm1:OffSet  I#AIMG         4000
       *
@@ -134,23 +134,23 @@
      C                   Else                                                                 BG4499
      C                   Eval      HOLFormat = I#BIMG                                         BG4499
      C                   EndIf                                                                BG4499
-
+ 
       * Set SQL return code, and flags to control loop
      C                   Eval      SQLCOD = 0
      C                   Eval      LRDProcessed  = ' '
      C                   Eval      EndEvent = 'Y'
      C                   Eval      DeleteFlag = ' '
-
+ 
       * Get currency and default location from SDBANKPD
      C                   Call      'AOBANKR0'
      C                   Parm      '*MSG   '     @RTCD
      C                   Parm      '*FIRST '     @OPTN
      C     SDBANK        Parm      SDBANK        DSSDY
-
+ 
      C                   If        @RTCD <> *BLANK
      C                   ExSR      *PSSR
      C                   EndIf
-
+ 
       * Trigger event types:
       * '1'=Insert, '2'=Delete, '3'=Update
       *
@@ -189,7 +189,7 @@
      C                   If        TrgEvent <> '2'
      C                   ExSR      SetVar
      C                   EndIf
-
+ 
       * Insert
      C                   If        TrgEvent = '1'
      C                   DoU       EndEvent = 'Y'
@@ -290,7 +290,7 @@
      C                   Eval      EndEvent = 'Y'
      C                   EndIf
      C                   EndIf
-
+ 
      C                   EndDo
      C                   EndIf
       *
@@ -313,7 +313,7 @@
      C                   KFld                    KeyYear           4
      C                   Eval      KeyCCY  = DGCYCD
      C                   Eval      KeyYear = DGYRNB
-
+ 
      C     HolKey        SetLL     SDHOLL3
      C                   DoW       *In99 = *Off
      C     HolKey        READE     SDHOLL3                                99
@@ -329,7 +329,7 @@
      C                   Eval      DeleteFlag = 'Y'
      C                   EndIf
      C                   EndIf
-
+ 
      C                   If        DeleteFlag = 'Y'
      C/EXEC SQL
      C+ Delete from CVPF
@@ -416,13 +416,13 @@
      C                   Eval      EndEvent = 'Y'
      C                   EndIf
      C                   EndIf
-
+ 
      C                   EndDo
      C                   EndIf
-
+ 
      C                   SetOn                                        LR
      C                   Return
-
+ 
       ********************************************************************
       /EJECT
       ********************************************************************
@@ -431,21 +431,21 @@
       * SetKList - Set Key list
       ********************************************************************
      C     SetKList      BegSR
-
+ 
       * First get some details from the currency file
      C                   Call      'AOCURRR0'
      C                   Parm      '*MSG   '     @RTCD
      C                   Parm      '*KEY   '     @OPTN
      C                   Parm      DGCYCD        @KEY
      C     SDCURR        Parm      SDCURR        DSSDY
-
+ 
      C                   If        @RTCD <> *BLANK
      C                   ExSR      *PSSR
      C                   EndIf
-
+ 
      C                   MoveL     DGYRNB        YearNo
      C                   Eval      KCVYOC = YearNo - 1900
-
+ 
       * If the location code is '***', this is a currency calendar.
      C                   If        DGLCCD = '***'
      C                   Eval      KCVCCY = DGCYCD
@@ -460,7 +460,7 @@
      C                   Parm      '*KEY   '     @OPTN
      C                   Parm      DGLCCD        @KEY
      C     SDLOCN        Parm      SDLOCN        DSFDY
-
+ 
      C                   If        @RTCD <> *BLANK
      C                   ExSR      *PSSR
      C                   EndIf
@@ -469,13 +469,13 @@
      C                   Eval      KCVCCYN = 'AAA'
      C                   Eval      KCVCNA = DVCNCD
      C                   EndIf
-
+ 
      C                   EndSR
-
+ 
       ********************************************************************
       /EJECT
       ********************************************************************
-
+ 
       ********************************************************************
       * SetVar  - Set variables
       ********************************************************************
@@ -483,21 +483,21 @@
       *
       * Initialise variable length field
      C                   Eval      %Len(WCVDIY) = 366
-
+ 
       * First get some details from the currency file
      C                   Call      'AOCURRR0'
      C                   Parm      '*MSG   '     @RTCD
      C                   Parm      '*KEY   '     @OPTN
      C                   Parm      DGCYCD        @KEY
      C     SDCURR        Parm      SDCURR        DSSDY
-
+ 
      C                   If        @RTCD <> *BLANK
      C                   ExSR      *PSSR
      C                   EndIf
       *
      C                   MoveL     DGYRNB        YearNo
      C                   Eval      WCVYOC = YearNo - 1900
-
+ 
       * If the location code is '***', this is a currency calendar.
       * Set variables accordingly.
      C                   If        DGLCCD = '***'
@@ -518,7 +518,7 @@
      C                   Parm      '*KEY   '     @OPTN
      C                   Parm      DGLCCD        @KEY
      C     SDLOCN        Parm      SDLOCN        DSFDY
-
+ 
      C                   If        @RTCD <> *BLANK
      C                   ExSR      *PSSR
      C                   EndIf
@@ -563,7 +563,7 @@
      C                   Eval      DIYARR(Day) = 'N'
      C                   EndIf
      C                   EndDo
-
+ 
       * In a non-leap year, we need to drop Feb 29th.  If the last
       * two digits of (year * 25) = 0, then this is a leap year
       * (this program will fail in 2400.  Shame.)
@@ -576,7 +576,7 @@
      C                   Eval      %Len(WCVDIY) = 365
      C                   EndIf
      C                   MoveA     DIYARR2       WCVDIY
-
+ 
       * Day of the week on which 1st Jan falls.  If you divide the
       * Midas run day by 7, the remainder is always the same for
       * each day of the week, as below.
@@ -598,20 +598,20 @@
      C                   When      WorkFract = 0.2
      C                   Eval      WCVDOO = 6
      C                   EndSl
-
+ 
      C                   EndSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
       ** The following /COPY contains the standard program status
       ** subroutine, excluding a bound call to the DBERRCTL module.
      C/COPY ZACPYSRC,PSSR_ILENE
-
+ 
      C                   SetOn                                        LR
      C                   Return
-
+ 
      C                   EndSR
-
+ 
       **---------------------------------------------------------------
       *****************************************************************

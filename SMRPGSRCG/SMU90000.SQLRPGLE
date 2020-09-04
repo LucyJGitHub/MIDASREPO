@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2015')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2015')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UP Generic program to update UPMNU*')            *
@@ -9,7 +9,7 @@
       *                                                               *
       *  SMU90000 - Generic program to update UPMNU*                  *
       *                                                               *
-      *  (c) Finastra International Limited 2015                      *
+      *  (c) Misys International Banking Systems Ltd. 2015            *
       *                                                               *
       *  Last Amend No. CUP042 *CREATE     Date 08Jun15               *
       *  Prev Amend No. xxxxxx             Date ddMmmyy               *

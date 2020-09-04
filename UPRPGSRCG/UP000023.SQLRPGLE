@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2015')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UP Copy across extact files')                    *
@@ -9,7 +9,7 @@
       *                                                               *
       *  UP000023 - Copy across extact files                          *
       *                                                               *
-      *  (c) Finastra International Limited 2015                      *
+      *  (c) Misys International Banking Systems Ltd. 2015            *
       *                                                               *
       *  Last Amend No. CUP042 *CREATE     Date 25May15               *
       *  Prev Amend No. xxxxxx             Date ddMmmyy               *

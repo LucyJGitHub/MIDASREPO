@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2014')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RE Account Balance Check Online Updater')        *
@@ -14,7 +14,7 @@
       *                                                               *
       *  Called By: GL007011 - Background update of ABC files         *
       *                                                               *
-      *  (c) Finastra International Limited 2014                      *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Prev Amend No. MD022132D          Date 09Mar18               *
       *                 MD022132 *CREATE   Date 09Mar18               *

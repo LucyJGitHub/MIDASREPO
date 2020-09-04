@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2011')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
       *****************************************************************
 /*XBI *  OVRDBF FILE(QTUSER) TOFILE(GZMUSERDD)                        *
 /*STD *  RPGSQLBND                                                    *
@@ -10,9 +10,9 @@
       *                                                               *
       *  SM000054 - Midas SM Upload to BF - Users                     *
       *                                                               *
-      *  (c) Finastra International Limited 2011                      *
+      *  (c) Misys International Banking Systems Ltd. 2011            *
       *                                                               *
-      *  Last Amend No. MD050393           Date 13Apr18               *
+      *  Last Amend No. MD050393           Date 13Apr18               *      
       *  Prev Amend No. MD032152           Date 22Jan15               *
       *                 MD022609           Date 27Sep13               *
       *                 MD022372           Date 12Sep13               *
@@ -193,7 +193,7 @@
                        '(select ''D'', USRP, 0, 0, 0, ''I'' from ' +
                        ZOMSYS +'DTALIB/MUSERDD where USRP not in ' +
                        '(select USRP from '+ ZOMSYS +'DTALIB/MBROSDD))';                 //AR1085933
-
+ 
            Exec SQL
                 Prepare MUSZONE from :USZONESTM;                                         //AR1085933
                                                                                          //AR1085933

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2013')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SM Consolidate SQL deliveries')
@@ -12,7 +12,7 @@
       *  Function:  This will merge SQL script deliveries in          *
       *             file SMSQLPQT                                     *
       *                                                               *
-      *  (c) Finastra International Limited 2013                      *
+      *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
       *  Last Amend No. AR1076132*CREATE   Date 15Feb13               *
       *---------------------------------------------------------------*
@@ -36,11 +36,11 @@
      C                   PARM                    MODE              7
      C                   PARM                    CNT               2 0
       /free
-
+ 
        // ------------------------------------------------------------*
        //  M A I N                                                    |
        // ------------------------------------------------------------*
-
+ 
        Idx = 1;
        DoW SQLFS(Idx) <> '#' and Idx <= CNT;
            SrcQry = 'Insert into SMSQLPTD (SQLLINE, SQLZONE) ' +
@@ -49,13 +49,13 @@
                 Prepare STM from :SrcQry;
            Exec SQL
                 Execute STM;
-
+ 
            SrcQry = '';
-
+ 
            Idx += 1;
        EndDo;
-
+ 
        *INLR = *ON;
        Return;
-
+ 
       /end-free

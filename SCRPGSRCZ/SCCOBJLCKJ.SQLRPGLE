@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2013')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd 2013')
       *****************************************************************
 /*XBIA*  DSPOBJD OBJ(*LIBL/SDBANKPD) OBJTYPE(*FILE)                   *
 /*XBIA*  OUTPUT(*OUTFILE) OUTFILE(QTEMP/DSPOBJD)                      *
@@ -11,7 +11,7 @@
       *                                                               *
       *  SCCOBJLCKJ - Midas SC Check if objects are locked            *
       *                                                               *
-      *  ((c) Finastra International Limited 2013                     *
+      *  (c) Misys International Banking Systems Ltd 2013             *
       *                                                               *
       *  Last Amend No. MD021351  *CREATE  Date 19Jul13               *
       *                                                               *
@@ -24,13 +24,13 @@
      F                                     USROPN
      FOBJECTLOCKO    E             DISK    RENAME(OBJECTLOCK:OBJLCKOUT)
      F                                     USROPN
-
+ 
       ** Common Structure for IBM API Error Code Parm
-
+ 
      D/COPY QSYSINC/QRPGLESRC,QUSEC
-
+ 
       ** Parameter for creating user space (QUSCRTUS)
-
+ 
      D SpaceName       DS
      D                               10    INZ('SCCOBJLCKR')
      D                               10    INZ('QTEMP     ')
@@ -41,19 +41,19 @@
      D Text            S             50    INZ('Object locks')
      D Replace         S             10    INZ('*YES')
      D Domain          S             10    INZ('*USER')
-
+ 
       ** Parameters for finding object locks (QWCLOBJL)
-
+ 
      D Format          S              8    INZ('OBJL0100')
      D ObjectName      DS
      D Object                        10
      D ObjectLib                     10
      D ObjectType      S             10
      D MemberName      S             10
-
+ 
       ** Returned information from object lock API (QWCLOBJL)
       ** The OBJL0100 format
-
+ 
      D LockInfo        DS                  BASED(ListPtr)
      D JobName                       10
      D JobUser                       10
@@ -64,10 +64,10 @@
      D LockMember                    10
      D Share                          1
      D Reserved                       1
-
+ 
       ** Parameters for finding the pointer to the userspace (QUSPTRUS)
       ** filled by QWCLOBJL
-
+ 
      D Ptr             S               *
      D SpaceDS         DS                  BASED(Ptr)
      D SpaceField                 32767
@@ -75,17 +75,17 @@
      D SpaceOffset                    9B 0 OVERLAY(SpaceField:125)
      D NumberEntry                    9B 0 OVERLAY(SpaceField:133)
      D SizeEntry                      9B 0 OVERLAY(SpaceField:137)
-
+ 
       ** The following data structure is returned by the
       ** QUSRJOBI api using JOBIO600
-
+ 
      D jobInfLen       S              4B 0
      D JobInf          DS           512
      D JobUserId              92    101
      D IPAddress             308    322
-
+ 
       ** Work fields
-
+ 
      D w@command       S           1024
      D w@lgth          S             15  5
      D sqlString       S           1024A
@@ -95,10 +95,10 @@
      D                                     Cycle will ')
      D w@msg3          S             52A   inz('continue after locks have been -
      D                                     removed.')
-
+ 
       ** Main Process
       ** Open the files
-
+ 
      C                   EVAL      w@command = 'OVRDBF FILE(OBJECTLOCK) ' +
      C                                         'TOFILE(QTEMP/OBJLCK) ' +
      C                                         'LVLCHK(*NO)'
@@ -112,18 +112,18 @@
      C                   ELSE
      C                   CLOSE     OBJECTLOCK
      C                   ENDIF
-
+ 
       ** Clear the output file
-
+ 
      C                   EVAL      w@command = 'CLRPFM ' +
      C                                         'FILE(QTEMP/OBJLCK)'
      C                   EVAL      w@lgth = %LEN(%TRIM(w@command))
      C                   CALL      'QCMDEXC'
      C                   PARM                    w@command
      C                   PARM                    w@lgth
-
+ 
       ** Create overrides to the files
-
+ 
      C                   EVAL      w@command = 'OVRDBF FILE(DSPOBJD   ) ' +
      C                                         'TOFILE(' +
      C                                         'QTEMP' + '/' +
@@ -132,18 +132,18 @@
      C                   CALL      'QCMDEXC'
      C                   PARM                    w@command
      C                   PARM                    w@lgth
-
+ 
      C                   OPEN      DSPOBJD
      C                   OPEN      OBJECTLOCK
-
+ 
       ** Delete the user space if it exists
-
+ 
      C                   CALL      'QUSDLTUS'
      C                   PARM                    SpaceName
      C                   PARM                    QUSEC
-
+ 
       ** Create the user space
-
+ 
      C                   CALL      'QUSCRTUS'
      C                   PARM                    SpaceName
      C                   PARM                    Attribute
@@ -154,35 +154,35 @@
      C                   PARM                    Replace
      C                   PARM                    QUSEC
      C                   PARM                    Domain
-
+ 
       ** Check for errors on QUSCRTUS
-
+ 
      C                   IF        QUSBAVL > 0
      C                   MOVEL     'QUSCRTUS'    APINAM           10
      C                   EXSR      APIERR
      C                   ENDIF
-
+ 
       ** Start at the beginning of the file
-
+ 
      C     1             SETLL     QLIDOBJD
      C                   READ      QLIDOBJD                               99
-
+ 
       ** Loop the file
-
+ 
      C                   DOW       *IN99 = *OFF
-
+ 
      C                   EVAL      Object = ODOBNM
      C                   EVAL      ObjectLib = ODLBNM
      C                   EVAL      ObjectType = ODOBTP
-
+ 
       ** Get object lock information
-
+ 
      C     ObjectType    IFEQ      '*FILE'
      C                   EVAL      MemberName = '*ALL'
      C                   ELSE
      C                   EVAL      MemberName = '*NONE'
      C                   ENDIF
-
+ 
      C                   CALL      'QWCLOBJL'
      C                   PARM                    SPACENAME
      C                   PARM                    Format
@@ -190,40 +190,40 @@
      C                   PARM                    ObjectType
      C                   PARM                    MemberName
      C                   PARM                    QUSEC
-
+ 
       ** Check for errors on QWCLOBJL
-
+ 
      C                   IF        QUSBAVL > 0
      C                   MOVEL     'QWCLOBJL'    APINAM           10
      C     w@msg1        DSPLY
      C     w@msg2        DSPLY
      C     w@msg3        DSPLY
      C                   ENDIF
-
+ 
       ** Get a pointer to the user-space
-
+ 
      C                   CALL      'QUSPTRUS'
      C                   PARM                    SpaceName
      C                   PARM                    Ptr
-
+ 
       ** Spacefield now contains the info stored in the userspace, we need to access it
-
+ 
      C                   EVAL      SpaceOffset = SpaceOffset + 1
      C                   EVAL      listPtr = %Addr(SpaceArray(SpaceOffset))
-
+ 
       ** If there are still locks then need to tell the user
-
+ 
      C                   DO        NumberEntry
-
+ 
       ** Set up the parameters for the QUSRJOBI api
-
+ 
      C                   EVAL      job = jobName + jobUser + JobNumber
      C                   CLEAR                   JobInf
      C                   EVAL      JobInfLen = %LEN(JobInf)
      C                   EVAL      JobIntId = *BLANKS
-
+ 
       ** Call the API to get the IP address
-
+ 
      C     LOCKSTATE     IFNE      '*NONE'
      C                   CALL      'QUSRJOBI'                           9999
      C                   PARM                    JobInf
@@ -232,30 +232,30 @@
      C                   PARM                    Job              26
      C                   PARM                    JobIntId         16
      C                   ENDIF
-
+ 
       ** Write the info onto the table
-
+ 
      C                   WRITE     OBJLCKOUT
-
+ 
       ** Get the next job
-
+ 
      C                   EVAL      SpaceOffset = SpaceOffset + SizeEntry
      C                   EVAL      listPtr = %Addr(SpaceArray(SpaceOffset))
      C                   ENDDO
-
+ 
       ** Get the next record
-
+ 
      C                   READ      QLIDOBJD                               99
      C                   ENDDO
-
+ 
       ** Delete the user space if it exists
-
+ 
      C                   CALL      'QUSDLTUS'
      C                   PARM                    SPACENAME
      C                   PARM                    QUSEC
-
+ 
       ** Leave
-
+ 
      C                   EVAL      *INLR = *ON
      C                   RETURN
       *****************************************************************
@@ -267,9 +267,9 @@
       *                                                               *
       *****************************************************************
      C     CreateOutFile BEGSR
-
+ 
       ** Create the table
-
+ 
      C                   EVAL      sqlString =
      C                             'CREATE TABLE QTEMP/OBJECTLOCK ' +
      C                             '(' +
@@ -289,15 +289,15 @@
      C                             'JOBUSERID CHAR (10) NOT NULL WITH DEFAULT,'+
      C                             'IPADDRESS CHAR (15) NOT NULL WITH DEFAULT)'
      C                   EXSR      ExecuteSQL
-
+ 
       ** Rename the table (this is required to handle a
       ** consistant record fmt name)
-
+ 
      C                   EVAL      sqlString =
      C                             'RENAME TABLE QTEMP/OBJECTLOCK ' +
      C                             'TO SYSTEM NAME OBJLCK'
      C                   EXSR      ExecuteSQL
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -307,17 +307,17 @@
       *                                                               *
       *****************************************************************
      C     ExecuteSQL    BEGSR
-
+ 
      C/EXEC SQL WHENEVER SQLERROR GOTO ERREX
      C/END-EXEC
-
+ 
       ** Prepare string S with the sqlString
-
+ 
      C/EXEC SQL PREPARE S FROM :sqlString
      C/END-EXEC
-
+ 
       ** Execute string S
-
+ 
      C/EXEC SQL EXECUTE S
      C/END-EXEC
      C                   IF        1 = 0
@@ -336,11 +336,11 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
-
+ 
      C                   DUMP
      C                   SETON                                            LR
      C                   RETURN
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -350,10 +350,10 @@
       *                                                               *
       *****************************************************************
      C     APIERR        BEGSR
-
+ 
      C     APINAM        DSPLY
      C     QUSEI         DSPLY
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -363,7 +363,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
      C                   Z-ADD     17            QUSBPRV
      C                   ENDSR
       *****************************************************************

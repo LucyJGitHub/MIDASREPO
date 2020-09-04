@@ -1,6 +1,6 @@
 /*******************************************************************************
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2008')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('UDF Configuration to MidasPlus - Data Take-on')
@@ -10,7 +10,7 @@
       *                                                               *
       *  SC003001 - UDF Configuration to MidasPlus - Data Take-on     *
       *                                                               *
-      *  (c) Finastra International Limited 2008                      *
+      *  (c) Misys International Banking Systems Ltd. 2008            *
       *                                                               *
       *  Last Amend No. MD039359           Date 27Jul16               *
       *  Prev Amend No. AR685870           Date 10Dec10               *
@@ -238,4 +238,4 @@
       *****************************************************************
 
 **  CPY@
-(c) Finastra International Limited 2008
+(c) Misys International Banking Systems Ltd. 2008

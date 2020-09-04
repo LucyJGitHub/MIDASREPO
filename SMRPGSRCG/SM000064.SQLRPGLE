@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2013')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SM Init BFTC and BFWS permissions on zones')
@@ -13,7 +13,7 @@
       *             permissions in SMBFPRTD in all zones in BFTB_ZONE *
       *             - thus, populating BFTB_ZONEPERMISSION            *
       *                                                               *
-      *  (c) Finastra International Limited 2013                      *
+      *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
       *  Last Amend No. MD032025           Date 21Jan15               *
       *  Prev Amend No. MD020456           Date 23May13               *
@@ -48,9 +48,9 @@
                  Where concat(concat(trim(b.BPPERID),'-'),trim(a.ZOMSYS))                 //MD032025
                  not in (select BFZONEPERMISSIONIDPK from BFTB_ZONEPERMISSION)            //MD032025
             );
-
+ 
        *INLR = *ON;
        Return;
       /end-free
-
+ 
       *****************************************************************

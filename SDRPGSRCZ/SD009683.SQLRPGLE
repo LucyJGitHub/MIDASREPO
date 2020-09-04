@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2016')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SD Access Audit system value valdn')
@@ -9,7 +9,7 @@
       *                                                               *
       *  SD009683 - SD Access Audidt system value validation          *
       *                                                               *
-      *  (c) Finastra International Limited 2016                      *
+      *  (c) Misys International Banking Systems Ltd. 2016            *
       *                                                               *
       *  Note: This program validates UserEnqAccessAudit system value *
       *                                                               *

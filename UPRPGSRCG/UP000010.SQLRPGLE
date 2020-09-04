@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2013')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UP Update modes on new dlv. data file')
@@ -9,7 +9,7 @@
       *                                                               *
       *  UP000010 - Update modes on deliverable data file             *
       *                                                               *
-      *  ((c) Finastra International Limited 2013                     *
+      *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
       *  Last Amend No. CUP040  *CREATE    Date 06Mar13               *
       *                                                               *

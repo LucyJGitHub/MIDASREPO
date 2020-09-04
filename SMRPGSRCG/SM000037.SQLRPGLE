@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2011')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SM Compare all users access rights')
@@ -9,7 +9,7 @@
       *                                                               *
       *  SM000037 - Compare all users' access rights, summary         *
       *                                                               *
-      *  (c) Finastra International Limited 2011                      *
+      *  (c) Misys International Banking Systems Ltd. 2011            *
       *                                                               *
       *  Last Amend No. CBF005   *CREATE   Date 04Jul11               *
       *                                                               *
@@ -44,11 +44,11 @@
      D                        59     64    INZ(') DTL(')
      D  Mode                  65     68
      D                        69     69    INZ(')')
-
+ 
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
-
+ 
      C     *ENTRY        PLIST
      C                   PARM                    PMode
       *

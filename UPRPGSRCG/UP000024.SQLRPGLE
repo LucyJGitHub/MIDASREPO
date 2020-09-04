@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2015')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2015')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UP Update T_UDFDEF with core field')             *
@@ -9,7 +9,7 @@
       *                                                               *
       *  UP000024 - Update T_UDFDEF with core field                   *
       *                                                               *
-      *  (c) Finastra International Limited 2015                      *
+      *  (c) Misys International Banking Systems Ltd. 2015            *
       *                                                               *
       *  Last Amend No. MD034724   *CREATE   Date 13Jun15             *
       *  Prev Amend No. xxxxxx             Date ddMmmyy               *

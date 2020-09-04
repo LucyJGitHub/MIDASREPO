@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2004')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas RE Retail Advice for DL')                        *
@@ -13,7 +13,7 @@
       *             advices if Correspondence Manager is switched     *
       *             off.                                              *
       *                                                               *
-      *  (c) Finastra International Limited 2004                      *
+      *  (c) Misys International Banking Systems Ltd. 2004            *
       *                                                               *
       *  Last Amend No. MD046248           Date 05Feb18               *
       *  Prev Amend No. CDL099             Date 06Oct17               *

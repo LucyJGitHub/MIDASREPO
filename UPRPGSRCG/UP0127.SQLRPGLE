@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2003')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UP Find job description on SMIMP*')
@@ -9,7 +9,7 @@
       *                                                               *
       *  UP0127 - Find job description on SMIMP*                      *
       *                                                               *
-      *  (c) Finastra International Limited 2003                      *
+      *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
       *  Last Amend No. CUP042 *REWRITE    Date 07Nov14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*

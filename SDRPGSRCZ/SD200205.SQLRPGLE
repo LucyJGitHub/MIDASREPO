@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Finastra International Limited 2009')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas SD Local Tax Office Statement')
@@ -20,7 +20,7 @@
       *                                                               *
       *  Called By: RPG/SDC200205 - Local Tax Office Statement        *
       *                                                               *
-      *  (c) Finastra International Limited 2009                      *
+      *  (C) Copyright Midas-Kapiti International Ltd. 2009           *
       *                                                               *
       *  Last Amend No. MD034216           Date 24Apr15               *
       *  Prev Amend No. AR752509           Date 01May11               *
@@ -1453,7 +1453,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
      C                   PARM                    PRSeq
      C                   PARM                    PRLev
@@ -1461,7 +1461,7 @@
      C                   PARM                    PParm                                      BUG24672
      C                   PARM                    PRAct
      C                   PARM                    PRCmd
-
+ 
      C                   ENDSR
       *****************************************************************
      C/COPY ZSRSRC,ZDATE2Z2LE

@@ -13,9 +13,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD052591           Date 03Sep19               *
-      *  Prev Amend No. MD039655           Date 03Sep19               *
-      *                 MD044553           Date 08May17               *
+      *  Last Amend No. MD039655           Date 03Sep19               *
+      *  Prev Amend No. MD044553           Date 08May17               *
       *                 MD030856           Date 06Nov19               *
       *                 MD054354           Date 23Oct19               *
       *                 MD055446           Date 04Apr20               *
@@ -228,8 +227,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD052591 - Added WIP timestamp parameter to match with PLIST *
-      *             in LEFCIPVU introduced by AR214087.               *
       *  MD039655 - Facility cannot be rejected.                      *
       *             Pattern fix from MD-29208 and MD-34908.           *
       *           - Applied for MD052591.                             *
@@ -2451,14 +2448,6 @@ RGC  D RPIF4LN         S              4  0                                      
                                                                                             BUG13174
      C     LEIFLn        SUBST     BUFFER:Bfp    DDPATH          200                        BUG13174
      C                   ADD       200           Bfp                                        BUG13174
-      ** WIP time stamp                                                                     MD052591
-     C     26            SUBST     BUFFER:Bfp    @WIPTmst                                   MD052591
-     C                   ADD       26            Bfp                                        MD052591
-                                                                                            MD039655
-      ** Restore Authorise Reversal Action Code                                             MD039655
-                                                                                            MD039655
-     C     1             SUBST     BUFFER:Bfp    @ACTRV                                     MD039655
-     C                   ADD       1             Bfp                                        MD039655
                                                                                               CER049
       ** Stamp Tax fields                                                                     CER049
                                                                                               CER049
@@ -2488,6 +2477,11 @@ RGC  D RPIF4LN         S              4  0                                      
      C     FCEXLn        SUBST     BUFFER:Bfp    ExtData                                    MD044880
      C                   ADD       FCEXLn        Bfp                                        MD044880
                                                                                             MD044880
+      ** Restore Authorise Reversal Action Code                                             MD039655
+                                                                                            MD039655
+     C     1             SUBST     BUFFER:Bfp    @ACTRV                                     MD039655
+     C                   ADD       1             Bfp                                        MD039655
+                                                                                            MD039655
      C     FCRXLn        SUBST     BUFFER:Bfp    RegData                                    BUG10093
      C                   ADD       FCRXLn        Bfp                                        BUG10093
                                                                                             BUG10093
@@ -2519,7 +2513,6 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    APIRetc
      C                   PARM                    DDPATH                                     BUG13174
      C                   PARM                    CADetails                                    CLE147
-     C                   PARM                    @WIPTmst                                   MD052591
      C                   PARM                    @ACTRV                                     MD039655
 
       * Loan Input

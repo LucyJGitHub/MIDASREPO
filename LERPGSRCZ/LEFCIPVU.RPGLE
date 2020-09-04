@@ -864,12 +864,12 @@
      C                                           + FCIPNotes + DDPATH                       BUG13174
      C                                           + TranStamp                                  CER049
      C                                           + CADetails                                  CLE147
-     C                                           + @ACTRV                                   MD039655
      C                                           + InfData                                  BUG13174
      C                                           + InRecSttmt                               BUG13174
      C                                           + InPaySttmt                                 CLE106
      C**********                                 + RegData + ExtData               BUG10093 MD044880
      C                                           + ExtData                                  MD044880
+     C                                           + @ACTRV                                   MD039655
      C                                           + RegData                                  MD044880
      C
 

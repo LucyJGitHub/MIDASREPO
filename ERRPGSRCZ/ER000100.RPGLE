@@ -18,8 +18,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055792           Date 09Jun20               *
+      *  Prev Amend No. MD055791           Date 04Jun20               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 263480             Date 25Nov14               *
@@ -44,6 +46,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055792 - Reverse part of 263480 to reformat title and name *
+      *             to be compatible with Mizuho data.                *
+      *  MD055791 - Populate Reference Number from Customer Record    *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
@@ -445,13 +450,14 @@
      C                   IF        BBDTDL = 0
      C                   EVAL      DF13CUS = BBCUST
      C                   EVAL      DF13PTP = 'K'
-     C                   IF        E5TITL = *BLANKS                                           263480
+     C**********         IF        E5TITL = *BLANKS                                  263480 MD055792
      C                   EVAL      DF13SNM = E5CNA1
-     C                   ELSE                                                                 263480
-     C                   EVAL      DF13SNM = %TRIMR(E5TITL) + ' ' + E5CNA1                    263480
-     C                   ENDIF                                                                263480
+     C**********         ELSE                                                        263480 MD055792
+     C**********         EVAL      DF13SNM = %TRIMR(E5TITL) + ' ' + E5CNA1           263480 MD055792
+     C**********         ENDIF                                                       263480 MD055792
      C**********         EVAL      DF13FNM = E5TITL                                           263480
-     C                   EVAL      DF13FNM = E5CNA2                                           263480
+     C                   EVAL      DF13FNM = E5TITL                                         MD055792
+     C**********         EVAL      DF13FNM = E5CNA2                                  263480 MD055792
       *
       ** Set date of birth, if appropriate
       *
@@ -600,13 +606,14 @@
      C                   EVAL      DF13PTP = 'K'
      C**********         EVAL      DF13SNM = E5CNA1                                         BUG23808
      C**********         EVAL      DF13FNM = E5TITL                                         BUG23808
-     C                   IF        DE5TITL = *BLANKS                                          263480
+     C**********         IF        DE5TITL = *BLANKS                                 263480 MD055792
      C                   EVAL      DF13SNM = DE5CNA1                                        BUG23808
-     C                   ELSE                                                                 263480
-     C                   EVAL      DF13SNM = %TRIMR(DE5TITL) + ' ' + DE5CNA1                  263480
-     C                   ENDIF                                                                263480
+     C**********         ELSE                                                        263480 MD055792
+     C**********         EVAL      DF13SNM = %TRIMR(DE5TITL) + ' ' + DE5CNA1         263480 MD055792
+     C**********         ENDIF                                                       263480 MD055792
      C**********         EVAL      DF13FNM = DE5TITL                                 BUG23808 263480
-     C                   EVAL      DF13FNM = DE5CNA2                                          263480
+     C**********         EVAL      DF13FNM = DE5CNA2                                 263480 MD055792
+     C                   EVAL      DF13FNM = DE5TITL                                        MD055792
      C                   MOVEL     OACNO         DF13RFN                                      CER068
       *
       ** Set date of birth, if appropriate
@@ -839,13 +846,14 @@
      C                   EVAL      DF13PTP = 'K'
      C**********         EVAL      DF13SNM = E5CNA1                                         BUG23808
      C**********         EVAL      DF13FNM = E5TITL                                         BUG23808
-     C                   IF        DE5TITL = *BLANKS                                          263480
+     C**********         IF        DE5TITL = *BLANKS                                 263480 MD055792
      C                   EVAL      DF13SNM = DE5CNA1                                        BUG23808
-     C                   ELSE                                                                 263480
-     C                   EVAL      DF13SNM = %TRIMR(DE5TITL) + ' ' + DE5CNA1                  263480
-     C                   ENDIF                                                                263480
+     C**********         ELSE                                                        263480 MD055792
+     C**********         EVAL      DF13SNM = %TRIMR(DE5TITL) + ' ' + DE5CNA1         263480 MD055792
+     C**********         ENDIF                                                       263480 MD055792
      C**********         EVAL      DF13FNM = DE5TITL                                 BUG23808 263480
-     C                   EVAL      DF13FNM = DE5CNA2                                          263480
+     C**********         EVAL      DF13FNM = DE5CNA2                                 263480 MD055792
+     C                   EVAL      DF13FNM = DE5TITL                                        MD055792
       *
       ** Set date of birth, if appropriate
       *
@@ -1037,13 +1045,14 @@
      C                   EVAL      DF13PTP = 'K'
      C**********         EVAL      DF13SNM = E5CNA1                                         BUG23808
      C**********         EVAL      DF13FNM = E5TITL                                         BUG23808
-     C                   IF        DE5TITL = *BLANKS                                          263480
+     C**********         IF        DE5TITL = *BLANKS                                 263480 MD055792
      C                   EVAL      DF13SNM = DE5CNA1                                        BUG23808
-     C                   ELSE                                                                 263480
-     C                   EVAL      DF13SNM = %TRIMR(DE5TITL) + ' ' + DE5CNA1                  263480
-     C                   ENDIF                                                                263480
+     C**********         ELSE                                                        263480 MD055792
+     C**********         EVAL      DF13SNM = %TRIMR(DE5TITL) + ' ' + DE5CNA1         263480 MD055792
+     C**********         ENDIF                                                       263480 MD055792
      C**********         EVAL      DF13FNM = DE5TITL                                 BUG23808 263480
-     C                   EVAL      DF13FNM = DE5CNA2                                          263480
+     C**********         EVAL      DF13FNM = DE5CNA2                                 263480 MD055792
+     C                   EVAL      DF13FNM = DE5TITL                                        MD055792
       *
       ** Set date of birth, if appropriate
       *
@@ -1595,13 +1604,14 @@
      C**********         EVAL      DF13FNM = E5TITL                                         BUG23808
      C**********         EVAL      DF13CUS = DBBCUST                               BUG23808 BUG24209
      C                   EVAL      DF13CUS = DE5CUST                                        BUG24209
-     C                   IF        DE5TITL = *BLANKS                                          263480
+     C**********         IF        DE5TITL = *BLANKS                                 263480 MD055792
      C                   EVAL      DF13SNM = DE5CNA1                                        BUG23808
-     C                   ELSE                                                                 263480
-     C                   EVAL      DF13SNM = %TRIMR(DE5TITL) + ' ' + DE5CNA1                  263480
-     C                   ENDIF                                                                263480
+     C**********         ELSE                                                        263480 MD055792
+     C**********         EVAL      DF13SNM = %TRIMR(DE5TITL) + ' ' + DE5CNA1         263480 MD055792
+     C**********         ENDIF                                                       263480 MD055792
      C**********         EVAL      DF13FNM = DE5TITL                                 BUG23808 263480
-     C                   EVAL      DF13FNM = DE5CNA2                                          263480
+     C**********         EVAL      DF13FNM = DE5CNA2                                 263480 MD055792
+     C                   EVAL      DF13FNM = DE5TITL                                        MD055792
       *
       ** If type 'WB' (wirtschaftliche Berechtigter) report address.
       *
@@ -1667,6 +1677,12 @@
      C                   EXSR      *PSSR
      C                   ENDIF
       *
+     C                   IF        FCurrentPass = 2                                         MD055791
+     C                   MOVEL     OACNO         DF13RFN                                    MD055791
+     C                   ELSE                                                               MD055791
+     C                   MOVEL     *BLANKS       DF13RFN                                    MD055791
+     C                   ENDIF                                                              MD055791
+      *                                                                                     MD055791
      C                   ENDSR
       *
       *****************************************************************                     BUG24101
@@ -1735,6 +1751,12 @@
      C                   EXSR      *PSSR                                                    BUG24101
      C                   ENDIF                                                              BUG24101
       *                                                                                     BUG24101
+     C                   IF        FCurrentPass = 2                                         MD055791
+     C                   MOVEL     OACNO         DF13RFN                                    MD055791
+     C                   ELSE                                                               MD055791
+     C                   MOVEL     *BLANKS       DF13RFN                                    MD055791
+     C                   ENDIF                                                              MD055791
+      *                                                                                     MD055791
      C                   ENDSR                                                              BUG24101
       *                                                                                     BUG24101
       *****************************************************************

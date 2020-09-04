@@ -14,9 +14,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD052591           Date 03Sep19               *
-      *  Prev Amend No. MD039655           Date 03Sep19               *
-      *                 MD044880           Date 15Jan18               *
+      *  Last Amend No. MD039655           Date 03Sep19               *
+      *  Prev Amend No. MD044880           Date 15Jan18               *
       *                 MD046248           Date 27Oct17               *
       *                 LLN022A            Date 03Jun15               *
       *                 LLN022             Date 03Jun15               *
@@ -52,8 +51,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD052591 - Added WIP timestamp in buffer to be consistent    *
-      *             with fix AR214087.                                *
       *  MD039655 - Facility cannot be rejected.                      *
       *             Pattern fix from MD-29208 and MD-34908.           *
       *           - Applied for MD052591.                             *
@@ -199,8 +196,7 @@
      D POPTN           S              7A                                                      CER001
      D PSARD           S              6A                                                      CER001
      D ULX004          S              1A                                                      CER001
-     
-     D @WIPTmst        S             26                                                      MD052591
+
                                                                                               CER049
      DTranStamp        S             51A                                                      CER049
       ** Stamp Tax Details                                                                    CER049
@@ -341,11 +337,10 @@
      C                                           + TranStamp                                  CER049
      C                                           + CADetails                                  CLE147
      C                                           + InfData                                 BUG13297A
-     C                                           + @WIPTmst                                 MD052591
-     C                                           + @ACTRV                                    MD03965
      C                                           + InRecSttmt + InPaySttmt                  BUG10093
      C**********                                 + RegData + ExtData               BUG10093 MD044880
      C                                           + ExtData                                  MD044880
+     C                                           + @ACTRV                                   MD039655
      C                                           + RegData                                  MD044880
 
      C                   SETON                                        LR

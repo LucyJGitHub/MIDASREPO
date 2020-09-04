@@ -18,8 +18,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054404           Date 22Jul20               *
+      *  Prev Amend No. CER076             Date 22Jul20               *
+      *                 MD055792           Date 09Jun20               *
+      *                 MD055791           Date 04Jun20               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 263480             Date 25Nov14               *
@@ -44,6 +48,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054404 - Additional changes needed for CER076              *
+      *  CER076 - Update to KWG § 24c interface specification         *
+      *           (BaFin version 3.3)                                 *
+      *  MD055792 - Reverse part of 263480 to reformat title and name *
+      *             to be compatible with Mizuho data.                *
+      *  MD055791 - Populate Reference Number from Customer Record    *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
@@ -174,6 +184,11 @@
       *                                                                                     BUG23995
      FSDACAHL0  IF   E           K DISK    INFSR(*PSSR)                                     BUG23995
       *                                                                                     BUG23995
+      * Additional customer details extension                                                 CER076
+     FSDACUSY0  IF   E           K DISK    INFSR(*PSSR) PREFIX(D)                             CER076
+      ** Midas SD Non-account Holders extension                                               CER076
+     FSDNAHOY0  IF   E           K DISK    INFSR(*PSSR) PREFIX(E)                             CER076
+      *                                                                                       CER076
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -245,6 +260,10 @@
       *                                                                                     BUG24101
      D SDNAHO        E DS                  EXTNAME(SDNAHOPD)                                BUG24101
      D                                     PREFIX(E)                                        BUG24101
+      *                                                                                       CER076
+      ** External data structures for Switchable Feature details                              CER076
+      *                                                                                       CER076
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CER076
       *
       ** Data structure to format separate dates into a 8N number
       *
@@ -258,6 +277,8 @@
      D  WYEAR2                13     16  0
      D  WDATE2                 9     16  0
       *
+     D #_WCD           S            874    DIM(999)                                           CER076
+     D #_WLD           S            874    DIM(999)                                           CER076
       **  Data structure to compare last sent image with current image
       *
      D WLHIMG        E DS                  EXTNAME(ERACEXPD)
@@ -266,7 +287,8 @@
       *
      D WLDIMG        E DS                  EXTNAME(ERACEPPD)
      D**WLDCMP**              47    865                                                       CER068
-     D  WLDCMP                77    895                                                       CER068
+     D**WLDCMP**              77    895                                                CER068 CER076
+     D  WLDCMP                77    950                                                       CER076
       *
      D WCHIMG        E DS                  EXTNAME(ERACEXPD) PREFIX(D)
      D**WCHCMP**              36     70                                                       CER068
@@ -275,7 +297,8 @@
      D WCDIMG        E DS                  EXTNAME(ERACEPPD) PREFIX(D)
      D                                     OCCURS(100)
      D**WCDCMP**              47    865                                                       CER068
-     D  WCDCMP                77    895                                                       CER068
+     D**WCDCMP**              77    895                                                CER068 CER076
+     D  WCDCMP                77    950                                                       CER076
       *
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -445,13 +468,14 @@
      C                   IF        BBDTDL = 0
      C                   EVAL      DF13CUS = BBCUST
      C                   EVAL      DF13PTP = 'K'
-     C                   IF        E5TITL = *BLANKS                                           263480
+     C**********         IF        E5TITL = *BLANKS                                  263480 MD055792
      C                   EVAL      DF13SNM = E5CNA1
-     C                   ELSE                                                                 263480
-     C                   EVAL      DF13SNM = %TRIMR(E5TITL) + ' ' + E5CNA1                    263480
-     C                   ENDIF                                                                263480
+     C**********         ELSE                                                        263480 MD055792
+     C**********         EVAL      DF13SNM = %TRIMR(E5TITL) + ' ' + E5CNA1           263480 MD055792
+     C**********         ENDIF                                                       263480 MD055792
      C**********         EVAL      DF13FNM = E5TITL                                           263480
-     C                   EVAL      DF13FNM = E5CNA2                                           263480
+     C                   EVAL      DF13FNM = E5TITL                                         MD055792
+     C**********         EVAL      DF13FNM = E5CNA2                                           263480
       *
       ** Set date of birth, if appropriate
       *
@@ -508,6 +532,15 @@
       *
      C**********         MOVEL     CNUM          CNUMA                                      BUG23808
      C                   MOVEL     OCNUM         CNUMA                                      BUG23808
+      ** Get customer details for BaFin version 3.3                                           CER076
+     C                   IF        CER076 = 'Y'                                               CER076
+     C                   CALL      'AOCUSTR1'                                                 CER076
+     C                   PARM      *BLANKS       PRtcd                                        CER076
+     C                   PARM      '*KEY   '     POptn                                        CER076
+     C                   PARM      CNUMA         PCust                                        CER076
+     C                   PARM                    PCnst                                        CER076
+     C     SDCUST        PARM      SDCUST        DSLDY                                        CER076
+     C                   ENDIF                                                                CER076
       *
      C                   CALL      'AOACUSR0'
      C                   PARM      *BLANKS       PRtCd
@@ -526,6 +559,9 @@
       *
      C                   IF        PRtCd = *BLANKS
       *
+     C                   IF        CER076 = 'Y'                                               CER076
+     C                   EXSR      SRGetACUSExtn                                              CER076
+     C                   ENDIF                                                                CER076
      C                   IF        DE5S24C <> 'Y'
      C                   EVAL      OK24C = DE5S24C
      C                   ENDIF
@@ -600,13 +636,23 @@
      C                   EVAL      DF13PTP = 'K'
      C**********         EVAL      DF13SNM = E5CNA1                                         BUG23808
      C**********         EVAL      DF13FNM = E5TITL                                         BUG23808
-     C                   IF        DE5TITL = *BLANKS                                          263480
+     C**********         IF        DE5TITL = *BLANKS                                 263480 MD055792
      C                   EVAL      DF13SNM = DE5CNA1                                        BUG23808
-     C                   ELSE                                                                 263480
-     C                   EVAL      DF13SNM = %TRIMR(DE5TITL) + ' ' + DE5CNA1                  263480
-     C                   ENDIF                                                                263480
+     C**********         ELSE                                                        263480 MD055792
+     C**********         EVAL      DF13SNM = %TRIMR(DE5TITL) + ' ' + DE5CNA1         263480 MD055792
+     C**********         ENDIF                                                       263480 MD055792
      C**********         EVAL      DF13FNM = DE5TITL                                 BUG23808 263480
-     C                   EVAL      DF13FNM = DE5CNA2                                          263480
+     C**********         EVAL      DF13FNM = DE5CNA2                                 263480 MD055792
+     C                   EVAL      DF13FNM = DE5TITL                                        MD055792
+      ** Report address for BaFin version 3.3                                                 CER076
+     C                   IF        CER076 = 'Y'                                               CER076
+     C**********         EVAL      DF13STR = DE5CNA2                                  CER076MD054404
+     C                   EVAL      DF13STR = DE5CNA3                                        MD054404
+     C                   EVAL      DF13TWN = DE5CITY                                          CER076
+     C                   EVAL      DF13ZIP = DE5ZIPC                                          CER076
+     C                   EVAL      WCtry = DBBCOLC                                            CER076
+     C                   EXSR      SRLookupCty                                                CER076
+     C                   ENDIF                                                                CER076
      C                   MOVEL     OACNO         DF13RFN                                      CER068
       *
       ** Set date of birth, if appropriate
@@ -632,6 +678,16 @@
      C                   ELSE
      C                   CLEAR                   DF13BDT
      C                   ENDIF
+      ** Report Tax ID number and Economic ID number for BaFin version 3.3                    CER076
+     C                   IF        CER076 = 'Y' and                                           CER076
+     C                             DBBCOLC = 'DE'                                             CER076
+     C                   EVAL      DF13TINO = DE5TINO                                         CER076
+     C                   EXSR      SRReformtTINO                                            MD054404
+     C                   EVAL      DF13EINO = DE5EINO                                         CER076
+     C                   ELSE                                                                 CER076
+     C                   CLEAR                   DF13TINO                                     CER076
+     C                   CLEAR                   DF13EINO                                     CER076
+     C                   ENDIF                                                                CER076
       *
       ** If this is a 'Final' record then no details about a person
       ** are reported
@@ -694,6 +750,15 @@
       ** Check if customer of the deal is a subject to @24c
       *
      C                   MOVEL     CNUM          CNUMA
+      ** Get customer details for BaFin version 3.3                                           CER076
+     C                   IF        CER076 = 'Y'                                               CER076
+     C                   CALL      'AOCUSTR1'                                                 CER076
+     C                   PARM      *BLANKS       PRtcd                                        CER076
+     C                   PARM      '*KEY   '     POptn                                        CER076
+     C                   PARM      CNUMA         PCust                                        CER076
+     C                   PARM                    PCnst                                        CER076
+     C     SDCUST        PARM      SDCUST        DSLDY                                        CER076
+     C                   ENDIF                                                                CER076
       *
      C                   CALL      'AOACUSR0'
      C                   PARM      *BLANKS       PRtCd
@@ -710,6 +775,9 @@
      C                   OUT       LDA
      C                   ENDIF
       *
+     C                   IF        CER076 = 'Y'                                               CER076
+     C                   EXSR      SRGetACUSExtn                                              CER076
+     C                   ENDIF                                                                CER076
      C                   IF        DE5S24C <> 'Y'
      C                   EVAL      FSK24C = DE5S24C
      C                   ENDIF
@@ -839,13 +907,23 @@
      C                   EVAL      DF13PTP = 'K'
      C**********         EVAL      DF13SNM = E5CNA1                                         BUG23808
      C**********         EVAL      DF13FNM = E5TITL                                         BUG23808
-     C                   IF        DE5TITL = *BLANKS                                          263480
+     C**********         IF        DE5TITL = *BLANKS                                 263480 MD055792
      C                   EVAL      DF13SNM = DE5CNA1                                        BUG23808
-     C                   ELSE                                                                 263480
-     C                   EVAL      DF13SNM = %TRIMR(DE5TITL) + ' ' + DE5CNA1                  263480
-     C                   ENDIF                                                                263480
+     C**********         ELSE                                                        263480 MD055792
+     C**********         EVAL      DF13SNM = %TRIMR(DE5TITL) + ' ' + DE5CNA1         263480 MD055792
+     C**********         ENDIF                                                       263480 MD055792
      C**********         EVAL      DF13FNM = DE5TITL                                 BUG23808 263480
-     C                   EVAL      DF13FNM = DE5CNA2                                          263480
+     C**********         EVAL      DF13FNM = DE5CNA2                                 263480 MD055792
+     C                   EVAL      DF13FNM = DE5TITL                                        MD055792
+      ** Report address for BaFin version 3.3                                                 CER076
+     C                   IF        CER076 = 'Y'                                               CER076
+     C**********         EVAL      DF13STR = DE5CNA2                                  CER076MD054404
+     C                   EVAL      DF13STR = DE5CNA3                                        MD054404
+     C                   EVAL      DF13TWN = DE5CITY                                          CER076
+     C                   EVAL      DF13ZIP = DE5ZIPC                                          CER076
+     C                   EVAL      WCtry = DBBCOLC                                            CER076
+     C                   EXSR      SRLookupCty                                                CER076
+     C                   ENDIF                                                                CER076
       *
       ** Set date of birth, if appropriate
       *
@@ -870,6 +948,16 @@
      C                   ELSE
      C                   CLEAR                   DF13BDT
      C                   ENDIF
+      ** Report Tax ID number and Economic ID number for BaFin version 3.3                    CER076
+     C                   IF        CER076 = 'Y' and                                           CER076
+     C                             DBBCOLC = 'DE'                                             CER076
+     C                   EVAL      DF13TINO = DE5TINO                                         CER076
+     C                   EXSR      SRReformtTINO                                            MD054404
+     C                   EVAL      DF13EINO = DE5EINO                                         CER076
+     C                   ELSE                                                                 CER076
+     C                   CLEAR                   DF13TINO                                     CER076
+     C                   CLEAR                   DF13EINO                                     CER076
+     C                   ENDIF                                                                CER076
       *
       ** If this is a 'Final' record then no details about a person are
       ** reported
@@ -929,6 +1017,15 @@
       ** Check if customer of the loan is a subject to @24c
       *
      C                   MOVEL     CNUM          CNUMA
+      ** Get customer details for BaFin version 3.3                                           CER076
+     C                   IF        CER076 = 'Y'                                               CER076
+     C                   CALL      'AOCUSTR1'                                                 CER076
+     C                   PARM      *BLANKS       PRtcd                                        CER076
+     C                   PARM      '*KEY   '     POptn                                        CER076
+     C                   PARM      CNUMA         PCust                                        CER076
+     C                   PARM                    PCnst                                        CER076
+     C     SDCUST        PARM      SDCUST        DSLDY                                        CER076
+     C                   ENDIF                                                                CER076
       *
      C                   CALL      'AOACUSR0'
      C                   PARM      *BLANKS       PRtCd
@@ -945,6 +1042,9 @@
      C                   OUT       LDA
      C                   ENDIF
       *
+     C                   IF        CER076 = 'Y'                                               CER076
+     C                   EXSR      SRGetACUSExtn                                              CER076
+     C                   ENDIF                                                                CER076
      C                   IF        DE5S24C <> 'Y'
      C                   EVAL      AYK24C = DE5S24C
      C                   ENDIF
@@ -1037,13 +1137,23 @@
      C                   EVAL      DF13PTP = 'K'
      C**********         EVAL      DF13SNM = E5CNA1                                         BUG23808
      C**********         EVAL      DF13FNM = E5TITL                                         BUG23808
-     C                   IF        DE5TITL = *BLANKS                                          263480
+     C**********         IF        DE5TITL = *BLANKS                                 263480 MD055792
      C                   EVAL      DF13SNM = DE5CNA1                                        BUG23808
-     C                   ELSE                                                                 263480
-     C                   EVAL      DF13SNM = %TRIMR(DE5TITL) + ' ' + DE5CNA1                  263480
-     C                   ENDIF                                                                263480
+     C**********         ELSE                                                        263480 MD055792
+     C**********         EVAL      DF13SNM = %TRIMR(DE5TITL) + ' ' + DE5CNA1         263480 MD055792
+     C**********         ENDIF                                                       263480 MD055792
      C**********         EVAL      DF13FNM = DE5TITL                                 BUG23808 263480
-     C                   EVAL      DF13FNM = DE5CNA2                                          263480
+     C**********         EVAL      DF13FNM = DE5CNA2                                 263480 MD055792
+     C                   EVAL      DF13FNM = DE5TITL                                        MD055792
+      ** Report address for BaFin version 3.3                                                 CER076
+     C                   IF        CER076 = 'Y'                                               CER076
+     C**********         EVAL      DF13STR = DE5CNA2                                  CER076MD054404
+     C                   EVAL      DF13STR = DE5CNA3                                        MD054404
+     C                   EVAL      DF13TWN = DE5CITY                                          CER076
+     C                   EVAL      DF13ZIP = DE5ZIPC                                          CER076
+     C                   EVAL      WCtry = DBBCOLC                                            CER076
+     C                   EXSR      SRLookupCty                                                CER076
+     C                   ENDIF                                                                CER076
       *
       ** Set date of birth, if appropriate
       *
@@ -1068,6 +1178,16 @@
      C                   ELSE
      C                   CLEAR                   DF13BDT
      C                   ENDIF
+      ** Report Tax ID number and Economic ID number for BaFin version 3.3                    CER076
+     C                   IF        CER076 = 'Y' and                                           CER076
+     C                             DBBCOLC = 'DE'                                             CER076
+     C                   EVAL      DF13TINO = DE5TINO                                         CER076
+     C                   EXSR      SRReformtTINO                                            MD054404
+     C                   EVAL      DF13EINO = DE5EINO                                         CER076
+     C                   ELSE                                                                 CER076
+     C                   CLEAR                   DF13TINO                                     CER076
+     C                   CLEAR                   DF13EINO                                     CER076
+     C                   ENDIF                                                                CER076
       *
       ** If this is a 'Final' record then no details about a person are
       ** reported
@@ -1411,6 +1531,9 @@
      C     SDNAHO        PARM      SDNAHO        DSLDY                                      BUG24101
       *                                                                                     BUG24101
      C                   IF        PRtCd = *BLANKS                                          BUG24101
+     C                   IF        CER076 = 'Y'                                               CER076
+     C                   EXSR      SRGetNAHOExtn                                              CER076
+     C                   ENDIF                                                                CER076
      C                   EXSR      SRSetFrmAuth                                             BUG24101
      C                   ELSE                                                               MD029599
      C                   EVAL      DBFILE = 'SDNAHOPD'                                      MD029599
@@ -1458,6 +1581,9 @@
      C**********         ENDIF                                                              BUG24101
       *
      C                   IF        PRtCd = *BLANKS
+     C                   IF        CER076 = 'Y'                                               CER076
+     C                   EXSR      SRGetACUSExtn                                              CER076
+     C                   ENDIF                                                                CER076
      C                   EXSR      SRSetFrmCust
      C                   ENDIF
       *
@@ -1514,6 +1640,9 @@
      C     SDNAHO        PARM      SDNAHO        DSLDY                                      BUG24101
       *                                                                                     BUG24101
      C                   IF        PRtCd = *BLANKS                                          BUG24101
+     C                   IF        CER076 = 'Y'                                               CER076
+     C                   EXSR      SRGetNAHOExtn                                              CER076
+     C                   ENDIF                                                                CER076
      C                   EXSR      SRSetFrmAuth                                             BUG24101
      C                   ELSE                                                               MD029599
      C                   EVAL      DBFILE = 'SDNAHOPD'                                      MD029599
@@ -1559,6 +1688,9 @@
      C**********         ENDIF                                                     BUG23995 BUG24101
       *                                                                                     BUG23995
      C                   IF        PRtCd = *BLANKS                                          BUG23995
+     C                   IF        CER076 = 'Y'                                               CER076
+     C                   EXSR      SRGetACUSExtn                                              CER076
+     C                   ENDIF                                                                CER076
      C                   EXSR      SRSetFrmCust                                             BUG23995
      C                   ENDIF                                                              BUG23995
       *                                                                                     BUG23995
@@ -1595,13 +1727,14 @@
      C**********         EVAL      DF13FNM = E5TITL                                         BUG23808
      C**********         EVAL      DF13CUS = DBBCUST                               BUG23808 BUG24209
      C                   EVAL      DF13CUS = DE5CUST                                        BUG24209
-     C                   IF        DE5TITL = *BLANKS                                          263480
+     C**********         IF        DE5TITL = *BLANKS                                 263480 MD055792
      C                   EVAL      DF13SNM = DE5CNA1                                        BUG23808
-     C                   ELSE                                                                 263480
-     C                   EVAL      DF13SNM = %TRIMR(DE5TITL) + ' ' + DE5CNA1                  263480
-     C                   ENDIF                                                                263480
+     C**********         ELSE                                                        263480 MD055792
+     C**********         EVAL      DF13SNM = %TRIMR(DE5TITL) + ' ' + DE5CNA1         263480 MD055792
+     C**********         ENDIF                                                       263480 MD055792
      C**********         EVAL      DF13FNM = DE5TITL                                 BUG23808 263480
-     C                   EVAL      DF13FNM = DE5CNA2                                          263480
+     C**********         EVAL      DF13FNM = DE5CNA2                                 263480 MD055792
+     C                   EVAL      DF13FNM = DE5TITL                                        MD055792
       *
       ** If type 'WB' (wirtschaftliche Berechtigter) report address.
       *
@@ -1613,10 +1746,21 @@
      C**********         EVAL      WCtry = BBCOLC                                           BUG23808
      C                   EVAL      DF13STR = DBBCNA1                                        BUG23808
      C                   EVAL      DF13TWN = DBBCRTN                                        BUG23808
+     C                   EVAL      DF13STR = DE5CNA3                                        MD054404
      C                   EVAL      DF13ZIP = DE5ZIPC                                        BUG23808
      C                   EVAL      WCtry = DBBCOLC                                          BUG23808
      C                   EXSR      SRLookupCty
      C                   CLEAR                   DF13BDT
+      ** Report Tax ID number and Economic ID number for BaFin version 3.3                    CER076
+     C                   IF        CER076 = 'Y' and                                           CER076
+     C                             DBBCOLC = 'DE'                                             CER076
+     C                   EVAL      DF13TINO = DE5TINO                                         CER076
+     C                   EXSR      SRReformtTINO                                            MD054404
+     C                   EVAL      DF13EINO = DE5EINO                                         CER076
+     C                   ELSE                                                                 CER076
+     C                   CLEAR                   DF13TINO                                     CER076
+     C                   CLEAR                   DF13EINO                                     CER076
+     C                   ENDIF                                                                CER076
       *
       ** Other types.
       *
@@ -1630,6 +1774,15 @@
      C                   CLEAR                   DF13TWN
      C                   CLEAR                   DF13ZIP
      C                   CLEAR                   DF13CTY
+      ** Report address for BaFin version 3.3                                                 CER076
+     C                   IF        CER076 = 'Y'                                               CER076
+     C**********         EVAL      DF13STR = DE5CNA2                                  CER076MD054404
+     C                   EVAL      DF13STR = DE5CNA3                                        MD054404
+     C                   EVAL      DF13TWN = DE5CITY                                          CER076
+     C                   EVAL      DF13ZIP = DE5ZIPC                                          CER076
+     C                   EVAL      WCtry = DBBCOLC                                            CER076
+     C                   EXSR      SRLookupCty                                                CER076
+     C                   ENDIF                                                                CER076
       *
       ** Set date of birth, if appropriate.
       *
@@ -1656,6 +1809,16 @@
      C                   ELSE
      C                   CLEAR                   DF13BDT
      C                   ENDIF
+      ** Report Tax ID number and Economic ID number for BaFin version 3.3                    CER076
+     C                   IF        CER076 = 'Y' and                                           CER076
+     C                             DBBCOLC = 'DE'                                             CER076
+     C                   EVAL      DF13TINO = DE5TINO                                         CER076
+     C                   EXSR      SRReformtTINO                                            MD054404
+     C                   EVAL      DF13EINO = DE5EINO                                         CER076
+     C                   ELSE                                                                 CER076
+     C                   CLEAR                   DF13TINO                                     CER076
+     C                   CLEAR                   DF13EINO                                     CER076
+     C                   ENDIF                                                                CER076
       *
      C                   ENDIF
       *
@@ -1667,6 +1830,12 @@
      C                   EXSR      *PSSR
      C                   ENDIF
       *
+     C                   IF        FCurrentPass = 2                                         MD055791
+     C                   MOVEL     OACNO         DF13RFN                                    MD055791
+     C                   ELSE                                                               MD055791
+     C                   MOVEL     *BLANKS       DF13RFN                                    MD055791
+     C                   ENDIF                                                              MD055791
+      *                                                                                     MD055791
      C                   ENDSR
       *
       *****************************************************************                     BUG24101
@@ -1702,6 +1871,16 @@
      C                   EVAL      WCtry = ENHCOLC                                          BUG24101
      C                   EXSR      SRLookupCty                                              BUG24101
      C                   CLEAR                   DF13BDT                                    BUG24101
+      ** Report Tax ID number and Economic ID number for BaFin version 3.3                    CER076
+     C                   IF        CER076 = 'Y' and                                           CER076
+     C                             ENHCOLC = 'DE'                                             CER076
+     C                   EVAL      DF13TINO = ENHTINO                                         CER076
+     C                   EXSR      SRReformtTINO                                            MD054404
+     C                   EVAL      DF13EINO = ENHEINO                                         CER076
+     C                   ELSE                                                                 CER076
+     C                   CLEAR                   DF13TINO                                     CER076
+     C                   CLEAR                   DF13EINO                                     CER076
+     C                   ENDIF                                                                CER076
       *                                                                                     BUG24101
       ** Other types                                                                        BUG24101
       *                                                                                     BUG24101
@@ -1715,6 +1894,14 @@
      C                   CLEAR                   DF13TWN                                    BUG24101
      C                   CLEAR                   DF13ZIP                                    BUG24101
      C                   CLEAR                   DF13CTY                                    BUG24101
+      ** Report address for BaFin version 3.3                                                 CER076
+     C                   IF        CER076 = 'Y'                                               CER076
+     C                   EVAL      DF13STR = ENHIDE3                                          CER076
+     C                   EVAL      DF13TWN = ENHCITY                                          CER076
+     C                   EVAL      DF13ZIP = ENHZIPC                                          CER076
+     C                   EVAL      WCtry = ENHCOLC                                            CER076
+     C                   EXSR      SRLookupCty                                                CER076
+     C                   ENDIF                                                                CER076
       *                                                                                     BUG24101
       ** Set date of birth, if appropriate                                                  BUG24101
       *                                                                                     BUG24101
@@ -1724,6 +1911,16 @@
      C                   ELSE                                                               BUG24101
      C                   CLEAR                   DF13BDT                                    BUG24101
      C                   ENDIF                                                              BUG24101
+      ** Report Tax ID number and Economic ID number for BaFin version 3.3                    CER076
+     C                   IF        CER076 = 'Y' and                                           CER076
+     C                             ENHCOLC = 'DE'                                             CER076
+     C                   EVAL      DF13TINO = ENHTINO                                         CER076
+     C                   EXSR      SRReformtTINO                                            MD054404
+     C                   EVAL      DF13EINO = ENHEINO                                         CER076
+     C                   ELSE                                                                 CER076
+     C                   CLEAR                   DF13TINO                                     CER076
+     C                   CLEAR                   DF13EINO                                     CER076
+     C                   ENDIF                                                                CER076
       *                                                                                     BUG24101
      C                   ENDIF                                                              BUG24101
       *                                                                                     BUG24101
@@ -1735,6 +1932,12 @@
      C                   EXSR      *PSSR                                                    BUG24101
      C                   ENDIF                                                              BUG24101
       *                                                                                     BUG24101
+     C                   IF        FCurrentPass = 2                                         MD055791
+     C                   MOVEL     OACNO         DF13RFN                                    MD055791
+     C                   ELSE                                                               MD055791
+     C                   MOVEL     *BLANKS       DF13RFN                                    MD055791
+     C                   ENDIF                                                              MD055791
+      *                                                                                     MD055791
      C                   ENDSR                                                              BUG24101
       *                                                                                     BUG24101
       *****************************************************************
@@ -1760,10 +1963,12 @@
      C     SDCTRY        PARM      SDCTRY        DSFDY
       *
      C                   IF        PRtCd <> *BLANKS
-     C                   MOVEL     'SDCTRYPD'    DBFILE
-     C                   MOVEL     '002'         DBASE
-     C                   MOVEL     POptn         DBKEY
-     C                   EXSR      *PSSR
+     C                   EVAL      A4CNNM = *blank                                          MD054404
+     C                   EVAL      A4ISOC = *blank                                          MD054404
+     C**********         MOVEL     'SDCTRYPD'    DBFILE                                     MD054404
+     C**********         MOVEL     '002'         DBASE                                      MD054404
+     C**********         MOVEL     POptn         DBKEY                                      MD054404
+     C**********         EXSR      *PSSR                                                    MD054404
      C                   ENDIF
       *
      C                   SELECT
@@ -1929,6 +2134,83 @@
       *                                                                                     BUG23808
      C                   ENDSR                                                              BUG23808
       *
+      /EJECT                                                                                  CER076
+      *****************************************************************                       CER076
+      *                                                               *                       CER076
+      *  SRGetACUSExtn - Get Additional customer details extension    *                       CER076
+      *                                                               *                       CER076
+      *  Called by: MAIN, SRCusAutLink, SRAccAutLink                  *                       CER076
+      *                                                               *                       CER076
+      *  Calls: None                                                  *                       CER076
+      *                                                               *                       CER076
+      *****************************************************************                       CER076
+     C     SRGetACUSExtn BEGSR                                                                CER076
+      *                                                                                       CER076
+     C     SDACUSK       KLIST                                                                CER076
+     C                   KFLD                    DE5CUST                                      CER076
+     C     SDACUSK       CHAIN     SDACUSY0                                                   CER076
+     C**********         IF        NOT %FOUND()                                       CER076MD054404
+     C                   IF        NOT %FOUND() OR DE5EINO = 'DE000000000'                  MD054404
+     C                   EVAL      DE5EINO = *BLANK                                           CER076
+     C                   ENDIF                                                                CER076
+      *                                                                                       CER076
+     C                   ENDSR                                                                CER076
+      *****************************************************************                       CER076
+      /EJECT                                                                                  CER076
+      *****************************************************************                       CER076
+      *                                                               *                       CER076
+      *  SRGetNAHOExtn - Get Non-account Holders extension            *                       CER076
+      *                                                               *                       CER076
+      *  Called by: SRCusAutLink, SRAccAutLink                        *                       CER076
+      *                                                               *                       CER076
+      *  Calls: None                                                  *                       CER076
+      *                                                               *                       CER076
+      *****************************************************************                       CER076
+     C     SRGetNAHOExtn BEGSR                                                                CER076
+      *                                                                                       CER076
+     C     SDNAHOK       KLIST                                                                CER076
+     C                   KFLD                    ENHNAHO                                      CER076
+     C     SDNAHOK       CHAIN     SDNAHOY0                                                   CER076
+     C**********         IF        NOT %FOUND()                                       CER076MD054404
+     C                   IF        NOT %FOUND() OR ENHEINO = 'DE000000000'                  MD054404
+     C                   EVAL      ENHEINO = *BLANK                                           CER076
+     C                   ENDIF                                                                CER076
+      *                                                                                       CER076
+     C                   ENDSR                                                                CER076
+      *****************************************************************                       CER076
+      /EJECT                                                                                MD054404
+      *****************************************************************                     MD054404
+      *                                                               *                     MD054404
+      *  SRReformtTINO - Reformat Tax identification number           *                     MD054404
+      *                                                               *                     MD054404
+      *  Called by: Main, SRSetFrmCust, SRSetFrmAuth                  *                     MD054404
+      *                                                               *                     MD054404
+      *  Calls: None                                                  *                     MD054404
+      *                                                               *                     MD054404
+      *****************************************************************                     MD054404
+     C     SRReformtTINO BEGSR                                                              MD054404
+     C                   movel     DF13TINO      W_F13TINO        25                        MD054404
+     C                   movel     *blank        DF13TINO                                   MD054404
+     C                   z-add     *zero         O_Pos             2 0                      MD054404
+     C                   z-add     *zero         W_Pos             2 0                      MD054404
+     C                   Dow       W_Pos < 25                                               MD054404
+     C                   add       1             W_Pos                                      MD054404
+     C                   If        %check('1234567890':                         Remove      MD054404
+     C                             %SubST(W_F13TINO:W_Pos:1)) <= 0              non-numeric MD054404
+     C                   add       1             O_Pos                          characters  MD054404
+     C                   Eval      %SubST(DF13TINO:O_Pos:1) =                               MD054404
+     C                             %SubST(W_F13TINO:W_Pos:1)                                MD054404
+     C                   else                                                               MD054404
+     C                   If        %SubST(W_F13TINO:W_Pos:1) <> ' ' and         Only blank &MD054404
+     C                             %SubST(W_F13TINO:W_Pos:1) <> '/'             slash alloweMD054404
+     C                   z-add     99            W_Pos                          so finish   MD054404
+     C                   Endif                                                              MD054404
+     C                   Endif                                                              MD054404
+     C                   Enddo                                                              MD054404
+     C                   If        O_Pos <> 11 or W_Pos = 99                    Invalid:    MD054404
+     C                   Eval      DF13TINO = *blank                            so no Tax   MD054404
+     C                   Endif                                                  ID is sent  MD054404
+     C                   ENDSR                                                              MD054404
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2019,6 +2301,27 @@
      C                   SUBDUR    1:*SECONDS    FTIME
      C     *HMS          MOVE      FTIME         FVTM1
       *
+                                                                                              CER076
+      ** Check if CER076 is on                                                                CER076
+                                                                                              CER076
+     C                   CALL      'AOSARDR0'                                                 CER076
+     C                   PARM      *Blanks       PRtCd                                        CER076
+     C                   PARM      '*VERIFY'     POptn                                        CER076
+     C                   PARM      'CER076'      PSard             6                          CER076
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CER076
+                                                                                              CER076
+     C                   MOVE      'N'           CER076            1                          CER076
+     C                   IF        PRtCd <> *Blanks                                           CER076
+     C                   IF        PRtCd <> '*NRF'                                            CER076
+     C                   MOVEL     'SCSARDPD'    DBFILE                                       CER076
+     C                   MOVEL     '901'         DBASE                                        CER076
+     C                   MOVEL     PSard         DBKEY                                        CER076
+     C                   EXSR      *PSSR                                                      CER076
+     C                   ENDIF                                                                CER076
+     C                   ELSE                                                                 CER076
+     C                   EVAL      CER076 = 'Y'                                               CER076
+     C                   ENDIF                                                                CER076
+                                                                                              CER076
      C                   ENDSR
       *
       *****************************************************************

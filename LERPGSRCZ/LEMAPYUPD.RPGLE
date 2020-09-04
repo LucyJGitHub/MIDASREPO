@@ -15,8 +15,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD054035           Date 03Sep19               *
+      *  Last Amend No. MD055733           Date 03Jul20               *
+      *  Prev Amend No. AR927395           Date 05Aug13               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD054035           Date 03Sep19               *
       *                 MD054317           Date 09Sep19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD047554           Date 11Oct17               *
@@ -118,6 +120,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
+      *             components.                                       *
+      *           - Redeliver of MD050139.                            *
+      *  AR927395 - Wrong COF repayment when loan had rate changes.   *
+      *             Compute corresponding COFA when PD interest is    *
+      *             paid off. (Child: AR927398)                       *
       *  CER050 - Annualised Percentage Rate (Recompile)              *       
       *  MD054035 - Prevent file locking of LEFEED                    *
       *  MD054317 - PDCL X not generated for freq based repayment     *
@@ -750,15 +758,24 @@
      D  PNAMR                 27     39  0
      D  TAMTR                 40     52  0
      D  WTXAR                 53     65  0
-     D  SAMT                   1     65
+     D  COFAR                 66     78  0                                                  AR927395
+     D**SAMT****               1     65                                                     AR927395
+     D  SAMT                   1     78                                                     AR927395
       *** Loan Amendment Current Amount in numeric  (on Valid format LOAMSDKF)
       *
-     D  OPRAM                 66     78  0
-     D  OINTA                 79     91  0
-     D  OPNAM                 92    104  0
-     D  OTAMT                105    117  0
-     D  OWTXA                118    130  0
-     D  OAMT                  66    130
+     D**OPRAM***              66     78  0                                                  AR927395
+     D**OINTA***              79     91  0                                                  AR927395
+     D**OPNAM***              92    104  0                                                  AR927395
+     D**OTAMT***             105    117  0                                                  AR927395
+     D**OWTXA***             118    130  0                                                  AR927395
+     D**OAMT****              66    130                                                     AR927395
+     D  OPRAM                 79     91  0                                                  AR927395
+     D  OINTA                 92    104  0                                                  AR927395
+     D  OPNAM                105    117  0                                                  AR927395
+     D  OTAMT                118    130  0                                                  AR927395
+     D  OWTXA                131    143  0                                                  AR927395
+     D  OCOFA                144    156  0                                                  AR927395
+     D  OAMT                  79    156                                                     AR927395
       *** Input Amount in numeric  (on Valid format LEVMAPY)
       *
       ***  24X7 interface
@@ -1777,6 +1794,7 @@
      C                   Z-Add     MRPNAM        PNAMR
      C                   Z-Add     MRTAMT        TAMTR
      C                   Z-Add     MRWTXA        WTXAR
+     C                   Z-Add     MRCOFA        COFAR                                      AR927395
      C                   Z-ADD     MRVDAT        WVALD
      C                   MOVE      MRLASN        SLASN
      C                   MOVE      *BLANK        WAMTP                                        260446
@@ -2434,6 +2452,7 @@
 
      C                   Z-ADD     MRXAVD        WVALD
      C                   MOVE      MRXASQ        SLASN
+     C                   Z-ADD     0             COFAR                                      AR927395
      C                   ENDIF
       *
      C     WWACTN        IFEQ      'R'
@@ -2502,6 +2521,7 @@
      C                   Z-ADD     PNAM          OPNAM
      C                   Z-ADD     TAMT          OTAMT
      C                   Z-ADD     WTXA          OWTXA
+     C                   Z-ADD     COFA          OCOFA                                      AR927395
 
       ***  Repayment schedule only
 
@@ -2573,6 +2593,18 @@
      C     INTA          SUB       INTAR         INTA
      C     WTXA          SUB       WTXAR         WTXA
      C     TAMT          SUB       TAMTR         TAMT
+      *                                                                                     AR927395
+     C     BGN0ST        IFEQ      'Y'                                                      AR927395
+     C     OINTA         ANDNE     0                                                        AR927395
+     C     INTA          IFEQ      0                                                        AR927395
+     C                   Z-ADD     OCOFA         COFAR                                      AR927395
+     C                   ELSE                                                               AR927395
+     C     INTAR         MULT      OCOFA         COFAR                                      AR927395
+     C     COFAR         DIV       OINTA         COFAR                                      AR927395
+     C                   ENDIF                                                              AR927395
+     C     OCOFA         SUB       COFAR         COFA                                       AR927395
+     C                   ENDIF                                                              AR927395
+      *                                                                                     AR927395
      C                   ENDIF
 
      C     WWACTN        IFEQ      'R'
@@ -2584,6 +2616,7 @@
      C     INTA          ADD       INTAR         INTA
      C     WTXA          ADD       WTXAR         WTXA
      C     TAMT          ADD       TAMTR         TAMT
+     C     COFA          ADD       COFAR         COFA                                       AR927395
      C                   ENDIF
       *
      C                   ENDIF                                                  End Past Due Rec.
@@ -3104,6 +3137,23 @@
      C                   ENDIF
       *
      C                   ENDIF
+      *                                                                                     AR927395
+     C     BGN0ST        IFEQ      'Y'                                                      AR927395
+     C     WWACTN        ANDEQ     'I'                                                      AR927395
+     C     MRXASQ        ANDNE     0                                                        AR927395
+     C     MRMTPD        ANDEQ     'Y'                                                      AR927395
+     C                   Eval      WLOAN = LNRF                                             AR927395
+     C                   Eval      WRCDT = 'A'                                              AR927395
+     C     KCLOAN        CHAIN     CLOAN                              39                    AR927395
+     C     *IN39         IFEQ      '0'                                                      AR927395
+     C                   Z-ADD     COFAR         WRK13N           13 0                      AR927395
+     C     PDCF          SUB       WRK13N        PDCF                                       AR927395
+     C                   CALLB     'ZAGENTMSTM'                                             AR927395
+     C                   PARM                    TimeStamp                                  AR927395
+     C                   EVAL      TMST=TimeStamp                                           AR927395
+     C                   UPDATE    CLOANCLF                                                 AR927395
+     C                   ENDIF                                                              AR927395
+     C                   ENDIF                                                              AR927395
       *
      C                   ELSE
 
@@ -3327,6 +3377,24 @@
      C                   UPDATE    CLOANCLF
      C                   ENDIF
      C                   ENDIF
+      *                                                                                     AR927395
+     C     BGN0ST        IFEQ      'Y'                                                      AR927395
+     C     WWACTN        ANDEQ     'R'                                                      AR927395
+     C     MRXASQ        ANDNE     0                                                        AR927395
+     C     MRMTPD        ANDEQ     'Y'                                                      AR927395
+     C                   Eval      WLOAN = LNRF                                             AR927395
+     C                   Eval      WRCDT = 'A'                                              AR927395
+     C     KCLOAN        CHAIN     CLOAN                              39                    AR927395
+     C     *IN39         IFEQ      '0'                                                      AR927395
+     C                   Z-ADD     COFAR         WRK13N                                     AR927395
+     C     PDCF          ADD       WRK13N        PDCF                                       AR927395
+     C                   CALLB     'ZAGENTMSTM'                                             AR927395
+     C                   PARM                    TimeStamp                                  AR927395
+     C                   EVAL      TMST=TimeStamp                                           AR927395
+     C                   UPDATE    CLOANCLF                                                 AR927395
+     C                   ENDIF                                                              AR927395
+     C                   ENDIF                                                              AR927395
+      *                                                                                     AR927395
      C                   ENDIF
       *
      C                   EXSR      SRLTRX
@@ -4451,6 +4519,11 @@
      C                   Z-ADD     XLASN         MRXASQ
      C                   Z-ADD     P@NATN        MRTNLU
      C                   MOVE      PsUser        MRIUSR
+     C     MRXASQ        IFEQ      0                                                        AR927395
+     C                   Z-ADD     0             MRCOFA                                     AR927395
+     C                   ELSE                                                               AR927395
+     C                   Z-ADD     COFAR         MRCOFA                                     AR927395
+     C                   ENDIF                                                              AR927395
       *
       ***  Set status depending on ICD
       *

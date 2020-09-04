@@ -17,8 +17,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD021108A          Date 16Jul13               *
-      *  Prev Amend No. CMG006             Date 15Oct19               *
+      *  Last Amend No. AR898442           Date 24Feb12               *
+      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *                 MD021108A          Date 16Jul13               *
+      *                 CMG006             Date 15Oct19               *
       *                 MD052633           Date 08Oct19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD042357           Date 02Dec16               *
@@ -53,6 +55,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR898442 - MT940 nacked if narrative starts with a /         *
+      *             (Child: AR898443)                                 *
+      *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD021108A - Problem in generating MT950. Use rundate for tags*
       *              60M and 62M.                                     *
       *            - Applied for MD-53366                             *
@@ -929,6 +934,13 @@
      C                   Movel     X_MGSFD8      Subfld8
 
       *    Subfld 9 = Supplementary Details
+     C                   Movel     X_MGSFD9      Wrk1              1                       AR898442
+     C     Wrk1          ifeq      '/'                                                     AR898442
+     C     Wrk1          oreq      '-'                                                     AR898442
+     C                   Move      X_MGSFD9      Wrk33            33                       AR898442
+     C                   Move      *Blanks       X_MGSFD9                                  AR898442
+     C                   Movel     Wrk33         X_MGSFD9                                  AR898442
+     C                   Endif                                                             AR898442
      C                   Movel     X_MGSFD9      Subfld9
 
       *    Concatenate Fld 61 subfields into 1 long string and determine length

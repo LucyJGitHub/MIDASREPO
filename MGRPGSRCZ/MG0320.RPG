@@ -10,8 +10,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR908919           Date 02Oct19               *
-      *  Prev Amend No. MD053295           Date 13Apr19               *
+      *  Last Amend No. MD051884           Date 05Sep19               *
+      *  Prev Amend No. 260931             Date 25Nov15               *
+      *                 MD055995           Date 13Jul20               *
+      *                 MD050459           Date 12Mar20               *
+      *                 AR908919           Date 02Oct19               *
+      *                 MD053295           Date 13Apr19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD047993           Date 23Sep17               *
       *                 MD035545           Date 11Sep15               *
@@ -146,6 +150,17 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD051884 - SWIFT MT320 early maturity unexpected interest    *
+      *             amount                                            *
+      *  260931 - Field 87A not correct                               *
+      *           Applied for MD-34062                                *
+      *  MD055995 - Diff in field F57U for 8 MT320 Messages, MP value *
+      *             of 'K', FM blank - Formalize fix introduced in    *
+      *             MG0320, rename DEALSDC.F57FU to avoid conflict of *
+      *             both fields                                       *
+      *  MD050459  - Produce correct 34E for 'BC' Deal Amendment      *
+      *            - Incomplete computation for 34E for 'PI' and 'PD' *
+      *              Deal Amendment                                   *
       *  AR908919 - MT320 message not acknowleged by SWIFT alliance.  *
       *             Ensure that for Early Maturity deal amendments,   *
       *             tag 30X will be generated instead of 32H.         *
@@ -489,6 +504,7 @@
      I              DLNO                            FDDLNO                                  AR916823
      I              VDAT                            FDVDAT                                  AR916823
      I              MDAT                            FDMDAT                                  AR916823
+     I              PCPL                            FDPCPL                                  MD050459
      I              INTR                            FDINTR                                  AR916823
      I              NIDT                            FDNIDT                                  AR916823
      I              IACD                            FDIACD                                  AR916823
@@ -499,6 +515,7 @@
      I              ICTD                            FDICTD                                  AR916823
      I              AIPD                            FDAIPD                                  MD034675
      I              INTF                            FDINTF                                  AR916823
+     I              F57U                            FDF57U                                  MD055995
       ** Rename for conflicting fields of DEALSDC                                           AR916823
       *                                                                                     AR916823
      I            DS
@@ -4398,6 +4415,11 @@
      C                     MOVE *BLANK    MFLD                                                CSW024
      C                     MOVELDSCBEI    MFLD                                                CSW024
      C                     MOVE ':87A:'   MTAG                                                CSW024
+     C                     ADD  1         V                                                   260931
+     C           V         OCUR EXTN                                                          260931
+     C                     Z-ADDX         MPSN                                                260931
+     C                     MOVELMTAG      MTG                                                 260931
+     C                     MOVELMGCNUM    MCSI                                                260931
       *                                                                                       CSW024
       **  If receiver party info output :87J:                                                 CSW024
      C                     ELSE                                                               CSW024
@@ -4985,14 +5007,14 @@
       *                                                                   CSW200
      C                     END                                            CSW200
       *                                                                   CSW200
-     C           MGMATU    IFEQ 'C'                                       CSW200
-     C           MGMATU    OREQ 'I'                                       CSW200
-     C                     Z-ADDMGINTA    ZAMNT                           CSW200
-     C                     Z-ADDMGINTA    ZINTR                           CSW200
-     C           ZINTR     IFLT 0                                         186631
-     C                     Z-SUBZINTR     ZAMNT                           186631
-     C                     END                                            186631
-     C                     ENDIF                                          CSW200
+     C********** MGMATU    IFEQ 'C'                                                  CSW200 MD051884
+     C********** MGMATU    OREQ 'I'                                                  CSW200 MD051884
+     C**********           Z-ADDMGINTA    ZAMNT                                      CSW200 MD051884
+     C**********           Z-ADDMGINTA    ZINTR                                      CSW200 MD051884
+     C********** ZINTR     IFLT 0                                                    186631 MD051884
+     C**********           Z-SUBZINTR     ZAMNT                                      186631 MD051884
+     C**********           END                                                       186631 MD051884
+     C**********           ENDIF                                                     CSW200 MD051884
      C           MGLORD    IFEQ 'L'                                       CSW200
       *                                                                   CSW200
      C           ZINTR     IFGE *ZERO                                     CSW200
@@ -5017,6 +5039,7 @@
       *                                                                                     AR694628
      C           MGEVTP    IFEQ 'SC'                                                        AR694628
      C           MGEVTP    OREQ 'EM'                                                        AR598353
+     C           MGEVTP    OREQ 'BC'                                                        MD050459
      C                     MOVELMGTNUM    WDLNO   60                                        AR694628
      C           WDLNO     CHAINDEALSC               40                                     AR694628
      C           *IN40     IFEQ '0'                                                         AR694628
@@ -5064,12 +5087,31 @@
      C                     MOVELMGTNUM    WDLNO   60                                        MD034675
      C           WDLNO     CHAINDEALSC               40                                     MD034675
      C           *IN40     IFEQ '0'                                                         MD034675
-     C                     Z-ADDMGVDAT    ZIBEG                                             MD034675
-     C                     Z-ADDMGMDAT    ZIEND                                             MD034675
-     C                     Z-ADDMGPCPL    ZIAMT                                             MD034675
+     C**********           Z-ADDMGVDAT    ZIBEG                                    MD034675 MD050459
+     C**********           Z-ADDMGMDAT    ZIEND                                    MD034675 MD050459
+     C**********           Z-ADDMGPCPL    ZIAMT                                    MD034675 MD050459
+     C                     Z-ADDFDIACD    ZIBEG                                             MD050459
+     C                     Z-ADDMGVDAT    ZIEND                                             MD050459
+     C                     Z-ADDFDPCPL    ZIAMT                                             MD050459
      C                     Z-ADDMGINTR    ZIRATE                                            MD034675
      C                     EXSR GLINTC                                                      MD034675
-     C                     Z-ADDZINTR     INTAM  130                                        MD034675
+     C                     Z-ADDZINTR     ZAMNT                                             MD050459
+     C           FDNIDT    IFNE 0                                                           MD050459
+     C                     Z-ADDFDNIDT    ZIEND                                             MD050459
+     C                     ELSE                                                             MD050459
+     C                     Z-ADDFDMDAT    ZIEND                                             MD050459
+     C                     ENDIF                                                            MD050459
+     C                     Z-ADDMGPCPL    ZIAMT                                             MD050459
+     C                     Z-ADDMGVDAT    ZIBEG                                             MD050459
+     C                     Z-ADDMGINTR    ZIRATE                                            MD050459
+     C                     EXSR GLINTC                                                      MD050459
+     C           JRDFC     IFEQ 'Y'                                                         MD050459
+     C           ZINTR     ADD  ZAMNT     ZAMNT                                             MD050459
+     C                     ELSE                                                             MD050459
+     C           ZINTR     ADD  ZAMNT     ZAMNT     H                                       MD050459
+     C                     ENDIF                                                            MD050459
+     C**********           Z-ADDZINTR     INTAM  130                               MD034675 MD050459
+     C                     Z-ADDZAMNT     INTAM  130                                        MD050459
       *                                                                                     MD034675
      C           INTAM     ADD  FDAITC    INTAM                                             MD034675
      C           INTAM     ADD  FDAIAN    INTAM                                             MD034675

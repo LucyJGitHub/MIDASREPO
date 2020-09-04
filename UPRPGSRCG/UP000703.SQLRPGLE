@@ -12,10 +12,12 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD054605   *CREATE   Date 17Oct19             *
+      *  Last Amend No. MD054955             Date 16Dec19             *
+      *  Prev Amend No. MD054605   *CREATE   Date 17Oct19             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *                                                               *
       *****************************************************************
@@ -32,9 +34,12 @@
      D KeyArr          S             10A   DIM(12)
      D WIdx            S              3P 0
      D KeyFld          S            200A
-     D WHERE           S            300A
-     D PINSERT         S            300A
-     D PSELECT         S            300A
+     D*WHERE****       S            300A                                                    MD054955
+     D WHERE           S            600A                                                    MD054955
+     D*PINSERT**       S            300A                                                    MD054955
+     D PINSERT         S            600A                                                    MD054955
+     D*PSELECT**       S            300A                                                    MD054955
+     D PSELECT         S            600A                                                    MD054955
      D SQLDynStmt      S           5000A
      D Outfile         S             10A
      D OFMbr           S             10A
@@ -195,6 +200,8 @@
      C/end-exec
 
 
+      ** Update XTD file only if there is at least one filed to update                      MD054955
+     C                   If        PINSERT <> *blanks                                       MD054955
      C                   eval      SQLDynStmt = 'update ' + EXTINDEX +
      C                             ' B set (' + %trimr(PINSERT) +
      C                             ') = (select ' + %trimr(PSELECT) +
@@ -215,6 +222,8 @@
      C                             and SQLCode <> 100
      C                   eval      ERROR = '*Error'
      C                   Endif
+     C                   Endif                                                              MD054955
+                                                                                            MD054955
      C                   ENDSR
 
       /EJECT

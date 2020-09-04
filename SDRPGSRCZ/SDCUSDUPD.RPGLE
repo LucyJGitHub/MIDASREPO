@@ -11,8 +11,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055446           Date 04Apr20               *
-      *  Prev Amend No. 260405             Date 04Apr20               *
+      *  Last Amend No. MD055373           Date 14Jul20               *
+      *  Prev Amend No. MD026746           Date 05Feb20               *
+      *                 MD025022           Date 05Feb20               *
+      *                 MD055446           Date 04Apr20               *
+      *                 260405             Date 04Apr20               *
       *                 MD055210           Date 03Feb20               *
       *                 MD054883           Date 23Dec19               *
       *                 MD053436           Date 21Sep19               *
@@ -150,10 +153,18 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055373 - Audit trail not available                         *
+      *           - Receive and process the DDIUSR and DDAUSR fields  *
+      *             from SDCUSDVU.                                    *
+      *  MD026746 - File control out of balance due to customer       *
+      *             closure. Extend fix MD025022 to cover scenario    *
+      *             where customer has been closed or released.       *
+      *  MD025022 - File Control Out of Balance. Ensure that AHNOAM is*
+      *             not incremented if changes done on the same day.  *
       *  MD055446 - There are parties and fields missing from the BRT *	
       *             details tab in Customer Input plus date of birth  *	
       *             issues.                                           *	
-      *           - Added BRT DOB century as *ENTRY parameter.        *     
+      *           - Added BRT DOB century as *ENTRY parameter.        *
       *  260405 - BRT Participation Date of Birth field is missing.   *
       *           Upgrade fix 235425. Recompile over changed SDCBRTPD.*
       *         - Applied for MD055446.                               *
@@ -1023,6 +1034,14 @@
      D  BR3DBC                        2S 0                                                  MD055446
      D  BR4DBC                        2S 0                                                  MD055446
      D  BR5DBC                        2S 0                                                  MD055446
+      *                                                                                     MD055373
+      ** Insert User (DDIUSR) and Amend User (DDAUSR) details layout                        MD055373
+     D SDVTransUser    DS                                                                   MD055373
+     D  SDIUSER                      10A                                                    MD055373
+     D  SDAUSER                      10A                                                    MD055373
+      *                                                                                     MD055373
+     D  SDAAUTH        S              1A                                                    MD055373
+      *                                                                                     MD055373
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
@@ -2969,7 +2988,9 @@
      C**********         MOVE      WKUSER        BBIUSR                           AR679445 MD027492A
                                                                                            MD027492A
      C                   EVAL      BBIUSR = WLUSER                                         MD027492A
+     C                   IF        SDAAUTH <> 'Y'                                           MD055373
      C                   EVAL      BBXUSR = WKUSER                                         MD027492A
+     C                   ENDIF                                                              MD055373
       *
       ** Update the SWIFT 2007 field details when CSW207 is on                                CSW207
      C**********         IF        CSW207 = 'Y' OR BGN4ST = 'Y'                      CSW207 BUG15138
@@ -2992,6 +3013,8 @@
      C                   ENDIF                                                                CSW207
      C**********         ENDIF                                                       CSW207 BUG15138
       *                                                                                       CSW207
+     C                   EVAL      BBIUSR = SDIUSER                                         MD055373
+      *                                                                                     MD055373
       ** WRITE NEW CUSTOMER
 
      C                   WRITE     @BBREBG
@@ -4168,7 +4191,9 @@
      C**********         MOVE      WKUSER        BBAUSR                           AR679445 MD027492A
                                                                                            MD027492A
      C                   EVAL      BBAUSR = WLUSER                                         MD027492A
+     C                   IF        SDAAUTH <> 'Y'                                           MD055373
      C                   EVAL      BBXUSR = WKUSER                                         MD027492A
+     C                   ENDIF                                                              MD055373
       *
       ** Update the SWIFT 2007 field details when CSW207 is on                                CSW207
      C**********         IF        CSW207 = 'Y' OR BGN4ST = 'Y'                      CSW207 BUG15138
@@ -4212,6 +4237,8 @@
      C                   ENDIF                                                                CSW207
      C**********         ENDIF                                                       CSW207 BUG15138
       *                                                                                       CSW207
+     C                   EVAL      BBAUSR = SDAUSER                                         MD055373
+      *                                                                                     MD055373
       ** UPDATE RECORD
 
      C                   IF        CSD028 = 'Y' AND PTransType = 'AUTH'                       CSD028
@@ -4286,6 +4313,8 @@
      C                   EXSR      UPDTID                                                    BUG3362
       *                                                                                      BUG3362
       * USER: Processing after Data update
+     C     B_BBTYLC      IFNE      'A'                                                      MD025022
+     C     B_BBLCD       ORNE      BJRDNB                                                   MD025022
      C                   Z-ADD     *ZERO         WUNORC                         No of records
      C                   Z-ADD     1             WUNOAM                         No of Amend
      C                   Z-ADD     *ZERO         WUNOIN                         No of delete
@@ -4293,6 +4322,7 @@
       * Change Standing Data Cont - Standing Data Controls  *
      C                   MOVEL     'SDCUSTPD'    WFLNAME           8            No of delete
      C                   EXSR      SNCHRC
+     C                   ENDIF                                                              MD025022
       * Pass parameters for marketing groups to SDCLINT to update CLINTCB
       * Customer marketing groups - Customer Marketing Groups  *
      C                   EXSR      SORVGN
@@ -5636,6 +5666,8 @@
      C                   ENDIF                                                                CSW207
      C                   ENDIF                                                                CSW207
                                                                                               CSD007
+     C     B_BBTYLC      IFNE      'A'                                                      MD026746
+     C     B_BBLCD       ORNE      BJRDNB                                                   MD026746
      C                   Z-ADD     *ZERO         WUNORC                         No of records CSD007
      C                   Z-ADD     1             WUNOAM                         No of Amend   CSD007
      C                   Z-ADD     *ZERO         WUNOIN                         No of Inserts CSD007
@@ -5643,6 +5675,7 @@
       * Change Standing Data Cont - Standing Data Controls  *                                 CSD007
      C                   MOVEL     'SDCUSTPD'    WFLNAME           8            No of delete  CSD007
      C                   EXSR      SNCHRC                                                     CSD007
+     C                   ENDIF                                                              MD026746
                                                                                               CSD007
      C                   ENDSR                                                                CSD007
      C****************************************************************                        CSD007
@@ -5719,6 +5752,8 @@
      C                   ENDIF                                                                CSW207
      C                   ENDIF                                                                CSW207
                                                                                               CSD007
+     C     B_BBTYLC      IFNE      'A'                                                      MD026746
+     C     B_BBLCD       ORNE      BJRDNB                                                   MD026746
      C                   Z-ADD     *ZERO         WUNORC                         No of records CSD007
      C                   Z-ADD     1             WUNOAM                         No of Amend   CSD007
      C                   Z-ADD     *ZERO         WUNOIN                         No of Inserts CSD007
@@ -5726,6 +5761,7 @@
       * Change Standing Data Cont - Standing Data Controls  *                                 CSD007
      C                   MOVEL     'SDCUSTPD'    WFLNAME           8            No of delete  CSD007
      C                   EXSR      SNCHRC                                                     CSD007
+     C                   ENDIF                                                              MD026746
                                                                                               CSD007
      C                   ENDSR                                                                CSD007
      C****************************************************************                        CSD007
@@ -6973,6 +7009,8 @@
      C                   PARM                    DACTN             1                          CSD028
      C                   PARM                    CTI006            1                        MD030956
      C                   PARM                    SDVCUBRCENT                                MD055446
+     C                   PARM                    SDVTransUser                               MD055373
+     C                   PARM                    SDAAUTH                                    MD055373
       ** Acceptance Mode                                                                      CSD031
      C**********         PARM                    PAccMde                             CSD031 BUG13525
       ** Update (Y/N)                                                                         CSD031
@@ -8512,8 +8550,11 @@
                                                                                               CSD079
       ** Change Standing Data Cont - Standing Data Controls                                   CSD079
                                                                                               CSD079
+     C     B_BBTYLC      IFNE      'A'                                                      MD025022
+     C     B_BBLCD       ORNE      BJRDNB                                                   MD025022
      C                   MOVEL     'SDCMRKPD'    WFLNAME                                      CSD079
      C                   EXSR      SNCHRC                                                     CSD079
+     C                   ENDIF                                                              MD025022
       *                                                                                       CSD079
      C                   ENDSR                                                                CSD079
       *                                                                                       CSD079
@@ -9261,8 +9302,11 @@
                                                                                               CSD079
       ** Change Standing Data Cont - Standing Data Controls                                   CSD079
                                                                                               CSD079
+     C     B_BBTYLC      IFNE      'A'                                                      MD025022
+     C     B_BBLCD       ORNE      BJRDNB                                                   MD025022
      C                   MOVEL     'SDCHEQPD'    WFLNAME                                      CSD079
      C                   EXSR      SNCHRC                                                     CSD079
+     C                   ENDIF                                                              MD025022
                                                                                               CSD079
      C                   ENDSR                                                                CSD079
                                                                                               CSD079
@@ -9380,8 +9424,11 @@
                                                                                               CSD079
       ** Change Standing Data Cont - Standing Data Controls                                   CSD079
                                                                                               CSD079
+     C     B_BBTYLC      IFNE      'A'                                                      MD025022
+     C     B_BBLCD       ORNE      BJRDNB                                                   MD025022
      C                   MOVEL     'SDSAFEPD'    WFLNAME                                      CSD079
      C                   EXSR      SNCHRC                                                     CSD079
+     C                   ENDIF                                                              MD025022
                                                                                               CSD079
      C                   ENDSR                                                                CSD079
                                                                                               CSD079

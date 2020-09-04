@@ -11,8 +11,10 @@
 0007 F*                                                                  *LE0820
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054877           Date 10Jan20               *
-      *  Prev Amend No. AR1096915          Date 10Jan20               *
+      *  Last Amend No. MD056260           Date 22Jul20               *
+      *  Prev Amend No. MD031174           Date 12Mar20               *
+      *                 MD054877           Date 10Jan20               *
+      *                 AR1096915          Date 10Jan20               *
       *                 MD054101           Date 08Aug19               *
       *                 MD053950           Date 16Jul19               *
       *                 MD053873           Date 10Jul19               *
@@ -98,6 +100,10 @@
 0010 F*                 E13500             DATE 09/06/88              *LE0820
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD056260 - System generated incorrect posting account        *
+      *             movements for automatically pmnt PDCL FEE 34      *
+      *             with currency conversion                          *
+      *  MD031174 - Value date shadow Posting missing.                *
       *  MD054877 - Enhance fix AR1096915, to also exclude risk       *
       *             parts purchased & risk parts sold.                *
       *  AR1096915 - Generate shadow posting of maturity interest of  *
@@ -360,7 +366,8 @@
      E**********          TABEVT  1  12  2   TABNAM 18   EVENT NAMES                   192289 CLE031
      E**********          TABEVT  1  24  2   TABNAM 18   EVENT NAMES                   CLE031 CER049
      E**********          TABEVT  1  25  2   TABNAM 18   EVENT NAMES                   CER049 CLE134
-     E                    TABEVT  1  28  2   TABNAM 18   EVENT NAMES                          CLE134
+     E**********          TABEVT  1  28  2   TABNAM 18   EVENT NAMES                 CLE134 MD056260
+     E                    TABEVT  1  30  2   TABNAM 18   EVENT NAMES                        MD056260
      E/COPY WNCPYSRC,LEH00957
       /COPY ZSRSRC,ZDATE2Z1                                               S01392
      E/COPY ZSRSRC,ZHOLE                                                                      237466
@@ -1132,6 +1139,11 @@
      C                     PARM '*MSG   ' @RTCD   7                       S01194
      C                     PARM '*FIRST ' @OPTN   7                       S01194
      C           SDBANK    PARM SDBANK    DSFDY                           S01194
+     C** PARAMETER LIST FOR PROGRAM 'AOGELRR0'                                              MD031174
+     C           PLISTB    PLIST                                                            MD031174
+     C                     PARM '*MSG   ' @RTCD                                             MD031174
+     C                     PARM '*FIRST ' @OPTN                                             MD031174
+     C           SDGELR    PARM SDGELR    DSSDY                                             MD031174
      C** PARAMETER LIST FOR PROGRAM 'AORETLR0'                            S01194
      C           BGRTBN    IFEQ 'Y'                                       064773
      C           BGIOAC    OREQ 'Y'                                       064773
@@ -1263,6 +1275,16 @@
      C                     END                                            S01194
      C**   CHECK SYSTEM DATE FORMAT, DDMMYY OR MMDDYY.                    S01194
      C           BJDFIN    COMP 'M'                      98MMDDYY, 98 ON  S01194
+      *                                                                                     MD031174
+      **    ACCESS GENERAL LEDGER DETAILS                                                   MD031174
+      *                                                                                     MD031174
+     C                     CALL 'AOGELRR1'PLISTB                                            MD031174
+     C           @RTCD     IFNE *BLANKS                                                     MD031174
+     C                     SETON                     U7U8LR                                 MD031174
+     C                     Z-ADD2         DBASE                                             MD031174
+     C                     MOVE 'SDGELRPD'DBFILE                                            MD031174
+     C                     GOTO ERROR                                                       MD031174
+     C                     END                                                              MD031174
      C*                                                                   S01117
      C                     CALL 'AORETLR0'PLISTC                          S01194
      C           @RTCD     IFNE *BLANKS                                   S01194
@@ -1864,6 +1886,16 @@
      C           *IN55     OREQ *ON                                                          BUG7568
      C                     SETON                     40                                       CLE031
      C                     ENDIF                                                              CLE031
+      *                                                                                     MD031174
+     C           ETP       IFEQ 'V1'                                                        MD031174
+     C           EDAT      ANDGTPRUND                                                       MD031174
+     C           BKANWD    ANDEQ'2'                                                         MD031174
+     C           ETP       OREQ 'V3'                                                        MD031174
+     C           EDAT      ANDGTPRUND                                                       MD031174
+     C           BKANWD    ANDEQ'2'                                                         MD031174
+     C                     SETOF                     40                                     MD031174
+     C                     ENDIF                                                            MD031174
+      *                                                                                     MD031174
 0460 C   40                GOTO ENDDET                                    LE0820
 0461 C**                                                                  LE0820
 0462 C**   SET UP ACCOUNT KEY CURRENCY                                    LE0820
@@ -1901,6 +1933,8 @@
      C           ETP       OREQ 'RY'                                                        MD051891
      C           ETP       OREQ 'MX'                                                        MD051891
      C           ETP       OREQ 'MY'                                                        MD051891
+     C           ETP       OREQ 'PX'                                                        MD056260
+     C           ETP       OREQ 'PY'                                                        MD056260
      C           EAMT      IFEQ OTHA                                                        MD051891
      C                     Z-ADD0         OTHA                                              MD051891
      C                     ENDIF                                                            MD051891
@@ -3674,6 +3708,8 @@ STSTAMP TAX                                                                     
 P1PDCL MATURITY                                                                               CLE134
 P2PDCL MATURITY INT                                                                           CLE134
 P6PDCL MATURITY ???                                                                           CLE134
+PXPDCL MATURITY XCCY                                                                        MD056260
+PYPDCL MAT INT. XCCY                                                                        MD056260
      X/COPY WNCPYSRC,LEH00960
 **   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
 0366073110961461

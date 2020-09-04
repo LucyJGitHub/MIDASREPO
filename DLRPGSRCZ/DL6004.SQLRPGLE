@@ -17,8 +17,9 @@
       *                                                               *
       *  Calls    : GL000050 APR Calculation program                  *
       *                                                               *
-      *  Last Amend No. MD055146           Date 04Feb20               *
-      *  Prev Amend No. MD054544           Date 04Oct19               *
+      *  Last Amend No. MD055733           Date 03Jul20               *
+      *  Prev Amend No. MD055146           Date 04Feb20               *
+      *                 MD054544           Date 04Oct19               *
       *                 MD054479           Date 27Sep19               *
       *                 MD054107           Date 11Sep19               *
       *                 MD054017           Date 04Sep19               *
@@ -26,6 +27,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
+      *             components.                                       *
+      *           - Redeliver of MD050139.                            *
       *  MD055146 - Failed MXC004802 seq. 00001 and others            *
       *             Increase Branches to 900.                         *
       *  MD054544 - Cashflow is incorrect for CALL LOAN after         *

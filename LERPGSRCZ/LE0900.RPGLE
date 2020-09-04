@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0009 F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE154             Date 07Aug12               *
+      *  Last Amend No. MD055687           Date 22Jul20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE154             Date 07Aug12               *
       *                 MD024133           Date 30Apr14               *
       *                 MD023534           Date 30Apr14               *
       *                 MD023031           Date 22Apr14               *
@@ -73,6 +74,12 @@
 0009 F*                                                               *
 0009 F*---------------------------------------------------------------*
 0009 F*                                                               *
+      *  MD055687 - Live COB - LEC10A failed                          *
+      *           - File control error occurs in LE0860 as amount is  *
+      *             being truncated when calculating file control.    *
+      *             Apply similar fix of MD-22680, change field length*
+      *             of WBOTH from 13,0 to 15,0. Also, initialize      *
+      *             ZZAMT field to 0 on every execution of MHASH subr *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
       *  MD024133 - LEC06A failed due to FOOB in BoM CoB              *
@@ -1350,6 +1357,7 @@
 0500 C     MHASH         BEGSR                                                  *** MHASH ***
 0501 C*
 0502 C*  BALANCE BEGINNING IN MONTH
+     C                   EVAL      ZZAMT = 0                                                MD055687
      C   05
 0503 CAN 42
      COR 04
@@ -1368,7 +1376,8 @@
      C   07
 0514 CAN 43
      COR 06
-0515 CAN 43WBEG          ADD       PRAM          WBOTH            13 0
+0515 C**AN*43WBEG          ADD       PRAM          WBOTH            13 0                    MD055687
+     CAN 43WBEG          ADD       PRAM          WBOTH            15 0                      MD055687
      C   07
 0516 CAN 43
      COR 06

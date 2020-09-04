@@ -10,8 +10,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT050             Date 03Jun13               *
+      *  Last Amend No. AR1036310          Date 05Dec12               *
+      *  Prev Amend No. AR918975           Date 21Mar12               *
+      *                 AR928996A          Date 03May12               *
+      *                 AR928996           Date 27Mar12               *
+      *                 MD055733           Date 03Jul20               *
+      *                 CSW220             Date 09Mar20               *
+      *                 MD055612           DATE 09Mar20               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CFT050             Date 03Jun13               *
       *                 AR895223           Date 19Nov12               *
       *                 CLE134             Date 01Aug12               *
       *                 AR787620           Date 10Jun11               *
@@ -177,6 +184,22 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1036310 - It is not possible to enter Instructed currency  *
+      *              for a Regular Payment. Comment out the validation*
+      *              that prohibits its entry for RP transactions.    *
+      *              (Child: AR1036311)                               *
+      *  AR918975 - Allow lower case SWIFT characters for STP.        *
+      *             (Child: AR919050)                                 *
+      *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
+      *             data structure field to have the correct length.  *
+      *             (Child: AR928997A)                                *
+      *  AR928996 - Data lost due to rate field :36: being truncated. *
+      *             (Child: AR928997)                                 *
+      *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
+      *             components.                                       *
+      *           - Redeliver of MD050139.                            *
+      *  CSW220 - SWIFT Changes 2020 (Recompile)                      *
+      *  MD055612 - Compilation Core error                            *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT050 - SWIFTRef Directories upload                         *
       *  AR895223 - Exchange rates should allow 5 digits. Fix is to   *
@@ -863,7 +886,9 @@
      I*
      I*     DATA AREA FOR ORDINARY PAYMENT REF NUMBERING
      I*
-     IOTPAYD    E DSOTPAYDA
+     I***OTPAYD    E DSOTPAYDA                                                              MD055612
+     IOTPAYD      DS                              4                                         MD055612
+     I                                        1   40WOTSQ                                   MD055612
      I*
      I*     DATA AREA FOR REGULAR PAYMENT REF NUMBERING
      I*
@@ -6903,8 +6928,10 @@
       *
      C/COPY WNCPYSRC,FTH00094
      C           *LOCK     IN   OTPAYD
-     C                     Z-ADDOSQNM     PRNUM
-     C                     ADD  1         OSQNM
+     C**********           Z-ADDOSQNM     PRNUM                                             MD055612
+     C**********           ADD  1         OSQNM                                             MD055612
+     C                     MOVELWOTSQ     PRNUM                                             MD055612
+     C                     ADD  1         WOTSQ                                             MD055612
      C                     OUT  OTPAYD
      C/COPY WNCPYSRC,FTH00095
      C                     END                             E002
@@ -13303,15 +13330,15 @@
       *                                                                   CEU006
      C           SPDCY     IFNE *BLANKS                                   CEU006
       *                                                                   CEU006
-     C           SPYTP     IFEQ 'RP'                                      CEU006
-      * Send error to screen                                              CEU006
-     C                     MOVE *ON       *IN89                           CEU006
-     C                     MOVE *ON       *IN10                           CEU006
+     C********** SPYTP     IFEQ 'RP'                                                CEU006 AR1036310
+      **Send*error*to*screen*******************************************             CEU006 AR1036310
+     C**********           MOVE *ON       *IN89                                     CEU006 AR1036310
+     C**********           MOVE *ON       *IN10                                     CEU006 AR1036310
      C***********          MOVEL'FTM2563' FTMSID                   CEU006 CFT014
-     C                     MOVEL'FTM3247' FTMSID                          CFT014
-     C                     Z-ADD1         PHW     50                      140640
-     C                     EXSR FTSNMS                                    CEU006
-     C                     ELSE                                           CEU006
+     C**********           MOVEL'FTM3247' FTMSID                                    CFT014 AR1036310
+     C**********           Z-ADD1         PHW     50                                140640 AR1036310
+     C**********           EXSR FTSNMS                                              CEU006 AR1036310
+     C**********           ELSE                                                     CEU006 AR1036310
       *                                                                   CEU006
       ** access currency file                                             CEU006
       *                                                                   CEU006
@@ -13370,7 +13397,7 @@
      C                     ENDIF                                          CFT014
      C                     ENDIF                                          CFT014
      C                     ENDIF                                          CFT014
-     C                     ENDIF                                          CEU006
+     C**********           ENDIF                                                    CEU006 AR1036310
      C                     ENDIF                                          CEU006
       *                                                                   CEU006
      C                     ENDSR                                          CEU006

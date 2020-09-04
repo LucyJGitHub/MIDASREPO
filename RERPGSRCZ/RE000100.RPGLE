@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD032170           Date 19Jul19               *
-      *  Prev Amend No. MD022132C          Date 09Mar18               *
+      *  Last Amend No. MD056297           Date 16Jul20               *
+      *  Prev Amend No. MD032170           Date 19Jul19               *
+      *                 MD022132C          Date 09Mar18               *
       *                 MD022132           Date 09Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD034451C          Date 02Mar16               *
@@ -52,6 +53,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056297 - Ensure GLACNTQD will be updated with SO projection*
       *  MD032170 - Ensure that GLACNTQD will be updated with the     *
       *             correct balance.                                  *
       *           - Applied for MD053827.                             *
@@ -817,6 +819,7 @@
      C                             AND  XRFI <> 'CL?'                                      AR1022006
      C                             AND  XRFI <> 'FEE'                                      AR1022006
      C                             AND  XRFI <> 'FE?')                                     AR1022006
+     C                             AND TRYP <> 'SO'                                         MD056297
      C     KRSCL6        READE     RSACMTL8                                                   CLE134
      C                   ITER                                                                 CLE134
      C                   ENDIF                                                                CLE134

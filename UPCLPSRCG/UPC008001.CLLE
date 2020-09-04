@@ -13,8 +13,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
-/*       Last Amend No. CUP040             Date 06Mar13              */
-/*       Prev Amend No. CUP021             Date 07Feb11              */
+/*       Last Amend No. MD056103           Date 17Jun20              */
+/*       Prev Amend No. CUP040             Date 06Mar13              */
+/*                      CUP021             Date 07Feb11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -23,6 +24,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD056103 - BLDA fails when from file is empty.              */
+/*                  Parameter &OLDLIB gets populated with QTEMP.     */
 /*       CUP040 - New deliverable data methodology.                  */
 /*       CUP021 - Rewrite of Action File processing.                 */
 /*       CUP022 - Copy from UPC8001 and amend for files in global    */
@@ -31,11 +34,11 @@
 /*********************************************************************/
 /**********  PGM        PARM(&MODE &SBSID &TOSBSID)                                    */ /*CUP021*/
              PGM        PARM(&MODE &OLDLIB &NEWLIB)                                       /*CUP021*/
- 
+
              DCL        VAR(&MODE) TYPE(*CHAR) LEN(10)
 /**********  DCL        VAR(&SBSID) TYPE(*CHAR) LEN(2)                                 */ /*CUP021*/
 /**********  DCL        VAR(&TOSBSID) TYPE(*CHAR) LEN(2)                               */ /*CUP021*/
- 
+
 /* Parameters to call UPC000799 */
 /**********  DCL        VAR(&BUILD)    TYPE(*CHAR) LEN(4) VALUE('*NO')                 */ /*CUP021*/
 /**********  DCL        VAR(&REVIEW)   TYPE(*CHAR) LEN(4) VALUE('*NO')                 */ /*CUP021*/
@@ -54,56 +57,63 @@
 /* Parameters passed to UP008010 */
              DCL        VAR(&GENPGM)   TYPE(*CHAR) LEN(10) VALUE(UPC008001)
              DCL        VAR(&ERRORMSG) TYPE(*CHAR) LEN(100)
- 
+             DCL        VAR(&OLDLIBS)   TYPE(*CHAR) LEN(10)                             /*MD056103*/
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2004')
- 
+
 /**********  DCLF       FILE(UPGPACTFQT)                                               */ /*CUP021*/
              DCLF       FILE(UPACTFQT)                                                    /*CUP021*/
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
 /**********  CHGVAR     VAR(&OLDLIB) VALUE(&SBSID *TCAT 'GTALIB')                      */ /*CUP021*/
 /**********  CHGVAR     VAR(&NEWLIB) VALUE(&TOSBSID *TCAT 'GTALIB')                    */ /*CUP021*/
- 
+
 /**Create*temporary*file*to*hold*error*messages.**/ /*                                 */ /*CUP021*/
 /**********  DLTF       FILE(QTEMP/UPERRMQT)                                           */ /*CUP021*/
 /**********  MONMSG     MSGID(CPF2105)                                                 */ /*CUP021*/
 /**********  CRTPF      FILE(QTEMP/UPERRMQT) RCDLEN(100) +                             */ /*CUP021*/
 /**********               TEXT('Temporary file for holding error +                     */ /*CUP021*/
 /**********               messages')                                                   */ /*CUP021*/
- 
+
+/* Save &OLDLIB */                                                                      /*MD056103*/
+                   CHGVAR     VAR(&OLDLIBS) VALUE(&OLDLIB)                              /*MD056103*/
+                                                                                        /*MD056103*/
 READNEXT:
+/* Restore &OLDLIB */                                                                   /*MD056103*/
+                   CHGVAR     VAR(&OLDLIB) VALUE(&OLDLIBS)                              /*MD056103*/
+                                                                                        /*MD056103*/
              RCVF
              MONMSG     MSGID(CPF0864) EXEC(DO)
                 GOTO       CMDLBL(END)
              ENDDO
- 
+
 /* Ignore record if there is no template. */
 /**********  IF         COND(&AAUPPF *EQ '*NONE') THEN(DO)                             */ /*CUP021*/
              IF         COND(&AAAFLF *EQ '*NONE') THEN(DO)                                /*CUP021*/
                 GOTO       CMDLBL(READNEXT)
              ENDDO
- 
+
 /* Call program to find migration type. */                                                /*CUP040*/
              CALL       PGM(UPC000800) PARM('*MIG' &OLDLIB &AABONF +
                           &AAORIF &FMLIB &MIGTYPE)                                        /*CUP040*/
- 
+
 /* If the migration type indicates that the file is new for this release then */          /*CUP040*/
 /*  ignore.                                                                   */          /*CUP040*/
              IF         COND(%SST(&MIGTYPE 1 4) *EQ '*NEW') THEN(DO)                      /*CUP040*/
                 GOTO       CMDLBL(READNEXT)                                               /*CUP040*/
              ENDDO                                                                        /*CUP040*/
- 
+
 /**Perform*validity*check*of*the*file*&AABONF.**/ /*                                   */ /*CUP021*/
 /**********  CALL       PGM(UPC008009) PARM(&AABONF &MODE +                            */ /*CUP021*/
 /**********                &OLDLIB &NEWLIB &AAFRMF &AAAFLF +                           */ /*CUP021*/
 /**********                &AAPROG &AAUPLF &ERROR)                                     */ /*CUP021*/
- 
+
 /**If*an*error*then*end*program.**/ /*                                                 */ /*CUP021*/
 /**********  IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ABNOR)                       */ /*CUP021*/
- 
+
 /**If*&ERROR*=*'Y',**/ /*                                                              */ /*CUP021*/
 /**********  IF         COND(&ERROR *EQ 'Y') THEN(DO)                                  */ /*CUP021*/
 /*****send*out*error*line**/ /*                                                        */ /*CUP021*/
@@ -116,7 +126,7 @@ READNEXT:
 /*****go*back*to*read*next*record*from*UPACTFQF.**/ /*                                 */ /*CUP021*/
 /**********     GOTO       CMDLBL(READNEXT)                                            */ /*CUP021*/
 /**********  ENDDO                                                                     */ /*CUP021*/
- 
+
              IF         COND(&MODE *EQ '*BUILD') THEN(DO)
 /**********     CHGVAR     VAR(&BUILD) VALUE('*YES')                                   */ /*CUP021*/
                 IF         COND(&MIGTYPE *NE '*OTOO') THEN(DO)                            /*CUP040*/
@@ -132,6 +142,7 @@ READNEXT:
                       CPYF       FROMFILE(&FMLIB/&AAORIF) +
                                    TOFILE(QTEMP/&AABONF) MBROPT(*REPLACE) +
                                    FMTOPT(*MAP *DROP)                                     /*CUP040*/
+                      MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                         /*MD056103*/
 /* Call program to update modes. */                                                       /*CUP040*/
                       CALL       PGM(UP000010) PARM(&AABONF 'QTEMP' &NEWLIB +
                                    &MODEFIELD)                                            /*CUP040*/
@@ -144,6 +155,7 @@ READNEXT:
                                    TRG(*NO)                                               /*CUP040*/
                       CPYF       FROMFILE(&FMLIB/&AABONF) +
                                    TOFILE(QTEMP/&AABONF) MBROPT(*REPLACE)                 /*CUP040*/
+                      MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                         /*MD056103*/
                       CHGVAR     VAR(&FMLIB) VALUE(%SST(&FMLIB 1 2) *TCAT +
                                    'DMLIB')                                               /*CUP040*/
                       CPYF       FROMFILE(&FMLIB/&BESPFILE) +
@@ -161,16 +173,17 @@ READNEXT:
                       CPYF       FROMFILE(QTEMP/&AABONF) TOFILE(&BESPFILE) +
                                    MBROPT(*REPLACE) INCCHAR(&MODEFIELD 1 *EQ +
                                    'B')                                                   /*CUP040*/
+                      MONMSG     MSGID(CPF2817) CMPDTA(CPF2869)                         /*MD056103*/
                    ENDDO                                                                  /*CUP040*/
                    CALL       PGM(UP009016) PARM(&AABONF)                                 /*CUP040*/
                 ENDDO                                                                     /*CUP040*/
              ENDDO
- 
+
 /**********  IF         COND(&MODE *EQ '*BLDRVW') THEN(DO)                             */ /*CUP021*/
 /**********     CHGVAR     VAR(&BUILD) VALUE('*YES')                                   */ /*CUP021*/
 /**********     CHGVAR     VAR(&REVIEW) VALUE('*YES')                                  */ /*CUP021*/
 /**********  ENDDO                                                                     */ /*CUP021*/
- 
+
              IF         COND(&MODE *EQ '*REVIEW') THEN(DO)
 /**********     CHGVAR     VAR(&REVIEW) VALUE('*YES')                                  */ /*CUP021*/
                 ACTIONFILE MODE(*RVW) FILE(&AABONF) TKOOPT(*PRETKO)                       /*CUP021*/
@@ -178,13 +191,13 @@ READNEXT:
                    CHGJOB     SWS(XXXXXX11)                                               /*CUP021*/
                 ENDDO                                                                     /*CUP021*/
              ENDDO
- 
+
 /**Call*Action*File*command*program**/ /*                                              */ /*CUP021*/
 /**********  CALL       PGM(UPC000799) PARM(&AABONF &BUILD &REVIEW +                   */ /*CUP021*/
 /**********               &CONFLICT &PROCESS &RESET &OLDLIB &NEWLIB +                  */ /*CUP021*/
 /**********               &REVTYP)                                                     */ /*CUP021*/
 /**********  MONMSG     MSGID(CPF0000)                                                 */ /*CUP021*/
- 
+
 /* If an error, send error line and read next rec.     */
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                 CHGJOB     SWS(XXXXXX00)
@@ -196,13 +209,13 @@ READNEXT:
                    GOTO       CMDLBL(ABNOR)
                 ENDDO
              ENDDO
- 
+
              GOTO       CMDLBL(READNEXT)
- 
+
 ABNOR:
              CHGJOB     SWS(XXXXXX11)
              GOTO       CMDLBL(ERROREND)
- 
+
 END:
 /* Call program to produce report. */
              IF         COND(&ERROR *EQ 'Y') THEN(DO)                                     /*CUP021*/
@@ -213,6 +226,6 @@ END:
 /**********  CHGSPLFA   FILE(UP008010P1) SPLNBR(*LAST) USRDTA(&GENPGM)                 */ /*CUP021*/
                 CHGSPLFA   FILE(UP008010P1) SPLNBR(*LAST) USRDTA(&MODE)                   /*CUP021*/
              ENDDO                                                                        /*CUP021*/
- 
+
 ERROREND:
              ENDPGM

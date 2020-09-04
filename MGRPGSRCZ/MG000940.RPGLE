@@ -17,8 +17,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CMG006             Date 15Oct19               *
-      *  Prev Amend No. MD052633           Date 08Oct19               *
+      *  Last Amend No. AR898442           Date 24Feb12               *
+      *  Prev Amend No. MD055842           Date 02Jun20               *
+      *                 CMG008             Date 20Feb20               *
+      *                 CMG006             Date 15Oct19               *
+      *                 MD052633           Date 08Oct19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD042371           Date 11Nov16               *
       *                 MD042041           Date 21Oct16               *
@@ -79,6 +82,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR898442 - MT940 nacked if narrative starts with a /         *
+      *             (Child: AR898443)                                 *
+      *  MD055842 - Second tag 86 not translated to To Characters.    *
+      *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  CMG006 - MT940, 941, 942 & 950 Field 25 Account              *
       *           Identification.                                     *
       *  MD052633 - MT940's closing balance figures is 1 digit short -*
@@ -270,6 +277,9 @@
      F                                     COMMIT
      FMGOMSGPD  O    E             DISK    INFSR(*PSSR)
      F                                     COMMIT
+     FSDCONVPD  IF   E           K DISK                   INFSR(*PSSR) USROPN               MD055842
+      ** SWIFT Character Conversion file                                                    MD055842
+                                                                                            MD055842
      FMG000940AUO    E             PRINTER INFDS(SPOOLU)
      F                                     INFSR(*PSSR)
       /COPY OFCPYSRCZ,CGL146_088                                                             CGL146A
@@ -584,6 +594,28 @@
      D ChkLen86A       S              1A                                                    MD042371
      D WExtNar         S            100A                                                    MD042371
 
+     D ValSwiftChr     C                   CONST('ABCDEFGHIJKLMNOPQRSTUVWXYZ+               MD055842
+     D                                            abcdefghijklmnopqrstuvwxyz+               MD055842
+     D                                            0123456789+()?:-/,''. ')                  MD055842
+      ** Valid Swift Characters                                                             MD055842
+                                                                                            MD055842
+     D WBlank          C                   CONST(' ')                                       MD055842
+      ** Replacement Blank character                                                        MD055842
+                                                                                            MD055842
+     D WConvFld        S             65A                                                    MD055842
+      ** String to be converted                                                             MD055842
+                                                                                            MD055842
+     D To_Char         S            100A                                                    MD055842
+      ** TO character string                                                                MD055842
+                                                                                            MD055842
+     D Fr_Char         S            100A                                                    MD055842
+      ** FROM character string                                                              MD055842
+                                                                                            MD055842
+     D WChrPos         S              3S 0                                                  MD055842
+      ** Work field for %CHECK and %REPLACE operation                                       MD055842
+                                                                                            MD055842
+     D WChrLen         S              3S 0                                                  MD055842
+      ** Work field for %SUBST operation                                                    MD055842
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1322,6 +1354,13 @@
      C                   Movel     X_MGSFD8      Subfld8
 
       *    Subfld 9 = Supplementary Details
+     C                   Movel     X_MGSFD9      Wrk1              1                        AR898442
+     C     Wrk1          ifeq      '/'                                                      AR898442
+     C     Wrk1          oreq      '-'                                                      AR898442
+     C                   Move      X_MGSFD9      Wrk33            33                        AR898442
+     C                   Move      *Blanks       X_MGSFD9                                   AR898442
+     C                   Movel     Wrk33         X_MGSFD9                                   AR898442
+     C                   Endif                                                              AR898442
      C                   Movel     X_MGSFD9      Subfld9
      C/COPY WNCPYSRC,MGH00024
       *                                                                                       CER030
@@ -1895,6 +1934,15 @@
      C     Q             Occur     MULT
      C                   Eval      MTAG = ':86:'
      C                   Movel     MGMIO1        MFLD
+      *                                                                                     MD055842
+      ** Convert non-SWIFT chars in Field 86 output fields                                  MD055842
+     C                   IF        CMG008 = 'Y' AND EDCONV = 'Y'                            MD055842
+     C                   Eval      WConvFld = *Blanks                                       MD055842
+     C                   Eval      WConvFld = MFLD                                          MD055842
+     C                   Exsr      ConvChar                                                 MD055842
+     C                   Eval      MFLD = WConvFld                                          MD055842
+     C                   ENDIF                                                              MD055842
+      *                                                                                     MD055842
      C                   Eval      CTRC    = WCrLf
      C                   If        %subst(MGMIO1 : 51 : 15 ) <> *blank
      C                   Movel     *blank        CTRC
@@ -1909,6 +1957,15 @@
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Movel     MGMIO2        MFLD
+      *                                                                                     MD055842
+      ** Convert non-SWIFT chars in Field 86 output fields                                  MD055842
+     C                   IF        CMG008 = 'Y' AND EDCONV = 'Y'                            MD055842
+     C                   Eval      WConvFld = *Blanks                                       MD055842
+     C                   Eval      WConvFld = MFLD                                          MD055842
+     C                   Exsr      ConvChar                                                 MD055842
+     C                   Eval      MFLD = WConvFld                                          MD055842
+     C                   ENDIF                                                              MD055842
+      *                                                                                     MD055842
      C                   Eval      CTRC    = WCrLf
      C                   If        %subst(MGMIO2 : 51 : 15 ) <> *blank
      C                   Movel     *blank        CTRC
@@ -1923,6 +1980,15 @@
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Movel     MGMIO3        MFLD
+      *                                                                                     MD055842
+      ** Convert non-SWIFT chars in Field 86 output fields                                  MD055842
+     C                   IF        CMG008 = 'Y' AND EDCONV = 'Y'                            MD055842
+     C                   Eval      WConvFld = *Blanks                                       MD055842
+     C                   Eval      WConvFld = MFLD                                          MD055842
+     C                   Exsr      ConvChar                                                 MD055842
+     C                   Eval      MFLD = WConvFld                                          MD055842
+     C                   ENDIF                                                              MD055842
+      *                                                                                     MD055842
      C                   Eval      CTRC    = WCrLf
      C                   If        %subst(MGMIO3 : 51 : 15 ) <> *blank
      C                   Movel     *blank        CTRC
@@ -1937,6 +2003,15 @@
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Movel     MGMIO4        MFLD
+      *                                                                                     MD055842
+      ** Convert non-SWIFT chars in Field 86 output fields                                  MD055842
+     C                   IF        CMG008 = 'Y' AND EDCONV = 'Y'                            MD055842
+     C                   Eval      WConvFld = *Blanks                                       MD055842
+     C                   Eval      WConvFld = MFLD                                          MD055842
+     C                   Exsr      ConvChar                                                 MD055842
+     C                   Eval      MFLD = WConvFld                                          MD055842
+     C                   ENDIF                                                              MD055842
+      *                                                                                     MD055842
      C                   Eval      CTRC    = WCrLf
      C                   If        %subst(MGMIO4 : 51 : 15 ) <> *blank
      C                   Movel     *blank        CTRC
@@ -1951,6 +2026,15 @@
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Movel     MGMIO5        MFLD
+      *                                                                                     MD055842
+      ** Convert non-SWIFT chars in Field 86 output fields                                  MD055842
+     C                   IF        CMG008 = 'Y' AND EDCONV = 'Y'                            MD055842
+     C                   Eval      WConvFld = *Blanks                                       MD055842
+     C                   Eval      WConvFld = MFLD                                          MD055842
+     C                   Exsr      ConvChar                                                 MD055842
+     C                   Eval      MFLD = WConvFld                                          MD055842
+     C                   ENDIF                                                              MD055842
+      *                                                                                     MD055842
      C                   Eval      CTRC    = WCrLf
      C                   If        %subst(MGMIO5 : 51 : 15 ) <> *blank
      C                   Movel     *blank        CTRC
@@ -1965,6 +2049,15 @@
      C                   Eval      Q = Q + 1
      C     Q             Occur     MULT
      C                   Movel     MGMIO6        MFLD
+      *                                                                                     MD055842
+      ** Convert non-SWIFT chars in Field 86 output fields                                  MD055842
+     C                   IF        CMG008 = 'Y' AND EDCONV = 'Y'                            MD055842
+     C                   Eval      WConvFld = *Blanks                                       MD055842
+     C                   Eval      WConvFld = MFLD                                          MD055842
+     C                   Exsr      ConvChar                                                 MD055842
+     C                   Eval      MFLD = WConvFld                                          MD055842
+     C                   ENDIF                                                              MD055842
+      *                                                                                     MD055842
      C                   Eval      CTRC    = WCrLf
      C                   If        %subst(MGMIO6 : 51 : 15 ) <> *blank
      C                   Eval      CTRC    = *blanks
@@ -3103,6 +3196,70 @@
       *                                                                                       CER030
       *****************************************************************                       CER030
       /EJECT                                                                                  CER030
+      *========================================================================*            MD055842
+      * BldConvFil : Build Conversion Table for removing non-SWIFT characters  *            MD055842
+      *------------------------------------------------------------------------*            MD055842
+                                                                                            MD055842
+     C     BldConvFil    BEGSR                                                              MD055842
+      *    ----------    -----                                                              MD055842
+      *                                                                                     MD055842
+      ** Open Character conversion file                                                     MD055842
+     C                   Open      SDCONVPD                                                 MD055842
+      *                                                                                     MD055842
+      ** Initialise work fields                                                             MD055842
+     C                   Eval      Fr_Char = *Blanks                                        MD055842
+     C                   Eval      To_Char = *Blanks                                        MD055842
+     C                   Eval      WChrLen = 0                                              MD055842
+                                                                                            MD055842
+      ** Read file and collect characters in FROM and TO alpha fields                       MD055842
+     C     *Loval        Setll     SDCONVPD                                                 MD055842
+     C                   Read      SDCONVPD                                                 MD055842
+                                                                                            MD055842
+     C                   Dow       NOT %EOF                                                 MD055842
+     C                   Eval      Fr_Char = %SUBST(Fr_Char:1:WChrLen)+FRCHAR               MD055842
+     C                   Eval      To_Char = %SUBST(To_Char:1:WChrLen)+TOCHAR               MD055842
+     C                   Eval      WChrLen = WChrLen + 1                                    MD055842
+                                                                                            MD055842
+     C                   Read      SDCONVPD                                                 MD055842
+     C                   Enddo                                                              MD055842
+      *                                                                                     MD055842
+      ** Close file                                                                         MD055842
+     C                   Close     SDCONVPD                                                 MD055842
+      *                  -----                                                              MD055842
+     C                   ENDSR                                                              MD055842
+      *========================================================================*            MD055842
+      /EJECT                                                                                MD055842
+      *========================================================================*            MD055842
+      * ConvChar : Convert Character and remove remove invalid non-SWIFT chars *            MD055842
+      *------------------------------------------------------------------------*            MD055842
+                                                                                            MD055842
+     C     ConvChar      BEGSR                                                              MD055842
+      *    --------      -----                                                              MD055842
+      *                                                                                     MD055842
+      ** Only process field if not blank                                                    MD055842
+     C                   If        WConvFld <> *BLANKS                                      MD055842
+                                                                                            MD055842
+      ** Convert all non-SWIFT characters based on conversion table                         MD055842
+     C                   Eval      WConvFld = %XLATE(%TRIM(Fr_Char)                         MD055842
+     C                                        :%TRIM(To_Char):WConvFld)                     MD055842
+                                                                                            MD055842
+      ** Convert all remaining non-SWIFT chars (not defined in the table)                   MD055842
+      ** into blanks. Use pre-defined 'Valid Swift Chars' field for comparison.             MD055842
+     C                   Eval      WChrPos = 0                                              MD055842
+     C                   Eval      WChrPos = %CHECK(ValSwiftChr:WConvFld)                   MD055842
+                                                                                            MD055842
+      ** Repeat process until all invalid chars are found and converted to blank            MD055842
+     C                   Dow       WChrPos > 0                                              MD055842
+     C                   Eval      WConvFld=%REPLACE(WBlank:WConvFld:WChrPos:1)             MD055842
+     C                   Eval      WChrPos = 0                                              MD055842
+     C                   Eval      WChrPos = %CHECK(ValSwiftChr:WConvFld)                   MD055842
+     C                   Enddo                                                              MD055842
+                                                                                            MD055842
+     C                   Endif                                                              MD055842
+      *                  -----                                                              MD055842
+     C                   ENDSR                                                              MD055842
+      *========================================================================*            MD055842
+      /EJECT                                                                                MD055842
      C/COPY WNCPYSRC,MGH00030
      C/COPY OFCPYSRCZ,CGL146_093                                                             CGL146A
       *****************************************************************
@@ -3292,6 +3449,26 @@
       *                                                                                       CER030
      C                   ENDIF                                                                CER030
       *                                                                                       CER030
+      ** Check if feature CMG008 is installed                                               MD055842
+                                                                                            MD055842
+     C                   EVAL      CMG008 = 'N'                                             MD055842
+                                                                                            MD055842
+     C                   CALL      'AOSARDR0'                                               MD055842
+     C                   PARM      *BLANKS       PRtcd                          Return Code MD055842
+     C                   PARM      '*VERIFY'     POptn                          Option      MD055842
+     C                   PARM      'CMG008 '     PSard                          Feature Ref MD055842
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD055842
+                                                                                            MD055842
+     C                   IF        PRtcd = *BLANKS                                          MD055842
+     C                   MoveL     'Y'           CMG008            1                        MD055842
+     C                   ENDIF                                                              MD055842
+                                                                                            MD055842
+      * If CMG008 is ON, build the character conversion table                               MD055842
+                                                                                            MD055842
+     C                   IF        CMG008 = 'Y'                                             MD055842
+     C                   EXSR      BldConvFil                                               MD055842
+     C                   ENDIF                                                              MD055842
+                                                                                            MD055842
      C/COPY WNCPYSRC,MGH00091
      C/COPY OFCPYSRCZ,CGL146_058                                                              CGL146
       ** Get the Maximum number of characters for field 86                                  BUG25529

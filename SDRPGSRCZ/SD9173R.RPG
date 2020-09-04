@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD049513           Date 12Mar18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD039031           Date 22May20               *
+      *  Prev Amend No. MD049513           Date 12Mar18               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG26717           Date 11Nov09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -34,6 +35,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039031 - A5TOIN and A5ACTY fields used by CGL010 contain   *
+      *             different values due to incorrect DS used.        *
+      *             AOACODR0 should use SDACODPD format for parameter.*
+      *             Also, restrict entry of nostro and retail account *
+      *             codes in Transitory account codes.                *
+      *             Applied fix for MD055359.                         *
       *  MD049513 - CGL010: ICD set up inconsistency                  *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG26717 - GLC30 00001 - Database Error in GL0600            *
@@ -55,7 +62,7 @@
      F            SD9173F0                          KRENAMESCREEN
      FGLVALPL1IF  E           K        DISK
      FSDACODL1IF  E           K        DISK
-     FACACOD  IF  E           K        DISK                                                 BUG26717
+     F**********ACACOD  IF  E K        DISK                                        BUG26717 MD039031
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -135,6 +142,7 @@
       *  SRACAM  -  Validate Account Codes                            *
       *  SRACMD  -  Validate Account Codes                            *
       *  SRACPD  -  Validate Account Codes                            *
+      *  SRACRN  -  Validate Account Codes                            *                     MD039031
       *  ZASNMS  -  Send message to program's message queue           *
       *  *PSSR   -  Error handling subroutine                         *
       *                                                               *
@@ -576,6 +584,14 @@
       ** Validate if 'Account Code' exists in SDACODPD
       *
      C                     EXSR SRACPD
+      *                                                                                     MD039031
+      ** Validate if 'Account Code' is non-title                                            MD039031
+      *                                                                                     MD039031
+     C                     EXSR SRACTO                                                      MD039031
+      *                                                                                     MD039031
+      ** Validate Account Type of 'Account Code'                                            MD039031
+      *                                                                                     MD039031
+     C                     EXSR SRACRN                                                      MD039031
      C/COPY WNCPYSRC,SD9173RC03
       *
       ** Update Extension File if no errors encountered
@@ -925,41 +941,41 @@
      C           W#CAG     OREQ 0
      C                     MOVE '1'       *IN61
      C                     MOVE '1'       *IN62
-     C                     ELSE                                                             BUG26717
-      *                                                                                     BUG26717
-      ** General Ledger account only                                                        BUG26717
-      *                                                                                     BUG26717
-     C           W#DAG     CHAINACACOD               61                                     BUG26717
-     C           *IN61     IFEQ '1'                                                         BUG26717
-     C                     MOVE '0'       *IN30                                             BUG26717
-     C                     MOVE '1'       *IN70                                             BUG26717
-     C                     MOVEL'USR0283' ZAMSID                                            BUG26717
-     C                     EXSR ZASNMS                                                      BUG26717
-     C                     ELSE                                                             BUG26717
-     C           ATYP      IFNE 'G'                                                         BUG26717
-     C                     MOVE '1'       *IN61                                             BUG26717
-     C                     MOVE '0'       *IN30                                             BUG26717
-     C                     MOVE '1'       *IN70                                             BUG26717
-     C                     MOVEL'USR2769' ZAMSID                                            BUG26717
-     C                     EXSR ZASNMS                                                      BUG26717
-     C                     ENDIF                                                            BUG26717
-     C                     ENDIF                                                            BUG26717
-      *                                                                                     BUG26717
-     C           W#CAG     CHAINACACOD               62                                     BUG26717
-     C           *IN62     IFEQ '1'                                                         BUG26717
-     C                     MOVE '0'       *IN30                                             BUG26717
-     C                     MOVE '1'       *IN70                                             BUG26717
-     C                     MOVEL'USR0283' ZAMSID                                            BUG26717
-     C                     EXSR ZASNMS                                                      BUG26717
-     C                     ELSE                                                             BUG26717
-     C           ATYP      IFNE 'G'                                                         BUG26717
-     C                     MOVE '1'       *IN62                                             BUG26717
-     C                     MOVE '0'       *IN30                                             BUG26717
-     C                     MOVE '1'       *IN70                                             BUG26717
-     C                     MOVEL'USR2769' ZAMSID                                            BUG26717
-     C                     EXSR ZASNMS                                                      BUG26717
-     C                     ENDIF                                                            BUG26717
-     C                     ENDIF                                                            BUG26717
+     C**********           ELSE                                                    BUG26717 MD039031
+      *                                                                            BUG26717 MD039031
+      ** General Ledger account only                                               BUG26717 MD039031
+      *                                                                            BUG26717 MD039031
+     C********** W#DAG     CHAINACACOD               61                            BUG26717 MD039031
+     C********** *IN61     IFEQ '1'                                                BUG26717 MD039031
+     C**********           MOVE '0'       *IN30                                    BUG26717 MD039031
+     C**********           MOVE '1'       *IN70                                    BUG26717 MD039031
+     C**********           MOVEL'USR0283' ZAMSID                                   BUG26717 MD039031
+     C**********           EXSR ZASNMS                                             BUG26717 MD039031
+     C**********           ELSE                                                    BUG26717 MD039031
+     C********** ATYP      IFNE 'G'                                                BUG26717 MD039031
+     C**********           MOVE '1'       *IN61                                    BUG26717 MD039031
+     C**********           MOVE '0'       *IN30                                    BUG26717 MD039031
+     C**********           MOVE '1'       *IN70                                    BUG26717 MD039031
+     C**********           MOVEL'USR2769' ZAMSID                                   BUG26717 MD039031
+     C**********           EXSR ZASNMS                                             BUG26717 MD039031
+     C**********           ENDIF                                                   BUG26717 MD039031
+     C**********           ENDIF                                                   BUG26717 MD039031
+      **********                                                                   BUG26717 MD039031
+     C********** W#CAG     CHAINACACOD               62                            BUG26717 MD039031
+     C********** *IN62     IFEQ '1'                                                BUG26717 MD039031
+     C**********           MOVE '0'       *IN30                                    BUG26717 MD039031
+     C**********           MOVE '1'       *IN70                                    BUG26717 MD039031
+     C**********           MOVEL'USR0283' ZAMSID                                   BUG26717 MD039031
+     C**********           EXSR ZASNMS                                             BUG26717 MD039031
+     C**********           ELSE                                                    BUG26717 MD039031
+     C********** ATYP      IFNE 'G'                                                BUG26717 MD039031
+     C**********           MOVE '1'       *IN62                                    BUG26717 MD039031
+     C**********           MOVE '0'       *IN30                                    BUG26717 MD039031
+     C**********           MOVE '1'       *IN70                                    BUG26717 MD039031
+     C**********           MOVEL'USR2769' ZAMSID                                   BUG26717 MD039031
+     C**********           EXSR ZASNMS                                             BUG26717 MD039031
+     C**********           ENDIF                                                   BUG26717 MD039031
+     C**********           ENDIF                                                   BUG26717 MD039031
       *                                                                                     BUG26717
      C                     ENDIF
      C                     ELSE
@@ -1006,49 +1022,99 @@
       *
       ** Must be a valid account code
       *
+     C                     MOVE *BLANKS   WTYPDN  1                                         MD039031
+     C                     MOVE *BLANKS   WTYPCN  1                                         MD039031
+     C                     MOVE *BLANKS   WTYPDD  1                                         MD039031
+     C                     MOVE *BLANKS   WTYPCD  1                                         MD039031
+     C                     MOVE *BLANKS   WTYPDC  1                                         MD039031
+     C                     MOVE *BLANKS   WTYPCC  1                                         MD039031
+     C                     MOVE *BLANKS   WTYPDG  1                                         MD039031
+     C                     MOVE *BLANKS   WTYPCG  1                                         MD039031
+      *                                                                                     MD039031
+     C                     MOVE *BLANKS   WTOIDN  1                                         MD039031
+     C                     MOVE *BLANKS   WTOICN  1                                         MD039031
+     C                     MOVE *BLANKS   WTOIDD  1                                         MD039031
+     C                     MOVE *BLANKS   WTOICD  1                                         MD039031
+     C                     MOVE *BLANKS   WTOIDC  1                                         MD039031
+     C                     MOVE *BLANKS   WTOICC  1                                         MD039031
+     C                     MOVE *BLANKS   WTOIDG  1                                         MD039031
+     C                     MOVE *BLANKS   WTOICG  1                                         MD039031
+      *                                                                                     MD039031
      C           SAFVN     IFNE 'N'
      C           W#DAN     ORNE 0
      C**********           MOVE W#DAN     W#ACT   4                                           CGL029
      C                     MOVE W#DAN     W#ACT  10                                           CGL029
      C           W#ACT     CHAINSDACODL1             52
+     C           *IN52     IFEQ '0'                                                         MD039031
+     C                     MOVE A5ACTY    WTYPDN                                            MD039031
+     C                     MOVE A5TOIN    WTOIDN                                            MD039031
+     C                     ENDIF                                                            MD039031
      C                     ENDIF
      C           SAFVN     IFNE 'N'
      C           W#CAN     ORNE 0
      C                     MOVE W#CAN     W#ACT
      C           W#ACT     CHAINSDACODL1             53
+     C           *IN53     IFEQ '0'                                                         MD039031
+     C                     MOVE A5ACTY    WTYPCN                                            MD039031
+     C                     MOVE A5TOIN    WTOICN                                            MD039031
+     C                     ENDIF                                                            MD039031
      C                     ENDIF
       *
      C           SAFVD     IFNE 'N'
      C           W#DAD     ORNE 0
      C                     MOVE W#DAD     W#ACT
      C           W#ACT     CHAINSDACODL1             55
+     C           *IN55     IFEQ '0'                                                         MD039031
+     C                     MOVE A5ACTY    WTYPDD                                            MD039031
+     C                     MOVE A5TOIN    WTOIDD                                            MD039031
+     C                     ENDIF                                                            MD039031
      C                     ENDIF
      C           SAFVD     IFNE 'N'
      C           W#CAD     ORNE 0
      C                     MOVE W#CAD     W#ACT
      C           W#ACT     CHAINSDACODL1             56
+     C           *IN56     IFEQ '0'                                                         MD039031
+     C                     MOVE A5ACTY    WTYPCD                                            MD039031
+     C                     MOVE A5TOIN    WTOICD                                            MD039031
+     C                     ENDIF                                                            MD039031
      C                     ENDIF
       *
      C           SAFVC     IFNE 'N'
      C           W#DAC     ORNE 0
      C                     MOVE W#DAC     W#ACT
      C           W#ACT     CHAINSDACODL1             58
+     C           *IN58     IFEQ '0'                                                         MD039031
+     C                     MOVE A5ACTY    WTYPDC                                            MD039031
+     C                     MOVE A5TOIN    WTOIDC                                            MD039031
+     C                     ENDIF                                                            MD039031
      C                     ENDIF
      C           SAFVC     IFNE 'N'
      C           W#CAC     ORNE 0
      C                     MOVE W#CAC     W#ACT
      C           W#ACT     CHAINSDACODL1             59
+     C           *IN59     IFEQ '0'                                                         MD039031
+     C                     MOVE A5ACTY    WTYPCC                                            MD039031
+     C                     MOVE A5TOIN    WTOICC                                            MD039031
+     C                     ENDIF                                                            MD039031
      C                     ENDIF
       *
      C           SAFVG     IFNE 'N'
      C           W#DAG     ORNE 0
      C                     MOVE W#DAG     W#ACT
      C           W#ACT     CHAINSDACODL1             61
+     C           *IN61     IFEQ '0'                                                         MD039031
+     C                     MOVE A5ACTY    WTYPDG                                            MD039031
+     C                     MOVE A5TOIN    WTOIDG                                            MD039031
+     C                     ENDIF                                                            MD039031
      C                     ENDIF
      C           SAFVG     IFNE 'N'
      C           W#CAG     ORNE 0
      C                     MOVE W#CAG     W#ACT
      C           W#ACT     CHAINSDACODL1             62
+     C           *IN62     IFEQ '0'                                                         MD039031
+     C                     MOVE A5ACTY    WTYPCG                                            MD039031
+     C                     MOVE A5TOIN    WTOICG                                            MD039031
+     C                     ENDIF                                                            MD039031
      C                     ENDIF
      C/COPY WNCPYSRC,SD9173RC14
       *
@@ -1073,6 +1139,225 @@
       *
       *****************************************************************
      C/COPY WNCPYSRC,SD9173RC16
+      /EJECT
+      *****************************************************************                     MD039031
+      *                                                               *                     MD039031
+      *  SRACTO  -  Validate Account Codes                            *                     MD039031
+      *          -  Check if account code is non-title                *                     MD039031
+      *  Called by: SRVALD                                            *                     MD039031
+      *  Calls    : ZASNMS                                            *                     MD039031
+      *                                                               *                     MD039031
+      *****************************************************************                     MD039031
+      *                                                                                     MD039031
+     C           SRACTO    BEGSR                                                            MD039031
+      *                                                                                     MD039031
+     C           *IN30     IFEQ '1'                                                         MD039031
+      * Nostro Debit Transitory Account Code                                                MD039031
+     C           WTOIDN    IFEQ 'Y'                                                         MD039031
+     C                     MOVE '1'       *IN52                                             MD039031
+     C                     MOVE '0'       *IN30                                             MD039031
+     C                     MOVE '1'       *IN70                                             MD039031
+     C                     MOVEL'USR0221' ZAMSID                                            MD039031
+     C                     EXSR ZASNMS                                                      MD039031
+     C                     ENDIF                                                            MD039031
+      *                                                                                     MD039031
+      * Nostro Credit Transitory Account Code                                               MD039031
+     C           WTOICN    IFEQ 'Y'                                                         MD039031
+     C                     MOVE '1'       *IN53                                             MD039031
+     C                     MOVE '0'       *IN30                                             MD039031
+     C                     MOVE '1'       *IN70                                             MD039031
+     C                     MOVEL'USR0221' ZAMSID                                            MD039031
+     C                     EXSR ZASNMS                                                      MD039031
+     C                     ENDIF                                                            MD039031
+      *                                                                                     MD039031
+      * Dealing Debit Transitory Account Code                                               MD039031
+     C           WTOIDD    IFEQ 'Y'                                                         MD039031
+     C                     MOVE '1'       *IN55                                             MD039031
+     C                     MOVE '0'       *IN30                                             MD039031
+     C                     MOVE '1'       *IN70                                             MD039031
+     C                     MOVEL'USR0221' ZAMSID                                            MD039031
+     C                     EXSR ZASNMS                                                      MD039031
+     C                     ENDIF                                                            MD039031
+      *                                                                                     MD039031
+      * Dealing Credit Transitory Account Code                                              MD039031
+     C           WTOICD    IFEQ 'Y'                                                         MD039031
+     C                     MOVE '1'       *IN56                                             MD039031
+     C                     MOVE '0'       *IN30                                             MD039031
+     C                     MOVE '1'       *IN70                                             MD039031
+     C                     MOVEL'USR0221' ZAMSID                                            MD039031
+     C                     EXSR ZASNMS                                                      MD039031
+     C                     ENDIF                                                            MD039031
+      *                                                                                     MD039031
+      * Contingent Debit Transitory Account Code                                            MD039031
+     C           WTOIDC    IFEQ 'Y'                                                         MD039031
+     C                     MOVE '1'       *IN58                                             MD039031
+     C                     MOVE '0'       *IN30                                             MD039031
+     C                     MOVE '1'       *IN70                                             MD039031
+     C                     MOVEL'USR0221' ZAMSID                                            MD039031
+     C                     EXSR ZASNMS                                                      MD039031
+     C                     ENDIF                                                            MD039031
+      *                                                                                     MD039031
+      * Contingent Credit Transitory Account Code                                           MD039031
+     C           WTOICC    IFEQ 'Y'                                                         MD039031
+     C                     MOVE '1'       *IN59                                             MD039031
+     C                     MOVE '0'       *IN30                                             MD039031
+     C                     MOVE '1'       *IN70                                             MD039031
+     C                     MOVEL'USR0221' ZAMSID                                            MD039031
+     C                     EXSR ZASNMS                                                      MD039031
+     C                     ENDIF                                                            MD039031
+      *                                                                                     MD039031
+      * GL Debit Transitory Account Code                                                    MD039031
+     C           WTOIDG    IFEQ 'Y'                                                         MD039031
+     C                     MOVE '1'       *IN61                                             MD039031
+     C                     MOVE '0'       *IN30                                             MD039031
+     C                     MOVE '1'       *IN70                                             MD039031
+     C                     MOVEL'USR0221' ZAMSID                                            MD039031
+     C                     EXSR ZASNMS                                                      MD039031
+     C                     ENDIF                                                            MD039031
+      *                                                                                     MD039031
+      * GL Credit Transitory Account Code                                                   MD039031
+     C           WTOICG    IFEQ 'Y'                                                         MD039031
+     C                     MOVE '1'       *IN62                                             MD039031
+     C                     MOVE '0'       *IN30                                             MD039031
+     C                     MOVE '1'       *IN70                                             MD039031
+     C                     MOVEL'USR0221' ZAMSID                                            MD039031
+     C                     EXSR ZASNMS                                                      MD039031
+     C                     ENDIF                                                            MD039031
+      *                                                                                     MD039031
+     C                     ENDIF                                                            MD039031
+      *                                                                                     MD039031
+     C                     ENDSR                                                            MD039031
+      *                                                                                     MD039031
+      /EJECT
+      *****************************************************************                     MD039031
+      *                                                               *                     MD039031
+      *  SRACRN  -  Validate Account Codes                            *                     MD039031
+      *          -  Check if type is Retail or Nostro                 *                     MD039031
+      *  Called by: SRVALD                                            *                     MD039031
+      *  Calls    : ZASNMS                                            *                     MD039031
+      *                                                               *                     MD039031
+      *****************************************************************                     MD039031
+      *                                                                                     MD039031
+     C           SRACRN    BEGSR                                                            MD039031
+      *                                                                                     MD039031
+     C           *IN30     IFEQ '1'                                                         MD039031
+      * Nostro Debit Transitory Account Code                                                MD039031
+     C           WTYPDN    IFEQ 'R'                                                         MD039031
+     C           WTYPDN    OREQ 'N'                                                         MD039031
+     C                     MOVE '1'       *IN52                                             MD039031
+     C                     MOVE '0'       *IN30                                             MD039031
+     C                     MOVE '1'       *IN70                                             MD039031
+     C           WTYPDN    IFEQ 'R'                                                         MD039031
+     C                     MOVEL'USR0176' ZAMSID                                            MD039031
+     C                     ELSE                                                             MD039031
+     C                     MOVEL'USR8445' ZAMSID                                            MD039031
+     C                     ENDIF                                                            MD039031
+     C                     EXSR ZASNMS                                                      MD039031
+     C                     ENDIF                                                            MD039031
+      *                                                                                     MD039031
+      * Nostro Credit Transitory Account Code                                               MD039031
+     C           WTYPCN    IFEQ 'R'                                                         MD039031
+     C           WTYPCN    OREQ 'N'                                                         MD039031
+     C                     MOVE '1'       *IN53                                             MD039031
+     C                     MOVE '0'       *IN30                                             MD039031
+     C                     MOVE '1'       *IN70                                             MD039031
+     C           WTYPCN    IFEQ 'R'                                                         MD039031
+     C                     MOVEL'USR0176' ZAMSID                                            MD039031
+     C                     ELSE                                                             MD039031
+     C                     MOVEL'USR8445' ZAMSID                                            MD039031
+     C                     ENDIF                                                            MD039031
+     C                     EXSR ZASNMS                                                      MD039031
+     C                     ENDIF                                                            MD039031
+      *                                                                                     MD039031
+      * Dealing Debit Transitory Account Code                                               MD039031
+     C           WTYPDD    IFEQ 'R'                                                         MD039031
+     C           WTYPDD    OREQ 'N'                                                         MD039031
+     C                     MOVE '1'       *IN55                                             MD039031
+     C                     MOVE '0'       *IN30                                             MD039031
+     C                     MOVE '1'       *IN70                                             MD039031
+     C           WTYPDD    IFEQ 'R'                                                         MD039031
+     C                     MOVEL'USR0176' ZAMSID                                            MD039031
+     C                     ELSE                                                             MD039031
+     C                     MOVEL'USR8445' ZAMSID                                            MD039031
+     C                     ENDIF                                                            MD039031
+     C                     EXSR ZASNMS                                                      MD039031
+     C                     ENDIF                                                            MD039031
+      *                                                                                     MD039031
+      * Dealing Credit Transitory Account Code                                              MD039031
+     C           WTYPCD    IFEQ 'R'                                                         MD039031
+     C           WTYPCD    OREQ 'N'                                                         MD039031
+     C                     MOVE '1'       *IN56                                             MD039031
+     C                     MOVE '0'       *IN30                                             MD039031
+     C                     MOVE '1'       *IN70                                             MD039031
+     C           WTYPCD    IFEQ 'R'                                                         MD039031
+     C                     MOVEL'USR0176' ZAMSID                                            MD039031
+     C                     ELSE                                                             MD039031
+     C                     MOVEL'USR8445' ZAMSID                                            MD039031
+     C                     ENDIF                                                            MD039031
+     C                     EXSR ZASNMS                                                      MD039031
+     C                     ENDIF                                                            MD039031
+      *                                                                                     MD039031
+      * Contingent Debit Transitory Account Code                                            MD039031
+     C           WTYPDC    IFEQ 'R'                                                         MD039031
+     C           WTYPDC    OREQ 'N'                                                         MD039031
+     C                     MOVE '1'       *IN58                                             MD039031
+     C                     MOVE '0'       *IN30                                             MD039031
+     C                     MOVE '1'       *IN70                                             MD039031
+     C           WTYPDC    IFEQ 'R'                                                         MD039031
+     C                     MOVEL'USR0176' ZAMSID                                            MD039031
+     C                     ELSE                                                             MD039031
+     C                     MOVEL'USR8445' ZAMSID                                            MD039031
+     C                     ENDIF                                                            MD039031
+     C                     EXSR ZASNMS                                                      MD039031
+     C                     ENDIF                                                            MD039031
+      *                                                                                     MD039031
+      * Contingent Credit Transitory Account Code                                           MD039031
+     C           WTYPCC    IFEQ 'R'                                                         MD039031
+     C           WTYPCC    OREQ 'N'                                                         MD039031
+     C                     MOVE '1'       *IN59                                             MD039031
+     C                     MOVE '0'       *IN30                                             MD039031
+     C                     MOVE '1'       *IN70                                             MD039031
+     C           WTYPCC    IFEQ 'R'                                                         MD039031
+     C                     MOVEL'USR0176' ZAMSID                                            MD039031
+     C                     ELSE                                                             MD039031
+     C                     MOVEL'USR8445' ZAMSID                                            MD039031
+     C                     ENDIF                                                            MD039031
+     C                     EXSR ZASNMS                                                      MD039031
+     C                     ENDIF                                                            MD039031
+      *                                                                                     MD039031
+      * GL Debit Transitory Account Code                                                    MD039031
+     C           WTYPDG    IFEQ 'R'                                                         MD039031
+     C           WTYPDG    OREQ 'N'                                                         MD039031
+     C                     MOVE '1'       *IN61                                             MD039031
+     C                     MOVE '0'       *IN30                                             MD039031
+     C                     MOVE '1'       *IN70                                             MD039031
+     C           WTYPDG    IFEQ 'R'                                                         MD039031
+     C                     MOVEL'USR0176' ZAMSID                                            MD039031
+     C                     ELSE                                                             MD039031
+     C                     MOVEL'USR8445' ZAMSID                                            MD039031
+     C                     ENDIF                                                            MD039031
+     C                     EXSR ZASNMS                                                      MD039031
+     C                     ENDIF                                                            MD039031
+      *                                                                                     MD039031
+      * GL Credit Transitory Account Code                                                   MD039031
+     C           WTYPCG    IFEQ 'R'                                                         MD039031
+     C           WTYPCG    OREQ 'N'                                                         MD039031
+     C                     MOVE '1'       *IN62                                             MD039031
+     C                     MOVE '0'       *IN30                                             MD039031
+     C                     MOVE '1'       *IN70                                             MD039031
+     C           WTYPCG    IFEQ 'R'                                                         MD039031
+     C                     MOVEL'USR0176' ZAMSID                                            MD039031
+     C                     ELSE                                                             MD039031
+     C                     MOVEL'USR8445' ZAMSID                                            MD039031
+     C                     ENDIF                                                            MD039031
+     C                     EXSR ZASNMS                                                      MD039031
+     C                     ENDIF                                                            MD039031
+      *                                                                                     MD039031
+     C                     ENDIF                                                            MD039031
+      *                                                                                     MD039031
+     C                     ENDSR                                                            MD039031
+      *                                                                                     MD039031
+      *****************************************************************                     MD039031
       /EJECT
       *****************************************************************
       *                                                               *

@@ -12,8 +12,15 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055115           Date 23Jan20               *
-      *  Prev Amend No. MD055067           Date 17Jan20               *
+      *  Last Amend No. MD055733           Date 03Jul20               *      
+      *  Prev Amend No. MD056223           Date 15Jul20               *
+      *                 MD051347           Date 12Mar20               *
+      *                 AR819229           Date 10Dec18               *
+      *                 AR932652           Date 06Aug13               *
+      *                 AR927395           Date 05Aug13               *
+      *                 252101             Date 06Nov19               *
+      *                 MD055115           Date 23Jan20               *
+      *                 MD055067           Date 17Jan20               *
       *                 MD055009           Date 23Dec19               *
       *                 MD054960           Date 13Dec19               *
       *                 MD054869           Date 21Nov19               *
@@ -418,6 +425,33 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
+      *             components.                                       *
+      *           - Redeliver of MD050139.                            *      
+      *  MD056223 - CLE031: Incorrect Posting narratives in           *
+      *             Fee postings with conversion                      *
+      *           - The amount and currency of the posting narratives *
+      *             of Cross currency settlements P and S records     *
+      *             whose narrative codes defined as 03 are now       *
+      *             formatted based on the format string defined in   *
+      *             Narrative Codes File SDNARRPD.                    *
+      *  MD051347 - Interest on a loan taken at the wrong date. Also  *
+      *             update value of IBDT to zero if NIPD is less than *
+      *             or equal to rundate. Additional fix to AR819229.  *
+      *  AR819229 - Interest on a loan taken at the wrong date.       *
+      *             Update value of IBDT with NIPD on SR/ROLLOV and   *
+      *             SR/MROLL. (Child: AR823033)                       *
+      *           - Applied for MD051347                              *
+      *  AR932652 - Error on withholding tax accrual when past due    *
+      *             interest is manually repaid. Reverse fix BUG12852.*
+      *             (Child: AR932655)                                 *
+      *  AR927395 - Negative interest accruals generated on backvalued*
+      *             MR of past due interest. Suppress posting when    *
+      *             PD interest is paid off and reduce PDCF as well.  *
+      *             (Child: AR927398)                                 *
+      *  252101 - The spread rate value was incorrect. the previous   *
+      *           value from LEHISTL2 was retrieved.                  *
+      *         - Applied for MD025526.                               *
       *  MD055115 - Scenario 1.30 Discrepancy on LE3180P1 and         *
       *             PDCL double entries                               *
       *  MD055067 - Adhoc - Narrative for Interest payment on         *
@@ -2045,6 +2079,7 @@
      D PDCLPayAc       S              1A                                                    MD050007
      D PDCLPIAcc       S              1A                                                    MD050018
       *                                                                                       CLE134
+     D VALUE_DATE      C                   CONST(1)                                         MD056223
      D AMLPRI          C                   CONST('ZAAMLSETLE')
      D SECTN1          C                   CONST('LE0450001')                                 CFC006
      D SECTN2          C                   CONST('LE0450002')                                 CFC006
@@ -2070,6 +2105,7 @@
      D wRepIntr        S             13P 0 INZ(*ZEROS)                                      MD054326
      D wAvail          S             13P 0 INZ(*ZEROS)                                      MD054326
      D isInterest      S              1A   INZ(*On)                                         MD053565
+     D wEvent          S              1S 0 INZ(*ZEROS)                                      MD056223
      I*                                                                   S01408
       *                                                                                       CLE134
      ILKEYF1DF                                                                                CLE134
@@ -7076,6 +7112,7 @@ L118 I                             P   72   77 7RTSPL
       ** IF Settlement type is 14 and OSAC is not blanks,                                     262597
       ** then retrieve settlement branch from settlement a/c                                  262597
       *                                                                                       262597
+     C                   EVAL      wEvent = VALUE_DATE                                      MD056223
      C                   EVAL      wGenNewKey = *ON                                         MD051883
      C                   EVAL      wNinthPos = *BLANKS                                      MD051883
      C                   MOVE      *BLANKS       AKY910            2                        MD051883
@@ -7587,6 +7624,7 @@ L118 I                             P   72   77 7RTSPL
      C                   ENDIF
      C                   ENDIF
      C                   EVAL      wGenNewKey = *OFF                                        MD051883
+     C                   EVAL      wEvent = 0                                               MD056223
 1154 C**
 1155 C                   ENDSR
 1156 C**
@@ -7664,6 +7702,7 @@ L118 I                             P   72   77 7RTSPL
 1202 C**
       ** CLE134 - Past Due Call Loans process                                                 CLE134
       *                                                                                       CLE134
+     C                   EVAL      wEvent = VALUE_DATE                                      MD056223
      C                   EVAL      wGenNewKey = *ON                                         MD051883
      C                   MOVE      'N'           WPDCLL                                       CLE134
      C                   MOVE      'N'           WPDCLA                                       CLE134
@@ -7918,6 +7957,7 @@ L118 I                             P   72   77 7RTSPL
      C                   ENDIF
 1221 C**
      C                   EVAL      wGenNewKey = *OFF                                        MD051883
+     C                   EVAL      wEvent = 0                                               MD056223
 1222 C                   ENDSR
 1223 C**
 1224 C**
@@ -8449,6 +8489,13 @@ L118 I                             P   72   77 7RTSPL
      C                   ENDIF                                                              AR628773
      C                   ENDIF                                                                 18004
       *                                                                   180044
+     C     BGN0ST        IFEQ      'Y'                                                      AR927395
+     C     FPRCL         ANDNE     *BLANKS                                                  AR927395
+     C     *IN15         ANDEQ     '1'                                                      AR927395
+     C     COFA          ANDNE     *ZEROS                                                   AR927395
+     C     PDCF          SUB       COFA          PDCF                                       AR927395
+     C                   ENDIF                                                              AR927395
+      *                                                                                     AR927395
      C     CAS005        IFEQ      'Y'
      C     *IN15         ANDEQ     '1'
      C     INTN          ANDNE     *ZEROS
@@ -9953,6 +10000,9 @@ L118 I                             P   72   77 7RTSPL
      C     LNRF          SETGT     LEHISTL2                                                    11633
      C     LNRF          READPE    LEHISTL2                               69                   11633
      C     *IN69         IFEQ      *OFF                                                        11633
+     C     BGN0ST        IFEQ      'N'                                                        252101
+     C     BGN0ST        OREQ      'Y'                                                        252101
+     C     IRCF#H        ANDEQ     'Y'                                                        252101
      C                   Z-ADD     RTSP#H        RTSPL                                         11633
      C     SPINL         IFNE      SPIN#H                                                   MD019942
      C                   MOVEL     SPIN#H        SPINL                                      MD019942
@@ -9960,6 +10010,7 @@ L118 I                             P   72   77 7RTSPL
      C     VDAT#H        IFGT      VDAT                                                        11633
      C                   Z-ADD     VDAT#H        VDAT                                          11633
      C                   ENDIF                                                                 11633
+     C                   ENDIF                                                                252101
      C                   ENDIF                                                                 11633
      C                   ENDIF                                                                 11633
       *                                                                                       CLE036
@@ -10102,9 +10153,11 @@ L118 I                             P   72   77 7RTSPL
      C     NIPD          IFNE      *ZEROS                                                      S0146
      C***********IPFR      ANDEQ' '                                 S01465159199
      C                   Z-ADD     NIPD          NIDT                                          S0146
+     C                   Z-ADD     NIPD          IBDT                                       AR819229
       *                                                                   174873
      C     NIPD          IFLE      RUND                                                        17487
      C                   Z-ADD     0             NIDT                                          17487
+     C                   Z-ADD     0             IBDT                                       MD051347
      C                   ENDIF                                                                 17487
       *                                                                   174873
      C                   END                                                                   S0146
@@ -11494,6 +11547,13 @@ L118 I                             P   72   77 7RTSPL
      C     NIPD          IFNE      *ZEROS                                                      CLE00
      C***********IPFR      ANDEQ' '                                 CLE004159199
      C                   Z-ADD     NIPD          NIDT                                          CLE00
+     C                   Z-ADD     NIPD          IBDT                                       AR819229
+      *                                                                                     MD051347
+     C     NIPD          IFLE      RUND                                                     MD051347
+     C                   Z-ADD     0             NIDT                                       MD051347
+     C                   Z-ADD     0             IBDT                                       MD051347
+     C                   ENDIF                                                              MD051347
+      *                                                                                     MD051347
      C                   END                                                                   CLE00
      C                   ENDIF                                                                 CLE00
      C                   Z-ADD     *ZEROS        NIPD                                          CLE00
@@ -13846,6 +13906,13 @@ L118 I                             P   72   77 7RTSPL
 1774 C**
 1777 C     WRK13         SUB       AIPD          WRK13
      C*
+      *                                                                                   AR927395
+     C     WRK13         IFLT      0                                                      AR927395
+     C     AMTP          ANDEQ     'MR'                                                   AR927395
+     C     VDAT          ANDLT     RUND                                                   AR927395
+     C     VDAT          ANDNE     MDAT                                                   AR927395
+     C                   Z-ADD     0             WRK13                                    AR927395
+     C                   ENDIF                                                            AR927395
 1775 C                   Z-ADD     WRK13         AMOUNT
 1778 C**
 1779 C**   GENERATE AN ACCRUAL A/C KEY
@@ -14054,13 +14121,20 @@ L118 I                             P   72   77 7RTSPL
 1827 C     WTWD          ADD       WTRD          WRK13
 1828 C**
 1829 C     WRK13         SUB       AWTP          WRK13
+      *                                                                                     AR927395
+     C     WRK13         IFLT      0                                                        AR927395
+     C     AMTP          ANDEQ     'MR'                                                     AR927395
+     C     VDAT          ANDLT     RUND                                                     AR927395
+     C     VDAT          ANDNE     MDAT                                                     AR927395
+     C                   Z-ADD     0             WRK13                                      AR927395
+     C                   ENDIF                                                              AR927395
 1830 C**
 1831 C**   GENERATE ACCRUAL A/C KEY
 1832 C**
 1833 C**
 1834 C**   USE AMOUNT OF INTEREST ACCRUAL KEY TO CALC. W/TAX AMOUNT
 1835 C**
-12852C     WRK13         ADD       AMOUNT        AMOUNT
+12852C********** WRK13     ADD  AMOUNT    AMOUNT                                            AR932652
 1836 C                   EXSR      WTAX
 1837 C                   Z-ADD     AMOUNT        ACAMNT                   89
      C   88              Z-ADD     IACD          ACDATE
@@ -18160,6 +18234,13 @@ C    C                   ENDIF                                                  
      C                   ENDIF                                                                 CAC00
      C     WK13N         SUB       ACPD          WK13N                                         CAC00
       *                                                                   CAC001
+      *                                                                                     AR927395
+     C     WK13N         IFLT      0                                                        AR927395
+     C     AMTP          ANDEQ     'MR'                                                     AR927395
+     C     VDAT          ANDLT     RUND                                                     AR927395
+     C     VDAT          ANDNE     MDAT                                                     AR927395
+     C                   Z-ADD     0             WK13N                                      AR927395
+     C                   ENDIF                                                              AR927395
      C                   Z-ADD     WK13N         ACAMNT                   89                   CAC00
       *                                                                   CAC001
      C     SRCPA9        ENDSR                                                  ** SRCPA9 **   CAC00
@@ -18812,6 +18893,13 @@ C    C                   ENDIF                                                  
      C                   ENDIF                                                              MD054326
      C                   ENDIF                                                              MD054326
      C                   ENDIF                                                              MD054326
+     C                   IF        wEvent = VALUE_DATE                                      MD056223
+     C                   EVAL      KOTHA = wSettleAmt                                       MD056223
+     C                   EVAL      KOTHC = wSettleCCY                                       MD056223
+     C                   ELSE                                                               MD056223
+     C                   EVAL      KOTHA = wLoanAmt                                         MD056223
+     C                   EVAL      KOTHC = wLoanCCY                                         MD056223
+     C                   ENDIF                                                              MD056223
      C                   EXSR      AKYOUT
      C                   ENDIF                                                              MD054132
       *                                                                                     MD051883
@@ -18836,6 +18924,8 @@ C    C                   ENDIF                                                  
      C                   MOVE      'V'           AKY(10)                                    MD054132
      C                   ENDIF                                                              MD054132
      C     isSettle      IFEQ      *ON                                                      MD054132
+     C                   EVAL      KOTHA = *ZEROS                                           MD056223
+     C                   EVAL      KOTHC = *BLANKS                                          MD056223
      C                   EXSR      AKYOUT                                                   MD051883
      C                   ENDIF                                                              MD054132
      C                   MOVE      SAV3          AKY(3)                                     MD051883
@@ -18866,6 +18956,13 @@ C    C                   ENDIF                                                  
       *                                                                                       CLE031
      C                   MOVE      WSCCY         CCYL
      C     isSettle      IFEQ      *ON                                                      MD054132
+     C                   IF        wEvent = VALUE_DATE                                      MD056223
+     C                   EVAL      KOTHA = wLoanAmt                                         MD056223
+     C                   EVAL      KOTHC = wLoanCCY                                         MD056223
+     C                   ELSE                                                               MD056223
+     C                   EVAL      KOTHA = wSettleAmt                                       MD056223
+     C                   EVAL      KOTHC = wSettleCCY                                       MD056223
+     C                   ENDIF                                                              MD056223
      C                   EXSR      AKYOUT
      C                   ENDIF                                                              MD054132
       *                                                                                       CLE031
@@ -18897,6 +18994,13 @@ C    C                   ENDIF                                                  
      C                   MOVE      BJCYCD        CCYL
      C                   Z-ADD     BSAMT         ACAMNT
      C     isSettle      IFEQ      *ON                                                      MD054132
+     C                   IF        wEvent = VALUE_DATE                                      MD056223
+     C                   EVAL      KOTHA = wSettleAmt                                       MD056223
+     C                   EVAL      KOTHC = wSettleCCY                                       MD056223
+     C                   ELSE                                                               MD056223
+     C                   EVAL      KOTHA = wLoanAmt                                         MD056223
+     C                   EVAL      KOTHC = wLoanCCY                                         MD056223
+     C                   ENDIF                                                              MD056223
      C                   EXSR      AKYOUT
      C                   ENDIF                                                              MD054132
       *                                                                                       CLE031
@@ -18906,6 +19010,13 @@ C    C                   ENDIF                                                  
      C                   MOVEA     ' S'          AKY(9)
      C                   MOVEA     WSCCY         AKY(6)
      C     isSettle      IFEQ      *ON                                                      MD054132
+     C                   IF        wEvent = VALUE_DATE                                      MD056223
+     C                   EVAL      KOTHA = wLoanAmt                                         MD056223
+     C                   EVAL      KOTHC = wLoanCCY                                         MD056223
+     C                   ELSE                                                               MD056223
+     C                   EVAL      KOTHA = wSettleAmt                                       MD056223
+     C                   EVAL      KOTHC = wSettleCCY                                       MD056223
+     C                   ENDIF                                                              MD056223
      C                   EXSR      AKYOUT
      C                   ENDIF                                                              MD054132
                                                                                             MD049745
@@ -18928,6 +19039,8 @@ C    C                   ENDIF                                                  
      C     WPROC         ANDNE     'Y'
      C                   MOVE      LKSCSV        LKSCCY
      C                   ENDIF
+     C                   EVAL      KOTHA = *ZEROS                                           MD056223
+     C                   EVAL      KOTHC = *BLANKS                                          MD056223
      C                   ENDSR
       *****************************************************************                       CLE031
      C/EJECT                                                                                  CLE031
@@ -21464,7 +21577,9 @@ C    C                   ENDIF                                                  
      O                  53                       56 '1'                                    AR1056323
      O                  21                       56 '1'                                    AR1056323
      O                       Z13                 63P                                       AR1056323
+     O                       KOTHA               63P                                        MD056223
      O                       Z13                 73P                                       AR1056323
+     O                       KOTHC               66                                         MD056223
      O                       VDATL               76P                                       AR1056323
      O                       SLIDL               79P                                       AR1056323
      O               79      FEPSTD              79P                                       AR1056323

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD042042           Date 14Feb17               *
+      *  Last Amend No. 254841B            Date 14May20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD042042           Date 14Feb17               *
       *                 MD037529           Date 26Apr16               *
       *                 CFT142             Date 20Feb15               *
       *                 AR900506           Date 04Nov14               *
@@ -104,6 +105,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  254841B - Reexecute the validation of Settle Amount when     *
+      *            field is left blank and gets defaulted from Pay    *
+      *            Amount.                                            *
+      *          - Applied for MD055654.                              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD042042 - Input Officer 1 and Input Officer 2 are being     *
       *             populated with WIP authoriser. Use the WIP input  *
@@ -511,6 +516,8 @@
                                                                                               CFT032
      D WODMT18         S             18A                                                      CFT032
                                                                                               CFT032
+     D WsmamInd        S              1  0                                                   254841B
+     D Wsmamnum        S             13  0                                                   254841B
       ** Work fields for ZALIGN                                                             BUG15032
      D ZAlignOk        S              1A                                                    BUG15032
      D ZFIELD          S             16A                                                    BUG15032
@@ -837,7 +844,21 @@
  
       * Validate entered amounts agree
      C                   If        Idx = 0
+      *                                                                                      254841B
+      ** When Settle Amount is not entered but rather defaulted from                         254841B
+      ** Pay Amount, execute the validation of Settle amount.                                254841B
+      *                                                                                      254841B
+     C                   Move      SSMAM         WsmamNum                                    254841B
+     C                   If        SSMAM = *Blanks Or                                        254841B
+     C                             WsmamNum = 0                                              254841B
+     C                   eval      WsmamInd = 1                                              254841B
+     C                   else                                                                254841B
+     C                   eval      WsmamInd = 0                                              254841B
+     C                   Endif                                                               254841B
      C                   Exsr      VEUXCHK
+     c                   If        WsmamInd = 1                                              254841B
+     c                   EXSR      VSETCA                                                    254841B
+     c                   Endif                                                               254841B
      C                   End
  
       * Validate Book Code

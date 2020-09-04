@@ -16,8 +16,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. MD047582           Date 13Jul20               *
+      *  Prev Amend No. MD055065           Date 24Apr20               *
+      *                 CER050             Date 16Jun19               *
+      *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD034264           Date 05May15               *
       *                 CLE164             Date 18Aug14               *
@@ -75,6 +77,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047582 - Unable to authorise/reject a manual repayment     *
+      *             for discount loan. Allow MR with value date equal *
+      *             to loan's maturity date but not attached to a     *
+      *             past due record.                                  *
+      *           - Applied for MD055652                              *
+      *  MD055065 - Incorrect feature being checked in AOSARDR0.      *
+      *             Check CSC054 instead.                             *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
@@ -337,7 +346,7 @@
       ** Ê Declared variables                   Ê
       ** Ê ==================                   Ê
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Ix              S              3P 0
       *                                                                         CAP084
@@ -396,7 +405,7 @@
                                                                                               CSC024
      D CAP086          S              1A                                                      CAP086
      D CLE056          S              1A                                                      CLE056
- 
+
      D wLoanAlpha      S              1A                                                      CLE148
      D PLNRF           S              6A                                                      CLE148
      D PValid          S              6A                                                      CLE148
@@ -424,7 +433,7 @@
      D SVAL9           S            200A                                                      CLE148
      D SVALK0          S             20A                                                      CLE148
      D SVAL10          S            200A                                                      CLE148
- 
+
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
@@ -435,7 +444,7 @@
       ** +--------------------------------------+
       *****************************************************************
       /EJECT
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** Ê                                                                Ê
       ** Ê Initial processing is performed automatically: the *inzsr is   Ê
@@ -453,7 +462,7 @@
      C                   UNLOCK    ZMUSER                                                    BUG8550
       *                                                                                      BUG8550
      C                   EXSR      INIT
- 
+
       ** Check whether user is a web browser user, if so overwrite                            CAP084
      C**********         CALL      'SFC000026'                                       CAP084 MD024398
      C**********         PARM      *BLANKS       USER             10                 CAP084 MD024398
@@ -489,7 +498,7 @@
      C     OKESEQ        OREQ      'N'
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDIF                                                  *FRONT
       *
       ***  Validate Key fields and Input details
@@ -513,9 +522,9 @@
      C     RespMode      IFEQ      'S'
      C                   EXSR      ACSSEC
      C                   END
- 
+
       ***  Return
- 
+
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -897,12 +906,12 @@
      C                   Eval      K@FCNO = CL_FSEQ
       *
      C     K@FCLTY       CHAIN     FCLTY                              99
- 
+
      C                   IF        *IN99 = *On or                               Not Found
      C                             *IN99 = *Off and FC_RECI = 'E' or            Expired
      C                             CLE005 = 'Y' and
      C                             *IN99 = *Off and FC_RECI = 'C'               Closed
- 
+
       ***  No Facility Found,
       *
      C                   If        *IN99 = *on                                  Not Found
@@ -1301,6 +1310,23 @@
      C                   If        CL_PTYP=63 or CL_PTYP=65 or CL_PTYP = 67
      C**********         if        DDACTN <> 'I' or DDEVAL = *BLANKS                          242276
      C                   if        DDACTN <> 'I' and DDEVAL = *BLANKS                         242276
+     C                             and  DDACTN <> 'E' and PD_AMTP <> 'PD'                   MD047582
+      *                                                                                     MD047582
+      ** Check if maturity date of the loan is not equal to the value                       MD047582
+      ** date of the manual repayment. If yes, send an error message.                       MD047582
+      *                                                                                     MD047582
+     C                   MOVE      *BLANKS       ZDATE                                      MD047582
+     C                   MOVE      *BLANKS       ZDATFM                                     MD047582
+     C                   MOVE      DDVALD        ZDATE                                      MD047582
+     C                   MOVE      BJDFIN        ZDATFM                                     MD047582
+     C                   CALL      'ZDATE1'                                                 MD047582
+     C                   PARM      *BLANKS       ZERR                                       MD047582
+     C                   PARM                    ZDATE                                      MD047582
+     C                   PARM                    ZDATFM                                     MD047582
+     C                   PARM                    ZDAYNO                                     MD047582
+      *                                                                                     MD047582
+     C                   IF        ZDAYNO <> CL_MDAT                                        MD047582
+      *                                                                                     MD047582
      C                   MOVE      'N'           OKEVAL
      C                   ADD       1             Ix
      C                   MOVEL     'DDEVAL'      FldNameArr(Ix)
@@ -1309,6 +1335,7 @@
       *
      C                   MOVEL     'LEM0102'     MsgIdArr(Ix)
      C                   GOTO      EVAL
+     C                   ENDIF                                                              MD047582
      C                   Endif
      C                   Endif
       **********                                                                   BUG11240 BUG12002
@@ -1357,7 +1384,7 @@
      C                   MOVE      'N'           OKEVAL
      C                   ADD       1             Ix
      C                   MOVEL     'DDEVAL'      FldNameArr(Ix)
- 
+
       ***  'Value date is Mandatory and in valid format
       *
      C                   MOVEL     'LEM0106'     MsgIdArr(Ix)
@@ -1381,7 +1408,7 @@
      c                   Endif
       *
      c                   if        DDACTN = 'I'                                 insert Validation
- 
+
       ***  1) Expected Sequence is mandatory when Insert and Expected Value Date was input
       *
      C                   If        DDESEQ = *BLANKS and DDEVAL <> *BLANKS
@@ -1394,7 +1421,7 @@
      C                   MOVEL     'LEM0202'     MsgIdArr(Ix)
      C                   GOTO      EVAL
      c                   endif
- 
+
       ***  2) Expected Value Date must be input if Action ='I' and Exp. seq. is input.
       *
      C                   If        DDESEQ <> *BLANKS and DDEVAL = *BLANKS
@@ -1402,13 +1429,13 @@
      C                   ADD       1             Ix
      C**********         MOVEL     'DDESEQ'      FldNameArr(Ix)                              BUG4326
      C                   MOVEL     'DDEVAL'      FldNameArr(Ix)                              BUG4326
- 
+
       ***  'Please, fill in Expected Date when Expected sequence is filled in (when Insert).'
       *
      C                   MOVEL     'LEM0210'     MsgIdArr(Ix)
      C                   GOTO      EVAL
      c                   endif
- 
+
       ***  3) Expected Value date may be LN or a valid numeric
       *
       * Allow lower case entry                                                               BUG4326
@@ -1429,7 +1456,7 @@
      C                   MOVE      'N'           OKESEQ
      C                   ADD       1             Ix
      C                   MOVEL     'DDESEQ'      FldNameArr(Ix)
- 
+
       ***  'Invalid or wrong format for sequence number'
       *
      C                   MOVEL     'LEM0031'     MsgIdArr(Ix)
@@ -1438,7 +1465,7 @@
      c                   endif                                                  'LN '
       *
      C                   endif                                                  DDACTN = 'I'
- 
+
       *
       ***  Other Validation : Check Manual Repayment Loan Amendment
       ***  Access loan amendment record what ever Action Code is.
@@ -1774,6 +1801,22 @@
       *
      C                   If        CL_PTYP = 63 or CL_PTYP = 65 or CL_PTYP = 67
      C                   if        AL_AMTP <> 'PD'
+      *                                                                                     MD047582
+      ** Check if maturity date of the loan is not equal to the value                       MD047582
+      ** date of the manual repayment. If yes, send an error message.                       MD047582
+      *                                                                                     MD047582
+     C                   MOVE      *BLANKS       ZDATE                                      MD047582
+     C                   MOVE      *BLANKS       ZDATFM                                     MD047582
+     C                   MOVE      DDVALD        ZDATE                                      MD047582
+     C                   MOVE      BJDFIN        ZDATFM                                     MD047582
+     C                   CALL      'ZDATE1'                                                 MD047582
+     C                   PARM      *BLANKS       ZERR                                       MD047582
+     C                   PARM                    ZDATE                                      MD047582
+     C                   PARM                    ZDATFM                                     MD047582
+     C                   PARM                    ZDAYNO                                     MD047582
+      *                                                                                     MD047582
+     C                   IF        ZDAYNO <> CL_MDAT                                        MD047582
+      *                                                                                     MD047582
      C                   MOVE      'N'           OKEVAL
      C                   ADD       1             Ix
      C                   MOVEL     'DDEVAL'      FldNameArr(Ix)
@@ -1786,6 +1829,7 @@
      C                   MOVEL     'DDESEQ'      FldNameArr(Ix)
      C                   MOVEL     *BLANKS       MsgIdArr(Ix)
      C                   GOTO      EVAL
+     C                   ENDIF                                                              MD047582
      C                   endif
      C                   endif
       *
@@ -1836,6 +1880,22 @@
      C                   When      CL_PTYP=63 or CL_PTYP=65 or CL_PTYP=67
       *
      C                   if        AL_AMTP <> 'PD'
+      *                                                                                     MD047582
+      ** Check if maturity date of the loan is not equal to the value                       MD047582
+      ** date of the manual repayment. If yes, send an error message.                       MD047582
+      *                                                                                     MD047582
+     C                   MOVE      *BLANKS       ZDATE                                      MD047582
+     C                   MOVE      *BLANKS       ZDATFM                                     MD047582
+     C                   MOVE      DDVALD        ZDATE                                      MD047582
+     C                   MOVE      BJDFIN        ZDATFM                                     MD047582
+     C                   CALL      'ZDATE1'                                                 MD047582
+     C                   PARM      *BLANKS       ZERR                                       MD047582
+     C                   PARM                    ZDATE                                      MD047582
+     C                   PARM                    ZDATFM                                     MD047582
+     C                   PARM                    ZDAYNO                                     MD047582
+      *                                                                                     MD047582
+     C                   IF        ZDAYNO <> CL_MDAT                                        MD047582
+      *                                                                                     MD047582
      C                   MOVE      'N'           OKEVAL
      C                   ADD       1             Ix
      C                   MOVEL     'DDEVAL'      FldNameArr(Ix)
@@ -1848,6 +1908,7 @@
      C                   MOVEL     'DDESEQ'      FldNameArr(Ix)
      C                   MOVEL     *BLANKS       MsgIdArr(Ix)
      C                   GOTO      EVAL
+     C                   ENDIF                                                              MD047582
      c                   Endif                                                  AMTP <> 'PD'
       *
      C                   When      CL_PTYP = 61 or CL_PTYP = 62 or

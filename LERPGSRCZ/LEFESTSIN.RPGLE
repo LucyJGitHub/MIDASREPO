@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *  Last Amend No. MD054354           Date 23Oct19               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL094             Date 11Jun14               *
       *                 CLE148             Date 23Jul12               *
       *                 CSF011A            Date 28Nov11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -40,6 +41,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054354 - Settlement of fee accrual for prior period for    *
+      *             backdated notional change                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions             *
       *           (Recompile)                                         *
@@ -2121,6 +2124,7 @@
      C                   PARM                    F5XUSR           10
      C                   PARM                    F5AUSR           10
      C                   PARM                    LEFEESTFmt                                   CAP084
+     C                   PARM                    P_SIGN                                     MD054354
       *
       * OUTPUTS
       * Status                                                                                CAP084
@@ -2200,6 +2204,8 @@
  
       * Record status
      C                   PARM                    S#STAT           10
+      * Fee Amount Sign                                                                     MD054354
+     C                   PARM                    P_SIGN            1                        MD054354
  
      C                   ENDSR
       *****************************************************************

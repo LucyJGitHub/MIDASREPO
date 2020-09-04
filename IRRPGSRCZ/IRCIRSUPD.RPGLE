@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054117           Date 12Sep19               *
-      *  Prev Amend No. MD054095           Date 17Oct19               *
+      *  Last Amend No. MD031031           Date 24Sep15               *
+      *  Prev Amend No. 235567             Date 12Mar20               *
+      *                 MD054117           Date 12Sep19               *
+      *                 MD054095           Date 17Oct19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -119,6 +121,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031031 - F1DLNO missing in DLDLDnQD file for LDNI, NASP,   *
+      *             NASS, FRA, CIRS and SIRS. Write to extension file *
+      *             whether CLE025 is *ON or *OFF.                    *
+      *  235567 - Ensure pay/rcv msgs are generated during I/C when   *
+      *           VDEI is 'Y' and value date SSIs are amended.        *
+      *           Initialise BefRecVal and AftRecVal on 'Authorise'.  *
+      *         - Applied for AR1041215. (Child: AR1041216)           *      
       *  MD054117 - Principal change Increase/Decrease capability     *
       *  MD054095 - FRA/IRS: Impossible to input a CIRS deal with zero*
       *             rate                                              *
@@ -289,6 +298,8 @@
      FDLGXSTL0  UF A E           K DISK                                                       CIR003
      F                                     PREFIX(GX)                                         CIR003
      F                                     COMMIT                                             CIR003
+     FDLGXSBL0  UF A E           K DISK                                                       235567
+     F                                     PREFIX(BX)                                         235567
                                                                                               CSD015
       ** Compliance Watch Hit List                                                            CSD015
      FSDCWHTL1  IF   E           K DISK    INFSR(SRERR)                                       CSD015
@@ -405,6 +416,8 @@
      D DLGXST        E DS                  EXTNAME(DLGXSTPD)                                  CIR003
      D                                     PREFIX(GX)                                         CIR003
       *                                                                                       CIR003
+     D DLGXSB        E DS                  EXTNAME(DLGXSBPD)                                  235567
+     D                                     PREFIX(BX)                                         235567
                                                                                               CSD015
      D MXST          E DS                  EXTNAME(DLGXSTPD)                                  CSD015
      D                                     PREFIX(M:1)                                        CSD015
@@ -1461,13 +1474,13 @@
                                                                                               CLE025
       ** Set up deal extension file if Credit Lines is installed                              CLE025
                                                                                               CLE025
-     C                   IF        CLE025 = 'Y'                                               CLE025
+     C**********         IF        CLE025 = 'Y'                                      CLE025 MD031031
      C                   CLEAR                   DEALEXT                                      CLE025
      C                   MOVEL     IRVXSIR       DEALEXT                                      CLE025
      C                   MOVEL     RXDLNO        F1DLNO                                       CDL038
      C                   MOVEL     RXBRCA        F1BRCA                                       248452
      C                   WRITE     DLDLDGD0                                                   CLE025
-     C                   ENDIF                                                                CLE025
+     C**********         ENDIF                                                       CLE025 MD031031
       *
      C                   ENDSR
      C****************************************************************
@@ -1968,6 +1981,16 @@
      C                   ELSE                                                                 CIR003
      C                   UPDATE    DLGXSTD0                                                   CIR003
      C                   ENDIF                                                                CIR003
+      *                                                                                       235567
+      ** Keep copy of "before" values in DLGXSBPD.                                            235567
+      *                                                                                       235567
+     C     KGXST         CHAIN     DLGXSBL0                           97                      235567
+     C                   MOVEL     Z#WSTS        DLGXSB                                       235567
+     C     *IN97         IFEQ      '1'                                                        235567
+     C                   WRITE     DLGXSBD0                                                   235567
+     C                   ELSE                                                                 235567
+     C                   UPDATE    DLGXSBD0                                                   235567
+     C                   ENDIF                                                                235567
       *                                                                                       CIR003
       ** Keep 'after' status of value date extra settlement record.                           CIR003
       *                                                                                       CIR003
@@ -2317,6 +2340,39 @@
      C**********         MOVEL     *BLANK        DBKEY                                CIR008 BUG5519
      C**********         EXSR      *PSSR                                              CIR008 BUG5519
      C**********         ENDIF                                                        CIR008 BUG5519
+      *                                                                                       235567
+      ** Initialise values of BefRevVal and AftRecVal for                                     235567
+      ** Pay/Rcv message processing.                                                          235567
+      *                                                                                       235567
+     C     CIR003        IFEQ      'Y'                                                        235567
+     C     VDEI          ANDEQ     'Y'                                                        235567
+     C     RXCHTP        ANDEQ     'A'                                                        235567
+      *                                                                                       235567
+     C                   MOVE      *BLANKS       Z#WSTS                                       235567
+     C                   MOVE      *BLANKS       Z#YSTS                                       235567
+     C                   MOVE      DLNO          KDLNO                                        235567
+     C                   MOVE      'VAL'         KEDCD                                        235567
+      *                                                                                       235567
+     C     KGXST         CHAIN(N)  DLGXSBL0                           99                      235567
+      *                                                                                       235567
+      **  If record is found, keep 'before' status of value date extra                        235567
+      **  settlement.  Take values from backup file DLGXSBPD.                                 235567
+      *                                                                                       235567
+     C     *IN99         IFEQ      '0'                                                        235567
+     C                   MOVEL     DLGXSB        Z#WSTS                                       235567
+     C                   ENDIF                                                                235567
+      *                                                                                       235567
+     C     KGXST         CHAIN(N)  DLGXSTL0                           99                      235567
+      *                                                                                       235567
+      **  If record is found, keep 'after' status of value date extra                         235567
+      **  settlement.  Since this is authorisation, DLGXSTPD already                          235567
+      **  contains new values.                                                                235567
+      *                                                                                       235567
+     C     *IN99         IFEQ      '0'                                                        235567
+     C                   MOVEL     DLGXST        Z#YSTS                                       235567
+     C                   ENDIF                                                                235567
+      *                                                                                       235567
+     C                   ENDIF                                                                235567
      C                   ENDSR                                                                CIR008
      C****************************************************************
       /EJECT

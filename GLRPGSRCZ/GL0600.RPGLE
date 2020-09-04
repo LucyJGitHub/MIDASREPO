@@ -12,8 +12,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055382           Date 02Apr20               *
-      *  Prev Amend No. AR954846           Date 09Jan20               *
+      *  Last Amend No. MD055785           Date 20May20               *
+      *  Prev Amend No. MD055784           Date 19May20               *
+      *                 MD055690           Date 06May20               *
+      *                 247630             Date 05May20               *
+      *                 262263             Date 18Dec09               *
+      *                 MD055382           Date 02Apr20               *
+      *                 AR954846           Date 09Jan20               *
       *                 255478A            Date 03Oct19               *
       *                 MD045515           Date 02Jul17               *
       *                 MD037555           Date 24Feb15               *
@@ -187,6 +192,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055785 - Initialise K24C for new GL account.               *
+      *  MD055784 - A5INTL (Internal Flag) not initialised correctly  *
+      *             in FusionMidas 2.1.                               *
+      *  MD055690 - Write STMTAH records for closed accounts reopened *
+      *             by GL0600.                                        *
+      *  247630 - TI Midas Interface error. Map A5ACKY to have the    *
+      *           correct value (for COB generated account).          *
+      *         - Applied for MD-55712                                *
+      *  262263 - Wrong value of OLDR and OLCR for GL accnts inserted *
+      *           Initialised the fields to zero for ATYP <> R.       *
       *  MD055382 - System generated account statements will be       *
       *             written to STMTAH only when it's NSTD is less than*
       *             the system's NWKD.                                *
@@ -617,6 +632,7 @@
      F***GLACPOPD  IP   E             DISK                                                  MD021994
      FGLACPOPD  UF   E             DISK                                                     MD021994
      FZACCNTAB  IF   F  687        DISK    RECNO(RRN)
+     FSDBRCHL5  IF   E           K DISK                                                     MD055784
      FACCBA     UF   E           K DISK
      F                                     RENAME(ACCNTABF:ACCBAABF)
      F                                     IGNORE(ACCNTAAF)
@@ -726,6 +742,12 @@
      D  WNOCC2                 1      9
      D  WACOD2                10     19  0
      D  WSEQ2                 20     21  0
+                                                                                              247630
+      ** Data Structure for A5ACKY mapping                                                    247630
+     D ACKY            DS                                                                     247630
+     D  ABRCA                  1      3                                                       247630
+     D  AACNK                  4     34                                                       247630
+                                                                                              247630
      D/COPY WNCPYSRC,GL0600I009
      D RUNDT           DS
 
@@ -1426,6 +1448,7 @@
      I**********    GHDCT                       HDCT                                        MD031057
 
      IACCNTL0   NS
+     I                                  1    1  O_RECI                                      MD055690
      I                             P   56   63 0O_LDBL
      I                                  1  200  AREC3
      I                                201  687  AREC4
@@ -1721,7 +1744,26 @@
      C                   Z-ADD     RUND          DACO
      C                   MOVE      BKDSFC        STFQ
      C                   Z-ADD     RUND          LSTD
+      *                                                                                       247630
+      ** Map Account Key field to have the correct Brch/Cust/Ccy/Acod/Seq                     247630
+     C                   MOVE      *BLANKS       ACKY                                         247630
+     C                   MOVE      *BLANKS       A5ACKY                                       247630
+                                                                                              247630
+     C                   MOVE      BRCA          ABRCA                                        247630
+     C                   MOVEL     ACNK          AACNK                                        247630
+     C                   MOVEL     ACKY          A5ACKY                                       247630
 
+                                                                                            MD055785
+      ** Initialise KWG flag for new GL Account                                             MD055785
+     C                   MOVEL     ' '           K24C                                       MD055785
+
+      ** Setup Internal Flag                                                                MD055784
+     C                   EVAL      A5INTL = 'N'                                             MD055784
+     C     CNUM          CHAIN     SDBRCHL5                           83                    MD055784
+     C                   IF        *IN83 = *OFF                                             MD055784
+     C                   EVAL      A5INTL = 'Y'                                             MD055784
+     C                   ENDIF                                                              MD055784
+                                                                                            MD055784
      C/COPY WNCPYSRC,GL0600CP17
 
      C                   Z-ADD     BKAPDT        NSTD
@@ -1779,7 +1821,9 @@
      C                   Z-ADD     0             DITM
      C                   Z-ADD     0             CITM
      C                   Z-ADD     0             DAIC
+     C                   Z-ADD     0             OLDR                                         262263
      C                   Z-ADD     0             CAIC
+     C                   Z-ADD     0             OLCR                                         262263
      C                   Z-ADD     0             ENOC
      C                   Z-ADD     0             EPNO
      C                   Z-ADD     0             ECFB
@@ -2339,6 +2383,12 @@
 
      C                   IF        (AREC1O <> AREC3) or (AREC2O <> AREC4)
      C                   EXCEPT    EXCPT5
+                                                                                            MD055690
+      ** Write STMTAH records for reopened accounts on COB                                  MD055690
+     C                   IF        (O_RECI = 'C' and RECIAM = 'D')                          MD055690
+     C                   EXSR      WRTSTMT                                                  MD055690
+     C                   ENDIF                                                              MD055690
+                                                                                            MD055690
      C                   ENDIF
      C                   ENDIF
 

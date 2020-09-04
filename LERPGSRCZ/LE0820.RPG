@@ -11,8 +11,9 @@
 0007 F*                                                                  *LE0820
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 261881A            Date 09Mar10               *
-      *  Prev Amend No. 261881             Date 19Nov09               *
+      *  Last Amend No. AR375891A          Date 26Aug20               *
+      *  Prev Amend No. 261881A            Date 09Mar10               *
+      *                 261881             Date 19Nov09               *
       *                 MD031174           Date 12Mar20               *
       *                 MD054877           Date 10Jan20               *
       *                 AR1096915          Date 10Jan20               *
@@ -101,6 +102,9 @@
 0010 F*                 E13500             DATE 09/06/88              *LE0820
      F*---------------------------------------------------------------*
       *                                                               *
+      *  AR375891A - Fee for parts sold was tagged as Debit, where it *
+      *              should be Credit. Check processing type of loan  *
+      *              (Child: AR375892).                               *      
       *  261881A- Failed component SCC0411 due to difference on value *
       *           of records. Amend program such that event amount for*
       *           future valued discount loans would be computed      *
@@ -1188,6 +1192,7 @@
      C***********          SETOF                     3233                 S01392
      C                     SETOF                     323363               S01392
      C                     MOVE *OFF      *IN55                                              BUG7568
+     C                     MOVE '0'       *IN25                                            AR375891A
 0373 C**                                                                  LE0820
 0374 C**   EXECUTE DETAIL PROCESSING                                      LE0820
 0375 C**                                                                  LE0820
@@ -1995,6 +2000,22 @@
      C                     ENDIF                                          CLE005
       *                                                                   CLE005
      C                     ENDIF                                          CLE005
+      *                                                                                    AR375891A
+      ** If ETP is F1, this is a fee event attached to a loan. PTP does not                AR375891A
+      ** reflect the correct processing type so it must be checked on CLOANCL              AR375891A
+      *                                                                                    AR375891A
+     C           ETP       IFEQ 'F1'                                                       AR375891A
+     C           LNRF      CHAINCLOAN                99                                    AR375891A
+      *                                                                                    AR375891A
+     C           PTYPX     IFEQ 66                                                         AR375891A
+     C           PTYPX     OREQ 67                                                         AR375891A
+     C           PTYPX     OREQ 69                                                         AR375891A
+     C           PTYPX     OREQ 72                                                         AR375891A
+     C                     MOVE '0'       *IN41                                            AR375891A
+     C                     MOVE '1'       *IN25                                            AR375891A
+     C                     MOVE '1'       *IN47                                            AR375891A
+     C                     ENDIF                                                           AR375891A
+     C                     ENDIF                                                           AR375891A
      C*                                                                   123275
      C** Set value of Deal/Loan Reference (DLREF) to Loan Reference       123275
      C** no. or Facility no. according to fee type.                       123275
@@ -2003,6 +2024,7 @@
      C                     MOVE *BLANKS   TRAN06  6                                         AR548455
      C                     MOVE *BLANKS   TRAN05                                            AR548455
      C           *IN41     IFEQ '1'                                       123275
+     C           *IN25     OREQ '1'                                                        AR375891A
      C********** *IN71     ANDEQ'0'                                                    123275 CLE031
      C/COPY WNCPYSRC,LEH00958
       * If facility fee:                                                                      CLE031
@@ -2064,6 +2086,7 @@
      C                     ENDIF                                                              261191
       *                                                                                       261191
      C           *IN41     IFEQ '0'                                                           222446
+     C           *IN25     ANDEQ'0'                                                        AR375891A
      C           *IN40     IFEQ '0'                                                           222446
      C           IBRE      ANDEQ'N'                                                           222446
      C           EBRC      ANDNEOSBR                                                          222446
@@ -2100,6 +2123,8 @@
       *                                                                   157984
      C           *IN41     IFEQ '1'                                       157984
      C           *IN40     ANDEQ'0'                                       157984
+     C           *IN25     OREQ '1'                                                        AR375891A
+     C           *IN40     ANDEQ'0'                                                        AR375891A
       *                                                                   157984
      C           AUTO      IFNE 'Y'                                       157984
      C           AUTO      ANDNE'C'                                                           CLE134
@@ -2174,7 +2199,8 @@
      CORN18 32                                                            S01392
      CORN18 33                                                            S01392
      CORN18N47N45                                                         S01392
-     CANN46N31             SETON                         87               S01392
+     C*NN46N31**           SETON                         87                         S01392 AR375891A
+     CANN46N31N25          SETON                         87                                AR375891A
 0518 C*RN18N47N45***                                                      S01392
 0519 C*NN46*********                                                      S01392
      C   87                                                               S01392
@@ -2735,6 +2761,7 @@
      C** Access fee narrative                                             123275
      C*                                                                   123275
      C           *IN41     IFEQ '1'                                       123275
+     C           *IN25     OREQ '1'                                                        AR375891A
      C           LFKEY     KLIST                                          123275
      C                     KFLD           BRCACD  3                       123275
      C**********           KFLD           CUSTNO  60                                   123275 CSD027
@@ -3435,10 +3462,13 @@
      O**********       41 71             40 'F1'                                       123275 CLE031
      O**********       41N71             40 'F3'                                       123275 CLE031
      O                 41      WPREF     40                                                   CLE031
+     O                 25      WPREF     40                                                AR375891A
 0938 O*************************LNRF******49                         LE0820123275
-     O                N41      LNRF      49                               123275
+     O**********      N41      LNRF      49                                         123275 AR375891A
+     O                N41N25   LNRF      49                                                AR375891A
 0939 O*****************4*******FACLTY****54                         LE0820123275
      O                 41      PNARTV    73                               123275
+     O                 25      PNARTV    73                                                AR375891A
 0940 O                         EAMT      80P                              LE0820
 0941 O                         DRCRIN    81                               LE0820
 0942 O                                  102 'GE-LE'                       LE0820

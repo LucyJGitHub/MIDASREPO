@@ -20,8 +20,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD036154           Date 12Mar20               *
-      *  Prev Amend No. MD008453           Date 12Mar20               *
+      *  Last Amend No. AR375891B          Date 26Aug20               *
+      *  Prev Amend No. MD036154           Date 12Mar20               *
+      *                 MD008453           Date 12Mar20               *            
       *                 AR956619           Date 28Jun12               *
       *                 263473             Date 28Jun12               *
       *                 AR674226           Date 04Dec19               *
@@ -195,6 +196,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  AR375891B - Enquiry shows 'RECEIVABLE' for fees attached to  *
+      *              parts sold loan, should be 'PAYABLE'.            *
+      *              (Child: AR375892)                                *
       *  MD036154 - JNSTAT is being locked by the program. Amended    *
       *             program to prevent locking.                       *
       *  MD008453 - Accrued to date in enquiry is not the same as the *
@@ -2320,6 +2324,27 @@
      C                     ENDIF                                                              204452
       *
      C                     END
+      ********************************************************                      153664 AR375891B
+      ***If*SAR*CLE005*is*Present*****************************                      153664 AR375891B
+      ********************************************************                      153664 AR375891B
+     C********** *IN30     IFEQ *ON                                                 153664 AR375891B
+      ********************************************************                      153664 AR375891B
+      ***Format*Fee*Indicator*********************************                      153664 AR375891B
+      ********************************************************                      153664 AR375891B
+     C**********           MOVEL*BLANKS   SFPTFI                                    153664 AR375891B
+     C********** PTFI      IFEQ *BLANKS                                             153664 AR375891B
+     C**********           MOVEL'R'       SFPTFI                                    153664 AR375891B
+     C**********           ENDIF                                                    153664 AR375891B
+     C********** PTFI      IFEQ 'P'                                                 153664 AR375891B
+     C********** PTFI      OREQ 'S'                                                 CLE106 AR375891B
+     C********** PTFI      OREQ 'R'                                                 CLE106 AR375891B
+     C**********           MOVEL'P'       SFPTFI                                    153664 AR375891B
+     C**********           ENDIF                                                    153664 AR375891B
+     C********** PTFI      IFEQ 'I'                                                 153664 AR375891B
+     C**********           MOVEL'I'       SFPTFI                                    153664 AR375891B
+     C**********           ENDIF                                                    153664 AR375891B
+      ********************************************************                      153664 AR375891B
+     C**********           ENDIF                                                    153664 AR375891B
       *                                                                   153664
       ** If SAR CLE005 is Present                                         153664
       *                                                                   153664
@@ -2368,11 +2393,12 @@
       * LoanCustOriginPurch = 'O', use Original Borrower:                                     207629
      C********** FELOAN    IFNE 0                                                      207629 CLE148
      C           FELOAN    IFNE *BLANKS                                                       CLE148
-     C           PPCUST    ANDEQ'O'                                                           207629
+     C********** PPCUST    ANDEQ'O'                                                 207629 AR375891B
      C                     MOVE FELOAN    WLOAN                                               207629
      C                     MOVE 'A'       WCLRT                                               207629
      C           KEY005    CHAINCLOAN                79                                       207629
      C           *IN79     IFEQ '0'                                                           207629
+     C           PPCUST    ANDEQ'O'                                                        AR375891B
      C           PTYP      IFEQ 64                                                            207629
      C           PTYP      OREQ 65                                                            207629
      C           PTYP      OREQ 68                                                            207629
@@ -2391,6 +2417,34 @@
      C                     ELSE                                           176783
      C                     MOVE FESCCY    SFSCCY                          176783
      C                     END                                            176783
+      *                                                                                    AR375891B
+      ** If SAR CLE005 is Present                                                          AR375891B
+      *                                                                                    AR375891B
+     C           *IN30     IFEQ *ON                                                        AR375891B
+      *                                                                                    AR375891B
+      ** Format Fee Indicator                                                              AR375891B
+      *                                                                                    AR375891B
+     C                     MOVEL*BLANKS   SFPTFI                                           AR375891B
+     C           PTFI      IFEQ *BLANKS                                                    AR375891B
+     C           PTYP      IFEQ 66                                                         AR375891B
+     C           PTYP      OREQ 67                                                         AR375891B
+     C           PTYP      OREQ 69                                                         AR375891B
+     C           PTYP      OREQ 72                                                         AR375891B
+     C                     MOVEL'P'       SFPTFI                                           AR375891B
+     C                     ELSE                                                            AR375891B
+     C                     MOVEL'R'       SFPTFI                                           AR375891B
+     C                     ENDIF                                                           AR375891B
+     C                     ENDIF                                                           AR375891B
+     C           PTFI      IFEQ 'P'                                                        AR375891B
+     C           PTFI      OREQ 'S'                                                        AR375891B
+     C           PTFI      OREQ 'R'                                                        AR375891B
+     C                     MOVEL'P'       SFPTFI                                           AR375891B
+     C                     ENDIF                                                           AR375891B
+     C           PTFI      IFEQ 'I'                                                        AR375891B
+     C                     MOVEL'I'       SFPTFI                                           AR375891B
+     C                     ENDIF                                                           AR375891B
+      *                                                                                    AR375891B
+     C                     ENDIF                                                           AR375891B
      C*                                                                   BH3431
      C** Move the record id into the screen field                         BH3431
      C*                                                                   BH3431
@@ -3940,11 +3994,12 @@
       * LoanCustOriginPurch = 'O', use Original Borrower:                                     207629
      C********** FELOAN    IFNE 0                                                      207629 CLE148
      C           FELOAN    IFNE *BLANKS                                                       CLE148
-     C           PPCUST    ANDEQ'O'                                                           207629
+     C********** PPCUST    ANDEQ'O'                                                 207629 AR375891B
      C                     MOVE FELOAN    WLOAN                                               207629
      C                     MOVE 'A'       WCLRT                                               207629
      C           KEY005    CHAINCLOAN                79                                       207629
      C           *IN79     IFEQ '0'                                                           207629
+     C           PPCUST    ANDEQ'O'                                                        AR375891B
      C           PTYP      IFEQ 64                                                            207629
      C           PTYP      OREQ 65                                                            207629
      C           PTYP      OREQ 68                                                            207629
@@ -3962,8 +4017,15 @@
       *                                                                   CLE005
      C                     MOVE *BLANKS   SDPTFN                          CLE005
      C           PTFI      IFEQ *BLANKS                                   CLE005
+     C           PTYP      IFEQ 66                                                         AR375891B
+     C           PTYP      OREQ 67                                                         AR375891B
+     C           PTYP      OREQ 69                                                         AR375891B
+     C           PTYP      OREQ 72                                                         AR375891B
+     C                     MOVEL'PAYABLE' SDPTFN                                           AR375891B
+     C                     ELSE                                                            AR375891B
      C                     MOVEL'RECEIVAB'SDPTFN                          CLE005
      C                     MOVE 'LE'      SDPTFN                          CLE005
+     C                     ENDIF                                                           AR375891B
      C                     ENDIF                                          CLE005
      C           PTFI      IFEQ 'P'                                       CLE005
      C           PTFI      OREQ 'S'                                                           CLE106

@@ -26,8 +26,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD052696           Date 04Apr19               *
-      *  Prev Amend No. MD031692           Date 12Mar20               *
+      *  Last Amend No. AR375892           Date 26Aug20               *
+      *  Prev Amend No. MD052696           Date 04Apr19               *
+      *                 MD031692           Date 12Mar20               *
       *                 MD030856           Date 06Nov19               *
       *                 CER050             Date 16Jun19               *
       *                 MD053607           Date 19Jul19               *
@@ -69,6 +70,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR375892 - Incorrect projection for fees attached to parts   *
+      *             sold loan. Use Payment Settlement instead of      *
+      *             Receipt Settlement.                               *      
       *  MD052696 - Unauthorised Loans and fees not visible in WIP,   *
       *             after rejecting amendments to their maturity dates*
       *  MD031692 - Incorrect accrual when fee rate is changed on     *
@@ -548,6 +552,8 @@
                                                                                               244636
       ** Parameter for LEFEEMRTV                                                              244636
      D PRcvParm        S             92                                                       244636
+                                                                                            AR375892
+     D PPayParm        S            594                                                     AR375892
 
      D #TRCCY          S              3A                                                     CSF011A
      D #TPCCY          S              3A                                                     CSF011A
@@ -1016,6 +1022,7 @@
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
      C                   PARM                    PRcvParm                                     244636
+     C                   PARM                    PPayParm                                   AR375892
 
      C                   ENDSR
       *****************************************************************
@@ -1405,6 +1412,11 @@
      C                             PRcvParm <> *blank                                         244636
      C                   MOVEL     PRcvParm      InRecSttmt                                   244636
      C                   ENDIF                                                                244636
+      *                                                                                     AR375892
+     C                   IF        InPaySttmt = *blank AND                                  AR375892
+     C                             PPayParm <> *blank                                       AR375892
+     C                   MOVEL     PPayParm      InPaySttmt                                 AR375892
+     C                   ENDIF                                                              AR375892
       *
       *  If error in validation, fail this input
       *

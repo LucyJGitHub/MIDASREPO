@@ -13,8 +13,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD052696           Date 04Apr19               *
-      *  Prev Amend No. MD031692           Date 12Mar20               *
+      *  Last Amend No. AR375891B          Date 26Aug20               *
+      *  Prev Amend No. AR375892           Date 26Aug20               *
+      *                 MD052696           Date 04Apr19               *
+      *                 MD031692           Date 12Mar20               *
       *                 MD030856           Date 06Nov19               *
       *                 CER050             Date 16Jun19               *
       *                 MD053607           Date 19Jul19               *
@@ -48,6 +50,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR375891B - Amendment to Settlement details do not reflect   *
+      *              on file. Ensure protect indicator set correctly. *
+      *              (Child: AR375892)                                *
+      *  AR375892 - Incorrect projection for fees attached to parts   *
+      *             sold loan. Use Payment Settlement instead of      *
+      *             Receipt Settlement.                               *      
       *  MD052696 - Unauthorised Loans and fees not visible in WIP,   *
       *             after rejecting amendments to their maturity dates*
       *  MD031692 - Incorrect accrual when fee rate is changed on     *
@@ -354,6 +362,7 @@
       ** Parameter for LEFEEMRTV                                                              244636
      D PRcvParm        S             92                                                       244636
                                                                                               244636
+     D PPayParm        S            594                                                     AR375892                                                                                              
      D #TRCCY          S              3A                                                     CSF011A
      D #TPCCY          S              3A                                                     CSF011A
      D WTRCcy          S              3A                                                     CSF011A
@@ -1183,6 +1192,7 @@
       * Array index (3P0) from/to caller
      C                   PARM                    Ix
      C                   PARM                    PRcvParm                                     244636
+     C                   PARM                    PPayParm                                   AR375892
       *
       ***  Retrieve Branch code of the transaction
       *
@@ -1546,8 +1556,14 @@
      C                   ENDIF
       *
      C     WPTFI         IFEQ      *BLANK
+     C                   IF        CL_PTYP = 66 or CL_PTYP = 67                            AR375891B
+     C                             or CL_PTYP = 69 or CL_PTYP = 72                         AR375891B
+     C                   MOVE      'N'           ##PPAY                                    AR375891B
+     C                   MOVE      'Y'           ##PREC                                    AR375891B
+     C                   ELSE                                                              AR375891B
      C                   MOVE      'Y'           ##PPAY
      C                   MOVE      'N'           ##PREC
+     C                   ENDIF                                                             AR375891B
      C                   ENDIF
       *
      C                   ENDIF

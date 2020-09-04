@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR375891B          Date 26Aug20               *
+      *  Prev Amend No. AR375892           Date 26Aug20               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR318270           Date 01Aug12               *
       *                 263801             Date 01Aug12               *
       *                 262672             Date 01Aug12               *
@@ -45,6 +47,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR375891B - Amendment to Settlement details do not reflect   *
+      *              on file. Ensure fee type narrative is set        *
+      *              correctly. (Child: AR375892)                     *
+      *  AR375892 - Incorrect projection for fees attached to parts   *
+      *             sold loan. Use Payment Settlement instead of      *
+      *             Receipt Settlement.                               *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  AR318270 - Specific Fee amendment ends in error              *
@@ -92,7 +100,7 @@
      F                                     IGNORE(CLOANHHF)                                   CLE134
      F                                     IGNORE(CLOANCKF)                                   CLE134
      F                                     IGNORE(CLOANZ1F)                                   CLE134
- 
+
       *****************************************************************
       ** +--------------------------------------+
       **   Automatically included D-specs        
@@ -111,76 +119,76 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the GL standard declares
      D/COPY GLCPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       **   End of automatically included D-specs 
       **   ===================================== 
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       **   Manually included D-specs             
       **   =========================             
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       **   Named constants                       
       **   ===============                       
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       **   Arrays and Data Structures            
       **   ==========================            
       ** +--------------------------------------+
- 
+
       * Fee in File Format
      D CrFeFilFmt    E DS                  EXTNAME(LEFEED)
- 
+
       * Customer Loans record CL in file Format
      D ClilFilFmt    E DS                  EXTNAME(CLOANCL)
      D                                     PREFIX(CL_)
- 
+
       * Facility record FM in file Format
      D FacmFilFmt    E DS                  EXTNAME(FCLTYFM)
      D                                     PREFIX(FA_)
- 
+
       * Fee in Screen Format
      D CrFeScnFmt    E DS                  EXTNAME(LEFEEMPD)
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** EXTERNAL DS FOR SAR DETAILS
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       **   CURRENCY TYPE
- 
+
      D SDFEE         E DS                  EXTNAME(SDFEEPD)                                   CLE134
                                                                                               CLE134
       ** External DS for Fee Details                                                          CLE134
                                                                                               CLE134
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
      D                 DS                                                                     242377
      D  WPARM                  1     20                                                       242377
      D  WPARM1                 1      5                                                       242377
@@ -192,13 +200,13 @@
       **   Declared variables                    
       **   ==================                    
       ** +--------------------------------------+
- 
+
      D Kpd_LNRF        S                   LIKE(pd_LNRF)                                      CLE134
                                                                                               CLE134
      D P@FCOD          S              2A                                                      CLE134
                                                                                               CLE134
      D CLE134          S              1                                                       CLE134
- 
+
       ** +--------------------------------------+
       **   End of D-specs                        
       **   ==============                        
@@ -213,7 +221,7 @@
       *
       ** Set output screen fields for screen
      C                   EXSR      SETFLD
- 
+
       * Return
      C                   RETURN
       *
@@ -230,7 +238,7 @@
      C                   ELSE
      C                   MOVEL     FECNUM        DDCSSN
      C                   ENDIF
- 
+
      C*****FELOAN        IFEQ      0                                                          CLE148
      C     FELOAN        IFEQ      *BLANKS                                                    CLE148
      C                   MOVE      *BLANKS       DDLNRF
@@ -245,7 +253,7 @@
      C                   ENDIF                                                                242377
      C                   MOVE      FELOAN        DDLNRF
      C                   ENDIF
- 
+
      C     FEFACL        IFEQ      0
      C                   MOVE      *BLANKS       DDFACT
      C                   MOVE      *BLANKS       DDFCNO
@@ -253,7 +261,7 @@
      C                   MOVEL     FEFACL        DDFACT
      C                   MOVE      FEFACL        DDFCNO
      C                   ENDIF
- 
+
      C                   MOVE      FEFSEQ        DDFSEQ
      C                   MOVE      FEFCOD        DDECOD
      C                   MOVE      FEFCCY        DDECUR
@@ -459,10 +467,10 @@
       *
       * Fee status
      C     DDACTN        IFNE      'I'
- 
+
      C     FERECI        IFNE      'M'
      C     FERECI        ANDNE     'R'
- 
+
      C                   SELECT
      C     FSTS          WHENEQ    'C'
      C                   MOVEL     'LER0194'     ZAMSID
@@ -475,16 +483,16 @@
      C                   ENDSL
       *
      C                   ELSE
- 
+
      C                   SELECT
      C     FERECI        WHENEQ    'M'
      C                   MOVEL     'LER0198'     ZAMSID
      C     FERECI        WHENEQ    'R'
      C                   MOVEL     'LER0197'     ZAMSID
      C                   ENDSL
- 
+
      C                   ENDIF
- 
+
      C                   EXSR      SRTEXT
      C                   MOVEL     ZAMSTP        DDSTAT
      C                   MOVE      *BLANKS       ZAMSID
@@ -778,8 +786,20 @@
      C                   ELSE
       *
      C     PTFI          IFEQ      *BLANK
+     C     FELOAN        IFNE      *BLANK                                                  AR375891B
+     C     CL_PTYP       ANDEQ     66                                                      AR375891B
+     C     FELOAN        ORNE      *BLANK                                                  AR375891B
+     C     CL_PTYP       ANDEQ     67                                                      AR375891B
+     C     FELOAN        ORNE      *BLANK                                                  AR375891B
+     C     CL_PTYP       ANDEQ     69                                                      AR375891B
+     C     FELOAN        ORNE      *BLANK                                                  AR375891B
+     C     CL_PTYP       ANDEQ     72                                                      AR375891B
+     C                   MOVE      *BLANKS       ZAMSID                                    AR375891B
+     C                   MOVEL     'LER0203'     ZAMSID                                    AR375891B
+     C                   ELSE                                                              AR375891B
      C                   MOVE      *BLANKS       ZAMSID
      C                   MOVEL     'LER0202'     ZAMSID
+     C                   ENDIF                                                             AR375891B
      C                   EXSR      SRTEXT
      C                   MOVEL     ZAMSTP        DDFETP
      C                   MOVE      '1'           *IN52
@@ -788,6 +808,18 @@
      C     PTFI          IFEQ      'P'
      C     PTFI          OREQ      'S'                                                        CLE106
      C     PTFI          OREQ      'R'                                                        CLE106
+     C*****FELOAN        ORNE      0                                              AR375892 AR375891B
+     C*****CL_PTYP       ANDEQ     66                                             AR375892 AR375891B
+     C*****CL_LPFI       ANDNE     'I'                                            AR375892 AR375891B
+     C*****FELOAN        ORNE      0                                              AR375892 AR375891B
+     C*****CL_PTYP       ANDEQ     67                                             AR375892 AR375891B
+     C*****CL_LPFI       ANDNE     'I'                                            AR375892 AR375891B
+     C*****FELOAN        ORNE      0                                              AR375892 AR375891B
+     C*****CL_PTYP       ANDEQ     69                                             AR375892 AR375891B
+     C*****CL_LPFI       ANDNE     'I'                                            AR375892 AR375891B
+     C*****FELOAN        ORNE      0                                              AR375892 AR375891B
+     C*****CL_PTYP       ANDEQ     72                                             AR375892 AR375891B
+     C*****CL_LPFI       ANDNE     'I'                                            AR375892 AR375891B
      C                   MOVE      *BLANKS       ZAMSID
      C                   MOVEL     'LER0203'     ZAMSID
      C                   EXSR      SRTEXT
@@ -862,7 +894,7 @@
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE004'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CLE004            1
      C                   ELSE
@@ -875,13 +907,13 @@
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE005'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CLE005            1
      C                   ELSE
      C                   MOVEL     'Y'           CLE005
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

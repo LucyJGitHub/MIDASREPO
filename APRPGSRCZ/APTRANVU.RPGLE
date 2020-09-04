@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD030856           Date 06Nov19               *
-      *  Prev Amend No. MD054354           Date 23Oct19               *
+      *  Last Amend No. MD055373           Date 14Jul20               *
+      *  Prev Amend No. MD030856           Date 06Nov19               *
+      *                 MD054354           Date 23Oct19               *
       *                 MD055446           Date 04Apr20               *
       *                 MD054696           Date 29Oct19               *
       *                 MD054538           Date 08Oct19               *
@@ -225,6 +226,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055373 - Audit trail not available                         *
+      *           - Include DDIUSR and DDAUSR fields on TransInEx2.   *
       *  MD030856 - Introduced reject processing to FEEM              *
       *  MD054354 - Settlement of fee accrual for prior period for    *
       *             backdated notional change                         *
@@ -671,6 +674,7 @@
      D  TransCRSH                          LIKE(SDCRSS)                                       CGL157
      D  TransCR50                     1A                                                    MD054028
      D  TransBRTCent                 10A                                                    MD055446
+     D  TransPROFUser                20A                                                    MD055373
                                                                                               CSW213
      D TransInEx3      DS          9999                                                       CSW213
      D  TransCARS              1   9999                                                       CSW213
@@ -7345,6 +7349,11 @@ RGC  D RPIF4LN         S              4  0                                      
       *** BRT Customer Details - Century                                                    MD055446
      C                   EVAL      TransBRTCent = %SUBST(BufferEx2:Bfp:10)                  MD055446
      C                   EVAL      Bfp  += 10                                               MD055446
+      *                                                                                     MD055373
+      ** Insert User and Amend User fields                                                  MD055373
+     C                   EVAL      TransPROFUser = %SUBST(BufferEx2:Bfp:20)                 MD055373
+     C                   EVAL      Bfp  += 20                                               MD055373
+      *                                                                                     MD055373
      C                                                                                      MD054028
      C                   EVAL      BFEX2Ln -= Bfp                                           MD022093
                                                                                             MD022093

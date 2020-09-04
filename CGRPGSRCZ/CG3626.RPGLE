@@ -631,7 +631,7 @@
      C**********         LEAVE                                                              MD055442
      C**********         ENDIF                                                              MD055442
      C     SpcArr(X)     SCAN      ConvValue:Y   SpcPos                   90                MD055442
-     C                   ENDDO
+     C                   ENDDO                                                              MD055442
 
       *  Scan for next special character.
      C                   EVAL      X = X + 1

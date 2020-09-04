@@ -16,7 +16,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055481           Date 12Aug20               *
+      *  Last Amend No. MD055481           Date 04Sep20               *
       *  Prev Amend No. MD050457           Date 06Mar19               *
       *                 MD046248           Date 27Oct17               *
       *                 CLE134             Date 01Aug12               *
@@ -71,9 +71,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD055481 - Use Original borrower on report for participation *
-      *             purchased loans when system set up is 'O'         *
-      *             (Original Borrower).                              *
+      *  MD055481 - Show the original borrower on the report for loan *
+      *             fees attached to a participation purchased if the *
+      *             system value 'LoanCustOriginPurch' is equal to 'O'*
       *  MD050457 - Do not process DBERR when customer is closed.     *
       *             Patterned fic from 263371.                        *
       *  MD046248 - Finastra Rebranding                               *
@@ -2030,21 +2030,55 @@
       *                                                                   153792
      C                     ENDSR                                          153792
       *                                                                   153792
-      ********************************************************************                  MD055481
-     C/TITLE SR/ORIGB - Display Original Borrower on report                                 MD055481
-      ********************************************************************                  MD055481
+      *****************************************************************                     MD055481
+      *  ORIGB - Display Original Borrower on report                  *                     MD055481
+      *                                                               *                     MD055481
+      *  Called by: C0000, D0000, E0000 and SRH000                    *                     MD055481
+      *  Calls: None                                                  *                     MD055481
+      *****************************************************************                     MD055481
      C           ORIGB     BEGSR                                                            MD055481
       *                                                                                     MD055481
-      ** If participation purchased and system value is using Original Borrower             MD055481
+      ** If participation purchased and system value is using Original                      MD055481
+      **  Borrower.                                                                         MD055481
       *                                                                                     MD055481
      C                     MOVE *BLANKS   POLNO                                             MD055481
+     C                     MOVELBBCRNM    WBCRNM 20                                         MD055481
+     C                     MOVELBBCRTN    WBCRTN 10                                         MD055481
      C           PTYP      IFEQ 64                                                          MD055481
      C           PTYP      OREQ 65                                                          MD055481
      C           PTYP      OREQ 68                                                          MD055481
      C           PTYP      OREQ 71                                                          MD055481
      C                     MOVE '1'       *IN36                                             MD055481
      C                     MOVE OLNO      POLNO                                             MD055481
+     C                     MOVELPOLNO     KEYC   10                                         MD055481
+      *                                                                                     MD055481
+     C                     CALL 'AOCUSTR0'                                                  MD055481
+     C                     PARM *BLANKS   @RTCD                                             MD055481
+     C                     PARM '*KEY   ' @OPTN                                             MD055481
+     C                     PARM           KEYC                                              MD055481
+     C                     PARM           KEYSTS  7                                         MD055481
+     C           SDCUST    PARM SDCUST    DSSDY                                             MD055481
+      *                                                                                     MD055481
+     C           @RTCD     IFEQ *BLANKS                                                     MD055481
+     C           @RTCD     OREQ '*CUSCLS'                                                   MD055481
+     C                     MOVE BBCRNM    OLNORN                                            MD055481
+     C                     MOVE BBCRTN    OLNORT                                            MD055481
+     C                     ELSE                                                             MD055481
+     C                     MOVE *ALL'*'   OLNORN                                            MD055481
+     C                     MOVE *ALL'*'   OLNORT                                            MD055481
+     C           *LOCK     IN   LDA                         ************                    MD055481
+     C                     MOVELPOLNO     DBKEY             * DBERR 19 *                    MD055481
+     C                     Z-ADD19        DBASE             ************                    MD055481
+     C                     MOVEL'LER160  'DBPGM                                             MD055481
+     C                     MOVEL'SDCUSTPD'DBFILE                                            MD055481
+     C                     SETON                     U7U8LR                                 MD055481
+     C                     EXSR *PSSR                                                       MD055481
+     C                     OUT  LDA                                                         MD055481
+     C                     EXSR F0000                                                       MD055481
      C                     ENDIF                                                            MD055481
+     C                     ENDIF                                                            MD055481
+     C                     MOVELWBCRNM    BBCRNM                                            MD055481
+     C                     MOVELWBCRTN    BBCRTN                                            MD055481
       *                                                                                     MD055481
      C                     ENDSR                                                            MD055481
       ********************************************************************

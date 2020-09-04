@@ -22,7 +22,7 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055481           Date 12Aug20               *
+      *  Last Amend No. MD055481           Date 04Sep20               *
       *  Prev Amend No. AR820690           Date 12Oct12               *
       *                 AR956619           Date 28Jun12               *
       *                 AR911591           Date 03May12               *
@@ -299,7 +299,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
-      *  MD055481 - Added Orig Borrower on report for loan fees.      *
+      *  MD055481 - Show the original borrower on the report for loan *
+      *             fees attached to a participation purchased if the *
+      *             system value 'LoanCustOriginPurch' is equal to 'O'*
       *  AR820690 - Missing LEFHST record. Ensure that when payment   *
       *             falls on a holiday and ANWD=2, LEFHST record will *
       *             be generated on next working day. Applied fix     *
@@ -14907,20 +14909,49 @@
       *                                                                                       CLE164
      C                     ENDSR                                                              CLE164
       *****************************************************************                       CLE164
-     C/TITLE SR/ORIGB - Display Original Borrower on report                                 MD055481
-      ********************************************************************                  MD055481
+      *  ORIGB - Display Original Borrower on report                  *                     MD055481
+      *                                                               *                     MD055481
+      *  Called by: Main Processing                                   *                     MD055481
+      *  Calls: None                                                  *                     MD055481
+      *****************************************************************                     MD055481
      C           ORIGB     BEGSR                                                            MD055481
       *                                                                                     MD055481
-      ** If participation purchased and system value is using Original Borrower             MD055481
+      ** If participation purchased and system value is using Original                      MD055481
+      ** Borrower.                                                                          MD055481
       *                                                                                     MD055481
      C                     MOVE *BLANKS   POLNO                                             MD055481
+     C                     MOVEL*BLANKS   KEYC   10                                         MD055481
+     C                     MOVELBBCRNM    WBCRNM 20                                         MD055481
      C           WPTYP     IFEQ 64                                                          MD055481
      C           WPTYP     OREQ 65                                                          MD055481
      C           WPTYP     OREQ 68                                                          MD055481
      C           WPTYP     OREQ 71                                                          MD055481
      C                     MOVE '1'       *IN36                                             MD055481
      C                     MOVE WOLNO     POLNO                                             MD055481
+     C                     MOVELPOLNO     KEYC                                              MD055481
+      *                                                                                     MD055481
+      ** Get original borrower customer name.                                               MD055481
+      *                                                                                     MD055481
+     C                     CALL 'AOCUSTR0'                                                  MD055481
+     C                     PARM '*BLANKS' WRTCD                                             MD055481
+     C                     PARM '*KEY   ' WOPTN                                             MD055481
+     C                     PARM           KEYC                                              MD055481
+     C                     PARM           KEYSTS  7                                         MD055481
+     C           SDCUST    PARM SDCUST    DSSDY                                             MD055481
+     C           WRTCD     IFEQ *BLANKS                                                     MD055481
+     C           WRTCD     OREQ '*CUSCLS'                                                   MD055481
+     C                     MOVE BBCRNM    OLNORN                                            MD055481
+     C                     ELSE                                                             MD055481
+     C           *LOCK     IN   LDA                                                         MD055481
+     C                     MOVEL'LER135'  DBPGM                                             MD055481
+     C                     MOVELPOLNO     DBKEY            ************                     MD055481
+     C                     MOVEL'SDCUSTPD'DBFILE           * DBERR 39 *                     MD055481
+     C                     Z-ADD039       DBASE            ************                     MD055481
+     C                     OUT  LDA                                                         MD055481
+     C                     EXSR *PSSR                                                       MD055481
      C                     ENDIF                                                            MD055481
+     C                     ENDIF                                                            MD055481
+     C                     MOVELWBCRNM    BBCRNM                                            MD055481
       *                                                                                     MD055481
      C                     ENDSR                                                            MD055481
       ********************************************************************                  MD055481

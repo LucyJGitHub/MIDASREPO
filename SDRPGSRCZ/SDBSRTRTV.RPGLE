@@ -469,16 +469,16 @@
       *
       * Base Rate Number must be numeric
       *
-     C     SubForTRNN    IFEQ      0
-     C     DDBSRC        IFLT      '0'
-     C     DDBSRC        ORGT      '99'
-     C                   MOVE      'N'           OKBSRC
-     C                   ADD       1             Ix
-     C                   MOVEL     'DDBSRC'      FldNameArr(Ix)
-     C                   MOVEL     'USR4434'     MsgIdArr(Ix)
-     C                   GOTO      EVAL
-     C                   END
-     C                   END
+     C*****SubForTRNN    IFEQ      0                                                          CSD103
+     C*****DDBSRC        IFLT      '0'                                                        CSD103
+     C*****DDBSRC        ORGT      '99'                                                       CSD103
+     C**********         MOVE      'N'           OKBSRC                                       CSD103
+     C**********         ADD       1             Ix                                           CSD103
+     C**********         MOVEL     'DDBSRC'      FldNameArr(Ix)                               CSD103
+     C**********         MOVEL     'USR4434'     MsgIdArr(Ix)                                 CSD103
+     C**********         GOTO      EVAL                                                       CSD103
+     C**********         END                                                                  CSD103
+     C**********         END                                                                  CSD103
       *
       * If Authorisation check is on,                                                         CSD012
       * check if unathorised record exists on Authorisation Log.                              CSD012

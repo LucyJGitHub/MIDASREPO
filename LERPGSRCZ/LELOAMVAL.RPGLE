@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD034449           Date 24Jan19               *      
+      *  Last Amend No. MD054876           Date 26Aug20               *
+      *  Prev Amend No. MD034915           Date 26Aug20               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD034449           Date 24Jan19               *
       *                 MD052213           Date 26Oct18               *
       *                 MD051873           Date 14Sep18               *
       *                 MD027418           Date 18Jul18               *
@@ -98,6 +100,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054876 - When only funding rate/spread is populated, value *
+      *             of IRCF becomes 'Y'. Remove passing of value of   *
+      *             @@ALPH to DDRTSP so as to differentiate an SC with*
+      *             intentional zero spread rate from an SC with      *
+      *             funding details amendment only.                   *
+      *  MD034915 - Negative funding rate is not allowed in Lending.  *
+      *             Allow negative input in Funding rate/spread.      *
+      *             Use ZA0841 for validation instead of ZALIGN.      *
+      *           - Applied for MD054876                              *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD034449 - Used ZA0841 instead of ZALIGN for negative spread *
       *           - Applied for MD052515                              *
@@ -2412,7 +2423,7 @@
      C                   ELSE                                                               MD034449
      C                   Z-ADD     WNumBas       WSPRT                                      MD034449
      C                   ENDIF                                                              MD034449
-     C                   MOVE      @@ALPH        DDRTSP                                     MD034449
+     C**********         MOVE      @@ALPH        DDRTSP                            MD034449 MD054876
      C**********         MOVE      ZFIELD        WSPRT            11 7                      MD034449
      C                   ENDIF
      C                   Endif                                                                CLE035
@@ -4881,13 +4892,20 @@
       *
       ** If funding rate/spread entered, check if it is a valid figure
      C                   ELSE
-     C                   CALLB     'ZALIGN'
-     C                   PARM      *BLANK        ZALIGNok          1
-     C                   PARM      DDFRAT        ZFIELD           16
-     C                   PARM      7             ZADEC             1 0
-     C                   PARM      4             ZADIG             2 0
+     C**********         CALLB     'ZALIGN'                                                 MD034915
+     C**********         PARM      *BLANK        ZALIGNok          1                        MD034915
+     C**********         PARM      DDFRAT        ZFIELD           16                        MD034915
+     C**********         PARM      7             ZADEC             1 0                      MD034915
+     C**********         PARM      4             ZADIG             2 0                      MD034915
+     C                   Z-ADD     7             @@IDP                                      MD034915
+     C                   Z-ADD     4             @@IINT                                     MD034915
+     C                   MOVE      *BLANKS       @@ALPH                                     MD034915
+     C                   MOVE      DDFRAT        @@ALPH                                     MD034915
+     C                   MOVE      'N'           @@MTID            1                        MD034915
+     C                   EXSR      VALAMT                                                   MD034915
       *
-     C     ZALIGNok      IFEQ      'N'
+     C*****ZALIGNok      IFEQ      'N'                                                      MD034915
+     C     @@ERCD        IFNE      0                                                        MD034915
      C                   MOVE      'N'           DDFRATOK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDFRAT'
@@ -4895,7 +4913,8 @@
       *
       ** If valid figure, assign rate change flag and funding sign
      C                   ELSE
-     C                   MOVE      ZFIELD        WFRAT
+     C**********         MOVE      ZFIELD        WFRAT                                      MD034915
+     C                   MOVE      @@AMT         WFRAT                                      MD034915
      C                   Z-ADD     WFRAT         WFRSP
      C                   MOVE      'Y'           WFRCF
      C                   MOVE      SVFSGN        WFSGN

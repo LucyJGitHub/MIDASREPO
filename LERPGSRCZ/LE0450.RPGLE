@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD051347           Date 12Mar20               *
-      *  Prev Amend No. AR819229           Date 10Dec18               *       
+      *  Last Amend No. MD034915           Date 26Aug20               *
+      *  Prev Amend No. MD051347           Date 12Mar20               *
+      *                 AR819229           Date 10Dec18               *
       *                 AR932652           Date 06Aug13               *
       *                 AR927395           Date 05Aug13               *
       *                 252101             Date 06Nov19               *
@@ -423,13 +424,16 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD034915 - Negative funding rate is not allowed in Lending.  *
+      *             Allow negative input in Funding rate/spread.      *
+      *           - Applied for MD054876                              *
       *  MD051347 - Interest on a loan taken at the wrong date. Also  *
       *             update value of IBDT to zero if NIPD is less than *
       *             or equal to rundate. Additional fix to AR819229.  *
       *  AR819229 - Interest on a loan taken at the wrong date.       *
       *             Update value of IBDT with NIPD on SR/ROLLOV and   *
       *             SR/MROLL. (Child: AR823033)                       *
-      *           - Applied for MD051347                              *       
+      *           - Applied for MD051347                              *
       *  AR932652 - Error on withholding tax accrual when past due    *
       *             interest is manually repaid. Reverse fix BUG12852.*
       *             (Child: AR932655)                                 *
@@ -16222,9 +16226,17 @@ C    C                   ENDIF                                                  
       *                                                                   CAC001
      C     COFD          ADD       CFCD          WK13NA                                        CAC00
      C                   ADD       FWOD          WK13NA                                        CAC00
+      *                                                                                     MD034915
+     C     WK13NA        IFLT      WK13N                                                    MD034915
+     C     WK13N         ANDLT     0                                                        MD034915
+     C                   Z-ADD     WK13NA        WK13N                                      MD034915
+     C                   ELSE                                                               MD034915
+      *                                                                                     MD034915
      C     WK13NA        IFGT      WK13N                                                       CAC00
+     C     WK13NA        ANDGT     0                                                        MD034915
      C                   Z-ADD     WK13NA        WK13N                                         CAC00
      C                   ENDIF                                                                 CAC00
+     C                   ENDIF                                                              MD034915
       *                                                                   CAC001
      C                   SUB       ACPD          WK13N                                         CAC00
       *                                                                   CAC001
@@ -18210,10 +18222,18 @@ C    C                   ENDIF                                                  
       *                                                                   CAC001
       ** Subtract Accrued COF Posted to Date from the greater amount      CAC001
       *                                                                   CAC001
+     C     WK13NA        IFLT      WK13N                                                    MD034915
+     C     WK13N         ANDLT     0                                                        MD034915
+     C                   Z-ADD     WK13NA        WK13N                                      MD034915
+     C                   ELSE                                                               MD034915
+      *                                                                                     MD034915
      C     WK13NA        IFGT      WK13N                                                       CAC00
+     C     WK13NA        ANDGT     0                                                        MD034915
      C                   Z-ADD     WK13NA        WK13N                                         CAC00
      C                   Z-ADD     FCTD          ACDATE                                        CAC00
      C                   ENDIF                                                                 CAC00
+     C                   ENDIF                                                              MD034915
+      *                                                                                     MD034915
      C     WK13N         SUB       ACPD          WK13N                                         CAC00
       *                                                                   CAC001
       *                                                                                     AR927395

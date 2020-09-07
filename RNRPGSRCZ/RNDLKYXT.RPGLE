@@ -935,10 +935,12 @@
      c                   eval      forconra    = intr
 
       ** Map referate
-     c                   if        d#ubrtt    <> 0
+     c**********         if        d#ubrtt    <> 0                                            CSD103
+     c                   if        d#ubrtt    <> *BLANKS                                      CSD103
      c                   move      d#ucucy       curr
      c                   move      d#ubrtt       rateType
-     c                   elseif    d#tbrtt    <> 0
+     c**********         elseif    d#tbrtt    <> 0                                            CSD103
+     c                   elseif    d#tbrtt    <> *BLANKS                                      CSD103
      c                   move      d#tcucy       curr
      c                   move      d#tbrtt       rateType
      c                   endif

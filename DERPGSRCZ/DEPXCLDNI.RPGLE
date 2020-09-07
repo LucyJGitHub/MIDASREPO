@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -54,6 +55,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
@@ -93,12 +96,12 @@
       *  CDE001 - Data Export - CCRM Limits.                          *
       *                                                               *
       *****************************************************************
- 
+
      FMMDEALLL  IF   E           K DISK    INFSR(*PSSR)
      F                                     INCLUDE(MMDELDP0)
      FDEALS     IF   E           K DISK    INFSR(*PSSR)
      F                                     INCLUDE(DEALSDCF)
- 
+
      F/COPY WNCPYSRC,DEPXCLDF01
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -117,20 +120,20 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       * P E R I O D   D E T A I L S
      D/COPY DECPYSRC,DEXCPERDD
- 
- 
+
+
      D MMDELD        E DS                  EXTNAME(MMDELDPP)
      D DEALDC        E DS                  EXTNAME(DEALSDC)
       *                                                                                       CDE005
      D SCSARD        E DS                  EXTNAME(SCSARDPD) PREFIX(SF_)                      CDE005
       ** External DS for Switchable Features details                                          CDE005
      D DSFDY         E DS                  EXTNAME(DSFDY)                                     CDE005
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           30
@@ -241,9 +244,9 @@
      C                   PARM                    DEALDC
      C                   PARM                    Dataarea                                     208221
      C                   PARM                    I#RSRV           10                          CDE005
- 
+
       * If data error encountered, log error
- 
+
      C     W#RTCD        IFEQ      '*ERROR '
      C                   CLEAR                   BUFFER
      C     CDE005        IFEQ      'Y'                                                        CDE005
@@ -264,13 +267,13 @@
       * *INZSR --- INITIAL PROCESSING
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
       * This is a projections extract
- 
+
      C                   MOVE      'P'           I#PH
- 
+
       * Get Extract control information
- 
+
       /COPY DECPYSRC,DEXTGTCT
       ** Determine if Data Export - Reservation ID is active                                  CDE005
      C                   CALL      'AOSARDR0'                                                 CDE005
@@ -283,8 +286,8 @@
      C                   MOVEL     'Y'           CDE005            1                          CDE005
      C                   ENDIF                                                                CDE005
       *                                                                                       CDE005
- 
- 
+
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5

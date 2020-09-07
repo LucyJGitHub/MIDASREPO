@@ -16021,7 +16021,7 @@
      C                   MOVE      UFRDKY        FRDKY                                         S0111
      C                   TESTB     '0'           UDNSI                31                       S0111
      C***   SUPPRESS PRINT OF ZERO BASE RATE                              S01119
-     C*****NRBRTT        IFEQ      '00'                                   **             S0111 CSD103
+     C*****NRBRTT        IFEQ      '00'                                   **            S0111 CSD103
      C     NRBRTT        IFEQ      *BLANKS                                                    CSD103
      C                   MOVE      '  '          NRBRTT                                        S0111
      C                   SETOFF                                       31                       S0111
@@ -16040,7 +16040,7 @@
      C                   Z-ADD     UPAMT         NRRPUR                                        S0111
      C                   TESTB     '0'           TDNSI                31                       S0111
      C***   SUPPRESS PRINT OF ZERO BASE RATE                              S01119
-     C*****NRBRTT        IFEQ      '00'                                   **             S0111 CSD103
+     C*****NRBRTT        IFEQ      '00'                                   **            S0111 CSD103
      C     NRBRTT        IFEQ      *BLANKS                                                    CSD103
      C                   MOVE      '  '          NRBRTT                                        S0111
      C                   SETOFF                                       31                       S0111
@@ -24719,8 +24719,7 @@
      C                   Z-ADD     UEINR         WEINR            11 7                         S0111
      C                   MOVE      USPIN         WSPIN             1                           S0111
      C                   Z-ADD     URTSP         WRTSP            11 7                         S0111
-     C**********         Z-ADD     UBRTE         WBRTE            11 7                  S0111 CSD103
-     C                   MOVE      UBRTE         WBRTE            11                          CSD103
+     C                   Z-ADD     UBRTE         WBRTE            11 7                         S0111
      C                   MOVE      UDNSI         WDNSI             1                           S0111
      C                   Z-ADD     ULPCD         WLPCD             5 0                         S0111
      C                   Z-ADD     UFRFD         WFRFD             2 0                         S0111
@@ -24742,8 +24741,7 @@
      C                   Z-ADD     TEINR         WEINR            11 7                         S0111
      C                   MOVE      TSPIN         WSPIN             1                           S0111
      C                   Z-ADD     TRTSP         WRTSP            11 7                         S0111
-     C**********         Z-ADD     TBRTE         WBRTE            11 7                  S0111 CSD103
-     C                   MOVE      TBRTE         WBRTE            11                          CSD103
+     C                   Z-ADD     TBRTE         WBRTE            11 7                         S0111
      C                   MOVE      TDNSI         WDNSI             1                           S0111
      C                   Z-ADD     TLPCD         WLPCD             5 0                         S0111
       * Original Base Rate                                                CSW005

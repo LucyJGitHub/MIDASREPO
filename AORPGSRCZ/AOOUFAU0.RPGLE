@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054354           Date 23Oct19               *
-      *  Prev Amend No. MD026969           Date 23Oct19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD054354           Date 23Oct19               *
+      *                 MD026969           Date 23Oct19               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR943686           Date 23Sep16               *
@@ -57,6 +58,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *             (Recompile)                                       *
       *  MD054354 - Settlement of fee accrual for prior period for    *
       *             backdated notional change                         *
       *  MD026969 - New Processing for Fee Settlement.                *

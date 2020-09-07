@@ -3,7 +3,7 @@
 000102200903     H COPYRIGHT('(c) Finastra International Limited 2020')
 000104200903      *****************************************************************
 000105200904/*STD *  RPGBASEBND                                                   *
-000106200905/*EXI *  TEXT('Midas SD API - Calculate Term Rate')                   *
+000106200907/*EXI *  TEXT('Midas SD API - Calculate Term Rate')                   *
 000107200903      *****************************************************************
 000108200903      *                                                               *
 000109200903      *  Midas - Midas Standing Dat API - Calculate Term Rate         *
@@ -105,58 +105,59 @@
 000223200907     D  errorCode                     3a
 000224200907      ** Error Code (output)
 000225200905
-000226200905      ** Prototype to call ZBKDT module
-000227200903     D  backwardDays   pr                  extpgm('ZBKDT')
-000228200903     D    pDayno                      5s 0
-000229200903     D    pCurrency                   3a
-000230200903     D    pLocation                   3a
-000231200903     D    pNoDays                     2s 0
-000232200903     D    pRetDay                     5s 0
-000233200903
-000234200905      ** Prototype to call ZFWDT module
-000235200903     D  forwardDays    pr                  extpgm('ZFWDT')
-000236200903     D    pDayno                      5s 0
-000237200903     D    pNoDays                     2s 0
-000238200903     D    pRetDay                     5s 0
-000239200903     D    pCurrency                   3a
-000240200903     D    pLocation                   3a
-000241200903
-000242200905      ** Prototype to call getHistRate function
-000243200903     D  getHistRate    pr            11P 7
-000244200903     D    pCurrency                   3a
-000245200904     D    pBaseRate                   2s 0
-000246200903     D    pHistDate                   5s 0
-000247200903
-000248200903      ** +--------------------------------------+
-000249200903      ** ¦ Manually included D-specs            ¦
-000250200903      ** ¦ =========================            ¦
-000251200903      ** +--------------------------------------+
-000252200904
-000253200904     D calcRateDS      ds                  dim(1000) qualified
-000254200907     D    runDate                     5s 0
-000255200907     D    appliedRate                11p 7
-000256200907     D    daysApplied                 5s 0
-000257200907     D    calendarDay                 5s 0
-000258200907     D    effectiRate                11p 7
-000259200907     D    calculaRate                11p 7
-000260200907     D    cumulatRate                11p 7
-000261200907     D    compoundRat                11p 7
-000262200903
-000263200904     D baseRateHistDS  ds                  dim(1000) qualified
-000264200907     D    historyDate                 5s 0
-000265200907     D    appliedRate                11p 7
-000266200907     D    provRateFlg                 1a
-000267200904
-000268200903      ** +--------------------------------------+
-000269200903      ** ¦ Constants declaration                ¦
-000270200903      ** ¦ =====================                ¦
-000271200903      ** +--------------------------------------+
-000272200903
-000273200903      ** +--------------------------------------+
-000274200903      ** ¦ Variable declaration                 ¦
-000275200903      ** ¦ ====================                 ¦
-000276200903      ** +--------------------------------------+
-000277200904
+000226200907
+000227200905      ** Prototype to call ZBKDT module
+000228200903     D  backwardDays   pr                  extpgm('ZBKDT')
+000229200903     D    pDayno                      5s 0
+000230200903     D    pCurrency                   3a
+000231200903     D    pLocation                   3a
+000232200903     D    pNoDays                     2s 0
+000233200903     D    pRetDay                     5s 0
+000234200903
+000235200905      ** Prototype to call ZFWDT module
+000236200903     D  forwardDays    pr                  extpgm('ZFWDT')
+000237200903     D    pDayno                      5s 0
+000238200903     D    pNoDays                     2s 0
+000239200903     D    pRetDay                     5s 0
+000240200903     D    pCurrency                   3a
+000241200903     D    pLocation                   3a
+000242200903
+000243200905      ** Prototype to call getHistRate function
+000244200903     D  getHistRate    pr            11P 7
+000245200903     D    pCurrency                   3a
+000246200904     D    pBaseRate                   2s 0
+000247200903     D    pHistDate                   5s 0
+000248200903
+000249200903      ** +--------------------------------------+
+000250200903      ** ¦ Manually included D-specs            ¦
+000251200903      ** ¦ =========================            ¦
+000252200903      ** +--------------------------------------+
+000253200904
+000254200904     D calcRateDS      ds                  dim(1000) qualified
+000255200907     D    runDate                     5s 0
+000256200907     D    appliedRate                11p 7
+000257200907     D    daysApplied                 5s 0
+000258200907     D    calendarDay                 5s 0
+000259200907     D    effectiRate                11p 7
+000260200907     D    calculaRate                11p 7
+000261200907     D    cumulatRate                11p 7
+000262200907     D    compoundRat                11p 7
+000263200903
+000264200904     D baseRateHistDS  ds                  dim(1000) qualified
+000265200907     D    historyDate                 5s 0
+000266200907     D    appliedRate                11p 7
+000267200907     D    provRateFlg                 1a
+000268200904
+000269200903      ** +--------------------------------------+
+000270200903      ** ¦ Constants declaration                ¦
+000271200903      ** ¦ =====================                ¦
+000272200903      ** +--------------------------------------+
+000273200903
+000274200903      ** +--------------------------------------+
+000275200903      ** ¦ Variable declaration                 ¦
+000276200903      ** ¦ ====================                 ¦
+000277200903      ** +--------------------------------------+
+000278200904
 000311200903     D histCtr         s              4s 0 inz(0)
 000312200903     D calcCtr         s              4s 0 inz(0)
 000314200905     D wLocation       s              3a   inz(*blanks)

@@ -153,8 +153,9 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
- 
+      ** Alpha Num Base Rate Code                                                             CSD103
+     D AlphaBSRC       C                   Const('ALPHABASRATCOD')                            CSD103
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -278,6 +279,27 @@
      D PZOut15         S             15A                                                      240065
      D PZFSign         S              1A                                                      240065
                                                                                               240065
+     D PSysVal01       S             20A                                                      CSD103
+     D PCurSet01       S            200A                                                      CSD103
+     D PSysVal02       S             20A                                                      CSD103
+     D PCurSet02       S            200A                                                      CSD103
+     D PSysVal03       S             20A                                                      CSD103
+     D PCurSet03       S            200A                                                      CSD103
+     D PSysVal04       S             20A                                                      CSD103
+     D PCurSet04       S            200A                                                      CSD103
+     D PSysVal05       S             20A                                                      CSD103
+     D PCurSet05       S            200A                                                      CSD103
+     D PSysVal06       S             20A                                                      CSD103
+     D PCurSet06       S            200A                                                      CSD103
+     D PSysVal07       S             20A                                                      CSD103
+     D PCurSet07       S            200A                                                      CSD103
+     D PSysVal08       S             20A                                                      CSD103
+     D PCurSet08       S            200A                                                      CSD103
+     D PSysVal09       S             20A                                                      CSD103
+     D PCurSet09       S            200A                                                      CSD103
+     D PSysVal10       S             20A                                                      CSD103
+     D PCurSet10       S            200A                                                      CSD103
+                                                                                              CSD103
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -962,6 +984,7 @@
                                                                                              BUG3124
      ** Used MOVE op code to validate Base Rate Code                                         BUG3124
                                                                                              BUG3124
+     C     AlphaCode     IFNE      'Y'                                                        CSD103
      C                   MOVE      DDBSRC        #1TESTN                                     BUG3124
      C     DDBSRC        IFLE      '00'                                                      BUG3124
      C     DDBSRC        ORGT      '99'                                                      BUG3124
@@ -972,6 +995,7 @@
      C                   EVAL      FldNamXAr(Idx) = 'DDBSRN'                                 BUG3124
      C                   EVAL      MsgIdXAr(Idx) = 'USR4572'                                 BUG3124
      C                   END                                                                 BUG3124
+     C                   ENDIF                                                                CSD103
                                                                                              BUG3124
                                                                                              BUG3124
       * Update error info with that returned from the validation module                      BUG3124
@@ -1194,7 +1218,38 @@
      C     @RTCD         IFNE      *BLANK                                                     240065
      C                   EVAL      BNDCSP =  '.'                                              240065
      C                   END                                                                  240065
- 
+      ** Check for Alpha Num Base Rate Code system value                                      CSD103
+     C                   CALLB     'AOSVALR0'                                                 CSD103
+     C                   PARM      *BLANKS       PRtCd                                        CSD103
+     C                   PARM      AlphaBSRC     PSysVal01                                    CSD103
+     C                   PARM      *BLANKS       PCurSet01                                    CSD103
+     C                   PARM      *BLANKS       PSysVal02                                    CSD103
+     C                   PARM      *BLANKS       PCurSet02                                    CSD103
+     C                   PARM      *BLANKS       PSysVal03                                    CSD103
+     C                   PARM      *BLANKS       PCurSet03                                    CSD103
+     C                   PARM      *BLANKS       PSysVal04                                    CSD103
+     C                   PARM      *BLANKS       PCurSet04                                    CSD103
+     C                   PARM      *BLANKS       PSysVal05                                    CSD103
+     C                   PARM      *BLANKS       PCurSet05                                    CSD103
+     C                   PARM      *BLANKS       PSysVal06                                    CSD103
+     C                   PARM      *BLANKS       PCurSet06                                    CSD103
+     C                   PARM      *BLANKS       PSysVal07                                    CSD103
+     C                   PARM      *BLANKS       PCurSet07                                    CSD103
+     C                   PARM      *BLANKS       PSysVal08                                    CSD103
+     C                   PARM      *BLANKS       PCurSet08                                    CSD103
+     C                   PARM      *BLANKS       PSysVal09                                    CSD103
+     C                   PARM      *BLANKS       PCurSet09                                    CSD103
+     C                   PARM      *BLANKS       PSysVal10                                    CSD103
+     C                   PARM      *BLANKS       PCurSet10                                    CSD103
+                                                                                              CSD103
+     C                   If        PRtCd <> *Blanks                                           CSD103
+     C                   Eval      DBFile = 'SDSVALPD'                                        CSD103
+     C                   Eval      DBase = 906                                                CSD103
+     C                   Eval      DBKey = '*KEY    '                                         CSD103
+     C                   ExSR      *PSSR                                                      CSD103
+     C                   EndIf                                                                CSD103
+     C                   MOVEL     PCurSet01     AlphaCode         1                          CSD103
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as

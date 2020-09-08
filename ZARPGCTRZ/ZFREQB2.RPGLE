@@ -71,10 +71,14 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. 250822  *CREATE    Date 22May20               *
+      *  Last Amend No. MD056646           Date 07Sep20               *
+      *  Prev Amend No. 250822  *CREATE    Date 22May20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056646 - Accounts Maintenance: "A serious Midas error has  *
+      *             occured" during Account Creation. Add ZLOC in     *
+      *             *entry parameters.                                *
       *  250822 - For Freq 'B' and 'L', compute the date for the      *
       *           current month and not next month.                   *
       *                                                               *
@@ -261,6 +265,7 @@
 3666 C                   Z-ADD     ZMDAY         ZMDAY             2 0
 3667 C                   MOVE      ZCCY          ZCCY              3
      C                   MOVE      ZCCY          ZCCY
+     C                   MOVE      ZLOC          ZLOC              3                        MD056646
      C                   MOVE      *BLANKS       ErrorFound
 3674 C                   MOVE      '  '          ZINDE             2
 3675 C                   Z-ADD     0             ZINTO             2 0
@@ -527,6 +532,7 @@
      C                   PARM                    ZFREQ
      C                   PARM                    ZDAYNO
      C                   PARM                    ZCCY
+     C                   PARM                    ZLOC                                       MD056646
      C                   PARM                    ZMDAY
      C                   PARM                    BJDFIN
      C     SDGELR        PARM                    SDGELR

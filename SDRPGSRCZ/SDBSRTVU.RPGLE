@@ -358,6 +358,15 @@
      C                   EVAL                    Buffer = BaseRateIn                         BUG4469
      C                                                    + @TimeStamp                       BUG4469
      C                                                    + ExtData                          BUG4469
+     C                                                    + DDBLRT                            CSD103
+     C                                                    + DDLBDY                            CSD103
+     C                                                    + DDLODY                            CSD103
+     C                                                    + DDPDLY                            CSD103
+     C                                                    + DDBADJ                            CSD103
+     C                                                    + DDAVOP                            CSD103
+     C                                                    + DDBRAC                            CSD103
+     C                                                    + DDWGHT                            CSD103
+     C                                                    + DDLBAC                            CSD103
 
      C                   RETURN
 
@@ -378,6 +387,15 @@
       * Transaction information
      C                   PARM                    BaseR500
      C                   PARM                    ExtData500
+     C                   PARM                    DDBLRT            1                          CSD103
+     C                   PARM                    DDLBDY            2                          CSD103
+     C                   PARM                    DDLODY            2                          CSD103
+     C                   PARM                    DDPDLY            2                          CSD103
+     C                   PARM                    DDBADJ            7                          CSD103
+     C                   PARM                    DDAVOP            1                          CSD103
+     C                   PARM                    DDBRAC            2                          CSD103
+     C                   PARM                    DDWGHT            1                          CSD103
+     C                   PARM                    DDLBAC            2                          CSD103
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
@@ -804,6 +822,17 @@
 
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx
+                                                                                              CSD103
+      * Backward-Looking Rate Fields                                                          CSD103
+     C                   PARM                    DDBLRT                                       CSD103
+     C                   PARM                    DDLBDY                                       CSD103
+     C                   PARM                    DDLODY                                       CSD103
+     C                   PARM                    DDPDLY                                       CSD103
+     C                   PARM                    DDBADJ                                       CSD103
+     C                   PARM                    DDAVOP                                       CSD103
+     C                   PARM                    DDBRAC                                       CSD103
+     C                   PARM                    DDWGHT                                       CSD103
+     C                   PARM                    DDLBAC                                       CSD103
 
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr

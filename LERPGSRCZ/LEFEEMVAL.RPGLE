@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD052696           Date 04Apr19               *
-      *  Prev Amend No. MD004904           Date 04Apr19               *
+      *  Last Amend No. MD031003           Date 08Sep20               *
+      *  Prev Amend No. MD052696           Date 04Apr19               *
+      *                 MD004904           Date 04Apr19               *
       *                 AR1049357          Date 04Apr19               *
       *                 AR994776           Date 04Apr19               *
       *                 MD053942           Date 23Jul19               *
@@ -115,6 +116,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031003 - Facility Fee amount divided by 100 upon rejection *
+      *             of change in Fee end date.                        *
       *  MD052696 - Unauthorised Loans and fees not visible in WIP,   *
       *             after rejecting amendments to their maturity dates*
       *  MD004904 - Rejection causes incorrect exchange rate and      *

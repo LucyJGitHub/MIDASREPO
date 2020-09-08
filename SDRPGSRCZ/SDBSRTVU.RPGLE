@@ -139,6 +139,13 @@
       ** ¦ =========================            ¦
       ** +--------------------------------------+
 
+      ** +--------------------------------------+                                             CSD103
+      ** ¦ Named constants                      ¦                                             CSD103
+      ** ¦ ===============                      ¦                                             CSD103
+      ** +--------------------------------------+                                             CSD103
+      ** Alpha Num Base Rate Code                                                             CSD103
+     D AlphaBSRC       C                   Const('ALPHABASRATCOD')                            CSD103
+                                                                                              CSD103
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -239,6 +246,27 @@
                                                                                              BUG3124
      D #1TESTN         S              1A                                                     BUG3124
 
+     D PSysVal01       S             20A                                                      CSD103
+     D PCurSet01       S            200A                                                      CSD103
+     D PSysVal02       S             20A                                                      CSD103
+     D PCurSet02       S            200A                                                      CSD103
+     D PSysVal03       S             20A                                                      CSD103
+     D PCurSet03       S            200A                                                      CSD103
+     D PSysVal04       S             20A                                                      CSD103
+     D PCurSet04       S            200A                                                      CSD103
+     D PSysVal05       S             20A                                                      CSD103
+     D PCurSet05       S            200A                                                      CSD103
+     D PSysVal06       S             20A                                                      CSD103
+     D PCurSet06       S            200A                                                      CSD103
+     D PSysVal07       S             20A                                                      CSD103
+     D PCurSet07       S            200A                                                      CSD103
+     D PSysVal08       S             20A                                                      CSD103
+     D PCurSet08       S            200A                                                      CSD103
+     D PSysVal09       S             20A                                                      CSD103
+     D PCurSet09       S            200A                                                      CSD103
+     D PSysVal10       S             20A                                                      CSD103
+     D PCurSet10       S            200A                                                      CSD103
+                                                                                              CSD103
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -559,6 +587,37 @@
      C                   EndIf                                                                CSC022
      C                   EndIf                                                                CSC022
                                                                                               CSC022
+      ** Check for Alpha Num Base Rate Code system value                                      CSD103
+     C                   CALLB     'AOSVALR0'
+     C                   PARM      *BLANKS       @RTCD                                        CSD103
+     C                   PARM      AlphaBSRC     PSysVal01                                    CSD103
+     C                   PARM      *BLANKS       PCurSet01                                    CSD103
+     C                   PARM      *BLANKS       PSysVal02                                    CSD103
+     C                   PARM      *BLANKS       PCurSet02                                    CSD103
+     C                   PARM      *BLANKS       PSysVal03                                    CSD103
+     C                   PARM      *BLANKS       PCurSet03                                    CSD103
+     C                   PARM      *BLANKS       PSysVal04                                    CSD103
+     C                   PARM      *BLANKS       PCurSet04                                    CSD103
+     C                   PARM      *BLANKS       PSysVal05                                    CSD103
+     C                   PARM      *BLANKS       PCurSet05                                    CSD103
+     C                   PARM      *BLANKS       PSysVal06                                    CSD103
+     C                   PARM      *BLANKS       PCurSet06                                    CSD103
+     C                   PARM      *BLANKS       PSysVal07                                    CSD103
+     C                   PARM      *BLANKS       PCurSet07                                    CSD103
+     C                   PARM      *BLANKS       PSysVal08                                    CSD103
+     C                   PARM      *BLANKS       PCurSet08                                    CSD103
+     C                   PARM      *BLANKS       PSysVal09                                    CSD103
+     C                   PARM      *BLANKS       PCurSet09                                    CSD103
+     C                   PARM      *BLANKS       PSysVal10                                    CSD103
+     C                   PARM      *BLANKS       PCurSet10                                    CSD103
+                                                                                              CSD103
+     C                   If        @RTCD <> *Blanks                                           CSD103
+     C                   Eval      DBFile = 'SDSVALPD'                                        CSD103
+     C                   Eval      DBase = 906                                                CSD103
+     C                   Eval      DBKey = '*KEY    '                                         CSD103
+     C                   ExSR      *PSSR                                                      CSD103
+     C                   EndIf                                                                CSD103
+     C                   MOVEL     PCurSet01     AlphaCode         1                          CSD103
       * Key list
      C     SDBSRT        KLIST
      C                   KFLD                    DDCYCD
@@ -601,6 +660,7 @@
                                                                                              BUG3124
      ** Used MOVE to validate Base Rate Code                                                 BUG3124
                                                                                              BUG3124
+     C     AlphaCode     IFNE      'Y'                                                        CSD103
      C                   MOVE      DDBSRC        #1TESTN                                     BUG3124
      C     DDBSRC        IFLE      '00'                                                      BUG3124
      C     DDBSRC        ORGT      '99'                                                      BUG3124
@@ -612,6 +672,7 @@
      C                   EVAL      FldNameArr(Idx) = 'DDBSRC'                                BUG3124
      C                   EVAL      MsgIDArr(Idx) = 'USR4572'                                 BUG3124
      C                   END                                                                 BUG3124
+     C                   ENDIF                                                                CSD103
                                                                                              BUG3124
       *
      C                   ENDSR

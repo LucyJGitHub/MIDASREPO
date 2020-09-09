@@ -1,0 +1,94 @@
+      *****************************************************************                       EML102
+      *                                                               *                       EML102
+      *  Midas - /COPY Member GL4443                                  *                       EML102
+      *                                                               *                       EML102
+      *  GL4443C023 - Midas Write to SFLRD2 - part 1                  *                       EML102
+      *                                                               *                       EML102
+      *  Last Amend No. EML102  *CREATE    Date 22Nov19               *                       EML102
+      *                                                               *                       EML102
+      *---------------------------------------------------------------*                       EML102
+      *                                                               *                       EML102
+      *  EML102 - Upgrade of UNL007 to FB21 SP21                      *                       EML102
+      *     UNL007 - Extended Narratives                              *                       EML102
+      *            - Write to display record only if *IN17 is         *                       EML102
+      *              activated to avoid subfile error                 *                       EML102
+      *                                                               *                       EML102
+      *****************************************************************                       EML102
+     C           EML102    IFEQ 'Y'                                                           EML102
+     C                     MOVE *BLANKS   UFSPOS                                              EML102
+      *                                                                                       EML102
+      * If Future & Option active and last read from F&O file                                 EML102
+     C           FFFL      IFEQ 'Y'                                                           EML102
+     C           FILE      ANDEQ'F'                                                           EML102
+      *                                                                                       EML102
+      * If used RSACMTL1/FFACMV3                                                              EML102
+     C           CQKEY     IFEQ *ZEROS                                                        EML102
+      * If Transaction type 'Manual entry'                                                    EML102
+     C           TRYPD     IFEQ 'ME'                                                          EML102
+     C                     Z-ADDPTDTD     UFPTDT                                              EML102
+     C                     MOVELTNMRD     UFTNMR                                              EML102
+     C                     ENDIF                                                              EML102
+      *                                                                                       EML102
+      * Else used RSACMTL2/FFACMV2                                                            EML102
+     C                     ELSE                                                               EML102
+      * If Transaction type 'Manual entry'                                                    EML102
+     C           TRYPC     IFEQ 'ME'                                                          EML102
+     C                     Z-ADDPTDTC     UFPTDT                                              EML102
+     C                     MOVELTNMRC     UFTNMR                                              EML102
+     C                     ENDIF                                                              EML102
+     C                     ENDIF                                                              EML102
+      *                                                                                       EML102
+      * Else If Future & Option not active or last read not from F&O file                     EML102
+     C                     ELSE                                                               EML102
+     C                     SELEC                                                              EML102
+      * Last readed record APOST1                                                             EML102
+     C           *IN31     WHEQ *ON                                                           EML102
+     C                     Z-ADDPSTD      UFPTDT                                              EML102
+     C                     MOVELSPOS      UFSPOS                                              EML102
+      * If it is not batch posting movement                                                   EML102
+     C           UFPORE    IFEQ *BLANKS                                                       EML102
+     C                     MOVE *BLANKS   UFBTNB                                              EML102
+     C                     ENDIF                                                              EML102
+      * Last readed record RSACMTP1                                                           EML102
+     C           *IN32     WHEQ *ON                                                           EML102
+      * If Transaction type 'Manual entry'                                                    EML102
+     C           TRYPA     IFEQ 'ME'                                                          EML102
+     C                     Z-ADDPTDTA     UFPTDT                                              EML102
+     C                     MOVELTNMRA     UFTNMR                                              EML102
+     C                     ENDIF                                                              EML102
+      * Last readed record APOST2                                                             EML102
+     C           *IN33     WHEQ *ON                                                           EML102
+     C                     Z-ADDPSTD      UFPTDT                                              EML102
+     C                     MOVELSPOS      UFSPOS                                              EML102
+      * If it is not batch posting movement                                                   EML102
+     C           UFPORE    IFEQ *BLANKS                                                       EML102
+     C                     MOVE *BLANKS   UFBTNB                                              EML102
+     C                     ENDIF                                                              EML102
+      * Last readed record RSACMTP2                                                           EML102
+     C           *IN34     WHEQ *ON                                                           EML102
+      * If Transaction type 'Manual entry'                                                    EML102
+     C           TRYPB     IFEQ 'ME'                                                          EML102
+     C                     Z-ADDPTDTB     UFPTDT                                              EML102
+     C                     MOVELTNMRB     UFTNMR                                              EML102
+     C                     ENDIF                                                              EML102
+     C                     ENDSL                                                              EML102
+     C                     ENDIF                                                              EML102
+      *                                                                                       EML102
+      ** Get correct MVAM as key for APOST6                                                   EML102
+      *                                                                                       EML102
+     C           DORC      IFEQ 1                                                             EML102
+     C           MVAM      MULT -1        MVAM                                                EML102
+     C                     END                                                                EML102
+      *                                                                                       EML102
+     C           DORC      IFEQ 0                                                             EML102
+     C           PRCLB     ADD  MVAM      PRCLB                                               EML102
+     C                     ELSE                                                               EML102
+     C           PRCLB     SUB  MVAM      PRCLB                                               EML102
+     C                     ENDIF                                                              EML102
+      *                                                                                       EML102
+     C                     MOVE '0'       *IN88                                               EML102
+     C                     WRITESFLRD2                                                        EML102
+     C                     ELSE                                                               EML102
+      *****************************************************************                       EML102
+      * End of /COPY GL4443C023                                       *                       EML102
+      *****************************************************************                       EML102

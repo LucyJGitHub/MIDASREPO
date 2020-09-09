@@ -11,20 +11,25 @@
 /*                                                                   */
 /*       Submitted by MCC0260 - Select Control Groups for Update     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. EML108             Date 14Jan20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CED002             Date 19Jun97              */
+/*                      CED002             Date 19Jun97              */
 /*                      CMC001             Date 28Aug96              */
 /*                      057942             DATE 15JUL94              */
 /*                      048237             DATE 08DEC92              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*   EML108 - Upgrade FMD003 to FBM2.1SP21                           */
+/*            Use /Copy MCC0265003, MCC0265005                       */
+/*            Add /Copy EML108_007, EML108_008                       */
+/*   FMD003 - Management Accounts Automatic Balance update           */
 /*       MD046248 - Finastra Rebranding                              */
 /*   CED002 - Midas ED Enhancements                                  */
 /*   CMC001 - Management Accounts Enhancement for PCA:               */
@@ -39,7 +44,7 @@
 /*/COPY WNCPYSRC,MCC0265001                                          */
              PGM
 /*/COPY WNCPYSRC,MCC0265002                                          */
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
@@ -63,11 +68,11 @@
 /************DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2) /* System  */ /*057942*/
 /************DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10) /* xxDPLIB*/ /*057942*/
 /*/COPY WNCPYSRC,MCC0265003                                          */
- 
+
 /* Global error message                                              */
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
                           CMDLBL(ERROR))
- 
+
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
 /*/COPY WNCPYSRC,MCC0265004                                          */
@@ -99,7 +104,7 @@
                    GOTO       CMDLBL(ERROR)                           /*CMC001*/
                 ENDDO                                                 /*CMC001*/
              ENDDO                                                    /*CMC001*/
- 
+
 /***Create*GLPOSTL5X*if*is*does*not*exist*to*speedup*OPNQRYF          /*048237*/
 /************                                                         /*048237*/
 /************RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)           /*048237*/
@@ -108,16 +113,16 @@
 /************MONMSG     MSGID(CPF9801) EXEC(CPYF FROMFILE(GLPOSTL5) +
 /************             TOFILE(&DPLIB/GLPOSTL5X) MBROPT(*ADD) +     /*048237*/
 /************             CRTFILE(*YES))                              /*048237*/
- 
+
 /*/COPY WNCPYSRC,MCC0265005                                          */
 /* Work through all defined Group Codes                              */
 TAG01:
- 
+
 /* Call the Update All Control Groups program                        */
              CALL       PGM(MC0265) PARM(&GROUPCODE &PERIODSET +
                           &POSTINGBAS &STARTDATE &SECTIONS +
                           &ANALYSIS &STARTTIME)
- 
+
 /* If Group Code is not returned from MCC0265, skip out of loop      */
              IF         COND(&GROUPCODE *EQ '  ') THEN(GOTO +
                           CMDLBL(TAG02))
@@ -175,62 +180,64 @@ TAG01:
              OVRDBF     FILE(GLHIBLL1) TOFILE(*FILE) MBR(&GROUPCODE) /*CED002*/
              OVRDBF     FILE(GLHIBLL3) TOFILE(*FILE) MBR(&GROUPCODE)
              OVRDBF     FILE(GLHIBLL4) TOFILE(*FILE) MBR(&GROUPCODE)
- 
+
              OVRDBF     FILE(GLAVBLPD) TOFILE(*FILE) MBR(&GROUPCODE)
              OVRDBF     FILE(GLAVBLL0) TOFILE(*FILE) MBR(&GROUPCODE)
              OVRDBF     FILE(GLAVBLL1) TOFILE(*FILE) MBR(&GROUPCODE)
              OVRDBF     FILE(GLAVBLL3) TOFILE(*FILE) MBR(&GROUPCODE)
 /************OVRDBF     FILE(UPDBALPD) TOFILE(GLPOSTL5X) SHARE(*YES)  /*048237*/
- 
+
 /* Call Select Postings using OPNQRYF program                        */
 /* These parameters are output by MC0265                             */
+/*/COPY WNCPYSRC,EML108_007                                          */                   /*EML108*/
              CALL       PGM(MCC0299) PARM(&PERIODSET &POSTINGBAS +
                           &STARTDATE &SECTIONS &ANALYSIS 'N' +
                           &STARTTIME)
- 
+/*/COPY WNCPYSRC,EML108_008                                          */                   /*EML108*/
+
 /* Call Update Management Accounts to Current End of Period program  */
              CALL       PGM(MC0230) PARM(&GROUPCODE &RETURNCODE)
- 
+
 /* Check for database error                                          */
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                           CMDLBL(ERROR))
- 
+
 /* Call Update Management Accounts with Movements program            */
 /*      Override UPDBALPD to OPNQRYF generated by MCC0299             /*048237*/
              OVRDBF     FILE(UPDBALPD) TOFILE(GLPERDPD) SHARE(*YES)   /*048237*/
              CALL       PGM(MC0235) PARM(&GROUPCODE &RETURNCODE)
              DLTOVR     FILE(UPDBALPD)                                /*048237*/
- 
+
 /* Check for database error                                          */
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                           CMDLBL(ERROR))
- 
+
 /* Call Rework DR/CR Average Balances program                        */
              CALL       PGM(MCC0240) PARM(&GROUPCODE &RETURNCODE)
- 
+
 /* Check for database error                                          */
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO +
                           CMDLBL(ERROR))
- 
+
 /* Delete all file overrides                                         */
              DLTOVR     FILE(*ALL)
- 
+
 /* End of processing run if MC0265 returns a Group Code              */
 /* Process the next Group Code                                       */
              GOTO       CMDLBL(TAG01)
 /*/COPY WNCPYSRC,MCC0265006                                          */
- 
+
 /***TAG02:      GOTO       CMDLBL(ENDPGM)                          */ /*CMC001*/
  TAG02:                                                               /*CMC001*/
              IF         COND(&CMC001 *EQ 'Y') THEN(DO)                /*CMC001*/
                 DLCOBJ     OBJ((MC0220 *DTAARA *EXCLRD))              /*CMC001*/
              ENDDO                                                    /*CMC001*/
              GOTO       CMDLBL(ENDPGM)                                /*CMC001*/
- 
+
  ERROR:      SNDPGMMSG  MSG('Update All Control Groups ENDED +
                           ABNORMALLY') TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              DMPCLPGM
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
 ENDPGM:      ENDPGM

@@ -16,8 +16,9 @@
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. CMG008             Date 20Feb20               *
-      *  Prev Amend No. CSD101             Date 07Dec18               *
+      *  Last Amend No. EML104             Date 05Feb20               *
+      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *                 CSD101             Date 07Dec18               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL146             Date 10Jul13               *
       *                 CER059             Date 19Jul10               *
@@ -30,6 +31,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  EML104 - Upgrade EML010 to FB Midas 2.1 SP21                 *
+      *           Structured field :86:                               *
+      *           Add EML104_021, EML104_022                          *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
@@ -42,12 +46,12 @@
       *  CGL013 - MT94x Messages Generation                           *
       *                                                               *
       *****************************************************************
- 
+
      FSDNWRKL1  IF   E           K DISK    INFSR(*PSSR) RENAME(@EDREJZ:SDNWRKD0)
       ** Midas Message Network Details
       *
      F/COPY OFCPYSRCZ,CGL146_007                                                              CGL146
- 
+
       *========================================================================*
       *                                                                        *
       * Use of Indicators                                                      *
@@ -69,12 +73,12 @@
       * 99 - Multi-purpose                                                     *
       *                                                                        *
       *========================================================================*
- 
+
       *========================================================================*
       ** Automatically included D-specs
       ** ==============================
       *
- 
+
       ** The following /COPY line includes the LDA layout,
       ** the copyright array definition,
       ** and the following named constants:
@@ -86,28 +90,28 @@
       **    RunBefore  1A (for the PSSR)
       *
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
       *
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Manually included D-specs
       ** =========================
       *
- 
+
       ** Named constants
       ** ---------------
       *
- 
+
       ** Arrays and Data Structures
       ** --------------------------
       *
- 
+
      D PrvFilRcd     E DS                  EXTNAME(SDNWRKPD) PREFIX(PRV_)
       ** Previous Network File Record (i.e. initial state of the record)
       *
- 
+
      D NewFilRcd     E DS                  EXTNAME(SDNWRKPD)
       ** New Network File Record (i.e. new state after amendments)
      D/COPY OFCPYSRCZ,CGL146_008                                                              CGL146
@@ -137,7 +141,7 @@
      D CER030          S              1A                                                      CER030
       *
      D/COPY OFCPYSRCZ,CGL146_001                                                              CGL146
- 
+
       ** Record Key to process (entry parameter)
       *
      D KeyUsed         DS
@@ -167,7 +171,7 @@
       ** C Spec. Declaratives
       ** ====================
       *
- 
+
       ** Entry Parameters
       *
      C     *ENTRY        PLIST
@@ -175,7 +179,7 @@
      C                   PARM                    CallerIn         10
      C                   PARM                    KeyUsed
      C                   PARM                    ActionCode
- 
+
       ** Parameter list for screens display modules (Note that the
       ** return code, although being declared, isn't used for the moment)
       *
@@ -188,70 +192,70 @@
      C     *INKL         PARM      *INKL         KLIn              1
      C                   PARM                    NewFilRcd
      C/COPY OFCPYSRCZ,CGL146_009                                                              CGL146
- 
+
       ** Key lists
       *
      C     KSDNWRKL1     KLIST
      C                   KFLD                    KeyNWRK
- 
+
       *========================================================================*
       *              M  A  I  N     P  R  O  C  E  S  S  I  N  G               *
       *========================================================================*
- 
+
       ** Init processing uses the standard *INZSR subroutine
- 
+
       ** Main loop until F3 taken from any screen
       *  ========================================
  B1  C                   DOU       *INKC
- 
+
       ** If Action Code = Delete, Message "Press F10"
       *
  B2  C                   IF        ActionCode = 'D'
      C                   MOVE      'USR4005'     ZAMSID
      C                   EXSR      $ZaSndMsg
  E2  C                   ENDIF
- 
+
       ** -- Display screen according to the current record format number
       *     ------------------------------------------------------------
  B2  C                   SELECT
- 
+
       ** ---- Display the key screen format
       ** N.B.: The user may have requested to reinput a previously deleted record,
       **       so we need to avoid the updater module to issue an error in Amend mode
       *
  X2  C                   WHEN      CurFormat = 1
      C                   CALLB     'SD200120'    PSD20012x
- 
+
  B3  C                   IF        ActionCode = 'A'
      C                   EVAL      PrvFilRcd = NewFilRcd
      C/COPY OFCPYSRCZ,CGL146_010                                                              CGL146
  E3  C                   ENDIF
- 
+
       ** ---- Display the first details screen format
       *
  X2  C                   WHEN      CurFormat = 2
      C                   CALLB     'SD200121'    PSD20012x
- 
+
       ** ---- Display the second details screen format
       *
  X2  C                   WHEN      CurFormat = 3
      C                   CALLB     'SD200122'    PSD20012x
- 
+
       ** ---- Display the third details screen format
       *
  X2  C                   WHEN      CurFormat = 4
      C                   CALLB     'SD200123'    PSD20012x
- 
+
       ** ---- Display the fourth details screen format
       *
  X2  C                   WHEN      CurFormat = 5
      C                   CALLB     'SD200124'    PSD20012x
- 
+
       ** ---- Display the fifth details screen format
       *
  X2  C                   WHEN      CurFormat = 6
      C                   CALLB     'SD200126'    PSD20012x
- 
+
       ** ---- Display the Sixth details screen format
       *
  X2  C                   WHEN      CurFormat = 7
@@ -271,11 +275,12 @@
      C                   WHEN      CurFormat = 9                                              CER030
       *                                                                                       CER030
      C                   IF        CER030 = 'Y' AND EDMCNW = 'Y'                              CER030
+     C/COPY WNCPYSRC,EML104_021                                                               EML104
      C                   CALLB     'SD200128'    PSD20012x                                    CER030
      C                   ENDIF                                                                CER030
       *                                                                                       CER030
  E2  C                   ENDSL
- 
+
       ** -- Action keys management
       *     ----------------------
       ** ---- F3 ==> Exit program
@@ -284,7 +289,7 @@
      C                   MOVEL(P)  '*EXIT'       RetCodeOut
      C                   ITER
  E2  C                   ENDIF
- 
+
       ** ---- F10 ==> Confirm record deletion
       *
  B2  C                   IF        *INKJ
@@ -292,17 +297,17 @@
      C                   MOVE      RetCodeIn     RetCodeOut
      C                   LEAVE
  E2  C                   ENDIF
- 
+
       ** ---- F12 ==> Return to the previous screen
       *
  B2  C                   IF        *INKL
- 
+
       ** ------ If first displayed format --> Return to the caller
       *
  B3  C                   IF        DspFormat = 0
      C                   MOVEL(P)  '*PRV'        RetCodeOut
      C                   LEAVE
- 
+
       ** ------ Otherwise return to the previous screen
       *
  X3  C                   ELSE
@@ -310,12 +315,12 @@
      C                   SUB       1             CurFormat
      C                   ITER
  E3  C                   ENDIF
- 
+
  E2  C                   ENDIF
- 
+
       ** -- Check if record has to be updated
       *     ---------------------------------
- 
+
       ** ---- Update record if last record format and not Delete or Enquire
       *
  B2  C                   IF        CurFormat = NbrFormat  AND
@@ -323,34 +328,34 @@
      C                   EXSR      $UpdatRcd
      C                   MOVE      RetCodeIn     RetCodeOut
      C                   LEAVE
- 
+
       ** ---- If no need to update yet, display the next screen
       **      Remark: if last format with Enquire action code --> End of module
       *
  X2  C                   ELSE
- 
+
  B3  C                   IF        CurFormat = NbrFormat AND ActionCode = 'E'
      C                   MOVE      *Blanks       RetCodeOut
      C                   LEAVE
  E3  C                   ENDIF
- 
+
  B3  C                   IF        CurFormat < NbrFormat
      C                   ADD       1             CurFormat
      C                   ADD       1             DspFormat
  E3  C                   ENDIF
- 
+
  E2  C                   ENDIF
- 
+
  E1  C                   ENDDO
- 
+
       ** Exit module
       *
      C                   EXSR      $ExitMod
- 
+
       *========================================================================*
       *                    S  U  B  R  O  U  T  I  N  E  S                     *
       *========================================================================*
- 
+
       *========================================================================*
       * $UpdatRcd : Update Records                                             *
       *------------------------------------------------------------------------*
@@ -478,7 +483,7 @@
      C                   ENDSL                                                                CSD101
                                                                                               CSD101
      C     @UpdatRcd     ENDSR
- 
+
       *========================================================================*
       * $ZaSndMsg : Send message to the program message queue                  *
       *------------------------------------------------------------------------*
@@ -493,7 +498,7 @@
      C                   PARM                    ZAMSTP
       *    ----------    ------
      C     @ZaSndMsg     ENDSR
- 
+
       *========================================================================*
       * $ExitMod  : Exit from the module                                       *
       *------------------------------------------------------------------------*
@@ -504,7 +509,7 @@
      C                   IF        RetCodeOut = *Blanks AND ActionCode <> 'E'
      C                   COMMIT
      C                   ENDIF
- 
+
       ** Always roll back and exit
       *
      C                   ROLBK
@@ -512,7 +517,7 @@
      C                   RETURN
       *    ----------    ------
      C     @ExitMod      ENDSR
- 
+
       *========================================================================*
       * *INZSR    : Init Processing                                            *
       *========================================================================*
@@ -521,33 +526,33 @@
       ** Initialise Copyright Array
       *
      C                   MOVEA     CPY@          CPY@@            80
- 
+
       ** Define fields used by the message sending function
       *
       ** -- If no named caller --> set-up ZAPGM with the current program name
       *
      C                   IF        CallerIn = *Blanks
      C                   MOVEL     PSProcPgm     ZAPGM            10
- 
+
       ** -- Otherwise set-up ZAPGM with the caller name
       *
      C                   ELSE
      C                   MOVEL     CallerIn      ZAPGM
      C                   ENDIF
      C/COPY OFCPYSRCZ,CGL146_014                                                              CGL146
- 
+
      C                   MOVEL     'SDUSRMSG'    ZAMSGF           10
      C                   MOVEL     '*SAME'       ZAPGRL            5
      C                   MOVEL     *Blanks       ZAMSID            7
      C                   MOVEL     *Blanks       ZAMSDA          132
      C                   MOVEL     *Blanks       ZAMSTP            7
- 
+
       ** Reset fields
       *
      C                   CLEAR                   PrvFilRcd
      C                   CLEAR                   NewFilRcd
      C/COPY OFCPYSRCZ,CGL146_012                                                              CGL146
- 
+
       ** Set up screen format flag according to the received action code
       *
       ** -- First details format if Amend, Enquire, or Delete
@@ -555,28 +560,28 @@
      C                   IF        ActionCode = 'A' OR ActionCode = 'E' OR
      C                             ActionCode = 'D'
      C                   Z-ADD     2             CurFormat         2 0
- 
+
       ** -- Otherwise key format
       *
      C                   ELSE
      C                   Z-ADD     1             CurFormat
      C                   ENDIF
- 
+
       ** Set up the number of the last format to process before amending the file record
       *
      C**********         Z-ADD     7             NbrFormat         2 0                        CER030
      C                   Z-ADD     9             NbrFormat         2 0                        CER030
- 
+
       ** Set up the count of displayed formats since the first
       ** This field will be mainly used for F12 management
       *
      C                   Z-ADD     0             DspFormat         2 0
- 
+
       ** If not Insert, check if record exists
       *
  B1  C                   IF        ActionCode <> 'I'
      C     KSDNWRKL1     CHAIN     SDNWRKD0                           99
- 
+
       ** -- Record not found --> Error
       *
  B2  C                   IF        *IN99
@@ -584,11 +589,11 @@
      C                   EXSR      $ZaSndMsg
      C                   MOVEL(P)  '*MSG'        RetCodeOut
      C                   EXSR      $ExitMod
- 
+
       ** -- Check if record is live
       *
  X2  C                   ELSE
- 
+
       ** ---- If record deleted and not Enquire --> Error
       *
  B3  C                   IF        EDTYLC = 'D' AND ActionCode <> 'E'
@@ -596,16 +601,16 @@
      C                   EXSR      $ZaSndMsg
      C                   MOVEL(P)  '*MSG'        RetCodeOut
      C                   EXSR      $ExitMod
- 
+
       ** ---- Save the current value of the record
       *
  X3  C                   ELSE
      C                   MOVE      NewFilRcd     PrvFilRcd
      C/COPY OFCPYSRCZ,CGL146_013                                                              CGL146
  E3  C                   ENDIF
- 
+
  E2  C                   ENDIF
- 
+
  E1  C                   ENDIF
       *                                                                                       CER030
      C                   EVAL      CER030 = 'N'                                               CER030
@@ -635,26 +640,27 @@
      C                   EVAL      CER030 = 'Y'                                               CER030
      C                   ENDIF                                                                CER030
       *                                                                                       CER030
+     C/COPY WNCPYSRC,EML104_022                                                               EML104
       *    ----------    ------
      C     @INZSR        ENDSR
- 
+
       *========================================================================*
       * *PSSR     : Program exception error subroutine                         *
       *------------------------------------------------------------------------*
      C     *PSSR         BEGSR
       *    ----------    ------
      C                   DUMP
- 
+
      C                   EVAL      *INU7 = *On
      C                   EVAL      *INU8 = *On
- 
+
      C                   CALLB     'DBERRCTL'
- 
+
      C                   MOVEL(P)  '*ERROR'      RetCodeOut
      C                   EXSR      $ExitMod
       *    ----------    ------
      C     @PSSR         ENDSR
- 
+
       *========================================================================*
 **  CPY@
 (c) Finastra International Limited 2002

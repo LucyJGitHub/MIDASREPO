@@ -1,0 +1,351 @@
+     H        1
+      ********************************************************************
+/*STD *  RPGBASE                                                         *
+/*EXI *  TEXT('Midas JE Posting Extended Narrative Description')         *
+      ********************************************************************
+      *                                                                  *
+      *  Midas - GL Module                                               *
+      *                                                                  *
+      *  GL4441W0 - JE Posting Extended Narrative Description            *
+      *                                                                  *
+      *  (c) Finastra International Limited 2020                         *
+      *                                                                  *
+      *  Last Amend No. EML102A *CREATE     Date 27Jul20                 *
+      *                                                                  *
+      ********************************************************************
+      *                                                                  *
+      *  EML102A - Upgrade of UNL007 and EML004 to FB2.1 SP23            *
+      *  EML004 - Extended Narrative Upgrade from UMA005                 *
+      *  UMA004 - CAR Upgrades to Midas Plus                             *
+      *  UNL007 - Extended Narratives                                    *
+      *                                                                  *
+      ********************************************************************
+      *
+      *    F U N C T I O N   O F   I N D I C A T O R S
+      *
+      *       01      First time through
+      *
+      *       03      F3 Pressed EXIT program
+      *       05      F5 Pressed REDISPLAY the screen
+      *       12      F12 Pressed goto PREVIOUS screen
+      *
+      *       30      Redisplay the screen
+      *       85      Chain to GLJENPY0 failed
+      *
+      *       99      Data base error
+      *       LR      Last record
+      *
+      *****************************************************************
+      *
+      *    S U B R O U T I N E    I N D E X
+      *
+      * #FCLRM - Routine to clear program's message queue.
+      * #FINIT - Routine to handle initial processing
+      * #FEXIT - Exit from program if F3 has been pressed
+      * #FPREV - Exit from program if F12 has been pressed
+      * #FENDP - Exit from program
+      * #FSEND - Routine to send messages to message subfile.
+      *
+      *****************************************************************
+     FGLJENPY0IF  E           K        DISK                           UC
+     F            GLJENPD2                          KRENAMERTVIDX
+      * Retreival index
+      *
+     FGLJEPHY0IF  E           K        DISK                           UC
+     F            GLJEPHD2                          KRENAMERTVIDX2
+      * Retreival index
+      *
+     FGL4441#0CF  E                    WORKSTN
+     F            GL4441F0                          KRENAMESCREEN
+      * Display file
+     F/EJECT
+     E*****************************************************************
+     E* Array for copyright
+     E                    CPY@    1   1 80
+     E* Array for bottom line with function keys
+     E                    FF1     1   1 50
+     E* Array for titles
+     E                    FF2     1   1 50
+     E*****************************************************************
+     E/EJECT
+     I*
+     IA@CPY       DS
+     I                                        1  80 CPY@
+     I* BIS Copyright array
+     I*
+     ILDA         DS                            256
+     I                                      134 141 DBFILE
+     I                                      142 170 DBKEY
+     I                                      142 144 DBKEY1
+     I                                      145 147 DBKEY2
+     I                                      148 152 DBKEY3
+     I                                      171 180 DBPGM
+     I                                      181 1830DBASE
+     I** Data structure for database error
+     I*
+     IPSDS       SDS
+     I                                     *PROGRAM UFPGMN
+     I* Get program name from PSDS
+     I*
+     I/COPY QWINDSRC,GL4441GDTA
+     I* Get the data structure passed from calling program
+     I*
+     I/EJECT
+      *****************************************************************
+     C           *ENTRY    PLIST
+     C                     PARM           UFPACT  1
+     C                     PARM           DATA
+     C                     PARM           UFRTNC  7
+     C                     PARM           UFWLEN  30
+     C                     PARM           UFWWID  30
+     C                     PARM           UFSROW  30
+     C                     PARM           UFSCOL  30
+     C                     PARM           UFTITL  7
+     C                     PARM           UFSPAR256
+     C                     MOVELUFPACT    UFACTN  1
+      *
+      *-------------------------------------------------------------------------
+      * Main processing
+      *-------------------------------------------------------------------------
+      *
+      * Define the LDA for error handling
+     C           *NAMVAR   DEFN           LDA
+      *
+      * Execute initial routine
+     C                     EXSR #FINIT
+      *
+      * Continue to redisplay the screen if indicator 30 remains off
+     C           *IN30     DOWEQ'1'
+      *
+      * CTL format for message file
+     C                     WRITE#MSGCTL
+      *
+      * Main format of the display file
+     C                     EXFMTSCREEN
+      *
+      * Clear message file
+     C                     EXSR #FCLRM
+      *
+     C           *IN03     CASEQ'1'       #FEXIT
+     C           *IN12     CASEQ'1'       #FPREV
+     C                     CAS            #FPREV
+     C                     ENDCS
+      *
+     C                     ENDDO
+      *
+     C                     EXSR #FENDP
+     C/EJECT
+      *
+      *-------------------------------------------------------------------------
+      * #FCLRM - Routine to clear program's message queue.
+      *-------------------------------------------------------------------------
+      *
+     C           #FCLRM    BEGSR
+      *
+     C                     CALL 'Y2CLMSC'
+     C                     PARM UFPGMN    ZAPGM  10
+     C                     PARM '*SAME'   ZAPGRL  5
+      *
+     C                     ENDSR
+     C/EJECT
+      *
+      *-------------------------------------------------------------------------
+      * #FINIT - Routine to handle initial processing
+      *-------------------------------------------------------------------------
+      *
+     C           #FINIT    BEGSR
+      *
+     C                     Z-ADDUFSROW    SWROW
+     C                     Z-ADDUFSCOL    SWCOL
+      *
+      *   Check for SAR UNL007
+     C                     CALL 'AOSARDR0'
+     C                     PARM *BLANKS   @RTCD   7
+     C                     PARM '*VERIFY' @OPTN   7
+     C                     PARM 'UNL007'  @SARD   6
+      *
+      * If no record found or other mode than Enquiry call end processing
+     C           @RTCD     IFNE *BLANKS
+     C           UFACTN    ORNE 'E'
+     C                     EXSR #FENDP
+     C                     ENDIF
+      * Prepare title and bottom of screen
+     C                     MOVEAFF1,1     SFOOT
+     C                     MOVEAFF2,1     STITL
+      *
+      * If it is history posting open history file otherwise live
+     C           #1BPHI    IFEQ 'Y'
+     C                     OPEN GLJEPHY0
+     C                     ELSE
+     C                     OPEN GLJENPY0
+     C                     ENDIF
+      * Setup for cycle redisplaing screen
+     C                     MOVE *ON       *IN30
+      *
+      * Setup key values using transaction data passed from caller
+     C           *LIKE     DEFN FBTNB     UFBTNB
+     C           *LIKE     DEFN FBINB     UFBINB
+     C           *LIKE     DEFN FPTDT     UFPTDT
+     C                     MOVEL#1BTNB    UFBTNB
+     C                     Z-ADD#1BINB    UFBINB
+     C                     Z-ADD#1PTDT    UFPTDT
+      *
+      * Set up key list for file access
+     C           UFKLIS    KLIST
+     C                     KFLD           UFBTNB
+     C                     KFLD           UFBINB
+     C                     KFLD           UFPTDT
+      *
+      * If it is history posting chain history file
+     C           #1BPHI    IFEQ 'Y'
+     C           UFKLIS    CHAINRTVIDX2              85
+     C           *IN85     IFEQ *OFF
+      * Read all lines of item
+     C           *IN85     DOWEQ*OFF
+     C                     SELEC
+     C           HNALN     WHEQ 2
+     C                     MOVELHNATX     #FNA02
+     C           HNALN     WHEQ 3
+     C                     MOVELHNATX     #FNA03
+     C           HNALN     WHEQ 4
+     C                     MOVELHNATX     #FNA04
+     C           HNALN     WHEQ 5
+     C                     MOVELHNATX     #FNA05
+     C           HNALN     WHEQ 6
+     C                     MOVELHNATX     #FNA06
+     C           HNALN     WHEQ 7
+     C                     MOVELHNATX     #FNA07
+     C           HNALN     WHEQ 8
+     C                     MOVELHNATX     #FNA08
+     C           HNALN     WHEQ 9
+     C                     MOVELHNATX     #FNA09
+     C           HNALN     WHEQ 10
+     C                     MOVELHNATX     #FNA10
+     C           HNALN     WHEQ 11
+     C                     MOVELHNATX     #FNA11
+     C           HNALN     WHEQ 12
+     C                     MOVELHNATX     #FNA12
+     C           HNALN     WHEQ 13
+     C                     MOVELHNATX     #FNA13
+     C           HNALN     WHEQ 14
+     C                     MOVELHNATX     #FNA14
+     C           HNALN     WHEQ 15
+     C                     MOVELHNATX     #FNA15
+     C           HNALN     WHEQ 16
+     C                     MOVELHNATX     #FNA16
+     C           HNALN     WHEQ 17
+     C                     MOVELHNATX     #FNA17
+     C                     ENDSL
+     C           UFKLIS    READERTVIDX2                  85
+     C                     ENDDO
+      *
+      * If record not find setup send the message
+     C                     ELSE
+     C                     MOVELUFBTNB    FBTNB
+     C                     Z-ADDUFBINB    FBINB
+     C                     Z-ADDUFPTDT    FPTDT
+     C                     MOVEL'XXC0185' ZAMSID
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+     C                     EXSR #FSEND
+     C                     ENDIF
+      *
+      * If it is not history file chain to live records
+     C                     ELSE
+     C           UFKLIS    CHAINRTVIDX               85
+     C           *IN85     IFEQ '0'
+      * Setup screen fields
+     C                     MOVELFNA02     #FNA02
+     C                     MOVELFNA03     #FNA03
+     C                     MOVELFNA04     #FNA04
+     C                     MOVELFNA05     #FNA05
+     C                     MOVELFNA06     #FNA06
+     C                     MOVELFNA07     #FNA07
+     C                     MOVELFNA08     #FNA08
+     C                     MOVELFNA09     #FNA09
+     C                     MOVELFNA10     #FNA10
+     C                     MOVELFNA11     #FNA11
+     C                     MOVELFNA12     #FNA12
+     C                     MOVELFNA13     #FNA13
+     C                     MOVELFNA14     #FNA14
+     C                     MOVELFNA15     #FNA15
+     C                     MOVELFNA16     #FNA16
+     C                     MOVELFNA17     #FNA17
+      *
+      * If record not found send the message
+     C                     ELSE
+     C                     MOVELUFBTNB    FBTNB
+     C                     Z-ADDUFBINB    FBINB
+     C                     Z-ADDUFPTDT    FPTDT
+     C                     MOVEL'XXC0185' ZAMSID
+     C                     MOVEL'XXUSRMSG'ZAMSGF
+     C                     EXSR #FSEND
+     C                     ENDIF
+      *
+     C                     ENDIF
+      *
+     C                     ENDSR
+     C/EJECT
+      *
+      *-------------------------------------------------------------------------
+      * #FEXIT - Exit from program if F3 has been pressed
+      *-------------------------------------------------------------------------
+      *
+     C           #FEXIT    BEGSR
+      *
+     C                     MOVE 'Y2U9999' UFRTNC
+     C                     EXSR #FENDP
+      *
+     C                     ENDSR
+     C/EJECT
+      *
+      *-------------------------------------------------------------------------
+      * #FPREV - Exit from program if F12 has been pressed
+      *-------------------------------------------------------------------------
+      *
+     C           #FPREV    BEGSR
+      *
+     C                     MOVE 'USR0790' UFRTNC
+     C                     EXSR #FENDP
+      *
+     C                     ENDSR
+     C/EJECT
+      *
+      *-------------------------------------------------------------------------
+      * #FENDP - Exit from program
+      *-------------------------------------------------------------------------
+      *
+     C           #FENDP    BEGSR
+      *
+     C                     CLOSE*ALL
+     C                     SETON                     LR
+     C                     RETRN
+      *
+     C                     ENDSR
+     C/EJECT
+      *
+      *-------------------------------------------------------------------------
+      * #FSEND - Routine to send messages to message subfile.
+      *-------------------------------------------------------------------------
+      *
+     C           #FSEND    BEGSR
+      *
+     C           ZAPGM     IFEQ *BLANK
+     C                     MOVELUFPGMN    ZAPGM
+     C                     ENDIF
+      *
+     C                     CALL 'Y2SNMGC'
+     C                     PARM           ZAPGM  10        Program queue
+     C                     PARM           ZAPGRL  5        Rel queue
+     C                     PARM           ZAMSID  7        Message Id.
+     C                     PARM           ZAMSGF 10        Message File
+     C                     PARM           ZAMSDA132        Message data.
+     C                     PARM           ZAMSTP  7        Message type.
+      *
+     C                     ENDSR
+      /EJECT
+** CPY@
+(c) Finastra International Limited 2020
+** FF1
+F3=Main Menu  F12=Previous
+** FF2
+ Extended Posting Narrative Description - Enquiry

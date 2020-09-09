@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD034915           Date 26Aug20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE141             Date 08Feb16               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -45,6 +46,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD034915 - Negative funding rate is not allowed in Lending.  *
+      *             Allow negative input in Funding rate/spread.      *
+      *           - Applied for MD054876                              *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention for   *
@@ -360,6 +364,7 @@
       ***  Funding Spread/Rate
       *
      C     FSRP          IFNE      *ZEROS
+     C                   IF        FSRP > 0                                                 MD034915
      C                   MOVEL     *BLANKS       ZFIELD
      C                   MOVE      FSRP          ZFIELD
      C                   Z-ADD     7             ZDEC
@@ -372,6 +377,11 @@
      C                   ELSE                                                              BUG10391R
      C                   MOVE      ZFIELD        DDFRSP
      C                   ENDIF                                                             BUG10391R
+     C                   ELSE                                                               MD034915
+     C                   MOVEL     *BLANKS       ZFIELD12         12                        MD034915
+     C                   EVAL      ZFIELD12 = %CHAR(FSRP)                                   MD034915
+     C                   MOVE      ZFIELD12      DDFRSP                                     MD034915
+     C                   ENDIF                                                              MD034915
      C                   ENDIF
       *
       ***  Original Maturity Date

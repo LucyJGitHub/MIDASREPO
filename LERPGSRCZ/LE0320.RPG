@@ -11,8 +11,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
 0008 F*                                                               *
-      *  Last Amend No. MD054605           Date 17Oct19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD034915           Date 26Aug20               *
+      *  Prev Amend No. MD054605           Date 17Oct19               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR847588           Date 09Mar15               *
       *                 MD020563           Date 21May13               *
       *                 MD020118           Date 24Apr13               *
@@ -111,6 +112,9 @@
      F*                                                               *
 0011 F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD034915 - Negative funding rate is not allowed in Lending.  *
+      *             Allow negative input in Funding rate/spread.      *
+      *           - Applied for MD054876                              *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD046248 - Finastra Rebranding                               *
       *  AR847588 - Spread rate must be shown as negative in LE0320P1 *
@@ -3077,10 +3081,28 @@
       *                                                                   CLE004
      C                     Z-ADD7         ZADEC                           CLE004
      C                     MOVEL*BLANKS   ZFIELD                          CLE004
+      *                                                                                     MD034915
+      ** Display negative funding spread/rate in the report                                 MD034915
+      *                                                                                     MD034915
+     C           FSRP      IFLT 0                                                           MD034915
+     C                     MOVE 'Y'       WSUB    1                                         MD034915
+     C                     Z-SUBFSRP      FSRP                                              MD034915
+     C                     ENDIF                                                            MD034915
+      *                                                                                     MD034915
      C                     MOVE FSRP      ZFIELD                          CLE004
      C                     EXSR ZEDIT                                     CLE004
+      *                                                                                     MD034915
+     C           WSUB      IFEQ 'Y'                                                         MD034915
+     C                     MOVE *BLANKS   WSUB                                              MD034915
+     C                     MOVE ZFIELD    WFLD1  19                                         MD034915
+     C           WFLD1     CAT  '-'       WFLD2  20                                         MD034915
+     C                     MOVE WFLD2     RFSR1                                             MD034915
+     C                     MOVE WFLD2     RFSR2                                             MD034915
+     C                     Z-SUBFSRP      FSRP                                              MD034915
+     C                     ELSE                                                             MD034915
      C                     MOVE ZFIELD    RFSR1                           CLE004
      C                     MOVE ZFIELD    RFSR2                           CLE004
+     C                     ENDIF                                                            MD034915
       *                                                                   CLE004
      C                     MOVE ACTI      RACTI                           CLE004
      C                     MOVE CRNM      RCRNM                           CLE004
@@ -4531,9 +4553,11 @@
      O***********      34 57 56FSRP     108 '  0 .       '         CAC001 CEU020
       *                                                                   CEU020
      O                 34 57N56          75 'FUNDING SPREAD RATE'         CEU020
-     O                 34 57N56FSRP      89 '  0 .       '                CEU020
+     O**********       34 57N56FSRP      89 '  0 .       '                           CEU020 MD034915
+     O                 34 57N56FSRP      90 '  0 .       -'                                 MD034915
      O                 34 57 56         103 'FUNDING SPREAD RATE'         CEU020
-     O                 34 57 56FSRP     117 '  0 .       '                CEU020
+     O**********       34 57 56FSRP     117 '  0 .       '                           CEU020 MD034915
+     O                 34 57 56FSRP     118 '  0 .       -'                                 MD034915
       *                                                                   CEU020
 0957 O                 35                40 'STOP ACCRUALS'
 0958 O                 36                41 'START ACCRUALS'

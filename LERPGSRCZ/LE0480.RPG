@@ -12,7 +12,12 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. 241243             Date 07Mar08               *
-      *  Prev Amend No. MD055733           Date 03Jul20               *
+      *  Prev Amend No. 261881             Date 19Nov09               *
+      *                 254446             Date 23May08               *
+      *                 252763A            Date 23May08               *
+      *                 MD055733           Date 03Jul20               *
+      *                 MD055652           Date 13Jul20               *
+      *                 MD055733           Date 03Jul20               *
       *                 MD055652           Date 13Jul20               *
       *                 MD055392           Date 04Mar20               *
       *                 MD053801           Date 04Mar20               *
@@ -250,6 +255,16 @@
       *           maturity and next repayment are on the same date    *
       *           but falls on a holiday. Fix is to enable checking   *
       *           of PTDI and PDDI for maturity processing            *
+      *  261881 - Incorrect Current Exposure Amount Drawn(CAMD) is    *
+      *           projected on PF/FCLTYFN. Amend program such that    *
+      *           correct Current Exposure Amount Drawn will be       *
+      *           posted for discount loans.                          *
+      *  254446 - Amend progmam such that discounted loans would not  *
+      *           generate double posting on Projected Account        *
+      *           Movements screen. Applied core fix 252763A.         *
+      *  252763A- Discount amount still posted in Projected Account   *
+      *           movement. System should post single entry where     *
+      *           posted amount is principal less discount.           *
       *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
       *             components.                                       *
       *           - Redeliver of MD050139.                            *
@@ -5382,26 +5397,26 @@
 1252 C**
 1253 C                     Z-ADDVDAT      EVDATE           EVENT DATE
 1254 C                     Z-ADDCPRINC    EVAMNT           EVENT AMOUNT
-      *                                                                                       221708
-      ** Subtract interest if discounted loan                                                 221708
-      *                                                                                       221708
-     C           PTYP      IFEQ 63                                                            221708
-     C           PTYP      OREQ 65                                                            221708
-     C           PTYP      OREQ 67                                                            221708
-     C                     Z-ADDVDAT      ZIBEG                                               221708
-     C                     Z-ADDMDAT      ZIEND                                               221708
-     C           ADDI      IFEQ 'B'                                                           221708
-     C           ZIEND     ADD  1         ZIEND                                               221708
-     C                     ENDIF                                                              221708
-     C                     Z-ADDCPRINC    ZIAMT                                               221708
-     C                     Z-ADDINTBAS    ZICALC                                              221708
-     C                     Z-ADDEFFINT    ZIRATE                                              221708
+      *****************************************************************                221708 261881
+      ***Subtract*interest*if*discounted*loan**************************                221708 261881
+      *****************************************************************                221708 261881
+     C********** PTYP      IFEQ 63                                                     221708 261881
+     C********** PTYP      OREQ 65                                                     221708 261881
+     C********** PTYP      OREQ 67                                                     221708 261881
+     C**********           Z-ADDVDAT      ZIBEG                                        221708 261881
+     C**********           Z-ADDMDAT      ZIEND                                        221708 261881
+     C********** ADDI      IFEQ 'B'                                                    221708 261881
+     C********** ZIEND     ADD  1         ZIEND                                        221708 261881
+     C**********           ENDIF                                                       221708 261881
+     C**********           Z-ADDCPRINC    ZIAMT                                        221708 261881
+     C**********           Z-ADDINTBAS    ZICALC                                       221708 261881
+     C**********           Z-ADDEFFINT    ZIRATE                                       221708 261881
      C/COPY WNCPYSRC,LEH01340
-     C                     EXSR GLINTC                                                        221708
+     C**********           EXSR GLINTC                                                 221708 261881
      C/COPY WNCPYSRC,LEH01400
-     C                     Z-ADDZINTR     TACIN2 130                                          221708
-     C           EVAMNT    SUB  TACIN2    EVAMNT                                              221708
-     C                     ENDIF                                                              221708
+     C**********           Z-ADDZINTR     TACIN2 130                                   221708 261881
+     C********** EVAMNT    SUB  TACIN2    EVAMNT                                       221708 261881
+     C**********           ENDIF                                                       221708 261881
 1255 C**
 1256 C**   DETERMINE EQUIVALENT AMOUNTS
 1257 C                     EXSR EQUIV
@@ -5413,17 +5428,21 @@
 1263 C**   OUTPUT RECORD TO FILE
 1264 C                     EXSR RECOUT
 1265 C**
-1266 C**   DETERMINE IF SECOND EVENT REQUIRED
-1267 C                     MOVE 'V2'      EVTYPE           EVENT TYPE
-1268 C                     EXSR LEVENT
-     C   U7 U8             GOTO STREND                                    S01117
-1269 C   57                Z-ADDTOTI      EVAMNT           EVENT AMOUNT
-1270 C**
-1271 C**   DETERMINE EQUIVALENT AMOUNTS
-1272 C   57                EXSR EQUIV
-1273 C**
-1274 C**   OUTPUT RECORD TO FILE
-1275 C   57                EXSR RECOUT
+      *                                                                                      252763A
+      ** No need to generate second event since 221708 already deducted                      252763A
+      ** the discount from the principal                                                     252763A
+      *                                                                                      252763A
+1266 C*****DETERMINE*IF*SECOND*EVENT*REQUIRED**************************                      252763A
+1267 C**********           MOVE 'V2'      EVTYPE           EVENT TYPE                        252763A
+1268 C**********           EXSR LEVENT                                                       252763A
+     C***U7*U8**           GOTO STREND                                                S01117 252763A
+1269 C***57*****           Z-ADDTOTI      EVAMNT           EVENT AMOUNT                      252763A
+1270 C*****************************************************************                      252763A
+1271 C*****DETERMINE*EQUIVALENT*AMOUNTS********************************                      252763A
+1272 C***57*****           EXSR EQUIV                                                        252763A
+1273 C*****************************************************************                      252763A
+1274 C*****OUTPUT*RECORD*TO*FILE***************************************                      252763A
+1275 C***57*****           EXSR RECOUT                                                       252763A
       *                                                                                       CLE028
       ** For flat rate personal loans,                                                        CLE028
       ** generate interest start date event, if add on interest flag is 'Y'                   CLE028

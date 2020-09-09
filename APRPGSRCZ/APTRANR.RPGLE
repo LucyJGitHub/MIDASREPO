@@ -14,7 +14,8 @@
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
       *  Last Amend No. MD039655           Date 03Sep19               *
-      *  Prev Amend No. MD054906           Date 15Jan20               *
+      *  Prev Amend No. AR994776           Date 04Apr19               *
+      *                 MD054906           Date 15Jan20               *
       *                 CSD102             Date 08Jan19               *
       *                 MD052550           Date 07Jan19               *
       *                 MD044880           Date 15Jan18               *
@@ -85,6 +86,11 @@
       *  MD039655 - Facility cannot be rejected.                      *
       *             Pattern fix from MD-29208 and MD-34908.           *
       *           - Applied for MD052591.                             *
+      *  AR994776 - Fees remains unauthorised after rejection of      *
+      *             amendment. Details are not reverted correctly.    *
+      *             Add a flag if action is reject to revert back the *
+      *             details of fees. (Child: AR994777)                *
+      *           - Applied for MD052696                              *
       *  MD054906 - CBS-2882 fix extenstion for Principal Change      *
       *             Schedule                                          *
       *           - Passed ACTRJ to IRSIRSR and IRCIRSR to match      *
@@ -755,6 +761,10 @@
      C                   PARM                    MsgDtaArr                                   BUG1100
      C                   PARM                    MsgFArray                                   BUG1100
      C                   PARM                    APIRetC                                     BUG1100
+      *                                                                                     AR994776
+      ** Action Code (Reject transaction)                                                   AR994776
+      *                                                                                     AR994776
+     C                   PARM      *BLANK        DRejFlg           1                        AR994776
                                                                                              BUG1100
       * LE Fee Adjustment
      C     TransTYPE     WHENEQ    'FEAD'

@@ -17,8 +17,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CMG008             Date 20Feb20               *
-      *  Prev Amend No. MD021108A          Date 16Jul13               *
+      *  Last Amend No. EML104             Date 06Feb20               *
+      *  Prev Amend No. EML107             Date 08May20               *
+      *                 CMG008             Date 20Feb20               *
+      *                 MD021108A          Date 16Jul13               *
       *                 CMG006             Date 15Oct19               *
       *                 MD052633           Date 08Oct19               *
       *                 MD046248           Date 27Oct17               *
@@ -54,6 +56,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  EML104 - Upgrade EML010 to FB Midas 2.1 SP21                 *
+      *           Structured field :86:                               *
+      *           Used hook MGH00092, MGH00094                        *
+      *           Added hook EML104_014                               *
+      *  EML107 - Output IBAN in Sender Account Number field          *
+      *           Use core hook MGH00094 and added EML107_001         *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD021108A - Problem in generating MT950. Use rundate for tags*
       *              60M and 62M.                                     *
@@ -1208,6 +1216,7 @@
      C                   Eval      EVTP = *Blanks
      C                   Eval      NWRK = MGNWRK
      C/COPY OFCPYSRCZ,CGL146_063                                                              CGL146
+     C/COPY WNCPYSRC,EML104_014                                                               EML104
 
      C**********         Call      'AOBRCHR0'                                                 CGL029
      C                   CALL      'AOBRCHR1'                                                 CGL029
@@ -1313,6 +1322,7 @@
      C**********         When      MGIBAN <> *Blank                                         MD042357
      C**********         Movel     MGIBAN        SACN                                       MD042357
      C**********         Movel     *blanks       AORR                                       MD042357
+     C/COPY WNCPYSRC,EML107_001
      C                   When      MGACNO <> 0
      C                   Movel     MGACNO        SACN
      C                   Movel     'R'           AORR

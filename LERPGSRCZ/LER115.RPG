@@ -20,8 +20,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR674226           Date 04Dec19               *
-      *  Prev Amend No. MD052216           Date 04Apr19               *
+      *  Last Amend No. MD036154           Date 12Mar20               *
+      *  Prev Amend No. MD008453           Date 12Mar20               *
+      *                 AR674226           Date 04Dec19               *
+      *                 MD052216           Date 04Apr19               *
       *                 MD053607           Date 19Jul19               *
       *                 MD053295           Date 13Apr19               *
       *                 MD050139           Date 23Mar18               *
@@ -191,6 +193,11 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD036154 - JNSTAT is being locked by the program. Amended    *
+      *             program to prevent locking.                       *
+      *  MD008453 - Accrued to date in enquiry is not the same as the *
+      *             Accrued to date in LER150P1 from the previous COB *
+      *             for BKALDI = 'Y'.                                 *
       *  AR674226 - Manual transaction reached 999. Increase the size *
       *             of utilisation sequence no. and transaction       *
       *             sequence. (Child: AR674227)                       *
@@ -1033,6 +1040,10 @@
       *
      I              'LECalcBasis6LeapYear'C         WPARML                                  MD035545
      I/COPY WNCPYSRC,LER115I002
+     I** JNSTAT Dataarea                                                                    MD008453
+     I***JNSTAT     UDS                            200                             MD008453 MD036154
+     I**********                          P 103 1050PRUN                           MD008453 MD036154
+     IJNSTAT    E DSJNSTAT                                                                  MD036154
      C/EJECT
       *****************************************************************
      C/TITLE Main Processing
@@ -1871,6 +1882,12 @@
      C                     ENDIF                                          090266
       *                                                                   090266
      C                     MOVELWCNUM     SFCNM2  6                       156886
+      *                                                                                     MD036154
+      ** Retrieve JNSTAT details                                                            MD036154
+      *                                                                                     MD036154
+     C           *NAMVAR   DEFN           JNSTAT                                            MD036154
+     C                     IN   JNSTAT                                                      MD036154
+     C                     UNLCKJNSTAT                                                      MD036154
      C                     ENDSR
       *
       *****************************************************************
@@ -4553,6 +4570,14 @@
       *                                                                                       CLE073
      C                     ENDIF                                                             243496B
      C                     ENDIF                                                              CLE071
+      *                                                                                     MD008453
+      **If Next payment date = Rundate, use previous FEAMTP                                 MD008453
+      *                                                                                     MD008453
+     C           BKALDI    IFEQ 'Y'                                                         MD008453
+     C           FENPYD    ANDEQBJRDNB                                                      MD008453
+     C           FEORED    ANDNEBJRDNB                                                      MD008453
+     C                     SUB  WFEE      FEAMTP                                            MD008453
+     C                     ENDIF                                                            MD008453
      C***********          ADD  FEAMTP    WFEE                     BH3414 155677
      C***********          ADD  FEAMTS    WFEE                     BH3414 052125
      C*                                                                   BH3414
@@ -6746,6 +6771,50 @@
      C                     ENDIF                                                             243496B
      C                     END                                            BH3414
      C                     END                                            BH3514
+     C           BKALDI    IFEQ 'Y'                                                         MD008453
+     C           FELPDT    ANDNEBJRDNB                                                      MD008453
+     C           FEPEND    ANDGTBJRDNB                                                      MD008453
+     C           FEORED    ANDNEBJRDNB                                                      MD008453
+     C                     ADD  1         STDATE                                            MD008453
+     C                     ENDIF                                                            MD008453
+      *                                                                                     MD008453
+      ** Fees with payment date processed on last COB will have zero accrued to date        MD008453
+      ** If accrual date fell on a weekend, do not include the holidays in the cal.         MD008453
+      ** Determine previous working day                                                     MD008453
+      *                                                                                     MD008453
+     C           FELPDT    IFNE 0                                                           MD008453
+     C           BKALDI    ANDEQ'Y'                                                         MD008453
+     C           FELADT    ORNE 0                                                           MD008453
+     C           BKALDI    ANDEQ'Y'                                                         MD008453
+      *                                                                                     MD008453
+     ** Determine previous accrual date                                                     MD008453
+      *                                                                                     MD008453
+     C           BKAPFQ    IFEQ 'D'                                                         MD008453
+     C           BKAPDT    SUB  1         PACDT   50                                        MD008453
+     C                     ENDIF                                                            MD008453
+      *                                                                                     MD008453
+     C           BKAPFQ    IFEQ 'M'                                                         MD008453
+     C           BKAPDT    SUB  BKAPFD    PACDT   50                                        MD008453
+     C                     ENDIF                                                            MD008453
+      *                                                                                     MD008453
+     C           BKAPFQ    IFEQ 'Q'                                                         MD008453
+     C           BKAPFD    MULT 4         PACDT   50                                        MD008453
+     C           BKAPDT    SUB  PACDT     PACDT                                             MD008453
+     C                     ENDIF                                                            MD008453
+      *                                                                                     MD008453
+      ** If the last payment date is within the range of the last working day up to         MD008453
+      ** previous date, then Accrued to date should be zero just like in LER150             MD008453
+      *                                                                                     MD008453
+     C                     Z-ADD0         HDAYS                                             MD008453
+     C           PACDT     IFGE PRUN                                                        MD008453
+     C           PACDT     ANDLTBJRDNB                                                      MD008453
+     C           BKALDI    ANDEQ'Y'                                                         MD008453
+     C           BJRDNB    SUB  PRUN      HDAYS   20                                        MD008453
+     C                     SUB  1         HDAYS                                             MD008453
+     C           STDATE    ADD  HDAYS     STDATE                                            MD008453
+     C                     ENDIF                                                            MD008453
+      *                                                                                     MD008453
+     C                     ENDIF                                                            MD008453
      C*                                                                   BH3414
      C** Obtain number of days to use.                                    BH3414
      C*                                                                   BH3414
@@ -6772,7 +6841,17 @@
      C                     ENDIF                                                              CLE071
      C                     ENDIF                                                              CLE071
       *                                                                                       CLE071
+      **If next pay date is today, still need to show accruals up to yesterday              MD008453
+      *                                                                                     MD008453
+     C           BKALDI    IFEQ 'Y'                                                         MD008453
+     C           FENPYD    ANDEQBJRDNB                                                      MD008453
+     C           BKALDI    OREQ 'Y'                                                         MD008453
+     C           FENPYD    ANDEQ0                                                           MD008453
+     C           FEPEND    ANDEQBJRDNB                                                      MD008453
+     C                     Z-ADDFEADBP    WFEE   130                                        MD008453
+     C                     ELSE                                                             MD008453
      C                     Z-ADD0         WFEE   130                                         BUG8762
+     C                     ENDIF                                                            MD008453
       *                                                                                      BUG8762
       ** Store end date which is equal to rundate.                                           BUG8762
       *                                                                                      BUG8762
@@ -7183,6 +7262,19 @@
      C                     Z-ADD*ZERO     FAFCTY                                             BUG8762
      C                     Z-ADD*ZERO     FADATE                                             BUG8762
      C                     Z-ADD*ZERO     FAFSEQ                                             BUG8762
+      *                                                                                     MD008453
+     C           PACDT     IFGE PRUN                                                        MD008453
+     C           PACDT     ANDLEOMDATE                                                      MD008453
+     C           BKALDI    ANDEQ'Y'                                                         MD008453
+     C                     SUB  1         STDATE                                            MD008453
+     C           STDATE    IFEQ FEPSTD                                                      MD008453
+     C                     ADD  HDAYS     STDATE                                            MD008453
+     C                     ADD  1         STDATE                                            MD008453
+     C                     ELSE                                                             MD008453
+     C                     ADD  1         STDATE                                            MD008453
+     C                     ENDIF                                                            MD008453
+     C                     ENDIF                                                            MD008453
+      *                                                                                     MD008453
      C           HSAKY1    SETGTFACHSAL1                                                     BUG8762
      C                     READPFACHSAL1                 20                                  BUG8762
      C           FECNUM    IFEQ FACNUM                                                       BUG8762

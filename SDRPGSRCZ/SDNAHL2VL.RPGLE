@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD052399           Date 05Dec18               *
-      *  Prev Amend No. MD044093           Date 18Apr17               *
+      *  Last Amend No. MD054404           Date 12Feb20               *
+      *  Prev Amend No. MD052399           Date 05Dec18               *
+      *                 MD044093           Date 18Apr17               *
       *                 CGL177             Date 11Jan16               *
       *                 MD036274           Date 21Oct15               *
       *                 CGL157             Date 17Aug15               *
@@ -47,6 +48,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054404 - Additional changes needed for CER076              *
       *  MD052399 - FATCA+CRS - Non-A/C Holder Maintenance  -Federal  *
       *             State Code is mandatory (even CER054 is OFF) and  *
       *             mandatory "Industry Code" field is protected      *
@@ -89,7 +91,7 @@
       *  CGL032 - Automatic Exchange of Information                   *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
@@ -100,11 +102,11 @@
                                                                                               CER054
       ** Religious Affiliation Codes Keyed by Religious Affiliation                           CER054
      FSDRLAFL0  IF   E           K DISK    INFSR(*PSSR)                                       CER054
- 
+
       * Midas SD Local Industry Codes
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,SDCUDPV001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -114,104 +116,104 @@
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
- 
+
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
- 
+
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D WBDate          DS
      D  WBX                    1      2
      D  WBY                    3      4
      D  WBYear                 5      8
- 
+
       ** Non-A/C Holder Primary Details in screen format
      D NaPrim        E DS                  Extname(SDNAHLPD)
- 
+
       ** Non-A/C Holder Primary Details OK indicators
      D OKNaPrim      E DS                  Extname(SDENAHLPD)
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  Extname(SDBANKPD)
- 
+
       ** External DS for SAR Details
      D SCSARD        E DS                  Extname(SCSARDPD)
- 
+
       **  Short DS for access programs
      D DSFDY         E DS                  Extname(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  Extname(DSSDY)
- 
+
       ** External DS for Midas modules                                                        CSW207
      D SDMMOD        E DS                  Extname(SDMMODPD)                                  CSW207
                                                                                               CSW207
      D ZMUSER          DS            17
      D  USRBCH                11     13
- 
+
       ** Valid Non-A/C Holder Details layout
      D ValidNaho     E DS                  Extname(SDVNAHLPD)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D ExtData         S            500A
- 
+
      D*CGL032***       S              1A
- 
+
      D Retcd           S              7A
- 
+
      D Option          S              7A
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of of warning message ids etc
      D WIdx            S              3P 0
- 
+
      D I               S              3  0
      D RespMode        S              1
      D PTaxStatus      S              1                                                       232543
      D PJACTdummy      S              1                                                       233004
- 
+
      D PDBTH           S                   LIKE(DDDBTH)
                                                                                               CSW207
       ** SWIFT 2007 feature                                                                   CSW207
@@ -228,7 +230,7 @@
      D DDSUBJ          S              1A                                                    MD036274
      D PCRSChk         S              1A                                                    MD036274
      D CVTINS          S              1A                                                      CGL177
- 
+
      D CER047          S              1A                                                      CER047
      D CER048          S              1A                                                      CER048
      D CER054          S              1A                                                      CER054
@@ -246,31 +248,31 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Pass data not requiring validation to ValidNaho fields
- 
+
       ** Tax Identification Number
       ** Place of Birth - Town
       ** Mailing Address 3
       ** Mailing Address 4
- 
+
       *                                                                                       CER047
       ** Pass data not requiring validation to ValidNaho fields, If                           CER047
       ** CER047 is ON                                                                         CER047
@@ -310,78 +312,94 @@
      C                   MOVE      DDBTHT        NABTHT
      C                   MOVE      DDCNA3        NACNA3
      C                   MOVE      DDCNA4        NACNA4
- 
+
       ** Validate Non-A/C Holder Report Name
- 
+
      C                   EXSR      SRVcNarn
- 
+
       ** Validate Non-A/C Holder Report Town
- 
+
      C                   EXSR      SRVcNatw
- 
+
       ** Validate Private Individual
- 
+
      C                   EXSR      SRVcPInd
- 
+
       ** Validate Identification Type
- 
+
      C                   EXSR      SRVcIdTp
- 
+
       ** Validate Issuing Country
- 
+
      C                   EXSR      SRVcIsCt
- 
+
       ** Validate Issuing Date
- 
+
      C                   EXSR      SRVcIsDt
- 
-      ** Validate Country of Residence
- 
+
+      ***Validate*Country of Residence                                                      MD054404
+      ** Validate Country of Domicile                                                       MD054404
+      ** Validate Country of Citizenship                                                    MD054404
+
+     C                   IF        CER047 = 'Y'                                             MD054404
+     C                   EXSR      SRCDom                                                   MD054404
+     C                   EXSR      SRCitz                                                   MD054404
+     C                   ENDIF                                                              MD054404
+                                                                                            MD054404
+      ** ADDITIONAL COUNTRY VALIDATION                                                      MD054404
+      ** Validate Country of Residence (= Country of Domicile)                              MD054404
+      ** Validate Country of Citizenship                                                    MD054404
+                                                                                            MD054404
+     C                   IF        OKCOLC <> 'N'                                            MD054404
      C                   EXSR      SRVcColC
- 
+     C                   ENDIF                                                              MD054404
+     C                   IF        OKCOCZ <> 'N'                                            MD054404
+     C                   EXSR      SRVcCocz                                                 MD054404
+     C                   ENDIF                                                              MD054404
+
                                                                                             MD036274
      C                   IF        CGL157 = 'Y'                                             MD036274
      C                   EXSR      SRVTINN                                                  MD036274
      C                   ENDIF                                                              MD036274
 
       ** Validate Date of Birth
- 
+
      C                   EXSR      SRVcDate
- 
+
       ** Validate Place of Birth - Country
- 
+
      C                   EXSR      SRVcBthC
- 
+
       ** Perform crosscheck of tax details
- 
+
      C                   EXSR      SRVtXCk
- 
+
       ** Validate Mailing Name and Address (Lines 1-2)
- 
+
      C                   EXSR      SRVccN12
- 
+
       ** Validate Family Name
- 
+
      C                   EXSR      SRVcIde1
- 
+
       ** Validate First Name
- 
+
      C                   EXSR      SRVcIde2
- 
+
       ** Validate Street 1
- 
+
      C                   EXSR      SRVcIde3
- 
+
       ** Validate Street 2                                                                  BUG16741
                                                                                             BUG16741
      C                   EXSR      SRVcIde4                                                 BUG16741
                                                                                             BUG16741
       ** Validate Zip Code
- 
+
      C                   EXSR      SRVcZipC
- 
+
       ** Validate City
- 
+
      C                   EXSR      SRVcCity
                                                                                               CSW207
       ** Validate Issuing Authority                                                           CSW207
@@ -390,12 +408,13 @@
      C                   EXSR      SRVcIssAut                                                 CSW207
      C                   ENDIF                                                                CSW207
                                                                                               CGL132
-      ** Validate Country of Citizenship                                                      CGL132
+      ***Validate*Country of Citizenship                                              CGL132MD054404
       ** Validate Alternative Country of Citizenship                                          CGL132
+
       ** Validate TIN                                                                         CGL132
       ** Validate Country of TIN                                                              CGL132
       ** Validate Creation Date                                                               CGL132
-     C                   EXSR      SRVcCocz                                                   CGL132
+     C*******************EXSR      SRVcCocz                                           CGL132MD054404
      C                   EXSR      SRVcAccz                                                   CGL132
      C**********         EXSR      SRVcTin1                                            CGL132 CGL157
      C**********         EXSR      SRVcCTIN                                            CGL132 CGL157
@@ -406,7 +425,7 @@
                                                                                               CGL157
       ** Validate Phone Number Countries                                                      CGL157
      C                   EXSR      SRVPHONE                                                   CGL157
- 
+
      C                   IF        CER047 = 'Y'                                               CER047
       *                                                                                       CER047
       ** Validate Industry Code                                                               CER047
@@ -417,13 +436,13 @@
       *                                                                                       CER047
      C                   EXSR      SRExpDt                                                    CER047
       *                                                                                       CER047
-      ** Validate Country of Domicile                                                         CER047
+      ***Validate*Country of Domicile                                                 CER047MD054404
       *                                                                                       CER047
-     C                   EXSR      SRCDom                                                     CER047
+     C*******************EXSR      SRCDom                                             CER047MD054404
       *                                                                                       CER047
-      ** Validate Country of Citizenship                                                      CER047
+      ***Validate*Country of Citizenship                                              CER047MD054404
       *                                                                                       CER047
-     C                   EXSR      SRCitz                                                     CER047
+     C*******************EXSR      SRCitz                                             CER047MD054404
       *                                                                                       CER047
       ** Validate Spouse Reference                                                            CER047
       *                                                                                       CER047
@@ -478,43 +497,43 @@
      C                   ENDIF                                                                CER048
       *                                                                                       CER048
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       ** SRVcNarn - Validate Non-A/C Holder Report Name
       *****************************************************************
- 
+
      C     SRVcNarn      BEGSR
- 
+
       ** Reset variables updated by each module
- 
+
      C                   EXSR      SRResetErrs
- 
+
       ** Validate Non-A/C Holder report name
- 
+
      C                   CALLB     'SDVRENM'
- 
+
       ** INPUTS
       ** Return Code
       ** Non-A/C Holder Report Name
- 
+
      C                   PARM                    RetCodeOut
      C     NANARN        PARM                    DDNARN
- 
+
       ** OUTPUTS
       ** Error fields/message IDs/message data (arrays) from/to caller
       ** Non-A/C Holder Report Name - OK
- 
+
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
      C                   PARM                    OKNARN
- 
+
       ** Update error info with that returned from the validation module
- 
+
      C                   EXSR      SRUpdatErrs
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -522,35 +541,35 @@
       ** SRVcNatw - Validate Non-A/C Holder Report Town
       *****************************************************************
      C     SRVcNatW      BEGSR
- 
+
       ** Reset variables updated by each module
- 
+
      C                   EXSR      SRResetErrs
- 
+
       ** Validate Non-A/C Holder Report Town
- 
+
      C                   CALLB     'SDVREDE'
- 
+
       ** INPUTS
       ** Return Code
       ** Non-A/C Holder Report Town
- 
+
      C                   PARM                    RetCodeOut
      C     NANATW        PARM                    DDNATW
- 
+
       ** OUTPUTS
       ** Error fields/message IDs/message data (arrays) from/to caller
       ** Non-A/C Holder Report Town - OK
- 
+
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
      C                   PARM                    OKNATW
- 
+
       ** Update error info with that returned from the validation module
- 
+
      C                   EXSR      SRUpdatErrs
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -558,35 +577,35 @@
       ** SRVcPInd - Validate Private Individual
       *****************************************************************
      C     SRVcPInd      BEGSR
- 
+
       ** Reset variables updated by each module
- 
+
      C                   EXSR      SRResetErrs
- 
+
       ** Validate Identification Type
- 
+
      C                   CALLB     'SDVPIND01'
- 
+
       ** INPUTS
       ** Return Code
       ** Identification Type
- 
+
      C                   PARM                    RetCodeOut
      C     NAPIND        PARM                    DDPIND
- 
+
       ** OUTPUTS
       ** Error fields/message IDs/message data (arrays) from/to caller
       ** Identification Type - OK
- 
+
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
      C                   PARM                    OKPIND
- 
+
       ** Update error info with that returned from the validation module
- 
+
      C                   EXSR      SRUpdatErrs
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -594,37 +613,37 @@
       ** SRVcIdTp - Validate Identification Type
       *****************************************************************
      C     SRVcIdTp      BEGSR
- 
+
       ** Reset variables updated by each module
- 
+
      C                   EXSR      SRResetErrs
- 
+
       ** Validate Identification Type
- 
+
      C                   CALLB     'SDVIDTP01'
- 
+
       ** INPUTS
       ** Return Code
       ** Identification Type
- 
+
      C                   PARM                    RetCodeOut
      C                   PARM                    DDTINO
      C     NAIDTP        PARM                    DDIDTP
      C                   PARM                    DDIDNO           15                        MD044093
- 
+
       ** OUTPUTS
       ** Error fields/message IDs/message data (arrays) from/to caller
       ** Identification Type - OK
- 
+
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
      C                   PARM                    OKIDTP
- 
+
       ** Update error info with that returned from the validation module
- 
+
      C                   EXSR      SRUpdatErrs
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -632,37 +651,37 @@
       ** SRVcIsCt - Validate Issuing Country
       *****************************************************************
      C     SRVcIsCt      BEGSR
- 
+
       ** Reset variables updated by each module
- 
+
      C                   EXSR      SRResetErrs
- 
+
       ** Validate Issuing Country
- 
+
      C                   CALLB     'SDVICTR01'
- 
+
       ** INPUTS
       ** Return Code
       ** Tax Identification Number
       ** Issuing Country
- 
+
      C                   PARM                    RetCodeOut
      C                   PARM                    DDTINO
      C     NAISCT        PARM                    DDISCT
- 
+
       ** OUTPUTS
       ** Error fields/message IDs/message data (arrays) from/to caller
       ** Issuing Country - OK
- 
+
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
      C                   PARM                    OKISCT
- 
+
       ** Update error info with that returned from the validation module
- 
+
      C                   EXSR      SRUpdatErrs
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -670,38 +689,38 @@
       ** SRVcIsDt - Validate Issuing Date
       *****************************************************************
      C     SRVcIsDt      BEGSR
- 
+
       ** Reset variables updated by each module
- 
+
      C                   EXSR      SRResetErrs
- 
+
       ** Validate Issuing Date
- 
+
      C                   CALLB     'SDVIDAT01'
- 
+
       ** INPUTS
       ** Return Code
       ** Issuing Date
- 
+
      C                   PARM                    RetCodeOut
      C                   PARM                    DDTINO
      C                   PARM                    DDISDT
- 
+
       ** OUTPUTS
       ** Issuing Date in Midas Day No
       ** Error fields/message IDs/message data (arrays) from/to caller
       ** Issuing Date - OK
- 
+
      C                   PARM                    NAISDT
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
      C                   PARM                    OKISDT
- 
+
       ** Update error info with that returned from the validation module
- 
+
      C                   EXSR      SRUpdatErrs
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -709,45 +728,45 @@
       ** SRVcDate - Validate Date of Birth
       *****************************************************************
      C     SRVcDate      BEGSR
- 
+
       ** Reset variables updated by each module
- 
+
      C                   EXSR      SRResetErrs
- 
+
       ** Reformat Date of Birth.
- 
+
      C                   EVAL      WBDate = DDDBTH
- 
+
      C                   IF        BJDFIN = 'D'
      C                   EVAL      PDBTH = WBYear + WBY + WBX
      C                   ELSE
      C                   EVAL      PDBTH = WBYear + WBX + WBY
      C                   ENDIF
- 
+
       ** Validate Date of Birth
- 
+
      C                   CALLB     'SDVDBTH01'
- 
+
       ** INPUTS
       ** Return Code
       ** Date of Birth
- 
+
      C                   PARM                    RetCodeOut
      C     NADBTH        PARM                    PDBTH
- 
+
       ** OUTPUTS
       ** Error fields/message IDs/message data (arrays) from/to caller
       ** Date of Birth - OK
- 
+
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
      C                   PARM                    OKDBTH
- 
+
       ** Update error info with that returned from the validation module
- 
+
      C                   EXSR      SRUpdatErrs
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -755,35 +774,35 @@
       ** SRVcBthC - Validate Place of Birth - Country
       *****************************************************************
      C     SRVcbthC      BEGSR
- 
+
       ** Reset variables updated by each module
- 
+
      C                   EXSR      SRResetErrs
- 
+
       ** Validate Place of Birth - Country
- 
+
      C                   CALLB     'SDVCBTH01'
- 
+
       ** INPUTS
       ** Return Code
       ** Place of Birth - Country
- 
+
      C                   PARM                    RetCodeOut
      C     NABTHC        PARM                    DDBTHC
- 
+
       ** OUTPUTS
       ** Error fields/message IDs/message data (arrays) from/to caller
       ** Place of Birth - Country - OK
- 
+
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
      C                   PARM                    OKBTHC
- 
+
       ** Update error info with that returned from the validation module
- 
+
      C                   EXSR      SRUpdatErrs
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -791,15 +810,15 @@
       ** SRVTxCk - Perform crosscheck of tax details
       *****************************************************************
      C     SRVTxCk       BEGSR
- 
+
       ** Reset variables updated by each module
- 
+
      C                   EXSR      SRResetErrs
- 
+
       ** Perform crosscheck of tax details
- 
+
      C                   CALLB     'SDVTXCK01'
- 
+
       ** INPUTS
       ** Return Code
       ** Tax Identification Number
@@ -812,7 +831,7 @@
       ***Error*Field*Name                                                                     232543
       ** Non-a/c Holder Reference                                                             232543
       ** Country of Residence                                                                 232543
- 
+
      C                   PARM                    RetCodeOut
      C                   PARM                    DDTINO
      C                   PARM                    DDIDTP
@@ -823,12 +842,12 @@
      C                   PARM                    DDBTHT
      C                   PARM                    DDNAHO                                       232543
      C                   Parm                    DDCOLC
- 
+
       ** OUTPUTS
       ** Error fields/message IDs/message data (arrays) from/to caller
       ** Tax details - OK
       ** Tax Status                                                                           232543
- 
+
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
@@ -837,11 +856,11 @@
      C                   PARM                    OKBTHT
      C                   PARM                    OKTINO
      C                   PARM                    PTaxStatus                                   232543
- 
+
       ** Update error info with that returned from the validation module
- 
+
      C                   EXSR      SRUpdatErrs
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -849,36 +868,38 @@
       ** SRVcColC - Validate Country of Residence
       *****************************************************************
      C     SRVcColC      BEGSR
- 
+
       ** Reset variables updated by each module
- 
+
      C                   EXSR      SRResetErrs
- 
+
       ** Validate Country of Residence
- 
+
      C                   CALLB     'SDVCNDI'
- 
+
       ** INPUTS
       ** Return Code
       ** Country of Residence
- 
+
      C                   PARM                    RetCodeOut
      C     NACOLC        PARM                    DDCOLC
      C                   PARM                    DDCUST                                     BUG25531
- 
+
       ** OUTPUTS
       ** Error fields/message IDs/message data (arrays) from/to caller
       ** Country of Residence - OK
- 
+
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
      C                   PARM                    OKCOLC
- 
+                                                                                            MD054404
+     C                   MOVEL     NACOLC        NACTYD                                     MD054404
+
       ** Update error info with that returned from the validation module
- 
+
      C                   EXSR      SRUpdatErrs
- 
+
      C                   ENDSR
       *****************************************************************                     MD036274
       /EJECT                                                                                MD036274
@@ -933,39 +954,39 @@
       ** SRVccN12 - Mailing Name and Address (Lines 1-2)
       *****************************************************************
      C     SRVccN12      BEGSR
- 
+
       ** Reset variables updated by each module
- 
+
      C                   EXSR      SRResetErrs
- 
+
       ** Mailing Name and Address (Lines 1-2)
- 
+
      C                   CALLB     'SDVCADD01'
- 
+
       ** INPUTS
       ** Return Code
       ** Mailing Name and Address 1
       ** Mailing Name and Address 2
- 
+
      C                   PARM                    RetCodeOut
      C     NACNA1        PARM                    DDCNA1
      C     NACNA2        PARM                    DDCNA2
- 
+
       ** OUTPUTS
       ** Error fields/message IDs/message data (arrays) from/to caller
       ** Mailing Name and Address 1 - OK
       ** Mailing Name and Address 2 - OK
- 
+
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
      C                   PARM                    OKCNA1
      C                   PARM                    OKCNA2
- 
+
       ** Update error info with that returned from the validation module
- 
+
      C                   EXSR      SRUpdatErrs
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -973,37 +994,37 @@
       ** SRVcIde1 - Validate Familiy Name
       *****************************************************************
      C     SRVcIde1      BEGSR
- 
+
       ** Reset variables updated by each module
- 
+
      C                   EXSR      SRResetErrs
- 
+
       ** Validate Family Name
- 
+
      C                   CALLB     'SDVFAMI02'
- 
+
       ** INPUTS
       ** Return Code
       ** Familiy Name
- 
+
      C                   PARM                    RetCodeOut
      C                   PARM                    DDCNA1
      C     NAIDE1        PARM                    DDIDE1
      C                   PARM                    PTaxStatus                                   232543
- 
+
       ** OUTPUTS
       ** Error fields/message IDs/message data (arrays) from/to caller
       ** Familiy Name - OK
- 
+
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
      C                   PARM                    OKIDE1
- 
+
       ** Update error info with that returned from the validation module
- 
+
      C                   EXSR      SRUpdatErrs
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1011,19 +1032,19 @@
       ** SRVcIde2 - Validate First Name
       *****************************************************************
      C     SRVcIde2      BEGSR
- 
+
       ** Reset variables updated by each module
- 
+
      C                   EXSR      SRResetErrs
- 
+
       ** Validate First Name
- 
+
      C                   CALLB     'SDVFIRS01'
- 
+
       ** INPUTS
       ** Return Code
       ** First Name
- 
+
      C                   PARM                    RetCodeOut
      C**********         PARM                    DDCUST            6                250804A AR978528
      C                   PARM      *Blank        DDCUST            6                        AR978528
@@ -1034,20 +1055,20 @@
       ** Action Code                                                                        MD022651
                                                                                             MD022651
      C                   PARM                    DDACTN                                     MD022651
- 
+
       ** OUTPUTS
       ** Error fields/message IDs/message data (arrays) from/to caller
       ** First Name - OK
- 
+
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
      C                   PARM                    OKIDE2
- 
+
       ** Update error info with that returned from the validation module
- 
+
      C                   EXSR      SRUpdatErrs
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1055,37 +1076,37 @@
       ** SRVcIde3 - Validate Street 1
       *****************************************************************
      C     SRVcide3      BEGSR
- 
+
       ** Reset variables updated by each module
- 
+
      C                   EXSR      SRResetErrs
- 
+
       ** Validate Street 1
- 
+
      C                   CALLB     'SDVSTR102'
- 
+
       ** INPUTS
       ** Return Code
       ** Street 1
- 
+
      C                   PARM                    RetCodeOut
      C                   PARM                    DDCNA2
      C     NAIDE3        PARM                    DDIDE3
      C                   PARM                    PTaxStatus                                   232543
- 
+
       ** OUTPUTS
       ** Error fields/message IDs/message data (arrays) from/to caller
       ** Street 1 - OK
- 
+
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
      C                   PARM                    OKIDE3
- 
+
       ** Update error info with that returned from the validation module
- 
+
      C                   EXSR      SRUpdatErrs
- 
+
      C                   ENDSR
       *****************************************************************                     BUG16741
       /EJECT                                                                                BUG16741
@@ -1131,37 +1152,37 @@
       ** SRVcZipC - Validate Zip Code
       *****************************************************************
      C     SRVcZipC      BEGSR
- 
+
       ** Reset variables updated by each module
- 
+
      C                   EXSR      SRResetErrs
- 
+
       ** Validate Zip Code
- 
+
      C                   CALLB     'SDVZIPC01'
- 
+
       ** INPUTS
       ** Return Code
       ** Zip Code
- 
+
      C                   PARM                    RetCodeOut
      C     NAZIPC        PARM                    DDZIPC
      C                   PARM                    PTaxStatus                                   232543
      C                   PARM      *Blank        PJACTdummy                                   233004
- 
+
       ** OUTPUTS
       ** Error fields/message IDs/message data (arrays) from/to caller
       ** Zip Code - OK
- 
+
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
      C                   PARM                    OKZIPC
- 
+
       ** Update error info with that returned from the validation module
- 
+
      C                   EXSR      SRUpdatErrs
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1169,37 +1190,37 @@
       ** SRVcCity - Validate City
       *****************************************************************
      C     SRVcCity      BEGSR
- 
+
       ** Reset variables updated by each module
- 
+
      C                   EXSR      SRResetErrs
- 
+
       ** Validate City
- 
+
      C                   CALLB     'SDVCITY02'
- 
+
       ** INPUTS
       ** Return Code
       ** Country of Location (2A)
- 
+
      C                   PARM                    RetCodeOut
      C                   PARM                    DDCNA4
      C     NACITY        PARM                    DDCITY
      C                   PARM                    PTaxStatus                                   232543
- 
+
       ** OUTPUTS
       ** Error fields/message IDs/message data (arrays) from/to caller
       ** Branch Indicator - OK
- 
+
      C                   PARM                    FldNamXAr
      C                   PARM                    MsgIDXAr
      C                   PARM                    MsgDtaXAr
      C                   PARM                    OKCITY
- 
+
       ** Update error info with that returned from the validation module
- 
+
      C                   EXSR      SRUpdatErrs
- 
+
      C                   ENDSR
       *****************************************************************                       CSW207
       /EJECT                                                                                  CSW207
@@ -1270,6 +1291,8 @@
      C                   PARM                    MsgIDXAr                                     CGL132
      C                   PARM                    MsgDtaXAr                                    CGL132
      C                   PARM                    OKCOCZ                                       CGL132
+                                                                                            MD054404
+     C                   MOVEL     NACOCZ        NACTYC                                     MD054404
                                                                                               CGL132
       ** Update error info with that returned from the validation module                      CGL132
                                                                                               CGL132
@@ -1634,12 +1657,14 @@
       *                                                                                       CER047
      C                   CALLB     'SDVCNTRY'                                                 CER047
      C                   PARM                    RetCodeOut                                   CER047
-     C     NACTYD        PARM                    DDCTYD                                       CER047
+     C*****NACTYD********PARM                    DDCTYD                               CER047MD054404
+     C     NACOLC        PARM                    DDCOLC                                     MD054404
      C                   PARM                    FldNamXAr                                    CER047
      C                   PARM                    MsgIDXAr                                     CER047
      C                   PARM                    MsgDtaXAr                                    CER047
      C                   PARM      'DDCTYD'      PFldNm                                       CER047
-     C                   PARM                    OKCTYD                                       CER047
+     C*******************PARM                    OKCTYD                               CER047MD054404
+     C                   PARM                    OKCOLC                                     MD054404
       *                                                                                       CER047
       ** Update error info with that returned from Validation Module                          CER047
       *                                                                                       CER047
@@ -1663,12 +1688,14 @@
       *                                                                                       CER047
      C                   CALLB     'SDVCNTRY'                                                 CER047
      C                   PARM                    RetCodeOut                                   CER047
-     C     NACTYC        PARM                    DDCTYC                                       CER047
+     C*****NACTYC********PARM                    DDCTYC                               CER047MD054404
+     C     NACOCZ        PARM                    DDCOCZ                                     MD054404
      C                   PARM                    FldNamXAr                                    CER047
      C                   PARM                    MsgIDXAr                                     CER047
      C                   PARM                    MsgDtaXAr                                    CER047
      C                   PARM      'DDCTYC'      PFldNm                                       CER047
-     C                   PARM                    OKCTYC                                       CER047
+     C*******************PARM                    OKCTYC                               CER047MD054404
+     C                   PARM                    OKCOCZ                                     MD054404
       *                                                                                       CER047
       ** Update error info with that returned from Validation Module                          CER047
       *                                                                                       CER047
@@ -1955,7 +1982,7 @@
      C                   EVAL      FldNamXAr(Err) = 'DDSTCD'                                BUG24714
      C                   EVAL      MsgIdXAr(Err)  = 'USR8322'                               BUG24714
      C                   EVAL      OKSTCD = 'N'                                             BUG24714
- 
+
      C                   ELSE                                                               BUG26384
                                                                                             BUG26384
      C                   EVAL      OKSTCD = 'Y'                                             BUG26384
@@ -1984,18 +2011,18 @@
       **    from each validation module.                              *
       *****************************************************************
      C     SRResetErrs   BEGSR
- 
+
      C                   EVAL      RetCodeOut = *Blanks
- 
+
       ** Reset error & warning fields/message IDs/message data (arrays)
- 
+
      C                   MOVEL     *BLANK        FldNamXAr
      C                   MOVEL     *BLANK        MsgIDXAr
      C                   MOVEL     *BLANK        MsgDtaXAr
      C                   MOVEL     *BLANK        WFldNmXAr
      C                   MOVEL     *BLANK        WMsgIDXAr
      C                   MOVEL     *BLANK        WMsgDtXAr
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2004,9 +2031,9 @@
       **    from each validation module.                               *
       *****************************************************************
      C     SRUpdatErrs   BEGSR
- 
+
       ** Update error fields/message IDs/message data (arrays)
- 
+
      C                   Z-ADD     1             I
      C     *BLANK        LOOKUP    FldNameArr(I)                          99
      C     *IN99         IFEQ      *On
@@ -2014,15 +2041,15 @@
      C                   MOVEA     MsgIDXAr      MsgIdArr(I)
      C                   MOVEA     MsgDtaXAr     MsgDtaArr(I)
      C                   ENDIF
- 
+
       ** Set Error Index
- 
+
      C                   Z-ADD     1             I
      C     *BLANK        LOOKUP    FldNameArr(I)                          99
      C     I             SUB       1             Idx
- 
+
       ** Update warning fields/message IDs/message data (arrays)
- 
+
      C                   Z-ADD     1             I
      C     *BLANK        LOOKUP    WFldNamArr(I)                          99
      C     *IN99         IFEQ      *On
@@ -2030,13 +2057,13 @@
      C                   MOVEA     WMsgIDXAr     WMsgIDArr(I)
      C                   MOVEA     WMsgDtXAr     WMsgDtaArr(I)
      C                   ENDIF
- 
+
       ** Set Warning Index
- 
+
      C                   Z-ADD     1             I
      C     *BLANK        LOOKUP    WFldNamArr(I)                          99
      C     I             SUB       1             WIdx
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2044,18 +2071,18 @@
       ** *INZSR - Program Initialisation routine                      *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *Entry        PLIST
- 
+
       ** INPUTS
       ** Response mode
       ** Non-A/C Holder Details
       ** Non-A/C Holder Extra Data
- 
+
      C                   PARM                    RespMode
      C                   PARM                    NaPrim
      C                   PARM                    ExtData
- 
+
       ** OUTPUTS
       ** Non-A/C Holder Details OK inds
       ** Error fields/message IDs/message data (arrays) from/to caller
@@ -2063,7 +2090,7 @@
       ** Warning fields/message IDs/message data (arrays) from/to caller
       ** Array index (3P0) from/to caller
       ** Valid Non-A/C Holder details layout (DS) from/to caller
- 
+
      C                   PARM                    OKNaPrim
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
@@ -2074,16 +2101,16 @@
      C                   PARM                    WMsgDtaArr
      C                   PARM                    WIdx
      C                   PARM                    ValidNaho
- 
+
       ** Access Bank details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       Retcd
      C                   PARM      '*FIRST '     Option
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database error
- 
+
      C     Retcd         IFNE      *BLANKS
      C                   MOVEL     'SDBANKPD'    Dbfile
      C                   MOVEL     '901'         Dbase
@@ -2140,7 +2167,7 @@
      C                   EXSR      *PSSR                                                      CGL157
      C                   ENDIF                                                                CGL157
      C                   ENDIF                                                                CGL157
- 
+
       *                                                                                       CER047
       ** Call AOSARDR0 to check for CER047                                                    CER047
       *                                                                                       CER047
@@ -2231,14 +2258,14 @@
      C                   EXSR      *PSSR                                                      CER054
       *                                                                                       CER054
      C                   ENDIF                                                                CER054
- 
+
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.
       /COPY ZACPYSRC,DBFIELDS
- 
+
       **  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,SDCUDPV051
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2246,27 +2273,27 @@
       ** SRERR - Exception Errors                                     *
       *****************************************************************
      C     SRERR         BEGSR
- 
+
      C                   MOVEL     'SDNAHL2VL'   Dbpgm
      C                   MOVE      *On           *INU7
      C                   MOVE      *On           *INU8
      C                   MOVE      *On           *INLR
- 
+
      C                   DUMP
- 
+
       **  Terminate the program
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** The following /COPY contains the standard program status
       ** subroutine, including a bound call to the DBERRCTL module.
       /COPY ZACPYSRC,PSSR_ILE
- 
+
       ********************************************************************
 **  CPY@
 (c) Finastra International Limited 2004

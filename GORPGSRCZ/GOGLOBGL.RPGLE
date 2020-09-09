@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CSD101             Date 07Dec18               *
+      *  Last Amend No. EML102             Date 28Nov19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CSD101             Date 07Dec18               *
       *                 MD046248           Date 27Oct17               *
       *                 CER073A            Date 05Sep17               *
       *                 CER073             Date 10Jul17               *
@@ -51,11 +52,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  EML102 - Upgrade of UNL007 to FB2.1 SP23                     *
+      *           UNL007 - Extended Narratives                        *
+      *           use Core hooks GPGLJENHPD  (call of UNL007UPD)      *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CER073A - CER073 Change Control 1 (Recompile)                *
-      *  CER073 - AnaCredit Reporting                                 *      
+      *  CER073 - AnaCredit Reporting                                 *
       *  MD029739 - File renaming for integration layer.              *
       *  MD033486 - Add new Beneficiary Account field (Recompile)     *
       *  MD031974 - Failed COB Component GOC0100 seq 002234 due to    *
@@ -95,10 +99,10 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
- 
+
+
      D PARM1           DS
       * Physical file name
      D  PFLNAME                1     10
@@ -115,31 +119,31 @@
       * Length of the after image of the record
      D  ALEN                  69     72B 0
      D  EntryData            117  10117A
- 
- 
+
+
      D PARM2           DS
      D  LENG                   1      4B 0
- 
+
      D CLE025          S              1                                                       CLE025
      D PSARD           S              6                                                       CLE025
      D PRTCD           S              7                                                       CLE025
      D POPTN           S              7                                                       CLE025
- 
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PARM1
      C                   PARM                    PARM2
- 
+
       * Recover before and after image
- 
+
      C     BOFF          ADD       1             OffSet            5 0
      C     BLen          SUBST     PARM1:OffSet  I#BIMG         4000
- 
+
      C     AOFF          ADD       1             OffSet
      C     ALen          SUBST     PARM1:OffSet  I#AIMG         4000
- 
- 
+
+
       * Global Updates - BEFORE/AFTER image
       * TRGEVENT: '1'=INSERT, '2'=DELETE, '3'=UPDATE
      C     TRGEVENT      IFEQ      '1'
@@ -148,17 +152,17 @@
      C     TRGEVENT      IFEQ      '2'
      C                   MOVEL     *BLANK        I#AIMG
      C                   ENDIF
- 
+
      C                   MOVEL     O#ZONE        I#ZONE                         * ERROR MESSAGE
      C                   MOVEL     'Y'           I#TRAP
- 
+
       * Determine updates
- 
+
      C                   EXSR      DET_UPDATES
- 
+
      C                   MOVEL     'B'           I#BFAF
      C                   DO        2
- 
+
      C     P_Before      IFEQ      'Y'
      C     I#BFAF        ANDEQ     'B'
      C     P_After       OREQ      'Y'
@@ -204,12 +208,12 @@
      C**********         EXSR      GLOB_GLACNTQD                                      CLE025 BUG3286
      C**********         ENDIF                                                        CLE025 BUG3286
      C                   ENDIF
- 
+
      C                   MOVEL     'A'           I#BFAF
      C                   ENDDO
- 
+
      C                   RETURN
- 
+
       /SPACE 5
       *****************************************************************
       * Global Updates - Account
@@ -479,7 +483,7 @@
       * Determine Updates
       *****************************************************************
      C     DET_UPDATES   BEGSR
- 
+
      C                   CALL      'GPDETGUPD'
      C                   PARM                    I#ZONE           10
      C                   PARM      PFLNAME       I#FILE           10
@@ -487,7 +491,7 @@
      C                   PARM                    I#AIMG
      C                   PARM      'N'           P_Before          1
      C                   PARM      'N'           P_After           1
- 
+
      C                   ENDSR
       *****************************************************************
      C/SPACE 5
@@ -517,14 +521,14 @@
      C                   ELSE                                                                 CLE025
      C                   MOVE      'N'           CLE025                                       CLE025
      C                   ENDIF                                                                CLE025
- 
+
      C                   MOVEL     *BLANK        I#RTCD            7
      C                   MOVEL     *BLANK        I#ERMS           50
- 
+
       * Get Zone
- 
+
       /COPY GOCPYSRC,GOGETZONE
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5

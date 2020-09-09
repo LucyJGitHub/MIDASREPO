@@ -10,8 +10,9 @@
 0006 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056278           Date 12Aug20               *      
-      *  Prev Amend No. MD055673           Date 20Jul20               *
+      *  Last Amend No. 257937             Date 28Nov08               *
+      *  Prev Amend No. MD056278           Date 12Aug20               *      
+      *                 MD055673           Date 20Jul20               *
       *                 MD053762           Date 16Jun19               *
       *                 MD049950           Date 08Mar18               *
       *                 MD048795           Date 30Jan18               *
@@ -191,6 +192,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  257937 - Incorrect postings for withholding tax in foreign   *
+      *           currency. Debit the tax from the settlement account *
+      *           for tax account keys with posting reference '2' and *
+      *           do not convert to Base Ccy. Applied fix 241675.     *
       *  MD056278 - Imbalance posting on computer suspense account    *
       *             with unrelated SWCR value.                        *
       *           - Fields SWCR and ACKEY in posting file should be   *
@@ -3223,6 +3228,19 @@
 0609 C   34                EXSR PREF1
      C/COPY WNCPYSRC,DL0295C077
 0610 C**
+      ** Fix for Withholding Tax.                                                             257937
+      ** If this is a tax key and the posting reference is 2 then the                         257937
+      ** account key is trying to post the tax to the settlement                              257937
+      ** account and it should therefore be in Event currency and not                         257937
+      ** Base.  There is therefore no need for the additional postings                        257937
+      ** to Spot and Trade Equivalent accounts.                                               257937
+      ** All this gets solved if we don't treat this key as a tax key.                        257937
+      *                                                                                       257937
+     C           *IN60     IFEQ '1'                                                           257937
+     C           *IN35     ANDEQ'1'                                                           257937
+     C                     MOVE '0'       *IN60                                               257937
+     C                     ENDIF                                                              257937
+      *                                                                                       257937
 0611 C*    ADDITIONAL PROCESSING FOR POSTING REFERENCE 2.
 0612 C   35                EXSR PREF2
      C   70 35             EXSR EXTRA

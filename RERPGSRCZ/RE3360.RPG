@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD035795           Date 07Oct15               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD055663           Date 22May20    
+      *  Prev Amend No. MD035795           Date 07Oct15               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL186             Date 06Oct17               *
       *                 MD044981           Date 29Mar17               *
@@ -142,6 +143,11 @@
      F*                                                               *
      F*****************************************************************
       *                                                               *
+      *  MD055663 - Incorrect interest calculation for Interest Type  *
+      *             03/04. Change capitalisation period for interest  *
+      *             type 03/04. Amended RE3360 such that the interest *
+      *             period start on the last calendar day of the month*
+      *             up to penultimate day of the following month.     *
       *  MD035795 - Account Closure does not generate a turnover stmt *
       *             charge when indicated. Ensure that extra daily chg*
       *             will be posted if account has non-charge posting  *
@@ -680,12 +686,16 @@
      I*
      I** RENAME REHRCJF FORMAT FIELDS - REHRCJ FILE
      I*
+     I              VALD                            RCVALD                                  MD055663
+     I              HISD                            RCHISD                                  MD055663
      I              INTH                            INTHC
      I*
      IREHRDJF
      I*
      I** RENAME REHRDJF FORMAT FIELDS - REHRDJ FILE
      I*
+     I              VALD                            RDVALD                                  MD055663
+     I              HISD                            RDHISD                                  MD055663
      I              INTH                            INTHD
      I*                                                                   159536
      IFUSIONJF                                                            159536
@@ -787,6 +797,7 @@
      I*
      I            DS
      I                                        1   60RESULT
+     I                                        1   60CUTOVR                                  MD055663
      I                                        1   20ZDAY
      I                                        3   40ZMTH
      I                                        5   60ZYEAR
@@ -811,6 +822,7 @@
      I*                                                                   088029
      I            DS                                                      088029
      I                                        1   60RESULX                088029
+     I                                        1   60CUTOVX                                  MD055663
      I                                        1   20ZMTHX                 088029
      I                                        3   40ZDAYX                 088029
      I                                        5   60ZYEARX                088029
@@ -1419,6 +1431,16 @@
       *                                                                                       CER016
      I              'InterestNumber'      C         PSYSVL                                    CER016
      I              'UserEnqAccessAudit'  C         V#AAUD                                    CGL183
+     IEFDT34      DS                                                                        MD055663
+      *                                                                                     MD055663
+      ** Data Area EFDT34                                                                   MD055663
+      *                                                                                     MD055663
+     I                                        1   7 EFFA                                    MD055663
+     I                                        8  120EFFD                                    MD055663
+      *                                                                                     MD055663
+      ** Constan Value for New Capitalisation Period of Type 3 and 4                        MD055663
+      *                                                                                     MD055663
+     I              'NewIntCpPeriodTyp3&4'C         WSYSVL                                  MD055663
       *                                                                   S01408
      I/COPY WNCPYSRC,RE3360IIP2                                           S01408
       *                                                                   S01408
@@ -1588,6 +1610,11 @@
      C           *LIKE     DEFN DRIB      ZCCT                                                CRE090
      C           *LIKE     DEFN DRIC      ZCCALC                                              CRE090
      C           *LIKE     DEFN DRIS      ZCRATE                                              CRE090
+     C           *LIKE     DEFN RCA       WCINT                                             MD055663
+     C           *LIKE     DEFN RUND      ZFDTM                                             MD055663
+     C           *LIKE     DEFN RUND      ZFDNM                                             MD055663
+     C           *LIKE     DEFN RUND      WFDCO                                             MD055663
+     C           *LIKE     DEFN RUND      WLDCO                                             MD055663
      C*
      C/COPY WNCPYSRC,RE3360C005
      C                     Z-ADD*ZEROS    ZIFY2   30
@@ -1689,6 +1716,11 @@
      C*
      C           *NAMVAR   DEFN RUNDAT    RUNDT
      C                     IN   RUNDT
+      *                                                                                     MD055663
+      ** Access DTAARA EFDT34                                                               MD055663
+      *                                                                                     MD055663
+     C           *NAMVAR   DEFN           EFDT34                                            MD055663
+     C                     IN   EFDT34                                                      MD055663
      C*
      C** SET UP INDICATOR 98 BASED ON THE DATE FORMAT.
      C*
@@ -2294,6 +2326,48 @@
      C                     EXSR *PSSR                                                         CER016
       *                                                                                       CER016
      C                     ENDIF                                                              CER016
+      *                                                                                     MD055663
+      **  Call AOSVALR0 to check for New Int.Cap. Period Int. Calc. Type 3 and 4            MD055663
+      *                                                                                     MD055663
+     C                     CALL 'AOSVALR0'                                                  MD055663
+     C                     PARM *BLANKS   PRTCD   7                                         MD055663
+     C                     PARM WSYSVL    WSVLK1 20                                         MD055663
+     C                     PARM           WSVL1 200                                         MD055663
+     C                     PARM *BLANKS   WSVLK2 20                                         MD055663
+     C                     PARM           WSVL2 200                                         MD055663
+     C                     PARM *BLANKS   WSVLK3 20                                         MD055663
+     C                     PARM           WSVL3 200                                         MD055663
+     C                     PARM *BLANKS   WSVLK4 20                                         MD055663
+     C                     PARM           WSVL4 200                                         MD055663
+     C                     PARM *BLANKS   WSVLK5 20                                         MD055663
+     C                     PARM           WSVL5 200                                         MD055663
+     C                     PARM *BLANKS   WSVLK6 20                                         MD055663
+     C                     PARM           WSVL6 200                                         MD055663
+     C                     PARM *BLANKS   WSVLK7 20                                         MD055663
+     C                     PARM           WSVL7 200                                         MD055663
+     C                     PARM *BLANKS   WSVLK8 20                                         MD055663
+     C                     PARM           WSVL8 200                                         MD055663
+     C                     PARM *BLANKS   WSVLK9 20                                         MD055663
+     C                     PARM           WSVL9 200                                         MD055663
+     C                     PARM *BLANKS   WSVLK0 20                                         MD055663
+     C                     PARM           WSVL0 200                                         MD055663
+      *                                                                                     MD055663
+     C           PRTCD     IFNE *BLANKS                                                     MD055663
+     C           WSVL1     ANDEQ'*NRF   '                                                   MD055663
+     C                     EXSR *PSSR                                                       MD055663
+      *                                                                                     MD055663
+     C                     ELSE                                                             MD055663
+     C           BMLDAI    IFEQ 'Y'                                                         MD055663
+     C                     MOVELWSVL1     NCAP34  1                                         MD055663
+     C                     ENDIF                                                            MD055663
+     C                     ENDIF                                                            MD055663
+      *                                                                                     MD055663
+     C           NCAP34    IFEQ 'Y'                                                         MD055663
+     C                     Z-ADDEFFD      @EFFD   50                                        MD055663
+     C                     MOVE @EFFD     ZDAYNO                                            MD055663
+     C                     EXSR CUTDAT                                                      MD055663
+     C                     ENDIF                                                            MD055663
+      *                                                                                     MD055663
      C*
      C                     ENDSR                           **FIRST ENDSR**
      C********************************************************************
@@ -4375,6 +4449,10 @@
      C                     Z-ADD*ZEROS    INST
      C                     Z-ADD*ZEROS    ZINTR
      C                     Z-ADD*ZEROS    ZLDTM
+     C                     Z-ADD*ZEROS    ZFDTM                                             MD055663
+     C                     Z-ADD*ZEROS    ZFDNM                                             MD055663
+     C                     Z-ADD*ZEROS    WCINT                                             MD055663
+     C                     MOVE *BLANK    W1DAY   1                                         MD055663
       *                                                                                       CER016
      C           WFIRST    IFEQ 'Y'                                                           CER016
      C                     EXSR SRAOS                                                         CER016
@@ -4423,6 +4501,63 @@
      C*
      C                     EXSR DATEIN
      C*
+     C           NCAP34    IFEQ 'Y'                                                         MD055663
+      *                                                                                     MD055663
+     C           RUND      IFLE ZLDTM                                                       MD055663
+     C           BJDNWD    ANDGTZLDTM                                                       MD055663
+     C                     Z-ADDZFDNM     ZIEND                                             MD055663
+     C                     ENDIF                                                            MD055663
+      *                                                                                     MD055663
+     C           RUND      IFGT ZLDTM                                                       MD055663
+     C           RUND      ORLE ZLDTM                                                       MD055663
+     C           BJDNWD    ANDGTZLDTM                                                       MD055663
+     C                     MOVE *BLANKS   RTCFLG                                            MD055663
+      *                                                                                     MD055663
+     C           RDVALD    DOWLEZLDTM                                                       MD055663
+     C           RTCFLG    ANDNE'Y'                                                         MD055663
+      *                                                                                     MD055663
+     C           MNBL      IFGT 0                                                           MD055663
+     C                     Z-ADDMNBL      ZIAMT                                             MD055663
+     C           INTP      IFEQ 3                                                           MD055663
+     C                     Z-ADD1         ZICT                                              MD055663
+     C                     ELSE                                                             MD055663
+     C                     Z-ADD2         ZICT                                              MD055663
+     C                     ENDIF                                                            MD055663
+     C           ZICT      CASEQ1         ZIC01                                             MD055663
+     C           ZICT      CASEQ2         ZIC02                                             MD055663
+     C                     END                                                              MD055663
+     C           INTP      IFEQ 3                                                           MD055663
+     C                     ADD  ZINTR     WCINT                                             MD055663
+     C                     ELSE                                                             MD055663
+     C           INTP      IFEQ 4                                                           MD055663
+     C                     Z-ADDZINTR     WCINT                                             MD055663
+     C                     ENDIF                                                            MD055663
+     C                     ENDIF                                                            MD055663
+     C                     ENDIF                                                            MD055663
+      *                                                                                     MD055663
+     C           ZIBEG     IFLE ZFDTM                                                       MD055663
+     C                     MOVE 'Y'       RTCFLG  1                                         MD055663
+     C                     ENDIF                                                            MD055663
+     C           RTCFLG    IFNE 'Y'                                                         MD055663
+     C           DCKEY     SETLLREHISL                                                      MD055663
+     C           R1KEY     REDPEREHISL                   49                                 MD055663
+     C*          *IN49     IFEQ '1'                                                         MD055663
+     C*                    EXSR REHSR                                                       MD055663
+     C*                    ENDIF                                                            MD055663
+     C                     EXSR CRINIT                                                      MD055663
+     C                     Z-ADDZIBEG     ZIEND                                             MD055663
+     C                     Z-ADDBCRCD     ZIBEG                                             MD055663
+     C           ZIBEG     IFLT ZFDTM                                                       MD055663
+     C                     Z-ADDZFDTM     ZIBEG                                             MD055663
+     C                     ENDIF                                                            MD055663
+     C                     ENDIF                                                            MD055663
+     C                     ENDDO                                                            MD055663
+      *                                                                                     MD055663
+     C                     Z-ADDWCINT     CINT                                              MD055663
+     C                     ENDIF                                                            MD055663
+      *                                                                                     MD055663
+     C                     ELSE                                                             MD055663
+      *                                                                                     MD055663
      C           RUND      IFLE ZLDTM                      - B2
      C           MNBL      IFGT 0                          - B3
      C                     Z-ADDMNBL      ZIAMT
@@ -4475,6 +4610,7 @@
      C                     END                             - E3
      C*
      C                     END                             - E2
+     C                     ENDIF                                                            MD055663
      C*
      C                     END                             - E1
      C/COPY WNCPYSRC,RE3360C044
@@ -4529,6 +4665,60 @@
      C*
      C                     EXSR DATEIN
      C*
+     C           NCAP34    IFEQ 'Y'                                                         MD055663
+      *                                                                                     MD055663
+     C           RUND      IFLE ZLDTM                                                       MD055663
+     C           BJDNWD    ANDGTZLDTM                                                       MD055663
+     C                     Z-ADDZFDNM     ZIEND                                             MD055663
+     C                     ENDIF                                                            MD055663
+      *                                                                                     MD055663
+     C           RUND      IFGT ZLDTM                                                       MD055663
+     C           RUND      ORLE ZLDTM                                                       MD055663
+     C           BJDNWD    ANDGTZLDTM                                                       MD055663
+     C                     MOVE *BLANKS   RTCFLG                                            MD055663
+      *                                                                                     MD055663
+     C           RCVALD    DOWLEZLDTM                                                       MD055663
+     C           RTCFLG    ANDNE'Y'                                                         MD055663
+      *                                                                                     MD055663
+     C           MNBL      IFLT 0                                                           MD055663
+     C                     Z-ADDMNBL      ZIAMT                                             MD055663
+     C           INTP      IFEQ 3                                                           MD055663
+     C                     Z-ADD1         ZICT                                              MD055663
+     C                     ELSE                                                             MD055663
+     C                     Z-ADD2         ZICT                                              MD055663
+     C                     ENDIF                                                            MD055663
+     C           ZICT      CASEQ1         ZIC01                                             MD055663
+     C           ZICT      CASEQ2         ZIC02                                             MD055663
+     C                     END                                                              MD055663
+     C           INTP      IFEQ 3                                                           MD055663
+     C                     ADD  ZINTR     WCINT                                             MD055663
+     C                     ELSE                                                             MD055663
+     C           INTP      IFEQ 4                                                           MD055663
+     C                     Z-ADDZINTR     WCINT                                             MD055663
+     C                     ENDIF                                                            MD055663
+     C                     ENDIF                                                            MD055663
+     C                     ENDIF                                                            MD055663
+      *                                                                                     MD055663
+     C           ZIBEG     IFLE ZFDTM                                                       MD055663
+     C                     MOVE 'Y'       RTCFLG  1                                         MD055663
+     C                     ENDIF                                                            MD055663
+     C           RTCFLG    IFNE 'Y'                                                         MD055663
+     C           DCKEY     SETLLREHISL                                                      MD055663
+     C           R1KEY     REDPEREHISL                   49                                 MD055663
+     C                     EXSR CRINIT                                                      MD055663
+     C                     Z-ADDZIBEG     ZIEND                                             MD055663
+     C                     Z-ADDBCRCD     ZIBEG                                             MD055663
+     C           ZIBEG     IFLT ZFDTM                                                       MD055663
+     C                     Z-ADDZFDTM     ZIBEG                                             MD055663
+     C                     ENDIF                                                            MD055663
+     C                     ENDIF                                                            MD055663
+     C                     ENDDO                                                            MD055663
+      *                                                                                     MD055663
+     C                     Z-ADDWCINT     CINT                                              MD055663
+     C                     ENDIF                                                            MD055663
+      *                                                                                     MD055663
+     C                     ELSE                                                             MD055663
+      *                                                                                     MD055663
      C           RUND      IFLE ZLDTM                      - B2
      C           MNBL      IFGT 0                          - B3
      C                     Z-ADDMNBL      ZIAMT
@@ -4581,6 +4771,7 @@
      C                     END                             - E3
      C*
      C                     END                             - E2
+     C                     ENDIF                                                            MD055663
       *                                                                   S01408
      C/COPY WNCPYSRC,RE3360CP14                                           S01408
       *                                                                   S01408
@@ -6283,6 +6474,24 @@
      C** FIND NUMBER OF DAYS TO CALCULATE INTEREST ACCORDING TO CALC. BASIS
      C*
      C                     EXSR ZICD
+      *                                                                                     MD055663
+      ** Add 1 day on cutover month such that number of days for which interest             MD055663
+      ** is accrued on this balance should be the full number of days that would            MD055663
+      ** normally calculated for this month                                                 MD055663
+      *                                                                                     MD055663
+     C           NCAP34    IFEQ 'Y'                                                         MD055663
+     C           W1DAY     ANDEQ*BLANK                                                      MD055663
+     C           INTP      IFGT 2                                                           MD055663
+     C           ZFDTM     ANDEQWFDCO                                                       MD055663
+     C           ZIBEG     ANDEQZFDTM                                                       MD055663
+     C           ZICALC    IFEQ 6                                                           MD055663
+     C                     ADD  1         INT6DY                                            MD055663
+     C                     ELSE                                                             MD055663
+     C                     ADD  1         ZDAYN2                                            MD055663
+     C                     ENDIF                                                            MD055663
+     C                     MOVE 'Y'       W1DAY                                             MD055663
+     C                     ENDIF                                                            MD055663
+     C                     ENDIF                                                            MD055663
      C*
      C                     Z-ADD0         WOVRIN 117                                        AR823701
      C           LOOP      DOWEQ0                          - B2
@@ -6590,6 +6799,24 @@
      C** FIND NUMBER OF DAYS TO CALCULATE INTEREST ACCORDING TO CALC. BASIS
      C*
      C                     EXSR ZICD
+      *                                                                                     MD055663
+      ** Add 1 day on cutover month such that number of days for which interest             MD055663
+      ** is accrued on this balance should be the full number of days that would            MD055663
+      ** normally calculated for this month                                                 MD055663
+      *                                                                                     MD055663
+     C           NCAP34    IFEQ 'Y'                                                         MD055663
+     C           W1DAY     ANDEQ*BLANK                                                      MD055663
+     C           INTP      IFGT 2                                                           MD055663
+     C           ZFDTM     ANDEQWFDCO                                                       MD055663
+     C           ZIBEG     ANDEQZFDTM                                                       MD055663
+     C           ZICALC    IFEQ 6                                                           MD055663
+     C                     ADD  1         INT6DY                                            MD055663
+     C                     ELSE                                                             MD055663
+     C                     ADD  1         ZDAYN2                                            MD055663
+     C                     ENDIF                                                            MD055663
+     C                     MOVE 'Y'       W1DAY                                             MD055663
+     C                     ENDIF                                                            MD055663
+     C                     ENDIF                                                            MD055663
      C*
      C                     Z-ADD1         Z
      C*
@@ -7016,14 +7243,21 @@
      C*
      C** WORK FIELD INIT
      C*
+     C                     Z-ADD*ZEROS    ZFDTM                                             MD055663
      C                     Z-ADD*ZEROS    ZLDTM
+     C                     Z-ADD*ZEROS    ZFDNM                                             MD055663
      C*
      C***CALCULATING*DATE*FROM*DAY*NUMBER*(REACR*HISTORY*DATE)*********                       220566
       ** Calculating date from history day number (REHISL History Date)                       220566
      C*
      C**********           Z-ADDRHISD     ZDAYNO                                              220566
      C                     Z-ADDDHISD     ZDAYNO                                              220566
+     C           NCAP34    IFEQ 'Y'                                                         MD055663
+     C                     Z-ADDRUND      ZDAYNO                                            MD055663
+     C                     ENDIF                                                            MD055663
      C                     EXSR ZDATE2
+      *                                                                                     MD055663
+     C                     Z-ADDZYEAR     YRSAVE  20                                        MD055663
      C*
      C** VERIFY IF ERROR
      C*
@@ -7051,6 +7285,8 @@
      C                     Z-ADDRESULX    ZDATE                           088029
      C                     END                             - E1           088029
      C                     EXSR ZDATE1
+      *                                                                                     MD055663
+     C                     Z-ADDYRSAVE    ZYEAR                                             MD055663
      C*
      C** VERIFY IF ERROR
      C*
@@ -7065,6 +7301,8 @@
      C                     MOVEA'1'       *IN,89
      C                     EXSR DBSR
      C                     END                             - E1
+      *
+     C                     Z-ADDZDAYNO    ZFDTM                                             MD055663
      C*
      C           *IN98     IFEQ '0'                        - B0           088029
      C           ZMTH      IFEQ 12                         - B1
@@ -7086,6 +7324,8 @@
      C                     Z-ADDRESULX    ZDATE                           088029
      C                     END                             - E0           088029
      C                     EXSR ZDATE1
+      *                                                                                     MD055663
+     C                     Z-ADDYRSAVE    ZYEAR                                             MD055663
      C*
      C** VERIFY IF ERROR
      C*
@@ -7101,8 +7341,21 @@
      C                     EXSR DBSR
      C                     END                             - E1
      C*
+     C                     Z-ADDZDAYNO    ZFDNM                                             MD055663
      C           ZDAYNO    SUB  1         ZLDTM
      C*
+     C           NCAP34    IFEQ 'Y'                                                         MD055663
+     C           ZFDTM     IFEQ WFDCO                                                       MD055663
+     C           ZLDTM     SUB  1         ZLDTM                                             MD055663
+     C           ZFDNM     SUB  1         ZFDNM                                             MD055663
+     C                     ENDIF                                                            MD055663
+     C           ZFDTM     IFGT WLDCO                                                       MD055663
+     C           ZFDTM     SUB  1         ZFDTM                                             MD055663
+     C           ZLDTM     SUB  1         ZLDTM                                             MD055663
+     C           ZFDNM     SUB  1         ZFDNM                                             MD055663
+     C                     ENDIF                                                            MD055663
+     C                     ENDIF                                                            MD055663
+      *
      C                     ENDSR                           **DATEIN ENDSR*
      C********************************************************************
      C/EJECT
@@ -7793,39 +8046,110 @@
       /EJECT                                                                                  CER016
       *****************************************************************                       CER016
       *                                                                                       CER016
-     C           SRRSAC    BEGSR                                                            MD035795
-      *                                                                                     MD035795
-     C                     Z-ADD0         NOPOST  50                                        MD035795
-     C                     Z-ADD0         NODELT  50                                        MD035795
-     C                     MOVE 'N'       POSTFL  1                                         MD035795
-     C           CLBLN     IFNE ACLBL                                                       MD035795
-     C                     MOVE 'Y'       POSTFL                                            MD035795
-     C                     ELSE                                                             MD035795
-     C           R1KEY     SETLLRSACMTL5                                                    MD035795
-     C           R1KEY     READERSACMTL5            N    84                                 MD035795
-     C           *IN84     DOWEQ*OFF                                                        MD035795
-     C           NOPOST    ANDLE99999                                                       MD035795
-     C           VUDT      IFLE BJRDNB                                                      MD035795
-     C                     ADD  1         NOPOST                                            MD035795
-     C                     MOVE NRTD      DELFLG  1                                         MD035795
-     C           DELFLG    IFEQ '*'                                                         MD035795
-     C                     ADD  1         NODELT                                            MD035795
-     C                     ENDIF                                                            MD035795
-     C                     ENDIF                                                            MD035795
-     C           R1KEY     READERSACMTL5            N    84                                 MD035795
-     C                     ENDDO                                                            MD035795
-     C           NOPOST    IFGT *ZERO                                                       MD035795
-     C           NOPOST    DIV  2         NOPST2  50                                        MD035795
-     C                     MVR            NOPST3  50                                        MD035795
-     C           NOPST2    IFNE NODELT                                                      MD035795
-     C           NOPST3    ORNE 0                                                           MD035795
-     C                     MOVE 'Y'       POSTFL                                            MD035795
-     C                     ENDIF                                                            MD035795
-     C                     ENDIF                                                            MD035795
-     C                     ENDIF                                                            MD035795
-      *                                                                                     MD035795
-     C                     ENDSR                                                            MD035795
-      *******************************************************************                   MD035795
+      *  CUTDAT - subroutine to determine the first and last day      *                     MD055663
+      *           of cutover month.                                   *                     MD055663
+      *                                                               *                     MD055663
+      *      Called by       DATEIN                                   *                     MD055663
+      *      Calls           DBSR                                     *                     MD055663
+      *                                                               *                     MD055663
+      *****************************************************************                     MD055663
+     C           CUTDAT    BEGSR                                                            MD055663
+      *                                                                                     MD055663
+      ** Work fields initialization                                                         MD055663
+      *                                                                                     MD055663
+     C                     Z-ADD*ZEROS    WFDCO                                             MD055663
+     C                     Z-ADD*ZEROS    WLDCO                                             MD055663
+      *                                                                                     MD055663
+      ** Calculating date from Effective Date                                               MD055663
+      *                                                                                     MD055663
+      ** *IN99 set off as ZDATE2Z2 does not reset. ZDATE2Z4 not used.                       MD055663
+      *                                                                                     MD055663
+     C                     SETOF                     99                                     MD055663
+     C                     EXSR ZDATE2                                                      MD055663
+      *                                                                                     MD055663
+     C                     Z-ADDZYEAR     YRSAVE  20                                        MD055663
+      *                                                                                     MD055663
+      ** Verify if error                                                                    MD055663
+      *                                                                                     MD055663
+     C           *IN99     IFEQ '1'                                                         MD055663
+     C           *LOCK     IN   LDA                                                         MD055663
+     C                     Z-ADD13        DBASE            ***************                  MD055663
+     C                     MOVE 'ZDATE2'  DBFILE           **DB ERROR 13**                  MD055663
+     C                     MOVE *BLANKS   DBKEY            ***************                  MD055663
+     C                     OUT  LDA                                                         MD055663
+     C                     EXSR DBSR                                                        MD055663
+     C                     ENDIF                                                            MD055663
+      *                                                                                     MD055663
+      ** Calculating the first day                                                          MD055663
+      *                                                                                     MD055663
+     C           *IN98     IFEQ '0'                        - B1                             MD055663
+     C                     Z-ADDZDATE     CUTOVR                                            MD055663
+     C                     Z-ADD1         ZDAY                                              MD055663
+     C                     Z-ADDCUTOVR    ZDATE                                             MD055663
+     C                     ELSE                            - X1                             MD055663
+     C                     Z-ADDZDATE     CUTOVX                                            MD055663
+     C                     Z-ADD1         ZDAYX                                             MD055663
+     C                     Z-ADDCUTOVX    ZDATE                                             MD055663
+     C                     END                             - E1                             MD055663
+     C                     EXSR ZDATE1                                                      MD055663
+      *                                                                                     MD055663
+     C                     Z-ADDYRSAVE    ZYEAR                                             MD055663
+      *                                                                                     MD055663
+      ** Verify if error                                                                    MD055663
+      *                                                                                     MD055663
+     C           *IN99     IFEQ '1'                        - B1                             MD055663
+     C           *LOCK     IN   LDA                                                         MD055663
+     C                     Z-ADD14        DBASE            ***************                  MD055663
+     C                     MOVE 'ZDATE1'  DBFILE           **DB ERROR 14**                  MD055663
+     C                     MOVE *BLANKS   DBKEY            ***************                  MD055663
+     C                     OUT  LDA                                                         MD055663
+     C                     EXSR DBSR                                                        MD055663
+     C                     ENDIF                           - E1                             MD055663
+      *                                                                                     MD055663
+      ** Calculating first and last day of cutover month                                    MD055663
+      *                                                                                     MD055663
+     C                     Z-ADDZDAYNO    WFDCO                                             MD055663
+      *                                                                                     MD055663
+     C           *IN98     IFEQ '0'                        - B0                             MD055663
+     C           ZMTH      IFEQ 12                         - B1                             MD055663
+     C                     Z-ADD1         ZMTH                                              MD055663
+     C                     ADD  1         ZYEAR                                             MD055663
+     C                     ELSE                            - X1                             MD055663
+     C                     ADD  1         ZMTH                                              MD055663
+     C                     ENDIF                           - E1                             MD055663
+      *                                                                                     MD055663
+     C                     Z-ADDCUTOVR    ZDATE                                             MD055663
+     C                     ELSE                            - X0                             MD055663
+     C           ZMTHX     IFEQ 12                         - B1                             MD055663
+     C                     Z-ADD1         ZMTHX                                             MD055663
+     C                     ADD  1         ZYEARX                                            MD055663
+     C                     ELSE                            - X1                             MD055663
+     C                     ADD  1         ZMTHX                                             MD055663
+     C                     ENDIF                           - E1                             MD055663
+     C*                                                                                     MD055663
+     C                     Z-ADDCUTOVX    ZDATE                                             MD055663
+     C                     ENDIF                           - E0                             MD055663
+     C                     EXSR ZDATE1                                                      MD055663
+      *                                                                                     MD055663
+     C                     Z-ADDYRSAVE    ZYEAR                                             MD055663
+      *                                                                                     MD055663
+      ** Verify if error                                                                    MD055663
+      *                                                                                     MD055663
+     C           *IN99     IFEQ '1'                        - B1                             MD055663
+     C           *LOCK     IN   LDA                                                         MD055663
+     C                     Z-ADD15        DBASE            ***************                  MD055663
+     C                     MOVE 'ZDATE1'  DBFILE           **DB ERROR 15**                  MD055663
+     C                     MOVE *BLANKS   DBKEY            ***************                  MD055663
+     C                     OUT  LDA                                                         MD055663
+     C                     EXSR DBSR                                                        MD055663
+     C                     ENDIF                           - E1                             MD055663
+      *                                                                                     MD055663
+     C           ZDAYNO    SUB  1         WLDCO                                             MD055663
+      *                                                                                     MD055663
+     C                     ENDSR                                                            MD055663
+      *****************************************************************                     MD055663
+     C/EJECT                                                                                MD055663
+      *****************************************************************                     MD055663
       /COPY ZSRSRC,RBRMSGC1                                               CRT002
       *                                                                   CRT002
       /EJECT                                                              CRT002

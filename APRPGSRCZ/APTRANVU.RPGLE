@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD030856           Date 06Nov19               *
-      *  Prev Amend No. MD054354           Date 23Oct19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD030856           Date 06Nov19               *
+      *                 MD054354           Date 23Oct19               *
       *                 MD055446           Date 04Apr20               *
       *                 MD054696           Date 29Oct19               *
       *                 MD054538           Date 08Oct19               *
@@ -225,6 +226,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD030856 - Introduced reject processing to FEEM              *
       *  MD054354 - Settlement of fee accrual for prior period for    *
       *             backdated notional change                         *
@@ -820,6 +822,15 @@
      D AuthUsers       S             20                                                       CFT163
      D P_SIGN          S              1                                                     MD054354
      D DRejFlg         S              1                                                     MD030856
+     D DDBLRT          S              1                                                       CSD103
+     D DDLBDY          S              2                                                       CSD103
+     D DDLODY          S              2                                                       CSD103
+     D DDPDLY          S              2                                                       CSD103
+     D DDBADJ          S              7                                                       CSD103
+     D DDAVOP          S              1                                                       CSD103
+     D DDBRAC          S              2                                                       CSD103
+     D DDWGHT          S              1                                                       CSD103
+     D DDLBAC          S              2                                                       CSD103
       ** DS/variables to split up incoming parameter
      D APParm          DS          1000
      D  UPDATEYN               1      1
@@ -2859,6 +2870,25 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       BSEXLn        Bfp                                        BUG22140
      C     1             SUBST     BUFFER:Bfp    AAuth                                      BUG22140
      C                   ADD       1             Bfp                                        BUG22140
+      ** Backward-Looking Rate Fields                                                         CSD103
+     C     1             SUBST     BUFFER:Bfp    DDBLRT                                       CSD103
+     C                   ADD       1             Bfp                                          CSD103
+     C     2             SUBST     BUFFER:Bfp    DDLBDY                                       CSD103
+     C                   ADD       2             Bfp                                          CSD103
+     C     2             SUBST     BUFFER:Bfp    DDLODY                                       CSD103
+     C                   ADD       2             Bfp                                          CSD103
+     C     2             SUBST     BUFFER:Bfp    DDPDLY                                       CSD103
+     C                   ADD       2             Bfp                                          CSD103
+     C     7             SUBST     BUFFER:Bfp    DDBADJ                                       CSD103
+     C                   ADD       7             Bfp                                          CSD103
+     C     1             SUBST     BUFFER:Bfp    DDAVOP                                       CSD103
+     C                   ADD       1             Bfp                                          CSD103
+     C     2             SUBST     BUFFER:Bfp    DDBRAC                                       CSD103
+     C                   ADD       2             Bfp                                          CSD103
+     C     1             SUBST     BUFFER:Bfp    DDWGHT                                       CSD103
+     C                   ADD       1             Bfp                                          CSD103
+     C     2             SUBST     BUFFER:Bfp    DDLBAC                                       CSD103
+     C                   ADD       2             Bfp                                          CSD103
 
      C                   CALL      'SDBSRTVU'
 
@@ -2868,6 +2898,15 @@ RGC  D RPIF4LN         S              4  0                                      
       * Transaction information
      C                   PARM                    TRANS1
      C                   PARM                    TRANS2
+     C                   PARM                    DDBLRT                                       CSD103
+     C                   PARM                    DDLBDY                                       CSD103
+     C                   PARM                    DDLODY                                       CSD103
+     C                   PARM                    DDPDLY                                       CSD103
+     C                   PARM                    DDBADJ                                       CSD103
+     C                   PARM                    DDAVOP                                       CSD103
+     C                   PARM                    DDBRAC                                       CSD103
+     C                   PARM                    DDWGHT                                       CSD103
+     C                   PARM                    DDLBAC                                       CSD103
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr

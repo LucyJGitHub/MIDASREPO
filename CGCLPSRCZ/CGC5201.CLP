@@ -9,12 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD051154           Date 05Sep20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CSC022             Date 24Feb04              */
+/*                      CSC022             Date 24Feb04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      CPK009             Date 09Jul99              */
@@ -23,6 +24,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD051154 - UDC_PRTGEN is in MSGW                            */
+/*                - Applied for MD056550.                            */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CSC022 - Commitment Control Changes for MidasPlus           */
 /*       CPK009 - Packaging for DBA3 release. STRCMTCTL values set   */
@@ -176,6 +179,12 @@
 /* */
              CALL       PGM(CGC5202) PARM(&RTN_CODE 'Next      ' +
                           &MSG_REF)
+/* */                                                                                   /*MD051154*/
+/* Process END request */                                                               /*MD051154*/
+/* */                                                                                   /*MD051154*/
+             IF         COND(&RTN_CODE *EQ 'CGP1002') THEN(DO)                          /*MD051154*/
+             GOTO       CMDLBL(ENDCLPGM)                                                /*MD051154*/
+             ENDDO                                                                      /*MD051154*/
 /* */
 /* Start Commitment Control */
 /* */

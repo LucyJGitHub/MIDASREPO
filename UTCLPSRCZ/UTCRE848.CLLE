@@ -1,0 +1,66 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas UT Util. to initialise EFDT34' )                */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Utility Module                                      */
+/*                                                                   */
+/*       UTCRE848  - Utility that will update data area EFDT34       */
+/*                                                                   */
+/*       (c) Finastra International Limited 2020                     */
+/*                                                                   */
+/*       Last Amend No. MD-55663  *CREATE  Date 28May29              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       MD-55663 - Delayed Int cap for int type.                    */
+/*                                                                   */
+/*********************************************************************/
+/**  Start Program */
+             PGM
+
+/** Declare variables */
+
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&ID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&RUNDAT) TYPE(*CHAR) LEN(5)
+             DCL        VAR(&RD) TYPE(*CHAR) LEN(10)
+             DCL        VAR(&RN) TYPE(*CHAR) LEN(3)
+
+
+/** Declare file */
+             DCLF       FILE(SDBANKPD) RCDFMT(SDBANKD0)
+
+/** Monitor for Error Messages from System */
+             MONMSG     MSGID(CPF0000 CPI0000 CPA0000 MCH0000 RPG0000)
+
+             CHGJOB     SWS(00000000)
+
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&ID)
+             CHGVAR     VAR(&DMLIB) VALUE(&ID *CAT 'DMLIB')
+
+
+/** Check if Data Area KESTAT exists in QTEMP */
+             CHKOBJ     OBJ(EFDT34) OBJTYPE(*DTAARA)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO ABNOR)
+
+
+/** Read SDBANKPD to retrieve Country Code,Runday number, Date of  */
+/** Next Working Day & Date Format Indicator                       */
+
+             RCVF      RCDFMT(SDBANKD0)
+
+             CHGVAR VAR(&RUNDAT) VALUE(&BJRDNB)
+
+             CHGDTAARA  DTAARA(EFDT34 (1 7)) VALUE(&BJMRDT)
+             CHGDTAARA  DTAARA(EFDT34 (8 5)) VALUE(&RUNDAT)
+             GOTO       CMDLBL(ENDPGM)
+
+ABNOR:      RCLRSC     LVL(*)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+             DMPCLPGM
+             SNDPGMMSG  MSG('Error occurred in UTCRE848.') +
+                          TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
+             MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
+
+ ENDPGM:     ENDPGM

@@ -15,10 +15,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2019                      *
       *                                                               *
-      *  Last Amend No. CSW219 *CREATE     Date 04Mar19               *
+      *  Last Amend No. MD055694           Date 09Mar20               *
+      *  Prev Amend No. CSW219 *CREATE     Date 04Mar19               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055694 - SWIFT Changes 2021                                *
       *  CSW219 - SWIFT Changes 2019                                  *
       *                                                               *
       *****************************************************************
@@ -78,11 +80,15 @@
       ** Data Structure for Feature
      D FeatDS          DS
      D                                6    INZ('CSW219')
+     D                                6    INZ('CSW220')                                    MD055694
+     D                                6    INZ('CSW221')                                    MD055694
      D Feat                           6    DIM(N) OVERLAY(FeatDS)
       *
       ** Data Structure for Feature Password
      D PWordDS         DS
      D                               16    INZ('GALERA')
+     D                               16    INZ('CARMONA')                                   MD055694
+     D                               16    INZ('ABBEY ROAD')                                MD055694
      D PWord                         16    DIM(N) OVERLAY(PWordDS)
       *
      D CacheDT       E DS                  EXTNAME(CACHEDT) DTAARA(CACHEDT)
@@ -98,7 +104,8 @@
       ** +--------------------------------------+
 
       ** Increment N, everytime a new Feature is added in DS
-     D N               C                   1
+     D*N********       C                   1                                               MD055694
+     D N               C                   3                                               MD055694
       *
      D I               S              4S 0
      D WriteFlag       S              1A

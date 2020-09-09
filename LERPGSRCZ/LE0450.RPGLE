@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055733           Date 03Jul20               *      
-      *  Prev Amend No. MD056223           Date 15Jul20               *
+      *  Last Amend No. MD055322           Date 15May20               *
+      *  Prev Amend No. MD055733           Date 03Jul20               *      
+      *                 MD056223           Date 15Jul20               *
       *                 MD051347           Date 12Mar20               *
       *                 AR819229           Date 10Dec18               *
       *                 AR932652           Date 06Aug13               *
@@ -425,6 +426,8 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055322 - FB2.1 SP21 RECON - Discrepancy on CLOANCK field   *
+      *             ABLN on first COB                                 *
       *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
       *             components.                                       *
       *           - Redeliver of MD050139.                            *      
@@ -17477,7 +17480,8 @@ C    C                   ENDIF                                                  
      C     MDAT          IFLT      DNWD                                          B3            13152
      C     MDAT          ANDNE     0                                                           13152
      C     MDAT          ANDGE     FIRY                                                     MD054008
-     C     RECI          ANDEQ     'M'                                                      MD054008
+     C*****RECI          ANDEQ     'M'                                             MD054008 MD055322
+     C     RECIL         ANDEQ     'M'                                                      MD055322
      C                   Z-ADD     MDAT          CDAT              5 0                         13152
      C                   ELSE                                                    X3            13152
      C                   Z-ADD     DNWD          CDAT                                          13152

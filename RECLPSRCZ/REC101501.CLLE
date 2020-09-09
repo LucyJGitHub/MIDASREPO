@@ -9,7 +9,8 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. 258347             Date 14Mar12              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*       Prev Amend No. BG18886            Date 28May08              */
@@ -20,6 +21,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       258347   - SCKOBJLCB fails. Save job info for job           */
+/*                  CM_GAC_REP in dtaara/CMDTA.                      */
+/*                - Applied for AR927020 (Child: AR927022)           */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BG18886 - Amend non-standard codes.                         */
 /*       CSC023 - MidasPlus additional packaging.  SBMJOB change.    */
@@ -30,6 +34,8 @@
              PGM
  
              DCL        VAR(&MEM)   TYPE(*CHAR) LEN(50)
+             DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)                                    /*258347*/
+             DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(256)                                 /*258347*/
  
              DCLF       FILE(SDCMANPD)
  
@@ -70,6 +76,19 @@
              SBMJOB     JOB(CM_GAC_REP) JOBD(MBATCH) JOBQ(CMGJOBQ) +
                           USER(*JOBD) RTGDTA(*JOBD) RQSDTA('CALL +
                           REC101502') OUTQ(*JOBD)                                         /*CSC023*/
+             RCVMSG     PGMQ(*SAME) RMV(*NO) MSGDTA(&MSGDTA) +
+                          MSGID(&MSGID)                                                   /*258347*/
+/**/                                                                                      /*258347*/
+/* Retrieve job information and store on CMDTA */                                         /*258347*/
+/**/                                                                                      /*258347*/
+              IF         COND(&MSGID *EQ 'CPC1221') THEN(DO)                              /*258347*/
+                         CHGDTAARA  DTAARA(CMDTA (1 10)) VALUE(%SST(&MSGDTA 1 +
+                                       10))                                               /*258347*/
+                         CHGDTAARA  DTAARA(CMDTA (11 10)) VALUE(%SST(&MSGDTA 11 +
+                                       10))                                               /*258347*/
+                         CHGDTAARA  DTAARA(CMDTA (21 6)) VALUE(%SST(&MSGDTA 21 +
+                                        6))                                               /*258347*/
+               ENDDO                                                                      /*258347*/
  
              GOTO       CMDLBL(ENDPGM)
  

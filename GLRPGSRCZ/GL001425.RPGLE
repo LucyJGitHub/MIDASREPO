@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD026965           Date 16May14               *
+      *  Last Amend No. MD028250           Date 28Jul14               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD026965           Date 16May14               *
       *                 CGL135A            Date 10Jul13               *
       *                 CER059             Date 19Jul10               *
       *                 BUG22979A          Date 12Mar09               *
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD028250 - Output Field :86: from Details of Payment         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD026965 - MT940 COB Extract Issue                           *
       *             Amended hook: CGL135_019                          *
@@ -73,6 +75,12 @@
      FGLUCTLPD  UF A E             DISK    COMMIT         INFSR(*PSSR)
       ** Midas GL Update Control file.
      F/COPY WNCPYSRC,GLH00518
+     FINPAY     IF   E           K DISK                      INFSR(*PSSR)                   MD028250
+     F                                     PREFIX(FT_)                                      MD028250
+      ** Midas FT Incoming Payments Transactions.                                           MD028250
+     FOTPAY     IF   E           K DISK                      INFSR(*PSSR)                   MD028250
+     F                                     PREFIX(FT_)                                      MD028250
+      ** Midas FT Outgoing Payments Transactions.                                           MD028250
  
       *========================================================================*
       *                                                                        *
@@ -484,6 +492,16 @@
      C                   ENDIF
      C                   ENDIF
      C/COPY WNCPYSRC,GLH00404
+     C     PREF          CHAIN     INPAY                              99                    MD028250
+     C     *IN99         IFEQ      '1'                                                      MD028250
+     C     PREF          CHAIN     OTPAY                              99                    MD028250
+     C                   ENDIF                                                              MD028250
+     C     *IN99         IFEQ      '0'                                                      MD028250
+     C                   EVAL      MGADI1   = FT_DTP1                                       MD028250
+     C                   EVAL      MGADI2   = FT_DTP2                                       MD028250
+     C                   EVAL      MGADI3   = FT_DTP3                                       MD028250
+     C                   EVAL      MGADI4   = FT_DTP4                                       MD028250
+     C                   ENDIF                                                              MD028250
  
       ** If the Posting is a Batch Input Item, the field SPOS contains the Batch Item
       ** and the Batch Number,

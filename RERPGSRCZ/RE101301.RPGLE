@@ -14,17 +14,19 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD030368           Date 19Sep14               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSC023             Date 28Jan04               *
+      *                 CSC023             Date 28Jan04               *
       *                 213197             Date 22Jan03               *
       *                 CRE008  *CREATE    Date 19Feb02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD030368 - Consider System date format in processing.        *
       *  MD046248 - Finastra Rebranding                               *
       *  CSC023 - SBMJOB output queue must be *JOBD.                  *
       *  213197 - Rewrite of sweeping scheduling                      *
@@ -280,9 +282,24 @@
      C     GET_CurDT     BEGSR
      C                   TIME                    TimeDate         12 0
      C                   MOVE      TimeDate      DMY               6
+     C                   IF        @DTFM = 'DMY'                                            MD030368
      C                   EVAL      CurDDA = %SUBST(DMY:1:2)
      C                   EVAL      CurMMA = %SUBST(DMY:3:2)
      C                   EVAL      CurYYA = %SUBST(DMY:5:2)
+     C                   ENDIF                                                              MD030368
+      *                                                                                     MD030368
+     C                   IF        @DTFM = 'MDY'                                            MD030368
+     C                   EVAL      CurDDA = %SUBST(DMY:2:2)                                 MD030368
+     C                   EVAL      CurMMA = %SUBST(DMY:1:2)                                 MD030368
+     C                   EVAL      CurYYA = %SUBST(DMY:5:2)                                 MD030368
+     C                   ENDIF                                                              MD030368
+      *                                                                                     MD030368
+     C                   IF        @DTFM = 'YMD'                                            MD030368
+     C                   EVAL      CurDDA = %SUBST(DMY:5:2)                                 MD030368
+     C                   EVAL      CurMMA = %SUBST(DMY:3:2)                                 MD030368
+     C                   EVAL      CurYYA = %SUBST(DMY:1:2)                                 MD030368
+     C                   ENDIF                                                              MD030368
+      *                                                                                     MD030368
      C                   MOVEL     TimeDate      CurTIME
      C                   ENDSR
       ********************************************************************
@@ -368,6 +385,9 @@
       ********************************************************************
      C     *INZSR        BEGSR
  
+     C     *ENTRY        PLIST                                                              MD030368
+     C                   PARM                    @DTFM             3                        MD030368
+                                                                                            MD030368
       *  Access Bank Details
  
      C                   CALL      'AOBANKR0'

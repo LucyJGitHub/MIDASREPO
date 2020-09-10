@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -70,6 +71,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -1156,7 +1158,8 @@
      C                   EVAL      BAGE = *ZEROS                                              CAP056
      C                   EVAL      LNKDN = *ZEROS                                             CAP056
      C                   EVAL      UPAMT = *ZEROS                                             CAP056
-     C                   EVAL      UBRTT = *ZEROS                                             CAP056
+     C**********         EVAL      UBRTT = *ZEROS                                      CAP056 CSD103
+     C                   EVAL      UBRTT = *BLANKS                                            CSD103
      C                   EVAL      USTRT = *ZEROS                                             CAP056
      C                   EVAL      UBRTE = *ZEROS                                             CAP056
      C                   EVAL      URTSP = *ZEROS                                             CAP056
@@ -1184,7 +1187,8 @@
      C                   EVAL      UTAXD = *ZEROS                                             CAP056
      C                   EVAL      UTAXM = *ZEROS                                             CAP056
      C                   EVAL      TPAMT = *ZEROS                                             CAP056
-     C                   EVAL      TBRTT = *ZEROS                                             CAP056
+     C**********         EVAL      TBRTT = *ZEROS                                      CAP056 CSD103
+     C                   EVAL      TBRTT = *BLANKS                                            CSD103
      C                   EVAL      TSTRT = *ZEROS                                             CAP056
      C                   EVAL      TBRTE = *ZEROS                                             CAP056
      C                   EVAL      TRTSP = *ZEROS                                             CAP056

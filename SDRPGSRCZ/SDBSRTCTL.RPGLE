@@ -720,6 +720,16 @@
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
+      * Backward-Looking Rate Fields                                                          CSD103
+     C                   PARM                    DDBLRT                                       CSD103
+     C                   PARM                    DDLBDY                                       CSD103
+     C                   PARM                    DDLODY                                       CSD103
+     C                   PARM                    DDPDLY                                       CSD103
+     C                   PARM                    DDBADJ                                       CSD103
+     C                   PARM                    DDAVOP                                       CSD103
+     C                   PARM                    DDBRAC                                       CSD103
+     C                   PARM                    DDWGHT                                       CSD103
+     C                   PARM                    DDLBAC                                       CSD103
 
      C                   ENDSR
       *****************************************************************
@@ -978,6 +988,16 @@
      C                   PARM      *BLANK        RetCodeOut
      C                   PARM                    BasRFilFmt
      C                   PARM                    CurTrTran
+      * Backward-Looking Rate Fields                                                          CSD103
+     C                   PARM                    DDBLRT                                       CSD103
+     C                   PARM                    DDLBDY                                       CSD103
+     C                   PARM                    DDLODY                                       CSD103
+     C                   PARM                    DDPDLY                                       CSD103
+     C                   PARM                    DDBADJ                                       CSD103
+     C                   PARM                    DDAVOP                                       CSD103
+     C                   PARM                    DDBRAC                                       CSD103
+     C                   PARM                    DDWGHT                                       CSD103
+     C                   PARM                    DDLBAC                                       CSD103
 
       ** Substitute the data for the various parts of the transaction,
       ** dependent on the flags that were set earlier.
@@ -1022,6 +1042,16 @@
      C                   PARM                    #ProcPgm
      C                   PARM                    #ProcMod
      C                   PARM                    #ProcName
+      * Backward-Looking Rate Fields                                                          CSD103
+     C                   PARM                    DDBLRT            1                          CSD103
+     C                   PARM                    DDLBDY            2                          CSD103
+     C                   PARM                    DDLODY            2                          CSD103
+     C                   PARM                    DDPDLY            2                          CSD103
+     C                   PARM                    DDBADJ           14                          CSD103
+     C                   PARM                    DDAVOP            1                          CSD103
+     C                   PARM                    DDBRAC            2                          CSD103
+     C                   PARM                    DDWGHT            1                          CSD103
+     C                   PARM                    DDLBAC            2                          CSD103
                                                                                               CSD012
       * Override SDAULGL0                                                                     CSD012
      C                   Z-ADD     50            CMDLEN           15 5                        CSD012

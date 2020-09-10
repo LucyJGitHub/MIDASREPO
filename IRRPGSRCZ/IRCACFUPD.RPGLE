@@ -1211,7 +1211,8 @@
      C                   EVAL      BAGE = *ZEROS
      C                   EVAL      LNKDN = *ZEROS
      C                   EVAL      UPAMT = *ZEROS
-     C                   EVAL      UBRTT = *ZEROS
+     C**********         EVAL      UBRTT = *ZEROS                                             CSD103
+     C                   EVAL      UBRTT = *BLANKS                                            CSD103
      C                   EVAL      USTRT = *ZEROS
      C                   EVAL      UBRTE = *ZEROS
      C                   EVAL      URTSP = *ZEROS
@@ -1239,7 +1240,8 @@
      C                   EVAL      UTAXD = *ZEROS
      C                   EVAL      UTAXM = *ZEROS
      C                   EVAL      TPAMT = *ZEROS
-     C                   EVAL      TBRTT = *ZEROS
+     C**********         EVAL      TBRTT = *ZEROS                                             CSD103
+     C                   EVAL      TBRTT = *BLANKS                                            CSD103
      C                   EVAL      TSTRT = *ZEROS
      C                   EVAL      TBRTE = *ZEROS
      C                   EVAL      TRTSP = *ZEROS
@@ -1317,24 +1319,32 @@
      C                   EVAL      PLTLRC = *ZEROS
      C                   EVAL      AGVC = *ZEROS
      C                   EVAL      FSOSDT = *ZEROS                                           BUG7535
-     C                   EVAL      FSOS1B = *ZEROS                                           BUG7535
+     C**********         EVAL      FSOS1B = *ZEROS                                    BUG7535 CSD103
+     C                   EVAL      FSOS1B = *BLANKS                                           CSD103
      C                   EVAL      FSOS1D = *ZEROS                                           BUG7535
-     C                   EVAL      FSOS2B = *ZEROS                                           BUG7535
+     C**********         EVAL      FSOS2B = *ZEROS                                    BUG7535 CSD103
+     C                   EVAL      FSOS2B = *BLANKS                                           CSD103
      C                   EVAL      FSOS2D = *ZEROS                                           BUG7535
      C                   EVAL      FSOEDT = *ZEROS                                           BUG7535
-     C                   EVAL      FSOE1B = *ZEROS                                           BUG7535
+     C**********         EVAL      FSOE1B = *ZEROS                                    BUG7535 CSD103
+     C                   EVAL      FSOE1B = *BLANKS                                           CSD103
      C                   EVAL      FSOE1D = *ZEROS                                           BUG7535
-     C                   EVAL      FSOE2B = *ZEROS                                           BUG7535
+     C**********         EVAL      FSOE2B = *ZEROS                                    BUG7535 CSD103
+     C                   EVAL      FSOE2B = *BLANKS                                           CSD103
      C                   EVAL      FSOE2D = *ZEROS                                           BUG7535
      C                   EVAL      FSTSDT = *ZEROS                                           BUG7535
-     C                   EVAL      FSTS1B = *ZEROS                                           BUG7535
+     C**********         EVAL      FSTS1B = *ZEROS                                    BUG7535 CSD103
+     C                   EVAL      FSTS1B = *BLANKS                                           CSD103
      C                   EVAL      FSTS1D = *ZEROS                                           BUG7535
-     C                   EVAL      FSTS2B = *ZEROS                                           BUG7535
+     C**********         EVAL      FSTS2B = *ZEROS                                    BUG7535 CSD103
+     C                   EVAL      FSTS2B = *BLANKS                                           CSD103
      C                   EVAL      FSTS2D = *ZEROS                                           BUG7535
      C                   EVAL      FSTEDT = *ZEROS                                           BUG7535
-     C                   EVAL      FSTE1B = *ZEROS                                           BUG7535
+     C**********         EVAL      FSTE1B = *ZEROS                                    BUG7535 CSD103
+     C                   EVAL      FSTE1B = *BLANKS                                           CSD103
      C                   EVAL      FSTE1D = *ZEROS                                           BUG7535
-     C                   EVAL      FSTE2B = *ZEROS                                           BUG7535
+     C**********         EVAL      FSTE2B = *ZEROS                                    BUG7535 CSD103
+     C                   EVAL      FSTE2B = *BLANKS                                           CSD103
      C                   EVAL      FSTE2D = *ZEROS                                           BUG7535
 
      C                   ENDSR
@@ -1958,18 +1968,21 @@
 
       ** Our/Their effective interest rate
 
-     C                   IF        RPUBRTT = *ZEROS
+     C**********         IF        RPUBRTT = *ZEROS                                           CSD103
+     C                   IF        RPUBRTT = *BLANKS                                          CSD103
      C                   EVAL      UEINR = URTSP
      C                   ENDIF
 
-     C                   IF        RPTBRTT = *ZEROS
+     C**********         IF        RPTBRTT = *ZEROS                                           CSD103
+     C                   IF        RPTBRTT = *BLANKS                                          CSD103
      C                   EVAL      TEINR = TRTSP
      C                   ENDIF
 
       ** Our Floating Rate Fix Days
       ** (Defaulting done in IRVRTFXDAY)
 
-     C                   IF        RPUBRTT = *ZEROS
+     C**********         IF        RPUBRTT = *ZEROS                                           CSD103
+     C                   IF        RPUBRTT = *BLANKS                                          CSD103
 
      C                   EVAL      UINFD = *ZEROS
      C                   ELSE
@@ -2079,7 +2092,8 @@
 
       ** User pays Fixed Rate, Counterparty pays Floating Rate
 
-     C                   IF        RPTBRTT = *ZEROS
+     C**********         IF        RPTBRTT = *ZEROS                                           CSD103
+     C                   IF        RPTBRTT = *BLANKS                                          CSD103
      C                   EVAL      TINFD = 0
      C                   ELSE
 
@@ -2216,13 +2230,15 @@
 
       ** Last Interest Payment/Change Date
 
-     C                   IF        RPUBRTT = *ZEROS
+     C**********         IF        RPUBRTT = *ZEROS                                           CSD103
+     C                   IF        RPUBRTT = *BLANKS                                          CSD103
      C                   EVAL      ULPCD = 0
      C                   ELSE
      C                   EVAL      ULPCD = VDAT
      C                   ENDIF
 
-     C                   IF        RPTBRTT = *ZEROS
+     C**********         IF        RPTBRTT = *ZEROS                                           CSD103
+     C                   IF        RPTBRTT = *BLANKS                                          CSD103
      C                   EVAL      TLPCD = 0
      C                   ELSE
      C                   EVAL      TLPCD = VDAT
@@ -2230,12 +2246,14 @@
 
       ** Spread Indicators
 
-     C                   IF        RPUBRTT <> *ZEROS AND RPURTSP <> *ZEROS AND
+     C**********         IF        RPUBRTT <> *ZEROS AND RPURTSP <> *ZEROS               SAND CSD103
+     C                   IF        RPUBRTT <> *BLANKS AND RPURTSP <> *ZEROS                   CSD103
      C                             RPUSPIN = *BLANKS
      C                   EVAL      USPIN = 'A'
      C                   ENDIF
 
-     C                   IF        RPTBRTT <> *ZEROS AND RPTRTSP <> *ZEROS AND
+     C**********         IF        RPTBRTT <> *ZEROS AND RPTRTSP <> *ZEROS               SAND CSD103
+     C                   IF        RPTBRTT <> *BLANKS AND RPTRTSP <> *ZEROS                   CSD103
      C                             RPTSPIN = *BLANKS
      C                   EVAL      TSPIN = 'A'
      C                   ENDIF
@@ -2297,13 +2315,15 @@
 
       **  Our/Their effective interest rate
 
-     C                   IF        RPUBRTT = *ZERO
+     C**********         IF        RPUBRTT = *ZERO                                            CSD103
+     C                   IF        RPUBRTT = *BLANKS                                          CSD103
      C                   EVAL      UEINR = URTSP
      C                   ELSE
      C                   EVAL      UEINR = RPUEINR
      C                   ENDIF
 
-     C                   IF        RPTBRTT = *ZEROS
+     C**********         IF        RPTBRTT = *ZEROS                                           CSD103
+     C                   IF        RPTBRTT = *BLANKS                                          CSD103
      C                   EVAL      TEINR = TRTSP
      C                   ELSE
      C                   EVAL      TEINR = RPTEINR
@@ -2311,7 +2331,8 @@
 
       ** Our Floating Rate Fix Days (Defaulting done in IRVRTFXDAY)
 
-     C                   IF        RPUBRTT = *ZEROS
+     C**********         IF        RPUBRTT = *ZEROS                                           CSD103
+     C                   IF        RPUBRTT = *BLANKS                                          CSD103
      C                   EVAL      UINFD = 0
      C                   ELSE
 
@@ -2417,7 +2438,8 @@
 
       ** Their Floating Rate Fix Days (Defaulting done in IRVRTFXDAY)
 
-     C                   IF        RPTBRTT = *ZEROS
+     C**********         IF        RPTBRTT = *ZEROS                                           CSD103
+     C                   IF        RPTBRTT = *BLANKS                                          CSD103
      C                   EVAL      TINFD = *ZERO
      C                   ELSE
 
@@ -2562,12 +2584,14 @@
 
       ** Spread Indicators
 
-     C                   IF        RPUBRTT <> *ZEROS AND RPURTSP <> *ZEROS AND
+     C**********         IF        RPUBRTT <> *ZEROS AND RPURTSP <> *ZEROS               SAND CSD103
+     C                   IF        RPUBRTT <> *BLANKS AND RPURTSP <> *ZEROS                   CSD103
      C                             RPUSPIN = *BLANKS
      C                   EVAL      USPIN = 'A'
      C                   ENDIF
 
-     C                   IF        RPTBRTT <> *ZEROS AND RPTRTSP <> *ZEROS AND
+     C**********         IF        RPTBRTT <> *ZEROS AND RPTRTSP <> *ZEROS               SAND CSD103
+     C                   IF        RPTBRTT <> *BLANKS AND RPTRTSP <> *ZEROS                   CSD103
      C                             RPTSPIN = *BLANKS
      C                   EVAL      TSPIN = 'A'
      C                   ENDIF
@@ -2575,13 +2599,15 @@
       ** Non-Static Indicators:
       ** Our short term rate / initial rate set entered bits
 
-     C                   IF        RPUBRTT <> *ZEROS AND UEINR <> WkUEINR
+     C**********         IF        RPUBRTT <> *ZEROS AND UEINR <> WkUEINR                     CSD103
+     C                   IF        RPUBRTT <> *BLANKS AND UEINR <> WkUEINR                    CSD103
      C                   BITON     '02'          UDNSI
      C                   ENDIF
 
       ** Their short term rate / initial rate set entered bits
 
-     C                   IF        RPTBRTT <> *ZEROS AND TEINR <> WkTEINR
+     C**********         IF        RPTBRTT <> *ZEROS AND TEINR <> WkTEINR                     CSD103
+     C                   IF        RPTBRTT <> *BLANKS AND TEINR <> WkTEINR                    CSD103
      C                   BITON     '02'          TDNSI
      C                   ENDIF
 

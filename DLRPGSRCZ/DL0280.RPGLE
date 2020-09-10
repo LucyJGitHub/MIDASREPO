@@ -14648,7 +14648,8 @@
      C                   Z-ADD     UPAMT         KYAMT                                         S0111
      C                   MOVE      UFRDKY        FRDKY                                         S0111
      C                   TESTB     '0'           UDNSI                31                       S0111
-     C     NRBRTT        IFEQ      '00'                                                        S0111
+     C*****NRBRTT        IFEQ      '00'                                                 S0111 CSD103
+     C     NRBRTT        IFEQ      *BLANKS                                                    CSD103
      C                   MOVE      '  '          NRBRTT                                        S0111
      C                   SETOFF                                       31                       S0111
      C                   END                                                                   S0111
@@ -14666,7 +14667,8 @@
      C                   Z-ADD     TPAMT         KYAMT                                         S0111
      C                   MOVE      TFRDKY        FRDKY                                         S0111
      C                   TESTB     '0'           TDNSI                31                       S0111
-     C     NRBRTT        IFEQ      '00'                                                        S0111
+     C*****NRBRTT        IFEQ      '00'                                                 S0111 CSD103
+     C     NRBRTT        IFEQ      *BLANKS                                                    CSD103
      C                   MOVE      '  '          NRBRTT                                        S0111
      C                   SETOFF                                       31                       S0111
      C                   END                                                                   S0111
@@ -14740,7 +14742,8 @@
      C* NON-RR/RP/RF                                                      S01157
      C*                                                                   S01119
      C                   TESTB     '0'           UDNSI                31                       S0111
-     C     NRBRTT        IFEQ      '00'                                                        S0111
+     C*****NRBRTT        IFEQ      '00'                                                 S0111 CSD103
+     C     NRBRTT        IFEQ      *BLANKS                                                    CSD103
      C                   MOVE      '  '          NRBRTT                                        S0111
      C                   SETOFF                                       31                       S0111
      C                   END                                                                   S0111
@@ -14748,7 +14751,8 @@
      C                   EXSR      EXCP                                                        S0111
      C                   MOVE      TFRDKY        FRDKY                                         S0111
      C                   TESTB     '0'           TDNSI                31                       S0111
-     C     NRBRTT        IFEQ      '00'                                                        S0111
+     C*****NRBRTT        IFEQ      '00'                                                 S0111 CSD103
+     C     NRBRTT        IFEQ      *BLANKS                                                    CSD103
      C                   MOVE      '  '          NRBRTT                                        S0111
      C                   SETOFF                                       31                       S0111
      C                   END                                                                   S0111
@@ -14945,7 +14949,8 @@
      C                   Z-ADD     UPAMT         KYAMT                                         CIR00
      C**********         MOVEL     UFRDKY        FRDKY                               BUG7045 BUG7688
      C                   TESTB     '0'           UDNSI                    31                   CIR00
-     C     NRBRTT        IFEQ      '00'                                                        CIR00
+     C*****NRBRTT        IFEQ      '00'                                                 CIR00 CSD103
+     C     NRBRTT        IFEQ      *BLANKS                                                    CSD103
      C                   MOVE      *BLANKS       NRBRTT                                        CIR00
      C                   MOVE      '0'           *IN31                                         CIR00
      C                   ENDIF                                                                 CIR00
@@ -15026,7 +15031,8 @@
       *                                                                                      BUG7312
      C                   TESTB     '0'           TDNSI                31                       CIR00
       *                                                                   CIR003
-     C     NRBRTT        IFEQ      '00'                                                        CIR00
+     C*****NRBRTT        IFEQ      '00'                                                 CIR00 CSD103
+     C     NRBRTT        IFEQ      *BLANKS                                                    CSD103
      C                   MOVEL     *BLANKS       NRBRTT                                        CIR00
      C                   MOVE      '0'           *IN31                                         CIR00
      C                   ENDIF                                                                 CIR00
@@ -15314,7 +15320,8 @@
      C     DTYP          OREQ      'RF'                                                        S0115
      C     TIPRD         ANDNE     0                                                           S0115
      C                   TESTB     '0'           UDNSI                31                       S0111
-     C     NRBRTT        IFEQ      '00'                                                        S0111
+     C*****NRBRTT        IFEQ      '00'                                                 S0111 CSD103
+     C     NRBRTT        IFEQ      *BLANKS                                                    CSD103
      C                   MOVE      '  '          NRBRTT                                        S0111
      C                   SETOFF                                       31                       S0111
      C                   END                                                                   S0111
@@ -15489,7 +15496,8 @@
      C     DTYP          OREQ      'RF'                                                        S0115
      C     UIPRD         ANDNE     0                                                           S0111
      C                   TESTB     '0'           TDNSI                31                       S0111
-     C     NRBRTT        IFEQ      '00'                                                        S0111
+     C*****NRBRTT        IFEQ      '00'                                                 S0111 CSD103
+     C     NRBRTT        IFEQ      *BLANKS                                                    CSD103
      C                   MOVE      '  '          NRBRTT                                        S0111
      C                   SETOFF                                       31                       S0111
      C                   END                                                                   S0111
@@ -16013,7 +16021,8 @@
      C                   MOVE      UFRDKY        FRDKY                                         S0111
      C                   TESTB     '0'           UDNSI                31                       S0111
      C***   SUPPRESS PRINT OF ZERO BASE RATE                              S01119
-     C     NRBRTT        IFEQ      '00'                                         **             S0111
+     C*****NRBRTT        IFEQ      '00'                                   **            S0111 CSD103
+     C     NRBRTT        IFEQ      *BLANKS                                                    CSD103
      C                   MOVE      '  '          NRBRTT                                        S0111
      C                   SETOFF                                       31                       S0111
      C                   END                                                    *              S0111
@@ -16031,7 +16040,8 @@
      C                   Z-ADD     UPAMT         NRRPUR                                        S0111
      C                   TESTB     '0'           TDNSI                31                       S0111
      C***   SUPPRESS PRINT OF ZERO BASE RATE                              S01119
-     C     NRBRTT        IFEQ      '00'                                         **             S0111
+     C*****NRBRTT        IFEQ      '00'                                   **            S0111 CSD103
+     C     NRBRTT        IFEQ      *BLANKS                                                    CSD103
      C                   MOVE      '  '          NRBRTT                                        S0111
      C                   SETOFF                                       31                       S0111
      C                   END                                                    *              S0111
@@ -16964,7 +16974,8 @@
      C                   MOVE      UFRDKY        FRDKY                                         S0111
      C                   TESTB     '0'           UDNSI                31                       S0111
      C***   SUPPRESS PRINT OF ZERO BASE RATE                              S01119
-     C     NRBRTT        IFEQ      '00'                                                        S0111
+     C*****NRBRTT        IFEQ      '00'                                                 S0111 CSD103
+     C     NRBRTT        IFEQ      *BLANKS                                                    CSD103
      C                   MOVE      '  '          NRBRTT                                        S0111
      C                   SETOFF                                       31                       S0111
      C                   END                                                                   S0111
@@ -16973,7 +16984,8 @@
      C                   MOVE      TFRDKY        FRDKY                                         S0111
      C                   TESTB     '0'           TDNSI                31                       S0111
      C***   SUPPRESS PRINT OF ZERO BASE RATE                              S01119
-     C     NRBRTT        IFEQ      '00'                                                        S0111
+     C*****NRBRTT        IFEQ      '00'                                                 S0111 CSD103
+     C     NRBRTT        IFEQ      *BLANKS                                                    CSD103
      C                   MOVE      '  '          NRBRTT                                        S0111
      C                   SETOFF                                       31                       S0111
      C                   END                                                                   S0111
@@ -17706,7 +17718,8 @@
      C*                                                                   CIR001
      C** SUPPRESS PRINT OF ZERO BASE RATE                                 CIR001
      C*                                                                   CIR001
-     C     NRBRTT        IFEQ      '00'                                                        CIR00
+     C*****NRBRTT        IFEQ      '00'                                                 CIR00 CSD103
+     C     NRBRTT        IFEQ      *BLANKS                                                    CSD103
      C                   MOVE      '  '          NRBRTT                                        CIR00
      C                   SETOFF                                       31                       CIR00
      C                   END                                                                   CIR00
@@ -17748,7 +17761,8 @@
      C*                                                                   CIR001
      C** SUPPRESS PRINT OF ZERO BASE RATE                                 CIR001
      C*                                                                   CIR001
-     C     NRBRTT        IFEQ      '00'                                                        CIR00
+     C*****NRBRTT        IFEQ      '00'                                                 CIR00 CSD103
+     C     NRBRTT        IFEQ      *BLANKS                                                    CSD103
      C                   MOVE      '  '          NRBRTT                                        CIR00
      C                   SETOFF                                       31                       CIR00
      C                   END                                                                   CIR00
@@ -19105,7 +19119,8 @@
       *                                                                   CPL002
      C*****BGN2ST        IFEQ      'Y'                                                CPL00 MD054117
      C     PCIDCF        IFEQ      'Y'                                                      MD054117
-     C     UBRTT         ANDNE     0                                                           CPL00
+     C*****UBRTT         ANDNE     0                                                    CPL00 CSD103
+     C     UBRTT         ANDNE     *BLANKS                                                    CSD103
      C                   Z-ADD     UNICD         PLULRC                                        CPL00
      C                   ENDIF                                                                 CPL00
       *                                                                   CPL002
@@ -19224,7 +19239,8 @@
      C                   MOVE      UFRDKY        FRDKY                                         S0111
      C                   TESTB     '0'           UDNSI                31                       S0111
      C***   SUPPRESS PRINT OF ZERO BASE RATE                              S01119
-     C     NRBRTT        IFEQ      '00'                                                        S0111
+     C*****NRBRTT        IFEQ      '00'                                                 S0111 CSD103
+     C     NRBRTT        IFEQ      *BLANKS                                                    CSD103
      C                   MOVE      '  '          NRBRTT                                        S0111
      C                   SETOFF                                       31                       S0111
      C                   END                                                                   S0111
@@ -19293,7 +19309,8 @@
      C                   MOVE      TFRDKY        FRDKY                                         S0111
      C                   TESTB     '0'           TDNSI                31                       S0111
      C***   SUPPRESS PRINT OF ZERO BASE RATE                              S01119
-     C     NRBRTT        IFEQ      '00'                                                        S0111
+     C*****NRBRTT        IFEQ      '00'                                                 S0111 CSD103
+     C     NRBRTT        IFEQ      *BLANKS                                                    CSD103
      C                   MOVE      '  '          NRBRTT                                        S0111
      C                   SETOFF                                       31                       S0111
      C                   END                                                                   S0111
@@ -19422,7 +19439,8 @@
      C                   MOVE      UFRDKY        FRDKY                                         S0111
      C                   TESTB     '0'           UDNSI                31                       S0111
      C***   SUPPRESS PRINT OF ZERO BASE RATE                              S01119
-     C     NRBRTT        IFEQ      '00'                                                        S0111
+     C*****NRBRTT        IFEQ      '00'                                                 S0111 CSD103
+     C     NRBRTT        IFEQ      *BLANKS                                                    CSD103
      C                   MOVE      '  '          NRBRTT                                        S0111
      C                   SETOFF                                       31                       S0111
      C                   END                                                                   S0111
@@ -19492,7 +19510,8 @@
      C                   MOVE      TFRDKY        FRDKY                                         S0111
      C                   TESTB     '0'           TDNSI                31                       S0111
      C***   SUPPRESS PRINT OF ZERO BASE RATE                              S01119
-     C     NRBRTT        IFEQ      '00'                                                        S0111
+     C*****NRBRTT        IFEQ      '00'                                                 S0111 CSD103
+     C     NRBRTT        IFEQ      *BLANKS                                                    CSD103
      C                   MOVE      '  '          NRBRTT                                        S0111
      C                   SETOFF                                       31                       S0111
      C                   END                                                                   S0111
@@ -19690,7 +19709,8 @@
      C/COPY WNCPYSRC,DL0280C557
      C                   TESTB     '0'           UDNSI                31                       S0111
      C***   SUPPRESS PRINT OF ZERO BASE RATE                              S01119
-     C     NRBRTT        IFEQ      '00'                                                        S0111
+     C*****NRBRTT        IFEQ      '00'                                                 S0111 CSD103
+     C     NRBRTT        IFEQ      *BLANKS                                                    CSD103
      C                   MOVE      '  '          NRBRTT                                        S0111
      C                   SETOFF                                       31                       S0111
      C                   END                                                                   S0111
@@ -19699,7 +19719,8 @@
      C                   MOVE      TFRDKY        FRDKY                                         S0111
      C                   TESTB     '0'           TDNSI                31                       S0111
      C***   SUPPRESS PRINT OF ZERO BASE RATE                              S01119
-     C     NRBRTT        IFEQ      '00'                                                        S0111
+     C*****NRBRTT        IFEQ      '00'                                                 S0111 CSD103
+     C     NRBRTT        IFEQ      *BLANKS                                                    CSD103
      C                   MOVE      '  '          NRBRTT                                        S0111
      C                   SETOFF                                       31                       S0111
      C                   END                                                                   S0111
@@ -20444,7 +20465,8 @@
      C*                                                                   S01119
      C*  OUR SHORT TERM RATE PROCESSING                                   S01119
      C*                                                                   S01119
-     C     UBRTT         IFNE      0                                                           S0111
+     C*****UBRTT         IFNE      0                                                    S0111 CSD103
+     C     UBRTT         IFNE      *BLANKS                                                    CSD103
      C                   TESTB     '2'           UDNSI                    31                   S0111
      C*  IF SHORT TERM RATE BIT IS ON AND DEAL IS PAST VALUE DATE         S01119
      C*  IT IS NECESSARY TO RECALCULATE ACCRUALS USING NEW RATE           S01119
@@ -20590,7 +20612,8 @@
      C*                                                                   S01119
      C* THEIR SHORT TERM RATE PROCESSING                                  S01119
      C*                                                                   S01119
-     C     TBRTT         IFNE      0                                                           S0111
+     C*****TBRTT         IFNE      0                                                    S0111 CSD103
+     C     TBRTT         IFNE      *BLANKS                                                    CSD103
      C                   TESTB     '2'           TDNSI                    31                   S0111
      C*  IF SHORT TERM RATE BIT IS ON AND DEAL IS PAST VALUE DATE         S01119
      C*  IT IS NECESSARY TO RECALCULATE ACCRUALS USING NEW RATE           S01119
@@ -20759,7 +20782,8 @@
       *                                                                                       CGL020
      C                   TESTB     '0'           UDNSI                31                       S0111
      C***   SUPPRESS PRINT OF ZERO BASE RATE                              S01119
-     C     NRBRTT        IFEQ      '00'                                                        S0111
+     C*****NRBRTT        IFEQ      '00'                                                 S0111 CSD103
+     C     NRBRTT        IFEQ      *BLANKS                                                    CSD103
      C                   MOVE      '  '          NRBRTT                                        S0111
      C                   SETOFF                                       31                       S0111
      C                   END                                                                   S0111
@@ -20800,7 +20824,8 @@
       *                                                                                       CGL020
      C                   TESTB     '0'           TDNSI                31                       S0111
      C***   SUPPRESS PRINT OF ZERO BASE RATE                              S01119
-     C     NRBRTT        IFEQ      '00'                                                        S0111
+     C*****NRBRTT        IFEQ      '00'                                                 S0111 CSD103
+     C     NRBRTT        IFEQ      *BLANKS                                                    CSD103
      C                   MOVE      '  '          NRBRTT                                        S0111
      C                   SETOFF                                       31                       S0111
      C                   END                                                                   S0111
@@ -21126,7 +21151,8 @@
      C                   ENDIF
       *                                                                   CIR003
      C                   TESTB     '0'           UDNSI                    31                   CIR00
-     C     NRBRTT        IFEQ      '00'                                                        CIR00
+     C*****NRBRTT        IFEQ      '00'                                                 CIR00 CSD103
+     C     NRBRTT        IFEQ      *BLANKS                                                    CSD103
      C                   MOVE      *BLANKS       NRBRTT                                        CIR00
      C                   MOVE      '0'           *IN31                                         CIR00
      C                   ENDIF                                                                 CIR00
@@ -21211,7 +21237,8 @@
      C                   ENDIF
       *                                                                   CIR003
      C                   TESTB     '0'           TDNSI                    31                   CIR00
-     C     NRBRTT        IFEQ      '00'                                                        CIR00
+     C*****NRBRTT        IFEQ      '00'                                                 CIR00 CSD103
+     C     NRBRTT        IFEQ      *BLANKS                                                    CSD103
      C                   MOVE      *BLANKS       NRBRTT                                        CIR00
      C                   MOVE      '0'           *IN31                                         CIR00
      C                   ENDIF                                                                 CIR00
@@ -21629,7 +21656,8 @@
      C*                                                                   CIR001
      C***   SUPPRESS PRINT OF ZERO BASE RATE                              CIR001
      C*                                                                   CIR001
-     C     NRBRTT        IFEQ      '00'                                                        CIR00
+     C*****NRBRTT        IFEQ      '00'                                                 CIR00 CSD103
+     C     NRBRTT        IFEQ      *BLANKS                                                    CSD103
      C                   MOVE      '  '          NRBRTT                                        CIR00
      C                   SETOFF                                       31                       CIR00
      C                   END                                                                   CIR00
@@ -21932,7 +21960,8 @@
      C*                                                                   CIR001
      C** SUPPRESS PRINT OF ZERO BASE RATE                                 CIR001
      C*                                                                   CIR001
-     C     NRBRTT        IFEQ      '00'                                                        CIR00
+     C*****NRBRTT        IFEQ      '00'                                                 CIR00 CSD103
+     C     NRBRTT        IFEQ      *BLANKS                                                    CSD103
      C                   MOVE      '  '          NRBRTT                                        CIR00
      C                   SETOFF                                       31                       CIR00
      C                   END                                                                   CIR00
@@ -22422,7 +22451,8 @@
      C                   MOVE      SZIPFC        TIPFR                                         S0111
      C                   Z-ADD     SZIPD         TIPFD                                         S0111
      C                   Z-ADD     SZLICD        TIALC                                         S0111
-     C     TBRTT         IFNE      0                                                           S0111
+     C*****TBRTT         IFNE      0                                                    S0111 CSD103
+     C     TBRTT         IFNE      *BLANKS                                                    CSD103
      C                   Z-ADD     SZSLID        TLPCD                                         S0111
      C                   END                                                                   S0111
      C                   MOVE      SZCNFI        CNFI                                          S0111
@@ -22755,7 +22785,8 @@
      C                   MOVE      SZIPFC        UIPFR                                         S0111
      C                   Z-ADD     SZIPD         UIPFD                                         S0111
      C                   Z-ADD     SZLICD        UIALC                                         S0111
-     C     UBRTT         IFNE      0                                                           S0111
+     C*****UBRTT         IFNE      0                                                    S0111 CSD103
+     C     UBRTT         IFNE      *BLANKS                                                    CSD103
      C                   Z-ADD     SZSLID        ULPCD                                         S0111
      C                   END                                                                   S0111
      C                   MOVE      SZCNFI        CNFI                                          S0111
@@ -22870,7 +22901,8 @@
      C                   GOTO      RXUIFD                                                      S0111
      C                   END                                                                   S0111
      C*                                                                   S01119
-     C     TBRTT         IFEQ      0                                                           S0111
+     C*****TBRTT         IFEQ      0                                                    S0111 CSD103
+     C     TBRTT         IFEQ      *BLANKS                                                    CSD103
      C                   GOTO      RXUIFD                                                      S0111
      C                   END                                                                   S0111
      C/COPY WNCPYSRC,DL0280C501
@@ -22974,7 +23006,8 @@
      C                   GOTO      RXTICD                                                      S0111
      C                   END                                                                   S0111
      C*                                                                   S01119
-     C     UBRTT         IFEQ      0                                                           S0111
+     C*****UBRTT         IFEQ      0                                                    S0111 CSD103
+     C     UBRTT         IFEQ      *BLANKS                                                    CSD103
      C                   GOTO      RXTICD                                                      S0111
      C                   END                                                                   S0111
      C/COPY WNCPYSRC,DL0280C502
@@ -23064,7 +23097,8 @@
      C                   GOTO      RXUICD                                                      S0111
      C                   END                                                                   S0111
      C*                                                                   S01119
-     C     TBRTT         IFEQ      0                                                           S0111
+     C*****TBRTT         IFEQ      0                                                    S0111 CSD103
+     C     TBRTT         IFEQ      *BLANKS                                                    CSD103
      C/COPY WNCPYSRC,DL0280C405
      C                   GOTO      RXUICD                                                      S0111
      C                   END                                                                   S0111
@@ -23199,7 +23233,8 @@
       *                                                                   CPL002
      C*****BGN2ST        IFEQ      'Y'                                                CPL00 MD054117
      C     PCIDCF        IFEQ      'Y'                                                      MD054117
-     C     TBRTT         ANDNE     0                                                           CPL00
+     C*****TBRTT         ANDNE     0                                                    CPL00 CSD103
+     C     TBRTT         ANDNE     *BLANKS                                                    CSD103
      C                   Z-ADD     TNICD         PLTLRC                                        CPL00
      C                   ENDIF                                                                 CPL00
       *                                                                   CPL002
@@ -23299,7 +23334,8 @@
      C                   GOTO      RXUNIP                                                      S0111
      C                   END                                                                   S0111
      C*                                                                   S01119
-     C     UBRTT         IFEQ      0                                                           S0111
+     C*****UBRTT         IFEQ      0                                                    S0111 CSD103
+     C     UBRTT         IFEQ      *BLANKS                                                    CSD103
      C/COPY WNCPYSRC,DL0280C406
      C                   GOTO      RXUNIP                                                      S0111
      C                   END                                                                   S0111
@@ -23434,7 +23470,8 @@
       *                                                                   CPL002
      C*****BGN2ST        IFEQ      'Y'                                                CPL00 MD054117
      C     PCIDCF        IFEQ      'Y'                                                      MD054117
-     C     UBRTT         ANDNE     0                                                           CPL00
+     C*****UBRTT         ANDNE     0                                                    CPL00 CSD103
+     C     UBRTT         ANDNE     *BLANKS                                                    CSD103
      C                   Z-ADD     UNICD         PLULRC                                        CPL00
      C                   ENDIF                                                                 CPL00
       *                                                                   CPL002
@@ -23754,7 +23791,8 @@
      C                   ENDIF                                                                 CIR00
      C/COPY WNCPYSRC,DL0280C559
      C                   TESTB     '0'           UDNSI                31                       S0111
-     C     NRBRTT        IFEQ      '00'                                                        S0111
+     C*****NRBRTT        IFEQ      '00'                                                 S0111 CSD103
+     C     NRBRTT        IFEQ      *BLANKS                                                    CSD103
      C                   MOVE      '  '          NRBRTT                                        S0111
      C                   SETOFF                                       31                       S0111
      C                   END                                                                   S0111
@@ -23856,7 +23894,8 @@
       *                                                                                       CGL020
      C                   TESTB     '0'           TDNSI                31                       S0111
      C***   SUPPRESS PRINT OF ZERO BASE RATE                              S01119
-     C     NRBRTT        IFEQ      '00'                                                        S0111
+     C*****NRBRTT        IFEQ      '00'                                                 S0111 CSD103
+     C     NRBRTT        IFEQ      *BLANKS                                                    CSD103
      C                   MOVE      '  '          NRBRTT                                        S0111
      C                   SETOFF                                       31                       S0111
      C                   END                                                                   S0111
@@ -24669,7 +24708,8 @@
      C* OURS/THEIRS                                                       S01119
      C*                                                                   S01119
      C     DTLUT         IFEQ      'U'                                                         S0111
-     C                   Z-ADD     UBRTT         WBRTT             2 0                         S0111
+     C**********         Z-ADD     UBRTT         WBRTT             2 0                  S0111 CSD103
+     C                   MOVE      UBRTT         WBRTT             2                          CSD103
      C                   Z-ADD     UNICD         WNICD             5 0                         S0111
      C                   Z-ADD     UINFD         WINFD             5 0                         S0111
      C                   Z-ADD     UICBD         WICBD             5 0                         S0111
@@ -24690,7 +24730,8 @@
       *                                                                   CSW005
      C                   ELSE                                                                  S0111
      C                   Z-ADD     TFRFD         WFRFD             2 0                         S0111
-     C                   Z-ADD     TBRTT         WBRTT             2 0                         S0111
+     C**********         Z-ADD     TBRTT         WBRTT             2 0                  S0111 CSD103
+     C                   MOVE      TBRTT         WBRTT             2                          CSD103
      C                   Z-ADD     TNICD         WNICD             5 0                         S0111
      C                   Z-ADD     TINFD         WINFD             5 0                         S0111
      C                   Z-ADD     TICBD         WICBD             5 0                         S0111
@@ -25135,7 +25176,8 @@
      C                   TESTB     '4'           TDSTI                    31                   S0111
      C   31              MOVE      'Y'           FLRRTF                                        S0111
      C* STATUS OF USER/AVERAGE RATE : USER HAS NON-ZERO BASE RATE         S01119
-     C     UBRTT         IFNE      0                                                           S0111
+     C*****UBRTT         IFNE      0                                                    S0111 CSD103
+     C     UBRTT         IFNE      *BLANKS                                                    CSD103
      C                   TESTB     '3'           UDSTI                    31                   S0111
      C   31              MOVE      'Y'           AVERRT                                        S0111
      C                   MOVE      'P'           USRST                                         S0111
@@ -27811,7 +27853,8 @@
      C                   MOVEA     '    A'       AKY(6)                                        S0111
      C                   TESTB     '0'           TDNSI                31                       S0111
      C***   SUPPRESS PRINT OF ZERO BASE RATE                              S01119
-     C     NRBRTT        IFEQ      '00'                                                        S0111
+     C*****NRBRTT        IFEQ      '00'                                                 S0111 CSD103
+     C     NRBRTT        IFEQ      *BLANKS                                                    CSD103
      C                   MOVE      '  '          NRBRTT                                        S0111
      C                   SETOFF                                       31                       S0111
      C                   END                                                                   S0111
@@ -29266,7 +29309,8 @@
      C                   MOVEA     'A'           AKY(3)                                        S0111
      C                   MOVEA     '   '         AKY(6)                                        19815
 1206 C                   MOVEL     NEV(6)        NARREV                                        E1119
-     C     NRBRTT        IFEQ      '00'                                                        E2269
+     C*****NRBRTT        IFEQ      '00'                                                 E2269 CSD103
+     C     NRBRTT        IFEQ      *BLANKS                                                    CSD103
      C                   MOVE      '  '          NRBRTT                                        E2269
      C                   SETOFF                                       31                       E2269
      C                   END                                                                   E2269
@@ -30845,7 +30889,8 @@
      C                   EXSR      FEDAT                                                       S0137
      C*                                                                   S01378
      C                   Z-ADD     KYAMT         NRRSAL                                        S0137
-     C     NRBRTT        IFEQ      '00'                                                        00345
+     C*****NRBRTT        IFEQ      '00'                                                 00345 CSD103
+     C     NRBRTT        IFEQ      *BLANKS                                                    CSD103
      C                   MOVE      '  '          NRBRTT                                        00345
      C                   END                                                                   00345
      C                   SETON                                        71                       S0137

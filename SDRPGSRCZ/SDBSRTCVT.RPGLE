@@ -45,7 +45,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
  
-      *****************************************************************
+      **********************************************a*******************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -339,6 +339,57 @@
      C                   EXSR      ZA0770                                                     CSD006
      C                   MOVE      DateOut       DDTSDT                                       CSD006
      C                   ENDIF                                                                CSD006
+      *                                                                                       CSD103
+      * Backward-Looking Rate                                                                 CSD103
+      *                                                                                       CSD103
+     C                   MOVE      BABLRT        DDBLRT                                       CSD103
+      *                                                                                       CSD103
+      * Default Lookback Days for Settlement Base Rate                                        CSD103
+      *                                                                                       CSD103
+     C                   MOVE      BALBDY        DDLBDY                                       CSD103
+      *                                                                                       CSD103
+      * Default Lockout Days                                                                  CSD103
+      *                                                                                       CSD103
+     C                   MOVE      BALODY        DDLODY                                       CSD103
+      *                                                                                       CSD103
+      * Default Payment Delay Days                                                            CSD103
+      *                                                                                       CSD103
+     C                   MOVE      BAPDLY        DDPDLY                                       CSD103
+      *                                                                                       CSD103
+      * Benchmark Adjustment                                                                  CSD103
+      *                                                                                       CSD103
+     C                   Z-ADD     8             @@IDP                                        CSD103
+     C                   Z-ADD     5             @@IINT                                       CSD103
+     C                   MOVE      *BLANKS       @@ALPH                                       CSD103
+     C                   MOVE      BABADJ        @@ALPH                                       CSD103
+      *                                                                                       CSD103
+     C                   CALLB     'ZA0840'                                                   CSD103
+     C                   PARM      *BLANK        PRetCode                                     CSD103
+     C                   PARM                    @@ALPH                         Display field CSD103
+     C                   PARM                    @@IDP                          no.of dec.plcsCSD103
+     C                   PARM                    @@IINT                         no.of integersCSD103
+     C                   PARM      'N'           @@MTID                         Mil/Thou      CSD103
+     C                   PARM      *ZERO         @@ERCD                         Error code    CSD103
+     C                   PARM      *ZERO         @@AMT                          File field    CSD103
+     C                   PARM                    BNDCSP                                       CSD103
+      *                                                                                       CSD103
+     C                   MOVE      @@ALPH        DDBADJ                                       CSD103
+      *                                                                                       CSD103
+      * Averaging Option                                                                      CSD103
+      *                                                                                       CSD103
+     C                   MOVE      BAAVOP        DDAVOP                                       CSD103
+      *                                                                                       CSD103
+      * Base Rate for Accrual                                                                 CSD103
+      *                                                                                       CSD103
+     C                   MOVE      BABRAC        DDBRAC                                       CSD103
+      *                                                                                       CSD103
+      * Weight Convention                                                                     CSD103
+      *                                                                                       CSD103
+     C                   MOVE      BAWGHT        DDWGHT                                       CSD103
+      *                                                                                       CSD103
+      * Default Lookback Days for Accrual                                                     CSD103
+      *                                                                                       CSD103
+     C                   MOVE      BALBAC        DDLBAC                                       CSD103
                                                                                               CSD006
       *                                                                                       CSD006
      C                   ENDSR
@@ -369,6 +420,15 @@
       *
      C                   MOVEL     DDACTN        ##ACTN            1
      C                   MOVEL     *BLANK        BasRScnFmt
+     C                   MOVEL     *BLANK        DDBLRT                                       CSD103
+     C                   MOVEL     *BLANK        DDLBDY                                       CSD103
+     C                   MOVEL     *BLANK        DDLODY                                       CSD103
+     C                   MOVEL     *BLANK        DDPDLY                                       CSD103
+     C                   MOVEL     *BLANK        DDBADJ                                       CSD103
+     C                   MOVEL     *BLANK        DDAVOP                                       CSD103
+     C                   MOVEL     *BLANK        DDBRAC                                       CSD103
+     C                   MOVEL     *BLANK        DDWGHT                                       CSD103
+     C                   MOVEL     *BLANK        DDLBAC                                       CSD103
      C                   MOVEL     ##ACTN        DDACTN
       *
      C                   ENDSR
@@ -395,6 +455,17 @@
       *
       * Base Rate in screen format
      C                   PARM                    BasRScnFmt
+     C
+      * Backward-Looking Rate Fields                                                          CSD103
+     C                   PARM                    DDBLRT            1                          CSD103
+     C                   PARM                    DDLBDY            2                          CSD103
+     C                   PARM                    DDLODY            2                          CSD103
+     C                   PARM                    DDPDLY            2                          CSD103
+     C                   PARM                    DDBADJ           14                          CSD103
+     C                   PARM                    DDAVOP            1                          CSD103
+     C                   PARM                    DDBRAC            2                          CSD103
+     C                   PARM                    DDWGHT            1                          CSD103
+     C                   PARM                    DDLBAC            2                          CSD103
       *
       *
       ** Initialize program name

@@ -45,7 +45,7 @@
       *             Rate has the same value as the previous history   *
       *             record.                                           *
       *           - Applied for MD-49833.                             *
-      *           - Applied for MD053919.
+      *           - Applied for MD053919.                             *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CTI006 - Trade Finance BF Midas 2.2 Interface                *
@@ -410,6 +410,19 @@
      C                   MOVEL     BVDFTS        BADFTS                                       CSD012
      C                   MOVEL     BVDTFR        BADTFR                                       CSD012
      C                   MOVEL     BVTLEX        BATLEX                                       CSD012
+      *                                                                                       CSD103
+     C                   MOVEL     BVZONE        BAZONE                                       CSD103
+     C                   MOVEL     BVVDTO        BAVDTO                                       CSD103
+     C                   MOVEL     BVCBRT        BACBRT                                       CSD103
+     C                   MOVEL     BVBLRT        BABLRT                                       CSD103
+     C                   MOVEL     BVLBDY        BALBDY                                       CSD103
+     C                   MOVEL     BVLODY        BALODY                                       CSD103
+     C                   MOVEL     BVPDLY        BAPDLY                                       CSD103
+     C                   MOVEL     BVBADJ        BABADJ                                       CSD103
+     C                   MOVEL     BVAVOP        BAAVOP                                       CSD103
+     C                   MOVEL     BVBRAC        BABRAC                                       CSD103
+     C                   MOVEL     BVWGHT        BAWGHT                                       CSD103
+     C                   MOVEL     BVLBAC        BALBAC                                       CSD103
       *                                                                                       CSD012
      C                   WRITE     SDBRSHD0                                                   CSD012
      C                   ENDIF                                                                CSD012

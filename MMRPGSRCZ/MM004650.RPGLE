@@ -1495,7 +1495,8 @@
      C                   EVAL      DKVDAT = *ZERO
      C                   EVAL      DKSLID = DFPSTD
      C                   EVAL      DKMDAT = *ZERO
-     C                   EVAL      DKBRTT = *ZERO
+     C**********         EVAL      DKBRTT = *ZERO                                             CSD103
+     C                   EVAL      DKBRTT = *BLANKS                                           CSD103
      C                   EVAL      DKBRTE = *ZERO
      C                   EVAL      DKRTSP = *ZERO
      C                   EVAL      DKINTR = *ZERO
@@ -1574,7 +1575,8 @@
      C                   EVAL      DKVDAT = 0
      C                   EVAL      DKSLID = DFPSTD
      C                   EVAL      DKMDAT = 0
-     C                   EVAL      DKBRTT = 0
+     C**********         EVAL      DKBRTT = 0                                                 CSD103
+     C                   EVAL      DKBRTT = *BLANKS                                           CSD103
      C                   EVAL      DKBRTE = 0
      C                   EVAL      DKRTSP = 0
      C                   EVAL      DKINTR = 0
@@ -1761,7 +1763,8 @@
      C                   EVAL      DKVDAT = 0
      C                   EVAL      DKSLID = DFPSTD
      C                   EVAL      DKMDAT = 0
-     C                   EVAL      DKBRTT = 0
+     C**********         EVAL      DKBRTT = 0                                                 CSD103
+     C                   EVAL      DKBRTT = *BLANKS                                           CSD103
      C                   EVAL      DKBRTE = 0
      C                   EVAL      DKRTSP = 0
      C                   EVAL      DKINTR = 0
@@ -1843,7 +1846,8 @@
      C                   EVAL      DKVDAT = 0                                                 233601
      C**********         EVAL      DKSLID = DFPSTD                                   233601 BUG13006
      C                   EVAL      DKMDAT = 0                                                 233601
-     C                   EVAL      DKBRTT = 0                                                 233601
+     C**********         EVAL      DKBRTT = 0                                          233601 CSD103
+     C                   EVAL      DKBRTT = *BLANKS                                           CSD103
      C                   EVAL      DKBRTE = 0                                                 233601
      C                   EVAL      DKRTSP = 0                                                 233601
      C                   EVAL      DKINTR = 0                                                 233601

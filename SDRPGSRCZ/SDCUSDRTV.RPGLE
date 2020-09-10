@@ -30,8 +30,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 254109             Date 01Jun20               *
-      *  Prev Amend No. MD048748           Date 16Dec19               *
+      *  Last Amend No. MD056548           Date 10Sep20               *
+      *  Prev Amend No. 254109             Date 01Jun20               *
+      *                 MD048748           Date 16Dec19               *
       *                 MD052297           Date 14Nov19               *
       *                 MD053634           Date 21Oct19               *
       *                 CER050             Date 16Jun19               *
@@ -151,6 +152,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056548 - Customer Fees Maintenance is missing              *
       *  254109 - Introduce new err msgs; one for the 'D' action code *
       *           and another one for 'C' and 'R' action codes ( when *
       *           CSD007 feauture is switched on) just to indicate the*
@@ -1099,6 +1101,8 @@
      D WCTAX           S              2A                                                      CGL132
      D WWCLAC          S              5A                                                      CGL132
      D CTI006          S              1A                                                    MD030956
+
+     D S01464          S              1A   INZ('N')                                         MD056548
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -1291,6 +1295,7 @@
       ** Retrieve Service Fees                                                                CSD079
                                                                                               CSD079
      C     CSD008        IFEQ      'Y'                                                        CSD079
+     C     S01464        OREQ      'Y'                                                      MD056548
      C                   EXSR      RtvSfee                                                    CSD079
      C                   ENDIF                                                                CSD079
                                                                                               CSD079
@@ -5755,6 +5760,20 @@
      C                   Eval      WCusAlphChksum  = PSysVal2                                 CSD027
      C                   Eval      WCusAlphaSupNum = PSysVal3                                 CSD027
       *                                                                                       CSD027
+
+      ** Check if enhancement S01464 is on                                                  MD056548
+                                                                                            MD056548
+     C                   CALLB     'AOSARDR0'                                               MD056548
+     C                   PARM      *BLANKS       @RTCD                                      MD056548
+     C                   PARM      '*VERIFY'     @OPTN                                      MD056548
+     C                   PARM      'S01464'      @SARD                                      MD056548
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD056548
+                                                                                            MD056548
+     C                   IF        @RTCD = *BLANKS                                          MD056548
+     C                   EVAL      S01464 = 'Y'                                             MD056548
+     C                   ELSE                                                               MD056548
+     C                   EVAL      S01464 = 'N'                                             MD056548
+     C                   ENDIF                                                              MD056548
      C                   ENDSR
       *****************************************************************
       /EJECT

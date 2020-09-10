@@ -6,13 +6,14 @@
       *****************************************************************
       *                                                               *
       *  Midas - Standing Data ILE Module                             *
-      *
+      *                                                               *
       *  SDCUSDUPD - STANDING DATA CUSTOMERS DATABASE UPDATE          *
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 252069             Date 22May20               *
-      *  Prev Amend No. MD055210           Date 03Feb20               *
+      *  Last Amend No. MD056548           Date 10Sep20               *
+      *  Prev Amend No. 252069             Date 22May20               *
+      *                 MD055210           Date 03Feb20               *
       *                 MD054883           Date 23Dec19               *
       *                 MD053436           Date 21Sep19               *
       *                 CER050             Date 16Jun19               *
@@ -149,6 +150,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056548 - Customer Fees Maintenance is missing              *
       *  252069 - Database error message occurs when there is a       *
       *           record locking issue.                               *
       *  MD055210 - Serious midas error encountered in CUSD           *
@@ -1309,6 +1311,8 @@
      D KCTRY           S              2A                                                      CGL157
      D X               S              2S 0                                                    CGL157
      D A               S              4S 0                                                    CGL177
+      **
+     D S01464          S              1A   INZ('N')                                         MD056548
 
       /EJECT
      C*****************************************************************
@@ -1981,7 +1985,9 @@
      C*****A_CUTYLC      OREQ      'C'                                               CSD079 BUG14009
      C*****A_CUTYLC      OREQ      'R'                                               CSD079 BUG14009
                                                                                               CSD079
-     C                   IF        CSD008 = 'Y' AND CSD079 = 'Y'                              CSD079
+     C**********         IF        CSD008 = 'Y' AND CSD079 = 'Y'                     CSD079 MD056548
+     C                   IF        (CSD008 = 'Y' AND CSD079 = 'Y')                          MD056548
+     C                             OR (CSD008 = 'N' AND S01464 = 'Y')                       MD056548
      C     F_SFSMAC      IFNE      *BLANKS                                                   BG12238
      C     F_SFHMIN      ORNE      *BLANKS                                                   BG12238
      C     F_SFNAIN      ORNE      *BLANKS                                                   BG12238
@@ -1991,6 +1997,7 @@
      C     F_SFPCAC      ORNE      *BLANKS                                                   BG12238
      C     F_SFPCHM      ORNE      *BLANKS                                                   BG12238
      C     F_SFTAIF      ORNE      *BLANKS                                                   BG12238
+     C     A_CUTYLC      OREQ      'A'                                                      MD056548
      C                   EXSR      UPDSFD                                                     CSD079
      C                   ENDIF                                                               BG12238
      C                   ENDIF                                                                CSD079
@@ -7906,6 +7913,20 @@
      C                   EVAL      CER050      = 'N'                                          CER050
      C                   ENDIF                                                                CER050
       *                                                                                       CER050
+
+      ** Check if enhancement S01464 is on                                                  MD056548
+                                                                                            MD056548
+     C                   CALLB     'AOSARDR0'                                               MD056548
+     C                   PARM      *BLANKS       PRTCD                                      MD056548
+     C                   PARM      '*VERIFY'     POPTN                                      MD056548
+     C                   PARM      'S01464'      PSARD                                      MD056548
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD056548
+                                                                                            MD056548
+     C                   IF        PRTCD = *BLANKS                                          MD056548
+     C                   EVAL      S01464 = 'Y'                                             MD056548
+     C                   ELSE                                                               MD056548
+     C                   EVAL      S01464 = 'N'                                             MD056548
+     C                   ENDIF                                                              MD056548
      C                   ENDSR
      C****************************************************************
       /EJECT

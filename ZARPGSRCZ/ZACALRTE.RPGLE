@@ -29,161 +29,159 @@
 000147200904
 000148200903     D/COPY ZACPYSRC,PSDS
 000149200903     D/COPY ZACPYSRC,STD_D_SPEC
-000150200903
-000151200903      ** +--------------------------------------+
-000152200903      ** ¦ Program Prototypes                   ¦
-000153200903      ** ¦ ==================                   ¦
-000154200903      ** +--------------------------------------+
-000155200904
-000156200903     D Main            pr                  extpgm('SDCALRTE')
-000157200905
-000158200903     D  transactCCY                   3a
-000159200905      ** Transaction Currency (input)
-000160200904     D  baseRateCode                  2s 0
-000161200905      ** Base Rate Code (input)
-000162200904     D  calcBasis                     1s 0
-000163200905      ** Calculation Basis (input)
-000164200903     D  startDate                     5s 0
-000165200905      ** Start Date of Compounding (input)
-000166200903     D  endDate                       5s 0
-000167200905      ** End Date of Compounding (input)
-000168200903     D  lookBackDays                  2s 0
-000169200905      ** Number of Days Lookback (input)
-000170200903     D  lockOutDays                   2s 0
-000171200905      ** Number of Days Lockout (input)
-000172200903     D  averagingOpt                  1s 0
-000173200905      ** Averaging Option (input)
-000174200905      **    1 - Compund Average
-000175200905      **    2 - Simple Average in Arrears
-000176200905      **    3 - No Averaging (Base Rates File)
-000177200905      **    4 - No Averaging (User Input)
-000178200907     D  weightConv                    1a
-000179200905      ** Weight Convention (input)
-000180200907      **    1 - Based on the day in the interest period
-000181200907      **    2 - Based on the day in the observation period
-000182200903     D  includeEndDat                 1a
-000183200905      ** Include End Date in Compounding Flag (Y/N)
-000184200905     D  provRateFlg                   1a
-000185200905      ** Provisional Rate Flag (output)
-000186200905     D  calculatedRat                11p 7
-000187200905      ** Compounded/Average Rate (output)
-000188200907     D  errorCode                     3a
-000189200907      ** Error Code (output)
-000190200905
-000191200903     D Main            pi
-000192200905
-000193200905     D  transactCCY                   3a
-000194200905      ** Transaction Currency (input)
-000195200905     D  baseRateCode                  2s 0
-000196200905      ** Base Rate Code (input)
-000197200905     D  calcBasis                     1s 0
-000198200905      ** Calculation Basis (input)
-000199200905     D  startDate                     5s 0
-000200200905      ** Start Date of Compounding (input)
-000201200905     D  endDate                       5s 0
-000202200905      ** End Date of Compounding (input)
-000203200905     D  lookBackDays                  2s 0
-000204200905      ** Number of Days Lookback (input)
-000205200905     D  lockOutDays                   2s 0
-000206200905      ** Number of Days Lockout (input)
-000207200905     D  averagingOpt                  1s 0
-000208200905      ** Averaging Option (input)
-000209200905      **    1 - Compund Average
-000210200905      **    2 - Simple Average in Arrears
-000211200905      **    3 - No Averaging (Base Rates File)
-000212200905      **    4 - No Averaging (User Input)
-000213200907     D  weightConv                    1a
-000214200905      ** Weight Convention (input)
-000215200907      **    1 - Based on the day in the interest period
-000216200907      **    2 - Based on the day in the observation period
-000217200905     D  includeEndDat                 1a
-000218200905      ** Include End Date in Compounding Flag (Y/N)
-000219200905     D  provRateFlg                   1a
-000220200905      ** Provisional Rate Flag (output)
-000221200905     D  calculatedRat                11p 7
-000222200905      ** Compounded/Average Rate (output)
-000223200907     D  errorCode                     3a
-000224200907      ** Error Code (output)
-000225200905
-000226200907
-000227200905      ** Prototype to call ZBKDT module
-000228200903     D  backwardDays   pr                  extpgm('ZBKDT')
-000229200903     D    pDayno                      5s 0
-000230200903     D    pCurrency                   3a
-000231200903     D    pLocation                   3a
-000232200903     D    pNoDays                     2s 0
-000233200903     D    pRetDay                     5s 0
-000234200903
-000235200905      ** Prototype to call ZFWDT module
-000236200903     D  forwardDays    pr                  extpgm('ZFWDT')
-000237200903     D    pDayno                      5s 0
-000238200903     D    pNoDays                     2s 0
-000239200903     D    pRetDay                     5s 0
-000240200903     D    pCurrency                   3a
-000241200903     D    pLocation                   3a
-000242200903
-000243200905      ** Prototype to call getHistRate function
-000244200903     D  getHistRate    pr            11P 7
-000245200903     D    pCurrency                   3a
-000246200904     D    pBaseRate                   2s 0
-000247200903     D    pHistDate                   5s 0
-000248200903
-000249200903      ** +--------------------------------------+
-000250200903      ** ¦ Manually included D-specs            ¦
-000251200903      ** ¦ =========================            ¦
-000252200903      ** +--------------------------------------+
-000253200904
-000254200904     D calcRateDS      ds                  dim(1000) qualified
-000255200907     D    runDate                     5s 0
-000256200907     D    appliedRate                11p 7
-000257200907     D    daysApplied                 5s 0
-000258200907     D    calendarDay                 5s 0
-000259200907     D    effectiRate                11p 7
-000260200907     D    calculaRate                11p 7
-000261200907     D    cumulatRate                11p 7
-000262200907     D    compoundRat                11p 7
-000263200903
-000264200904     D baseRateHistDS  ds                  dim(1000) qualified
-000265200907     D    historyDate                 5s 0
-000266200907     D    appliedRate                11p 7
-000267200907     D    provRateFlg                 1a
-000268200904
-000269200903      ** +--------------------------------------+
-000270200903      ** ¦ Constants declaration                ¦
-000271200903      ** ¦ =====================                ¦
-000272200903      ** +--------------------------------------+
-000273200903
-000274200903      ** +--------------------------------------+
-000275200903      ** ¦ Variable declaration                 ¦
-000276200903      ** ¦ ====================                 ¦
-000277200903      ** +--------------------------------------+
-000278200904
-000311200903     D histCtr         s              4s 0 inz(0)
-000312200903     D calcCtr         s              4s 0 inz(0)
-000314200905     D wLocation       s              3a   inz(*blanks)
-000315200904     D wNoDays         s              2s 0 inz(0)
-000316200905     D wRetDay         s              5s 0 inz(0)
-000317200905     D wStartDate      s              5s 0 inz(0)
-000318200904     D wCalcBasis      s              3s 0 inz(0)
-000319200907     D wProvRateFlg    s              1a   inz(*blanks)
-000320200907     D wLockOutDate    s              5s 0 inz(0)
-000321200907     D wLockOutRate    s             11p 7 inz(0)
-000322200903
-000323200903      ** +--------------------------------------+
-000324200903      ** ¦ Array declaration                    ¦
-000325200903      ** ¦ ==================                   ¦
-000326200903      ** +--------------------------------------+
-000327200903
-000328200903      /free
-000329200903
-000330200903       // ** +--- Start of Main processing -----------------------------------+
-000331200903       // ** ¦                                                                ¦
-000332200903       // ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
-000333200903       // ** ¦ executed at program activation.                                ¦
-000334200903       // ** ¦                                                                ¦
-000335200903       // ** +----------------------------------------------------------------+
-000336200903
-000343200903                   exsr calculateRates;
+000150200911     D/COPY ZSRSRC,ZINTDYZ1LE
+000154200910     D/COPY ZSRSRC,ZHOLILE
+000155200911     D/COPY ZSRSRC,ZHOLELE
+000158200903
+000159200903      ** +--------------------------------------+
+000160200903      ** ¦ Program Prototypes                   ¦
+000161200903      ** ¦ ==================                   ¦
+000162200903      ** +--------------------------------------+
+000163200904
+000164200910     D Main            pr                  extpgm('ZACALRTE')
+000165200905
+000166200910     D  transactCCY                   3a
+000167200905      ** Transaction Currency (input)
+000168200910     D  baseRateCode                  2s 0
+000169200905      ** Base Rate Code (input)
+000170200910     D  calcBasis                     1s 0
+000171200905      ** Calculation Basis (input)
+000172200910     D  startDate                     5s 0
+000173200905      ** Start Date of Compounding (input)
+000174200910     D  endDate                       5s 0
+000175200905      ** End Date of Compounding (input)
+000176200910     D  lookBackDays                  2s 0
+000177200905      ** Number of Days Lookback (input)
+000178200910     D  lockOutDays                   2s 0
+000179200905      ** Number of Days Lockout (input)
+000180200910     D  averagingOpt                  1s 0
+000181200905      ** Averaging Option (input)
+000182200905      **    1 - Compund Average
+000183200905      **    2 - Simple Average in Arrears
+000184200905      **    3 - No Averaging (Base Rates File)
+000185200905      **    4 - No Averaging (User Input)
+000186200910      *
+000187200910     D  weightConv                    1a
+000188200905      ** Weight Convention (input)
+000189200907      **    1 - Based on the day in the interest period
+000190200907      **    2 - Based on the day in the observation period
+000191200910     D  includeEndDat                 1a
+000192200905      ** Include End Date in Compounding Flag (Y/N)
+000193200910     D  provRateFlg                   1a
+000194200910      ** Provisional Rate Flag (output)
+000195200910     D  calculatedRat                11p 7
+000196200905      ** Compounded/Average Rate (output)
+000197200910     D  errorCode                     3a
+000198200907      ** Error Code (output)
+000199200905
+000200200903     D Main            pi
+000201200910
+000202200910     D  transactCCY                   3a
+000203200910      ** Transaction Currency (input)
+000204200910     D  baseRateCode                  2s 0
+000205200910      ** Base Rate Code (input)
+000206200910     D  calcBasis                     1s 0
+000207200910      ** Calculation Basis (input)
+000208200910     D  startDate                     5s 0
+000209200910      ** Start Date of Compounding (input)
+000210200910     D  endDate                       5s 0
+000211200910      ** End Date of Compounding (input)
+000212200910     D  lookBackDays                  2s 0
+000213200910      ** Number of Days Lookback (input)
+000214200910     D  lockOutDays                   2s 0
+000215200910      ** Number of Days Lockout (input)
+000216200910     D  averagingOpt                  1s 0
+000217200910      ** Averaging Option (input)
+000218200910      **    1 - Compund Average
+000219200910      **    2 - Simple Average in Arrears
+000220200910      **    3 - No Averaging (Base Rates File)
+000221200910      **    4 - No Averaging (User Input)
+000222200910      *
+000223200910     D  weightConv                    1a
+000224200910      ** Weight Convention (input)
+000225200910      **    1 - Based on the day in the interest period
+000226200910      **    2 - Based on the day in the observation period
+000227200910     D  includeEndDat                 1a
+000228200910      ** Include End Date in Compounding Flag (Y/N)
+000229200910     D  provRateFlg                   1a
+000230200910      ** Provisional Rate Flag (output)
+000231200911     D  calculatedRat                11p 7
+000232200910      ** Compounded/Average Rate (output)
+000233200910     D  errorCode                     3a
+000234200910      ** Error Code (output)
+000262200905
+000281200910     D  getSDBANK      pr                  extpgm('AOBANKR0')                                 CLE168
+000282200910     D    pReturnCode                 7A                                                      CLE168
+000283200910     D    pOption                     7A                                                      CLE168
+000284200910     D    pDSFDY                    200A                                                      CLE168
+000285200910
+000286200903
+000287200905      ** Prototype to call getHistRate function
+000288200903     D  getHistRate    pr            11P 7
+000289200903     D    pCurrency                   3a
+000290200904     D    pBaseRate                   2s 0
+000291200903     D    pHistDate                   5s 0
+000292200903
+000293200903      ** +--------------------------------------+
+000294200903      ** ¦ Manually included D-specs            ¦
+000295200903      ** ¦ =========================            ¦
+000296200903      ** +--------------------------------------+
+000297200910
+000298200910     D DSSDY         E DS                  EXTNAME(DSSDY)                       S01194
+000299200910     D sdbank        e ds                  extname(SDBANKPD)
+000300200910
+000302200910     D bsrhDS          ds                  dim(1000) qualified
+000303200911     D    historyDate                 5s 0
+000304200911     D    SOFR_Rate                  20p15
+000305200911     D    appliedRate                20p15
+000306200910     D    provRateFlg                 1a
+000308200907     D    daysApplied                 5s 0
+000309200907     D    calendarDay                 5s 0
+000310200911     D    effectiRate                20p15
+000311200911     D    calculaRate                20p15
+000312200911     D    cumulatRate                20p15
+000313200911     D    compoundRat                20p15
+000314200903
+000315200904
+000316200903      ** +--------------------------------------+
+000317200903      ** ¦ Constants declaration                ¦
+000318200903      ** ¦ =====================                ¦
+000319200903      ** +--------------------------------------+
+000320200903
+000321200903      ** +--------------------------------------+
+000322200903      ** ¦ Variable declaration                 ¦
+000323200903      ** ¦ ====================                 ¦
+000324200903      ** +--------------------------------------+
+000325200904
+000326200911     D i               s              4s 0 inz(0)
+000327200910     D ctr             s              4s 0 inz(0)
+000328200905     D wLocation       s              3a   inz(*blanks)
+000329200904     D wNoDays         s              2s 0 inz(0)
+000330200905     D wRetDay         s              5s 0 inz(0)
+000331200905     D wStartDate      s              5s 0 inz(0)
+000332200910     D wEndDate        s              5s 0 inz(0)
+000333200904     D wCalcBasis      s              3s 0 inz(0)
+000334200907     D wProvRateFlg    s              1a   inz(*blanks)
+000335200907     D wLockOutDate    s              5s 0 inz(0)
+000336200910     D pReturnCode     s              7A
+000337200910     D pOption         s              7A
+000338200910     D pDSFDY          s            200A
+000339200903
+000340200903      ** +--------------------------------------+
+000341200903      ** ¦ Array declaration                    ¦
+000342200903      ** ¦ ==================                   ¦
+000343200903      ** +--------------------------------------+
+000344200903
+000345200910      /free
+000346200903
+000347200903       // ** +--- Start of Main processing -----------------------------------+
+000348200903       // ** ¦                                                                ¦
+000349200903       // ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
+000350200903       // ** ¦ executed at program activation.                                ¦
+000351200903       // ** ¦                                                                ¦
+000352200903       // ** +----------------------------------------------------------------+
+000353200903
+000355200903                   exsr calculateRates;
 000397200903
 000398200903                   *Inlr = *On;
 000400200903                   return;
@@ -202,274 +200,279 @@
 001634200903       //*************************************************************
 001635200903
 001636200904       begsr calculateRates;
-001637200903
-001638200904                    //Go backwards depending on the lookBackDays
-001640200904                    if lookBackDays > 0;
-001644200905                         callp backwardDays ( startDate
-001645200905                                             :transactCCY
-001646200905                                             :wLocation
-001647200905                                             :lookBackDays
-001648200905                                             :wRetDay
-001649200905                                            );
-001650200905                        wStartDate = wRetDay;
-001651200903                    else;
-001653200905                        wStartDate = startDate;
-001654200903                    endif;
-001655200903
-001656200903                    histCtr = 1;
-001657200903                    calcCtr = 1;
-001658200903
-001659200905                    dow  wStartDate <= endDate;
-001660200905                         baseRateHistDS(histCtr).historyDate = wStartDate;
-001661200905                         baseRateHistDS(histCtr).appliedRate = getHistRate
-001662200905                                                              (
-001663200905                                                                transactCCY:
-001664200905                                                                baseRateCode:
-001665200905                                                                wStartDate
-001666200905                                                              );
-001667200907                         baseRateHistDS(histCtr).provRateFlg = wProvRateFlg;
-001668200904
-001669200905                         if wStartDate >= StartDate;
-001670200905                              calcRateDS(calcCtr).runDate = wStartDate;
-001671200905
-001672200905                              if (startDate <> endDate) and
-001673200907                                   (wStartDate = endDate) and
-001674200907                                   (includeEndDat = 'N');
-001675200905                                   calcRateDS(calcCtr).daysApplied = 0;
-001676200905                                   calcRateDS(calcCtr).calendarDay = 0;
-001677200905                                   calcRateDS(calcCtr).appliedRate = 0;
-001678200905                                   calcRateDS(calcCtr).effectiRate = 0;
-001679200905                                   calcRateDS(calcCtr).calculaRate = 0;
-001680200905                                   calcRateDS(calcCtr).cumulatRate = 0;
-001681200905                                   calcRateDS(calcCtr).compoundRat = 0;
-001687200905                                   leave;
-001689200905                              endif;
-001690200904
-001691200905                              //***** Get days applied (ni) and calendar days *****//
-001692200907                              select;
-001693200907
-001694200907                                   when weightConv = 1;
-001695200907                                        if calcCtr > 1;
-001696200907                                            calcRateDS(calcCtr -1).daysApplied =
-001697200907                                            calcRateDS(calcCtr).RunDate -
-001698200907                                            calcRateDS(calcCtr-1).RunDate;
-001699200907                                            calcRateDS(calcCtr -1).calendarDay =
-001700200907                                            calcRateDS(calcCtr).RunDate +
-001701200907                                            calcRateDS(calcCtr-1).RunDate;
-001702200907                                        else;
-001703200907                                             calcRateDS(calcCtr).daysApplied
-001704200907                                             = 1;
-001705200907                                             calcRateDS(calcCtr).calendarDay
-001706200907                                             = 1;
-001707200907                                        endif;
-001708200907                                     when weightConv = 2;
-001709200907                                            calcRateDS(calcCtr).daysApplied =
-001710200907                                            baseRateHistDS(calcCtr -
-001711200907                                            (lookBackDays-1)).rundate -
-001713200907                                            baseRateHistDS(calcCtr -
-001714200907                                            lookBackDays).
-001715200907                                            RunDate;
-001720200907                              endsl;
-001721200904
-001722200905                              //***** Get Rate (ri) *****//
-001723200905                              calcRateDS(calcCtr).appliedRate  = baseRateHistDS
-001724200905                              (calcCtr - lookBackDays).appliedRate;
-001725200904
-001726200904
-001727200905                              select;
-001728200905                                   when averagingOpt = 1;
-001729200905                                        //***** Get Effective Rate (ri x ni /N) *****//
-001730200905                                        calcRateDS(calcCtr).effectiRate =
-001731200905                                        calcRateDS(calcCtr).appliedRate /
-001732200905                                        (wCalcBasis  *
-001733200905                                         calcRateDS(calcCtr).daysApplied);
-001734200905
-001735200904
-001736200905                                        //***** Get Calculated Rate *****//
-001737200905                                        calcRateDS(calcCtr).calculaRate = 1  +
-001738200905                                        (calcRateDS(calcCtr).effectiRate/100);
-001739200904
-001740200905                                        //***** Get cumulative rate *****//
-001741200905                                       if calcCtr <= 1;
-001742200905                                           calcRateDS(calcCtr).cumulatRate =
-001743200905                                           calcRateDS(calcCtr).calculaRate;
-001744200905                                       else;
-001745200905                                          calcRateDS(calcCtr).cumulatRate =
-001746200905                                          calcRateDS(calcCtr-1).cumulatRate
-001747200905                                          * calcRateDS(calcCtr).calculaRate;
-001748200905                                       endif;
-001749200904
-001750200904
-001751200905                                       //***** Get Compounded Rate *****//
-001752200905                                       calcRateDS(calcCtr).compoundRat =
-001753200905                                       (calcRateDS(calcCtr).cumulatRate - 1) *
-001754200905                                       (wCalcBasis/calcRateDS(calcCtr).
-001755200905                                         calendarDay
-001756200905                                        * 100);
-001757200905
-001758200905
-001759200905                                   when averagingOpt = 2;
-001760200905
-001761200905                                        //***** Get Effective Rate (ri x ni /N) *****//
-001762200905                                        calcRateDS(calcCtr).effectiRate =
-001763200905                                        calcRateDS(calcCtr).appliedRate /
-001764200905                                        (wCalcBasis  *
-001765200905                                         calcRateDS(calcCtr).daysApplied);
-001766200905
-001767200905
-001768200905                                        //***** Get Calculated Rate *****//
-001769200905                                        calcRateDS(calcCtr).calculaRate = 0;
-001770200905
-001771200905                                        //***** Get cumulative rate *****//
-001772200905                                        calcRateDS(calcCtr).cumulatRate = 0;
-001773200905
-001774200905                                        //***** Get Compounded Rate *****//
-001775200905                                        calcRateDS(calcCtr).compoundRat = 0;
-001776200905
-001777200905                              endsl;
-001778200905                              //increment calculatedDS index
-001779200905                              calcCtr = calcCtr + 1;
-001780200905                         endif;
-001781200904
-001782200905                         wNoDays = 1;
-001783200905                         callp forwardDays  ( wStartDate
-001784200905                                              :wNoDays
-001785200905                                              :wRetDay
-001786200905                                              :transactCCY
-001787200905                                              :wLocation
-001788200905                                             );
-001789200905                         wStartDate = wRetDay;
-001790200904
-001791200905                         //increment historyRateDS
-001792200905                         histCtr = histCtr + 1;
-001793200903                    enddo;
-001794200903       endsr;
-001795200903
-001796200903       //*************************************************************
-001797200903       /EJECT
-001798200903       //*************************************************************
-001799200903       //                                                            *
-001800200903       // inzsr - Program Initialisation routine                     *
-001801200903       //                                                            *
-001802200903       // Called by: Main processing                                 *
-001803200903       //                                                            *
-001804200903       //  Calls: None                                               *
-001805200903       //                                                            *
-001806200903       //*************************************************************
-001807200903
-001808200903       begsr *inzsr;
-001809200905
-001810200905                   clear calcRateDS;
-001811200907                   clear baseRateHistDS;
-001812200907                   clear wLockOutDate;
-001813200907                   clear wLockOutRate;
-001814200907                   provRateFlg = 'N';
-001815200907                   errorCode = *blanks;
-001816200907
-001817200907                   //Determine divisor based on calculation basis passed to this program
-001818200907
-001819200905                   select;
-001820200905
-001821200905                     when calcBasis = 1
-001822200905                             or calcBasis = 4;
-001823200905
-001824200905                          wCalcBasis = 365;
-001825200905
-001826200905                     when calcBasis = 2
-001827200905                             or calcBasis = 3
-001828200905                             or calcBasis = 5;
-001829200905
-001830200905                          wCalcBasis = 360;
-001831200905
-001832200905                     when calcBasis = 6;
-001833200905
-001834200905                          wCalcBasis = 366;
-001835200905
-001836200905                   endsl;
-001837200907
-001838200907                   // If lock out days parameter is passed, determine the first day of lockout
-001839200907
-001840200907                   if lockOutDays <> 0;
-001841200907                        callp backwardDays (  endDate
-001842200907                                             :transactCCY
-001843200907                                             :wLocation
-001844200907                                             :lockOutDays
-001845200907                                             :wRetDay
-001846200907                                            );
-001847200907
-001848200907                        wLockOutDate = wRetDay;
-001849200907
-001850200907                   endif;
-001851200907
-001852200903       endsr;
-001853200903
-001854200903       //*************************************************************
-001855200903       /EJECT
-001856200903       //*************************************************************
-001857200903       //                                                            *
-001858200903       //   *pssr  - Program Error Processing Subroutine.            *
-001859200903       //                                                            *
-001860200903       //   Called By: Main Processing                               *
-001861200903       //                                                            *
-001862200903       //*************************************************************
-001863200903
-001864200903       begsr *pssr;
-001865200903                   *inu7 = *on;
-001866200903                   *inu8 = *on;
-001867200903                   *Inlr = *on;
-001868200903                   dump;
-001869200903                   return;
-001870200903       endsr;
-001871200903
-001872200903      /end-free
-001873200903
-001874200903      *****************************************************************
-001875200903      /EJECT
-001876200903      *****************************************************************
-001877200903      *                                                               *
-001878200903      *  getHistRate - Get rates from history file                    *
-001879200903      *                                                               *
-001880200903      *****************************************************************
-001881200903
-001882200903     P getHistRate     B
-001883200903     D getHistRate     PI            11P 7
-001884200903     D    pCCY                        3a
-001885200904     D    pBRC                        2s 0
-001886200903     D    pHDT                        5s 0
-001887200903     D   retVal        S             11P 7
-001888200905
-001889200903     C                   EVAL      RetVal = *ZEROS
-001890200903     C     KHIST         KLIST
-001891200904     C                   KFLD                    pCCY
-001892200904     C                   KFLD                    pBRC
-001893200904     C                   KFLD                    pHDT
-001894200907
-001895200907     C                   IF        lockOutDays <> 0
-001896200907     C                   IF        pHDT >= wLockOutDate
-001897200907     C                   IF        wLockOutRate = 0
-001898200907     C                   EVAL      wLockOutRate =
-001899200907     C                             baseRateHistDS(histCtr -1).AppliedRate
-001900200907     C                   ELSE
-001901200907     C                   EVAL      RetVal = wLockOutRate
-001902200907     C                   RETURN    RetVal
-001903200907     C                   ENDIF
-001904200907     C                   ENDIF
-001905200907     C                   ENDIF
-001906200905      *
-001907200904     C     KHIST         CHAIN (N) SDBSHSL1                           55
-001908200903     C     *IN55         IFEQ      *OFF
-001909200903     C                   EVAL      RetVal =  G0CBSR
-001910200907     C                   EVAL      wProvRateFlg = 'N'
-001911200904     C                   ELSE
-001912200904     C     KHIST         SETLL     SDBSHSL1                           55
-001913200904     C                   READP (N) SDBSHSL1                               55
-001914200904     C     *IN55         IFEQ      *OFF
-001915200904     C                   EVAL      RetVal =  G0CBSR
-001916200907     C                   EVAL      wProvRateFlg = 'Y'
-001917200907     C                   EVAL      provRateFlg = 'Y'
-001918200904     C                   ENDIF
-001919200903     C                   ENDIF
-001920200905      *
-001921200903     C                   RETURN    RetVal
-001922200903     P   getHistRate   E
-001923200903
+001637200910
+001680200910                    ctr = 1;
+001681200903
+001682200910                    dow  wStartDate <= wEndDate;
+001683200910
+001684200911                         bsrhDS(ctr).historyDate = wStartDate;
+001685200910                         bsrhDS(ctr).SOFR_Rate   =
+001686200910                                      getHistRate(
+001687200910                                                  transactCCY:
+001688200910                                                  baseRateCode:
+001689200910                                                  wStartDate
+001690200910                                                  );
+001691200911                         bsrhDS(ctr).provRateFlg = wProvRateFlg;
+001692200910
+001693200910                         wNoDays = 1;
+001694200910                         zdayno = wStartDate;
+001695200910                         zccy = transactCCY;
+001696200910                         zloc = *blanks;
+001697200910                         znrdys = wNoDays;
+001698200910                         zdynbr = 0;
+001699200910                         exsr zfwdt;
+001700200910                         wStartDate = zdynbr;
+001701200910
+001702200910                         //increment historyRateDS
+001703200910                         ctr = ctr + 1;
+001704200910                    enddo;
+001705200910
+001706200910                    for i = 1 to ctr;
+001707200910                         if bsrhDS(i).historyDate >= startDate;
+001709200910
+001710200911                              if  bsrhDS(i).historyDate < wEndDate;
+001715200911                                   //***** Get Rate (ri) *****//
+001716200911                                   if wlockOutDate <= bsrhDS(i).historyDate;
+001717200911                                        bsrhDS(i).appliedRate  = bsrhDS(i-1).
+001718200911                                                  appliedRate;
+001719200911                                   else;
+001720200911                                        bsrhDS(i).appliedRate  =
+001721200911                                        bsrhDS(i-lookBackDays).
+001722200911                                        SOFR_Rate;
+001723200911                                   endif;
+001724200911                              else;
+001725200911                                 iter;
+001726200911                              endif;
+001727200910
+001739200910
+001740200910                              //***** Get days applied (ni) and calendar days *****//
+001741200910                              select;
+001742200910
+001743200910                                   when weightConv = '1';
+001744200910                                            bsrhDS(i).daysApplied =
+001745200910                                            bsrhDS(i + 1).Historydate -
+001746200910                                            bsrhDS(i).HistoryDate;
+001751200910                                    when weightConv = '2';
+001752200910                                            bsrhDS(i).daysApplied =
+001753200910                                            bsrhDS(i -
+001754200910                                            lookBackDays-1).historydate -
+001755200910                                            bsrhDS(i -
+001756200910                                            lookBackDays).
+001757200910                                            historydate;
+001758200910                              endsl;
+001759200910
+001760200910                              //***** calendar days *****//
+001761200910                              if startDate = bsrhDS(i).
+001762200910                                   historyDate;
+001763200910                                   bsrhDS(i).calendarDay =
+001764200910                                   bsrhDS(i).daysApplied;
+001765200910                               else;
+001766200910                                   bsrhDS(i).calendarDay =
+001767200910                                   bsrhDS(i).daysApplied +
+001768200910                                   bsrhDS(i-1).CalendarDay;
+001769200910                               endif;
+001770200910
+001771200910
+001772200910                               //***** Get Effective Rate (ri x ni /N) *****//
+001773200910                               bsrhDS(i).effectiRate =
+001774200910                               bsrhDS(i).appliedRate *
+001775200910                               bsrhDS(i).daysApplied/wCalcBasis;
+001776200910                               select;
+001777200910                                   when averagingOpt = 1;
+001781200910
+001782200910                                        //***** Get Calculated Rate *****//
+001783200910                                        bsrhDS(i).calculaRate = 1  +
+001784200910                                        (bsrhDS(i).effectiRate/100);
+001785200910
+001786200910                                        //***** Get cumulative rate *****//
+001787200910                                       if startDate = bsrhDS(i).historyDate;
+001788200910                                           bsrhDS(i).cumulatRate =
+001789200910                                           bsrhDS(i).calculaRate;
+001790200910                                       else;
+001791200910                                          bsrhDS(i).cumulatRate =
+001792200910                                          bsrhDS(i - 1).cumulatRate
+001793200910                                          * bsrhDS(i).calculaRate;
+001794200910                                       endif;
+001795200910
+001797200910                                       //***** Get Compounded Rate *****//
+001798200910                                       bsrhDS(i).compoundRat =
+001799200911                                       ((bsrhDS(i).cumulatRate - 1)*
+001800200911                                        wCalcBasis)/bsrhDS(i).calendarDay * 100;
+001804200910
+001805200910                                   when averagingOpt = 2;
+001806200910
+001814200910                                        //***** Get Calculated Rate *****//
+001815200910                                        bsrhDS(i).calculaRate = 0;
+001816200910
+001817200910                                        //***** Get cumulative rate *****//
+001818200910                                        bsrhDS(i).cumulatRate = 0;
+001819200910
+001820200910                                        //***** Get Compounded Rate *****//
+001821200910                                        bsrhDS(i).compoundRat = 0;
+001822200910
+001823200910                               endsl;
+001824200910                         endif;
+001825200910
+001826200910                    endfor;
+001827200910
+001838200903       endsr;
+001839200903
+001840200903       //*************************************************************
+001841200903       /EJECT
+001842200903       //*************************************************************
+001843200903       //                                                            *
+001844200903       // inzsr - Program Initialisation routine                     *
+001845200903       //                                                            *
+001846200903       // Called by: Main processing                                 *
+001847200903       //                                                            *
+001848200903       //  Calls: None                                               *
+001849200903       //                                                            *
+001850200903       //*************************************************************
+001851200903
+001852200903       begsr *inzsr;
+001853200905
+001855200909                   clear bsrhDS;
+001856200907                   clear wLockOutDate;
+001857200907                   provRateFlg = 'N';
+001858200907                   errorCode = *blanks;
+001859200910
+001860200910
+001861200910                   pOption = '*FIRST';
+001862200910                   pReturnCode = *blanks;
+001863200910                   callp getSDBANK(
+001864200910                                  pReturnCode
+001865200910                                : pOption
+001866200910                                : pDSFDY
+001867200910                               );
+001868200910                   sdbank= pDSFDY;
+001869200910
+001870200910                   // If lock out days parameter is passed, determine the first day of lockout
+001871200910
+001872200910                   if lockOutDays <> 0;
+001873200910                         zdayno = endDate;
+001874200910                         zccy = transactCCY;
+001875200910                         zloc = *blanks;
+001876200910                         znrdys = lockOutDays;
+001877200910                         zdynbr = 0;
+001878200910                         exsr zbkdt;
+001879200910                         wLockOutDate = zdynbr;
+001880200910                   else;
+001881200910                        wLockOutDate = endDate;
+001882200910                   endif;
+001883200910
+001884200910                   if includeEndDat = 'Y';
+001885200910                         wNoDays = 1;
+001886200910                         zdayno = endDate;
+001887200910                         zccy = transactCCY;
+001888200910                         zloc = *blanks;
+001889200910                         znrdys = wNoDays;
+001890200910                         zdynbr = 0;
+001891200910                         exsr zfwdt;
+001892200910                         wEndDate = zdynbr;
+001893200910                   else;
+001894200910                        wEndDate = EndDate;
+001895200910                   endif;
+001896200910
+001897200910                    //Go backwards depending on the lookBackDays
+001898200910                    if lookBackDays <> 0;
+001899200910                         zdayno = startDate;
+001900200910                         zccy = transactCCY;
+001901200910                         zloc = *blanks;
+001902200910                         znrdys = lookBackDays;
+001903200910                         zdynbr = 0;
+001904200910                         exsr zbkdt;
+001905200910                         wStartDate = zdynbr;
+001906200910                    else;
+001907200910                        wStartDate = startDate;
+001908200910                    endif;
+001909200910
+001910200907
+001911200907                   //Determine divisor based on calculation basis passed to this program
+001912200907
+001913200905                   select;
+001914200905
+001915200905                     when calcBasis = 1
+001916200905                             or calcBasis = 4;
+001917200905
+001918200905                          wCalcBasis = 365;
+001919200905
+001920200905                     when calcBasis = 2
+001921200905                             or calcBasis = 3
+001922200905                             or calcBasis = 5;
+001923200905
+001924200905                          wCalcBasis = 360;
+001925200905
+001926200905                     when calcBasis = 6;
+001927200905
+001928200905                          wCalcBasis = 366;
+001929200905
+001930200905                   endsl;
+001931200907
+001932200907
+001933200903       endsr;
+001934200903
+001935200903       //*************************************************************
+001936200903       /EJECT
+001937200903       //*************************************************************
+001938200903       //                                                            *
+001939200903       //   *pssr  - Program Error Processing Subroutine.            *
+001940200903       //                                                            *
+001941200903       //   Called By: Main Processing                               *
+001942200903       //                                                            *
+001943200903       //*************************************************************
+001944200903
+001945200903       begsr *pssr;
+001946200903                   *inu7 = *on;
+001947200903                   *inu8 = *on;
+001948200903                   *Inlr = *on;
+001949200903                   dump;
+001950200903                   return;
+001951200903       endsr;
+001952200903
+001953200903      /end-free
+001954200910
+001955200910     C/COPY ZSRSRC,ZFWDT_ILE
+001956200910     C/COPY ZSRSRC,ZBKDT_ILE
+001957200910     C/COPY ZSRSRC,ZACCHLE
+001958200910
+001959200903      *****************************************************************
+001960200903      /EJECT
+001961200903      *****************************************************************
+001962200903      *                                                               *
+001963200903      *  getHistRate - Get rates from history file                    *
+001964200903      *                                                               *
+001965200903      *****************************************************************
+001966200903
+001967200903     P getHistRate     B
+001968200903     D getHistRate     PI            11P 7
+001969200903     D    pCCY                        3a
+001970200904     D    pBRC                        2s 0
+001971200903     D    pHDT                        5s 0
+001972200903     D   retVal        S             11P 7
+001973200905
+001974200903     C                   EVAL      RetVal = *ZEROS
+001975200903     C     KHIST         KLIST
+001976200904     C                   KFLD                    pCCY
+001977200910     C                   KFLD                    pBRC
+001978200904     C                   KFLD                    pHDT
+001979200905      *
+001980200904     C     KHIST         CHAIN (N) SDBSHSL1                           55
+001981200903     C     *IN55         IFEQ      *OFF
+001982200903     C                   EVAL      RetVal =  G0CBSR
+001983200907     C                   EVAL      wProvRateFlg = 'N'
+001984200904     C                   ELSE
+001985200904     C     KHIST         SETLL     SDBSHSL1                           55
+001986200904     C                   READP (N) SDBSHSL1                               55
+001987200904     C     *IN55         IFEQ      *OFF
+001988200904     C                   EVAL      RetVal =  G0CBSR
+001989200910     C     pHDT          IFGT      BJRDNB
+001990200907     C                   EVAL      wProvRateFlg = 'Y'
+001991200907     C                   EVAL      provRateFlg = 'Y'
+001992200904     C                   ENDIF
+001993200910     C                   ENDIF
+001994200903     C                   ENDIF
+001995200905      *
+001996200903     C                   RETURN    RetVal
+001997200903     P   getHistRate   E
+001998200910
+001999200903

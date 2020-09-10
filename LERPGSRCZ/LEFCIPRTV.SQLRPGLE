@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD036924           Date 06Nov19               *
-      *  Prev Amend No. AR674226           Date 04Dec19               *
+      *  Last Amend No. MD039655           Date 03Sep19               *
+      *  Prev Amend No. MD036924           Date 06Nov19               *
+      *                 AR674226           Date 04Dec19               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD026120           Date 13May14               *
@@ -69,6 +70,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039655 - Facility cannot be rejected.                      *
+      *             Pattern fix from MD-29208 and MD-34908.           *
+      *           - Applied for MD052591                              *
       *  MD036924 - Cannot enquire on certain screen when customer is *
       *             closed. Added checking if customer is closed      *
       *             during validation of customer.                    *
@@ -1500,6 +1504,19 @@
      C                   CALL      'ZVACTU'
      C                   PARM      DDACTN        @ZACTN            1
      C                   PARM                    @ERR              1 0
+      *                                                                                     MD039655
+      ** Check for reject permission                                                        MD039655
+      *                                                                                     MD039655
+     C     @ACTRV        IFNE      *BLANK                                                   MD039655
+     C     DDACTN        ANDNE     'X'                                                      MD039655
+     C     @ERR          ANDNE     0                                                        MD039655
+      *                                                                                     MD039655
+     C                   MOVE      @ACTRV        @ZACTN                                     MD039655
+      *                                                                                     MD039655
+     C                   CALL      'ZVACTU'                                                 MD039655
+     C                   PARM                    @ZACTN                                     MD039655
+     C                   PARM                    @ERR                                       MD039655
+     C                   ENDIF                                                              MD039655
       *
      C     @ERR          IFNE      *ZERO
      C                   MOVEL     'N'           DDACTNOK
@@ -1529,6 +1546,22 @@
      C                   PARM      DDACTN        @ZACTN            1
      C                   PARM      FC_BRCA       @ZBR              3
      C                   PARM                    @ERR              1 0
+      *                                                                                     MD039655
+      ** Check for reject permission                                                        MD039655
+      *                                                                                     MD039655
+     C     @ACTRV        IFNE      *BLANK                                                   MD039655
+     C     DDACTN        ANDNE     'X'                                                      MD039655
+     C     @ERR          ANDNE     0                                                        MD039655
+      *                                                                                     MD039655
+     C                   MOVE      @ACTRV        @ZACTN                                     MD039655
+      *                                                                                     MD039655
+     C                   CALL      'ZVACTBU'                                                MD039655
+     C                   PARM                    @ZACTN                                     MD039655
+     C                   PARM                    @ZBR                                       MD039655
+     C                   PARM                    @ERR                                       MD039655
+      *                                                                                     MD039655
+     C                   ENDIF                                                              MD039655
+      *                                                                                     MD039655
       *
      C     @ERR          IFEQ      1
      C                   MOVEL     'N'           DDACTNOK
@@ -1929,6 +1962,10 @@
      C                   PARM                    DDFCNO            2
       * (Midas) Branch
      C                   PARM                    DDBRCA            3
+                                                                                            MD039655
+      ** Reject action                                                                      MD039655
+                                                                                            MD039655
+     C                   PARM                    @ACTRV            1                        MD039655
      C/COPY WNCPYSRC,LEH00353
  
       * OUTPUTS

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE168             Date 26Feb18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD039655           Date 03Sep19               *
+      *  Prev Amend No. CLE168             Date 26Feb18               *
+      *                 MD046248           Date 27Oct17               *
       *                 BUG6689            Date 13Aug12               *
       *                 LLN022A            Date 13Aug12               *
       *                 LLN022             Date 13Aug12               *
@@ -52,6 +53,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039655 - Facility cannot be rejected.                      *
+      *             Pattern fix from MD-29208 and MD-34908.           *
+      *           - Applied for MD052591.                             *
       *  CLE168 - Allow Debit of Blocked Account (Recompile)          *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG6689 - Program should execute the confirmation screen     *
@@ -1173,6 +1177,10 @@
      C                   PARM                    F1XUSR           10
      C                   PARM                    F1AUSR           10
      C                   PARM                    ExtData         500
+                                                                                            MD039655
+      ** Reject action                                                                      MD039655
+                                                                                            MD039655
+     C                   PARM      *BLANK        @ACTRV                                     MD039655
 
       * OUTPUTS
      C                   PARM                    LEEFCIP1
@@ -1363,6 +1371,10 @@
      C                   PARM                    CSC011            1
       * CEU013
      C                   PARM                    CEU013            1
+                                                                                            MD039655
+      ** Reject Action Code                                                                 MD039655
+                                                                                            MD039655
+     C                   PARM      *BLANK        @ACTRV                                     MD039655
 
       * OUTPUTS
       * Field OK flags (DS) from/to caller
@@ -1462,6 +1474,7 @@
      C                   PARM                    DDFCNO            2
       * (Midas) Branch
      C                   PARM                    DDBRCA            3
+     C                   PARM      *BLANK        @ACTRV            1                        MD039655
      C/COPY WNCPYSRC,LEH00357
       *
       ***  Outputs

@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD030856           Date 06Nov19               *
-      *  Prev Amend No. MD054354           Date 23Oct19               *
+      *  Last Amend No. MD039655           Date 14Aug20               *
+      *  Prev Amend No. MD030856           Date 06Nov19               *
+      *                 MD054354           Date 23Oct19               *
       *                 MD055446           Date 04Apr20               *
       *                 MD054696           Date 29Oct19               *
       *                 MD054538           Date 08Oct19               *
@@ -225,6 +226,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039655 - Facility cannot be rejected.                      *
+      *             Pattern fix from MD-29208 and MD-34908.           *
       *  MD030856 - Introduced reject processing to FEEM              *
       *  MD054354 - Settlement of fee accrual for prior period for    *
       *             backdated notional change                         *
@@ -2470,6 +2473,11 @@ RGC  D RPIF4LN         S              4  0                                      
      C     FCEXLn        SUBST     BUFFER:Bfp    ExtData                                    MD044880
      C                   ADD       FCEXLn        Bfp                                        MD044880
                                                                                             MD044880
+                                                                                            MD039655
+      ** Restore Authorise Reversal Action Code                                             MD039655
+     C     1             SUBST     BUFFER:Bfp    @ACTRV                                     MD039655
+     C                   ADD       1             Bfp                                        MD039655
+                                                                                            MD039655
      C     FCRXLn        SUBST     BUFFER:Bfp    RegData                                    BUG10093
      C                   ADD       FCRXLn        Bfp                                        BUG10093
                                                                                             BUG10093
@@ -2501,6 +2509,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    APIRetc
      C                   PARM                    DDPATH                                     BUG13174
      C                   PARM                    CADetails                                    CLE147
+     C                   PARM                    @ACTRV                                     MD039655
 
       * Loan Input
 

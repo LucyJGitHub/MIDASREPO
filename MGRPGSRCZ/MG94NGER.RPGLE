@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CMG008             Date 20Feb20               *
-      *  Prev Amend No. MD054605           Date 17Oct19               *
+      *  Last Amend No. MD050727           Date 21Jan17               *
+      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *                 MD054605           Date 17Oct19               *
       *                 MD046248           Date 27Oct17               *
       *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -46,6 +47,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050727 - Emergency fix to enable alphanumeric batches      *
+      *             to be processed. Please see SFDC 01793714         *
       *  CMG008 - SWIFT Character Translation Table                   *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD046248 - Finastra Rebranding                               *
@@ -635,7 +638,8 @@
       *
       ** Batch Transaction
       *
-     C     '0123456789'  CHECK     GLSPOS        Wx
+     C*****'0123456789'**CHECK     GLSPOS        Wx                                         MD050727
+     C     '0123456789'  CHECK     GLSPOS:4      Wx                                         MD050727
       *
       ** Source of Posting contains 6 numeric digits (batch number +
       ** batch item)

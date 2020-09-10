@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR374612           Date 21Mar15              */
-/*       Prev Amend No. MD021975B          Date 10Dec14              */
+/*       Last Amend No. EML110             Date 20Jan20              */
+/*       Prev Amend No. AR374612           Date 21Mar15              */
+/*                      MD021975B          Date 10Dec14              */
 /*                      MD021975           Date 27Nov13              */
 /*                      MD054045           Date 27Aug19              */
 /*                      MD046248           Date 27Oct17              */
@@ -132,6 +133,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       EML110 - Account Balance Pooling. Upgrade to FBM 2.1        */
+/*                Amend core hook SCC07005                           */
 /*       AR374612 - COB Re-Open option fails due to problem restoring*/
 /*                  file members in DBIC which cannot be found in    */
 /*                  some files in DMLIB. Fix is to use the correct   */
@@ -618,7 +621,7 @@
 /*********   CHGVAR     VAR(&GLOBID) VALUE(&SVAL1) */                     /*MD021975*/ /*MD021975B*/
 /*********   CHGVAR     VAR(&GMLIB) VALUE(&GLOBID *CAT 'GMLIB   ') */     /*MD021975*/ /*MD021975B*/
                                                                                         /*MD021975*/
-/*********   ENDDO */                                                     /*MD021975*/ /*MD021975B*/                          
+/*********   ENDDO */                                                     /*MD021975*/ /*MD021975B*/
 /*                                                                                        /*CSC018*/
 /***Check*for*Switchable*feature*CSC018*(Journaling*options*for*high***         */ /*CSC018 CCB020*/
 /** availability)******************************************************         */ /*CSC018 CCB020*/
@@ -1390,7 +1393,7 @@ CHKCMPLFL:                                                                      
                  RTVOBJD    OBJ(GPBSRQPD) OBJTYPE(*FILE) RTNLIB(&GMLIB) +
                               /*MD021975B*/
                  RSTOBJ     OBJ(GPBSRQPD) SAVLIB(&GMLIB) DEV(*SAVF) +
-                              SAVF(&LIB2/DBICGM) OUTPUT(*PRINT) /*MD021975B*/                              
+                              SAVF(&LIB2/DBICGM) OUTPUT(*PRINT) /*MD021975B*/
                                                                                           /*CBF002*/
 /**********  IF         COND(&CRE026 *EQ 'Y') THEN(DO)             */            /*BUG12169 CCB022*/
 /*******************************************************************/           /*BUG14179A CCB022*/

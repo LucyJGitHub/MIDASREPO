@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD034915           Date 26Aug20               *
-      *  Prev Amend No. MD054707           Date 06Nov19               *
+      *  Last Amend No. MD054876           Date 26Aug20               *
+      *  Prev Amend No. MD034915           Date 26Aug20               *
+      *                 MD054707           Date 06Nov19               *
       *                 CER050             Date 16Jun19               *
       *                 CLE071             Date 18Jul18               *
       *                 CLE051             Date 02Mar18               *
@@ -69,6 +70,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054876 - Negative funding rate is not allowed in Lending.  *
+      *             Enhance fix MD034915, populate WFSRP after call   *
+      *             to VALAMT.                                        *
       *  MD034915 - Negative funding rate is not allowed in Lending.  *
       *             Allow negative input in Funding rate/spread.      *
       *             Use ZA0841 for validation instead of ZALIGN.      *
@@ -2059,6 +2063,7 @@
      C                   MOVE      DDFRSP        @@ALPH                                     MD034915
      C                   MOVE      'N'           @@MTID            1                        MD034915
      C                   EXSR      VALAMT                                                   MD034915
+     C                   MOVE      @@AMT         WFSRP                                      MD054876
       *                                                                                     MD034915
      C*****@RTCD         IFNE      *BLANKS                                                  MD034915
      C     @@ERCD        IFNE      0                                                        MD034915

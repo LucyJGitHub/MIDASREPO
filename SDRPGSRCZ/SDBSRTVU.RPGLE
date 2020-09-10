@@ -246,27 +246,6 @@
                                                                                              BUG3124
      D #1TESTN         S              1A                                                     BUG3124
 
-     D PSysVal01       S             20A                                                      CSD103
-     D PCurSet01       S            200A                                                      CSD103
-     D PSysVal02       S             20A                                                      CSD103
-     D PCurSet02       S            200A                                                      CSD103
-     D PSysVal03       S             20A                                                      CSD103
-     D PCurSet03       S            200A                                                      CSD103
-     D PSysVal04       S             20A                                                      CSD103
-     D PCurSet04       S            200A                                                      CSD103
-     D PSysVal05       S             20A                                                      CSD103
-     D PCurSet05       S            200A                                                      CSD103
-     D PSysVal06       S             20A                                                      CSD103
-     D PCurSet06       S            200A                                                      CSD103
-     D PSysVal07       S             20A                                                      CSD103
-     D PCurSet07       S            200A                                                      CSD103
-     D PSysVal08       S             20A                                                      CSD103
-     D PCurSet08       S            200A                                                      CSD103
-     D PSysVal09       S             20A                                                      CSD103
-     D PCurSet09       S            200A                                                      CSD103
-     D PSysVal10       S             20A                                                      CSD103
-     D PCurSet10       S            200A                                                      CSD103
-                                                                                              CSD103
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -387,15 +366,6 @@
       * Transaction information
      C                   PARM                    BaseR500
      C                   PARM                    ExtData500
-     C                   PARM                    DDBLRT            1                          CSD103
-     C                   PARM                    DDLBDY            2                          CSD103
-     C                   PARM                    DDLODY            2                          CSD103
-     C                   PARM                    DDPDLY            2                          CSD103
-     C                   PARM                    DDBADJ            7                          CSD103
-     C                   PARM                    DDAVOP            1                          CSD103
-     C                   PARM                    DDBRAC            2                          CSD103
-     C                   PARM                    DDWGHT            1                          CSD103
-     C                   PARM                    DDLBAC            2                          CSD103
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
@@ -409,6 +379,15 @@
      C                   PARM                    APIRetc           1
      C                   PARM                    @TimeStamp       26                         BUG4469
      C                   PARM                    AAuth             1                        BUG22152
+     C                   PARM                    DDBLRT            1                          CSD103
+     C                   PARM                    DDLBDY            2                          CSD103
+     C                   PARM                    DDLODY            2                          CSD103
+     C                   PARM                    DDPDLY            2                          CSD103
+     C                   PARM                    DDBADJ           14                          CSD103
+     C                   PARM                    DDAVOP            1                          CSD103
+     C                   PARM                    DDBRAC            2                          CSD103
+     C                   PARM                    DDWGHT            1                          CSD103
+     C                   PARM                    DDLBAC            2                          CSD103
 
       * Set up the names of the message files from which the message handler
       * will get the messages
@@ -606,36 +585,35 @@
      C                   EndIf                                                                CSC022
                                                                                               CSC022
       ** Check for Alpha Num Base Rate Code system value                                      CSD103
-     C                   CALLB     'AOSVALR0'
+     C                   CALLB     'AOSVALR0'                                                 CSD103
      C                   PARM      *BLANKS       @RTCD                                        CSD103
-     C                   PARM      AlphaBSRC     PSysVal01                                    CSD103
-     C                   PARM      *BLANKS       PCurSet01                                    CSD103
-     C                   PARM      *BLANKS       PSysVal02                                    CSD103
-     C                   PARM      *BLANKS       PCurSet02                                    CSD103
-     C                   PARM      *BLANKS       PSysVal03                                    CSD103
-     C                   PARM      *BLANKS       PCurSet03                                    CSD103
-     C                   PARM      *BLANKS       PSysVal04                                    CSD103
-     C                   PARM      *BLANKS       PCurSet04                                    CSD103
-     C                   PARM      *BLANKS       PSysVal05                                    CSD103
-     C                   PARM      *BLANKS       PCurSet05                                    CSD103
-     C                   PARM      *BLANKS       PSysVal06                                    CSD103
-     C                   PARM      *BLANKS       PCurSet06                                    CSD103
-     C                   PARM      *BLANKS       PSysVal07                                    CSD103
-     C                   PARM      *BLANKS       PCurSet07                                    CSD103
-     C                   PARM      *BLANKS       PSysVal08                                    CSD103
-     C                   PARM      *BLANKS       PCurSet08                                    CSD103
-     C                   PARM      *BLANKS       PSysVal09                                    CSD103
-     C                   PARM      *BLANKS       PCurSet09                                    CSD103
-     C                   PARM      *BLANKS       PSysVal10                                    CSD103
-     C                   PARM      *BLANKS       PCurSet10                                    CSD103
+     C                   PARM      AlphaBSRC     SVAL1           200                          CSD103
+     C                   PARM      *BLANKS       SVALK2           20                          CSD103
+     C                   PARM      *BLANKS       SVAL2           200                          CSD103
+     C                   PARM      *BLANKS       SVALK3           20                          CSD103
+     C                   PARM      *BLANKS       SVAL3           200                          CSD103
+     C                   PARM      *BLANKS       SVALK4           20                          CSD103
+     C                   PARM      *BLANKS       SVAL4           200                          CSD103
+     C                   PARM      *BLANKS       SVALK5           20                          CSD103
+     C                   PARM      *BLANKS       SVAL5           200                          CSD103
+     C                   PARM      *BLANKS       SVALK6           20                          CSD103
+     C                   PARM      *BLANKS       SVAL6           200                          CSD103
+     C                   PARM      *BLANKS       SVALK7           20                          CSD103
+     C                   PARM      *BLANKS       SVAL7           200                          CSD103
+     C                   PARM      *BLANKS       SVALK8           20                          CSD103
+     C                   PARM      *BLANKS       SVAL8           200                          CSD103
+     C                   PARM      *BLANKS       SVALK9           20                          CSD103
+     C                   PARM      *BLANKS       SVAL9           200                          CSD103
+     C                   PARM      *BLANKS       SVALK0           20                          CSD103
+     C                   PARM      *BLANKS       SVAL10          200                          CSD103
                                                                                               CSD103
-     C                   If        @RTCD <> *Blanks                                           CSD103
-     C                   Eval      DBFile = 'SDSVALPD'                                        CSD103
-     C                   Eval      DBase = 906                                                CSD103
-     C                   Eval      DBKey = '*KEY    '                                         CSD103
-     C                   ExSR      *PSSR                                                      CSD103
-     C                   EndIf                                                                CSD103
-     C                   MOVEL     PCurSet01     AlphaCode         1                          CSD103
+     C                   IF        @RTCD <> *BLANKS                                           CSD103
+     C                   EVAL      DBFILE = 'SDSVALPD'                                        CSD103
+     C                   EVAL      DBASE = 906                                                CSD103
+     C                   EVAL      DBKEY = '*KEY    '                                         CSD103
+     C                   EXSR      *PSSR                                                      CSD103
+     C                   ENDIF                                                                CSD103
+     C                   MOVEL     SVAL1         AlphaCode         1                          CSD103
       * Key list
      C     SDBSRT        KLIST
      C                   KFLD                    DDCYCD
@@ -822,6 +800,11 @@
 
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx
+
+      * Warning fields/message IDs/message data (arrays) from/to caller
+     C                   PARM                    WFldNamArr
+     C                   PARM                    WMsgIDArr
+     C                   PARM                    WMsgDtaArr
                                                                                               CSD103
       * Backward-Looking Rate Fields                                                          CSD103
      C                   PARM                    DDBLRT                                       CSD103
@@ -833,11 +816,6 @@
      C                   PARM                    DDBRAC                                       CSD103
      C                   PARM                    DDWGHT                                       CSD103
      C                   PARM                    DDLBAC                                       CSD103
-
-      * Warning fields/message IDs/message data (arrays) from/to caller
-     C                   PARM                    WFldNamArr
-     C                   PARM                    WMsgIDArr
-     C                   PARM                    WMsgDtaArr
 
      C                   ENDSR
       *****************************************************************

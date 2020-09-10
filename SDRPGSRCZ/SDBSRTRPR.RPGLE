@@ -721,6 +721,16 @@
      C                   PARM                    ISDAFlag          1
      C                   PARM      'N'           @HDTFD            1
      C                   PARM      'N'           CLRSCRN
+      * Backward-Looking Rate Fields                                                          CSD103
+     C                   PARM                    DDBLRT            1                          CSD103
+     C                   PARM                    DDLBDY            2                          CSD103
+     C                   PARM                    DDLODY            2                          CSD103
+     C                   PARM                    DDPDLY            2                          CSD103
+     C                   PARM                    DDBADJ           14                          CSD103
+     C                   PARM                    DDAVOP            1                          CSD103
+     C                   PARM                    DDBRAC            2                          CSD103
+     C                   PARM                    DDWGHT            1                          CSD103
+     C                   PARM                    DDLBAC            2                          CSD103
       *
       * RESET ERRORS ....
       *
@@ -823,6 +833,15 @@
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIdArr
      C                   PARM                    WMsgDtaArr
+     C                   PARM                    DDBLRT            1                          CSD103
+     C                   PARM                    DDLBDY            2                          CSD103
+     C                   PARM                    DDLODY            2                          CSD103
+     C                   PARM                    DDPDLY            2                          CSD103
+     C                   PARM                    DDBADJ           14                          CSD103
+     C                   PARM                    DDAVOP            1                          CSD103
+     C                   PARM                    DDBRAC            2                          CSD103
+     C                   PARM                    DDWGHT            1                          CSD103
+     C                   PARM                    DDLBAC            2                          CSD103
       *
       * If errors returned
      C     Idx           IFNE      0
@@ -997,6 +1016,15 @@
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIdArr
      C                   PARM                    WMsgDtaArr
+     C                   PARM                    DDBLRT            1                          CSD103
+     C                   PARM                    DDLBDY            2                          CSD103
+     C                   PARM                    DDLODY            2                          CSD103
+     C                   PARM                    DDPDLY            2                          CSD103
+     C                   PARM                    DDBADJ           14                          CSD103
+     C                   PARM                    DDAVOP            1                          CSD103
+     C                   PARM                    DDBRAC            2                          CSD103
+     C                   PARM                    DDWGHT            1                          CSD103
+     C                   PARM                    DDLBAC            2                          CSD103
       *
       * If transaction is valid output message 'Press enter to accept'
       *
@@ -1054,6 +1082,16 @@
      C                   PARM                    ISDAFlag          1
      C                   PARM      'N'           @HDTFD            1
      C                   PARM      'N'           CLRSCRN
+      * Backward-Looking Rate Fields                                                          CSD103
+     C                   PARM                    DDBLRT            1                          CSD103
+     C                   PARM                    DDLBDY            2                          CSD103
+     C                   PARM                    DDLODY            2                          CSD103
+     C                   PARM                    DDPDLY            2                          CSD103
+     C                   PARM                    DDBADJ           14                          CSD103
+     C                   PARM                    DDAVOP            1                          CSD103
+     C                   PARM                    DDBRAC            2                          CSD103
+     C                   PARM                    DDWGHT            1                          CSD103
+     C                   PARM                    DDLBAC            2                          CSD103
       *
       * RESET ERRORS ....
       *

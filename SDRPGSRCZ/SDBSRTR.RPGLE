@@ -161,7 +161,16 @@
      C                   MOVE      BATMST        @TimeStamp       26                         BUG4469
      C                   EVAL      Buffer = BasRScnfmt
      C                                      + @TimeStamp                                     BUG4469
- 
+     C                                      + DDBLRT                                          CSD103
+     C                                      + DDLBDY                                          CSD103
+     C                                      + DDLODY                                          CSD103
+     C                                      + DDPDLY                                          CSD103
+     C                                      + DDBADJ                                          CSD103
+     C                                      + DDAVOP                                          CSD103
+     C                                      + DDBRAC                                          CSD103
+     C                                      + DDWGHT                                          CSD103
+     C                                      + DDLBAC                                          CSD103
+
      C                   SETON                                        LR
      C                   RETURN
       /EJECT
@@ -380,7 +389,17 @@
       * Outputs
       * Current base rate in screen format
      C                   PARM                    BasRScnfmt
- 
+      * Backward-Looking Rate Fields                                                          CSD103
+     C                   PARM                    DDBLRT            1                          CSD103
+     C                   PARM                    DDLBDY            2                          CSD103
+     C                   PARM                    DDLODY            2                          CSD103
+     C                   PARM                    DDPDLY            2                          CSD103
+     C                   PARM                    DDBADJ           14                          CSD103
+     C                   PARM                    DDAVOP            1                          CSD103
+     C                   PARM                    DDBRAC            2                          CSD103
+     C                   PARM                    DDWGHT            1                          CSD103
+     C                   PARM                    DDLBAC            2                          CSD103
+
       * The file structure is a bit weird - there is a 'current' rate plus
       * value date, and a 'new' one.  The 'new' rate will apply after the
       * next CoB, but it is shown on the browse/listview screen as the

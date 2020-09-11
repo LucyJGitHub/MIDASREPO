@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD053869           Date 07Jan20               *
-      *  Prev Amend No. MD052075           Date 07Jun19               *
+      *  Last Amend No. MD056479           Date 14Sep19               *
+      *  Prev Amend No. MD053869           Date 07Jan20               *
+      *                 MD052075           Date 07Jun19               *
       *                 CGL148             Date 13Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 LLN022A            Date 03Jun15               *
@@ -69,6 +70,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056479 - Cannot accept batch due to calculated hash        *
+      *             not recalculated after deleting batch item        *
+      *           - Applied for MD-56637                              *
       *  MD053869 - Do not validate batch item on delete.             *
       *  MD052075 - [CGL150] Warning message should be displayed when *
       *           the system defaults the value date.                 *
@@ -400,9 +404,9 @@
 
       /COPY WNCPYSRC,GLBITPV004
 
-     C                   IF        DDACTN <> 'D'                                            MD053869
+     C**********         IF        DDACTN <> 'D'                                   MD053869 MD056479
      C                   EXSR      SRACID
-     C                   ENDIF                                                              MD053869
+     C**********         ENDIF                                                     MD053869 MD056479
      C**********         If        CGL037 = 'Y'                                        BG9009 237621
      C**********         ExSr      ChkRetAc                                            BG9009 237621
      C**********         EndIf                                                         BG9009 237621
@@ -413,9 +417,9 @@
 
       /COPY WNCPYSRC,GLBITPV006
 
-     C                   IF        DDACTN <> 'D'                                            MD053869
+     C**********         IF        DDACTN <> 'D'                                   MD053869 MD056479
      C                   EXSR      SRPTAM
-     C                   ENDIF                                                              MD053869
+     C**********         ENDIF                                                     MD053869 MD056479
 
       /COPY WNCPYSRC,GLBITPV007
 
@@ -948,7 +952,9 @@
       *
       ** Update error information.
       *
+     C                   IF        DDACTN <> 'D'                                            MD056479
      C                   EXSR      SRUPDERR
+     C                   ENDIF                                                              MD056479
       *
      C                   ENDSR
       *
@@ -1038,7 +1044,9 @@
       *
       ** Update error information.
       *
+     C                   IF        DDACTN <> 'D'                                            MD056479
      C                   EXSR      SRUPDERR
+     C                   ENDIF                                                              MD056479
       *
      C                   ENDSR
       *

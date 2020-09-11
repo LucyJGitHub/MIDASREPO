@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD056733           Date 11Sep20               *
-      *  Prev Amend No. MD055663           Date 22May20               *
+      *  Last Amend No. MD055870           Date 27May20               *
+      *  Prev Amend No. MD056733           Date 11Sep20               *
+      *                 MD055663           Date 22May20               *
       *                 MD035795           Date 07Oct15               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
@@ -144,6 +145,9 @@
      F*                                                               *
      F*****************************************************************
       *                                                               *
+      *  MD055870 - FM2.1 SP21 RETAIL-1 Reverse previously upgraded   *
+      *             MD035795 and rework MD-28899                      *
+      *             Applied for MD-56742                              *
       *  MD056733 - Add missing subroutine SRRSAC                     *
       *  MD055663 - Incorrect interest calculation for Interest Type  *
       *             03/04. Change capitalisation period for interest  *
@@ -486,8 +490,8 @@
      FSDJACCLBIF  E           K        DISK                                                   CGL031
      FREHISDL IF  E           K        DISK                                                   CRE090
      F            REHISPPF                          KRENAMEREHISPAF                           CRE090
-     FRSACMTL5IF  E           K        DISK                                                 MD035795
-     F            APOSTPDF                          KIGNORE                                 MD035795
+     F***RSACMTL5IF  E           K        DISK                                     MD035795 MD055870
+     F**********  APOSTPDF                          KIGNORE                        MD035795 MD055870
      FRE3360AUO   E                    PRINTER
       *                                                                   CRT002
       /COPY ZSRSRC,RBWLOGF1                                               CRT002
@@ -1605,7 +1609,7 @@
      C********** *LIKE     DEFN CNUM      FLD80 - 2                                           CSD027
      C                     Z-ADD*ZEROS    FLD80   40                                          CSD027
      C           *LIKE     DEFN KEY       FLD3  - 9
-     C           *LIKE     DEFN CLBL      ACLBL                                             MD035795
+     C********** *LIKE     DEFN CLBL      ACLBL                                    MD035795 MD055870
      C           *LIKE     DEFN DRIB      ZDCT                                                CRE090
      C           *LIKE     DEFN DRIC      ZDCALC                                              CRE090
      C           *LIKE     DEFN DRIS      ZDRATE                                              CRE090
@@ -3341,7 +3345,7 @@
      C                     MOVEA'1'       *IN,89
      C                     EXSR DBSR
      C                     END                             - E1
-     C                     Z-ADDCLBL      ACLBL                                             MD035795
+     C**********           Z-ADDCLBL      ACLBL                                    MD035795 MD055870
      C*
      C**  IF BRT LIABLE FLAG IS ON
      C*
@@ -4320,11 +4324,16 @@
      C*
      C** ACCOUNT IS FLAGGED FOR CLOSING
      C*
-     C                     Z-ADD0         NCNDS                                             MD035795
-     C                     EXSR SRRSAC                                                      MD035795
-     C           POSTFL    IFEQ 'Y'                                                         MD035795
+     C**********           Z-ADD0         NCNDS                                    MD035795 MD055870
+     C**********           EXSR SRRSAC                                             MD035795 MD055870
+     C********** POSTFL    IFEQ 'Y'                                                MD035795 MD055870
+     C********** DAIC      ORNE 0                                                  MD035795 MD055870
+     C********** DACP      ANDEQ*BLANKS                                            MD035795 MD055870
+     C********** CAIC      ORNE 0                                                  MD035795 MD055870
+     C********** CACP      ANDEQ*BLANKS                                            MD035795 MD055870
      C********** NOIS      ADD  NOCC      NCNDS                                             MD035795
-     C                     ADD  NOCC      NCNDS                                             MD035795
+     C**********           ADD  NOCC      NCNDS                                    MD035795 MD055870
+     C           NOIS      ADD  NOCC      NCNDS                                             MD055870
      C                     Z-ADD1         ALTNAD
      C                     MOVE CNUM      WCUST
      C***********WCUST     SETLLSDALTNL0                 25               089811
@@ -4338,8 +4347,8 @@
      C           WCUST     READESDALTNL0                 65               089811
      C                     END                             - E4
      C           NCNDS     MULT ALTNAD    NCNDS
-     C                     ENDIF                                                            MD035795
-     C                     ADD  NOIS      NCNDS                                             MD035795
+     C**********           ENDIF                                                   MD035795 MD055870
+     C**********           ADD  NOIS      NCNDS                                    MD035795 MD055870
      C                     ADD  1         LSTP
      C                     ELSE                            - X3
      C                     Z-ADDNOIS      NCNDS
@@ -8152,38 +8161,38 @@
       *****************************************************************                     MD055663
      C/EJECT                                                                                MD055663
       *****************************************************************                     MD055663
-     C           SRRSAC    BEGSR                                                            MD056733
-      *                                                                                     MD056733
-     C                     Z-ADD0         NOPOST  50                                        MD056733
-     C                     Z-ADD0         NODELT  50                                        MD056733
-     C                     MOVE 'N'       POSTFL  1                                         MD056733
-     C           CLBLN     IFNE ACLBL                                                       MD056733
-     C                     MOVE 'Y'       POSTFL                                            MD056733
-     C                     ELSE                                                             MD056733
-     C           R1KEY     SETLLRSACMTL5                                                    MD056733
-     C           R1KEY     READERSACMTL5            N    84                                 MD056733
-     C           *IN84     DOWEQ*OFF                                                        MD056733
-     C           NOPOST    ANDLE99999                                                       MD056733
-     C           VUDT      IFLE BJRDNB                                                      MD056733
-     C                     ADD  1         NOPOST                                            MD056733
-     C                     MOVE NRTD      DELFLG  1                                         MD056733
-     C           DELFLG    IFEQ '*'                                                         MD056733
-     C                     ADD  1         NODELT                                            MD056733
-     C                     ENDIF                                                            MD056733
-     C                     ENDIF                                                            MD056733
-     C           R1KEY     READERSACMTL5            N    84                                 MD056733
-     C                     ENDDO                                                            MD056733
-     C           NOPOST    IFGT *ZERO                                                       MD056733
-     C           NOPOST    DIV  2         NOPST2  50                                        MD056733
-     C                     MVR            NOPST3  50                                        MD056733
-     C           NOPST2    IFNE NODELT                                                      MD056733
-     C           NOPST3    ORNE 0                                                           MD056733
-     C                     MOVE 'Y'       POSTFL                                            MD056733
-     C                     ENDIF                                                            MD056733
-     C                     ENDIF                                                            MD056733
-     C                     ENDIF                                                            MD056733
-      *                                                                                     MD056733
-     C                     ENDSR                                                            MD056733
+     C********** SRRSAC    BEGSR                                                   MD056733 MD055870
+      **********                                                                   MD056733 MD055870
+     C**********           Z-ADD0         NOPOST  50                               MD056733 MD055870
+     C**********           Z-ADD0         NODELT  50                               MD056733 MD055870
+     C**********           MOVE 'N'       POSTFL  1                                MD056733 MD055870
+     C********** CLBLN     IFNE ACLBL                                              MD056733 MD055870
+     C**********           MOVE 'Y'       POSTFL                                   MD056733 MD055870
+     C**********           ELSE                                                    MD056733 MD055870
+     C********** R1KEY     SETLLRSACMTL5                                           MD056733 MD055870
+     C********** R1KEY     READERSACMTL5            N    84                        MD056733 MD055870
+     C********** *IN84     DOWEQ*OFF                                               MD056733 MD055870
+     C********** NOPOST    ANDLE99999                                              MD056733 MD055870
+     C********** VUDT      IFLE BJRDNB                                             MD056733 MD055870
+     C**********           ADD  1         NOPOST                                   MD056733 MD055870
+     C**********           MOVE NRTD      DELFLG  1                                MD056733 MD055870
+     C********** DELFLG    IFEQ '*'                                                MD056733 MD055870
+     C**********           ADD  1         NODELT                                   MD056733 MD055870
+     C**********           ENDIF                                                   MD056733 MD055870
+     C**********           ENDIF                                                   MD056733 MD055870
+     C********** R1KEY     READERSACMTL5            N    84                        MD056733 MD055870
+     C**********           ENDDO                                                   MD056733 MD055870
+     C********** NOPOST    IFGT *ZERO                                              MD056733 MD055870
+     C********** NOPOST    DIV  2         NOPST2  50                               MD056733 MD055870
+     C**********           MVR            NOPST3  50                               MD056733 MD055870
+     C********** NOPST2    IFNE NODELT                                             MD056733 MD055870
+     C********** NOPST3    ORNE 0                                                  MD056733 MD055870
+     C**********           MOVE 'Y'       POSTFL                                   MD056733 MD055870
+     C**********           ENDIF                                                   MD056733 MD055870
+     C**********           ENDIF                                                   MD056733 MD055870
+     C**********           ENDIF                                                   MD056733 MD055870
+      **********                                                                   MD056733 MD055870
+     C**********           ENDSR                                                   MD056733 MD055870
       *******************************************************************                   MD056733
       /COPY ZSRSRC,RBRMSGC1                                               CRT002
       *                                                                   CRT002

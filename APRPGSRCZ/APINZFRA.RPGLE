@@ -11,12 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CDL038             Date 10May05               *
       *                 CAS008             Date 16Jun04               *
       *                 CDL028             Date 07Feb05               *
@@ -37,6 +38,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data.    *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CDL038 - Extended Deal Sub Type (Recompile)                  *
@@ -56,21 +59,21 @@
       *  CAP004 - APIs phase 3.                                       *
       *                                                               *
       *****************************************************************
- 
+
      FDEALSDG   UF   E             DISK    INFSR(*PSSR)
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       /COPY ZACPYSRC,PSDS
- 
+
       * PARAMETERS
      C     *ENTRY        PLIST
      C                   PARM                    ReturnCode
- 
+
       * RESET UNUSED FIELDS
      C     ONCE          IFNE      'YES'
      C                   READ      DEALSDG                                99
@@ -79,43 +82,43 @@
      C     *IN99         DOWEQ     *OFF
      C                   MOVE      '01'          FLAG              2
      C                   Z-ADD     UOBRT         TESTN             1 0
- 
+
      C                   MOVE      '02'          FLAG
      C                   Z-ADD     TOBRT         TESTN
- 
+
      C                   MOVE      '03'          FLAG
      C                   Z-ADD     UOPAM         TESTN
- 
+
      C                   MOVE      '04'          FLAG
      C                   Z-ADD     TOPAM         TESTN
- 
+
      C                   MOVE      '05'          FLAG
      C                   Z-ADD     RSTM          TESTN
- 
+
      C**********         MOVE      '06'          FLAG                                         CSD027
      C**********         Z-ADD     ROBN          TESTN                                        CSD027
      C**********                                                                              CSD027
      C**********         MOVE      '07'          FLAG                                         CSD027
      C**********         Z-ADD     ROCN          TESTN                                        CSD027
- 
+
      C                   MOVE      '08'          FLAG
      C                   Z-ADD     PSTM          TESTN
- 
+
      C**********         MOVE      '09'          FLAG                                         CSD027
      C**********         Z-ADD     POBN          TESTN                                        CSD027
      C**********                                                                              CSD027
      C**********         MOVE      '10'          FLAG                                         CSD027
      C**********         Z-ADD     POCN          TESTN                                        CSD027
- 
+
      C                   MOVE      '11'          FLAG
      C                   Z-ADD     ISDA          TESTN
- 
+
      C                   MOVE      '12'          FLAG
      C                   Z-ADD     AGDT          TESTN
- 
+
      C                   MOVE      '13'          FLAG
      C                   Z-ADD     AGVV          TESTN
- 
+
      C                   MOVE      '14'          FLAG                           163185
      C                   Z-ADD     UNPCD         TESTN                          163185
                                                                                 163185
@@ -155,9 +158,9 @@
      C                   EXCEPT    DEALSG
      C                   READ      DEALSDG                                99
      C                   ENDDO
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       *                                                               *
       * *PSSR  - Program exception error routine                      *
@@ -168,9 +171,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *pssr         BEGSR
- 
+
      C                   IF        PSexcpno = '1202' AND PSexcptype = 'MCH'
      C                   SELECT
      C                   WHEN      Flag = '01'
@@ -227,23 +230,23 @@
      C                   Z-ADD     *ZERO         TUSA                           163185
      C                   ENDSL                                                  CAP003
      C                   ELSE
- 
+
      C                   IF        RunBefore <> 'Y'
- 
+
      C                   EVAL      RunBefore = 'Y'
- 
+
      C                   EVAL      *inu7 = *on
      C                   EVAL      *inu8 = *on
      C                   EVAL      *inlr = *on
- 
+
      C                   RETURN
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR     '*DETL'
- 
+
       *****************************************************************
- 
+
      ODEALSDGF  E            DEALSG
      O                       UOBRT
      O                       TOBRT

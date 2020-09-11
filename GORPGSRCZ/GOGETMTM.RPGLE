@@ -158,7 +158,8 @@
      D PRetCode        S              7
      D POption         S              7
      D PCurrency       S              3
-     D PBRTT           S              2
+     D*PBRTT****       S              2                                                       CSD103
+     D PBRTT           S              2A                                                      CSD103
      D W#RTCD          S              7
      D W#ERMS          S             50
      D BUYSELL         S              1

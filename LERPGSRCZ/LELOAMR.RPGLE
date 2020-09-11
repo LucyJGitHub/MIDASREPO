@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR878735           Date 13Dec11               *
       *                 CDL094             Date 11Jun14               *
       *                 CLE134             Date 01Aug12               *
@@ -51,6 +52,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  AR878735 - Field CVMR not properly inserted/updated in       *
@@ -93,12 +96,12 @@
       *  CAP084 - Midas Plus API development                          *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       **   F-specs                               
       **   =======                               
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       **   Automatically included D-specs        
       **   ==============================        
@@ -116,53 +119,53 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       **   End of automatically included D-specs 
       **   ===================================== 
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       **   Manually included D-specs             
       **   =========================             
       ** +--------------------------------------+
- 
- 
+
+
       **--------------------------------------------------------------------------------------------
       ** SCREEN FORMATS
       **--------------------------------------------------------------------------------------------
- 
+
      D LOAMScnFmt    E DS                  EXTNAME(LELOAMPD)
       ***  New Fclty in Screen Format - Screen 1
       *
- 
+
      D LOA2ScnFmt    E DS                  EXTNAME(LELOA2PD)                                  CLE106
       ***  New Fclty in Screen Format - Screen 2                                              CLE106
       *                                                                                       CLE106
@@ -173,7 +176,7 @@
       **--------------------------------------------------------------------------------------------
       ** FILE FORMATS
       **--------------------------------------------------------------------------------------------
- 
+
      D LoamFilFmt    E DS                  EXTNAME(LOAMSDK)
      D LoamFilXFmt   E DS                  EXTNAME(LEVLOAMPD)                                 CRE073
      D***CLREC**              321    389                                                      CGL029
@@ -183,7 +186,7 @@
      D  CLRECEx             1195   1212                                                       CGL029
      D  CLPAYEx             1213   1230                                                       CGL029
       ***  Current Loan Amendment in File Format
- 
+
       * Error indicators
      D LOAM_OK       E DS                  EXTNAME(LEELOAMPD)
       *
@@ -227,50 +230,50 @@
      D FB_AFRT       E                     EXTFLD(AFRT)
      D FB_REPA       E                     EXTFLD(REPA)
      D FB_STMP       E                     EXTFLD(STMP)
- 
+
       * File receive instructions
      D F_REC         E DS                  EXTNAME(SDESFRPD)
      D***FLREC**                1     69                                                      CGL029
      D  FLREC                 21     75                                                       CGL029
- 
+
       * File payment instructions
      D F_PAY         E DS                  EXTNAME(SDESFPPD)
      D***FLPAY**                1    559                                                      CGL029
      D  FLPAY                 21    565                                                       CGL029
- 
+
       * File FRA/IRS instructions (needed as a parameter for call
       * to ZASETINVAL etc)
      D F_FRI         E DS                  EXTNAME(SDESFFPD)
- 
+
       * Pay Settlement Instructions - Input
      D S_Pay         E DS                  EXTNAME(SDESSPPD)
- 
+
       * Receive Settlement Instructions - Input
      D S_Rec         E DS                  EXTNAME(SDESSRPD)
- 
+
       *  Screen FRA/IRS instructions
      D S_FRI         E DS                  EXTNAME(SDESSFPD)
- 
+
       ** External DS for SAR details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)
       *
       ***  Midas modules details
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       * First DS for Access programs - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for Access programs - long data structure                                  CSF011
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CSF011
       **--------------------------------------------------------------------------------------------
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
       ** Work Variable for Facility UTN                                                       CLE106
@@ -281,10 +284,10 @@
      D C#KYST          S              7                                                       CSF011
      D #TRCCY          S              3A                                                     CSF011A
      D #TPCCY          S              3A                                                     CSF011A
- 
+
       ** Reservation ID - Blank field here to ensure similarity with VU module
      D*ReservID********S             10    INZ(*BLANKS)                         BUG2480
- 
+
       ************************ MAIN PROCESSING *****************************
       * If the action code is blank, enquire unless authorising
      C                   CLEAR                   LoamFilFmt
@@ -299,7 +302,7 @@
      C                   MOVEL     'E'           DDACTN
      C                   ENDIF
      C                   ENDIF
- 
+
      C     FwdBck        IFEQ      'F'
      C                   MOVEL     'Y'           @RDFWD
      C                   MOVEL     'N'           @RDBCK
@@ -312,7 +315,7 @@
      C                   MOVEL     'N'           @RDBCK
      C                   ENDIF
      C                   ENDIF
- 
+
      C     @RDFWD        IFEQ      'Y'
      C     @RDBCK        OREQ      'Y'
      C                   EXSR      LELOAMRED
@@ -345,13 +348,13 @@
      C     Idx           IFEQ      0
      C                   EXSR      LELOAMCVT
      C                   ENDIF
- 
+
      C                   ENDIF
      C     CLE034        IFEQ      'Y'                                                        CLE034
       * Facility UTN was extracted from the FM file format data structure                     CLE034
      C                   EVAL      DDSTAL = STAL                                              CLE034
      C                   ENDIF                                                                CLE034
- 
+
      C     RetCodeOut    IFNE      *BLANK
      C                   MOVEL     '0'           APIRetc
      C                   MOVEL     'DDLNRF'      FldNameArr(1)
@@ -361,7 +364,7 @@
       ** Populate Customer Name Inputs                                                        CSF011
                                                                                               CSF011
      C                   EXSR      SrCustActN                                                 CSF011
- 
+
       * Build buffer with required output
      C*******************EVAL           Buffer = LoamScnFmt + S_REC + S_PAY                   CGP001
      C*******************                         +ReservID + DDSTAT                          CGP001
@@ -379,7 +382,7 @@
      C                   SETON                                        LR
      C                   RETURN
       **********************************************************************
- 
+
       **********************************************************************
       /EJECT
       **********************************************************************
@@ -394,52 +397,52 @@
       *
       * Action code
      C                   PARM                    DDACTN
- 
+
       * Read forwards/backwards
      C                   PARM                    @RDFWD            1
      C                   PARM                    @RDBCK            1
- 
+
       * Loan number / value date / sequence
      C                   PARM                    DDLNRF_In
      C                   PARM                    DDVDAT_In
      C                   PARM                    DDLASN_In
- 
+
       * Multi-branching/date format indicators
      C                   PARM                    BGMBIN            1
      C                   PARM                    BJDFIN            1
- 
+
       * Output Parameters :
       * Error message
- 
+
       * Loan number / value date / sequence
      C                   PARM      *BLANK        @LNRed            6
      C                   PARM      *BLANK        @VDRed            6
      C                   PARM      *BLANK        @SQRed            3
       *
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
       **********************************************************************
      C     LELOAMRTV     BEGSR
- 
+
      C                   CALLB     'LELOAMRTV'
- 
+
       * INPUTS
- 
+
       * Return code
      C                   PARM                    ReturnCode
- 
+
       * Mode = '*FRONT' (FRONT OFFICE TRANSACTION INTERFACE)
       * Mode = '      ' (NOT FRONT OFFICE TRANSACTION INTERFACE)
      C                   PARM                    ModeofOp          6
       *
       * Response mode
      C                   PARM      'S'           APRESPMODE        1
- 
+
       * Action Code
      C                   PARM                    DDACTN            1
- 
+
       * Front Office Transaction ID
       * Front office transaction Id
      C                   PARM                    C_FRNT           20
@@ -448,13 +451,13 @@
      C                   PARM                    DDVDAT            6
      C                   PARM                    DDLASN            3
      C                   PARM                    DDATYP            2
- 
+
       * Where called from
      C                   PARM                    CallModCod        3
       * Features
      C                   PARM                    CEU020
      C                   PARM                    CLE030                                       CLE030
- 
+
       * Multi-branching/date format indicators
      C                   PARM                    BGMBIN
      C                   PARM                    BJDFIN
@@ -467,7 +470,7 @@
      C                   PARM                    LoanDetsB
      C                   PARM                    FacilityA
      C                   PARM                    FacilityB
- 
+
       * Error Indicators
      C                   PARM                    LOAM_OK
       *
@@ -475,11 +478,11 @@
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
      C                   PARM                    LOAMFilXFmt                                  CRE073
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -488,7 +491,7 @@
       *
       **  Save the action code (LOAMScnFmt is blanked)
      C                   MOVE      DDACTN        @DDACTN           1
- 
+
      C                   CALLB     'LELOAMCVT'
       * Inputs
       * Return Code
@@ -511,12 +514,12 @@
       *
       ** Add the action code
      C                   MOVE      @DDACTN       DDACTN
- 
+
       ** AMEND CHECKING
      C                   RESET                   ReturnCode
- 
+
       ***  Convert settlement details from file to screen format
- 
+
      C                   EVAL      FLPAY = CLPAY
      C                   EVAL      FLREC = CLREC
      C                   EVAL      FLRONS = CLRECEx                                           CGL029
@@ -558,8 +561,8 @@
      C                   PARM      *BLANK        S_FRI
      C                   PARM      CCY           #TRCCY                                      CSF011A
      C                   PARM      CCY           #TPCCY                                      CSF011A
- 
- 
+
+
      C                   ENDSR
       *****************************************************************                       CSF011
       /EJECT                                                                                  CSF011
@@ -609,7 +612,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    AuthComp          1
      C                   PARM                    FwdBck            1
@@ -622,21 +625,21 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetc           1
- 
+
       * Set up the names of the message files from which the message handler
       * will get the messages
      C                   EVAL      MsgFArray(1) = 'LERMSGF'
      C                   EVAL      MsgFArray(2) = 'DRSMM'
- 
+
       * Hook to enable non-core Message files to be included
      D/COPY WNCPYSRC,LELOAMM01
- 
+
       ** Retrieve Midas Module details
      C                   CALL      'AOMMODR0'
      C                   PARM      *BLANKS       @RtCd
      C                   PARM      '*FIRST '     @Optn
      C     SDMMOD        PARM                    DSFDY
- 
+
      C     @RtCd         IFNE      *BLANKS
      C                   MOVEL     'SDMMODPD'    DBFILE                         *************
      C                   Z-ADD     3             DBASE                          * DBERR 003 *
@@ -732,7 +735,7 @@
      C     @RTCD         IFEQ      *BLANKS                                                    CLE031
      C                   MOVE      'Y'           CLE031                                       CLE031
      C                   ENDIF                                                                CLE031
- 
+
      C                   ENDSR
       *
       **********************************************************************

@@ -826,7 +826,7 @@
      D DDLBDY          S              2                                                       CSD103
      D DDLODY          S              2                                                       CSD103
      D DDPDLY          S              2                                                       CSD103
-     D DDBADJ          S              7                                                       CSD103
+     D DDBADJ          S             14                                                       CSD103
      D DDAVOP          S              1                                                       CSD103
      D DDBRAC          S              2                                                       CSD103
      D DDWGHT          S              1                                                       CSD103
@@ -2879,8 +2879,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       2             Bfp                                          CSD103
      C     2             SUBST     BUFFER:Bfp    DDPDLY                                       CSD103
      C                   ADD       2             Bfp                                          CSD103
-     C     7             SUBST     BUFFER:Bfp    DDBADJ                                       CSD103
-     C                   ADD       7             Bfp                                          CSD103
+     C     14            SUBST     BUFFER:Bfp    DDBADJ                                       CSD103
+     C                   ADD       14            Bfp                                          CSD103
      C     1             SUBST     BUFFER:Bfp    DDAVOP                                       CSD103
      C                   ADD       1             Bfp                                          CSD103
      C     2             SUBST     BUFFER:Bfp    DDBRAC                                       CSD103
@@ -2898,15 +2898,6 @@ RGC  D RPIF4LN         S              4  0                                      
       * Transaction information
      C                   PARM                    TRANS1
      C                   PARM                    TRANS2
-     C                   PARM                    DDBLRT                                       CSD103
-     C                   PARM                    DDLBDY                                       CSD103
-     C                   PARM                    DDLODY                                       CSD103
-     C                   PARM                    DDPDLY                                       CSD103
-     C                   PARM                    DDBADJ                                       CSD103
-     C                   PARM                    DDAVOP                                       CSD103
-     C                   PARM                    DDBRAC                                       CSD103
-     C                   PARM                    DDWGHT                                       CSD103
-     C                   PARM                    DDLBAC                                       CSD103
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
@@ -2919,6 +2910,15 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    APIRetc
      C                   PARM                    @TimeStamp                                  BUG4469
      C                   PARM                    AAuth                                      BUG22140
+     C                   PARM                    DDBLRT                                       CSD103
+     C                   PARM                    DDLBDY                                       CSD103
+     C                   PARM                    DDLODY                                       CSD103
+     C                   PARM                    DDPDLY                                       CSD103
+     C                   PARM                    DDBADJ                                       CSD103
+     C                   PARM                    DDAVOP                                       CSD103
+     C                   PARM                    DDBRAC                                       CSD103
+     C                   PARM                    DDWGHT                                       CSD103
+     C                   PARM                    DDLBAC                                       CSD103
 
       ** Fees                                                                                BUG1100
      C     TransTYPE     WHENEQ    'FEEM'                                                    BUG1100

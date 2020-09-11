@@ -133,7 +133,17 @@
      C                   PARM                    RetCodeOut
      C                   PARM                    BSRTFilFmt
      C                   PARM                    BSRTScnFmt
- 
+      * Backward-Looking Rate Fields                                                          CSD103
+     C                   PARM                    DDBLRT            1                          CSD103
+     C                   PARM                    DDLBDY            2                          CSD103
+     C                   PARM                    DDLODY            2                          CSD103
+     C                   PARM                    DDPDLY            2                          CSD103
+     C                   PARM                    DDBADJ           14                          CSD103
+     C                   PARM                    DDAVOP            1                          CSD103
+     C                   PARM                    DDBRAC            2                          CSD103
+     C                   PARM                    DDWGHT            1                          CSD103
+     C                   PARM                    DDLBAC            2                          CSD103
+
      C                   IF        RetCodeOut <> *Blanks
      C                   EVAL      RetCodeIn = '*Error'
      C                   ELSE

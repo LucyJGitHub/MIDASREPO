@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD055642A          Date 27May20               *
-      *  Prev Amend No. MD055642           Date 20May20               *
+      *  Last Amend No. EML102C            Date 13Sep20               *
+      *  Prev Amend No. MD055642A          Date 27May20               *
+      *                 MD055642           Date 20May20               *
       *                 EML102 *CREATE     Date 06May20               *
       *                 TP448868           Date 21Jan17               *
       *                 EMP005             Date 19May10               *
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  EML102C - Replace MGCONVPD with core SDCONVPD                *
       *  MD055642A - FM 2.1 SP21 Duplicate MultiCash Narr 22 on       *
       *             field 61 subfield 86 ; reverse MD-55642 fix       *
       *            - Fix is now applied in GL001432 to avoid          *
@@ -153,7 +155,8 @@
       *                                                                                    BUG23280A
      FGLNW94L8  IF   E           K DISK    RENAME(GLNW94D0:GLNW94D1)                       BUG23280A
       *
-     FMGCONVPD  IF   E           K DISK                   INFSR(*PSSR) USROPN                 EMP005
+     F*****MGCONVPD  IF   E           K DISK                   INFSR(*PSSR) USROPN    EMP005 EML102C
+     FSDCONVPD  IF   E           K DISK                   INFSR(*PSSR) USROPN                EML102C
       ** MG Character Conversion file                                                         EMP005
                                                                                               EMP005
       *****************************************************************
@@ -2498,7 +2501,8 @@
       *    ----------    -----                                                                EMP005
       *                                                                                       EMP005
       ** Open Character conversion file                                                       EMP005
-     C                   Open      MGCONVPD                                                   EMP005
+     C**********         Open      MGCONVPD                                           EMP005 EML102C
+     C                   Open      SDCONVPD                                                  EML102C
       *                                                                                       EMP005
       ** Initialise work fields                                                               EMP005
      C                   Eval      Fr_Char = *Blanks                                          EMP005
@@ -2506,19 +2510,23 @@
      C                   Eval      WChrLen = 0                                                EMP005
                                                                                               EMP005
       ** Read file and collect characters in FROM and TO alpha fields                         EMP005
-     C     *Loval        Setll     MGCONVPD                                                   EMP005
-     C                   Read      MGCONVPD                                                   EMP005
+     C******Loval        Setll     MGCONVPD                                           EMP005 EML102C
+     C**********         Read      MGCONVPD                                           EMP005 EML102C
+     C     *Loval        Setll     SDCONVPD                                                  EML102C
+     C                   Read      SDCONVPD                                                  EML102C
                                                                                               EMP005
      C                   Dow       NOT %EOF                                                   EMP005
      C                   Eval      Fr_Char = %SUBST(Fr_Char:1:WChrLen)+FRCHAR                 EMP005
      C                   Eval      To_Char = %SUBST(To_Char:1:WChrLen)+TOCHAR                 EMP005
      C                   Eval      WChrLen = WChrLen + 1                                      EMP005
                                                                                               EMP005
-     C                   Read      MGCONVPD                                                   EMP005
+     C**********         Read      MGCONVPD                                           EMP005 EML102C
+     C                   Read      SDCONVPD                                                  EML102C
      C                   Enddo                                                                EMP005
       *                                                                                       EMP005
       ** Close file                                                                           EMP005
-     C                   Close     MGCONVPD                                                   EMP005
+     C**********         Close     MGCONVPD                                           EMP005 EML102C
+     C                   Close     SDCONVPD                                                  EML102C
       *                  -----                                                                EMP005
      C                   ENDSR                                                                EMP005
                                                                                               EMP005

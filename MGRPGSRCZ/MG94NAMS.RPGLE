@@ -14,13 +14,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. MD050727           Date 28Feb20               *
-      *  Prev Amend No. AR826599           Date 28Feb20               *
+      *  Last Amend No. EML102C            Date 13Sep20               *
+      *  Prev Amend No. MD050727           Date 28Feb20               *
+      *                 AR826599           Date 28Feb20               *
       *                 CMG008             Date 28Feb20               *
       *                 EML104  *CREATE    Date 27Feb20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  EML102C - Replace MGCONVPD with SDCONVPD                     *
       *  MD050727 - Emergency fix to enable alphanumeric batches      *
       *             to be processed. Please see SFDC 01793714         *
       *  AR826599 - Field ?29 is too long in :86: (Detl. Payments)    *
@@ -84,7 +86,8 @@
       ** Midas DL Deals file including historic
      F                                     INCLUDE(DEALSDCF:DLCHISD0:MMDELDP0)
       *
-     FMGCONVPD  IF   E           K DISK                   INFSR(*PSSR) USROPN                 CMG008
+     F******MGCONVPD  IF   E           K DISK                   INFSR(*PSSR) USROPN   CMG008 EML102C
+     FSDCONVPD  IF   E           K DISK                   INFSR(*PSSR) USROPN                EML102C
       ** MG Character Conversion file                                                         CMG008
       *                                                                                       CMG008
       *****************************************************************
@@ -1122,7 +1125,8 @@
       *                                                                                       CMG008
       ** Open Character conversion file                                                       CMG008
       *                                                                                       CMG008
-     C                   Open      MGCONVPD                                                   CMG008
+     C**********         Open      MGCONVPD                                           CMG008 EML102C
+     C                   Open      SDCONVPD                                                  EML102C
       *                                                                                       CMG008
       ** Initialise work fields                                                               CMG008
       *                                                                                       CMG008
@@ -1132,20 +1136,24 @@
       *                                                                                       CMG008
       ** Read file and collect characters in FROM and TO alpha fields                         CMG008
       *                                                                                       CMG008
-     C     *Loval        Setll     MGCONVPD                                                   CMG008
-     C                   Read      MGCONVPD                                                   CMG008
+     C******Loval        Setll     MGCONVPD                                           CMG008 EML102C
+     C**********         Read      MGCONVPD                                           CMG008 EML102C
+     C     *Loval        Setll     SDCONVPD                                                  EML102C
+     C                   Read      SDCONVPD                                                  EML102C
       *                                                                                       CMG008
      C                   Dow       NOT %EOF                                                   CMG008
      C                   Eval      Fr_Char = %SUBST(Fr_Char:1:WChrLen)+FRCHAR                 CMG008
      C                   Eval      To_Char = %SUBST(To_Char:1:WChrLen)+TOCHAR                 CMG008
      C                   Eval      WChrLen = WChrLen + 1                                      CMG008
       *                                                                                       CMG008
-     C                   Read      MGCONVPD                                                   CMG008
+     C**********         Read      MGCONVPD                                           CMG008 EML102C
+     C                   Read      SDCONVPD                                                  EML102C
      C                   Enddo                                                                CMG008
       *                                                                                       CMG008
       ** Close file                                                                           CMG008
       *                                                                                       CMG008
-     C                   Close     MGCONVPD                                                   CMG008
+     C**********         Close     MGCONVPD                                           CMG008 EML102C
+     C                   Close     SDCONVPD                                                  EML102C
       *                                                                                       CMG008
      C                   ENDSR                                                                CMG008
       *                                                                                       CMG008

@@ -11,10 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2020                      *
       *                                                               *
-      *  Last Amend No. CSW220  *CREATE    Date 09Mar20               *
+      *  Last Amend No. MD056683           Date 14Sep20               *
+      *  Prev Amend No. CSW220  *CREATE    Date 09Mar20               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056683 - MT199 Confirm is being generated for an IPAY where*
+      *             the credit goes to the Account with Bank          *
       *  CSW220 - SWIFT Changes 2020                                  *
       *                                                               *
       *****************************************************************
@@ -181,7 +184,17 @@
       ** Livre records
       ** Authorized
      C                   IF        IN_AUIN = 'Y'
+      *                                                                                     MD056683
+     C                   IF        ACBT = *BLANK                                            MD056683
      C                   EVAL      FTM199 = 'A'
+     C                   ELSE                                                               MD056683
+     C                   IF        OPIN = 'Y'                                               MD056683
+     C                   EVAL      FTM199 = 'Z'                                             MD056683
+     C                   ELSE                                                               MD056683
+     C                   EVAL      FTM199 = 'I'                                             MD056683
+     C                   ENDIF                                                              MD056683
+     C                   ENDIF                                                              MD056683
+      *                                                                                     MD056683
      C                   ELSE
       ** Not yet authorize
      C                   EVAL      FTM199 = *BLANKS

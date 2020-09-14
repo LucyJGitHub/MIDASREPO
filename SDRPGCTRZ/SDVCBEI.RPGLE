@@ -38,7 +38,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD055903 - SD: error while amending Customer details. Added  *
-      *             validation for amending customer.                 *
+      *             validation for amending customer                  *
       *  MD046248 - Finastra Rebranding                               *
       *  MD019970 - Customer Details Amendment Error. Added validation*
       *             for MT3xx Corporate BEI.                          *
@@ -314,7 +314,7 @@
      C                   MOVEL     'DDCBEI'      WFldNmXAr(WIx)                             AR855391
      C                   MOVEL     'USR9134'     WMsgIdXAr(WIx)                             AR855391
      C                   ENDIF
- 
+
      C                   MOVEL     DDCBEI        PBICC
      C                   MOVE      DDCBEI        PBICB
       *
@@ -348,7 +348,7 @@
      C                   MOVEL     'DDCBEI'      FldNamXAr(Idx)                             MD019970
      C                   MOVEL     '5047300'     MsgIdXAr(IDx)                              MD019970
      C                   ENDIF                                                              MD019970
- 
+
      C     EndCorBEI     ENDSR
       *****************************************************************
       /EJECT

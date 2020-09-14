@@ -22,10 +22,12 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD056578           Date 08Sep20               *
+      *  Prev Amend No. 247420             Date 08Sep20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. 095907             Date 17Jan07               *
+      *                 095907             Date 17Jan07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 172190             Date 13Oct06               *
@@ -55,6 +57,21 @@
      F*                 E16772             DATE 19/06/89              *
      F*                                                               *
      F*---------------------------------------------------------------*
+      *  MD056578 - SEC1001 00001 FCOOB.                              *
+      *           - Pass field NTOTO7 with length 7,0 to SNNORE result*
+      *             field in order to avoid truncated value in Audit  *
+      *             file SNDEVA.                                      *
+      *           - Reflect value of SNNORE (No. of records on file)  *
+      *             to field NFILE7 (No of records before update) in  *
+      *             the Audit report SE2510AU for FCOOB occurence.    *
+      *  247420 - Non diary events not being dropped due to event date*
+      *           being compared to the last coupon date of the       *
+      *           security though zero.  Rename pf/SECTYD fields RECI *
+      *           and NMCY to RECIS and NMCYS.  Process print before  *
+      *           drop. rename and increase length of field NORE in   *
+      *           SNDEVA from NORE(5,0) to SNNORE(&,0). Increase also *
+      *           all working fields related to field SNNORE. Applied *
+      *           fix 230430.                                         *
       *  MD046248 - Finastra Rebranding                               *
      F*  095907 - DELETE SNDEVD RECORDS IF THE SECURITY DOESN'T EXIST *
      F*           ANYMORE.                                            *
@@ -409,10 +426,12 @@
      C*  ZEROISE ACCUMULATORS
      C*
      C                     Z-ADD0         ETOTI   50
-     C                     Z-ADD0         NTOTI   50
+     C**********           Z-ADD0         NTOTI   50                                          247420
+     C                     Z-ADD0         NTOTI   70                                          247420
      C                     Z-ADD0         NTOTI7  70                                          243026
      C                     Z-ADD0         EDROP   50
-     C                     Z-ADD0         NDROP   50
+     C**********           Z-ADD0         NDROP   50                                          247420
+     C                     Z-ADD0         NDROP   70                                          247420
      C                     Z-ADD0         NDROP7  70                                          243026
      C                     Z-ADD0         PDROP   50                                          197419
      C*
@@ -670,6 +689,11 @@
      C                     MOVEA'1'       *IN,31
      C                     END
      C*
+     C                     ELSE                                                               247420
+     C           RECIS     IFEQ '*'                                                           247420
+     C                     MOVEA'1'       *IN,31                                              247420
+     C                     ENDIF                                                              247420
+      *                                                                                       247420
      C                     END
      C*
      C* IF NOT THERE, DROP EVENT
@@ -703,6 +727,7 @@
      C*  BACK VALUE DATE)
      C*
      C           SDED      IFGE LCPN
+     C           LCPN      ANDNE0                                                             247420
      C                     MOVEA'0'       *IN,30
      C                     ELSE
      C*
@@ -730,10 +755,12 @@
      C** If security still valid, do not drop initial value record        E44166
      C** of any event type on file SEDEVD.                                E44166
      C*                                                                   E44166
+     C           *IN20     IFEQ '1'                                                           247420
      C                     MOVELSDNV      NARRAT  7                       E44166
      C           NARRAT    IFEQ 'INITIAL'                                 E44166
      C                     MOVEA'0'       *IN,30                          E44166
      C                     END                                            E44166
+     C                     ENDIF                                                              247420
      C*                                                                   E44166
      C                     END
      C*
@@ -1269,12 +1296,15 @@ AW   C                     Z-ADDETOTO     NLRB
      C                     OUT  LDA                                       S01117
      C                     EXSR *PSSR                                     S01117
      C                     ELSE
-     C                     Z-ADDNORE      NFILE   50
+     C**********           Z-ADDNORE      NFILE   50                                        MD056578
+     C                     Z-ADDSNNORE    NFILE7                                            MD056578
      C*
      C* CHECK CONTROL TOTALS AGREE
      C*
      C***********NTOTI     IFNE NORE                                                         243026
-     C           NFILE7    IFNE NTOTI7                                                       243026
+     C********** NFILE7    IFNE NTOTI7                                                243026 247420
+     C           NTOTI     IFNE SNNORE                                                       247420
+     C*
      C                     MOVE '1'       *INU8
      C                     MOVEA'1'       *IN,71
      C*
@@ -1282,7 +1312,8 @@ AW   C                     Z-ADDETOTO     NLRB
      C*
      C* WRITE SNDEVA RECORD
      C*
-     C                     MOVE NTOTO     NORE
+     C**********           MOVE NTOTO     NORE                                              MD056578
+     C                     Z-ADDNTOTO7    SNNORE                                            MD056578
      C*
      C                     UPDATSNDEVAF
      C*

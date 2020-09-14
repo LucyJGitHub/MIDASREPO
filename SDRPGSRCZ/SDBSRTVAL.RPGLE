@@ -530,7 +530,7 @@
       * Benchmark Adjustment                                                                  CSD103
       *                                                                                       CSD103
      C     DDBADJ        IFEQ      *BLANKS                                                    CSD103
-     C                   Z-ADD     0             DDBADJ                         Default: 0    CSD103
+     C                   MOVE      *ZEROS        DDBADJ                         Default: 0    CSD103
      C                   ELSE                                                                 CSD103
       *                                                                                       CSD103
      C                   MOVE      *BLANKS       ZFIELD                                       CSD103

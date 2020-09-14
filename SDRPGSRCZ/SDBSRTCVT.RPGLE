@@ -364,7 +364,7 @@
      C                   MOVE      BABADJ        @@ALPH                                       CSD103
       *                                                                                       CSD103
      C                   CALLB     'ZA0840'                                                   CSD103
-     C                   PARM      *BLANK        PRetCode                                     CSD103
+     C                   PARM      *BLANK        RetCodeOut                                   CSD103
      C                   PARM                    @@ALPH                         Display field CSD103
      C                   PARM                    @@IDP                          no.of dec.plcsCSD103
      C                   PARM                    @@IINT                         no.of integersCSD103

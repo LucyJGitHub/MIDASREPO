@@ -14,11 +14,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR375891B          Date 26Mar20               *
-      *  Prev Amend No. AR375892           Date 26Aug20               *
-      *                 MD052696           Date 04Apr19               *
-      *                 MD031692           Date 12Mar20               *
-      *                 MD030856           Date 06Nov19               *
+      *  Last Amend No. MD031692           Date 12Mar20               *
+      *  Prev Amend No. MD030856           Date 06Nov19               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD036070           Date 19Oct15               *
@@ -50,14 +47,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  AR375891B - Amendment to Settlement details do not reflect   *
-      *              on file. Ensure protect indicator set correctly. *
-      *              (Child: AR375892)                                *
-      *  AR375892 - Incorrect projection for fees attached to parts   *
-      *             sold loan. Use Payment Settlement instead of      *
-      *             Receipt Settlement.                               *      
-      *  MD052696 - Unauthorised Loans and fees not visible in WIP,   *
-      *             after rejecting amendments to their maturity dates*
       *  MD031692 - Incorrect accrual when fee rate is changed on     *
       *             payment date. Add warning message parameters in   *
       *             LEFEEMAMD.                                        *
@@ -314,7 +303,6 @@
       ** Parameter for LEFEEMRTV                                                              244636
      D PRcvParm        S             92                                                       244636
       *                                                                                       244636
-     D PPayParm        S            594                                                     AR375892      
      D #TRCCY          S              3A                                                     CSF011A
      D #TPCCY          S              3A                                                     CSF011A
      D WTRCcy          S              3A                                                     CSF011A
@@ -540,14 +528,8 @@
      C                   ENDIF
       *
      C     WPTFI         IFEQ      *BLANK
-     C                   IF        CL_PTYP = 66 or CL_PTYP = 67                            AR375891B
-     C                             or CL_PTYP = 69 or CL_PTYP = 72                         AR375891B
-     C                   MOVE      'N'           ##PPAY                                    AR375891B
-     C                   MOVE      'Y'           ##PREC                                    AR375891B
-     C                   ELSE                                                              AR375891B
      C                   MOVE      'Y'           ##PPAY
      C                   MOVE      'N'           ##PREC
-     C                   ENDIF                                                             AR375891B
      C                   ENDIF
       *
      C                   ENDIF
@@ -692,7 +674,6 @@
       *
      C**********         PARM                    S_REC                                        244636
      C                   PARM      PRcvParm      S_REC                                        244636
-     C                   PARM      PPayParm      S_PAY                                      AR375892
       *
       ***  FRA/IRS instructions
       *
@@ -1313,7 +1294,6 @@
      C                   PARM                    WIdx
       * Valid Fee layout (DS) from/to caller
      C                   PARM                    ValidFeem
-     C                   PARM                    DRejFlg                                    MD052696
       *
      C                   MOVEL     *BLANKS       ChkWarnAr
      C                   MOVEA     WMsgIdArr     ChkWarnAr
@@ -1726,7 +1706,6 @@
       * Array index (3P0) from/to caller
      C                   PARM      *Zero         Ix
      C                   PARM                    PRcvParm                                     244636
-     C                   PARM                    PPayParm                                   AR375892
       *
      C                   Z-ADD     FETNLU        H#TNLU            5 0
       *

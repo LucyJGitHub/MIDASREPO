@@ -10,14 +10,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR375892           Date 26Aug20               *
-      *  Prev Amend No. MD029653           Date 06Nov19               *
-      *                 CER050             Date 16Jun19               *
+      *  Last Amend No. MD029653           Date 06Nov19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
       *                 MD053295           Date 13Apr19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD047993           Date 23Sep17               *
       *                 MD035545           Date 11Sep15               *
-      *                 MD037658           Date 19Feb16               *
+      *                 MD037658           Date 19Feb16               *      
       *                 MD046351           Date 23Aug17               *
       *                 MD034020           Date 19Jul17               *
       *                 AR943686           Date 23Sep16               *
@@ -89,9 +88,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  AR375892 - Incorrect projection for fees attached to parts   *
-      *             sold loan. Use Payment Settlement instead of      *
-      *             Receipt Settlement.                               *
       *  MD029653 - Pay/receive generation failure. Program encounters*
       *             RPG0102 when it tried to divide by 0.             *
       *             Applied for MD-52080. Applied 222942              *
@@ -99,12 +95,12 @@
       *  MD053295 - Lending loan with Interest Calculation Basis      *
       *             method 3 (30/360) has wrong interest payment      *
       *             amount for month of March (Recompile)             *
-      *  MD046248 - Finastra Rebranding                               *
+      *  MD046248 - Finastra Rebranding                               *      
       *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
       *             on Last Day indicator.                            *
       *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
       *             Accrue on Last Day Indicator for method 6.        *
-      *  MD037658 - Define NDAYS/WDAYS w/decimal to cater calc basis 6*
+      *  MD037658 - Define NDAYS/WDAYS w/decimal to cater calc basis 6*      
       *  MD046351 - Rounding and truncation in fee accrual            *
       *             calculations due to mult/div using 15,9 fields    *
       *             being placed into 13,0/15,0 result fields.        *
@@ -208,8 +204,6 @@
      FLVENTL4 IF  E           K        DISK
      F            LVENTELF                          KRENAMELVENTLF4
      FSDCURRPDIF  E                    DISK
-     FPSOLDL1 IF  E           K        DISK                                                 AR375892
-     F            CLOANCLF                          KRENAMEPSOLDCLF                         AR375892
      FLEHOSTPDO   E                    DISK                               CLE033
      F                                              KCOMIT                CLE033
       *  Subroutine stack
@@ -863,43 +857,27 @@
       *
       ** Store pay and receive settlement methods, accounts & branches
       *
-     C                     MOVE '0'       *IN75                                             AR375892
-     C           FELOAN    CHAINPSOLDL1              74                                     AR375892
-     C           *IN74     IFEQ '0'                                                         AR375892
-     C                     MOVE '1'       *IN75                                             AR375892
-     C                     ENDIF                                                            AR375892
-      *                                                                                     AR375892
       ** For fees with blank participant fee indicator
       ** format receive settlement
       *
-     C********** FEPTFI    IFEQ *BLANK                                                      AR375892
-     C**********           MOVE *BLANKS   ##PAYM           * pay method                     AR375892
-     C**********           MOVE *BLANKS   ##PAYA           * pay account                    AR375892
-     C**********           MOVE *BLANKS   ##PAYB           * pay branch                     AR375892
-     C**********           MOVELFERSTM    ##RECM           * rec method                     AR375892
-     C**********           MOVELFERONS    ##RECA           * rec account                    AR375892
-     C**********           MOVELFEOSDB    ##RECB           * rec branch                     AR375892
-     C**********           ELSE                                                             AR375892
+     C           FEPTFI    IFEQ *BLANK
+     C                     MOVE *BLANKS   ##PAYM           * pay method
+     C                     MOVE *BLANKS   ##PAYA           * pay account
+     C                     MOVE *BLANKS   ##PAYB           * pay branch
+     C                     MOVELFERSTM    ##RECM           * rec method
+     C                     MOVELFERONS    ##RECA           * rec account
+     C                     MOVELFEOSDB    ##RECB           * rec branch
+     C                     ELSE
       *
       ** For fee with participant fee indicator 'P'
       ** format pay settlement
       *
-     C           FEPTFI    IFEQ 'P'                                                         AR375892
-     C           *IN75     OREQ '1'                                                         AR375892
      C                     MOVELFEPSTM    ##PAYM           * pay method
      C                     MOVELFEPONS    ##PAYA           * pay account
      C                     MOVELFEOMDB    ##PAYB           * pay branch
      C                     MOVE *BLANKS   ##RECM           * rec method
      C                     MOVE *BLANKS   ##RECA           * rec account
      C                     MOVE *BLANKS   ##RECB           * rec branch
-      *                                                                                     AR375892
-     C                     ELSE                                                             AR375892
-     C                     MOVE *BLANKS   ##PAYM           * pay method                     AR375892
-     C                     MOVE *BLANKS   ##PAYA           * pay account                    AR375892
-     C                     MOVE *BLANKS   ##PAYB           * pay branch                     AR375892
-     C                     MOVELFERSTM    ##RECM           * rec method                     AR375892
-     C                     MOVELFERONS    ##RECA           * rec account                    AR375892
-     C                     MOVELFEOSDB    ##RECB           * rec branch                     AR375892
      C                     ENDIF
       *
       ** Store basic fee details
@@ -991,14 +969,10 @@
       *
       ** Pass movement to write program (with appropriate instructions)
       *
-     C********** FEPTFI    IFEQ *BLANK                                                      AR375892
-     C**********           MOVEL##RECD    ##SETD           * Rec details                    AR375892
-     C**********           ELSE                                                             AR375892
-     C           FEPTFI    IFEQ 'P'                                                         AR375892
-     C           *IN75     OREQ '1'                                                         AR375892
+     C           FEPTFI    IFEQ *BLANK
+     C                     MOVEL##RECD    ##SETD           * Rec details
+     C                     ELSE
      C                     MOVEL##PAYD    ##SETD           * Pay details
-     C                     ELSE                                                             AR375892
-     C                     MOVEL##RECD    ##SETD           * Rec details                    AR375892
      C                     ENDIF
       *
       ** Get fee code description from Fee Codes File

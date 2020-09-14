@@ -11,22 +11,27 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. EML109             Date 07Feb20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BUG4136            Date 01Sep04               *
+      *                 BUG4136            Date 01Sep04               *
       *                 BUG3672 *CREATE    Date 16Jul04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  EML109 - Upgrade of NAD1 to FB2.1 SP21                       *
+      *           NADC01 - ML Extracts for Mizuho                     *
+      *           Add EML109_002, EML109_003, EML109_004              *
       *  MD046248 - Finastra Rebranding                               *
       *  BG4136 - Library of the dataq not setup                      *
       *  BG1673 - Wait for finished message                           *
       *                                                               *
       *****************************************************************
- 
+     F/COPY WNCPYSRC,EML109_002
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -45,36 +50,36 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for fields
       ** used in checking whether there are messages on the data queue.
      D/COPY ZACPYSRC,DTAQCHKDCL
       **------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       * Message to send to Management Limits
      D ML_MSG          S              1    DIM(800) CTDATA PERRCD(86)
- 
+
      D DBerrUpd        C                   CONST('DB error in MLIM global updat+
      D                                     e')
- 
+
       ** Access Object Parameters
      D PRetCode        S              7A
      D PSysValK1       S             20A
@@ -97,7 +102,7 @@
      D PSysVal9        S            200A
      D PSysValK10      S             20A
      D PSysVal10       S            200A
- 
+
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
@@ -113,29 +118,30 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
      D WConst          C                   'ManagementLimitsCoBWait'
       *
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
       * MAIN - Main body                                              *
       *                                                               *
       *****************************************************************
- 
+     C/COPY WNCPYSRC,EML109_003
+
       ** Get the rundate
      C     *DTAARA       DEFINE                  RUNDAT
      C                   IN        RUNDAT
- 
+
       ** Get the system prefix
      C     *DTAARA       DEFINE                  SDSTAT
      C                   IN        SDSTAT
- 
+
       *  Get wait time
      C                   EVAL      PSysValK1 = WConst
      C                   CALL      'AOSVALR0'
@@ -169,13 +175,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       *  Re-initialise Data queue parms
      C                   EVAL      DtqNam = 'GOMLCOBRSP'
      C                   EVAL      DtqLib = '*LIBL'                                          BUG4136
      C                   EVAL      DtqLen = 1000                                             BUG4136
      C                   MoveL     PSysVal1      DtqWait
- 
+
       ** Wait for data queue return prompt
      C                   CALL      'QRCVDTAQ'
      C                   PARM                    DtqNam           10
@@ -183,15 +189,16 @@
      C                   PARM                    DtqLen            5 0
      C                   PARM                    DtqRsp           10
      C                   PARM                    DtqWait           5 0
- 
+
       ** Check for error
      C     DtqRsp        IFNE      'GO'
      C                   ExSr      *Pssr
      C                   EndIf
- 
+     C/COPY WNCPYSRC,EML109_004
+
       * Exit from program
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       ** The following /COPY contains the standard program status

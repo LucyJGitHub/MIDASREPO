@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CGL146             Date 10Jul13              */
+/*       Last Amend No. EML104             Date 04Feb20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CGL146             Date 10Jul13              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -19,15 +20,18 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       EML104 - Upgrade of EML010 to FBM2.1 SP23                   */
+/*                EML010 - Structured field :86:                     */
+/*                Added EML104_020                                   */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CGL146 - MT940/MT950 Production in Input Cycle              */
 /*                Added hooks: CGL146_054, CGL146_055, CGL146_056    */
 /*       CGL013 - MT94x Message Generation                           */
 /*                                                                   */
 /*********************************************************************/
- 
+
              PGM        PARM(&Cnam &Cseq)
- 
+
              DCL        VAR(&Cnam)    TYPE(*CHAR)  LEN(10)
              DCL        VAR(&Cseq)    TYPE(*DEC)   LEN(5 0)
              DCL        VAR(&Sdstat)  TYPE(*CHAR)  LEN(256)
@@ -37,38 +41,38 @@
              DCL        VAR(&Stat)    TYPE(*CHAR)  LEN(1) VALUE(' ')
              DCL        VAR(&Rtncde)  TYPE(*CHAR)  LEN(7) VALUE('       ')
 /*/COPY OFCPYSRCZ,CGL146_054                                         */                   /*CGL146*/
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                              2002')
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                         CMDLBL(ABNOR))
- 
+
              CHGJOB     SWS(XXXXXX00)
- 
+
 /* Check feature CGL013 MT94x Message Generation */
- 
+
              CHGVAR     VAR(&Rtncde) VALUE('       ')
              CALL       PGM(AOSARDR0) PARM(&Rtncde '*VERIFY' 'CGL013')
- 
+
              IF         (&Rtncde *NE '       ') +
                  GOTO      CMDLBL(END)
- 
- 
+
+
 /*/COPY OFCPYSRCZ,CGL146_055                                         */                   /*CGL146*/
 /* Compute the name of the library which will contain the file copy */
- 
+
              RTVDTAARA  DTAARA(SDSTAT) RTNVAR(&Sdstat)
              CHGVAR    VAR(&Pre) VALUE(%SST(&Sdstat 6 2))
              CHGVAR    VAR(&Tolib) VALUE(&Pre *TCAT 'DPLIB')
              CHGVAR    VAR(&Fromlib) VALUE(&Pre *TCAT 'DTALIB')
- 
+
 /* Copy the Network Description File at first run */
- 
+
              CALL       PGM(CB0160) PARM(&Cnam &Cseq &Stat)
- 
+
              IF         (&Stat *NE 'Y') +
                DO
                  DLTF       FILE(&Tolib/XSDNWRKPD)
@@ -77,30 +81,31 @@
                             TOFILE(&Tolib/XSDNWRKPD) MBROPT(*REPLACE) +
                             CRTFILE(*YES) FMTOPT(*NONE)
                ENDDO
- 
+
              CHGVAR     VAR(&Stat) VALUE('Y')
              CALL       PGM(CB0150) PARM(&Cnam &Cseq &Stat)
- 
+
 /* Copy back the working copy, without the deleted records */
- 
+
              CPYF       FROMFILE(&Tolib/XSDNWRKPD) +
                         TOFILE(&Fromlib/SDNWRKPD) +
                         MBROPT(*REPLACE) INCREL((*IF EDTYLC *NE 'D')) +
                         FMTOPT(*NONE)
- 
+
 /* Delete record from SDNWRK1D if not found in SDNWRKPD */
- 
+
 /*/COPY OFCPYSRCZ,CGL146_056                                         */                   /*CGL146*/
- 
+/*/COPY WNCPYSRC,EML104_020                                          */                   /*EML104*/
+
              GOTO       CMDLBL(END)
- 
+
 /* Abnormal termination  */
- 
+
 ABNOR:       CHGJOB     SWS(XXXXXX11)
- 
+
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           SDC2001D ended abnormally - see job +
                           log') TOMSGQ(MOPERQ)
                MONMSG     MSGID(CPF0000 MCH0000)
- 
+
 END:         ENDPGM

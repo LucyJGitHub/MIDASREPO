@@ -14,7 +14,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD039655           Date 03Sep19               *
+      *  Last Amend No. MD039655           Date 11Feb20               *
       *  Prev Amend No. MD044880           Date 15Jan18               *
       *                 MD046248           Date 27Oct17               *
       *                 LLN022A            Date 03Jun15               *
@@ -196,7 +196,6 @@
      D POPTN           S              7A                                                      CER001
      D PSARD           S              6A                                                      CER001
      D ULX004          S              1A                                                      CER001
-
                                                                                               CER049
      DTranStamp        S             51A                                                      CER049
       ** Stamp Tax Details                                                                    CER049

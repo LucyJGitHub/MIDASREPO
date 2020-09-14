@@ -16,7 +16,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD039655           Date 03Sep19               *
+      *  Last Amend No. MD039655           Date 14Aug20               *
       *  Prev Amend No. MD036924           Date 06Nov19               *
       *                 AR674226           Date 04Dec19               *
       *                 CLE071             Date 18Jul18               *
@@ -1546,6 +1546,7 @@
      C                   PARM      DDACTN        @ZACTN            1
      C                   PARM      FC_BRCA       @ZBR              3
      C                   PARM                    @ERR              1 0
+      *
       *                                                                                     MD039655
       ** Check for reject permission                                                        MD039655
       *                                                                                     MD039655
@@ -1562,7 +1563,6 @@
       *                                                                                     MD039655
      C                   ENDIF                                                              MD039655
       *                                                                                     MD039655
-      *
      C     @ERR          IFEQ      1
      C                   MOVEL     'N'           DDACTNOK
      C                   ADD       1             Ix

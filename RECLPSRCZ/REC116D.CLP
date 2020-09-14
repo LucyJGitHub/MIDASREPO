@@ -3,7 +3,7 @@
 /*EXI    TEXT('Midas RE Retail accrual for non-alternate')           */
 /*********************************************************************/
 /*                                                                   */
-/*       Midas Retail Module                                 */
+/*       Midas Retail Module                                         */
 /*                                                                   */
 /*       REC116D - COMMISSION CAPITALISATIONS                        */
 /*                                                                   */
@@ -13,7 +13,7 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD035795           Date 07Oct15              */
+/*       Last Amend No. MD035795           Date 12Mar20              */
 /*       Prev Amend No. MD046248           Date 27Oct17              */
 /*                      CRE083BD           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/

@@ -11,9 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD053093           Date 03Sep19               *
-      *  Prev Amend No. MD046484           Date 03Sep19               *
-      *                 MD039655           Date 03Sep19               *
+      *  Last Amend No. MD053093           Date 14Aug20               *
+      *  Prev Amend No. MD046484           Date 14Aug20               *
+      *                 MD039655           Date 14Aug20               *
       *                 MD054782           Date 04Dec19               *
       *                 AR674226           Date 04Dec19               *
       *                 CLE071             Date 18Jul18               *
@@ -628,7 +628,7 @@
      C                   EVAL      PSUSER = USRID                                           MD024398
      C                   ENDIF                                                  CAP084
 
-     ** Skip validation process if action is reject                                         MD039655
+      ** Skip validation process if action is reject                                        MD039655
                                                                                             MD039655
      C                   IF        @ACTRV <> *BLANK                                         MD039655
      C                   EXSR      SRRSFD                                                   MD039655
@@ -3269,7 +3269,8 @@ E4   C                   ENDIF
       *                                                                                     MD039655
       ** Reject Action                                                                      MD039655
       *                                                                                     MD039655
-     C                   PARM                    @ACTRV            1                        MD039655 
+     C                   PARM                    @ACTRV            1                        MD039655
+
       * OUTPUTS
       * Field OK flags (DS) from/to caller
      C                   PARM                    OKFlagsDS

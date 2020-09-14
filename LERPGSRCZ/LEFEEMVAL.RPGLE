@@ -11,14 +11,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR375891B          Date 26Aug20               *      
-      *  Prev Amend No. AR375892           Date 26Aug20               *      
-      *                 MD052696           Date 04Apr19               *
-      *                 MD004904           Date 04Apr19               *
-      *                 AR1049357          Date 04Apr19               *
-      *                 AR994776           Date 04Apr19               *
-      *                 MD053942           Date 23Jul19               *
-      *                 CER050             Date 16Jun19               *
+      *  Last Amend No. MD053942           Date 23Jul19               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
       *                 MD053837           Date 28Aug19               *
       *                 MD021377           Date 18Jul18               *
       *                 CLE071             Date 18Jul18               *
@@ -117,26 +111,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  AR375891B - Amendment to Settlement details do not reflect   *
-      *              on file. Ensure currency is set correctly.       *
-      *              (Child: AR375892)                                *      
-      *  AR375892 - Incorrect projection for fees attached to parts   *
-      *             sold loan. Use Payment Settlement instead of      *
-      *             Receipt Settlement.                               *      
-      *  MD052696 - Unauthorised Loans and fees not visible in WIP,   *
-      *             after rejecting amendments to their maturity dates*
-      *  MD004904 - Rejection causes incorrect exchange rate and      *
-      *             fee amount1-5. Enhanced fix AR9947776.            *
-      *           - Applied for MD052696                              *
-      *  AR1049357 - Rejection of fee causes the Fee amount to be     *
-      *              corrupted. Details should be reverted correctly. *
-      *              Enhanced fix AR994776. (Child: AR1049358)        *
-      *           - Applied for MD052696                              *
-      *  AR994776 - Fees remains unauthorised after rejection of      *
-      *             amendment. Details are not reverted correctly.    *
-      *             Add a flag if action is reject to revert back the *
-      *             details of fees. (Child: AR994777)                *
-      *           - Applied for MD052696                              *
       *  MD053942 - Incorrect defaulting of DDEXRT for loan fees. Add *
       *             exchange rate default process for loan fee only   *
       *             when fee currency not equal to loan currency.     *
@@ -797,13 +771,6 @@
      C                   IF        USER <> *BLANKS
      C                   EVAL      PSUSER = USER
      C                   ENDIF
-      *                                                                                     AR994776
-      ** Skip validation process if action is reject.                                       AR994776
-      *                                                                                     AR994776
-     C     DRejFlg       IFEQ      'Y'                                                      AR994776
-     C                   EXSR      SRRSFD                                                   AR994776
-     C                   RETURN                                                             AR994776
-     C                   ENDIF                                                              AR994776
 
       ** Call Validation Modules in Sequence
       *
@@ -963,9 +930,7 @@
      C                   EXSR      SRTEXT
      C                   MOVEL     ZAMSTP        DDFETP
      C**********         MOVE      'P'           WPTFI                                        CLE106
-     C**********         MOVE      CL_LPFI       WPTFI                               CLE106 AR375892
-     C**********         MOVE      'P'           WPTFI                            AR375892 AR375891B
-     C                   MOVE      CL_LPFI       WPTFI                                     AR375891B
+     C                   MOVE      CL_LPFI       WPTFI                                        CLE106
      C                   ENDIF
       *
      C     CL_PTYP       IFEQ      64
@@ -4240,14 +4205,8 @@
      C                   ELSE
       ** info coming from input parameter
      C     WPTFI         IFEQ      ' '
-     C                   IF        CL_PTYP = 66 or CL_PTYP = 67                            AR375891B
-     C                             or CL_PTYP = 69 or CL_PTYP = 72                         AR375891B
-     C                   EVAL      VFSCCY = DDPSCY                                         AR375891B
-     C                   EVAL      VFICCY = DDIC72                                         AR375891B
-     C                   ELSE                                                              AR375891B
      C                   EVAL      VFSCCY = DDRSCY
      C                   EVAL      VFICCY = *BLANKS
-     C                   ENDIF                                                             AR375891B
      C                   ENDIF
      C     WPTFI         IFEQ      'P'
      C     WPTFI         OREQ      'S'                                                        CLE106
@@ -4356,287 +4315,6 @@
      C                   EVAL      VFEFEMC     = DDFEMC                                       CLE134
      C                   ENDIF                                                                CLE134
      C                   ENDSR
-      *****************************************************************                     AR994776
-      /EJECT                                                                                AR994776
-      *****************************************************************                     AR994776
-      *                                                               *                     AR994776
-      * SRRSFD  -  Restore orignal details (for Reject Action)        *                     AR994776
-      *                                                               *                     AR994776
-      *****************************************************************                     AR994776
-     C     SRRSFD        BEGSR                                                              AR994776
-      *                                                                                     AR994776
-      ** Fee Code                                                                           AR994776
-      *                                                                                     AR994776
-     C                   MOVE      DDECOD        VFFCOD                                     AR994776
-      *                                                                                     AR994776
-      ** Currency Code                                                                      AR994776
-      *                                                                                     AR994776
-     C                   MOVE      DDECUR        VFFCCY                                     AR994776
-      *                                                                                     AR994776
-      ** Fee Amount                                                                         AR994776
-      *                                                                                     AR994776
-     C**********         MOVE      DDEAMT        VFFAMT                           AR994776 AR1049357
-     C     DDEAMT        IFNE      *BLANKS                                                 AR1049357
-     C                   MOVE      *BLANKS       ZFIELD                                    AR1049357
-     C                   MOVE      DDEAMT        ZFIELD                                    AR1049357
-     C                   CALL      'AOCURRR0'                                               MD031003
-     C                   PARM      *BLANK        PRTCD                                      MD031003
-     C                   PARM      '*KEY   '     POPTN                                      MD031003
-     C                   PARM      DDECUR        PCURR                                      MD031003
-     C     SDCURR        PARM      SDCURR        DSSDY                                      MD031003
-     C                   Z-ADD     A6NBDP        ZADEC                                     AR1049357
-     C     13            SUB       A6NBDP        ZADIG                                     AR1049357
-     C                   EXSR      ZALIGN                                                  AR1049357
-     C                   MOVE      ZFIELD        VFFAMT                                    AR1049357
-     C                   ENDIF                                                             AR1049357
-      *                                                                                     AR994776
-      ** Start Date                                                                         AR994776
-      *                                                                                     AR994776
-     C                   MOVE      DDEPSD        DATEA                                      AR994776
-     C                   TESTN                   DATEA                9798                  AR994776
-     C                   CALLB     'ZDATE1'                                                 AR994776
-     C                   PARM                    DATEA                                      AR994776
-     C                   PARM                    ZDAYNO                                     AR994776
-     C                   PARM                    BJDFIN                                     AR994776
-     C                   PARM                    ErrorFlag                                  AR994776
-     C                   Z-ADD     ZDAYNO        VFPSTD                                     AR994776
-      *                                                                                     AR994776
-      ** End Date                                                                           AR994776
-      *                                                                                     AR994776
-     C                   MOVE      DDEPED        DATEA                                      AR994776
-     C                   TESTN                   DATEA                9798                  AR994776
-     C                   CALLB     'ZDATE1'                                                 AR994776
-     C                   PARM                    DATEA                                      AR994776
-     C                   PARM                    ZDAYNO                                     AR994776
-     C                   PARM                    BJDFIN                                     AR994776
-     C                   PARM                    ErrorFlag                                  AR994776
-     C                   Z-ADD     ZDAYNO        VFPEND                                     AR994776
-      *                                                                                     AR994776
-      ** Payment On                                                                         AR994776
-      *                                                                                     AR994776
-     C                   MOVE      DDEPON        VFPYON                                     AR994776
-      *                                                                                     AR994776
-      ** Advance / Confirmed Indicator                                                      AR994776
-      *                                                                                     AR994776
-     C                   MOVE      DDEADV        VFAUTO                                     AR994776
-      *                                                                                     AR994776
-      ** Calculation Type                                                                   AR994776
-      *                                                                                     AR994776
-     C                   MOVE      DDCALT        VFCALT                                     AR994776
-      *                                                                                     AR994776
-      ** Rate 1                                                                             AR994776
-      *                                                                                     AR994776
-     C     DDRTE1        IFNE      *BLANKS                                                  AR994776
-     C                   MOVE      *BLANKS       ZFIELD                                     AR994776
-     C                   MOVE      DDRTE1        ZFIELD                                     AR994776
-     C                   Z-ADD     2             ZADIG             2 0                      AR994776
-     C                   Z-ADD     5             ZADEC                                      AR994776
-     C                   MOVE      '0'           *IN99                                      AR994776
-     C                   EXSR      ZALIGN                                                   AR994776
-     C                   MOVE      ZFIELD        WA13                                       AR994776
-     C     WA13          DIV       100000        WFRT1                                      AR994776
-     C                   MOVE      WFRT1         VFFRT1                                     AR994776
-     C                   ELSE                                                               AR994776
-     C                   MOVE      *BLANKS       VFFRT1                                     AR994776
-     C                   ENDIF                                                              AR994776
-      *                                                                                     AR994776
-      ** Rate 2                                                                             AR994776
-      *                                                                                     AR994776
-     C     DDRTE2        IFNE      *BLANKS                                                  AR994776
-     C                   MOVE      *BLANKS       ZFIELD                                     AR994776
-     C                   MOVE      DDRTE2        ZFIELD                                     AR994776
-     C                   Z-ADD     2             ZADIG             2 0                      AR994776
-     C                   Z-ADD     5             ZADEC                                      AR994776
-     C                   MOVE      '0'           *IN99                                      AR994776
-     C                   EXSR      ZALIGN                                                   AR994776
-     C                   MOVE      ZFIELD        WA13                                       AR994776
-     C     WA13          DIV       100000        WFRT2                                      AR994776
-     C                   MOVE      WFRT2         VFFRT2                                     AR994776
-     C                   ELSE                                                               AR994776
-     C                   MOVE      *BLANKS       VFFRT2                                     AR994776
-     C                   ENDIF                                                              AR994776
-      *                                                                                     AR994776
-      ** Rate 3                                                                             AR994776
-      *                                                                                     AR994776
-     C     DDRTE3        IFNE      *BLANKS                                                  AR994776
-     C                   MOVE      *BLANKS       ZFIELD                                     AR994776
-     C                   MOVE      DDRTE3        ZFIELD                                     AR994776
-     C                   Z-ADD     2             ZADIG             2 0                      AR994776
-     C                   Z-ADD     5             ZADEC                                      AR994776
-     C                   MOVE      '0'           *IN99                                      AR994776
-     C                   EXSR      ZALIGN                                                   AR994776
-     C                   MOVE      ZFIELD        WA13                                       AR994776
-     C     WA13          DIV       100000        WFRT3                                      AR994776
-     C                   MOVE      WFRT3         VFFRT3                                     AR994776
-     C                   ELSE                                                               AR994776
-     C                   MOVE      *BLANKS       VFFRT3                                     AR994776
-     C                   ENDIF                                                              AR994776
-      *                                                                                     AR994776
-      ** Rate 4                                                                             AR994776
-      *                                                                                     AR994776
-     C     DDRTE4        IFNE      *BLANKS                                                  AR994776
-     C                   MOVE      *BLANKS       ZFIELD                                     AR994776
-     C                   MOVE      DDRTE4        ZFIELD                                     AR994776
-     C                   Z-ADD     2             ZADIG             2 0                      AR994776
-     C                   Z-ADD     5             ZADEC                                      AR994776
-     C                   MOVE      '0'           *IN99                                      AR994776
-     C                   EXSR      ZALIGN                                                   AR994776
-     C                   MOVE      ZFIELD        WA13                                       AR994776
-     C     WA13          DIV       100000        WFRT4                                      AR994776
-     C                   MOVE      WFRT4         VFFRT4                                     AR994776
-     C                   ELSE                                                               AR994776
-     C                   MOVE      *BLANKS       VFFRT4                                     AR994776
-     C                   ENDIF                                                              AR994776
-      *                                                                                     AR994776
-      ** Rate 5                                                                             AR994776
-      *                                                                                     AR994776
-     C     DDRTE5        IFNE      *BLANKS                                                  AR994776
-     C                   MOVE      *BLANKS       ZFIELD                                     AR994776
-     C                   MOVE      DDRTE5        ZFIELD                                     AR994776
-     C                   Z-ADD     2             ZADIG             2 0                      AR994776
-     C                   Z-ADD     5             ZADEC                                      AR994776
-     C                   MOVE      '0'           *IN99                                      AR994776
-     C                   EXSR      ZALIGN                                                   AR994776
-     C                   MOVE      ZFIELD        WA13                                       AR994776
-     C     WA13          DIV       100000        WFRT5                                      AR994776
-     C                   MOVE      WFRT5         VFFRT5                                     AR994776
-     C                   ELSE                                                               AR994776
-     C                   MOVE      *BLANKS       VFFRT5                                     AR994776
-     C                   ENDIF                                                              AR994776
-      *                                                                                     AR994776
-      ** Amounts 1-5                                                                        AR994776
-      **********                                                                   AR994776 MD004904
-     C**********         MOVE      DDFAMT1       VFAMT1                            AR994776 MD004904
-     C**********         MOVE      DDFAMT2       VFAMT2                            AR994776 MD004904
-     C**********         MOVE      DDFAMT3       VFAMT3                            AR994776 MD004904
-     C**********         MOVE      DDFAMT4       VFAMT4                            AR994776 MD004904
-     C**********         MOVE      DDFAMT5       VFAMT5                            AR994776 MD004904
-      *                                                                                     MD004904
-     C     DDPIND        IFEQ      'A'                                                      MD004904
-     C                   Z-ADD     11            ZADIG                                      MD004904
-     C                   Z-ADD     0             ZADEC                                      MD004904
-     C                   ELSE                                                               MD004904
-     C                   Z-ADD     3             ZADIG                                      MD004904
-     C                   Z-ADD     3             ZADEC                                      MD004904
-     C                   ENDIF                                                              MD004904
-      *                                                                                     MD004904
-      ** Amount 1                                                                           MD004904
-      *                                                                                     MD004904
-     C     DDFAMT1       IFNE      *BLANKS                                                  MD004904
-     C                   MOVE      *BLANKS       ZFIELD                                     MD004904
-     C                   MOVEL     DDFAMT1       ZFIELD                                     MD004904
-     C                   MOVE      '0'           *IN99                                      MD004904
-     C                   EXSR      ZALIGN                                                   MD004904
-     C                   MOVE      ZFIELD        WA13                                       MD004904
-     C                   Z-ADD     WA13          WCAMT1                                     MD004904
-     C                   MOVE      WCAMT1        VFAMT1                                     MD004904
-     C                   ENDIF                                                              MD004904
-      *                                                                                     MD004904
-      ** Amount 2                                                                           MD004904
-      *                                                                                     MD004904
-     C     DDFAMT2       IFNE      *BLANKS                                                  MD004904
-     C                   MOVE      *BLANKS       ZFIELD                                     MD004904
-     C                   MOVEL     DDFAMT2       ZFIELD                                     MD004904
-     C                   MOVE      '0'           *IN99                                      MD004904
-     C                   EXSR      ZALIGN                                                   MD004904
-     C                   MOVE      ZFIELD        WA13                                       MD004904
-     C                   Z-ADD     WA13          WCAMT2                                     MD004904
-     C                   MOVE      WCAMT2        VFAMT2                                     MD004904
-     C                   ENDIF                                                              MD004904
-      *                                                                                     MD004904
-      ** Amount 3                                                                           MD004904
-      *                                                                                     MD004904
-     C     DDFAMT3       IFNE      *BLANKS                                                  MD004904
-     C                   MOVE      *BLANKS       ZFIELD                                     MD004904
-     C                   MOVEL     DDFAMT3       ZFIELD                                     MD004904
-     C                   MOVE      '0'           *IN99                                      MD004904
-     C                   EXSR      ZALIGN                                                   MD004904
-     C                   MOVE      ZFIELD        WA13                                       MD004904
-     C                   Z-ADD     WA13          WCAMT3                                     MD004904
-     C                   MOVE      WCAMT3        VFAMT3                                     MD004904
-     C                   ENDIF                                                              MD004904
-      *                                                                                     MD004904
-      ** Amount 4                                                                           MD004904
-      *                                                                                     MD004904
-     C     DDFAMT4       IFNE      *BLANKS                                                  MD004904
-     C                   MOVE      *BLANKS       ZFIELD                                     MD004904
-     C                   MOVEL     DDFAMT4       ZFIELD                                     MD004904
-     C                   MOVE      '0'           *IN99                                      MD004904
-     C                   EXSR      ZALIGN                                                   MD004904
-     C                   MOVE      ZFIELD        WA13                                       MD004904
-     C                   Z-ADD     WA13          WCAMT4                                     MD004904
-     C                   MOVE      WCAMT4        VFAMT4                                     MD004904
-     C                   ENDIF                                                              MD004904
-      *                                                                                     MD004904
-      ** Amount 5                                                                           MD004904
-      *                                                                                     MD004904
-     C     DDFAMT5       IFNE      *BLANKS                                                  MD004904
-     C                   MOVE      *BLANKS       ZFIELD                                     MD004904
-     C                   MOVEL     DDFAMT5       ZFIELD                                     MD004904
-     C                   MOVE      '0'           *IN99                                      MD004904
-     C                   EXSR      ZALIGN                                                   MD004904
-     C                   MOVE      ZFIELD        WA13                                       MD004904
-     C                   Z-ADD     WA13          WCAMT5                                     MD004904
-     C                   MOVE      WCAMT5        VFAMT5                                     MD004904
-     C                   ENDIF                                                              MD004904
-      *                                                                                     AR994776
-      ** Calculation Basis                                                                  AR994776
-      *                                                                                     AR994776
-     C                   MOVE      DDCALC        VFCALC                                     AR994776
-      *                                                                                     MD004904
-     C     DDEXRT        IFNE      *BLANKS                                                  MD004904
-     C                   MOVE      *BLANKS       ZFIELD                                     MD004904
-     C                   MOVE      DDEXRT        ZFIELD                                     MD004904
-     C                   Z-ADD     5             ZADIG             2 0                      MD004904
-     C                   Z-ADD     8             ZADEC                                      MD004904
-     C                   EXSR      ZALIGN                                                   MD004904
-     C                   MOVE      ZFIELD        WA13                                       MD004904
-     C     WA13          DIV       100000000     WERAT                                      MD004904
-     C                   MOVE      WERAT         VFERAT                                     MD004904
-     C                   ELSE                                                               MD004904
-     C                   MOVE      *BLANKS       VFERAT                                     MD004904
-     C                   ENDIF                                                              MD004904
-      **********                                                                   AR994776 MD004904
-      ***Exchange Rate                                                             AR994776 MD004904
-      **********                                                                   AR994776 MD004904
-     C**********         CALL      'AOCURRR0'                                      AR994776 MD004904
-     C**********         PARM      *BLANK        PRTCD                             AR994776 MD004904
-     C**********         PARM      '*KEY   '     POPTN                             AR994776 MD004904
-     C**********         PARM      DDECUR        PCURR                             AR994776 MD004904
-     C*****SDCURR        PARM      SDCURR        DSSDY                             AR994776 MD004904
-      **********                                                                   AR994776 MD004904
-     C**********         MOVE      A6MDIN        ZMDI1                             AR994776 MD004904
-     C**********         Z-ADD     A6SPRT        ZRATE1                            AR994776 MD004904
-     C**********         EXSR      ZXRATE                                          AR994776 MD004904
-     C**********         Z-ADD     ZRATEX        VFERAT                            AR994776 MD004904
-      *                                                                                     AR994776
-      ** Multiplication / Division Ind                                                      AR994776
-      *                                                                                     AR994776
-     C                   MOVE      DDMDIN        VFMDIN                                     AR994776
-      *                                                                                     AR994776
-      ** Next Payment Date                                                                  AR994776
-      *                                                                                     AR994776
-     C                   MOVE      DDNPYD        DATEA                                      AR994776
-     C                   TESTN                   DATEA                9798                  AR994776
-     C                   CALLB     'ZDATE1'                                                 AR994776
-     C                   PARM                    DATEA                                      AR994776
-     C                   PARM                    ZDAYNO                                     AR994776
-     C                   PARM                    BJDFIN                                     AR994776
-     C                   PARM                    ErrorFlag                                  AR994776
-     C                   Z-ADD     ZDAYNO        VFNPYD                                     AR994776
-      *                                                                                     AR994776
-      ** Frequency                                                                          AR994776
-      *                                                                                     AR994776
-     C                   MOVE      DDFREQ        VFFREQ                                     AR994776
-      *                                                                                     AR994776
-      ** Day                                                                                AR994776
-      *                                                                                     AR994776
-     C                   MOVE      DDDYIM        VFDYIM                                     AR994776
-      *                                                                                     AR994776
-      ** Last Change Status                                                                 AR994776
-      *                                                                                     AR994776
-     C                   MOVE      'A'           VFFSTS                                     AR994776
-     C                   ENDSR                                                              AR994776
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -4707,8 +4385,6 @@
       * Valid Fee layout (DS) from/to caller
      C                   PARM                    ValidFeem
       *
-      ** Reject Action Flag                                                                 MD052696
-     C                   PARM                    DRejFlg           1                        MD052696
       **  GET ZMUSER to access default branch.
      C******DTAARA       DEFINE                  ZMUSER                                      BUG8550
      C**********         IN        ZMUSER                                                    BUG8550

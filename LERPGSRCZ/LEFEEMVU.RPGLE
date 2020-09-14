@@ -22,10 +22,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. AR375891B          Date 26Aug20               *
-      *  Prev Amend No. AR375892           Date 26Aug20               *
-      *                 MD031692           Date 12Mar20               *
-      *                 MD030856           Date 06Nov19               *
+      *  Last Amend No. MD031692           Date 12Mar20               *
+      *  Prev Amend No. MD030856           Date 06Nov19               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
       *                 CLE071             Date 18Jul18               *
@@ -87,15 +85,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  AR375891B - Amendment to Settlement details do not reflect   *
-      *              on file. Ensure protect indicator set correctly. *
-      *              (Child: AR375892)                                *
-      *  AR375892 - Incorrect projection for fees attached to parts   *
-      *             sold loan. Use Payment Settlement instead of      *
-      *             Receipt Settlement.                               *      
       *  MD031692 - Incorrect accrual when fee rate is changed on     *
       *             payment date. Add warning message parameters in   *
-      *             LEFEEMAMD.                                        *
+      *             LEFEEMAMD.                                        *      
       *  MD030856 - Introduced reject processing to FEEM              *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -535,7 +527,6 @@
      D BlankSTYP       S              2A                                                      CSD095
      D BlankBRCA       S              3A                                                      CSD095
                                                                                               CSD095
-     D PPayParm        S            594                                                     AR375892                                                                                              
       ** +--------------------------------------+
       ** Ê End of D-specs                       Ê
       ** Ê ==============                       Ê
@@ -602,26 +593,12 @@
      C                   WHEN      DDACTN = 'I'
                                                                                             AR693137
       ** Default settlement details from related loan                                       AR693137
-      ** Use Pay Settlement if attached to parts sold                                       AR375892
-      *                                                                                     AR375892
-     C                   IF        CL_PTYP <> 66                                            AR375892
-     C                             And CL_PTYP <> 67                                        AR375892
-     C                             And CL_PTYP <> 69                                        AR375892
-     C                             And CL_PTYP <> 72                                        AR375892    
                                                                                             AR693137
      C                   IF        ##RECS = *blank AND                                      AR693137
      C                             PRcvParm <> *blank                                       AR693137
      C                   MOVEL     PRcvParm      ##RECS                                     AR693137
      C                   ENDIF                                                              AR693137
-      *                                                                                     AR375892
-     C                   ELSE                                                               AR375892
-      *                                                                                     AR375892
-     C                   IF        ##PAYS = *blank AND                                      AR375892
-     C                             PPayParm <> *blank                                       AR375892
-     C                   MOVEL     PPayParm      ##PAYS                                     AR375892
-     C                   ENDIF                                                              AR375892
-     C                   ENDIF                                                              AR375892
-      *                                                                                     AR375892
+      *
      C                   EXSR      ValidateTr
      C                   EVAL      WrkDftSettl = 'Y'
       *****************************************************************              244636 AR693137
@@ -630,7 +607,7 @@
      C**********         IF        ##RECS = *blank AND                               244636 AR693137
      C**********                   PRcvParm <> *blank                                244636 AR693137
      C**********         MOVEL     PRcvParm      ##RECS                              244636 AR693137
-     C**********         ENDIF                                                       244636 AR693137     
+     C**********         ENDIF                                                       244636 AR693137
      C                   EXSR      ChkSettmts
      C                   EXSR      ValidateSt
 
@@ -767,7 +744,6 @@
       ** Array index (3P0) from/to caller
      C                   PARM                    Idx
      C                   PARM                    PRcvParm                                     244636
-     C                   PARM                    PPayParm                                   AR375892
 
      C                   Z-ADD     FE_FETNLU     H#TNLU
 
@@ -873,8 +849,6 @@
 
       ** Valid Fee layout (DS) from/to caller
      C                   PARM                    ValidFeem
-                                                                                            MD052696
-     C                   PARM                    DRejFlg                                    MD052696
 
       ** If Syndications Manager is off, override UTN with PC Ref value                      CSF011A
                                                                                              CSF011A
@@ -926,14 +900,8 @@
      C                   ENDIF
 
      C     WPTFI         IFEQ      *BLANK
-     C                   IF        CL_PTYP = 66 or CL_PTYP = 67                            AR375891B
-     C                             or CL_PTYP = 69 or CL_PTYP = 72                         AR375891B
-     C                   MOVE      'N'           ##PPAY                                    AR375891B
-     C                   MOVE      'Y'           ##PREC                                    AR375891B
-     C                   ELSE                                                              AR375891B
      C                   MOVE      'Y'           ##PPAY
      C                   MOVE      'N'           ##PREC
-     C                   ENDIF                                                             AR375891B
      C                   ENDIF
 
      C                   ENDIF
@@ -1620,7 +1588,7 @@
       ** Array index (3P0) from/to caller                                                   MD031692
                                                                                             MD031692
      C                   PARM                    WIdx                                       MD031692
-                                                                                            MD031692
+                                                                                            MD031692     
       ** If any errors overwrite previous error information
 
      C                   IF        AmIdx <> 0

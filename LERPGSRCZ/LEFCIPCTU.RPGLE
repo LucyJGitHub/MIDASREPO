@@ -15,7 +15,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD039655           Date 03Sep19               *
+      *  Last Amend No. MD039655           Date 11Feb20               *
       *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 AR937578A          Date 04Apr12               *
       *                 CSF011A            Date 28Nov11               *
@@ -46,7 +46,7 @@
       *                                                               *
       *  MD039655 - Facility cannot be rejected.                      *
       *             Pattern fix from MD-29208 and MD-34908.           *
-      *           - Applied for MD052591.                             *
+      *           - Applied for MD052591.                             *      
       *  MD046248 - Finastra Rebranding                               *
       *  AR937578A - In Collateral and Credit Lines Enquiry, availed  *
       *              loans are both in reservation and exposure       *

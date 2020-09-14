@@ -16,7 +16,9 @@
       *                                                               *
       *  Last Amend No. BUG25122B          Date 13Oct09               *
       *  Prev Amend No. EFIXJM             Date 16Sep09               *
-      *                 BUG25122A          Date 02Sep09               *
+      *                 BUG25122A          Date 02Sep09               *      
+      *                 EML102A            Date 16Jun20               *
+      *                 EML102             Date 28Nov19               *
       *                 220877             Date 22Mar19               *
       *                 CGL188             Date 19Feb18               *
       *                 MD046248           Date 27Oct17               *
@@ -164,7 +166,14 @@
       *                                                               *
       *  BUG25122B - FOKFIX changes                                   *
       *  EFIXJM    - Amendment to FOKFIX                              *
-      *  BUG25122A - Applied missing FOKFIX functionality             *
+      *  BUG25122A - Applied missing FOKFIX functionality             *      
+      *  EML102A- GLC43 on MWGW due to closed GL0420P6                *
+      *           Amended GL0420OP13 -> GL0420OP18                    *
+      *  EML102 - Upgrade of UNL007 to FB2.1 SP23                     *
+      *           UNL007 - Extended Narratives                        *
+      *           Used GL0420CP15, GL0420CP27, GL0420CP35, GL0420CP48,*
+      *                GL0420FFP2, GL0420IIPG, GL0420OP13, GL0420OP14,*
+      *                GL0420OP15, GL0420OP16, GL0420OP17, GL0420OP18 *
       *  220877 - GL0420 Statements produced do not include the       *
       *           IBAN even if CFT004 is switched on.                 *
       *         - Applied for MD052224.                               *

@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD019970           Date 19Aug14               *
+      *  Last Amend No. MD055903           Date 14Sep20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD019970           Date 19Aug14               *
       *                 AR855391           Date 27Oct11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -36,6 +37,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055903 - SD: error while amending Customer details. Added  *
+      *             validation for amending customer.                 *
       *  MD046248 - Finastra Rebranding                               *
       *  MD019970 - Customer Details Amendment Error. Added validation*
       *             for MT3xx Corporate BEI.                          *
@@ -339,6 +342,7 @@
       *                                                                                     MD019970
       ** MT3xx Corporate BEI already exist in SDCUSTPD                                      MD019970
      C     PRTCD         IFEQ      'MIN0247'                                                MD019970
+     C     BBCUST        ANDNE     CUCUST                                                   MD055903
      C                   ADD       1             Idx                                        MD019970
      C                   MOVEL     'N'           DDCBEIOK                                   MD019970
      C                   MOVEL     'DDCBEI'      FldNamXAr(Idx)                             MD019970

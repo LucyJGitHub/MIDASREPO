@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD053345           Date 01Jun20               *
-      *  Prev Amend No. MD052432           Date 18Dec18               *
+      *  Last Amend No. MD056548           Date 10Sep20               *
+      *  Prev Amend No. MD053345           Date 01Jun20               *
+      *                 MD052432           Date 18Dec18               *
       *                 MD053634           Date 21Oct19               *
       *                 MD054610           Date 18Oct10               *
       *                 MD054028           Date 05Sep19               *
@@ -153,6 +154,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056548 - Customer Fees Maintenance is missing              *
       *  MD053345 - Dead lock when amending customer through JMS CUSD *
       *             API.                                              *
       *  MD052432 - System does not recognise the defined authority   *
@@ -1153,6 +1155,8 @@
      D  PACRTN                36     45                                                     MD042692
      D  PAACCZ                46     47                                                     MD042692
      D  PAINSF                48     48                                                     MD042692
+
+     D S01464          S              1A   INZ('N')                                         MD056548
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
@@ -2022,6 +2026,7 @@
       ** Validate Service Fees                                                                CSD079
                                                                                               CSD079
      C     CSD008        IFEQ      'Y'                                                        CSD079
+     C     S01464        OREQ      'Y'                                                      MD056548
      C     SFEDDSMAC     IFNE      *BLANKS                                                   BG12238
      C     SFEDDHMIN     ORNE      *BLANKS                                                   BG12238
      C     SFEDDNAIN     ORNE      *BLANKS                                                   BG12238
@@ -3870,6 +3875,12 @@
                                                                                               CSD079
       ** Set Service fees Fields                                                              CSD079
                                                                                               CSD079
+     C                   IF        S01464 = 'Y' AND CSD008 = 'N'                            MD056548
+     C                   MOVEL     DDCUSN        V_SFCUST                                   MD056548
+     C                   MOVEL     SFEDDSMAC     V_SFSMAC                                   MD056548
+     C                   MOVEL     SFEDDSBCH     V_SFSBCH                                   MD056548
+     C                   MOVEL     SFEDDSCCY     V_SFSCCY                                   MD056548
+     C                   ENDIF                                                              MD056548
      C                   IF        CSD008 = 'Y'                                               CSD079
      C                   MOVEL     DDCUSN        V_SFCUST                                     CSD079
      C                   MOVEL     SFEDDSMAC     V_SFSMAC                                     CSD079
@@ -7075,6 +7086,20 @@
      C                   eval      CER050 = 'N'                                               CER050
      C                   Endif                                                                CER050
                                                                                               CER050
+
+      ** Check if enhancement S01464 is on                                                  MD056548
+                                                                                            MD056548
+     C                   CALLB     'AOSARDR0'                                               MD056548
+     C                   PARM      *BLANKS       @RTCD                                      MD056548
+     C                   PARM      '*VERIFY'     @OPTN                                      MD056548
+     C                   PARM      'S01464'      @SARD                                      MD056548
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD056548
+                                                                                            MD056548
+     C                   IF        @RTCD = *BLANKS                                          MD056548
+     C                   EVAL      S01464 = 'Y'                                             MD056548
+     C                   ELSE                                                               MD056548
+     C                   EVAL      S01464 = 'N'                                             MD056548
+     C                   ENDIF                                                              MD056548
       /COPY WNCPYSRC,SDCUSDVU03
      C                   ENDSR
                                                                                              BUG5082

@@ -14,12 +14,15 @@
       *        are made to DL9005, this program should also           *
       *        be reviewed.                                           *
       *                                                               *
-      *  Last Amend No. MD054140           Date 27Aug19               *
-      *  Prev Amend No. CER050  *Create    Date 16Jun19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD054140           Date 27Aug19               *
+      *                 CER050  *Create    Date 16Jun19               *
       *                                                               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD054140 - APR rate is blanked out after amendment on        *
       *             Maturity Date and Next Interest Payment Date      *
       *  CER050 - Annualised Percentage Rate (APR)                    *

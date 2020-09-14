@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL094             Date 11Jun14               *
       *                 CSF011A            Date 28Nov11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -43,6 +44,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions             *
       *           (Recompile)                                         *
@@ -97,78 +100,78 @@
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       **------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D CIRSFilFmt    E DS                  EXTNAME(DEALSDG)
      D CIRSXFilFmt   E DS                  EXTNAME(DLDLDGQD)                                  CLE025
- 
+
      D CIRSScnFmt    E DS                  EXTNAME(IRCIRSPD)
- 
+
      D ORCDScnFmt    E DS                  EXTNAME(IRDTSCPD)
      D                                     PREFIX(OR)
- 
+
      D OIPDScnFmt    E DS                  EXTNAME(IRDTSCPD)
      D                                     PREFIX(OI)
- 
+
      D TRCDScnFmt    E DS                  EXTNAME(IRDTSCPD)
      D                                     PREFIX(TR)
- 
+
      D TIPDScnFmt    E DS                  EXTNAME(IRDTSCPD)
      D                                     PREFIX(TI)
- 
+
      D PAYFilFmt     E DS                  EXTNAME(SDESFPPD)
- 
+
      D RECFilFmt     E DS                  EXTNAME(SDESFRPD)
- 
+
      D FRIRFilFmt    E DS                  EXTNAME(SDESFFPD)
- 
+
      D PAYScnFmt     E DS                  EXTNAME(SDESSPPD)
- 
+
      D RECScnFmt     E DS                  EXTNAME(SDESSRPD)
- 
+
      D FRIRScnFmt    E DS                  EXTNAME(SDESSFPD)
- 
+
      D VPAYScnFmt    E DS                  EXTNAME(SDESSPPD)
      D                                     PREFIX(V)
- 
+
      D VRECScnFmt    E DS                  EXTNAME(SDESSRPD)
      D                                     PREFIX(V)
- 
+
      D MPAYScnFmt    E DS                  EXTNAME(SDESSPPD)
      D                                     PREFIX(M)
- 
+
      D MRECScnFmt    E DS                  EXTNAME(SDESSRPD)
      D                                     PREFIX(M)
- 
+
      D CIRSExtDta    E DS                  EXTNAME(IRCSEXPD)
                                                                                               CAP043
       ** FRA/IRS Interface Non-Screen Data                                                    CAP043
@@ -184,12 +187,12 @@
                                                                                               CIR008
       ** Short DS for Access programs                                                         CIR008
      D DSFDY         E DS                  EXTNAME(DSFDY)                                     CIR008
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D TRANSDTL        S           5800A
      D PSTS            S             24A
      D PDealNumber     S              6A
@@ -201,7 +204,7 @@
       ** for Transaction Currencies (Receipt and Payment Currency)                           CSF011A
      D InRCCY          S              3A                                                     CSF011A
      D InPCCY          S              3A                                                     CSF011A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -216,15 +219,15 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
      C                   EXSR      SRProc
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -234,15 +237,15 @@
       * Called by: Main Processing                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SRPROC        BEGSR
- 
+
      C                   EVAL      TRANSDTL = *Blanks
      C**********         EVAL      SACCD = CHTP                                               CIR008
      C                   EVAL      SACCD = PActCode                                           CIR008
- 
+
      C                   EXSR      SRSETD
- 
+
      C                   CALLB     'IRCIRSCVT'
      C                   PARM                    RetCodeOut
      C                   PARM                    CIRSFilFmt
@@ -250,11 +253,11 @@
      C                   PARM                    CIR008                                       CIR008
      C                   PARM                    CIRSScnFmt
      C                   PARM                    PSTS
- 
+
      C                   IF        RetCodeOut <> *Blanks
      C                   EVAL      RetCodeIn = '*Error'
      C                   ELSE
- 
+
      C                   CALLB     'IRIRCRTV'
      C                   PARM                    RetCodeOut
      C                   PARM      SDLNO         PDealNumber
@@ -263,11 +266,11 @@
      C                   PARM      *Blanks       OIPDScnFmt
      C                   PARM      *Blanks       TRCDScnFmt
      C                   PARM      *Blanks       TIPDScnFmt
- 
+
      C                   IF        RetCodeOut <> *Blanks
      C                   EVAL      RetCodeIn = '*Error'
      C                   ELSE
- 
+
      C                   CALLB     'ZASETINCVT'
      C                   PARM                    PAYFilFmt
      C                   PARM                    RECFilFmt
@@ -277,7 +280,7 @@
      C                   PARM      *Blanks       FRIRScnFmt
      C                   PARM      STCUCY        InRCCY                                      CSF011A
      C                   PARM      SUCUCY        InPCCY                                      CSF011A
- 
+
      C                   CALLB     'IRCXSTRTV'
      C                   PARM                    RetCodeOut
      C                   PARM      SDLNO         PDealNumber
@@ -285,11 +288,11 @@
      C                   PARM      *Blanks       VPAYScnFmt
      C                   PARM      *Blanks       MRECScnFmt
      C                   PARM      *Blanks       MPAYScnFmt
- 
+
      C                   IF        RetCodeOut <> *Blanks
      C                   EVAL      RetCodeIn = '*Error'
      C                   ELSE
- 
+
      C                   EVAL      TRANSDTL = CIRSScnFmt + ORCDScnFmt
      C                                        + OIPDScnFmt
      C                                        + TRCDScnFmt
@@ -306,9 +309,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -318,12 +321,12 @@
       * Called by: SR/SRPROC                                          *
       *                                                               *
       *****************************************************************
- 
+
      C     SRSETD        BEGSR
- 
+
       ** Move Payment Fields from CIRSFilFmt (DEALSDG) to
       ** PAYFilFmt (SDESFPPD)
- 
+
      C                   EVAL      FLPSTM = PSTM
      C                   EVAL      FLPONS = PONS
      C                   EVAL      FLPIBN = PIBN
@@ -352,10 +355,10 @@
      C                   EVAL      FLCVMR = CVMR
      C                   EVAL      FLPSCY = PSCY
      C                   EVAL      FLIC72 = IC72
- 
+
       ** Move Receipt Fields from CIRSFilFmt (DEALSDG) to
       ** RECFilFmt (SDESFRPD)
- 
+
      C                   EVAL      FLRSTM = RSTM
      C                   EVAL      FLRONS = RONS
      C                   EVAL      FLRIBN = RIBN
@@ -364,10 +367,10 @@
      C                   EVAL      FLROCN = ROCN
      C                   EVAL      FLROBR = ROBR
      C                   EVAL      FLRSCY = RSCY
- 
+
       ** Move extended FRA/IRS instruction fields from
       ** CIRSFilFmt (DEALSDG) to FRIRFilFmt (SDESFFPD)
- 
+
      C                   EVAL      FLDSR1 = DSR1
      C                   EVAL      FLDSR2 = DSR2
      C                   EVAL      FLDSR3 = DSR3
@@ -395,9 +398,9 @@
       ** Move FRA/IRS Interface Non-Screen Data to InfData                                    CAP043
                                                                                               CAP043
      C                   MOVEL     FIAUTH        AUTH                                         CAP043
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -409,9 +412,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *entry        PLIST
      C                   PARM                    RetCodeIn
      C                   PARM                    PActCode                                     CIR008
@@ -427,10 +430,10 @@
      C                   PARM                    MPAYScnFmt                                   CAP043
      C                   PARM                    InfData                                      CAP043
      C                   PARM                    TRANSDTL
- 
+
       ** The following /COPY sets the program, module and procedure
       ** names for database error processing.
- 
+
      C/COPY ZACPYSRC,DBFIELDS
                                                                                               CIR008
       **  Check if FRA/IRS Deals Authorisation is installed                                   CIR008
@@ -456,9 +459,9 @@
      C                   ELSE                                                                 CIR008
      C                   EVAL      CIR008 = 'N'                                               CIR008
      C                   ENDIF                                                                CIR008
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

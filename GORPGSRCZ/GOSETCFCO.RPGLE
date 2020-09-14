@@ -11,12 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BUG11830           Date 11Aug06               *
+      *                 BUG11830           Date 11Aug06               *
       *                 CSD027             Date 09Dec05               *
       *                 CDL038             Date 10May05               *
       *                 CDL028             Date 07Feb05               *
@@ -25,6 +26,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR DEREGULATION - COMMON LAYER/STANDING DATA     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG11830- branch of settlement account not defaulted         *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -34,23 +37,23 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
      FGPUTXTL0  IF A E           K DISK    INFSR(*PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
- 
+
+
      D CFCOS         E DS                  EXTNAME(DEALSDG)
- 
- 
+
+
       ** T R A N S A C T I O N    D E T A I L S
      D T_TRAP        E DS                  EXTNAME(GPTRAPPD)
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                BUG11830
      D DSSDY         E DS                  EXTNAME(DSSDY)                                   BUG11830
- 
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7            * RETURN CODE
      C                   PARM                    I#ERMS           50            * ERROR MESSAGE
@@ -58,24 +61,24 @@
      C                   PARM                    CFCOS
       * OUTPUTS
      C                   PARM                    T_TRAP
- 
+
       * SETUP TRANSACTION INDEX RECORD
- 
+
      C                   EXSR      SETUP_TRAP
- 
+
       * RETURN
- 
+
      C                   RETURN
       *
       *****************************************************************
       * SETUP TRANSACTION INDEX RECORD
       *****************************************************************
      C     SETUP_TRAP    BEGSR
- 
+
       * Clear Transaction Index
- 
+
      C                   CLEAR                   T_TRAP
- 
+
       * Zone
      C                   MOVEL     O#ZONE        T_ZONE
       * Module
@@ -161,14 +164,14 @@
       * *INZSR
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
       * Get Zone
- 
+
       /COPY GOCPYSRC,GOGETZONE
- 
- 
+
+
       * key list
- 
+
      C     GPUTXTK       KLIST
      C                   KFLD                    T_ZONE
      C                   KFLD                    T_MOD

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. MD039617           Date 16Jun19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *                 MD039617           Date 16Jun19               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD039575           Date 07Jul16               *
@@ -74,6 +75,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data.    *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  MD039617 - Corrupted data in CDL096 fields                   *
@@ -154,7 +156,7 @@
      FBKRAT1    IF   E           K DISK                                                       185276
      FDEALSC    IF   E           K DISK    INFSR(*PSSR)                                     MD031617
      FDLAPRHI0  IF   E           K DISK    INFSR(*PSSR)                                       CER050
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -173,93 +175,93 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Deal Status
      D @STSA           S             24    DIM(5) CTDATA PERRCD(1)
- 
+
      D CGL011          S              1A   EXPORT                                             CGL011
                                                                                               CGL011
       * Deal in File Format
      D DealFilFmt    E DS                  EXTNAME(MMDELDPP)
      D***BsDayFil            148    181                                              CDL096 MD039575
      D   BsDayFil           2148   2181                                                     MD039575
- 
+
       * Deal in Screen Format
      D DealScnFmt    E DS                  EXTNAME(MMLDNIPD)
      D   BsDayScn            667    700                                                       CDL096
      D/COPY WNCPYSRC,MMLDNIND01
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
       ** EXTERNAL DS FOR DEALING DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
- 
+
      D SDPORT        E DS                  EXTNAME(SDPORTPD)
       ** EXTERNAL DS FOR Portfolio Management DETAILS
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** EXTERNAL DS FOR SAR DETAILS
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** EXTERNAL DS FOR CURRENCY DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
      D                 DS
      D  @@YEAR                 1      4  0
      D  @@MNTH                 5      6  0
      D  @@DAY                  7      8  0
      D  @@DTIN                 1      8  0
- 
+
      D                 DS
      D  @@SXP1                 1      1  0
      D  @@SXP2                 2      2  0
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -309,7 +311,7 @@
      D  W#AMTP                 1     17                                                       245692
      D  W#AMTD                 1     16                                                       245692
      D  W#NEG                 17     17                                                       245692
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -577,7 +579,8 @@
      C                   END
      C*
      C**  Base Rate Code.
-     C     HKBSRC        IFNE      *ZEROS
+     C*****HKBSRC        IFNE      *ZEROS                                                     CSD103
+     C     HKBSRC        IFNE      *BLANKS                                                    CSD103
      C                   MOVE      HKBSRC        DDBSRC
      C                   END
      C*
@@ -1072,7 +1075,7 @@
      C                   Move      *BLANKS       DDAPRR                                       CER050
      C                   Endif                                                                CER050
      C                   Endif                                                                CER050
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

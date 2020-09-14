@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD054095           Date 17Oct19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD054095           Date 17Oct19               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -42,6 +43,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD054095 - FRA/IRS: Impossible to input a CIRS deal with     *
       *             zero rate                                         *
       *  MD046248 - Finastra Rebranding                               *
@@ -707,7 +709,8 @@
                                                                                               CDL028
       ** Start - 1st Term Base Rate Code                                                      CDL028
                                                                                               CDL028
-     C                   IF        FSTS1B = *ZERO                                             CDL028
+     C**********         IF        FSTS1B = *ZERO                                      CDL028 CSD103
+     C                   IF        FSTS1B = *BLANKS                                           CSD103
      C                   EVAL      #0OS1B = *BLANKS                                           CDL028
      C                   ELSE                                                                 CDL028
      C                   MOVE      FSTS1B        #0OS1B                                       CDL028
@@ -728,7 +731,8 @@
                                                                                               CDL028
       ** Start - 2nd Term Base Rate Code                                                      CDL028
                                                                                               CDL028
-     C                   IF        FSTS2B = *ZERO                                             CDL028
+     C**********         IF        FSTS2B = *ZERO                                      CDL028 CSD103
+     C                   IF        FSTS2B = *BLANKS                                           CSD103
      C                   EVAL      #0OS2B = *BLANKS                                           CDL028
      C                   ELSE                                                                 CDL028
      C                   MOVE      FSTS2B        #0OS2B                                       CDL028
@@ -762,7 +766,8 @@
                                                                                               CDL028
       ** End - 1st Term Base Rate Code                                                        CDL028
                                                                                               CDL028
-     C                   IF        FSTE1B = *ZERO                                             CDL028
+     C**********         IF        FSTE1B = *ZERO                                      CDL028 CSD103
+     C                   IF        FSTE1B = *BLANKS                                           CSD103
      C                   EVAL      #0OE1B = *BLANKS                                           CDL028
      C                   ELSE                                                                 CDL028
      C                   MOVE      FSTE1B        #0OE1B                                       CDL028
@@ -783,7 +788,8 @@
                                                                                               CDL028
       ** End - 2nd Term Base Rate Code                                                        CDL028
                                                                                               CDL028
-     C                   IF        FSTE2B = *ZERO                                             CDL028
+     C**********         IF        FSTE2B = *ZERO                                      CDL028 CSD103
+     C                   IF        FSTE2B = *BLANKS                                           CSD103
      C                   EVAL      #0OE2B = *BLANKS                                           CDL028
      C                   ELSE                                                                 CDL028
      C                   MOVE      FSTE2B        #0OE2B                                       CDL028
@@ -976,7 +982,8 @@
                                                                                               CDL028
       ** Start - 1st Term Base Rate Code                                                      CDL028
                                                                                               CDL028
-     C                   IF        FSOS1B = *ZERO                                             CDL028
+     C**********         IF        FSOS1B = *ZERO                                      CDL028 CSD103
+     C                   IF        FSOS1B = *BLANKS                                           CSD103
      C                   EVAL      #0OS1B = *BLANKS                                           CDL028
      C                   ELSE                                                                 CDL028
      C                   MOVE      FSOS1B        #0OS1B                                       CDL028
@@ -992,7 +999,8 @@
                                                                                               CDL028
       ** Start - 2nd Term Base Rate Code                                                      CDL028
                                                                                               CDL028
-     C                   IF        FSOS2B = *ZERO                                             CDL028
+     C**********         IF        FSOS2B = *ZERO                                      CDL028 CSD103
+     C                   IF        FSOS2B = *BLANKS                                           CSD103
      C                   EVAL      #0OS2B = *BLANKS                                           CDL028
      C                   ELSE                                                                 CDL028
      C                   MOVE      FSOS2B        #0OS2B                                       CDL028
@@ -1016,7 +1024,8 @@
                                                                                               CDL028
       ** End - 1st Term Base Rate Code                                                        CDL028
                                                                                               CDL028
-     C                   IF        FSOE1B = *ZERO                                             CDL028
+     C**********         IF        FSOE1B = *ZERO                                      CDL028 CSD103
+     C                   IF        FSOE1B = *BLANKS                                           CSD103
      C                   EVAL      #0OE1B = *BLANKS                                           CDL028
      C                   ELSE                                                                 CDL028
      C                   MOVE      FSOE1B        #0OE1B                                       CDL028
@@ -1032,7 +1041,8 @@
                                                                                               CDL028
       ** End - 2nd Term Base Rate Code                                                        CDL028
                                                                                               CDL028
-     C                   IF        FSOE2B = *ZERO                                             CDL028
+     C**********         IF        FSOE2B = *ZERO                                      CDL028 CSD103
+     C                   IF        FSOE2B = *BLANKS                                           CSD103
      C                   EVAL      #0OE2B = *BLANKS                                           CDL028
      C                   ELSE                                                                 CDL028
      C                   MOVE      FSOE2B        #0OE2B                                       CDL028

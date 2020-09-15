@@ -44,7 +44,7 @@
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD046080 - Gap between CLE031 (Settlement to different       *
-      *             currency) and CLE134 (PDCL processing)            *     
+      *             currency) and CLE134 (PDCL processing)            *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *           (Recompile)                                         *
       *  AR1063739 - SettlementAccount09 Issues                       *
@@ -80,20 +80,20 @@
      F                                     OFLIND(*IN50)
      F                                     INFSR(*PSSR)
       *****************************************************************
- 
+
      D SPOOL1          DS
      D SFILE1                 83     92
      D SFNUM1                123    124B 0
      D OFLLN1                188    189B 0
      D PRTLN1                367    368B 0
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
- 
+
      D SDTRAD        E DS                  EXTNAME(SDTRADPD)
      D QQACCD1       E                     EXTFLD(QQACCD)
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
 
      D SDCURR        E DS                  EXTNAME(SDCURRPD)

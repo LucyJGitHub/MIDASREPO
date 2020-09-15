@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD038258           Date 13Apr16               *
       *                 MD037489           Date 11Feb16               *
       *                 MD037485           Date 11Feb16               *
@@ -49,7 +50,9 @@
      F                                     COMMIT
      FLE000507AUO    E             PRINTER
       **------------------------------------------------------------------
-      ** The following /COPY line includes all the defined fields in the
+      *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *             (Recompile)                                       *
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS

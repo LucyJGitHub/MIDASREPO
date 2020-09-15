@@ -185,10 +185,10 @@
       ** Authorized
      C                   IF        IN_AUIN = 'Y'
       *                                                                                     MD056683
-     C                   IF        ACBT = *BLANK                                            MD056683
+     C                   IF        IN_ACBT = *BLANK                                         MD056683
      C                   EVAL      FTM199 = 'A'
      C                   ELSE                                                               MD056683
-     C                   IF        OPIN = 'Y'                                               MD056683
+     C                   IF        IN_OPIN = 'Y'                                            MD056683
      C                   EVAL      FTM199 = 'Z'                                             MD056683
      C                   ELSE                                                               MD056683
      C                   EVAL      FTM199 = 'I'                                             MD056683

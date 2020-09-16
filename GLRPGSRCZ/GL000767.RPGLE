@@ -3559,6 +3559,10 @@
      C                             AND PRType = 'APPROVED NEW'
      C                   EVAL      WRType = 'DRAFT CORRECTED'
       *
+     C                   WHEN      PActn = 'C'                                                CGL194
+     C                             AND PRType = 'APPROVED CORRECTED'                          CGL194
+     C                   EVAL      WRType = 'DRAFT CORRECTED'                                 CGL194
+      *                                                                                       CGL194
      C                   WHEN      PActn = 'O'
      C                             AND PRType = 'APPROVED'
      C                   EVAL      WRType = 'DRAFT DELETE'

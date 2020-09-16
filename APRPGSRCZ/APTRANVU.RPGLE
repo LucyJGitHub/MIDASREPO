@@ -13,6 +13,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD056546           Date 16Sep20               *
       *  Last Amend No. MD039655           Date 03Sep19               *
       *  Prev Amend No. MD044553           Date 08May17               *
       *                 MD055373           Date 14Jul20               *
@@ -228,6 +229,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056546 - Serious Midas Error encountered on CIRS Input     *
+      *             Reversed MD044553                                 *
       *  MD039655 - Facility cannot be rejected.                      *
       *             Pattern fix from MD-29208 and MD-34908.           *
       *           - Applied for MD052591.                             *
@@ -813,7 +816,7 @@
      D MsgArrOUT       S           9999                                                       BG1105
      D APIRetC         S              1
      D @TimeStamp      S             26                                                      BUG1569
-     D @WIPTmst        S             26                                                     MD044553
+     D*@WIPTmst*       S             26                                            MD044553 MD056546
      D NewButton       S              3                                                       255190
      D DDACTC          S              1                                                      BUG3684
      D DDFOID          S             20                                                       239400
@@ -3237,8 +3240,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     TempData#9    ExtData                                    MD029663
      C                   ADD       IRCSLn        Bfp                                        MD030454
      C                   ADD       168           Bfp                                        MD030454
-     C     26            SUBST     BUFFER:Bfp    @WIPTmst                                   MD044553
-     C                   ADD       26            Bfp                                        MD044553
+     C*****26***         SUBST     BUFFER:Bfp    @WIPTmst                          MD044553 MD056546
+     C**********         ADD       26            Bfp                               MD044553 MD056546
      C                   EVAL      InSwift2013 = %SUBST(BufferTotal:Bfp:RPIFLn)             MD030454
                                                                                             MD029663
      C                   CALL      'IRCIRSVU'
@@ -5164,8 +5167,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C     IRSSLn        SUBST     BUFFER:Bfp    ExtData                                     BUG6671
      C                   ADD       IRSSLn        Bfp                                          CSW213
      C                   ADD       168           Bfp                                          CSW213
-     C     26            SUBST     BUFFER:Bfp    @WIPTmst                                   MD044553
-     C                   ADD       26            Bfp                                        MD044553
+     C*****26***         SUBST     BUFFER:Bfp    @WIPTmst                           MD044553 MD056546
+     C**********         ADD       26            Bfp                                MD044553 MD056546
      C     RPIFLn        SUBST     BUFFER:Bfp    InSwift2013                                  CSW213
                                                                                              BUG6671
 

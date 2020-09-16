@@ -24,7 +24,7 @@
       *                                                               *
       *  MD056237 - Reporting Group/Accounts were removed from the    *
       *             CRS Report after authorization. Amend to          *
-      *             correctly get data from file.                     *
+      *             correctly get data from file                      *
       *  MD054940 - CRS Issue: Controlling Person Type                *
       *  MD054905 - Change Message Ref Id format                      *
       *  MD051055 - Incorrect report when multiple account selected   *
@@ -1510,8 +1510,8 @@
      C                   EVAL      D5FNME = MGDATA
      C                   EVAL      KTopElmName = 'Name'
      C                   EVAL      KMGSEQU = MGSEQU
-     C                   EVAL      D5FNME = *BLANKS                                       
-     C                   EVAL      D5LNME = *BLANKS                                        
+     C                   EVAL      D5FNME = *BLANKS
+     C                   EVAL      D5LNME = *BLANKS
 
      C     KAcctN3       SETLL     GLCRMDLB
      C                   READ      GLCRMDLB

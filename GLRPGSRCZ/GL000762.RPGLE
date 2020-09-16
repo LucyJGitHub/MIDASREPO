@@ -22,7 +22,7 @@
       *  CGL194 - CRS XML 2.0 Schema                                  *
       *  MD056237 - Reporting Group/Accounts were removed from the    *
       *             CRS Report after authorization. Amend to          *
-      *             correctly get data from file.                     *
+      *             correctly get data from file                      *
       *  MD054905 - Change Message Ref Id format                      *
       *  MD040841 - CRS Reports Screenflow for Actions Exclude, Cor-  *
       *             rect and Include should be adjusted               *

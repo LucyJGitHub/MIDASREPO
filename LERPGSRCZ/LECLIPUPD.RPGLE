@@ -12,9 +12,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD034643           Date 22May19               *
-      *  Prev Amend No. MD031292           Date 06Nov19               *
-      *                 MD025836           Date 06Nov19               *
+      *  Last Amend No. MD031292           Date 06Nov19               *
+      *  Prev Amend No. MD025836           Date 06Nov19               *
       *                 MD055714           Date 06May20               *
       *                 MD054877           Date 14Jan20               *
       *                 CER050             Date 16Jun19               *
@@ -164,10 +163,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD034643 - Settlement branch not restored after reject. On   *
-      *             reject, retrieve settlement details and convert   *
-      *             screenfield shortname to file customer no.        *
-      *           - Applied for MD051895                              *
       *  MD031292 - Initialize CLOANCK when inserting to avoid        *
       *             update with data from previous loan.              *
       *  MD025836 - Loan principal increase causing excess. Remove    *
@@ -3783,7 +3778,6 @@
      C                   EVAL      SCCY = L_CLSCCY                                          AR943686
      C                   EVAL      REXR = L_CLREXR                                            CLE031
      C                   EVAL      REXI = L_CLREXI                                            CLE031
-     C                   EVAL      SCCY = L_CLSCCY                                          MD034643
      C                   EVAL      PSCY = L_CLPSCY                                            CLE031
      C                   EVAL      PEXR = L_CLPEXR                                            CLE031
      C                   EVAL      PEXI = L_CLPEXI                                            CLE031
@@ -4423,7 +4417,6 @@
      C                   EVAL      SCCY = L_CLSCCY                                          AR943686
      C                   EVAL      REXR = L_CLREXR                                            CLE031
      C                   EVAL      REXI = L_CLREXI                                            CLE031
-     C                   EVAL      SCCY = L_CLSCCY                                          MD034643
      C                   EVAL      PSCY = L_CLPSCY                                            CLE031
      C                   EVAL      PEXR = L_CLPEXR                                            CLE031
      C                   EVAL      PEXI = L_CLPEXI                                            CLE031

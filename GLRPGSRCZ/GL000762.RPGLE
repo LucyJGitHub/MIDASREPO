@@ -11,12 +11,18 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD054905           Date 04Dec19               *
-      *  Prev Amend No. MD040841           Date 26Aug16               *
+      *  Last Amend No. CGL194             Date 01Aug20               *
+      *  Prev Amend No. MD056237           Date 20Jul20               *
+      *                 MD054905           Date 04Dec19               *
+      *                 MD040841           Date 26Aug16               *
       *                 CGL177  *CREATE    Date 11Jan16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL194 - CRS XML 2.0 Schema                                  *
+      *  MD056237 - Reporting Group/Accounts were removed from the    *
+      *             CRS Report after authorization. Amend to          *
+      *             correctly get data from file.                     *
       *  MD054905 - Change Message Ref Id format                      *
       *  MD040841 - CRS Reports Screenflow for Actions Exclude, Cor-  *
       *             rect and Include should be adjusted               *
@@ -267,10 +273,17 @@
 
       ** Report Message Header
 
-     C     PMsgRId       SETLL     GLCRMDL2
-     C     PMsgRId       READE     GLCRMDL2
-     C                   DOW       NOT %EOF(GLCRMDL2) AND
-     C                             Leave = 'N'
+     C                   EVAL      KMsgRID = PMsgRId                                        MD056237
+     C                   EVAL      KTopElm = 'MessageSpec'                                  MD056237
+                                                                                            MD056237
+     C*****PMsgRId       SETLL     GLCRMDL2                                                 MD056237
+     C*****PMsgRId       READE     GLCRMDL2                                                 MD056237
+     C     KeyTpmt       SETLL     GLCRMDL0                                                 MD056237
+     C     KeyTpmt       READE     GLCRMDL0                                                 MD056237
+     C**********         DOW       NOT %EOF(GLCRMDL2) AND                                   MD056237
+     C**********                   Leave = 'N'                                              MD056237
+     C                   DOW       NOT %EOF(GLCRMDL0) AND                                   MD056237
+     C                             MGTPMT = 'MessageSpec'                                   MD056237
 
      C                   SELECT
 
@@ -292,28 +305,38 @@
      C                   WHEN      MGELMT = 'MessageRefId'
      C                   EVAL      DMRFID = MGDATA
 
-     C                   WHEN      MGELMT = 'CorrMessageRefID'
-     C                   EVAL      DCMRID = MGDATA
+     C**********         WHEN      MGELMT = 'CorrMessageRefID'                                CGL194
+     C**********         EVAL      DCMRID = MGDATA                                            CGL194
+     C                   WHEN      MGELMT = 'MessageTypeIndic'                                CGL194
+     C                   EVAL      DCMIND = MGDATA                                            CGL194
 
      C                   WHEN      MGELMT = 'ReportingPeriod'
      C                   EVAL      DRPTPD = MGDATA
 
      C                   WHEN      MGELMT = 'Timestamp'
      C                   EVAL      DTSTMP = MGDATA
-     C                   EVAL      Leave  = 'Y'
+     C**********         EVAL      Leave  = 'Y'                                             MD056237
 
      C                   ENDSL
 
-     C     PMsgRId       READE     GLCRMDL2
+     C*****PMsgRId       READE     GLCRMDL2                                                 MD056237
+     C     KeyTpmt       READE     GLCRMDL0                                                 MD056237
 
      C                   ENDDO
 
       ** Reporting Financial Institution
 
-     C     PMsgRId       SETLL     GLCRMDL2
-     C     PMsgRId       READE     GLCRMDL2
-     C                   DOW       NOT %EOF(GLCRMDL2) AND
-     C                             LeaveFI = 'N'
+     C                   EVAL      KMsgRID = PMsgRId                                        MD056237
+     C                   EVAL      KTopElm = 'ReportingFI'                                  MD056237
+                                                                                            MD056237
+     C*****PMsgRId       SETLL     GLCRMDL2                                                 MD056237
+     C*****PMsgRId       READE     GLCRMDL2                                                 MD056237
+     C     KeyTpmt       SETLL     GLCRMDL0                                                 MD056237
+     C     KeyTpmt       READE     GLCRMDL0                                                 MD056237
+     C**********         DOW       NOT %EOF(GLCRMDL2) AND                                   MD056237
+     C**********                   LeaveFI = 'N'                                            MD056237
+     C                   DOW       NOT %EOF(GLCRMDL0) AND                                   MD056237
+     C                             MGTPMT = 'ReportingFI'                                   MD056237
 
      C                   SELECT
 
@@ -356,11 +379,12 @@
      C                   WHEN      MGELMT = 'CorrDocRefId'
      C                             AND MGTPMT = 'ReportingFI'
      C                   EVAL      DCORRF = MGDATA
-     C                   EVAL      LeaveFI  = 'Y'
+     C*********          EVAL      LeaveFI  = 'Y'                                           MD056237
 
      C                   ENDSL
 
-     C     PMsgRId       READE     GLCRMDL2
+     C*****PMsgRId       READE     GLCRMDL2                                                 MD056237
+     C     KeyTpmt       READE     GLCRMDL0                                                 MD056237
 
      C                   ENDDO
 
@@ -613,6 +637,10 @@
      C                   KFLD                    KMsgRID
      C                   KFLD                    KTopElm
 
+     C     KeyTpmt       KLIST                                                              MD056237
+     C                   KFLD                    KMsgRID                                    MD056237
+     C                   KFLD                    KTopElm                                    MD056237
+                                                                                            MD056237
      C                   ENDSR
       *****************************************************************
       /EJECT

@@ -16,13 +16,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055681           Date 31Jul20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. BUG14000 *CREATE   Date 18May07               *
+      *                 BUG14000 *CREATE   Date 18May07               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG14000 - Midas Plus error on User Functions                *
       *                                                               *
@@ -31,19 +33,19 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       * GP Global Menu Item Text
      FGPMTXTPD  IF   E             DISK    PREFIX(A_)
      F                                     INFSR(*PSSR)
- 
+
       * SF Zonal Menu Action Codes by Unique Code
      FSFMENUJ0  IF   E           K DISK    PREFIX(B_)
      F                                     INFSR(*PSSR)
- 
+
       * Zonal Extract File for List View
      FSFMNUEXPD O    E             DISK    USROPN
      F                                     INFSR(*PSSR)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -57,47 +59,47 @@
       ** the copyright array definition,
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
      D Cmd             S           1000
      D Len             S             15  5
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -105,10 +107,10 @@
       *
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** EXTERNAL DS FOR SAR DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
       *---------------------------------------------------------------
       ** Mainline Processing
       *---------------------------------------------------------------
@@ -143,7 +145,7 @@
      C                   ENDDO
       *
      C                   CLOSE     SFMNUEXPD
- 
+
      C                   EVAL      *INLR = *ON
       *
      C                   RETURN
@@ -154,22 +156,22 @@
       * *INZSR - Program Initialisation routine                       *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
       *
       * Clear the file SFMNUEXPD before processing further
       *
      C                   EVAL      Cmd = 'CLRPFM FILE(SFMNUEXPD)'
      C                   EVAL      LEN = %LEN(Cmd)
- 
+
      C                   CALL      'QCMDEXC'
      C                   PARM                    Cmd
      C                   PARM                    Len
- 
+
      C                   IF        NOT %OPEN(SFMNUEXPD)
      C                   OPEN      SFMNUEXPD
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -179,45 +181,45 @@
       *          or directly by the program code using EXSR.          *
       *          This subroutine DUMPs the program just once.         *
       *****************************************************************
- 
+
      C     *pssr         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   EVAL      *inu7 = *on
      C                   EVAL      *inu8 = *on
      C                   EVAL      *inlr = *on
- 
+
      C                   IF        RunBefore <> 'Y'
- 
+
      C                   EVAL      RunBefore = 'Y'
- 
+
       ** Load the APDUMP fields
      C     *lock         IN        APDUMP                               99
- 
+
       ** If there is an error in reading the APDUMP data area, it
       ** probably doesn't exist, so call the procedure which creates it
       ** and try again.
      C                   IF        *in99
- 
+
      C                   CLEAR                   PSSRRetCde
      C                   CALL      'APCCRTQTO'
      C                   PARM                    PSSRRetCde       10
      C     *lock         IN        APDUMP
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      ARErrMod = PSProcMod
      C                   OUT       APDUMP
- 
+
      C                   CALL      'DBERRCTL'
- 
+
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

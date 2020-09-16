@@ -17,10 +17,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055681           Date 31Jul20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. 245952             Date 23Feb07               *
+      *                 245952             Date 23Feb07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 BUG6921            Date 21Nov05               *
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
       *  245952 - New triggers for T_GPCUSTH, T_GPCTRYH and T_GRINDSH *
       *           Increase length of EntryData.                       *
@@ -60,21 +62,21 @@
       * *INZSR - Initialise                                           *
       *                                                               *
       *****************************************************************
- 
+
      FGPTRIGJ0  IF   E           K DISK    INFSR(*PSSR)
      FGPTLOGPD  O  A E             DISK    INFSR(*PSSR) USROPN
- 
+
      D/COPY GPCPYSRCG,PSDS
- 
+
      D GPTRIGLOG       DS             1
      D WRT_TLOG                1      1
- 
+
      D #_FIEVTI        S             12    DIM(500)
      D #_FITRPG        S            210    DIM(500)
- 
+
      D #_PGMS          S             21    DIM(10)
      D #_PGM           S              1    DIM(21)
- 
+
      D PARM1           DS
       * Physical file name
      D  PFLNAME                1     10
@@ -95,17 +97,17 @@
      D**EntryData******      117  10117A                                                     BUG6921
      D**EntryData******      117  22000A                                              BUG6921 245952
      D  EntryData            117  32000A                                                      245952
- 
+
      D PARM2           DS
      D  LENG                   1      4B 0
- 
+
      D #FIEVTI         DS
      D  #PFLNAME               1     10
      D  #TRGEVENT             11     11
      D  #TRGTIME              12     12
- 
+
      D @RUN            S              1
- 
+
      D*Jobd*********** DS            20                                                      BG2778R
      D*JobDName*******         1     10    INZ('GBATCH    ')                                  BG1736
      D*JobDName*******         1     10    INZ('GPBATCH   ')                                  BG1736
@@ -117,10 +119,10 @@
      D*LibCountB******       365    368B 0                                                   BG2778R
       ****************                                                                       BG2778R
      D*Len************ S              4B 0 INZ(1000)                                         BG2778R
- 
+
       * If this buffer needs to increase a separate parameter will need to be added
      D Buffer          S           9999
- 
+
      D*OffLen********* S              9  0                                                   BG2778R
      D*OffSet********* S              9  0                                                   BG2778R
      D*InLibl********* S           2750                                                      BG2778R
@@ -141,9 +143,9 @@
       ***************                               Varying length                           BG2778R
      D*QUSExcData****         17     46                                                      BG2778R
       ***************                               Varying length field Exception Data      BG2778R
- 
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PARM1
      C                   PARM                    PARM2
@@ -196,13 +198,13 @@
      C                   If        AOFF + ALEN > %Len(EntryData)                             BUG6921
      C                   Eval      ALEN = %Len(EntryData) - AOFF                             BUG6921
      C                   EndIf                                                               BUG6921
- 
+
       * Check for associated trigger program(s)
- 
+
      C                   EXSR      CHK_TRIGGER
- 
+
       * Loop through the trigger programs
- 
+
      C                   Z-ADD     1             #J
      C     #_PGMS(#J)    DOWNE     *BLANK
      C     WRT_TLOG      IFEQ      'Y'
@@ -213,7 +215,7 @@
      C                   PARM                    PARM2
      C                   ADD       1             #J
      C                   ENDDO
- 
+
      C                   RETURN
       *****************************************************************
       /SPACE 5
@@ -221,7 +223,7 @@
       * Check for associated trigger program(s)
       *****************************************************************
      C     CHK_TRIGGER   BEGSR
- 
+
      C                   MOVEL     PFLNAME       #PFLNAME
      C                   SELECT
      C     TRGEVENT      WHENEQ    '1'
@@ -238,10 +240,10 @@
      C                   ELSE
      C                   MOVEL     'B'           #TRGTIME
      C                   ENDIF
- 
+
      C                   Z-ADD     1             #I                3 0
      C     #FIEVTI       LOOKUP    #_FIEVTI(#I)                           99    *
- 
+
      C     *IN99         IFEQ      *OFF
      C     *BLANK        LOOKUP    #_FIEVTI(#I)                           99
      C                   MOVEL     #FIEVTI       #_FIEVTI(#I)
@@ -265,7 +267,7 @@
      C                   ELSE
      C                   MOVEA     #_FITRPG(#I)  #_PGMS
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -313,29 +315,29 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       * Job details
- 
+
      C                   EVAL      TRJOB  = PSJobName
      C                   EVAL      TRUSER = PSUser
      C                   MOVEL     PSJobNo       PSJobNoA          6
      C                   EVAL      TRJOBN = PSJobNoA
- 
+
       * Get trigger log status
- 
+
      C     *DTAARA       DEFINE                  GPTRIGLOG
      C     *LOCK         IN        GPTRIGLOG
      C                   OUT       GPTRIGLOG
- 
+
      C     WRT_TLOG      IFEQ      'Y'
      C                   OPEN      GPTLOGPD
      C                   ENDIF
- 
+
      C     FIEVTIK       KLIST
      C                   KFLD                    #PFLNAME
      C                   KFLD                    #TRGTIME
      C                   KFLD                    #TRGEVENT
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -345,7 +347,7 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
      C                   DUMP
@@ -353,11 +355,11 @@
      C                   EXSR      WRT_ERR_LOG
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************

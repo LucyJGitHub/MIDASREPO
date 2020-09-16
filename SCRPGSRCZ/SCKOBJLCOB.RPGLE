@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD024937           Date 07May14               *
+      *  Last Amend No. MD055681           Date 31Jul20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD024937           Date 07May14               *
       *                 MD021351           Date 06May14               *
       *                 AR584600           Date 10Jun13               *
       *                 CCB023             Date 06Aug12               *
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD024937 - SCKLEXTD works incorrectly in case file field     *
       *             contains symbol % in the first position           *
@@ -56,20 +58,20 @@
       *  BUG3834 - New programs created to deal with object locks     *
       *                                                               *
       *****************************************************************
- 
+
      FOBJLCK    UP   E           K DISK    INFSR(*PSSR) RENAME(OBJECTLOCK: OLF)
      FMUSER     IF   E           K DISK    INFSR(*PSSR)
      FSCTRIGJ0  IF   E           K DISK    INFSR(*PSSR)
      FSCKLEXTD  IF   E             DISK    INFSR(*PSSR)                                     MD021351
      FCBCOMSL0  IF   E           K DISK    INFSR(*PSSR)                                     MD021351
      FQSYSPRT   O    F  132        PRINTER USROPN
- 
+
      D J2E             S             28    DIM(999)
      D AJ              S             28    DIM(999)
- 
+
      D RcdJ            S             28    DIM(9999)
      D RcdD            S            100    DIM(9999)
- 
+
      D WQcmd           S              1    DIM(80) CTDATA PERRCD(80)
      D PosJN           S              3  0                                                  MD021351
      D PosJU           S              3  0                                                  MD021351
@@ -77,14 +79,14 @@
      D NTKJOBU         S              3                                                     MD021351
      D StrJobN         S              1  0                                                  MD021351
      D StrJobU         S              1  0                                                  MD021351
- 
+
      D SDSTAT        E DS
       *                                                                                      BUG4207
       * Program Status Data Structure layout                                                 BUG4207
      DPSDS            SDS                                                                    BUG4207
       **  Exception type & number                                                            BUG4207
      D PSException            40     46                                                      BUG4207
- 
+
      D JUNDS           DS
       * Job/User/Number
      D  JUN                    1     28
@@ -93,10 +95,10 @@
      D  JOBUSER               12     21
      D  SLASH2                22     22
      D  JOBNUMBER             23     28
- 
- 
+
+
      C     JOBNAME       CABEQ     *BLANK        IGNREC
- 
+
      C**********         MOVE      'N'           UpdateRecd        1
      C                   MOVE      'Y'           UpdateRecd        1                        MD021351
      C                   EXSR      CKNTBK                                                   MD021351
@@ -106,14 +108,14 @@
      C                   IF        *IN80 = '0'                                              MD021351
      C                   MOVE      'N'           UpdateRecd                                 MD021351
      C                   ENDIF                                                              MD021351
- 
+
      C                   EVAL      SLASH1 = '/'
      C                   EVAL      SLASH2 = '/'
- 
+
      C                   EVAL      Record =  OBJECT + OBJECTLIB + OBJECTTYPE +
      C                                       JOBNAME + JOBUSER + JOBNUMBER  +
      C                                       LOCKSTATE + JOBUSERID + IPADDRESS
- 
+
      C                   Z-add     1             R                 5 0
      C     Record        LOOKUP    RcdD(R)                                99
      C     *IN99         IFEQ      *OFF
@@ -121,7 +123,7 @@
      C                   EVAL      RcdJ(R) = JUN
      C                   EVAL      RcdD(R) = Record
      C                   ENDIF
- 
+
 O
       **If*web-facing*job*and*user*on*on*MUSERDD***********************                     MD021351
       *****Select*for*killing******************************************                     MD021351
@@ -158,10 +160,10 @@ O
      C**********         EVAL      UpdateRecd = 'Y'                                AR584600 MD021351
      C**********         ENDIF                                                              MD021351
      C**********         ENDIF                                                              MD021351
- 
+
       * Update OBJLCK
       * and add job to list of jobs to end
- 
+
      C                   IF        UpdateRecd = 'Y'
      C                   UPDATE    OLF
      C     JUN           LOOKUP    J2E                                    99
@@ -171,18 +173,18 @@ O
      C                   MOVEL     JUN           J2E(X)
      C                   ENDIF
      C                   ENDIF
- 
+
       * Add job to list of all jobs
- 
+
      C     JUN           LOOKUP    AJ                                     99
      C     *IN99         IFEQ      *OFF
      C                   Z-ADD     1             X                 3 0
      C     *BLANK        LOOKUP    AJ(X)                                  99
      C                   MOVEL     JUN           AJ(X)
      C                   ENDIF
- 
+
      C     IGNREC        TAG
- 
+
      CLR                 EXSR      ENDJOBS
      CLR                 EXSR      RPTJOBSNEND
      CLR                 EXSR      RPTLCKSEND
@@ -321,15 +323,15 @@ O
       * ENDJOBS - End Jobs
       ********************************************************************
      C     ENDJOBS       BEGSR
- 
+
      C                   Z-ADD     1             X
      C     X             DOWLE     999
      C     J2E(X)        ANDNE     *BLANK
- 
+
      C                   EVAL      JUN = J2E(X)
- 
+
      C                   EXSR      FMT_CMD
- 
+
      C                   CALL      'QCMDEXC'                            9999
      C                   PARM                    WQCmd
      C                   PARM      80            CommandLen       15 5
@@ -340,7 +342,7 @@ O
      C                   Eval      WQCMD = %Trim(WQCMD) + ' ***Job already endi+             BUG4207
      C                             ng *CNTRLD***'                                            BUG4207
      C                   EndIf                                                               BUG4207
- 
+
       * Open print File
      C                   IF        WREPORT = 'Y'                                              CCB023
      C                   EXSR      OPNPRTF
@@ -349,10 +351,10 @@ O
      C                   EXSR      PAGE_CHG_CHK
      C                   EXCEPT    JOBENDD
      C                   ENDIF                                                                CCB023
- 
+
      C                   ADD       1             X
      C                   ENDDO
- 
+
      C                   ENDSR
       ********************************************************************
      C/SPACE 5
@@ -360,20 +362,20 @@ O
       * RPTJOBSNEND - Report Jobs NOT Ended
       ********************************************************************
      C     RPTJOBSNEND   BEGSR
- 
+
      C                   Z-ADD     1             X
      C     X             DOWLE     999
      C     AJ(X)         ANDNE     *BLANK
- 
+
      C                   EVAL      JUN = AJ(X)
- 
+
       * If not ended
- 
+
      C     JUN           LOOKUP    J2E                                    99
      C     *IN99         IFEQ      *OFF
- 
+
      C                   EXSR      FMT_CMD
- 
+
       * Open print File
      C                   IF        WREPORT = 'Y'                                              CCB023
      C                   EXSR      OPNPRTF
@@ -382,12 +384,12 @@ O
      C                   EXSR      PAGE_CHG_CHK
      C                   EXCEPT    JOBNENDD
      C                   ENDIF                                                                CCB023
- 
+
      C                   ENDIF
- 
+
      C                   ADD       1             X
      C                   ENDDO
- 
+
      C                   ENDSR
       ********************************************************************
      C/SPACE 5
@@ -395,19 +397,19 @@ O
       * RPTLCKSEND  - Report Locks Ended
       ********************************************************************
      C     RPTLCKSEND    BEGSR
- 
+
      C                   Z-ADD     1             R
      C     R             DOWLE     9999
      C     RcdD(R)       ANDNE     *BLANK
- 
+
      C                   EVAL      JUN    = RcdJ(R)
      C                   EVAL      Record = RcdD(R)
- 
+
       * If ended
- 
+
      C     JUN           LOOKUP    J2E                                    99
      C     *IN99         IFEQ      *ON
- 
+
       * Open print File
      C                   IF        WREPORT = 'Y'                                              CCB023
      C                   EXSR      OPNPRTF
@@ -415,12 +417,12 @@ O
      C                   EXSR      PAGE_CHG_CHK
      C                   EXCEPT    LCKENDD
      C                   ENDIF                                                                CCB023
- 
+
      C                   ENDIF
- 
+
      C                   ADD       1             R
      C                   ENDDO
- 
+
      C                   ENDSR
       ********************************************************************
      C/SPACE 5
@@ -428,29 +430,29 @@ O
       * RPTLCKSNEND  - Report Locks NOT Ended
       ********************************************************************
      C     RPTLCKSNEND   BEGSR
- 
+
      C                   Z-ADD     1             R
      C     R             DOWLE     9999
      C     RcdD(R)       ANDNE     *BLANK
- 
+
      C                   EVAL      JUN    = RcdJ(R)
      C                   EVAL      Record = RcdD(R)
- 
+
       * If NOT ended
- 
+
      C     JUN           LOOKUP    J2E                                    99
      C     *IN99         IFEQ      *OFF
- 
+
       * Open print File
      C                   IF        WREPORT = 'Y'                                              CCB023
      C                   EXSR      OPNPRTF
- 
+
       *  If file is on SCTRIGJ0
       *  or if file doesn't have a lock state of *SHRRD
       *    Highlight
      C                   EVAL      OBJECT    = %subst(Record:1 :10)
      C                   EVAL      LOCKSTATE = %subst(Record:57:10)
- 
+
      C     SCTRIGK       CHAIN     SCTRIGJ0                           99
      C     *IN99         IFEQ      *OFF
      C     LOCKSTATE     ORNE      '*SHRRD'
@@ -463,12 +465,12 @@ O
      C                   EXSR      PAGE_CHG_CHK
      C                   EXCEPT    LCKNENDD
      C                   ENDIF                                                                CCB023
- 
+
      C                   ENDIF
- 
+
      C                   ADD       1             R
      C                   ENDDO
- 
+
      C                   ENDSR
       ********************************************************************
      C/SPACE 5
@@ -514,7 +516,7 @@ O
       * Page Change Check
       *****************************************************************
      C     PAGE_CHG_CHK  BEGSR
- 
+
      C                   ADD       1             LineNumber
      C     LineNumber    IFGT      60
      C                   ADD       1             PageNumber
@@ -522,7 +524,7 @@ O
      C                   Z-ADD     4             LineNumber
      C                   ADD       1             LineNumber
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
      C/SPACE 5
@@ -530,26 +532,26 @@ O
       * *INZSR - Initial subroutine called automatically at program start
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C**********         PARM                    Library          10                        MD021351
      C                   PARM                    WREPORT           1                          CCB023
- 
+
      C     SCTRIGK       KLIST
      C                   KFLD                    OBJECT
- 
+
       * Get System Prefix
      C     *DTAARA       DEFINE                  SDSTAT
      C                   IN        SDSTAT
- 
+
      C                   MOVEL     *BLANK        WebUser          10
      C                   EVAL      WebUser = LIBR + 'WEBUSER'
- 
+
      C*******************MOVEL     *BLANK        BLK80            80                         BUG4846
      C**********         MOVEL     *BLANK        BLK44            44                  BUG4846 240226
      C                   MOVEL     *BLANKS       BLK30            30                          240226
      C                   MOVEL     *BLANK        Record          100
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -557,24 +559,24 @@ O
       * *PSSR  --- ABNORMAL ERROR CONDITIONS
       *********************************************************************
      C     *PSSR         BEGSR
- 
+
      C     W#RUN         IFEQ      *BLANKS
      C                   IF        WREPORT = 'Y'                                              CCB023
- 
+
      C                   MOVE      'Y'           W#RUN             1
- 
+
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
- 
+
      C                   DUMP
- 
+
      C                   SETON                                        LRU7U8
      C                   RETURN
      C                   ELSE                                                                 CCB023
      C                   SETON                                        LR                      CCB023
      C                   ENDIF                                                                CCB023
      C                   ENDIF
- 
+
      C                   ENDSR
       *********************************************************************
      OQSYSPRT   E            HEADINGS       1 03

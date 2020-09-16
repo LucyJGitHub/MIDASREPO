@@ -1467,7 +1467,7 @@
      C     SRCsActRepHdr BEGSR
 
      C                   EVAL      MGSEQU = 1
-     C                   EVAL      WAcctRept = 'Y'                                          CGL194
+     C                   EVAL      WAcctRept = 'Y'                                            CGL194
 
      C                   EVAL      KGroupNm = 'AccountReport'
      C                   EVAL      KElemNm  = 'DocSpec'
@@ -3752,9 +3752,10 @@
      C                   WHEN      PRpDocRef = *BLANKS                                        CGL194
      C                             AND PActn = 'C'                                            CGL194
      C                   EVAL      WFIDocTyp = 'OECD0'                                        CGL194
+     C                   WHEN      PActn = 'I'                                                CGL194
+     C                   EVAL      WFIDocTyp = 'OECD0'                                        CGL194
      C                   WHEN      PActn = 'N'                                                CGL194
      C                             OR PActn = 'R'                                             CGL194
-     C                             OR PActn = 'I'                                             CGL194
      C                   EVAL      WFIDocTyp = 'OECD1'                                        CGL194
      C                   EVAL      WActn  = 'N'                                               CGL194
      C                   WHEN      PRpDocRef <> *BLANKS                                       CGL194
@@ -3765,7 +3766,7 @@
      C                   EVAL      WFIDocTyp = 'OECD1'                                        CGL194
      C                   WHEN      PActn = 'O'                                                CGL194
      C                             AND PRtype <> 'DRAFT NEW'                                  CGL194
-     C                   EVAL      WFIDocTyp = 'OECD3'                                        CGL194
+     C                   EVAL      WFIDocTyp = 'OECD0'                                        CGL194
      C                   ENDSL                                                                CGL194
      C                   ENDIF                                                                CGL194
                                                                                               CGL194
@@ -3774,9 +3775,10 @@
      C                   WHEN      PRpDocRef = *BLANKS                                        CGL194
      C                             AND PActn = 'C'                                            CGL194
      C                   EVAL      WFIDocTyp = 'OECD10'                                       CGL194
+     C                   WHEN      PActn = 'I'                                                CGL194
+     C                   EVAL      WFIDocTyp = 'OECD10'                                       CGL194
      C                   WHEN      PActn = 'N'                                                CGL194
      C                             OR PActn = 'R'                                             CGL194
-     C                             OR PActn = 'I'                                             CGL194
      C                   EVAL      WFIDocTyp = 'OECD11'                                       CGL194
      C                   WHEN      PRpDocRef <> *BLANKS                                       CGL194
      C                             AND PActn = 'C'                                            CGL194
@@ -3786,7 +3788,7 @@
      C                   EVAL      WFIDocTyp = 'OECD11'                                       CGL194
      C                   WHEN      PActn = 'O'                                                CGL194
      C                             AND PRtype <> 'DRAFT NEW'                                  CGL194
-     C                   EVAL      WFIDocTyp = 'OECD13'                                       CGL194
+     C                   EVAL      WFIDocTyp = 'OECD10'                                       CGL194
      C                   ENDSL                                                                CGL194
      C                   ENDIF                                                                CGL194
                                                                                               CGL194

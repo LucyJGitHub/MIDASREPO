@@ -788,7 +788,9 @@
      C                   IF        AUIN = 'Y'                                               MD056683
                                                                                             MD056683
      C                   EVAL      WTag79L2Val = StsACSPT                                   MD056683
-      * Use Account w/ Bank for Destination                                                 MD056683
+      *                                                                                     MD056683
+      ** Use Account w/ Bank for Destination                                                MD056683
+      *                                                                                     MD056683
      C                   EVAL      WDstT = ACBT                                             MD056683
      C                   EVAL      WDst1 = ACBK                                             MD056683
      C                   EVAL      WIOFlg = 'I'                                             MD056683
@@ -806,7 +808,6 @@
      C                   OUT       LDA                                                      MD056683
      C                   EXSR      *PSSR                                                    MD056683
      C                   ENDIF                                                              MD056683
-                                                                                            
       *
       ** MT199 Status is RJCT
       *

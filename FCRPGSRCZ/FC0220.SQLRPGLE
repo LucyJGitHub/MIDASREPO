@@ -12,8 +12,9 @@
      F*                                                                  *
       *  (c) Finastra International Limited 2001                      *
      F*                                                                  *
-      *  Last Amend No. MD055265           Date 10Feb20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055681           Date 31Jul20               *
+      *  Prev Amend No. MD055265           Date 10Feb20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 CRE026             Date 24May06               *
@@ -35,6 +36,7 @@
      F*                                                                  *
      F********************************************************************
       *                                                                  *
+      *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD055265 - Deliverable Data Split for Report Control Facility*
       *  MD046248 - Finastra Rebranding                               *
       *  CRE026 - Consumer Banking (Recompile)                        *
@@ -221,10 +223,14 @@
       *
      D P@MMOD        E DS                  EXTNAME(SDMMODPD)
      D FCRCOM        E DS                  EXTNAME(FCRCOJW1)                                MD055265
-     D  XSARD        E                     EXTFLD(SARD)                                     MD055265
-     D NullInds        s              5i 0 dim(12)                                          MD055265
+     D**XSARD***     E                     EXTFLD(SARD)                            MD055265 MD055681
+     D  XSARN        E                     EXTFLD(SARN)                                     MD055681
+     D  XENABLD      E                     EXTFLD(ENABLD)                                   MD055681
+     D*NullInds*       s              5i 0 dim(12)                                 MD055265 MD055681
+     D NullInds        s              5i 0 dim(13)                                          MD055681
      D FCREPT        E DS                  EXTNAME(FCREPJW1)                                MD055265
-     D NullInds2       s              5i 0 dim(19)                                          MD055265
+     D*NullInds2       s              5i 0 dim(19)                                 MD055265 MD055681
+     D NullInds2       s              5i 0 dim(20)                                          MD055681
      D FCRSFX        E DS                  EXTNAME(FCRSFJW0)                                MD055265
      I******************* SFX         8  2                                LN0210
      I******************* XNM        10  1                                LN0210

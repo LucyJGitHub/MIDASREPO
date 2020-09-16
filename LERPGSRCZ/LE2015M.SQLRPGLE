@@ -28,8 +28,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD054605           Date 17Oct19               *
+      *  Last Amend No. MD055681           Date 31Jul20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD054605           Date 17Oct19               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 CSD095             Date 08Apr14               *
@@ -151,6 +152,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055681 - Deliverable Data Split for SAR                    *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *           Applied for MD-55510.                               *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
@@ -362,7 +364,7 @@
       *
      FSDBSHSL1  IF   E             DISK    INFSR(*PSSR)
       *
-     FSCSARDL1  IF   E             DISK    INFSR(*PSSR) USROPN
+     F*SCSARDL1* IF   E             DISK    INFSR(*PSSR) USROPN                             MD055681
       *
      FCBAICDL1  IF   E           K DISK    INFSR(*PSSR)
       *
@@ -511,8 +513,8 @@
      D SDPCAC        E DS                  EXTNAME(SDPCACPD)
       *
       ** Switchable features file.
-     D SCSARD        E DS                  EXTNAME(SCSARDPD)
-     D  SCLCD        E                     EXTFLD(LCD)
+     D*SCSARD***     E DS                  EXTNAME(SCSARDPD)                                MD055681
+     D**SCLCD**      E                     EXTFLD(LCD)                                      MD055681
       *
       ** Account Code Details                                                   CLE033
      D SDACOD        E DS                  EXTNAME(SDACODPD)                    CLE033
@@ -704,6 +706,8 @@
      D SDSVAL        E DS                  EXTNAME(SDSVLJW1)                                MD054605
      D                                     PREFIX(X)                                        MD054605
      D NullInds        s              5i 0 dim(21)                                          MD054605
+     D SCSARD        E DS                  EXTNAME(SCSRDJW0)                                MD055681
+     D  XLCD         E                     EXTFLD(LCD)                                      MD055681
       **  Message Format
      D W#MFMT          S                   LIKE(P#MFMT)
       *
@@ -3675,8 +3679,34 @@
       * Access Switchable Features
      C     X1MSGT        WHENEQ    'SARD'
       *
-     C                   OPEN      SCSARDL1
-     C                   READ      SCSARDL1                             8687
+     C**********         OPEN      SCSARDL1                                                 MD055681
+     C**********         READ      SCSARDL1                             8687                MD055681
+     C/EXEC SQL                                                                             MD055681
+     C+ declare BCursor insensitive scroll cursor for                                       MD055681
+     C+ select * from SCSRDJW0                                                              MD055681
+     C+ order by SARN                                                                       MD055681
+     C/END-EXEC                                                                             MD055681
+                                                                                            MD055681
+     C/EXEC SQL                                                                             MD055681
+     C+ close BCursor                                                                       MD055681
+     C/END-EXEC                                                                             MD055681
+                                                                                            MD055681
+     C/EXEC SQL                                                                             MD055681
+     C+ open BCursor                                                                        MD055681
+     C/END-EXEC                                                                             MD055681
+                                                                                            MD055681
+     C/EXEC SQL                                                                             MD055681
+     C+ fetch next from BCursor into :SCSARD                                                MD055681
+     C/END-EXEC                                                                             MD055681
+     C                   SETOFF                                       8687                  MD055681
+     C                   If        SQLCODE = 100                                            MD055681
+     C                   SETON                                        87                    MD055681
+     C                   ELSE                                                               MD055681
+     C                   If        SQLCODE <> 0                                             MD055681
+     C                   SETON                                        86                    MD055681
+     C                   ENDIF                                                              MD055681
+     C                   ENDIF                                                              MD055681
+                                                                                            MD055681
      C     *IN87         IFEQ      *OFF
      C                   CLEAR                   WWRTCD
      C                   ENDIF
@@ -4301,13 +4331,28 @@
       * Access Switchable Features
      C     X1MSGT        WHENEQ    'SARD'
       *
-     C                   READ      SCSARDL1                             8687
+     C**********         READ      SCSARDL1                             8687                MD055681
+     C/EXEC SQL                                                                             MD055681
+     C+ fetch next from BCursor into :SCSARD                                                MD055681
+     C/END-EXEC                                                                             MD055681
+     C                   SETOFF                                       8687                  MD055681
+     C                   If        SQLCODE = 100                                            MD055681
+     C                   SETON                                        87                    MD055681
+     C                   ELSE                                                               MD055681
+     C                   If        SQLCODE <> 0                                             MD055681
+     C                   SETON                                        86                    MD055681
+     C                   ENDIF                                                              MD055681
+     C                   ENDIF                                                              MD055681
+                                                                                            MD055681
      C     *IN87         IFEQ      *OFF
      C                   CLEAR                   WWRTCD
      C                   ENDIF
      C     *IN87         IFEQ      *ON
      C                   MOVEL(P)  '*EOF'        WWRTCD
-     C                   CLOSE     SCSARDL1
+     C**********         CLOSE     SCSARDL1                                                 MD055681
+     C/EXEC SQL                                                                             MD055681
+     C+ close BCursor                                                                       MD055681
+     C/END-EXEC                                                                             MD055681
      C                   ENDIF
       *   Error?
      C     *IN86         IFEQ      *ON
@@ -5161,8 +5206,10 @@
       * Format Switchable Features
      C     X1MSGT        WHENEQ    'SARD'
       *
-     C                   MOVE      ABSARN        SSSARN
-     C                   MOVE      ABSARD        SSSARD
+     C**********         MOVE      ABSARN        SSSARN                                     MD055681
+     C**********         MOVE      ABSARD        SSSARD                                     MD055681
+     C                   MOVE      SARN          SSSARN                                     MD055681
+     C                   MOVE      SARD          SSSARD                                     MD055681
       * Move message format
      C                   EVAL      W#SSMF=%SUBST(DWSSMF:91:W#BTML)
      C                   EVAL      %SUBST(W#MFMT:W#MPOS:W#BTML)=W#SSMF

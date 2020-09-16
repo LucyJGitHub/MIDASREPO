@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054605           Date 17Oct19               *
-      *  Prev Amend No. CSD101             Date 07Dec18               *
+      *  Last Amend No. MD055681           Date 31Jul20               *
+      *  Prev Amend No. MD054605           Date 17Oct19               *
+      *                 CSD101             Date 07Dec18               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 CTI006             Date 31Mar14               *
@@ -199,6 +200,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  CSD101 - Password Encryption (Recompile)                     *
       *  CLE071 - Value Dating of Rate Changes to Fees                *
@@ -556,7 +558,7 @@
      FSDFONTPD  IF   E             DISK                                         CGL004
      FSDTIINPD  IF   E             DISK                                         CTI001
      FSDAPIPD   IF   E             DISK                                         CAP006
-     FSCSAREL1  IF   E           K DISK                                         CSC010
+     F*SCSAREL1* IF   E           K DISK                                         CSC010     MD055681
      FSDTOFPD   IF   E             DISK                                         CPB001
      FSDMDFCPD  IF   E             DISK                                         CSD006
      F***SDHEDGPDIF  E                    DISK                                         CAS002 CAS009
@@ -889,7 +891,7 @@
      D SDSCFE        E DS                  EXTNAME(SDSCFEPD)                    S01464
      D P@FMT         E DS                  EXTNAME(DSSDY)                       S01117
      D*                                                                   CSW005
-     D SCSARD        E DS                  EXTNAME(SCSARDPD)                    CSW005
+     D*SCSARD***     E DS                  EXTNAME(SCSARDPD)                    CSW005      MD055681
      D** EXTERNAL DS FOR SAR DETAILS                                      CSW005
      D*                                                                   CSW005
      D DSFDY         E DS                  EXTNAME(DSFDY)                       CSW005
@@ -902,6 +904,8 @@
      D SDSVAL        E DS                  EXTNAME(SDSVLJW1)                                MD054605
      D                                     PREFIX(X)                                        MD054605
      D NullInds        s              5i 0 dim(21)                                          MD054605
+     D SCSARD        E DS                  EXTNAME(SCSRDJW0)                                MD055681
+     D                                     PREFIX(AB)                                       MD055681
      I*                                                                   S01408
      I/COPY WNCPYSRC,SD9000PEP1                                           S01408
      I*                                                                   S01408
@@ -2057,20 +2061,37 @@
      C     SARDSR        BEGSR                                                                 07094
       *                                                                   070946
      C***********          READ SCSARDPD                 89        070946 CSC010
-     C                   READ      SCSAREL1                               89                   CSC01
-     C     *IN89         IFEQ      '0'                                                         07094
+     C**********         READ      SCSAREL1                               89          CSC01 MD055681
+     C/EXEC SQL                                                                             MD055681
+     C+ declare ECursor insensitive scroll cursor for                                       MD055681
+     C+ select * from SCSRDJW3                                                              MD055681
+     C+ order by SARN                                                                       MD055681
+     C/END-EXEC                                                                             MD055681
+                                                                                            MD055681
+     C/EXEC SQL                                                                             MD055681
+     C+ open ECursor                                                                        MD055681
+     C/END-EXEC                                                                             MD055681
+                                                                                            MD055681
+     C/EXEC SQL                                                                             MD055681
+     C+ fetch next from ECursor into :SCSARD                                                MD055681
+     C/END-EXEC                                                                             MD055681
+                                                                                            MD055681
+     C******IN89         IFEQ      '0'                                                07094 MD055681
+     C                   IF        SQLCODE = 0                                              MD055681
      C                   WRITE     ICDHDR                                                      07094
      C                   WRITE     SARHDR                                                      07094
      C                   ENDIF                                                                 07094
       *                                                                   070946
       **   Print detail line for each Switchable Feature                  070946
       *                                                                   070946
-     C     *IN89         DOWEQ     '0'                                                         07094
+     C******IN89         DOWEQ     '0'                                                07094 MD055681
+     C                   DOW       SQLCODE = 0                                              MD055681
      C**********         Z-ADD     LCD           ZDAYNO                               07094 MD054605
      C                   Z-ADD     ABLCD         ZDAYNO                                     MD054605
      C                   EXSR      ZDATE2                                                      07094
      C                   MOVE      ZADATE        WULCD             7                           07094
-     C     TYLC          IFEQ      'A'                                                         07094
+     C*****TYLC*         IFEQ      'A'                                                07094 MD055681
+     C     ABTYLC        IFEQ      'A'                                                      MD055681
      C                   MOVE      'Amend '      WUCHTP                                        07094
      C                   ELSE                                                                  07094
      C                   MOVE      'Insert'      WUCHTP                                        07094
@@ -2087,8 +2108,15 @@
      C                   MOVEL     'Inactive'    ACTFLG                                        CSC00
      C                   ENDIF                                                                 CSC00
      C     @RTCD         IFNE      *BLANKS                                                     CSC01
-     C     ABSARN        CHAIN     SCSARED1                           54                       CSC01
-     C     *IN54         IFEQ      *OFF                                                        CSC01
+     C*****ABSARN        CHAIN     SCSARED1                           54              CSC01 MD055681
+     C/EXEC SQL                                                                             MD055681
+     C+ SELECT *                                                                            MD055681
+     C+ into :SCSARD                                                                        MD055681
+     C+ from SCSRDJW2                                                                       MD055681
+     C+ where SARN = :ABSARN                                                                MD055681
+     C/END-EXEC                                                                             MD055681
+     C******IN54         IFEQ      *OFF                                               CSC01 MD055681
+     C                   IF        SQLCODE = 0                                              MD055681
      C                   MOVEL(P)  'Disabled'    ACTFLG                                        CSC01
      C                   ENDIF                                                                 CSC01
      C                   ENDIF                                                                 CSC01
@@ -2103,10 +2131,16 @@
      C                   WRITE     SARHDR                                                      07094
      C                   ENDIF                                                                 07094
      C******               READ SCSARDPD                 89        070946 CSC010
-     C                   READ      SCSAREL1                               89                   CSC01
+     C**********         READ      SCSAREL1                               89          CSC01 MD055681
+     C/EXEC SQL                                                                             MD055681
+     C+ fetch next from ECursor into :SCSARD                                                MD055681
+     C/END-EXEC                                                                             MD055681
      C                   ENDDO                                                                 07094
       *                                                                   070946
      C/COPY WNCPYSRC,SD9000PC14
+     C/EXEC SQL                                                                             MD055681
+     C+ close ECursor                                                                       MD055681
+     C/END-EXEC                                                                             MD055681
      C                   ENDSR                                                                 07094
       *                                                                   070946
      C********************************************************************070946

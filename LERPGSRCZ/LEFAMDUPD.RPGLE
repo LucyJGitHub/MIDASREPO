@@ -1,4 +1,5 @@
      H DEBUG
+     H
      H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*OVR *  OVRDBF FILE(LEFCAMXX) TOFILE(LEFCAML6) SHARE(*NO)            *
@@ -13,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD054317           Date 09Sep19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD054317           Date 09Sep19               *
+      *                 CSD102             Date 08Jan19               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD024398           Date 11May14               *
@@ -58,6 +60,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD054317 - PDCL X not generated for freq based repayment     *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
@@ -107,26 +111,26 @@
       *           use as API's.                                       *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       **   F-specs                               
       **   =======                               
       ** +--------------------------------------+
- 
+
       ** Facility amendments
      FLEFCAMXX  UF A E           K DISK    INFSR(*PSSR)
      F                                     USROPN
      F                                     COMMIT
      FLEFCAMQD  UF A E           K DISK    INFSR(*PSSR)                                       256732
      F                                     PREFIX(LFQ_)                                       256732
- 
+
       ** Facility amendments trailer
      F***LEFCAMZZ  UF   E             DISK    INFSR(*PSSR)                                  MD024342
      F***LEFCAMZZ  UF A E             DISK    INFSR(*PSSR)                        MD024342 MD024342B
      F***LEFCAMZZ  UF   E          DISK    INFSR(*PSSR)                           MD024342B MD025467
      FLEFCAMZZ  UF A E             DISK    INFSR(*PSSR)                                    MD024342B
      F                                     COMMIT
- 
+
       ** Facility amendments trailer                                                          CLE041
      FLEAGAMZZ  UF   E             DISK    INFSR(*PSSR)                                       CLE041
      F                                     RENAME(LEFCAMZF:LEAGAMZF)                          CLE041
@@ -153,7 +157,7 @@
      F**********                           RENAME(LEFCAMZF:LEFCAMZFX)             MD024342B MD025467
       ***API:*Midas*LE*Facility*Amendment*Transaction*Trailer**********           MD024342B MD025467
       *****************************************************************           MD024342B MD025467
- 
+
       *****************************************************************
       ** +--------------------------------------+
       **   Automatically included D-specs        
@@ -165,107 +169,107 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       **   End of automatically included D-specs 
       **   ===================================== 
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--------------------------------------+
       **   Manually included D-specs             
       **   =========================             
       ** +--------------------------------------+
- 
+
       ** Timestamp for the transaction
      D TimeStamp       S               Z
- 
+
       ** +--------------------------------------+
       **   Named constants                       
       **   ===============                       
       ** +--------------------------------------+
- 
+
      D OVRDBF1         C                   'OVRDBF FILE(LEFCAMXX)-
      D                                       TOFILE(LEFCAML6) SHARE(*NO)'
      D OVRDBF2         C                   'OVRDBF FILE(LEFEEDXX)-
      D                                       TOFILE(LEFEEDL1) SHARE(*NO)'
      D OVRDBF3         C                   'OVRDBF FILE(LEFCAMXX)-                            CLE041
      D                                       TOFILE(LEAGAML2) SHARE(*NO)'                     CLE041
- 
+
       ** +--------------------------------------+
       **   Arrays and Data Structures            
       **   ==========================            
       ** +--------------------------------------+
- 
+
       ** Amendment Details in file format
      D LEFCAMPD      E DS                  EXTNAME(LEFCAMPD)
- 
+
       ** Valid Amendment Details in file format
      D LEVFAMDPD     E DS                  EXTNAME(LEVFAMDPD)
- 
+
       ** Facility Amendment Details OK indicator
      D FAMD_OK       E DS                  EXTNAME(LEEFAMDPD)
- 
- 
+
+
       ** Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** SAR details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
       ** Customer lending details
      D SDCLND        E DS                  EXTNAME(SDCLNDPD)
- 
+
       ** Currency details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** Nostro details
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
- 
+
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
       ** SD data area
- 
+
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
       ** 24X7 status dataarea
                                                                                               CAP084
      D ZMUSER        E DS                  EXTNAME(ZMUSER) DTAARA(ZMUSER)                     CAP084
       ** Java user information                                                                CAP084
- 
+
      D APHEAD        E DS                  EXTNAME(APHEADPD)
       ** Midas API Message Header Format Definition
- 
+
       ** +--------------------------------------+
       **   Declared variables                    
       **   ==================                    
       ** +--------------------------------------+
- 
+
      D CSC011          S              1A   INZ('N')
      D CAP086          S              1A   INZ('N')                                           CAP086
      D TRANSDTL        S           5800A
@@ -338,12 +342,12 @@
      D WDtlOPay        S              1                                                     BUG4555
      D WPtyp           S              2A                                                    BUG4555
      D W#FRNT          S              8A                                                   MD0243423
- 
+
       ** +--------------------------------------+
       **   End of D-specs                        
       **   ==============                        
       ** +--------------------------------------+
- 
+
       ** Rename fields                                                                        CLE106
                                                                                               CLE106
      ILEFEEDF                                                                                BUG7146
@@ -399,11 +403,11 @@
       **   also any I-specs (if necessary)         
       **   =====================================   
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       **                                                                   
       **   Initial processing is performed automatically: the *inzsr is    
@@ -425,7 +429,7 @@
                                                                                               CLE041
       ** Perform overrides and set IsAggregate flag (WAggregate)                              CLE041
      C                   EXSR      SRChkFclt                                                  CLE041
- 
+
       ** Only clear warning error details if not coming from MidasPlus                        CAP084
                                                                                               CAP084
      C     USRID         IFEQ      *BLANKS                                                    CAP084
@@ -434,62 +438,62 @@
      C                   MOVE      *BLANK        WMsgDtaArr
      C                   Z-ADD     0             Wx
      C                   ENDIF                                                                CAP084
- 
+
      C                   MOVE      *BLANK        A_SQNO
- 
+
       * Set up the key fields to the facility amendments file
- 
+
      C                   MOVEL     AMCNUM        K#CNUM
      C                   MOVEL     AMFACT        K#FACT
      C                   MOVEL     AMFCNO        K#FCNO
      C                   Z-ADD     AMVLDT        K#VLDT
      C                   MOVEL     AMSQNO        K#SQNO
- 
+
      C                   SELECT
- 
+
       **  Write facility amendment record
       **  ===============================
- 
+
      C     S#ACTN        WHENEQ    'I'
      C                   EXSR      WRITER
- 
+
       **  Amend facility amendment record
       **  ===============================
- 
+
      C     S#ACTN        WHENEQ    'A'
      C                   EXSR      AMENDR
- 
+
       **  Authorise facility amendment record
       **  ===================================
- 
+
      C     S#ACTN        WHENEQ    'X'
      C                   EXSR      AUTHOR
- 
+
       **  Delete facility amendment record
       **  ================================
- 
+
      C     S#ACTN        WHENEQ    'D'
      C                   EXSR      DELETR
       *
      C                   ENDSL
- 
+
       ** If 24x7 Midas Availability is installed, write to the standard
       ** log file when support system is active
- 
+
      C                   IF        CSC011 = 'Y' AND
      C                             S1SUPP = LIBR
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM                    @OPTN
      C                   PARM      ACCY          @CURR             3
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   MOVE      ACCY          FccyFCCY          3
      C                   MOVE      A6NBDP        FccyNBDP          1 0
- 
+
       ** Setup Amendments support log
- 
+
      C                   CALLB     'LEFAMDLOG'
      C                   PARM      *BLANKS       RetCodeOut
      C                   PARM                    S#ACTN
@@ -497,11 +501,11 @@
      C                   PARM                    FccyFCCY
      C                   PARM                    FccyNBDP
      C                   PARM                    TRANSDTL
- 
+
       ** Write to support database log file
- 
+
      C                   IF        RetCodeOut = *BLANKS
- 
+
      C                   EVAL      APTGTTYPE = 'LEFAMD'
                                                                                               CAP084
       * Use the job user name or remote (java) user name as appropriate                       CAP084
@@ -521,31 +525,31 @@
      C                   EVAL      PDealNo = W@AMCNUM + W@AMFACT +
      C                                       W@AMFCNO + W@AMSQNO + W@AMFATP
      C                   EVAL      PADealNo = *BLANKS
- 
+
      C                   CALLB     'APLOGTRAN'
- 
+
      C                   PARM      *BLANKS       RetCodeOut
      C                   PARM                    APHEAD
      C                   PARM                    TRANSDTL
      C                   PARM      *BLANKS       WTimestamp
      C                   PARM                    PDealNo
      C                   PARM                    PADealNo
- 
+
      C                   ENDIF
- 
+
       ** If error occured,
- 
+
      C                   IF        RetCodeOut <> *BLANKS
- 
+
      C                   EVAL      RetCodeIn = '*ERROR'
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       **  Update the trailer if no errors
       **  Else report an error
- 
+
      C     Ix            IFEQ      0
      C                   IF        WAggregate = 'Y'                                           CLE041
      C                   EXSR      UpdTrlAg                                                   CLE041
@@ -561,33 +565,33 @@
      C                   CLOSE     LEFCAMXX                                                   CLE041
                                                                                               CLE041
      C                   RETURN
- 
+
       /SPACE 5
       *****************************************************************
       * WRITER   : Write facility amendment record                    *
       *****************************************************************
      C     WRITER        BEGSR
- 
+
       ** Timestamp
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
       * If CLE009 is installed, update fees file
- 
+
      C     CLE009        IFEQ      'Y'
      C                   EXSR      SRFEES
      C                   ELSE
      C                   MOVE      *BLANKS       AMSWRI
      C                   MOVE      *BLANKS       AMAUTH
      C                   ENDIF
- 
+
       ** Get the next available sequence no.
- 
+
      C                   MOVE      AMSQNO        A_SQNO
- 
+
      C                   MOVEL     LEVFAMDPD     LEFCAMPD
      C                   Z-ADD     BJRDNB        TLCD
- 
+
      C                   EVAL      STMP  = TimeStamp
                                                                                             BUG4555
      C                   IF        CSD015 = 'Y' AND W1EWLC = 'Y'                            BUG4555
@@ -606,12 +610,12 @@
      C                   EVAL      AUTO = AMAUTO                                              CAP086
      C                   ENDIF                                                                CAP086
                                                                                               CAP086
- 
+
       * Write to LEFCAML6
      C                   WRITE     LEFCAMPF                             80
- 
+
       * If an error occurs on the write, then end
- 
+
      C     *IN80         IFEQ      *ON
      C                   MOVEL     '*ERROR '     RetCodeIn
      C                   MOVEL     'LEFCAMPD'    DBFILE
@@ -619,7 +623,7 @@
      C                   MOVEL     '*WRITE'      DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C     P#MODE        IFEQ      'B'                                                        256732
                                                                                               256732
      C                   MOVEL     *BLANKS       LFQ_FABRCA                                   256732
@@ -652,47 +656,47 @@
       * AMENDR   : Amend facility amendment record                    *
       *****************************************************************
      C     AMENDR        BEGSR
- 
+
       * Access the record
- 
+
      C     FCAMK         CHAIN     LEFCAMXX                           80
      C     *IN80         IFEQ      '0'                                                        257297
- 
+
       * Save the previous amendment amount
- 
+
      C                   Z-ADD     AAMT          P_AAMT           13 0
- 
+
       **Currency
      C                   MOVEL     AMACCY        ACCY
- 
+
       **Amount
      C                   Z-ADD     AMAAMT        AAMT
- 
+
       **Revolving credit ind, new expiry date
- 
+
      C                   MOVEL     AMRVCR        RVCR
      C                   Z-ADD     AMNDEX        NDEX
      C/COPY WNCPYSRC,LEH00234
- 
+
       * Set record status if CLE002 is present and
       * Facility Amendment Authorise = Y.
- 
+
      C     CLE002        IFEQ      'Y'
      C     BPFAAM        ANDEQ     'Y'
- 
+
       * Status = 'R' if previous status was 'A', otherwise status = 'C'
- 
+
      C     ASTS          IFEQ      'A'
      C     ASTS          OREQ      'R'
      C                   MOVEL     'R'           ASTS
      C                   ELSE
      C                   MOVEL     'C'           ASTS
      C                   ENDIF
- 
+
      C                   ELSE
      C                   MOVEL     'A'           ASTS
      C                   ENDIF
- 
+
       * Amend User
                                                                                               CAP084
       * Use the job user name or remote (java) user name as appropriate                       CAP084
@@ -701,14 +705,14 @@
      C                   Else                                                                 CAP084
      C                   MOVEL     PsUser        AUSR
      C                   EndIf                                                                CAP084
- 
+
       * Last change date & change type
- 
+
      C                   Z-ADD     BJRDNB        TLCD
      C                   MOVEL     S#ACTN        CHTP
- 
+
       * For batch mode, set interface fields
- 
+
      C     P#MODE        IFEQ      'B'
      C                   MOVEL     AMAUSR        AUSR
      C                   MOVEL     AMXUSR        XUSR
@@ -716,18 +720,18 @@
      C                   MOVEL     AMFRNT        FRNT
      C                   MOVEL     'A'           ASTS
      C                   ENDIF
- 
+
       * If CLE009 is installed, set Work Regeneration Indicator
       * to changed and update fees file
- 
+
      C     CLE009        IFEQ      'Y'
      C                   EXSR      SRFEES
      C                   ENDIF
- 
+
       ** Timestamp
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
      C                   EVAL      STMP = TimeStamp
       *                                                                                     BUG4555
      C                   IF        CSD015 = 'Y' AND W1EWLC = 'Y'                            BUG4555
@@ -758,11 +762,11 @@
      C                   EVAL      ASTS = 'A'                                                 CAP086
      C                   EVAL      AUTO = AMAUTO                                              CAP086
      C                   ENDIF                                                                CAP086
- 
+
       * Update LEFCAML6
      C                   UPDATE    LEFCAMPF
      C                   ENDIF                                                                257297
- 
+
      C     EAMENDR       ENDSR
       *****************************************************************
       /SPACE 5
@@ -770,15 +774,15 @@
       * AUTHOR   : Authorise facility amendment record                *
       *****************************************************************
      C     AUTHOR        BEGSR
- 
+
       * Access the record
- 
+
      C     FCAMK         CHAIN     LEFCAMXX                           80
      C     *IN80         IFEQ      '0'                                                        257297
- 
+
       * Status
      C                   MOVEL     'A'           ASTS
- 
+
       * Authorising User
                                                                                               CAP084
       * Use the job user name or remote (java) user name as appropriate                       CAP084
@@ -787,22 +791,22 @@
      C                   Else                                                                 CAP084
      C                   MOVEL     PsUser        XUSR
      C                   EndIf                                                                CAP084
- 
+
       * Last change date
      C                   Z-ADD     BJRDNB        TLCD
- 
+
       * For batch mode, set interface fields
- 
+
      C     P#MODE        IFEQ      'B'
      C                   MOVEL     AMXUSR        XUSR
      C                   MOVEL     AMPCRF        PCRF
      C                   MOVEL     AMFRNT        FRNT
      C                   MOVEL     'A'           ASTS
      C                   ENDIF
- 
+
       * If CLE009 is installed, set Work Regeneration Indicator
       * to changed and update fees file
- 
+
      C     CLE009        IFEQ      'Y'
      C                   EXSR      SRFEES
      C                   ENDIF
@@ -813,11 +817,11 @@
      C                   EVAL      AUTO = AMAUTO                                              CAP086
      C                   ENDIF                                                                CAP086
                                                                                               CAP086
- 
+
       * Update LEFCAML6
      C                   UPDATE    LEFCAMPF
      C                   ENDIF                                                                257297
- 
+
      C     EAUTHOR       ENDSR
       *****************************************************************
       /SPACE 5
@@ -825,25 +829,25 @@
       * DELETR   : Delete facility amendment record                   *
       *****************************************************************
      C     DELETR        BEGSR
- 
+
       * Access the record
- 
+
      C     FCAMK         CHAIN     LEFCAMXX                           80
      C     *IN80         IFEQ      '0'                                                        257297
- 
+
       * Record ID
      C                   MOVEL     'R'           RECI
- 
+
       * Status
      C                   MOVEL     'D'           ASTS
- 
+
       * Last change date & change type
- 
+
      C                   Z-ADD     BJRDNB        TLCD
      C                   MOVEL     S#ACTN        CHTP
- 
+
       * For batch mode, set interface fields
- 
+
      C     P#MODE        IFEQ      'B'
      C                   MOVEL     AMPCRF        PCRF
      C                   MOVEL     AMFRNT        FRNT
@@ -858,7 +862,7 @@
       *
      C                   UPDATE    LEFCAMPF
      C                   ENDIF                                                                257297
- 
+
      C     EDELETR       ENDSR
       *****************************************************************
       /SPACE 5
@@ -866,42 +870,42 @@
       * SRFEES  -  Update Fees File                                   *
       *****************************************************************
      C     SRFEES        BEGSR
- 
+
      C                   MOVE      *BLANKS       W#SWRI            1
- 
+
       * If action code is insert, amend or delete and if action type
       * is facility increase, facility decrease or revolving credit
- 
+
      C     S#ACTN        IFEQ      'I'
      C     S#ACTN        OREQ      'A'
      C     S#ACTN        OREQ      'D'
- 
+
      C     AMFATP        IFEQ      'FI'
      C     AMFATP        OREQ      'FD'
      C     AMFATP        OREQ      'RC'
      C                   MOVE      'C'           W#SWRI
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       * If authorisation switchable feature is on
       * and facility amendments authorisations is required
       * and action code is insert or amend
- 
+
      C     CLE002        IFEQ      'Y'
      C     BPFAAM        ANDEQ     'Y'
      C     S#ACTN        ANDNE     'X'
      C     S#ACTN        ANDNE     'D'
- 
+
       * If action code is insert
- 
+
      C     S#ACTN        IFEQ      'I'
      C                   MOVE      W#SWRI        SWRI
      C                   MOVE      *BLANKS       AUTH
      C                   ENDIF
- 
+
       * If action code is amend
- 
+
      C     S#ACTN        IFEQ      'A'
      C     ORED          IFLT      BJRDNB
      C                   MOVE      W#SWRI        SWRI
@@ -913,38 +917,38 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
       * If action code is authorise
- 
+
      C     S#ACTN        IFEQ      'X'
      C                   MOVE      SWRI          W#SWRI
      C                   MOVE      'Y'           AUTH
      C                   ENDIF
- 
+
       * If action code is delete
- 
+
      C     S#ACTN        IFEQ      'D'
      C     AUTH          IFEQ      *BLANKS
      C                   MOVE      *BLANKS       W#SWRI
      C                   ELSE
- 
+
       * If work regeneration indicator is blank
- 
+
      C     W#SWRI        IFEQ      *BLANKS
      C                   MOVE      SWRI          W#SWRI
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
       * If work regeneration indicator is 'changed'
- 
+
      C     W#SWRI        IFEQ      'C'
- 
+
       * Check if the facility has an associated fee
- 
+
      C                   MOVE      AAFACL        AAFACL            5
      C                   MOVEL     AMFACT        AAFACL
      C                   MOVE      AMFCNO        AAFACL
@@ -953,14 +957,14 @@
      C                   MOVEL     *BLANK        WFLOAN                                       CLE148
      C     FEEK          SETLL     LEFEEDXX
      C     FEEK          READE     LEFEEDXX                               80
- 
+
       * Do while an associated fee exists
- 
+
      C     *IN80         DOWEQ     *OFF
- 
+
       * If the fee is a confirmed calculated fee and swift
       * regeneration indicator is not 'I', 'B', 'H'
- 
+
      C                   MOVE      FEAUTO        WAUTOC            1                          CLE134
      C     WAUTOC        IFEQ      'C'                                                        CLE134
      C     FEAUT2        OREQ      'C'                                                        CLE134
@@ -975,11 +979,11 @@
      C     FESWRI        ANDNE     'I'
      C     FESWRI        ANDNE     'B'
      C     FESWRI        ANDNE     'H'
- 
+
       * Set day to run date
       * Set currency to fee currency
       * Set number of working days to telex notice days
- 
+
      C                   Z-ADD     BJRDNB        ZDAYNO
      C                   MOVE      FEFCCY        ZCCY
       *                                                                                     MD054317
@@ -1004,26 +1008,26 @@
      C                   MOVE      WKCCY         ZCCY                                       MD054317
      C                   MOVE      WKCCY         @CURR                                      MD054317
      C                   MOVE      WKCCY         @CYCD                                      MD054317
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM                    @OPTN
      C**********         PARM      FEFCCY        @CURR             3                        MD054317
      C                   PARM                    @CURR             3                        MD054317
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   Z-ADD     A6TXND        ZNRDYS
- 
+
       * If Fee Settlement type involves a nostro
- 
+
      C     FESTTL        IFEQ      01
      C     FESTTL        OREQ      02
      C     FESTTL        OREQ      07
      C     FESTTL        OREQ      08
      C     FESTTL        OREQ      12
- 
+
       ** Set location to nostro location
- 
+
      C                   CALL      'AONOSTR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
@@ -1038,59 +1042,59 @@
      C                   PARM                    @CSSN            10
      C                   PARM                    @PNOI             1
      C     SDNOST        PARM      SDNOST        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVE      *BLANK        ZLOC
      C                   ELSE
      C                   MOVE      A7NOSN        ZLOC
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   MOVE      *BLANKS       ZLOC
- 
+
      C                   ENDIF
- 
+
       * Calculate number of working days forward
- 
+
      C                   EXSR      ZFWDT
- 
+
       * Set Telex Notice date to day number
- 
+
      C                   Z-ADD     ZDYNBR        TXDT              5 0
- 
+
       * If next payment date is before or equals to Telex Notice date
       * and Next Payment Telex indicator is set to 'Y'
- 
+
      C     FENPYD        IFLE      TXDT
      C     FEPPTI        ANDEQ     'Y'
- 
+
       * Update Fees file
- 
+
      C                   MOVE      'A'           FESWRI
      C                   UPDATE    LEFEEDF
      C                   ELSE
- 
+
       * If end date is before or equals to Telex Notice date and End
       * Telex indicator is set to 'Y'
- 
+
      C     FEPEND        IFLE      TXDT
      C     FEEPTI        ANDEQ     'Y'
- 
+
       * Update Fees file
- 
+
      C                   MOVE      'A'           FESWRI
      C                   UPDATE    LEFEEDF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     FEEK          READE     LEFEEDXX                               80
      C                   ENDDO
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -1098,13 +1102,13 @@
       * UPDTRL   : Update trailer                                     *
       *****************************************************************
      C     UPDTRL        BEGSR
- 
+
       ** Update trailer LEFCAMZZ
- 
+
      C*****MTHREAD       IFEQ      'N'                                             MD024342 MD025467
      C*****1****         SETLL     LEFCAMZZ                                                 MD025467
      C**********         READ      LEFCAMZZ                             8080                MD025467
- 
+
      C******IN80         IFEQ      *ON                                                      MD025467
      C**********         MOVEL     '*ERROR '     RetCodeIn                                  MD025467
      C**********         MOVEL     'LEFCAMZZ'    DBFILE                                     MD025467
@@ -1115,14 +1119,14 @@
      C**********         ENDIF                                                     MD024342 MD025467
       *
      C                   SELECT
- 
+
       **  Inserts
      C     S#ACTN        WHENEQ    'I'
                                                                                    MD024342 MD025467
      C**********         IF        MTHREAD = 'Y'                                            MD024342
      C                   EXSR      Initialise                                               MD024342
      C**********         ENDIF                                                     MD024342 MD025467
- 
+
      C                   ADD       1             NORE
      C                   ADD       1             NINS
      C                   ADD       1             NLRA
@@ -1138,16 +1142,16 @@
      C                   EXSR      GLZADD
      C                   Z-ADD     ZZTOTI        VLAF
      C                   Z-ADD     ZZTOTD        VLAL
- 
+
       **  Amend
      C     S#ACTN        WHENEQ    'A'
       *                                                                            MD024342 MD025467
      C**********         IF        MTHREAD = 'Y'                                            MD024342
      C                   EXSR      Initialise                                               MD024342
      C**********         ENDIF                                                     MD024342 MD025467
- 
+
      C                   ADD       1             NAMD
- 
+
      C     P_AAMT        SUB       W#AAMT        WDIFF            13 0
      C     WDIFF         DIV       1000          ZZAMT
      C                   Z-ADD     VARF          ZZTOTI
@@ -1155,14 +1159,14 @@
      C                   EXSR      GLZADD
      C                   Z-ADD     ZZTOTI        VARF
      C                   Z-ADD     ZZTOTD        VARL
- 
+
       **  Delete
      C     S#ACTN        WHENEQ    'D'
       *                                                                                     MD024342
      C**********         IF        MTHREAD = 'Y'                                   MD024342 MD025467
      C                   EXSR      Initialise                                               MD024342
      C**********         ENDIF                                                     MD024342 MD025467
- 
+
      C                   ADD       1             NDEL
      C                   SUB       1             NLRA
      C     W#AAMT        DIV       1000          ZZAMT
@@ -1176,9 +1180,9 @@
      C                   EXSR      GLZSUB
      C                   Z-ADD     ZZTOTI        VLAF
      C                   Z-ADD     ZZTOTD        VLAL
- 
+
      C                   ENDSL
- 
+
      C**********         IF        MTHREAD = 'N'                                   MD024342 MD025467
      C**********         UPDATE    LEFCAMZF                                                 MD025467
      C**********         ELSE                                                      MD024342 MD025467
@@ -1187,7 +1191,7 @@
      C**********         WRITE     LEFCAMZFX                                               MD024342B
      C                   WRITE     LEFCAMZF                                                 MD025467
      C**********         ENDIF                                                     MD024342 MD025467
- 
+
      C                   ENDSR
       *****************************************************************                       CLE041
       /SPACE 5                                                                                CLE041
@@ -1691,20 +1695,20 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
       *
       ** Return Code
      C                   PARM                    RetCodeIn
- 
+
       * Mode
      C                   PARM                    P#MODE            1
- 
+
       * Action Code
      C                   PARM                    S#ACTN            1
- 
+
       * Facility Amendment details in file format
      C                   PARM                    LEVFAMDPD
       *
@@ -1725,10 +1729,10 @@
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Wx                3 0
- 
+
       * Sequence assigned
      C                   PARM                    A_SQNO            3
- 
+
       *
       ** Access Bank details
       *  ~~~~~~~~~~~~~~~~~~~
@@ -1744,23 +1748,23 @@
      C                   MOVEL     '*FIRST  '    DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Check if CLE002 - Lending Authorisations - is Installed
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY    '    @OPTN
      C                   PARM      'CLE002'      @SARD             6
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVEL     'Y'           CLE002
      C                   ELSE
      C                   MOVEL     'N'           CLE002            1
      C                   ENDIF
- 
+
       ** Retrieve customer lending data, if CLE002 is Installed
- 
+
      C     CLE002        IFEQ      'Y'
       *
      C                   CALL      'AOCLNDR0'
@@ -1777,29 +1781,29 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Check if CLE009 - Customer Lending Enhancements - is Installed
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANK        @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM      'CLE007'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM      'CLE009'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVE      'Y'           CLE009            1
      C                   ELSE
      C                   MOVE      'N'           CLE009
      C                   ENDIF
      C                   ENDIF
- 
+
       *                                                                                       CLE134
       ** CLE134 - Past Due Call loans                                                         CLE134
       *                                                                                       CLE134
@@ -1828,19 +1832,19 @@
      C                   ELSE                                                               MD054317
      C                   MOVEL     'N'           CLE031            1                        MD054317
      C                   ENDIF                                                              MD054317
- 
+
       **If*the*user*is*connected*via*a*browser,*the*job*user*name*is*QUSER -          CAP084 BUG6318
       **their*user*name*is*stored*in*ZMUSER                                           CAP084 BUG6318
      C**********         IN        ZMUSER                                             CAP084 BUG6318
- 
+
      C     *LIKE         DEFINE    CNUM          K#CNUM
      C     *LIKE         DEFINE    FACT          K#FACT
      C     *LIKE         DEFINE    FCNO          K#FCNO
      C     *LIKE         DEFINE    VLDT          K#VLDT
      C     *LIKE         DEFINE    SQNO          K#SQNO
- 
+
       * Key lists
- 
+
      C     FCAMK         KLIST
      C                   KFLD                    K#CNUM
      C                   KFLD                    K#FACT
@@ -1881,18 +1885,18 @@
      C**********         PARM      OVRDBF1       QCMD             70                          CLE041
      C**********         PARM                    LENGTH           15 5                        CLE041
      C**********         OPEN      LEFCAMXX                                                   CLE041
- 
+
       ** OVRDBF LEFEEDL2 to LEFEEDXX then OPEN LEFEEDXX
- 
+
      C                   EVAL      LENGTH = %SIZE(OVRDBF2)
      C                   CALL      'QCMDEXC'
      C                   PARM      OVRDBF2       QCMD             70
      C                   PARM                    LENGTH           15 5
      C                   OPEN      LEFEEDXX
- 
+
       ** Check if CSC011 is installed
       ** CSC011 is a redundant feature. No need to check                                    MD024398
- 
+
      C**********         CALLB     'AOSARDR0'                                               MD024398
      C**********         PARM      *BLANKS       PRTCD                                      MD024398
      C**********         PARM      '*VERIFY'     POPTN                                      MD024398
@@ -1917,7 +1921,7 @@
      C**********         EVAL      DBASE = 905                                              MD024398
      C**********         EXSR      *PSSR                                                    MD024398
      C**********         ENDIF                                                              MD024398
- 
+
       ** Access SAR details to see if CSD015 is switched on.                                BUG4555
       *                                                                                     BUG4555
      C                   IN        SDSTAT                                                   BUG4555
@@ -2076,9 +2080,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5

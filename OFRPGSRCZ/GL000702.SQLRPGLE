@@ -12,13 +12,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD024191           Date 08Jan14               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD024191           Date 08Jan14               *
       *                 MD024013           Date 12Dec13               *
       *                 CGL145B  *CREATE   Date 29Oct13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data.    *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD024191 - Program failed when Facility file is empty        *
       *  MD024013 - Conversion rate not correct                       *

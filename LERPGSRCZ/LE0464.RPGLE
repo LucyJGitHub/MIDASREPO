@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR756564           Date 17May11               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR756564           Date 17May11               *
       *                 CLE064             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -33,6 +34,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  AR756564 - LEC0464 00001 DBERR 002 in SDCURRPD.              *
       *             (Child: AR756565)                                 *
@@ -72,69 +75,69 @@
       ** Ê F-specs                              Ê
       ** Ê =======                              Ê
       ** +--------------------------------------+
- 
+
       ** Midas MM Participants Contribution History
      FLEPCHSL0  UF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Midas LE Closed/reversed facilities
      FPEFCLFL1  UF   E           K DISK    INFSR(*PSSR) RENAME(FCLTYFMF:FCLTYX)
      F                                     PREFIX(Y)
- 
+
       ** Midas LE Customer lending facility file
      FFCLTY     IF   E           K DISK    INFSR(*PSSR) PREFIX(X)
- 
+
       ** Dropped Participant Contribution History
      FLE0464P1  O    E             PRINTER INFDS(SPOOL1) INFSR(*PSSR)
      F                                     USROPN
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** Ê Named constants                      Ê
       ** Ê ===============                      Ê
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** Ê Arrays and Data Structures           Ê
       ** Ê ==========================           Ê
       ** +--------------------------------------+
       ** Short Data Structure for Access Programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** External data structure for Midas SD Bank details ICD file
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External data structure for Currency Details File
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** Long Data Structure for Access Programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** External DS for Branch Details
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
- 
+
       ** File Information Data Structure for LE0464P1
      D SPOOL1          DS
      D  SFILE1                83     92
      D  SFNUM1               123    124B 0
      D  OFLLN1               188    189B 0
      D  PRTLN1               367    368B 0
- 
+
      D WkPPrFacility   DS
      D**WkPrevPMFC             1      6  0                                                   CSD027A
      D  WkPrevPMFC             1      6                                                      CSD027A
@@ -142,7 +145,7 @@
      D  WkPrevPMFT             8     10  0
      D  WkSep2                11     11    INZ('-')
      D  WkPrevPMFN            12     13  0
- 
+
      D WkPartFal       DS
      D**WkPTFC**               1      6  0                                                   CSD027A
      D  WkPTFC                 1      6                                                      CSD027A
@@ -154,19 +157,19 @@
       ** Ê Declared variables                   Ê
       ** Ê ==================                   Ê
       ** +--------------------------------------+
- 
+
      D WDIFLN1         S              3  0 INZ(0)
      D WkPrevEVDT      S                   LIKE(EVDT)
      D WkPrevPRTR      S                   LIKE(PRTR)
      D WkPrintFlag     S              1A   INZ('N')
      D WkDtlFlag       S              1A   INZ('N')
      D WkPrevPMBR      S                   LIKE(PMBR)
- 
+
       ** parameters for AOBANKRO
- 
+
      D PRTCD           S              7A
      D POPTN           S              7A
- 
+
       ** Calling parameters for ZDATE2
      D PDayNo          S              5  0 INZ(0)
      D PDtFmt          S              1    INZ(*BLANKS)
@@ -175,38 +178,38 @@
      D PMidasDt        S              6  0
      D PCCY            S              3A
      D PBranch         S              3A
- 
+
       ** ZSEDIT parameters
      D ZFLD15          S             15  0
      D ZDECS           S              1  0
      D ZECODE          S              1A
      D ZOUT21          S             21A
- 
+
       ** +--------------------------------------+
       ** Ê End of D-specs                       Ê
       ** Ê ==============                       Ê
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** Read all records from LEPCHSL0
- 
+
      C     *LOVAL        SETLL     LEPCHSL0
- 
+
      C                   READ      LEPCHSL0
      C                   DOW       NOT %EOF(LEPCHSL0)
- 
+
       ** Process printing
- 
+
      C                   EXSR      SrProcessPrint
- 
+
      C                   READ      LEPCHSL0
      C                   ENDDO
- 
+
       ** Print Footer
- 
+
      C                   IF        WkDtlFlag = 'N'
      C                   OPEN      LE0464P1
      C                   EVAL      BRCA = *BLANKS
@@ -214,11 +217,11 @@
      C                   EVAL      *IN80 = *ON
      C                   EVAL      WkPrintFlag = 'Y'
      C                   ENDIF
- 
+
      C                   EXSR      SrWp1End
- 
+
       ** Program wrap up
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
       *****************************************************************
@@ -230,38 +233,38 @@
       *                                                               *
       *****************************************************************
      C     SrProcessPrintBEGSR
- 
+
      C                   EVAL      PRIMEFACT  = *BLANKS
- 
+
      C                   IF        PMFC <> WkPrevPMFC OR
      C                             PMFT <> WkPrevPMFT OR
      C                             PMFN <> WkPrevPMFN
- 
+
       ** Check if existing in Facilities Table
- 
+
      C     DFCLKY        CHAIN     FCLTY
- 
+
      C                   IF        NOT %FOUND(FCLTY)
- 
+
       ** Store current Prime Facility to previous variable for
       ** referencing later
- 
+
      C                   EVAL      WkPrevPMFC = PMFC
      C                   EVAL      WkPrevPMFT = PMFT
      C                   EVAL      WkPrevPMFN = PMFN
- 
+
      C                   EVAL      PRIMEFACT = WkPPrFacility
- 
+
      C                   EXSR      SrPrntBrch
- 
+
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   EXSR      SrPrntBrch
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -271,26 +274,26 @@
       *                                                               *
       *****************************************************************
      C     SrPrntBrch    BEGSR
- 
+
      C                   IF        PMBR <> WkPrevPMBR
- 
+
       ** Print Footer
- 
+
      C                   EXSR      SrWp1End
- 
+
       ** Open printer file
- 
+
      C                   OPEN      LE0464P1
      C                   ENDIF
- 
+
       ** Print report
- 
+
      C                   EXSR      SrWriteP1
- 
+
       ** Drop participant distribution history
- 
+
      C                   EXSR      SrDelDrop
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -301,12 +304,12 @@
       *                                                               *
       *****************************************************************
      C     SrWriteP1     BEGSR
- 
+
      C     OFLLN1        SUB       PRTLN1        WDIFLN1
      C                   IF        WDIFLN1  <= 2 OR WkPrintFlag = 'N'
      C                   EXSR      SrWrtHeader
      C                   ENDIF
- 
+
      C                   IF        PTFC <> WkPTFC   or PTFT <> WkPTFT
      C                             or PTFN <> WkPTFN or PRIMEFACT <> *BLANKS
      C
@@ -317,7 +320,7 @@
      C                   ELSE
      C                   EVAL      PARTIFACT = *BLANKS
      C                   ENDIF
- 
+
      C                   IF        PRTR <> WkPrevPRTR or PARTIFACT <> *BLANKS
      C                   EVAL      WkPrevPRTR = PRTR
      C                   SELECT
@@ -333,7 +336,7 @@
      C                   ELSE
      C                   EVAL      PARTITYPE = *BLANKS
      C                   ENDIF
- 
+
      C                   IF        EVDT <> WkPrevEVDT or PARTITYPE <> *BLANKS
      C                   EVAL      WKPrevEVDT = EVDT
      C                   CALL      'ZDATE2'
@@ -341,49 +344,49 @@
      C                   PARM      BJDFIN        PDtFmt
      C                   PARM                    PMidasDt
      C                   PARM      *BLANKS       PDyMonYr
- 
+
      C                   EVAL      EVENTDATE = PDyMonYr
      C                   ELSE
      C                   EVAL      EVENTDATE = *BLANKS
      C                   ENDIF
- 
+
      C                   MOVE      SEQN          SEQUENCE
- 
+
       ** Prime Facility Amount
- 
+
      C                   EVAL      ZFLD15 = PMFA
      C                   EXSR      ZSEdit
      C                   EVAL      FACTAMT = ZOUT21
- 
+
       ** Share Percentage
- 
+
      C                   EVAL      SHAREPRCNT = SHPC
- 
+
       ** Share Amount
- 
+
      C                   EVAL      ZFLD15 = SHAM
      C                   EXSR      ZSEdit
      C                   EVAL      SHAREAMT = ZOUT21
- 
+
       ** Write P1 Header if required
- 
+
      C     OFLLN1        SUB       PRTLN1        WDIFLN1
      C                   IF        WDIFLN1 <= 2
      C                   EXSR      SrWrtHeader
      C                   ENDIF
- 
+
      C                   EVAL      WkPrintFlag = 'Y'
      C                   EVAL      WkDtlFlag = 'Y'
- 
+
       ** Write detail
- 
+
      C                   WRITE     DETFCLT
- 
+
       ** Save facility branch and set as previous branch
- 
+
      C                   EVAL      WkPrevPMBR = PMBR
- 
- 
+
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -393,18 +396,18 @@
       *                                                               *
       *****************************************************************
      C     SrWrtHeader   BEGSR
- 
+
      C                   IF        PMBR <> *BLANKS                                          BUG13152
      C                   CALL      'AOBRCHR1'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C                   PARM      PMBR          PBRANCH
      C     SDBRCH        PARM      SDBRCH        DSSDY
- 
+
      C                   IF        PRTCD <> *BLANKS
- 
+
       ** Data base error in file SDBRCHPD
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDBRCHPD'
      C                   EVAL      DBKEY  = PMBR
@@ -418,7 +421,7 @@
      C                   ENDIF
      C                   ENDIF                                                              BUG13152
      C                   WRITE     HEADER
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -428,24 +431,24 @@
       *                                                               *
       *****************************************************************
      C     SrWP1End      BEGSR
- 
+
      C                   IF        WkPrintFlag = 'Y'
- 
+
      C     OFLLN1        SUB       PRTLN1        WDIFLN1
      C                   IF        WDIFLN1 <= 4
      C                   EXSR      SrWrtHeader
      C                   ENDIF
- 
+
      C                   WRITE     TRAILPY
- 
+
       ** Close printer file
- 
+
      C                   CLOSE     LE0464P1
- 
+
      C                   EVAL      WkPrintFlag = 'N'
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -455,9 +458,9 @@
       *                                                               *
       *****************************************************************
      C     SrDelDrop     BEGSR
- 
+
      C                   DELETE    LEPCHSD0
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -467,7 +470,7 @@
       *                                                               *
       *****************************************************************
      C     SrRtvCurr     BEGSR
- 
+
      C*****PFCLTY        CHAIN     PEFCLFL1                                                 AR756564
      C     PFCLTY        CHAIN     PEFCLFL1                           90                    AR756564
      C                   IF        *IN90 = *OFF                                             AR756564
@@ -477,7 +480,7 @@
      C                   ELSE                                                               AR756564
      C                   EVAL      ZDECS = 0                                                AR756564
      C                   ENDIF                                                              AR756564
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -487,18 +490,18 @@
       *                                                               *
       *****************************************************************
      C     ZSEdit        BEGSR
- 
+
      C**********         EXSR      AOCURR                                                   AR756564
      C**********         EVAL      ZDECS = A6NBDP                                           AR756564
      C                   EXSR      SrRtvCurr                                                AR756564
- 
+
      C                   CALLB     'ZSEDIT'
      C                   PARM                    ZFLD15
      C**********         PARM      A6NBDP        ZDECS                                      AR756564
      C                   PARM                    ZDECS                                      AR756564
      C                   PARM      *BLANK        ZECODE
      C                   PARM                    ZOUT21
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -508,22 +511,22 @@
       *                                                               *
       *****************************************************************
      C     AOCURR        BEGSR
- 
+
       ** Retrieve facility currency
- 
+
      C**********         EXSR      SrRtvCurr                                                AR756564
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY   '     POptn
      C**********         PARM      YFCCY         PCCY                                       AR756564
      C                   PARM                    PCCY                                       AR756564
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        (PRTCD <> *BLANKS)
- 
+
       ** Data base error in file SDCURRPD
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'SDCURRPD'
      C                   EVAL      DBKEY  =  PCCY
@@ -531,9 +534,9 @@
       /COPY ZACPYSRC,DBFIELDS
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -542,11 +545,11 @@
       * *INZSR - Program Initialisation routine                       *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
       ** Set up Local Data Area
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DbFile = *BLANKS
      C                   EVAL      DbKey  = *BLANKS
@@ -554,27 +557,27 @@
      C                   EVAL      DbPGM  = 'LE0464'
      C                   EVAL      Dbase  = *ZERO
      C                   OUT       LDA
- 
+
      C     DFCLKY        KLIST
      C                   KFLD                    PMFC
      C                   KFLD                    PMFT
      C                   KFLD                    PMFN
- 
+
      C     PFCLTY        KLIST
      C                   KFLD                    PMBR
      C                   KFLD                    PMFC
      C                   KFLD                    PMFT
      C                   KFLD                    PMFN
- 
+
       ** Get Bank ICD
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*FIRST '     POPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database Error
- 
+
      C                   IF        PRTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DbFile = 'SDBANKPD'
@@ -583,17 +586,17 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** The following /COPY contains the standard program status
       ** subroutine, including a bound call to the DBERRCTL module.
- 
+
       /COPY ZACPYSRC,PSSR_ILE
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

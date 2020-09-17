@@ -12,12 +12,15 @@
       *                                                               *
       *  (c) Finastra International 2019                              *
       *                                                               *
-      *  Last Amend No. MD055681             Date 31Jul20             *
-      *  Prev Amend No. MD054955             Date 16Dec19             *
+      *  Last Amend No. MD056696             Date 09Sep20             *
+      *  Prev Amend No. MD055681             Date 31Jul20             *
+      *                 MD054955             Date 16Dec19             *
       *                 MD054605   *CREATE   Date 17Oct19             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056696 - SCSARDPD, SCSAREPD and REAPWDPD should not be     *
+      *             added as Bespoke record in SCTRGBTD.              *
       *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
@@ -362,6 +365,17 @@
      C                   ENDIF
      C
 
+     C                   If        XINDEX = 'SCTRGCTD'                                      MD056696
+     C/EXEC SQL                                                                             MD056696
+     C+ delete from SCTRGBTD where TRFILE = 'SCSARDPD' or TRFILE                            MD056696
+     C+ = 'SCSAREPD' or TRFILE = 'REAPWDPD'                                                 MD056696
+     C/END-EXEC                                                                             MD056696
+     C/EXEC SQL                                                                             MD056696
+     C+ delete from SCTRGXTD where TRFILE = 'SCSARDPD' or TRFILE                            MD056696
+     C+ = 'SCSAREPD' or TRFILE = 'REAPWDPD'                                                 MD056696
+     C/END-EXEC                                                                             MD056696
+     C                   Endif                                                              MD056696
+                                                                                            MD056696
      C                   ENDSR
 
       /EJECT

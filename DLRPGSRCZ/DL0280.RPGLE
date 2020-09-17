@@ -29435,6 +29435,9 @@
      C     @RTCD         IFNE      *BLANK                                                      S0148
      C                   SETON                                        U7U8LR                   S0148
      C                   MOVEL     '14'          DBASE             3             **DBERR 1**   S0148
+     C                   MOVEL     WWCUST        DBKEY                                      MD056629
+     C                   MOVEL     'SDPLCSPD'    DBFILE                                     MD056629
+     C                   EXSR      *PSSR                                                    MD056629
      C**********         EXCEPT    ERROR                                              S0148 AR547995
      C                   MOVE      'Y'           WWERRF                                        S0148
      C                   GOTO      P03END                                                      S0148

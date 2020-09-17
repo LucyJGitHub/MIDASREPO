@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD053119           Date 02Dec19               *
-      *  Prev Amend No. MD054696           Date 29Oct19               *
+      *  Last Amend No. MD054702           Date 07Sep20               *
+      *  Prev Amend No. MD053119           Date 02Dec19               *
+      *                 MD054696           Date 29Oct19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD052732           Date 12Mar19               *
       *                 249405             Date 09Mar18               *
@@ -84,6 +85,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054702 - Update valid indicator to 'Y' if batch header and *
+      *             batch details are already valid. Fix patterned    *
+      *             to GEMS fix 255331.                               *
       *  MD053119 - Conditioned UPDPOST subroutine on CGL016 feature  *
       *  MD054696 - Journal Entries Avoid Shadow Postings Update.     *
       *             Add Shadow Post Indicator in BITH API (SOAP/JMS). *
@@ -263,6 +267,7 @@
       *                                                                                    AR792734A
      FGLJENPL1  IF   E           K DISK    USROPN                                           AR992022
      F                                     PREFIX(M)                                       AR992022A
+     F                                     INFSR(*PSSR)                                     MD054702
       *                                                                                     AR992022
       ** Midas GL Journal entry posting Rtv                                                 AR992022
       *                                                                                     AR992022
@@ -835,6 +840,28 @@
      C     B1VALI        IFEQ      'N'
      C                   MOVE      B1VALI        BRVALI
      C                   ENDIF
+      *                                                                                     MD054702
+      ** Determine if all batch items are valid.                                            MD054702
+      *                                                                                     MD054702
+     C                   MOVE      'Y'           JEVALI            1                        MD054702
+     C                   SETOFF                                       10                    MD054702
+     C                   OPEN      GLJENPL1                                                 MD054702
+     C     B1BTNB        SETLL     GLJENPL1                                                 MD054702
+     C     B1BTNB        READE     GLJENPL1                               10                MD054702
+     C                   DOW       *IN10 = *OFF AND JEVALI = 'Y'                            MD054702
+     C     MBTVALI       IFNE      'Y'                                                      MD054702
+     C                   MOVE      'N'           JEVALI                                     MD054702
+     C                   ENDIF                                                              MD054702
+     C     B1BTNB        READE     GLJENPL1                               10                MD054702
+     C                   ENDDO                                                              MD054702
+     C                   CLOSE     GLJENPL1                                                 MD054702
+      *                                                                                     MD054702
+      ** If Valid Indicator and all batch item are valid, Set valid field to 'Y'            MD054702
+      *                                                                                     MD054702
+     C     B1VALI        IFEQ      'Y'                                                      MD054702
+     C     JEVALI        ANDEQ     'Y'                                                      MD054702
+     C                   MOVE      B1VALI        BRVALI                                     MD054702
+     C                   ENDIF                                                              MD054702
       *                                                                                      BUG3085
       ** If Security on Journal Entry is *ON, set Last Amend                                 BUG3085
       ** User field to system user.  Use correct user field if java user                     BUG3085

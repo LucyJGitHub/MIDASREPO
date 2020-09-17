@@ -4159,7 +4159,7 @@
      C                   MOVEL     'SDCURRPD'    DBF(N)                                     MD056358
      C                   MOVEL     BJCYCD        DBK(N)                                     MD056358
      C                   EXSR      DBERR                                                    MD056358
-     C                   GOTO      ZFTFR                                                    MD056358
+     C                   GOTO      ENDT                                                     MD056358
      C                   ENDIF                                                              MD056358
      C**
      C**   Convert Last Change Date, Day Number, To DDMMMYY Format. * FTFR

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD054998           Date 16Sep20               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD043345           Date 05Jan17               *
       *                 AR1092524          Date 12Mar13               *
       *                 CLE134             Date 01Aug12               *
@@ -48,6 +49,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD054998 - Security Prices sent to repair queue.             *
+      *           - Specify 'N' (not locked) operation extender when  *
+      *             reading file PRICEA and introduced new LF of      *
+      *             PRICEA for update mode.                           *
+      *             Applied for MD056743.                             *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  MD043345 - Security Prices does not have timestamp when      *
@@ -88,8 +94,15 @@
      FPRICE     UF A E           K DISK
      F                                     COMMIT
      F                                     INCLUDE(PRICEDF)
-     FPRICEA    UF A E             DISK
-     F                                     COMMIT
+     F***PRICEA UF A E             DISK                                                     MD054998
+     F**********                           COMMIT                                           MD054998
+     FPRICEA    IF   E             DISK                                                     MD054998
+
+      ** SE Prices - Audit by SLRB (for update mode)                                        MD054998
+     FPRICEAL0  UF   E           K DISK                                                     MD054998
+     F                                     COMMIT                                           MD054998
+     F                                     RENAME(PRICEAF:PRICEAX)                          MD054998
+     F                                     PREFIX(X_)                                       MD054998
 
      FSEPRICPD  UF A E           K DISK
      F                                     COMMIT
@@ -567,15 +580,23 @@
       * Get AUDIT Record.
       *
      C     1             SETLL     PRICEA
-     C                   READ      PRICEAF                                98
+     C**********         READ      PRICEAF                                98                MD054998
+     C                   READ (N)  PRICEAF                                98                MD054998
      C** Update AUDIT Record if found
      C     *IN98         IFEQ      '0'
      C** For Insert, Update Live records inserted today, and No. of live
      C** records
-     C                   ADD       1             SINS
-     C                   ADD       1             NORE
+     C**********         ADD       1             SINS                                       MD054998
+     C**********         ADD       1             NORE                                       MD054998
      C** Update AUDIT record
-     C                   UPDATE    PRICEAF
+     C     SLRB          CHAIN     PRICEAL0                                                 MD054998
+     C                   IF        %FOUND(PRICEAL0)                                         MD054998
+     C                   ADD       1             X_SINS                                     MD054998
+     C                   ADD       1             X_NORE                                     MD054998
+     C**********         UPDATE    PRICEAF                                                  MD054998
+     C                   UPDATE    PRICEAX                                                  MD054998
+     C                   ENDIF                                                              MD054998
+      *                                                                                     MD054998
      C                   ENDIF
       *
       * If CAC005 is installed, add the same record in SEPRICPD
@@ -727,20 +748,30 @@
       * Get AUDIT Record.
       *
      C     1             SETLL     PRICEA
-     C                   READ      PRICEAf                                98
+     C**********         READ      PRICEAf                                98                MD054998
+     C                   READ (N)  PRICEAF                                98                MD054998
      C** Update AUDIT Record if found
      C     *IN98         IFEQ      '0'
+      *                                                                                     MD054998
+     C     SLRB          CHAIN     PRICEAL0                                                 MD054998
+     C                   IF        %FOUND(PRICEAL0)                                         MD054998
      C     Insert        IFEQ      'Y'                                          170262
      C/COPY WNCPYSRC,SEH00095
      C** Update for insert over deleted record                                  170262
-     C                   ADD       1             SINS                           170262
-     C                   ADD       1             NORE                           170262
+     C**********         ADD       1             SINS                                170262 MD054998
+     C**********         ADD       1             NORE                                170262 MD054998
+     C                   ADD       1             X_SINS                                     MD054998
+     C                   ADD       1             X_NORE                                     MD054998
      C                   ELSE                                                   170262
      C** For Amends, Update No. of Records amended today.
-     C                   ADD       1             SAMD
+     C**********         ADD       1             SAMD                                       MD054998
+     C                   ADD       1             X_SAMD                                     MD054998
      C                   ENDIF                                                  170262
      C** Update AUDIT record
-     C                   UPDATE    PRICEAF
+     C**********         UPDATE    PRICEAF                                                  MD054998
+     C                   UPDATE    PRICEAX                                                  MD054998
+     C                   ENDIF                                                              MD054998
+      *                                                                                     MD054998
      C                   ENDIF
       *
       * If CAC005 is installed, update record in SEPRICPD
@@ -1320,20 +1351,30 @@
       * Get AUDIT Record.                                                                     CAP060
       *                                                                                       CAP060
      C     1             SETLL     PRICEA                                                     CAP060
-     C                   READ      PRICEAF                                98                  CAP060
+     C**********         READ      PRICEAF                                98         CAP060 MD054998
+     C                   READ (N)  PRICEAF                                98                MD054998
      C** Update AUDIT Record if found                                                         CAP060
      C     *IN98         IFEQ      '0'                                                        CAP060
+      *                                                                                     MD054998
+     C     SLRB          CHAIN     PRICEAL0                                                 MD054998
+     C                   IF        %FOUND(PRICEAL0)                                         MD054998
      C** For Insert, Update Live records inserted today, and No. of live                      CAP060
      C** records                                                                              CAP060
      C     Insert        IFEQ      'Y'                                                        224448
-     C                   ADD       1             SINS                                         CAP060
-     C                   ADD       1             NORE                                         CAP060
+     C**********         ADD       1             SINS                                CAP060 MD054998
+     C**********         ADD       1             NORE                                CAP060 MD054998
+     C                   ADD       1             X_SINS                                     MD054998
+     C                   ADD       1             X_NORE                                     MD054998
      C                   ELSE                                                                 224448
      C** For Amends, Update No. of Records amended today.                                     224448
-     C                   ADD       1             SAMD                                         224448
+     C**********         ADD       1             SAMD                                224448 MD054998
+     C                   ADD       1             X_SAMD                                     MD054998
      C                   ENDIF                                                                224448
      C** Update AUDIT record                                                                  CAP060
-     C                   UPDATE    PRICEAF                                                    CAP060
+     C**********         UPDATE    PRICEAF                                           CAP060 MD054998
+     C                   UPDATE    PRICEAX                                                  MD054998
+     C                   ENDIF                                                              MD054998
+      *                                                                                     MD054998
      C                   ENDIF                                                                CAP060
      C                   MOVE      ' '           Insert                                       224448
       *                                                                                       CAP060
@@ -1476,20 +1517,30 @@
       * Get AUDIT Record.                                                                     CAP060
       *                                                                                       CAP060
      C     1             SETLL     PRICEA                                                     CAP060
-     C                   READ      PRICEAf                                98                  CAP060
+     C**********         READ      PRICEAf                                98         CAP060 MD054998
+     C                   READ (N)  PRICEAF                                98                MD054998
      C** Update AUDIT Record if found                                                         CAP060
      C     *IN98         IFEQ      '0'                                                        CAP060
+      *                                                                                     MD054998
+     C     SLRB          CHAIN     PRICEAL0                                                 MD054998
+     C                   IF        %FOUND(PRICEAL0)                                         MD054998
      C     Insert        IFEQ      'Y'                                                        CAP060
      C/COPY WNCPYSRC,SEH00103
      C** Update for insert over deleted record                                                CAP060
-     C                   ADD       1             SINS                                         CAP060
-     C                   ADD       1             NORE                                         CAP060
+     C**********         ADD       1             SINS                                CAP060 MD054998
+     C**********         ADD       1             NORE                                CAP060 MD054998
+     C                   ADD       1             X_SINS                                     MD054998
+     C                   ADD       1             X_NORE                                     MD054998
      C                   ELSE                                                                 CAP060
      C** For Amends, Update No. of Records amended today.                                     CAP060
-     C                   ADD       1             SAMD                                         CAP060
+     C**********         ADD       1             SAMD                                CAP060 MD054998
+     C                   ADD       1             X_SAMD                                     MD054998
      C                   ENDIF                                                                CAP060
      C** Update AUDIT record                                                                  CAP060
-     C                   UPDATE    PRICEAF                                                    CAP060
+     C**********         UPDATE    PRICEAF                                           CAP060 MD054998
+     C                   UPDATE    PRICEAX                                                  MD054998
+     C                   ENDIF                                                              MD054998
+      *                                                                                     MD054998
      C                   ENDIF                                                                CAP060
       *                                                                                       CAP060
       * If CAC005 is installed, update record in SEPRICPD                                     CAP060
@@ -1675,14 +1726,22 @@
      C                   ENDIF                                                                CAP060
       * Get AUDIT Record.                                                                     CAP060
      C     1             SETLL     PRICEA                                                     CAP060
-     C                   READ      PRICEAf                                98                  CAP060
+     C**********         READ      PRICEAf                                98         CAP060 MD054998
+     C                   READ (N)  PRICEAF                                98                MD054998
      C** Update AUDIT Record if found                                                         CAP060
      C     *IN98         IFEQ      '0'                                                        CAP060
      C** Update for insert over deleted record                                                CAP060
-     C                   ADD       1             SDEL                                         CAP060
-     C                   SUB       1             NORE                                         CAP060
+     C**********         ADD       1             SDEL                                CAP060 MD054998
+     C**********         SUB       1             NORE                                CAP060 MD054998
      C** Update AUDIT record                                                                  CAP060
-     C                   UPDATE    PRICEAF                                                    CAP060
+     C     SLRB          CHAIN     PRICEAL0                                                 MD054998
+     C                   IF        %FOUND(PRICEAL0)                                         MD054998
+     C                   ADD       1             X_SDEL                                     MD054998
+     C                   SUB       1             X_NORE                                     MD054998
+     C**********         UPDATE    PRICEAF                                           CAP060 MD054998
+     C                   UPDATE    PRICEAX                                                  MD054998
+     C                   ENDIF                                                              MD054998
+      *                                                                                     MD054998
      C                   ENDIF                                                                CAP060
      C/COPY WNCPYSRC,SEH00118
      C                   ENDSR                                                                CAP060

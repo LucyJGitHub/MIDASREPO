@@ -14,8 +14,7 @@
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
       *  Last Amend No. MD039655           Date 14Aug20               *
-      *  Prev Amend No. MD044553           Date 08May17               *      
-      *                 MD030856           Date 06Nov19               *
+      *  Prev Amend No. MD030856           Date 06Nov19               *
       *                 MD054354           Date 23Oct19               *
       *                 MD055446           Date 04Apr20               *
       *                 MD054696           Date 29Oct19               *
@@ -230,7 +229,6 @@
       *  MD039655 - Facility cannot be rejected.                      *
       *             Pattern fix from MD-29208 and MD-34908.           *
       *           - Applied for MD052591.                             *
-      *  MD044553 - Corrected buffer position for WIP timestamp       *
       *  MD030856 - Introduced reject processing to FEEM              *
       *  MD054354 - Settlement of fee accrual for prior period for    *
       *             backdated notional change                         *
@@ -809,7 +807,6 @@
      D MsgArrOUT       S           9999                                                       BG1105
      D APIRetC         S              1
      D @TimeStamp      S             26                                                      BUG1569
-     D @WIPTmst        S             26                                                     MD044553
      D NewButton       S              3                                                       255190
      D DDACTC          S              1                                                      BUG3684
      D DDFOID          S             20                                                       239400
@@ -3232,8 +3229,6 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     TempData#9    ExtData                                    MD029663
      C                   ADD       IRCSLn        Bfp                                        MD030454
      C                   ADD       168           Bfp                                        MD030454
-     C     26            SUBST     BUFFER:Bfp    @WIPTmst                                   MD044553
-     C                   ADD       26            Bfp                                        MD044553
      C                   EVAL      InSwift2013 = %SUBST(BufferTotal:Bfp:RPIFLn)             MD030454
                                                                                             MD029663
      C                   CALL      'IRCIRSVU'
@@ -5159,8 +5154,6 @@ RGC  D RPIF4LN         S              4  0                                      
      C     IRSSLn        SUBST     BUFFER:Bfp    ExtData                                     BUG6671
      C                   ADD       IRSSLn        Bfp                                          CSW213
      C                   ADD       168           Bfp                                          CSW213
-     C     26            SUBST     BUFFER:Bfp    @WIPTmst                                   MD044553
-     C                   ADD       26            Bfp                                        MD044553
      C     RPIFLn        SUBST     BUFFER:Bfp    InSwift2013                                  CSW213
                                                                                              BUG6671
 

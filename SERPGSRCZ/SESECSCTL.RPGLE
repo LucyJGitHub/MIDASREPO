@@ -35,8 +35,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 LLN022A            Date 03Jun15               *
       *                 AR996842           Date 11Feb13               *
       *                 CRE073             Date 10Dec06               *
@@ -81,6 +82,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *             (Recompile)                                       *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *

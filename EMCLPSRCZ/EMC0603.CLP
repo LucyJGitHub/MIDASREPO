@@ -9,8 +9,9 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD030956           Date 09Oct14              */
+/*       Last Amend No. MD051112           Date 09Sep20              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD030956           Date 09Oct14              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -25,7 +26,10 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
-/*       MD046248 - Finastra Rebranding                              */
+/*       MD051112 - MSGW in EMC06 00003. EM0650 EMXTL match field is*/
+/*                  out sequence.                                   */
+/*                - Sort PF/EMXT1D1 via MCUN and LNRF.              */
+/*       MD046248 - Finastra Rebranding                             */
 /*        MD030956 - Additional changes to BFM-TI enhancement       */
 /*        CTI002 - Trade innovation phase 2                         */
 /*        S01408 - Addition of core hooks EMC0603MP1                */
@@ -102,12 +106,16 @@
              ELSE IF    ((%SST(&MMOD 16 1)) *EQ 'Y') +
                         CHGJOB SWS(1XXXXXXX)
 /**/
+             OVRDBF     FILE(EMXTL) TOFILE(EMXTL1)                                      /*MD051112*/
+                                                                                        /*MD051112*/
              IF         COND(%SWITCH(X1XXXXXX)) THEN(CALL EM0650)
 /**/
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERROR)
 /**/
              IF         COND(%SWITCH(XXXXXXX1)) THEN(GOTO ERROR)
 /**/
+             DLTOVR     FILE(EMXTL)                                                     /*MD051112*/
+                                                                                        /*MD051112*/
              CALL EM0700
 /* CTI002 Start */                                                    /*CTI002*/
              CALL       PGM(AOSARDR0) PARM(&SRTCD &SOPTN &SSARD)      /*CTI002*/

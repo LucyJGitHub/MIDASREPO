@@ -228,6 +228,7 @@
       *                                                               *
       *  MD039655 - Facility cannot be rejected.                      *
       *             Pattern fix from MD-29208 and MD-34908.           *
+      *           - Applied for MD052591.                             *
       *  MD030856 - Introduced reject processing to FEEM              *
       *  MD054354 - Settlement of fee accrual for prior period for    *
       *             backdated notional change                         *
@@ -2473,8 +2474,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C     FCEXLn        SUBST     BUFFER:Bfp    ExtData                                    MD044880
      C                   ADD       FCEXLn        Bfp                                        MD044880
                                                                                             MD044880
-                                                                                            MD039655
       ** Restore Authorise Reversal Action Code                                             MD039655
+                                                                                            MD039655
      C     1             SUBST     BUFFER:Bfp    @ACTRV                                     MD039655
      C                   ADD       1             Bfp                                        MD039655
                                                                                             MD039655

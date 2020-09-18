@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD045010           Date 05Apr17               *
+      *  Last Amend No. 262263             Date 18Dec09               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD045010           Date 05Apr17               *
       *                 CRE095             Date 25Apr14               *
       *                 CRE090             Date 14Feb14               *
       *                 AR1095876          Date 30Sep13               *
@@ -83,6 +84,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  262263 - Wrong value of OLDR and OLCR for GL accnts inserted *
+      *           Initialised the fields to zero for ATYP <> R.       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD045010 - Component LEC06A 10008 looping during COB caused  *
       *             by CGL184. Recompile due to changes in ZFRQB3.    *
@@ -944,7 +947,8 @@
      C                   Z-ADD     0             AB_GADI                                      CTI005
      C                   MOVE      ' '           AB_DDIS                                      CTI005
      C                   Z-ADD     BJRDNB        AB_DDIA                                      CTI005
-     C                   Z-ADD     BJRDNB        AB_OLDR                                      CTI005
+     C**********         Z-ADD     BJRDNB        AB_OLDR                               CTI005 262263
+     C                   Z-ADD     0             AB_OLDR                                      262263
      C                   Z-ADD     0             AB_OLDB                                      CTI005
      C                   Z-ADD     0             AB_OLDS                                      CTI005
      C                   Z-ADD     0             AB_CRIB                                      CTI005
@@ -964,7 +968,8 @@
      C                   Z-ADD     0             AB_GACI                                      CTI005
      C                   MOVE      ' '           AB_CDIS                                      CTI005
      C                   Z-ADD     BJRDNB        AB_DCIA                                      CTI005
-     C                   Z-ADD     BJRDNB        AB_OLCR                                      CTI005
+     C**********         Z-ADD     BJRDNB        AB_OLCR                               CTI005 262263
+     C                   Z-ADD     0             AB_OLCR                                      262263
      C                   Z-ADD     0             AB_OLCB                                      CTI005
      C                   Z-ADD     0             AB_OLCS                                      CTI005
      C                   Z-ADD     BJRDNB        AB_LCD                                       CTI005

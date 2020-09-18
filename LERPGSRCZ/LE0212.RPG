@@ -22,8 +22,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055393           Date 14Apr20               *
-      *  Prev Amend No. MD052515           Date 24Jan19               *
+      *  Last Amend No. MD021335           Date 17Jan14               *
+      *  Prev Amend No. 241243             Date 07Mar08               *
+      *                 MD055393           Date 14Apr20               *
+      *                 MD052515           Date 24Jan19               *
       *                 AR988460           Date 24Jan19               *
       *                 MD054316           Date 18Sep19               *
       *                 MD053789           Date 23Jul19               *
@@ -292,6 +294,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD021335 - Future repayments are not being shown in LOAC     *
+      *             for call loans                                    *
+      *  241243 - Missing activity for principal repayment when       *
+      *           maturity and next repayment are on the same date    *
+      *           but falls on a holiday. Fix is to enable checking   *
+      *           of PTDI and PDDI for maturity processing            *
       *  MD055393 - Check STAL indicator to display the PDCL          *
       *             narrative of the loan                             *
       *  MD052515 - Negative fixed rate loan got unexpected errors    *
@@ -6719,8 +6727,10 @@
       *                                                                                     MD023475
      C**********           MOVEL'N'       ESETIN  1                                   CLE141 CLE141A
      C           MDST      IFEQ 01                                                          MD023475
+     C           MDST      OREQ 02                                                            241243
      C           MDST      OREQ 07                                                          MD023475
      C           MDST      OREQ 08                                                          MD023475
+     C           MDST      OREQ 12                                                            241243
      C                     MOVE CCYCL     ZCCY                            157635
      C                     MOVE WNLOC     ZLOC
      C********** CLE141    IFEQ 'Y'                                                   CLE141 CLE141A
@@ -7005,8 +7015,10 @@
       ** Use loan currency for maturity settlement 01, 07 and 08.                           MD023475
       *                                                                                     MD023475
      C           MDST      IFEQ 01                                                          MD023475
+     C           MDST      OREQ 02                                                            241243
      C           MDST      OREQ 07                                                          MD023475
      C           MDST      OREQ 08                                                          MD023475
+     C           MDST      OREQ 12                                                            241243
      C                     MOVE CCYCL     ZCCY                            157635
      C                     MOVE WNLOC     ZLOC
      C                     ELSE                                                             MD023475
@@ -7313,8 +7325,10 @@
       ** Use loan currency for maturity settlement 01, 07 and 08.                           MD039187
       *                                                                                     MD039187
      C           MDST      IFEQ 01                                                          MD039187
+     C           MDST      OREQ 02                                                            241243
      C           MDST      OREQ 07                                                          MD039187
      C           MDST      OREQ 08                                                          MD039187
+     C           MDST      OREQ 12                                                            241243
      C**********           MOVE CCYCL     ZCCY                                         157635 253042
      C**********           MOVE WNLOC     ZLOC                                         154221 253042
      C                     EXSR SRSCUR                                                        253042
@@ -7507,11 +7521,14 @@
       ** Use loan currency for maturity settlement 01, 07 and 08.                           MD039187
       *                                                                                     MD039187
      C           MDST      IFEQ 01                                                          MD039187
+     C           MDST      OREQ 02                                                            241243
      C           MDST      OREQ 07                                                          MD039187
      C           MDST      OREQ 08                                                          MD039187
+     C           MDST      OREQ 12                                                            241243
      C**********           MOVE CCYCL     ZCCY                                         157635 253042
      C**********           MOVE WNLOC     ZLOC                                         154221 253042
      C                     EXSR SRSCUR                                                        253042
+     C                     ELSE                                                               241243
       *                                                                                     MD039187
       ** For all other settlement types, use Local Currency & Location                      MD039187
       *                                                                                     MD039187
@@ -8162,8 +8179,10 @@
       ** Use loan currency for maturity settlement 01, 07 and 08.                           MD039187
       *                                                                                     MD039187
      C           MDST      IFEQ 01                                                          MD039187
+     C           MDST      OREQ 02                                                            241243
      C           MDST      OREQ 07                                                          MD039187
      C           MDST      OREQ 08                                                          MD039187
+     C           MDST      OREQ 12                                                            241243
      C**********           MOVE CCYCL     ZCCY                                         157635 253042
      C**********           MOVE WNLOC     ZLOC                                         154221 253042
      C                     EXSR SRSCUR                                                        253042
@@ -8264,11 +8283,14 @@
       ** Use loan currency for maturity settlement 01, 07 and 08.                           MD039187
       *                                                                                     MD039187
      C           MDST      IFEQ 01                                                          MD039187
+     C           MDST      OREQ 02                                                            241243
      C           MDST      OREQ 07                                                          MD039187
      C           MDST      OREQ 08                                                          MD039187
+     C           MDST      OREQ 12                                                            241243
      C**********           MOVE CCYCL     ZCCY                                         157635 253042
      C**********           MOVE WNLOC     ZLOC                                         154221 253042
      C                     EXSR SRSCUR                                                        253042
+     C                     ELSE                                                               241243
       *                                                                                     MD039187
       ** For all other settlement types, use Local Currency & Location                      MD039187
       *                                                                                     MD039187
@@ -9151,7 +9173,8 @@
      C           MDAT      WHNE *ZEROS
      C                     Z-ADDMDAT      WENDT
      C                     OTHER
-     C                     Z-ADD*ZEROS    WENDT
+     C**********           Z-ADD*ZEROS    WENDT                                             MD021335
+     C                     Z-ADD99999     WENDT                                             MD021335
      C                     ENDSL
       *                                                                                     BUG21922
      C                     ELSE                                                             BUG21922
@@ -9168,6 +9191,7 @@
      C           RLDT      IFNE *ZEROS                                                     MD039391A
      C                     Z-ADD99999     WENDT                                            MD039391A
      C                     ENDIF
+     C                     Z-ADD99999     WENDT                                             MD021335
      C                     ENDSL                                                            BUG21922
      C                     ENDIF                                                            BUG21922
       *                                                                                       193701
@@ -10053,7 +10077,7 @@
       ** Check PTDI and PDDI field for maturity processing                                    253042
       *                                                                                       253042
      C                     EXSR SRSCUR                                                        253042
-     C                     MOVE WNLOC     ZLOC                                                253042
+     C**********           MOVE WNLOC     ZLOC                                         253042 241243
      C                     Z-ADD0         ZNRDYS                                              253042
       *                                                                                       253042
      C           CLE141    IFEQ 'Y'                                                         MD052734

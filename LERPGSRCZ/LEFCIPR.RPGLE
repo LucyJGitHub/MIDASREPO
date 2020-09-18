@@ -53,6 +53,7 @@
       *                                                               *
       *  MD039655 - Facility cannot be rejected.                      *
       *             Pattern fix from MD-29208 and MD-34908.           *
+      *           - Applied for MD052591.                             *
       *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *

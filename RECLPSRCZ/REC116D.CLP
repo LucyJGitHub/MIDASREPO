@@ -3,7 +3,7 @@
 /*EXI    TEXT('Midas RE Retail accrual for non-alternate')           */
 /*********************************************************************/
 /*                                                                   */
-/*       Midas Retail Module                                 */
+/*       Midas Retail Module                                         */
 /*                                                                   */
 /*       REC116D - COMMISSION CAPITALISATIONS                        */
 /*                                                                   */
@@ -263,7 +263,7 @@ LOOP:                                                                 /*CCB003*/
                                                                       /*CCB003*/
 RESTART:     OVRDBF     FILE(GEICPD) TOFILE(GEIC2PD)                  /*CCB003*/
              OVRDBF     FILE(GEICZZ) TOFILE(GEIC2ZZ)                  /*CCB003*/
-             OVRDBF     FILE(GEICL4) TOFILE(GEIC2L4)                  /*MD035795*/
+             OVRDBF     FILE(GEICL4) TOFILE(GEIC2L4)                                    /*MD035795*/
 /*/COPY WNCPYSRC,REC116D002                                          */
              CALL       PGM(RE3116) PARM(&RESTART)                    /*CCB003*/
 /*/COPY WNCPYSRC,REC116D003                                          */

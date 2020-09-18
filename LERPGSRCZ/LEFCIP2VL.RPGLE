@@ -75,13 +75,14 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD053093 - Component LEC06 00001 failed in Live due to       *
-      *             truncated CANM                                    *
-      *  MD046484 - 'LEC06 10011' Detailed name: 'Midas LE Facility   *
-      *             maintenance                                       *
+      *             truncated CANM.                                   *
+      *           - Applied for MD052591.                             *
       *  MD048074 - Drawing types, rollover types and allowable CCY   *
       *             were currupted during reject.                     *
-      *  MD039655 - Facility cannot be rejected.                      *
-      *             Pattern fix from MD-29208 and MD-34908.           *
+      *           - Applied for MD052591.                             *
+      *  MD046484 - 'LEC06 10011' Detailed name: 'Midas LE Facility   *
+      *             maintenance. Applied for MD052591                 *
+      *  MD039655 - Facility cannot be rejected. Applied for MD052591 *
       *  AR896408 - Validation in subroutine VCDTE                    *
       *             (Validate Closing Date) is only executed for      *
       *             syndicated facilities thus DTEX                   *

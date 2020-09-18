@@ -12,8 +12,10 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. EML111             Date 13Jul20               *
-      *  Prev Amend No. MD051347           Date 12Mar20               *
+      *  Last Amend No. MD055322           Date 15May20               *
+      *  Prev Amend No. AR760843           Date 01Sep11               *
+      *                 EML111             Date 13Jul20               *
+      *                 MD051347           Date 12Mar20               *
       *                 AR819229           Date 10Dec18               *
       *                 AR932652           Date 06Aug13               *
       *                 AR927395           Date 05Aug13               *
@@ -424,6 +426,12 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055322 - FB2.1 SP21 RECON - Discrepancy on CLOANCK field   *
+      *             ABLN on first COB                                 *
+      *  AR760843 - Automatic Next interest payment date set in-      *
+      *             correctly. Move value of W@STBL to ZLOC only if   *
+      *             not blank. Use ZDYNBR instead of ZDAYNO for IBDT  *
+      *             and RBDT. (Child: AR760844)                       *      
       *  EML111   -Holidays should be based on currency of transaction*
       *            and NEVER on local currency.                       *
       *            Apply fix 198974.                                  *
@@ -14214,7 +14222,9 @@ L118 I                             P   72   77 7RTSPL
      C                   ENDIF                                                  End If         CEU00
       *                                                                   CEU004
      C                   EXSR      SETLOC                                                      S0119
+     C     W@STBL        IFNE      *BLANK                                                   AR760843
      C                   MOVE      W@STBL        ZLOC                                          S0119
+     C                   ENDIF                                                              AR760843
      C                   END                                                                   S0119
                                                                                               CLE141
       ** Save the Base Date                                                                   CLE141
@@ -17470,7 +17480,8 @@ C    C                   ENDIF                                                  
      C     MDAT          IFLT      DNWD                                          B3            13152
      C     MDAT          ANDNE     0                                                           13152
      C     MDAT          ANDGE     FIRY                                                     MD054008
-     C     RECI          ANDEQ     'M'                                                      MD054008
+     C*****RECI          ANDEQ     'M'                                             MD054008 MD055322
+     C     RECIL         ANDEQ     'M'                                                      MD055322
      C                   Z-ADD     MDAT          CDAT              5 0                         13152
      C                   ELSE                                                    X3            13152
      C                   Z-ADD     DNWD          CDAT                                          13152
@@ -17674,6 +17685,9 @@ C    C                   ENDIF                                                  
      C                   MOVE      NRLC          W@STBL                                        S0119
      C                   END                                                                   S0119
       *                                                                   S01195
+     C                   ELSE                                                               AR760843
+     C                   MOVE      SYSL          W@STBL                                     AR760843
+      *                                                                                     AR760843
      C                   END                                                    *E1            S0119
       *                                                                   S01195
      C     SETRTN        ENDSR                                                  *** SETRTN *** S0119

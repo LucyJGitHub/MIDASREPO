@@ -12,8 +12,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR1031825A         Date 09Jan13               *
+      *  Prev Amend No. MD048750           Date 27Mar18               *
+      *                 MD029952           Date 30Apr15               *
+      *                 AR783240           Date 05Jul11               *
+      *                 CER050             Date 16Jun19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CER070             Date 25Nov14               *
@@ -45,6 +49,17 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1031825A - Audit Letters are showing future-valued Customer*
+      *               Loans. Use VDAT as start date, which should be  *
+      *               LE Rundate. (Child: AR1031826)                  *
+      *  MD048750 - Add extract of IBAN.                              *
+      *           - Applied for MD-50185.                             *
+      *  MD029952   - This is a Mizuho Touchpaper Reference. Use      *
+      *               Cleared balance rather than Ledger Balance on   *
+      *               Audit Letter                                    *
+      *  AR763240 - Use the Ledger balance on RE audit letters        *
+      *             regardless of statement frequency.                *
+      *             (Child: AR763241)                                 *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
@@ -680,14 +695,15 @@
      C                     MOVEL'END_CLR '#@RDE
      C           ##RDE     CAT  #@RDE:1   ##RDE
       *
-     C           STFQ      IFEQ 'E'
-     C                     MOVELLDBL      ##DATA
-      *
-      ** Forword statement balance
-      *
-     C                     ELSE
-     C                     MOVELCFSB      ##DATA
-     C                     END
+     C********** STFQ      IFEQ 'E'                                                         AR763240
+     C**********           MOVELLDBL      ##DATA                                            MD029952
+     C                     MOVELCLBL      ##DATA                                            MD029952
+      *****************************************************************                     AR763240
+      ***Forword*statement*balance*************************************                     AR763240
+      *****************************************************************                     AR763240
+     C**********           ELSE                                                             AR763240
+     C**********           MOVELCFSB      ##DATA                                            AR763240
+     C**********           END                                                              AR763240
       *
      C                     MOVEL'Amount'  ##RDEC
      C                     MOVEL'L'       ##RDET
@@ -746,6 +762,18 @@
      C                     MOVELR#DATA    ##D,R1
      C                     MOVELR#DEFN    ##R,R1
       *
+      ** IBAN                                                                              MD048750
+      *                                                                                    MD048750
+     C                     ADD  1         R1                                               MD048750
+     C                     CLEARR#DATA                                                     MD048750
+     C                     CLEARR#DEFN                                                     MD048750
+     C                     CLEAR#@RDE                                                      MD048750
+     C                     MOVEL'IBAN'    #@RDE                                            MD048750
+     C           ##RDE     CAT  #@RDE:1   ##RDE                                            MD048750
+     C                     MOVELIBAN      R#DATA                                           MD048750
+     C                     MOVELR#DATA    ##D,R1                                           MD048750
+     C                     MOVELR#DEFN    ##R,R1                                           MD048750
+      *                                                                                    MD048750
      C                     EXSR SRADTA
      C                     EXSR SRODTA
      C                     EXSR POPGRS
@@ -1154,7 +1182,9 @@
       *                                                                                     BUG23586
      C           *IN82     DOWEQ'0'
       *
+     C           VDAT      IFLE BJRDNB                                                    AR1031825A
      C                     EXSR Z132D1
+     C                     ENDIF                                                          AR1031825A
       *
      C           FBRCA     IFNE 'ALL'
      C           KEY01     READELELOANLF                 82
@@ -1169,7 +1199,9 @@
       *                                                                                     BUG23586
      C           FZERO     IFEQ 'Y'                                                         BUG23586
       *                                                                                     BUG23586
+     C           VDAT      IFLE BJRDNB                                                    AR1031825A
      C                     EXSR Z132D1                                                      BUG23586
+     C                     ENDIF                                                          AR1031825A
       *                                                                                     BUG23586
      C                     ENDIF                                                            BUG23586
       *                                                                                     BUG23586

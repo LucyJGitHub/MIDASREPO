@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. 258471             Date 29Jun16               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -26,6 +27,9 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD046248 - Finastra Rebranding                               *
+      *  258471 - Fix when duplicate error encountered, don't call    *
+      *           subroutine *PSSR.                                   *
+      *         - Applied for MD038719                                *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER043 - German Features LF041-00 New Fields and Defaulting  *
       *           (Recompile)                                         *
@@ -489,9 +493,13 @@
       ********************************************************************                    239642
      C     FILSR         BEGSR                                                                239642
      C                   IF        %STATUS = 01021                                            239642
-     C                   SETON                                        U5                      239642
+     C**********         SETON                                        U5               239642 258471
+     C                   SETON                                        U5LR                    258471
+     C                   RETURN                                                               258471
+     C                   ELSE                                                                 258471
+     C                   EXSR      *PSSR                                                      258471
      C                   ENDIF                                                                239642
-     C                   EXSR      *PSSR                                                      239642
+     C**********         EXSR      *PSSR                                               239642 258471
      C                   ENDSR                                                                239642
       ********************************************************************
       /SPACE 5

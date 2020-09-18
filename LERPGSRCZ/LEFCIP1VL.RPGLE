@@ -83,11 +83,14 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  MD053093 - Component LEC06 00001 failed in Live due to       *
-      *             truncated CANM                                    *
+      *             truncated CANM. .                                 *
+      *           - Applied for MD052591.                             *
       *  MD046484 - 'LEC06 10011' Detailed name: 'Midas LE Facility   *
-      *             maintenance. Applied for MD048074                 *
+      *             maintenance.                                      *
+      *           - Applied for MD052591.                             *
       *  MD039655 - Facility cannot be rejected.                      *
       *             Pattern fix from MD-29208 and MD-34908.           *
+      *           - Applied for MD052591.                             *
       *  MD054782 - SQNO of LEFCAMPD is same with LEMNFUPD.           *
       *             Rename SQNO of LEMNFUPF to FSQNO                  *
       *  AR674226 - Manual transaction reached 999. Increase the size *

@@ -55,6 +55,7 @@
       *                                                               *
       *  MD039655 - Facility cannot be rejected.                      *
       *             Pattern fix from MD-29208 and MD-34908.           *
+      *           - Applied for MD052591.                             *
       *  CLE168 - Allow Debit of Blocked Account (Recompile)          *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG6689 - Program should execute the confirmation screen     *

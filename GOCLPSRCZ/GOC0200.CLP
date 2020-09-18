@@ -9,10 +9,11 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. AR898898           Date 29Jun16              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. BUG18886           Date 30May08              */
+/*                      BUG18886           Date 30May08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /*                      239642             Date 01Jun06              */
@@ -20,6 +21,12 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       AR898898 - If Duplicate key error was still encountered     */
+/*                  after 2 retries, program will just send a        */
+/*                  message and end. Amended to fail program if      */
+/*                  duplicate key error is still encountered after   */
+/*                  2 retries. (Child: AR909227).                    */
+/*                - Applied for MD038719.                            */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BUG18886 - Non-standard codes exist in Midas Plus core      */
 /*                  sources                                          */
@@ -81,7 +88,10 @@ CALLPGM:     CALL       PGM(GPCCYPGEN) PARM(&RTCD &ERMS &ZOZONE)
              SNDPGMMSG  MSGID(CPF5009) MSGF(QCPFMSG) +
                           MSGDTA('Duplicate key error. See +
                           joblog.') TOMSGQ(MOPERQ MRUNQ)                                  /*239642*/
-             GOTO       CMDLBL(END)
+             CHGJOB     SWS(XXXXXX11)                                                   /*AR898898*/
+                        DMPCLPGM                                                        /*AR898898*/
+/**********  GOTO       CMDLBL(END) */                                                  /*AR898898*/
+             GOTO       CMDLBL(ERROR)                                                   /*AR898898*/
              ENDDO                                                                        /*239642*/
              DLYJOB     DLY(30)                                                           /*239642*/
              CHGVAR     VAR(&RETRY) VALUE(&RETRY + 1)                                     /*239642*/
@@ -89,6 +99,7 @@ CALLPGM:     CALL       PGM(GPCCYPGEN) PARM(&RTCD &ERMS &ZOZONE)
              GOTO       CMDLBL(CALLPGM)                                                   /*239642*/
              ENDDO                                                                        /*239642*/
 /* error */
+ERROR:                                                                                  /*AR898898*/
              IF COND(%SWITCH(XXXXXX11)) THEN(DO)
                 IF         COND(&JOBTYPE = '0') THEN(DO)
                    SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +

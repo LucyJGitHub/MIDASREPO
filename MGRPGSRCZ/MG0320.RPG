@@ -10,8 +10,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD050459           Date 12Mar20               *
-      *  Prev Amend No. AR908919           Date 02Oct19               *
+      *  Last Amend No. MD055600           Date 11Apr20               *
+      *  Prev Amend No. MD051884           Date 05Sep19               *
+      *                 260931             Date 25Nov15               *
+      *                 MD050459           Date 12Mar20               *
+      *                 AR908919           Date 02Oct19               *
       *                 MD053295           Date 13Apr19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD047993           Date 23Sep17               *
@@ -147,6 +150,12 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD055600 - FM2.1 SP21 MT320 Field 32H not generated with     *
+      *             CSW208 ON, CAS009 OFF and DLFSWIFTConf = Y        *
+      *  MD051884 - SWIFT MT320 early maturity unexpected interest    *
+      *             amount                                            *
+      *  260931 - Field 87A not correct                               *
+      *           Applied for MD-34062                                *
       *  MD050459  - Produce correct 34E for 'BC' Deal Amendment      *
       *            - Incomplete computation for 34E for 'PI' and 'PD' *
       *              Deal Amendment                                   *
@@ -4403,6 +4412,11 @@
      C                     MOVE *BLANK    MFLD                                                CSW024
      C                     MOVELDSCBEI    MFLD                                                CSW024
      C                     MOVE ':87A:'   MTAG                                                CSW024
+     C                     ADD  1         V                                                   260931
+     C           V         OCUR EXTN                                                          260931
+     C                     Z-ADDX         MPSN                                                260931
+     C                     MOVELMTAG      MTG                                                 260931
+     C                     MOVELMGCNUM    MCSI                                                260931
       *                                                                                       CSW024
       **  If receiver party info output :87J:                                                 CSW024
      C                     ELSE                                                               CSW024
@@ -4873,11 +4887,11 @@
      C                     PARM           ZSCCY   3                       CSW200
      C                     PARM           ZERR    1                       CSW200
      C                     PARM           ZSWDPC                                              222373
-     C           MGEVTP    IFEQ 'SC'                                                        MD034675
-     C           MGEVTP    OREQ 'BC'                                                        MD034675
-     C           MGEVTP    OREQ 'PI'                                                        MD034675
-     C           MGEVTP    OREQ 'PD'                                                        MD034675
-     C                     ELSE                                                             MD034675
+     C********** MGEVTP    IFEQ 'SC'                                               MD034675 MD055600
+     C********** MGEVTP    OREQ 'BC'                                               MD034675 MD055600
+     C********** MGEVTP    OREQ 'PI'                                               MD034675 MD055600
+     C********** MGEVTP    OREQ 'PD'                                               MD034675 MD055600
+     C**********           ELSE                                                    MD034675 MD055600
       *                                                                   CSW200
      C                     ADD  1         X                               CSW200
      C           X         OCUR MULT                                      CSW200
@@ -4889,7 +4903,7 @@
      C           'N'       CAT  MFLD      MFLD                            CSW200
      C                     ENDIF                                          CSW200
       *                                                                   CSW200
-     C                     ENDIF                                                            MD034675
+     C**********           ENDIF                                                   MD034675 MD055600
      C                     END                                            CSW200
      C*                                                                   CSW200
      C                     END                                            CSW200
@@ -4990,14 +5004,14 @@
       *                                                                   CSW200
      C                     END                                            CSW200
       *                                                                   CSW200
-     C           MGMATU    IFEQ 'C'                                       CSW200
-     C           MGMATU    OREQ 'I'                                       CSW200
-     C                     Z-ADDMGINTA    ZAMNT                           CSW200
-     C                     Z-ADDMGINTA    ZINTR                           CSW200
-     C           ZINTR     IFLT 0                                         186631
-     C                     Z-SUBZINTR     ZAMNT                           186631
-     C                     END                                            186631
-     C                     ENDIF                                          CSW200
+     C********** MGMATU    IFEQ 'C'                                                  CSW200 MD051884
+     C********** MGMATU    OREQ 'I'                                                  CSW200 MD051884
+     C**********           Z-ADDMGINTA    ZAMNT                                      CSW200 MD051884
+     C**********           Z-ADDMGINTA    ZINTR                                      CSW200 MD051884
+     C********** ZINTR     IFLT 0                                                    186631 MD051884
+     C**********           Z-SUBZINTR     ZAMNT                                      186631 MD051884
+     C**********           END                                                       186631 MD051884
+     C**********           ENDIF                                                     CSW200 MD051884
      C           MGLORD    IFEQ 'L'                                       CSW200
       *                                                                   CSW200
      C           ZINTR     IFGE *ZERO                                     CSW200

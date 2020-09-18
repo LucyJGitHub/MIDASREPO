@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD053956           Date 29Oct19               *
-      *  Prev Amend No. MD036838A          Date 29Oct19               *
+      *  Last Amend No. MD051895           Date 22May19               *
+      *  Prev Amend No. MD053956           Date 29Oct19               *
+      *                 MD036838A          Date 29Oct19               *
       *                 MD036838           Date 29Oct19               *
       *                 MD030274           Date 29Oct19               *
       *                 MD054028           Date 05Sep19               *
@@ -143,6 +144,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD051895 - Error when rejecting a change to a loan which     *
+      *             settles over a GL account.                        *
       *  MD053956 - Modified fix MD036838 by removing  checking of    *
       *             ##PPAY or ##PREC for warning message LEL0700/0701.*
       *  MD036838A - Move ZASETINVAL call to ensure that settlement   *
@@ -3498,7 +3501,8 @@
      C                   MOVE      DDPSCY        CL_SCCY                                    AR804863
      C                   MOVE      DDIC72        CL_ICCY                                    AR804863
       *                                                                                     AR804863
-     C                   MOVEL     DDPSTM        CL_RSTM                                    AR804863
+     C**********         MOVEL     DDPSTM        CL_RSTM                           AR804863 MD051895
+     C                   MOVEL     DDRSTM        CL_RSTM                                    MD051895
      C                   MOVE      DDRSCY        CL_SCCY                                    AR804863
       *                                                                                     MD034643
      C                   MOVE      DDPEXI        CL_PEXI                                    MD034643

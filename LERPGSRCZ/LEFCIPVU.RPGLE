@@ -85,6 +85,7 @@
       *                                                               *
       *  MD039655 - Facility cannot be rejected.                      *
       *             Pattern fix from MD-29208 and MD-34908.           *
+      *           - Applied for MD052591.                             *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *

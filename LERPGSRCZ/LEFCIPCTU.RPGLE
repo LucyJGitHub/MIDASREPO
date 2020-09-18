@@ -46,6 +46,7 @@
       *                                                               *
       *  MD039655 - Facility cannot be rejected.                      *
       *             Pattern fix from MD-29208 and MD-34908.           *
+      *           - Applied for MD052591.                             *      
       *  MD046248 - Finastra Rebranding                               *
       *  AR937578A - In Collateral and Credit Lines Enquiry, availed  *
       *              loans are both in reservation and exposure       *

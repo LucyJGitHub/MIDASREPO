@@ -72,6 +72,7 @@
       *                                                               *
       *  MD039655 - Facility cannot be rejected.                      *
       *             Pattern fix from MD-29208 and MD-34908.           *
+      *           - Applied for MD052591                              *
       *  MD036924 - Cannot enquire on certain screen when customer is *
       *             closed. Added checking if customer is closed      *
       *             during validation of customer.                    *

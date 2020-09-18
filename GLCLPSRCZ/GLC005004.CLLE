@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2007                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CER059             Date 19Jul10              */
+/*       Last Amend No. AR988489           Date 06Jul12              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CER059             Date 19Jul10              */
 /*                      BUG26200           Date 25Sep09              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      BUG22338           Date 25Feb09              */
@@ -20,6 +21,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       AR988489 - Use *OUTQ/GPPRINT for spool QPRINT               */
+/*                  (Child:AR988491)                                 */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CER059 - German Feature Upgrade to Delhi                    */
 /*       BUG26200 - Error in component GLC005004 00001 during COB    */
@@ -29,19 +32,19 @@
 /*                                                                   */
 /*********************************************************************/
              PGM
- 
+
 /* Declare variables */
- 
+
              DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)
              DCL        VAR(&JOBNAME) TYPE(*CHAR) LEN(10)
              DCL        VAR(&SBMUSER) TYPE(*CHAR) LEN(10)
              DCL        VAR(&DTAQLIB) TYPE(*CHAR) LEN(10)                               /*BUG22338*/
- 
+
              COPYRIGHT TEXT('(c) Finastra International Limited +
                           2007')
- 
+
 /* Global Monitor Message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
 /* */
@@ -50,31 +53,31 @@
              SNDPGMMSG  MSG('GLC005004 - GL Submit Calculation Manager +
                           Job for Input Cycle') TOMSGQ(MRUNQ)
              CHGJOB     SWS(XXXXX000)
- 
+
              STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)                                     /*BUG26200*/
              MONMSG     MSGID(CPF8351)                                                  /*BUG26200*/
- 
+
 /* Calculation Manager processing */
 /* Get zone system prefix */
- 
+
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREFIX)
 /* Build user profile under which to submit the job */
- 
+
              CHGVAR     VAR(&SBMUSER) VALUE(&PREFIX *TCAT 'WEBUSER')
- 
- 
+
+
 /* Collateralised Lending Calculation Manager */
 /* Check if the CALCMGR_xx job is running */
- 
+
              ALCOBJ     OBJ((GLCLCALLCK *DTAARA *EXCL)) WAIT(0)
              MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(LTVMNTR))
- 
+
              DLCOBJ     OBJ((GLCLCALLCK *DTAARA *EXCL))
- 
+
 /* Build submitted job name */
- 
+
              CHGVAR     VAR(&JOBNAME) VALUE('CALCMGR_' *CAT &PREFIX)
- 
+
 /* Clear DTAQs before starting the calculation manager job on when called */            /*BUG22338*/
 /* during COB                                                             */            /*BUG22338*/
                                                                                         /*BUG22338*/
@@ -83,43 +86,53 @@
              CALL       PGM(QCLRDTAQ) PARM('CLELTVMNTR' &DTAQLIB)                       /*BUG22338*/
                                                                                         /*BUG22338*/
 /* Submit calculation manager job  */
- 
+
+/**********  SBMJOB     CMD(CALL PGM(GLC005001) PARM(&PREFIX +        */                /*AR988489*/
+/**********               'calccl')) JOB(&JOBNAME) +                  */                /*AR988489*/
+/**********               JOBD(*LIBL/MBATCH) JOBQ(INTERFACE) +        */                /*AR988489*/
+/**********               OUTQ(*JOBD) USER(&SBMUSER) LANGID(ENU) +    */                /*AR988489*/
+/**********               CNTRYID(US) CCSID(37)                       */                /*AR988489*/
              SBMJOB     CMD(CALL PGM(GLC005001) PARM(&PREFIX +
                           'calccl')) JOB(&JOBNAME) +
                           JOBD(*LIBL/MBATCH) JOBQ(INTERFACE) +
-                          OUTQ(*JOBD) USER(&SBMUSER) LANGID(ENU) +
-                          CNTRYID(US) CCSID(37)
- 
+                          OUTQ(*LIBL/GPPRINT) USER(&SBMUSER) +
+                          LANGID(ENU) CNTRYID(US) CCSID(37)                             /*AR988489*/
+
  LTVMNTR:
 /* LTV Monitor processing */
- 
+
 /* Check if the LTVMNTR_xx job is running (input cycle and COB) */
- 
+
              ALCOBJ     OBJ((GLLTVMNLCK *DTAARA *EXCL)) WAIT(0)
              MONMSG     MSGID(CPF1002) EXEC(GOTO CMDLBL(END))
- 
+
              DLCOBJ     OBJ((GLLTVMNLCK *DTAARA *EXCL))
- 
+
 /* Get zone system prefix */
- 
+
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREFIX)
- 
+
 /* Build submitted job name */
- 
+
              CHGVAR     VAR(&JOBNAME) VALUE('LTVMNTR_' *CAT &PREFIX)
- 
+
 /* Submit LTV monitor job */
- 
-             SBMJOB     CMD(CALL PGM(GLC005001) PARM(&PREFIX +
-                          'ltv ')) JOB(&JOBNAME) JOBD(*LIBL/MBATCH) +
-                          JOBQ(INTERFACE) OUTQ(*JOBD) +
+
+/**********  SBMJOB     CMD(CALL PGM(GLC005001) PARM(&PREFIX +        */                /*AR988489*/
+/**********               'ltv ')) JOB(&JOBNAME) JOBD(*LIBL/MBATCH) + */                /*AR988489*/
+/**********               JOBQ(INTERFACE) OUTQ(*JOBD) +               */                /*AR988489*/
+/**********               USER(&SBMUSER) LANGID(ENU) CNTRYID(US) +    */                /*AR988489*/
+/**********               CCSID(37)                                   */                /*AR988489*/
+             SBMJOB     CMD(CALL PGM(GLC005001) PARM(&PREFIX 'ltv +
+                          ')) JOB(&JOBNAME) JOBD(*LIBL/MBATCH) +
+                          JOBQ(INTERFACE) OUTQ(*LIBL/GPPRINT) +
                           USER(&SBMUSER) LANGID(ENU) CNTRYID(US) +
-                          CCSID(37)
- 
+                          CCSID(37)                                                     /*AR988489*/
+
              GOTO       CMDLBL(END)                                                     /*BUG16544*/
                                                                                         /*BUG16544*/
 /* Abnormal termination processing */
- 
+
 ABNOR:
              ROLLBACK
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
@@ -127,14 +140,14 @@ ABNOR:
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              DMPCLPGM
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
              SNDPGMMSG  MSG('Program GLC005004 ended abnormally') +
                           TOMSGQ(MOPERQ MRUNQ)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           GLC005004 ended abnormally') MSGTYPE(*ESCAPE)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
  END:
- 
+
              ENDPGM

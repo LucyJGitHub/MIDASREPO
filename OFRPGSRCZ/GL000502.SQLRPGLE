@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
       *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD024275           Date 27Jan14               *
       *                 MD024013           Date 12Dec13               *
       *                 MD024014           Date 11Dec13               *
@@ -20,6 +21,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD024275 - Available Balance in Forecast Total is incorrect  *
       *  MD024013 - Conversion rate not correct                       *

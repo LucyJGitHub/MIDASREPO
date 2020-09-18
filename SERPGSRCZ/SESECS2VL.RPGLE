@@ -665,7 +665,8 @@
      C                   EVAL      S1CPNR = *ZEROS
  
      C                   EVAL      DDBASC = *BLANKS
-     C                   EVAL      S1BASC = *ZEROS
+     C**********         EVAL      S1BASC = *ZEROS                                            CSD103
+     C                   EVAL      S1BASC = *BLANKS                                           CSD103
  
      C                   EVAL      DDBASS = *BLANKS
      C                   EVAL      S1BASS = *ZEROS

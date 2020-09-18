@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR674226           Date 04Dec19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. AR674226           Date 04Dec19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE148             Date 23Jul12               *
       *                 CLE064             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -43,6 +44,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data.    *
+      *           (Recompile)                                         *
       *  AR674226 - Manual transaction reached 999. Increase the size *
       *             of utilisation sequence no. and transaction       *
       *             sequence. Recompile. (Child: AR674227)            *
@@ -92,7 +95,7 @@
       *    RESET for subsequent passes.                               *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
@@ -106,19 +109,19 @@
       ** Facilities details by date
      FFACHSAL1  IF   E           K DISK    INFSR(*PsSR)
      F                                     PREFIX(FH_)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       ** Standard D-specs
       ** ================
- 
+
       ** The following /COPY line includes the LDA layout,
       ** the copyright array definition,
       ** and the following named constants:
@@ -128,35 +131,35 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
       /COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
       /COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs: Arrays and Data Structures  ¦
       ** ¦ ===================================  ¦
@@ -185,7 +188,7 @@
      D Indicators      DS                  BASED(IndicatorP)
      D  EndOfFile             01     01
      D  RecNotFnd             02     02
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs: Declared variables          ¦
       ** ¦ =======  ==================          ¦
@@ -203,7 +206,7 @@
      D*PEndOfBk********S              1A                                                      208221
      D PrjHstFlg       S              1A
      D PAction         S              1A
- 
+
      D*Run_Date********S              5P 0                                                    208221
      D*Date_NWD********S              5P 0                                                    208221
      D*HstCtlDat*******S              5P 0                                                    208221
@@ -220,28 +223,28 @@
      D WAFcNo          S              2A
      D WAFacT          S              3A
      D WACnum          S              6A
- 
+
      D WFcty           S              5P 0
      D WFctyA          S              5                                                       205244
       *
       ** Pointer for the indicator Array
      D IndicatorP      S               *   INZ(%Addr(*IN))
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -------------------------------+
       ** ¦                                                            ¦
       ** ¦ *INZSR is executed at program activation.                  ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
+
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
@@ -301,7 +304,7 @@
      C************       PARM      *ZEROS        EvtCtlDat                                    208221
      C************       PARM      *ZEROS        PrjCtlDat                                    208221
      C************       PARM                    PeriodEDT                                    208221
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -316,18 +319,18 @@
       ** Extract all processes.
       *
      C                   IF        PExtrctTp = '*ALL'
- 
+
      C                   EXSR      SrExAll
- 
+
      C                   ELSE
       *
       ** Extract single process.
      C                   EXSR      SrExSin
- 
+
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -342,7 +345,7 @@
       ** Extract all customer lending facilities
       *
      C                   READ      FCLTY                                  01
- 
+
      C                   DOW       EndOfFile = False
       *
       ** Extract record for the facility read.
@@ -352,7 +355,7 @@
      C                   READ      FCLTY                                  01
       *
      C                   ENDDO
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -363,7 +366,7 @@
       *                                                               *
       *****************************************************************
      C     SrExSin       BEGSR
- 
+
      C                   EVAL      WRcTp = 'A'
      C     WKeyList1     CHAIN     FCLTY                              02
      C                   IF        RecNotFnd <> True
@@ -372,7 +375,7 @@
      C                   EXSR      SrPrSpec
       *
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -393,7 +396,7 @@
      C                   MOVEL     WFctyA        WFcty                                        205244
      C     WKeyList2     SETLL     FACHSAL1
      C     WKeyList2     READE     FACHSAL1                               01
- 
+
      C                   IF        EndOfFile = True
      C                   CLEAR                   FACHISX
      C                   ENDIF
@@ -458,7 +461,7 @@
      C                   IF        I#RTCD = '*ERROR'                                          208221
      C                   EXSR      SrXCWrite
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -469,19 +472,19 @@
       *                                                               *
       *****************************************************************
      C     SrXCWrite     BEGSR
- 
+
      C                   MOVE      FC_CNUM       WACnum
      C                   MOVE      FC_FACT       WAFacT
      C                   MOVE      FC_FCNO       WAFcNo
- 
+
      C                   EVAL      Buffer = PrjHstFlg + 'FCLT' + PExtrctTp +
      C                                      WACnum + WAFacT + WAFcNo +
      C***************                       ' ' + PRetCode + PErrMs + FCLTYX                  208221
      C                                      ' ' + I#RTCD + I#ERMS + FCLTYX                    208221
- 
+
      C                   CALLB     'DEWRTELOG'
      C                   PARM                    Buffer
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -496,7 +499,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ** Return code
@@ -533,21 +536,21 @@
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================
       ** The following /COPY sets these values.
- 
+
       /COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** The following /COPY contains the standard program status
       ** subroutine, including a bound call to the DBERRCTL module.
- 
+
       *COPY*ZACPYSRC,PSSR_ILE*****************************************************************208221
       /COPY DECPYSRC,DEPSSR                                                                   208221
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

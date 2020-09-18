@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054698           Date 02Nov19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD054698           Date 02Nov19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD037824           Date 09Mar16               *
       *                 CRE073             Date 06Dec10               *
       *                 CSW210             Date 04May10               *
@@ -86,6 +87,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *             (Recompile)                                       *
       *  MD054689 - System allows to REPO more than the actual        *
       *             Security Position Without any warning             *
       *  MD046248 - Finastra Rebranding                               *

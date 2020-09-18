@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD032162A          Date 12Feb15               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD032162A          Date 12Feb15               *
       *                 MD032161           Date 29Jan15               *
       *                 MD032162           Date 29Jan15               *
       *                 MD032091           Date 26Jan15               *
@@ -28,6 +29,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD032162A - Set Last Statement Date = 1Jan72 for CM fmt      *
       *  MD032161 - New requirements in the set-up of the Start Date  *

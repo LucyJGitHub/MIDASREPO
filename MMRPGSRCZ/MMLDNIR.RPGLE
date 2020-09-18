@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR701789           Date 26Sep16               *
       *                 CGL165             Date 23Feb15               *
@@ -65,6 +66,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate                          *
@@ -127,7 +129,7 @@
       *  CAP084 - Synchronous calling of APIs                         *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
@@ -140,7 +142,7 @@
       ** Midas MM Loan/Deposits by Link No.- Fiduciary only                                  BUG9827
      FMMDELDLF  IF   E           K DISK    INFSR(*PSSR)                                      BUG9827
      F                                     PREFIX(L_)                                        BUG9827
- 
+
       **********************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -152,19 +154,19 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY includes the standard API declares:
      D/COPY ZACPYSRC,STDDECLARE
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **-----------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
@@ -177,7 +179,7 @@
      DBufferEx2        DS          9999                                                       CDL033
      DRatDateDS        DS          4800                                                       CDL033
      DPayDateDS        DS          4800                                                       CDL033
- 
+
      DBufferEx3        DS          9999                                                       CSF011
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)                                  CSF011
      D                                     PREFIX(NO_)                                        CSF011
@@ -201,7 +203,7 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       **--------------------------------------------------------------------------------------------
       ** Screen formats
       **--------------------------------------------------------------------------------------------
@@ -209,7 +211,7 @@
       ** Regional data in file format                                                         CER001
       *                                                                                       CER001
      D RegData       E DS                  EXTNAME(MMLDRXPD)                                  CER001
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CDL018
       ** External DS for SAR Details                                                          CDL018
                                                                                               CDL018
@@ -221,19 +223,19 @@
       *                                                                                       CER043
      D DealScnFmt    E DS                  EXTNAME(MMLDNIPD)
       * Deal in Screen Format
- 
+
      D InfData       E DS                  EXTNAME(MMLDIFPD)
       ** Interface Data Format
- 
+
      D ##RECS        E DS                  EXTNAME(SDESSRPD)
       * Receive settlement instructions in screen format
- 
+
      D ##PAYS        E DS                  EXTNAME(SDESSPPD)
       * Pay settlement instructions in screen format
- 
+
      D ##FRIS        E DS                  EXTNAME(SDESSFPD)
       * FRA/IRS settlement instructions in screen format
- 
+
      D #FRECS        E DS                  EXTNAME(SDFSSRPD)                                  CDL018
       * Receive Further Settlement instructions in screen format                              CDL018
                                                                                               CDL018
@@ -249,7 +251,7 @@
       **--------------------------------------------------------------------------------------------
       ** File formats
       **--------------------------------------------------------------------------------------------
- 
+
      D DealFilFmt    E DS                  EXTNAME(MMDELDPP)
       ** Loans and Deposits in File Format
      D  DELDRecIns           470    524                                                       TCA002
@@ -263,7 +265,7 @@
       ** File Format for LDNI Extension File (LUX)                                            CER001
       *                                                                                       CER001
      D LDNILUXFilFmt E DS                  EXTNAME(MMDLX1PD)                                  CER001
- 
+
      D TranQExt      E DS                  EXTNAME(DLSTMPPD)                                  CER049
       ** Stamp Tax Extension Screen Format based on DLSTMPPD                                  CER049
                                                                                               CER049
@@ -274,15 +276,15 @@
      D**FLREC******************1     69                                                       TCA002
      D  FLREC2                21     75                                                       TCA002
       * Receive settlement instructions in file format
- 
+
      D ##PAYF        E DS                  EXTNAME(SDESFPPD)
      D**FLPAY******************1    559                                                       TCA002
      D  FLPAY2                21    565                                                       TCA002
       * Pay settlement instructions in file format
- 
+
      D ##FRIF        E DS                  EXTNAME(SDESFFPD)
       * FRA/IRS settlement instructions in file format
- 
+
      DPayDATEADS       DS                                                                     CDL033
      D PayDATEA                       8A   DIM(600)                                           CDL033
      D PayDate                        6    OVERLAY(PayDATEA:1)                                CDL033
@@ -317,13 +319,13 @@
      D  A#BRCA                19     21                                                      CSF011A
                                                                                              CSF011A
       **--------------------------------------------------------------------------------------------
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
- 
+
      D SREMK           S             35                                                       CMM105
      D DDACTC          S              1                                                      BUG3684
      D PLATAK          S              1                                                      BUG3792
@@ -365,7 +367,7 @@
      C/COPY WNCPYSRC,MMLDNIZD01
       **--------------------------------------------------------------------------------------------
       ** +--- Start of main processing -----------------------------------+
- 
+
       * If the action code is blank, enquire unless authorising
      C                   CLEAR                   DealFilFmt
      C                   CLEAR                   LDNILUXFilFmt                                CER001
@@ -384,7 +386,7 @@
      C                   MOVEL     'E'           DDACTN
      C                   ENDIF
      C                   ENDIF
- 
+
      C     FwdBck        IFEQ      'F'
      C                   MOVEL     'Y'           @RDFWD
      C                   MOVEL     'N'           @RDBCK
@@ -397,7 +399,7 @@
      C                   MOVEL     'N'           @RDBCK
      C                   ENDIF
      C                   ENDIF
- 
+
      C     @RDFWD        IFEQ      'Y'
      C     @RDBCK        OREQ      'Y'
      C                   EXSR      MMLDNIRED
@@ -476,9 +478,9 @@
      C                   ENDIF                                                                CDL018
                                                                                               CDL018
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     @ERRMS        IFNE      *BLANK
      C                   MOVEL     '0'           APIRetc
      C                   MOVEL     'DDDLNO'      FldNameArr(1)
@@ -490,7 +492,7 @@
      C                   MOVEA     RatDATEA      RatDateDS                                    CDL033
      C                   MOVEA     PayDATEA      PayDateDS                                    CDL033
      C                   ENDIF                                                                CDL033
- 
+
       *                                                                                       CER043
       ***Population*of*Customer*Details                                                CER043 CSF011
      C**********         IF        CER043 = 'Y'                                        CER043 CSF011
@@ -558,7 +560,7 @@
      C                                        + RatDateDS                                  AR1060863
      C                   EVAL      BufferEx3 = Filler3 + PayDateDS                         AR1060863
      C                                        + RegData + ExtData                          AR1060863
- 
+
      C                   SETON                                        LR
      C                   RETURN
       **********************************************************************
@@ -769,7 +771,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    AuthComp          1
      C                   PARM                    FwdBck            1
@@ -784,14 +786,14 @@
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetc           1
      C                   PARM                    ACTRJ             1                        AR701789
- 
+
       * Set up the name of the primary and secondary message files from
       * which the message handler will get the messages
      C                   EVAL      MsgFArray(1) = 'DRSMM'
- 
+
       *  Hook to enable non-core message files to be included
      C/COPY WNCPYSRC,MMLDNIM01
- 
+
       ** Access SAR details file to determine if CDL018 is switched on                        CDL018
       ** (Multiple Settlement Accounts on Loans/Deposit)                                      CDL018
                                                                                               CDL018
@@ -913,12 +915,12 @@
      C                   ENDIF                                                                CER043
      C/COPY WNCPYSRC,MMLDNIZC02
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       **********************************************************************
      C     MMLDNIRED     BEGSR
- 
+
      C                   CALLB     'MMLDNIRED'
       *
       * Input parameters
@@ -956,11 +958,11 @@
       *
       * Front Office Deal Read
      C                   PARM                    @FTRED           20
- 
+
      C                   ENDSR
       **********************************************************************
      C     MMLDNIRTV     BEGSR
- 
+
      C                   CALLB     'MMLDNIRTV'
       *
       * INPUTS
@@ -1023,19 +1025,19 @@
      C                   PARM                    MsgDtaArr
       *
       * Array index (3P0) from/to caller
- 
+
      C                   PARM                    Idx
       ** Warning flds/message IDs/message data (arrays) from/to caller
- 
+
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIdArr
      C                   PARM                    WMsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
- 
+
      C                   PARM                    WIdx
      C/COPY WNCPYSRC,MMLDNIZC03
- 
+
      C                   ENDSR
       **********************************************************************
       *                                                               *                       CER001
@@ -1065,9 +1067,9 @@
       /EJECT                                                                                  CER001
       ****************************************************************                        CER001
      C     MMLDNICVT     BEGSR
- 
+
      C                   CALLB     'MMLDNICVT'
- 
+
       * INPUTS
       * Return Code
      C                   PARM      *BLANK        ReturnCode       10
@@ -1076,7 +1078,7 @@
       *                                                                                     MD054028
      C                   PARM                    DDAPRC            1                        MD054028
      C                   PARM                    DDAPRR            8                        MD054028
- 
+
       * OUTPUTS
       * (Current) Deal in screen format
      C                   PARM                    DealScnfmt
@@ -1084,7 +1086,7 @@
      C                   PARM                    DDSTS            24
       * Collateral Status
      C                   PARM                    DDCSTS           10
- 
+
      C                   EVAL      DDFOID = HKFRNT                                            239400
                                                                                               239400
       *                                                                                       CER050

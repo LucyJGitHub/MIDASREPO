@@ -11,13 +11,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD052228           Date 30Oct18               *
-      *  Prev Amend No. MD041649           Date 29Sep16               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD052228           Date 30Oct18               *
+      *                 MD041649           Date 29Sep16               *
       *                 MD039547           Date 20Sep16               *
       *                 MD038593  *CREATE  Date 09Jun16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD052228 - Overridable message Settlement account is         *
       *             Referred is not displayed after clicking          *
       *             complete button in MAPY.                          *

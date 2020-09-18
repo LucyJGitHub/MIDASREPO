@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CMG009             Date 24Oct19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CMG009             Date 24Oct19               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD039029           Date 13Jul16               *
       *                 MD036398           Date 02Nov15               *
       *                 MD034442           Date 14Jul15               *
@@ -45,6 +46,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CMG009 - MT942 without Forward Value Postings                *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039029 - No MT942 generated even if there are shadow       *

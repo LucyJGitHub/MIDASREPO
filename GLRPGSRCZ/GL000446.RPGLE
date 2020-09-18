@@ -16,10 +16,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. BUG14826A          Date 13Sep07               *
+      *                 BUG14826A          Date 13Sep07               *
       *                 BUG14597           Date 14Aug07               *
       *                 BUG14589           Date 10Aug07               *
       *                 BG12067            Date 23Nov06               *
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG14826A - Transactions made using Equation functions were  *
       *      not reflected in the Projected Nostro Balances Enquiry   *

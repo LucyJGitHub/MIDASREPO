@@ -18,14 +18,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2017                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1096687          Date 04Apr17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1096687          Date 04Apr17               *
       *                 AR1069768          Date 04Apr17               *
       *                 AR1038758          Date 04Apr17               *
       *                 CGL027  *CREATE    Date 04Apr17               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1096687A - All shadow postings CGL027 movements are near   *
       *  AR1069768 - Write correct error info to SHDOUTTD             *

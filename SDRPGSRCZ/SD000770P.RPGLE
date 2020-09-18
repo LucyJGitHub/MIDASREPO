@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR787305           Date 13Jun11               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR787305           Date 13Jun11               *
       *                 AR782377           Date 04Jun11               *
       *                 CER059             Date 19Jul10               *
       *                 BUG24029           Date 20May09               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  AR787305 - Tax Self Declaration Statement usability issues   *
       *  AR782377 - Retail account's income not reflected on Tax      *

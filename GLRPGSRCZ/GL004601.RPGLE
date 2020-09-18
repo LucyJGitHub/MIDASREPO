@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD055518           Date 22Apr20               *
-      *  Prev Amend No. MD051765           Date 18Jul19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD055518           Date 22Apr20               *
+      *                 MD051765           Date 18Jul19               *
       *                 MD043945A          Date 20Feb17               *
       *                 MD043945           Date 07Feb17               *
       *                 MD046248           Date 27Oct17               *
@@ -52,6 +53,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055518 - Profit Centre assigned to TI postings is different*
       *             between MidasPlus and FBMidas. Profit Centre of   *
       *             TI postings will be defaulted based on the TI ICD *

@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD034521A          Date 14Sep15               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD034521A          Date 14Sep15               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD000091           Date 06May13               *
       *                 AR1083047          Date 30Jan13               *
       *                 CFT120             Date 28Sep12               *
@@ -59,6 +60,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD034521A - Error handling of Blocked account is not the     *
       *              same across the modules                          *
       *  MD046248 - Finastra Rebranding                               *

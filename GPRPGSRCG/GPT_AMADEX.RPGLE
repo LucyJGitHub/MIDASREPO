@@ -13,14 +13,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD026161           Date 04Apr14               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD026161           Date 04Apr14               *
       *                 AR658311           Date 15Oct10               *
       *                 CER059             Date 19Jul10               *
       *                 BUG25565A *CREATE  Date 25Aug09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD026161 - ALWNULL(*INPUTONLY) only allows read of null      *
       *             values. Use ALWNULL(*USRCTL) instead since this   *

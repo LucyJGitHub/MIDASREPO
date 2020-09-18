@@ -24782,10 +24782,12 @@
      C     CSW005        IFEQ      'Y'                                                         CSW00
      C     *IN31         ANDEQ     '0'                                                         CSW00
      C     WOBRT         ANDEQ     *ZERO                                                       CSW00
-     C                   Z-ADD     WBRTE         WOBRT                                         CSW00
+     C**********         Z-ADD     WBRTE         WOBRT                                  CSW00 CSD103
+     C                   MOVE      WBRTE         WOBRT                                        CSD103
      C                   ENDIF                                                                 CSW00
      C*                                                                   S01119
-     C                   Z-ADD     RTSPDM        WBRTE                                         S0111
+     C**********         Z-ADD     RTSPDM        WBRTE                                  S0111 CSD103
+     C                   MOVE      RTSPDM        WBRTE                                        CSD103
      C*                                                                   S01119
      C*  IF INITIAL RATE SET BIT ON,ONLY UPDATE BASE RATE                 S01119
      C*  CALCULATE NEXT RATE FIX BY DETERMINING NEXT CHANGE DATE          S01119
@@ -24961,7 +24963,8 @@
      C     WRTSP         ADD       WBRTE         WEINR                                         S0111
      C                   END                                                                   S0111
      C     WSPIN         IFEQ      ' '                                                         S0111
-     C                   Z-ADD     WBRTE         WEINR                                         S0111
+     C**********         Z-ADD     WBRTE         WEINR                                  S0111 CSD103
+     C                   MOVE      WBRTE         WEINR                                        CSD103
      C                   END                                                                   S0111
      C     WSPIN         IFEQ      'S'                                                         S0111
      C     WBRTE         SUB       WRTSP         WEINR                                         S0111
@@ -25070,12 +25073,14 @@
      C     CSW011        OREQ      'Y'                                                        227642
      C     URFIN         ANDEQ     'A'                                                        227642
      C                   Z-ADD     WEINR         UEINR                                         S0111
-     C                   Z-ADD     WBRTE         UBRTE                                         S0111
+     C**********         Z-ADD     WBRTE         UBRTE                                  S0111 CSD103
+     C                   MOVE      WBRTE         UBRTE                                        CSD103
       *                                                                                       CAS005
      C     CAS005        IFEQ      'Y'
      C     DTYP          IFEQ      'RS'
      C     DTYP          OREQ      'RX'
-     C                   Z-ADD     WBRTE         FSUEFR
+     C**********         Z-ADD     WBRTE         FSUEFR                                       CSD103
+     C                   MOVE      WBRTE         FSUEFR                                       CSD103
      C                   ENDIF
      C                   ENDIF
       *                                                                                       CAS005
@@ -25110,12 +25115,14 @@
      C     CSW011        OREQ      'Y'                                                        227642
      C     TRFIN         ANDEQ     'A'                                                        227642
      C                   Z-ADD     WEINR         TEINR                                         S0111
-     C                   Z-ADD     WBRTE         TBRTE                                         S0111
+     C**********         Z-ADD     WBRTE         TBRTE                                  S0111 CSD103
+     C                   MOVE      WBRTE         TBRTE                                        CSD103
       *                                                                                       CAS005
      C     CAS005        IFEQ      'Y'
      C     DTYP          IFEQ      'RS'
      C     DTYP          OREQ      'RX'
-     C                   Z-ADD     WBRTE         FSTEFR
+     C**********         Z-ADD     WBRTE         FSTEFR                                       CSD103
+     C                   MOVE      WBRTE         FSTEFR                                       CSD103
      C                   ENDIF
      C                   ENDIF
       *                                                                                       CAS005
@@ -25215,7 +25222,8 @@
      C     USRST         IFEQ      'P'                                          * B            S0111
      C*  OUR AVERAGE RATE PROCESSING-SETUP WORK FIELDS                    S01119
      C                   Z-ADD     UEINR         WEINR                          * *            S0111
-     C                   Z-ADD     UBRTE         WBRTE                          * *            S0111
+     C**********         Z-ADD     UBRTE         WBRTE                    * *            S0111 CSD103
+     C                   MOVE      UBRTE         WBRTE                                        CSD103
      C                   Z-ADD     URTSP         WRTSP                          * *            S0111
      C                   Z-ADD     UINFD         WINFD                          * *            S0111
      C                   MOVE      UDNSI         WDNSI                          * *            S0111
@@ -25223,7 +25231,8 @@
      C                   ELSE                                                   * X            S0111
      C*  THEIR AVERAGE RATE PROCESSING-SETUP WORK FIELDS                  S01119
      C                   Z-ADD     TEINR         WEINR                          * *            S0111
-     C                   Z-ADD     TBRTE         WBRTE                          * *            S0111
+     C**********         Z-ADD     TBRTE         WBRTE                    * *            S0111 CSD103
+     C                   MOVE      TBRTE         WBRTE                                        CSD103
      C                   Z-ADD     TRTSP         WRTSP                          * *            S0111
      C                   Z-ADD     TINFD         WINFD                          * *            S0111
      C                   MOVE      TDNSI         WDNSI                          * *            S0111
@@ -25248,7 +25257,8 @@
      C     WBRTE         ADD       WRTSP         WEINR                          * * *          S0111
      C                   END                                                    * * E          S0111
      C     WSPIN         IFEQ      ' '                                          * * B          S0111
-     C                   Z-ADD     WBRTE         WEINR                          * * *          S0111
+     C**********         Z-ADD     WBRTE         WEINR                    * * *          S0111 CSD103
+     C                   MOVE      WBRTE         WEINR                                        CSD103
      C                   END                                                    * * E          S0111
      C     WSPIN         IFEQ      'S'                                          * * B          S0111
      C     WBRTE         SUB       WRTSP         WEINR                          * * *          S0111
@@ -25281,7 +25291,8 @@
      C     WBRTE         ADD       WRTSP         EINR                           * * *          S0111
      C                   END                                                    * * E          S0111
      C     WSPIN         IFEQ      ' '                                          * * B          S0111
-     C                   Z-ADD     WBRTE         EINR                           * * *          S0111
+     C**********         Z-ADD     WBRTE         EINR                     * * *          S0111 CSD103
+     C                   MOVE      WBRTE         EINR                                         CSD103
      C                   END                                                    * * E          S0111
      C     WSPIN         IFEQ      'S'                                          * * B          S0111
      C     WBRTE         SUB       WRTSP         EINR                           * * *          S0111
@@ -26793,14 +26804,16 @@
      C* PROCESS PROVIDERS DETAILS                                         S01119
      C*                                                                   S01119
      C     USRST         IFEQ      'P'                                                         S0111
-     C                   Z-ADD     UBRTE         WBRTE                                         S0111
+     C**********         Z-ADD     UBRTE         WBRTE                                  S0111 CSD103
+     C                   MOVE      UBRTE         WBRTE                                        CSD103
      C                   Z-ADD     URTSP         WRTSP                                         S0111
      C                   Z-ADD     UINFD         WINFD                                         S0111
      C                   MOVE      USPIN         WSPIN                                         S0111
      C                   Z-ADD     UEINR         WEINR                                         S0111
      C                   MOVE      UDNSI         WDNSI                                         S0111
      C                   ELSE                                                                  S0111
-     C                   Z-ADD     TBRTE         WBRTE                                         S0111
+     C**********         Z-ADD     TBRTE         WBRTE                                  S0111 CSD103
+     C                   MOVE      TBRTE         WBRTE                                        CSD103
      C                   Z-ADD     TRTSP         WRTSP                                         S0111
      C                   Z-ADD     TINFD         WINFD                                         S0111
      C                   MOVE      TSPIN         WSPIN                                         S0111
@@ -26871,7 +26884,8 @@
      C     WRTSP         ADD       WBRTE         EINR                           * * *          S0111
      C                   END                                                    * * E          S0111
      C     WSPIN         IFEQ      ' '                                                         S0111
-     C                   Z-ADD     WBRTE         EINR                                          S0111
+     C**********         Z-ADD     WBRTE         EINR                                   S0111 CSD103
+     C                   MOVE      WBRTE         EINR                                         CSD103
      C                   END                                                                   S0111
      C     WSPIN         IFEQ      'S'                                          * * B          S0111
      C     WBRTE         SUB       WRTSP         EINR                           * * *          S0111
@@ -26918,12 +26932,14 @@
      C*                                                                   S01119
      C     RLINTR        TAG                                                     ** RLINTR TAG*S0111
      C*                                                                   S01119
-     C                   Z-ADD     RTSPDM        WBRTE                                         S0111
+     C**********         Z-ADD     RTSPDM        WBRTE                                  S0111 CSD103
+     C                   MOVE      RTSPDM        WBRTE                                        CSD103
      C     WSPIN         IFEQ      'A'                                          B              S0111
      C     WRTSP         ADD       WBRTE         WEINR                          *              S0111
      C                   END                                                    E              S0111
      C     WSPIN         IFEQ      ' '                                                         S0111
-     C                   Z-ADD     WBRTE         WEINR                                         S0111
+     C**********         Z-ADD     WBRTE         WEINR                                  S0111 CSD103
+     C                   MOVE      WBRTE         WEINR                                        CSD103
      C                   END                                                                   S0111
      C     WSPIN         IFEQ      'S'                                          B              S0111
      C     WBRTE         SUB       WRTSP         WEINR                                         S0111
@@ -26982,12 +26998,14 @@
      C*                                                                   S01119
      C* APPLY DEAL AMENDMENT TO RECORD GIVING EFFECTIVE INTEREST RATE     S01119
      C*                                                                   S01119
-     C                   Z-ADD     RTSPDM        WBRTE                                         S0111
+     C**********         Z-ADD     RTSPDM        WBRTE                                  S0111 CSD103
+     C                   MOVE      RTSPDM        WBRTE                                        CSD103
      C     WSPIN         IFEQ      'A'                                          B              S0111
      C     WRTSP         ADD       WBRTE         WEINR                          *              S0111
      C                   END                                                    E              S0111
      C     WSPIN         IFEQ      ' '                                                         S0111
-     C                   Z-ADD     WBRTE         WEINR                                         S0111
+     C**********         Z-ADD     WBRTE         WEINR                                  S0111 CSD103
+     C                   MOVE      WBRTE         WEINR                                        CSD103
      C                   END                                                                   S0111
      C     WSPIN         IFEQ      'S'                                          B              S0111
      C     WBRTE         SUB       WRTSP         WEINR                          *              S0111
@@ -27016,12 +27034,14 @@
      C*                                                                   S01119
      C* APPLY DEAL AMENDMENT TO RECORD GIVING EFFECTIVE INTEREST RATE     S01119
      C*                                                                   S01119
-     C                   Z-ADD     RTSPDM        WBRTE                                         S0111
+     C**********         Z-ADD     RTSPDM        WBRTE                                  S0111 CSD103
+     C                   MOVE      RTSPDM        WBRTE                                        CSD103
      C     WSPIN         IFEQ      'A'                                          B              S0111
      C     WRTSP         ADD       WBRTE         WEINR                          *              S0111
      C                   END                                                    E              S0111
      C     WSPIN         IFEQ      ' '                                                         S0111
-     C                   Z-ADD     WBRTE         WEINR                                         S0111
+     C**********         Z-ADD     WBRTE         WEINR                                  S0111 CSD103
+     C                   MOVE      WBRTE         WEINR                                        CSD103
      C                   END                                                                   S0111
      C     WSPIN         IFEQ      'S'                                          B              S0111
      C     WBRTE         SUB       WRTSP         WEINR                          *              S0111
@@ -27036,12 +27056,14 @@
      C*   UPDATE PROVIDER'S FIELDS BASED ON TAKER/PROVIDER INDICATOR      S01119
      C     USRST         IFEQ      'P'                                                         S0111
      C                   Z-ADD     WEINR         UEINR                                         S0111
-     C                   Z-ADD     WBRTE         UBRTE                                         S0111
+     C**********         Z-ADD     WBRTE         UBRTE                                  S0111 CSD103
+     C                   MOVE      WBRTE         UBRTE                                        CSD103
      C                   Z-ADD     WINFD         UINFD                                         S0111
      C                   BITON     '0'           UDNSI                                         S0111
      C                   ELSE                                                                  S0111
      C                   Z-ADD     WEINR         TEINR                                         S0111
-     C                   Z-ADD     WBRTE         TBRTE                                         S0111
+     C**********         Z-ADD     WBRTE         TBRTE                                  S0111 CSD103
+     C                   MOVE      WBRTE         TBRTE                                        CSD103
      C                   Z-ADD     WINFD         TINFD                                         S0111
      C                   BITON     '0'           TDNSI                                         S0111
      C                   END                                                                   S0111

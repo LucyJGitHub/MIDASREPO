@@ -44,7 +44,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       **********************************************a*******************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -63,55 +63,55 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Base Rate in File Format
      D BasRFilFmt    E DS                  EXTNAME(SDBSRTPD)
- 
+
       * Base Rate in Screen Format
      D BasRScnFmt    E DS                  EXTNAME(SDBSRSPD)
      D   DDTSDT                       6    OVERLAY(DDDFTS:3)
      D   DDTSTM                       6    OVERLAY(DDDFTS:9)
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     240065
       * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                                    240065
                                                                                               240065
@@ -121,12 +121,23 @@
      D ArrayNbrt       S              1A   DIM(12)                                            240065
       * Incoming Base Rate in screen format                                                   240065
                                                                                               240065
+      ** BSRT Backward-Looking Rate Fields                                                    CSD103
+     D BasRBckfld      DS            27                                                       CSD103
+     D DDBLRT                  1      1                                                       CSD103
+     D DDLBDY                  2      3                                                       CSD103
+     D DDLODY                  4      5                                                       CSD103
+     D DDPDLY                  6      7                                                       CSD103
+     D DDBADJ                  8     21                                                       CSD103
+     D DDAVOP                 22     22                                                       CSD103
+     D DDBRAC                 23     24                                                       CSD103
+     D DDWGHT                 25     25                                                       CSD103
+     D DDLBAC                 26     27                                                       CSD103
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
      D DateIn          S              8S 0
- 
+
       ** Parameter list for ZA0841                                                            240065
       ** Alpha field for numeric validation                                                   240065
      D @@ALPH          S             16A                                                      240065
@@ -188,11 +199,11 @@
       *
      C**********         MOVEL     *BLANK        ZFIELD                                       240065
      C**********         MOVE(P)   BANBRT        ZFIELD                                       240065
- 
+
      C**********         CALLB     'ZEDIT'                                                    240065
      C**********         PARM                    ZFIELD           16                          240065
      C**********         PARM      7             ZADEC             1 0                        240065
- 
+
      C**********         MOVE      ZFIELD        DDNBRT                                       240065
                                                                                              BUG4660
      C                   Z-ADD     7             @@IDP                                        240065
@@ -240,7 +251,7 @@
      C**********         PARM      7             ZADEC             1 0               BUG4660  240065
                                                                                              BUG4660
      C**********         MOVE      ZFIELD        DDCBSR                                       240065
- 
+
      C                   Z-ADD     7             @@IDP                                        240065
      C                   Z-ADD     4             @@IINT                                       240065
      C                   MOVE      *BLANKS       @@ALPH                                       240065
@@ -358,16 +369,12 @@
       *                                                                                       CSD103
       * Benchmark Adjustment                                                                  CSD103
       *                                                                                       CSD103
-     C                   Z-ADD     8             @@IDP                                        CSD103
-     C                   Z-ADD     5             @@IINT                                       CSD103
      C                   MOVE      *BLANKS       @@ALPH                                       CSD103
-     C                   MOVE      BABADJ        @@ALPH                                       CSD103
-      *                                                                                       CSD103
      C                   CALLB     'ZA0840'                                                   CSD103
      C                   PARM      *BLANK        RetCodeOut                                   CSD103
-     C                   PARM                    @@ALPH                         Display field CSD103
-     C                   PARM                    @@IDP                          no.of dec.plcsCSD103
-     C                   PARM                    @@IINT                         no.of integersCSD103
+     C                   PARM      DDBADJ        @@ALPH                         Display field CSD103
+     C                   PARM      8             @@IDP                          no.of dec.plcsCSD103
+     C                   PARM      5             @@IINT                         no.of integersCSD103
      C                   PARM      'N'           @@MTID                         Mil/Thou      CSD103
      C                   PARM      *ZERO         @@ERCD                         Error code    CSD103
      C                   PARM      *ZERO         @@AMT                          File field    CSD103
@@ -420,15 +427,7 @@
       *
      C                   MOVEL     DDACTN        ##ACTN            1
      C                   MOVEL     *BLANK        BasRScnFmt
-     C                   MOVEL     *BLANK        DDBLRT                                       CSD103
-     C                   MOVEL     *BLANK        DDLBDY                                       CSD103
-     C                   MOVEL     *BLANK        DDLODY                                       CSD103
-     C                   MOVEL     *BLANK        DDPDLY                                       CSD103
-     C                   MOVEL     *BLANK        DDBADJ                                       CSD103
-     C                   MOVEL     *BLANK        DDAVOP                                       CSD103
-     C                   MOVEL     *BLANK        DDBRAC                                       CSD103
-     C                   MOVEL     *BLANK        DDWGHT                                       CSD103
-     C                   MOVEL     *BLANK        DDLBAC                                       CSD103
+     C                   MOVEL     *BLANK        BasRBckfld                                   CSD103
      C                   MOVEL     ##ACTN        DDACTN
       *
      C                   ENDSR
@@ -457,15 +456,7 @@
      C                   PARM                    BasRScnFmt
      C
       * Backward-Looking Rate Fields                                                          CSD103
-     C                   PARM                    DDBLRT            1                          CSD103
-     C                   PARM                    DDLBDY            2                          CSD103
-     C                   PARM                    DDLODY            2                          CSD103
-     C                   PARM                    DDPDLY            2                          CSD103
-     C                   PARM                    DDBADJ           14                          CSD103
-     C                   PARM                    DDAVOP            1                          CSD103
-     C                   PARM                    DDBRAC            2                          CSD103
-     C                   PARM                    DDWGHT            1                          CSD103
-     C                   PARM                    DDLBAC            2                          CSD103
+     C                   PARM                    BasRBckfld                                   CSD103
       *
       *
       ** Initialize program name

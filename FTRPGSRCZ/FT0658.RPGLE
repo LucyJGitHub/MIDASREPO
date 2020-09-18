@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD035623           Date 27Aug15               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD035623           Date 27Aug15               *
       *                 MD035625           Date 27Aug15               *
       *                 MD034842           Date 30Jun15               *
       *                 MD034390           Date 14May15               *
@@ -100,6 +101,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD035623 - Generated main and cover MT202 for MT102 have     *
       *             different network                                 *

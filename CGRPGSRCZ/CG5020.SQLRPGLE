@@ -20,9 +20,10 @@
      F*  Called By: CGC5020 - Correspondence Management               *
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
-     F*                                                               *
-      *  Last Amend No. MD054955           Date 16Dec19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                                                               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD054955           Date 16Dec19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CCG024             Date 29Sep16               *
       *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -44,7 +45,8 @@
      F*                 S01522             DATE 22NOV94               *
      F*                                                               *
      F*---------------------------------------------------------------*
-     F*                                                               *
+      *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
       *  MD046248 - Finastra Rebranding                               *
       *  CCG024 - Use Atlernate Name and Address in Correspondence    *

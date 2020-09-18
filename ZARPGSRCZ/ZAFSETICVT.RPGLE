@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL165             Date 15Feb17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 MD024886           Date 10Feb14               *
       *                 MD023371           Date 13Nov13               *
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -52,30 +54,30 @@
       *  CDL018 - Multiple Settlement Accounts on Loans/Deposit       *
       *                                                               *
       *****************************************************************
- 
+
      FDLFSACL0  IF   E           K DISK
       ** Deals Further Settlement Accounts
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D NwDlFilFmt    E DS                  EXTNAME(MMVLDNIPD)
       ** Deal in File Format
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** External DS for Currency details
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** External DS for Long Dummy Data Structure
- 
+
      D #FRECS        E DS                  EXTNAME(SDFSSRPD)
       ** Screen - Receive Further Settlement Instructions
- 
+
      D #FPAYS        E DS                  EXTNAME(SDFSSPPD)
       ** Screen - Payment Further Settlement Instructions
- 
+
      D ACCT          E DS                  EXTNAME(ACCNTAB)                                  CSF011A
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                 CSF011A
      D                                     PREFIX(C_)                                        CSF011A
@@ -142,30 +144,30 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialize all Screen Instructions
- 
+
      C                   EXSR      INITSC
- 
+
       ** Access Further Settlement Instructions file and convert if found
- 
+
      C                   MOVE      ##DLNO        PDLNO             6 0
      C     PDLNO         CHAIN     DLFSACL0                           90
      C     *IN90         IFEQ      *OFF
- 
+
       ** Convert Receive Further Settlement Ins from File to Screen format
- 
+
      C                   CLEAR                   #FRECS
      C                   EXSR      CVTREC
- 
+
       ** Convert Payment Further Settlement Ins from File to Screen format
- 
+
      C                   CLEAR                   #FPAYS
      C                   EXSR      CVTPAY
      C                   ENDIF
- 
+
       ** Return
- 
+
      C                   SETON                                        LR                    MD023371
      C                   RETURN
       /EJECT
@@ -721,7 +723,7 @@
      C                   ELSE
      C                   MOVE      *BLANKS       DPAM12
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -730,7 +732,7 @@
       *                                                               *
       *****************************************************************
      C     CVTFLD        BEGSR
- 
+
      C**********         CALLB     'ZEDIT'                                                  MD024886
      C**********         PARM                    ZFIELD           16                        MD024886
      C**********         PARM                    ZADEC             1 0                      MD024886
@@ -746,22 +748,22 @@
      C                   PARM                    P#Amtp                                     MD024886
                                                                                             MD024886
      C                   MOVE      P#Amtd        ZFIELD           16                        MD024886
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
       * GETCCYDET - Get currency details                              *
       *****************************************************************
      C     GETCCYDET     BEGSR
- 
+
       **  Access Currency Details
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      '*DBERR  '    PRTCD             7
      C                   PARM      '*KEY    '    POPTN             7
      C                   PARM                    @CURR             3
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   ENDSR
       *****************************************************************                      CSF011A
       /EJECT                                                                                 CSF011A
@@ -951,15 +953,15 @@
       *                                                               *
       *****************************************************************
      C     INITSC        BEGSR
- 
+
       ** Get Receipt currency details
- 
+
      C                   MOVEL     ##RCCY        @CURR
      C                   EXSR      GETCCYDET
      C                   Z-ADD     A6NBDP        RNBDP             1 0
- 
+
       ** Get Payment currency details
- 
+
      C                   MOVEL     ##PCCY        @CURR
      C                   EXSR      GETCCYDET
      C                   Z-ADD     A6NBDP        PNBDP             1 0
@@ -973,7 +975,7 @@
      C                   PARM      '*DBERR '     PRTCD                                      MD024886
      C                   PARM      '*FIRST '     POPTN                                      MD024886
      C     SDDEAL        PARM      SDDEAL        DSFDY                                      MD024886
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -986,9 +988,9 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       ** Parameters
- 
+
      C     *ENTRY        PLIST
       *
       ** INPUT
@@ -1014,18 +1016,18 @@
       *
       ** Screen - Receive Further Settlement Instructions
      C                   PARM                    #FRECS
- 
- 
+
+
       ** Determine Deal Type
- 
+
      C     ##ACTN        IFEQ      'I'
      C                   MOVE      IKTYPE        DLTYPE            2
      C                   ELSE
      C                   MOVE      IKMTYP        DLTYPE
      C                   ENDIF
- 
+
       ** Calculate Total of Principal + Interest of Deal
- 
+
      C     IKAMNP        IFLT      0
      C                   Z-SUB     IKAMNP        UAMNP            15 0
      C                   ELSE
@@ -1049,5 +1051,5 @@
      C                   MOVE      UAMNP         PAmtInRec
      C                   MOVE      UAMNP         PAmtInPay
      C                   ENDIF
- 
+
      C                   ENDSR

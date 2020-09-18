@@ -822,15 +822,9 @@
      D AuthUsers       S             20                                                       CFT163
      D P_SIGN          S              1                                                     MD054354
      D DRejFlg         S              1                                                     MD030856
-     D DDBLRT          S              1                                                       CSD103
-     D DDLBDY          S              2                                                       CSD103
-     D DDLODY          S              2                                                       CSD103
-     D DDPDLY          S              2                                                       CSD103
-     D DDBADJ          S             14                                                       CSD103
-     D DDAVOP          S              1                                                       CSD103
-     D DDBRAC          S              2                                                       CSD103
-     D DDWGHT          S              1                                                       CSD103
-     D DDLBAC          S              2                                                       CSD103
+                                                                                              CSD103
+      ** BSRT Backward-Looking Rate Fields                                                    CSD103
+     D BasRBckfld      DS            27                                                       CSD103
       ** DS/variables to split up incoming parameter
      D APParm          DS          1000
      D  UPDATEYN               1      1
@@ -2871,24 +2865,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C     1             SUBST     BUFFER:Bfp    AAuth                                      BUG22140
      C                   ADD       1             Bfp                                        BUG22140
       ** Backward-Looking Rate Fields                                                         CSD103
-     C     1             SUBST     BUFFER:Bfp    DDBLRT                                       CSD103
-     C                   ADD       1             Bfp                                          CSD103
-     C     2             SUBST     BUFFER:Bfp    DDLBDY                                       CSD103
-     C                   ADD       2             Bfp                                          CSD103
-     C     2             SUBST     BUFFER:Bfp    DDLODY                                       CSD103
-     C                   ADD       2             Bfp                                          CSD103
-     C     2             SUBST     BUFFER:Bfp    DDPDLY                                       CSD103
-     C                   ADD       2             Bfp                                          CSD103
-     C     14            SUBST     BUFFER:Bfp    DDBADJ                                       CSD103
-     C                   ADD       14            Bfp                                          CSD103
-     C     1             SUBST     BUFFER:Bfp    DDAVOP                                       CSD103
-     C                   ADD       1             Bfp                                          CSD103
-     C     2             SUBST     BUFFER:Bfp    DDBRAC                                       CSD103
-     C                   ADD       2             Bfp                                          CSD103
-     C     1             SUBST     BUFFER:Bfp    DDWGHT                                       CSD103
-     C                   ADD       1             Bfp                                          CSD103
-     C     2             SUBST     BUFFER:Bfp    DDLBAC                                       CSD103
-     C                   ADD       2             Bfp                                          CSD103
+     C     27            SUBST     BUFFER:Bfp    BasRBckfld                                   CSD103
+     C                   ADD       27            Bfp                                          CSD103
 
      C                   CALL      'SDBSRTVU'
 
@@ -2910,15 +2888,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    APIRetc
      C                   PARM                    @TimeStamp                                  BUG4469
      C                   PARM                    AAuth                                      BUG22140
-     C                   PARM                    DDBLRT                                       CSD103
-     C                   PARM                    DDLBDY                                       CSD103
-     C                   PARM                    DDLODY                                       CSD103
-     C                   PARM                    DDPDLY                                       CSD103
-     C                   PARM                    DDBADJ                                       CSD103
-     C                   PARM                    DDAVOP                                       CSD103
-     C                   PARM                    DDBRAC                                       CSD103
-     C                   PARM                    DDWGHT                                       CSD103
-     C                   PARM                    DDLBAC                                       CSD103
+     C                   PARM                    BasRBckfld                                   CSD103
 
       ** Fees                                                                                BUG1100
      C     TransTYPE     WHENEQ    'FEEM'                                                    BUG1100

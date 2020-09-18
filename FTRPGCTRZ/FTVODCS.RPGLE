@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055570           Date 15May20               *
-      *  Prev Amend No. MD051978           Date 14Oct19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD055570           Date 15May20               *
+      *                 MD051978           Date 14Oct19               *
       *                 MD039547           Date 20Sep16               *
       *                 MD046248           Date 27Oct17               *
       *                 MD037223           Date 20Jul17               *
@@ -117,6 +118,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055570 - Payment with account blocked (CR/DR) can be       *
       *             inserted.                                         *
       *  MD051978 - ':' should not be present in first character of   *

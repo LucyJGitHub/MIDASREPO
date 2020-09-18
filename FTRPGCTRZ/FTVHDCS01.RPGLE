@@ -15,9 +15,10 @@
  
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
- 
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD034505           Date 26May15               *
+      *                                                               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD034505           Date 26May15               *
       *                 MD027284           Date 25Nov14               *
       *                 MD000091           Date 07May13               *
       *                 CRE075             Date 06Dec10               *
@@ -81,6 +82,7 @@
  
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034505 - Database error encountered when Ordering Customer *
       *             is a Customer Number or Accountline               *

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. 260903             Date 25Apr14               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 260903             Date 25Apr14               *
       *                 CFT151             Date 20Mar14               *
       *                 MD019877           Date 10Apr13               *
       *                 260045             Date 20Dec12               *
@@ -54,6 +55,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  260903 - Remove the error validation for reversed account.   *
       *           Changed DBERR hard coded Return Code for AOCUSTR0.  *

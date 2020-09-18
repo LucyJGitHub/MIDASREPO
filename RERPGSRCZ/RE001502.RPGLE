@@ -16,11 +16,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
       *  Prev Amend No. MD022132D          Date 09Mar18               *
       *                 MD022132 *CREATE   Date 09Mar18               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD022132D- Process all retail accounts.                      *
       *           - Applied for MD-35969.                             *
       *  MD022132 - Triggers don't pick up Rollback deletes of ABC    *

@@ -14,8 +14,9 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. 220877             Date 22Mar19               * 
-      *  Prev Amend No. CGL188             Date 19Feb18               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. 220877             Date 22Mar19               * 
+      *                 CGL188             Date 19Feb18               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL184             Date 07Dec16               *
       *                 MD037536           Date 26Apr16               *
@@ -73,7 +74,7 @@
       *                 176080             Date 11Feb00               *
       *                 144366             Date 11Feb00               *
       * Midas DBA 3.02 -----------------------------------------------*
-      *  Prev Amend No. CAP035             Date 11Nov99               *
+      *                 CAP035             Date 11Nov99               *
       *                 CFT004             Date 22Jul99               *
       *                 169210             Date 19Oct99               *
       * Midas DBA 3.01 -----------------------------------------------*
@@ -159,6 +160,7 @@
 0008 F*                                                               *
 0013 F*---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  220877 - GL0420 Statements produced do not include the       *
       *           IBAN even if CFT004 is switched on.                 *
       *         - Applied for MD052224.                               *

@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD029739 *RENAMED* Date 15Aug14               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD029739 *RENAMED* Date 15Aug14               *
       *                 MD031513           Date 27Jan15               *
       *                 MD030256           Date 27Oct14               *
       *                 MD027428           Date 09Jun14               *
@@ -39,6 +40,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD029739 - File renaming for integration layer.              *
       *  MD031513 - Serious midas error due to Cheque No. 00000000.   *

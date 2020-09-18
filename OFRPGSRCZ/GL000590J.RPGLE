@@ -11,12 +11,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD052296           Date 26Nov18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD052296           Date 26Nov18               *
+      *                 MD046248           Date 27Oct17               *
       *                 CGL135B  *CREATE   Date 11Oct13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD052296 - Problems caused by use of special characters      *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL135B - Accounting Rules Process                           *

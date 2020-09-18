@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. CLE071             Date 18Jul18               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL094             Date 01Sep14               *
       *                 MD025945           Date 19Aug14               *
@@ -70,6 +71,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CLE071 - Value Dating of Rate Changes to Fees (Recompile)    *
       *  MD046248 - Finastra Rebranding                               *
@@ -190,44 +193,44 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the LE standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       **   End of automatically included D-specs 
       **   ===================================== 
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       **   Manually included D-specs             
       **   =========================             
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       **   Named constants                       
       **   ===============                       
       ** +--------------------------------------+
- 
+
      D*PSysVal1        C                   CONST('OMEIndicator')                       CSC024 CSC054
      D PSysVal1        C                   CONST('PEAIndicator')                              CSC054
      D CLAuthORED      C                   Const('CLAuthORED')                                240968
@@ -236,19 +239,19 @@
       **   Arrays and Data Structures            
       **   ==========================            
       ** +--------------------------------------+
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
- 
+
      D SDCLND        E DS                  EXTNAME(SDCLNDPD)
       ** Customer lending Details
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ***  Midas modules details
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       **   CUSTOMER
                                                                                              BUG3760
@@ -269,27 +272,27 @@
                                                                                              BUG3760
       ** External DS for SAR Details                                                         BUG3760
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                 BUG3760
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D CrFeFilFmt    E DS                  EXTNAME(LEFEED)
      D                                     PREFIX(F1_)
       ** Fee in File Format
- 
+
       * Customer Loans record CL in file Format
      D ClilFilFmt    E DS                  EXTNAME(CLOANCL)
      D                                     PREFIX(CL_)
- 
+
       * Facility record FM in file Format
      D FacmFilFmt    E DS                  EXTNAME(FCLTYFM)
      D                                     PREFIX(FA_)
- 
+
       * Saved Facility record FM
      D SvFaFilFmt    E DS                  EXTNAME(FCLTYFM)
      D                                     PREFIX(SV_)
- 
+
      D PRcvParm      E DS                  EXTNAME(SDESSRPD)                                  244636
      D  WComplete             15     15                                                       244636
       ***  Screen Receive Instructions                                                        244636
@@ -305,11 +308,11 @@
      D**WLOAN***              12     17  0                                                    CLE148
      D  WLOAN                 12     17                                                       CLE148
      D  WFSEQ                 18     19  0
- 
+
      D                 DS
       ** Data structure to set work amounts
      D  WFAC3                 20     22  0
- 
+
       ** Datastructure to hold input parameter for AOSVALR0.
      D                 DS
      D  WPARM                  1     20
@@ -322,7 +325,7 @@
       **   Declared variables                    
       **   ==================                    
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Ix              S              3P 0
                                                                                              BUG3760
@@ -388,17 +391,17 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       **                                                                   
       **   Initial processing is performed automatically: the *inzsr is    
       **   executed at program activation.                                 
       **                                                                   
       ** +----------------------------------------------------------------+
- 
+
       * INITIALIZATION
      C                   EXSR      INIT
- 
+
       ** Check whether user is a web browser user, if so overwrite
      C                   CALL      'SFC000026'
      C                   PARM      *BLANKS       USER             10
@@ -414,18 +417,18 @@
      C                             ModeofOp = *BLANKS                                         CAP086
      C                   EVAL      F1_FEAUTH = *BLANKS                                        CAP086
      C                   ENDIF                                                                CAP086
- 
+
       * IF THE MODE IS 'FRONT OFFICE TRANSACTION INTERFACE'
       * DO (EXTRA) VALIDATION FOR FRONT OFFICE TRANSACTION INTERFACE
      C     ModeofOp      IFEQ      '*FRONT'
      C                   EXSR      VFRNT
- 
+
       **  Carry out no further validation if errors have occurred.
      C     DDACTNOK      IFEQ      'N'
      C                   RETURN
      C                   END
      C                   END
- 
+
      C     DDACTN        IFNE      *BLANK
      C     DDCSSN        ORNE      *BLANK
      C     DDLNRF        ORNE      *BLANK
@@ -447,7 +450,7 @@
      C     DDACTN        CASEQ     'X'           VALAMD
      C                   CAS                     VALERR
      C                   ENDCS
- 
+
      C                   ENDIF
       *
       ** Determine if fee is for against a syndicated facility/loan
@@ -462,7 +465,7 @@
       * VFRNT - VALIDATION FOR FRONT OFFICE TRANSACTION INTERFACE
       *****************************************************************
      C     VFRNT         BEGSR
- 
+
       * ERROR IF ACTION CODE IS NOT 'I', 'A, 'D' or 'X'
      C     DDACTN        IFNE      'I'
      C     DDACTN        ANDNE     'A'
@@ -474,7 +477,7 @@
      C                   MOVEL     'APM0100'     MsgIdArr(Ix)
      C                   GOTO      EVFRNT
      C                   END
- 
+
       * ERROR IF FRONT OFFICE TRANSACTION ID IS BLANK
      C     FOTRID        IFEQ      *BLANK
      C                   MOVE      'N'           DDACTNOK
@@ -483,14 +486,14 @@
      C                   MOVEL     'APM0101'     MsgIdArr(Ix)
      C                   GOTO      EVFRNT
      C                   END
- 
+
       * ACCESS FEE WITH FRONT OFFICE TRANSACTION ID
- 
+
      C     FOTRID        CHAIN     LEFEEML0                           99
- 
+
       * IF INSERT
      C     DDACTN        IFEQ      'I'
- 
+
       * FRONT OFFICE TRANSACTION ID CAN'T BE PRESENT ALREADY
      C     *IN99         IFEQ      '0'
      C                   MOVE      'N'           DDACTNOK
@@ -502,9 +505,9 @@
      C                   EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(FOTRID)                    MD000091
      C                   GOTO      EVFRNT
      C                   END
- 
+
      C                   ELSE
- 
+
       * IF NOT INSERT, FRONT OFFICE TRANSACTION ID MUST BE PRESENT
      C     *IN99         IFEQ      '1'
      C                   MOVE      'N'           DDACTNOK
@@ -516,16 +519,16 @@
      C                   EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(FOTRID)                    MD000091
      C                   GOTO      EVFRNT
      C                   END
- 
+
       * IF NOT INSERT, UPDATE MIDAS Fee reference
      C                   MOVEL     FECNUM        DDCSSN
      C                   MOVEL     FEFACL        DDFACT
      C                   MOVE      FEFACL        DDFCNO
      C                   MOVEL     FELOAN        DDLNRF
      C                   MOVEL     FEFSEQ        DDFSEQ
- 
+
      C                   END
- 
+
      C     EVFRNT        ENDSR
       *****************************************************************
       /EJECT
@@ -1094,7 +1097,7 @@
      C     F1_FEORED     ANDNE     WRNDAY
      C     F1_FEAUTO     IFEQ      'Y'
      C     F1_FECALT     ANDEQ     *BLANKS
- 
+
      C     F1_FEAUTO     OREQ      'C'                                                        CLE134
      C     F1_FECALT     ANDEQ     *BLANKS                                                    CLE134
      C     CLE134        ANDEQ     'Y'                                                        CLE134
@@ -1400,7 +1403,7 @@
      C                   EVAL      MsgIdArr(Ix) = 'LER0110'                                 BUG13128
      C                   ENDIF                                                              BUG13128
      C                   ENDIF                                                               BUG4108
- 
+
       *                                                                                       CLE134
       ** Check for PDCLs - Cannot delete fee if there are.                                    CLE134
       *                                                                                       CLE134
@@ -1968,7 +1971,7 @@
       *
      C                   MOVE      'N'           WSYND             1
      C     DDLNRF        IFNE      *BLANKS
- 
+
      C     CL_PTYP       IFNE      61
      C     CL_PTYP       ANDNE     62
      C     CL_PTYP       ANDNE     63
@@ -1978,7 +1981,7 @@
      C     CL_LPFI       IFNE      *BLANKS
      C                   MOVE      'Y'           WSYND
      C                   ENDIF
- 
+
      C                   ELSE
       * Else, not a Participation so check if facility is syndicated:
       * Facility used may be on another customer, so save CNUM value
@@ -1987,7 +1990,7 @@
      C                   MOVE      CL_FCUS       WCNUM
      C                   MOVE      CL_FTYP       WFAC03
      C                   MOVE      CL_FSEQ       WFAC02
- 
+
      C     KEY001        CHAIN     FCLTY                              78
      C     *IN78         IFEQ      '0'
      C     FA_SYIN       ANDEQ     'Y'
@@ -1998,7 +2001,7 @@
      C                   Z-ADD     0             WFAC05
      C                   ENDIF
      C                   ENDIF
- 
+
      C     DDFACT        IFNE      *BLANKS
      C     FA_SYIN       ANDEQ     'Y'
      C     FA_PRTR       ANDNE     'I'
@@ -2041,7 +2044,7 @@
      C     KEY004        KLIST
      C                   KFLD                    WLOAN
      C                   KFLD                    WCLRT
- 
+
      C     KCLOANL4      KLIST                                                                CLE134
      C                   KFLD                    Kpd_RECI                                     CLE134
      C                   KFLD                    Kpd_LNRF                                     CLE134
@@ -2070,7 +2073,7 @@
      C                   MOVEL     'Y'           DDFCNOOK
      C                   MOVEL     'Y'           DDLNRFOK
      C                   MOVEL     'Y'           DDFSEQOK                                     CAP084
- 
+
      C                   MOVE      'A'           WRCDT             1
      C                   MOVE      'A'           WCLRT             1
       *
@@ -2081,10 +2084,10 @@
       * *INZSR - INITIAL PROCESSING
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       * Parameters
      C     *ENTRY        PLIST
- 
+
       * INPUTS
       * Return code
      C                   PARM                    RetCodeIn
@@ -2112,7 +2115,7 @@
       *
       * CSC011 processing date
      C                   PARM                    WRNDAY            6 0
- 
+
       * OUTPUTS
       * (Current) Fee in file format
      C                   PARM                    CrFeFilFmt
@@ -2145,11 +2148,11 @@
       * Array index (3P0) from/to caller
      C                   PARM                    Ix
      C                   PARM                    PRcvParm                                     244636
- 
+
       ** Initialize program name
- 
+
      C                   MOVEL     'LEFEEMRTV'   DBPGM
- 
+
       ** Access Bank Detailes
       *  ~~~~~~~~~~~~~~~~~~~~
      C                   CALLB     'AOBANKR0'
@@ -2248,7 +2251,7 @@
      C                   ELSE                                                                 CLE134
      C                   MOVE      'N'           CLE134                                       CLE134
      C                   ENDIF                                                                CLE134
- 
+
       *
       ** Check System Value: Use Original Borrower or Purchased From?
       ** Set up parameter so access object checks LoanCustOriginPurch
@@ -2500,7 +2503,7 @@
       ** Check Digit (Output)                                                                 CLE148
      C                   PARM                    PChkDigit         1                          CLE148
      C                   PARM                    PData             2                          CLE148
- 
+
                                                                                               CLE056
       ** Check if Authorisation on Lending Transactions (CLE056) is on                        CLE056
                                                                                               CLE056

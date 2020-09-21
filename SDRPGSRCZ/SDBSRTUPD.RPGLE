@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MG000484           Date 15Jul19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MG000484           Date 15Jul19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 CTI006             Date 31Mar14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -39,11 +40,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MG000484 - Rate Change should not be generated if New Base   *
       *             Rate has the same value as the previous history   *
       *             record.                                           *
       *           - Applied for MD-49833.                             *
-      *           - Applied for MD053919.
+      *           - Applied for MD053919.                             *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  CTI006 - Trade Finance BF Midas 2.2 Interface                *
@@ -408,6 +410,19 @@
      C                   MOVEL     BVDFTS        BADFTS                                       CSD012
      C                   MOVEL     BVDTFR        BADTFR                                       CSD012
      C                   MOVEL     BVTLEX        BATLEX                                       CSD012
+      *                                                                                       CSD103
+     C                   MOVEL     BVZONE        BAZONE                                       CSD103
+     C                   MOVEL     BVVDTO        BAVDTO                                       CSD103
+     C                   MOVEL     BVCBRT        BACBRT                                       CSD103
+     C                   MOVEL     BVBLRT        BABLRT                                       CSD103
+     C                   MOVEL     BVLBDY        BALBDY                                       CSD103
+     C                   MOVEL     BVLODY        BALODY                                       CSD103
+     C                   MOVEL     BVPDLY        BAPDLY                                       CSD103
+     C                   MOVEL     BVBADJ        BABADJ                                       CSD103
+     C                   MOVEL     BVAVOP        BAAVOP                                       CSD103
+     C                   MOVEL     BVBRAC        BABRAC                                       CSD103
+     C                   MOVEL     BVWGHT        BAWGHT                                       CSD103
+     C                   MOVEL     BVLBAC        BALBAC                                       CSD103
       *                                                                                       CSD012
      C                   WRITE     SDBRSHD0                                                   CSD012
      C                   ENDIF                                                                CSD012
@@ -753,7 +768,8 @@
                                                                                               245028
      C     BAVDNR        IFLE      BAVDRC                                                     245028
      C                   MOVE      BACYCD        WCYCD             3                          245028
-     C                   MOVE      BABSRC        WBSRC             2 0                        245028
+     C**********         MOVE      BABSRC        WBSRC             2 0                 245028 CSD103
+     C                   MOVE      BABSRC        WBSRC             2                          CSD103
      C     BAVDNR        SUB       1             WVDNR             5 0                        245028
                                                                                               245028
      C     BSHSKY        SETGT     SDBSHSL1                                                   245028

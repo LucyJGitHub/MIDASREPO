@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 03May13               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD000091           Date 03May13               *
       *                 AR817540           Date 15Aug12               *
       *                 AR641183           Date 27Nov12               *
       *                 CER059             Date 19Jul10               *
@@ -45,6 +46,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  AR817540 - Cannot input negative all-in-rate on Lending.     *
@@ -82,10 +84,10 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,SDBSRTV001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -104,91 +106,92 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
- 
+      ** Alpha Num Base Rate Code                                                             CSD103
+     D AlphaBSRC       C                   Const('ALPHABASRATCOD')                            CSD103
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D ArrayNbrt       S              1A   DIM(12)                                            240065
       * Incoming Base Rate in screen format                                                   240065
                                                                                               240065
      D BaseRateIn    E DS                  EXTNAME(SDBSRSPD)
       * Incoming Base Rate in screen format
- 
+
      D ValdBasRat    E DS                  EXTNAME(SDVBSRTPD)
       * Valid Base Rate Layout
- 
- 
+
+
      D SDBASR        E DS                  EXTNAME(SDBSRTPD)
       ** EXTERNAL DS FOR BASE RATE DETAILS
- 
+
      D PBTOBS        E DS                  EXTNAME(PBTOBSPD)
       ** EXTERNAL DS FOR BASE RATE NAME
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** External DS for SAR details
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
       ** 24X7 status data area                                                                CSC011
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)                     CSC011
                                                                                               CSC011
@@ -198,10 +201,10 @@
      D ZMUSER          DS            17
      D  BRC                   11     13
      D  DEPT                  14     16
- 
+
      D ExtData       E DS                  EXTNAME(SDBSEXPD)
       * SD Extra Data - File (D/B) format
- 
+
      D SDMDFC        E DS                  EXTNAME(SDMDFCPD)                                  CSD006
       ** External DS for Market Data Feeds ICD                                                CSD006
                                                                                               CSD006
@@ -213,29 +216,29 @@
      D   LenStr                1      2                                                     MD000091
      D   MsgDtaTmp                   99                                                     MD000091
       ** Data Structure for Event Codes Substitution                                        MD000091
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
      D Ix              S              3P 0
- 
+
       ** Index for arrays of of warning message ids etc
      D WIdx            S              3P 0
- 
+
       ** Flags to indicate whether Base Rate fields are valid
      D OKFlagsDS     E DS                  EXTNAME(SDEBSRTPD)
- 
+
       ** A code to indicate the calling function to the lower level modules
      D BSRT            S              4A   INZ('BSRT')
- 
+
       ** Response Mode, received as a parameter from the common header
      D RespMode        S              1A
- 
+
       * Switchable features
      D CSD006F         S              1A
      D CSW005          S              1A
@@ -243,7 +246,7 @@
      D CSW200          S              1A
      D****** CDL016          S              1A                                         CDL016 BG3360
      D CDL020          S              1A                                                      BG3360
- 
+
       ** Time stamp field in file format, defaulted if necessary                              CSD006
      D JDFTS           S             14  0                                                    CSD006
                                                                                               CSC011
@@ -280,14 +283,14 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,SDBSRTV002
- 
+
       *****************************************************************
       /EJECT
       ** +--- Start of Main processing -----------------------------------+
@@ -303,11 +306,11 @@
      C                   IN        ZMUSER                                                    BUG8550
      C                   UNLOCK    ZMUSER                                                    BUG8550
       *                                                                                      BUG8550
- 
+
       /COPY WNCPYSRC,SDBSRTV003
- 
+
       * Call Validation Modules in Sequence
- 
+
                                                                                              BUG3124
       ** Validate Base Rate Code                                                             BUG3124
                                                                                              BUG3124
@@ -317,44 +320,44 @@
       * Validate Front Office Id (Base Rate MDF id)
       *
       /COPY WNCPYSRC,SDBSRTV016
- 
+
      C                   IF        CSC011 = 'Y' OR                                          AR641183
      C                             CSD006F = 'Y'                                            AR641183
      C                   EXSR      VFRNT
      C                   ENDIF                                                              AR641183
- 
+
       /COPY WNCPYSRC,SDBSRTV017
- 
- 
+
+
       ** Validate Base Rate Name
       *
       /COPY WNCPYSRC,SDBSRTV004
- 
+
      C                   EXSR      VBASRNAM
       *
       /COPY WNCPYSRC,SDBSRTV005
- 
+
       *
       ** Validate New Base Rate
       *
       /COPY WNCPYSRC,SDBSRTV006
- 
+
      C                   EXSR      VNEWBSR
       *
       /COPY WNCPYSRC,SDBSRTV007
- 
+
       ** Validate Value Date for new base rate
       *
       /COPY WNCPYSRC,SDBSRTV008
- 
+
      C                   EXSR      VVDAT
       *
       /COPY WNCPYSRC,SDBSRTV009
- 
+
       ** Validate ISDA Definition and Designated Maturity
       *
       /COPY WNCPYSRC,SDBSRTV010
- 
+
      C                   IF        CSW005  =  'Y'  OR
      C                             CSW011  =  'Y'  AND
      C                             CSW200  =  'Y'
@@ -396,30 +399,30 @@
       *  *-------------------------------------------------------*
       *  * If no errors set up outstanding fields for valid file *
       *  *-------------------------------------------------------*
- 
+
       /COPY WNCPYSRC,SDBSRTV012
- 
+
      C                   IF        Idx = 0
      C                   EXSR      SetupValid
      C                   ENDIF
       *
       /COPY WNCPYSRC,SDBSRTV013
- 
+
       * RETURN
       *
      C                   RETURN
       *****************************************************************
      C/EJECT
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,SDBSRTV014
       *****************************************************************
       ** VFRNT - Validate Front Office Id
       *****************************************************************
      C     VFRNT         BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate Front Office Id
@@ -437,7 +440,7 @@
      C                   PARM                    CSC011                                       CSC011
       *
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -447,9 +450,9 @@
       ** VBASRNAM - Validate base rate name
       *****************************************************************
      C     VBASRNAM      BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       * If 'Private Banking' Module is not installed the Base Rate
@@ -507,16 +510,16 @@
      C                   MOVEL     AOBANA        DDBSRN
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
       *
       * Display Base Rate Shortname
       *
      C     DDCYCD        CAT       DDBSRC        DDBSRS
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -526,9 +529,9 @@
       ** VNEWBSR - Validate new base rate
       *****************************************************************
      C     VNEWBSR       BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       ** Validate New Base Rate
@@ -660,9 +663,9 @@
      C                   ELSE                                                                 CSD006
      C                   EVAL      BVCBSR= BVNBRT                                             CSD006
      C                   ENDIF                                                                CSD006
- 
+
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -672,13 +675,13 @@
       ** VVDAT    - Validate Value Date for the New Base Rate
       *****************************************************************
      C     VVDAT         BEGSR
- 
+
       * Reset variables updated by each subroutine
- 
+
      C                   EXSR      RESETERRS
- 
+
       * Validate Value Date for the New Base Rate
- 
+
      C     DDVDNR        IFEQ      *BLANKS
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDVDNR'
@@ -698,7 +701,7 @@
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    BJDFIN
      C                   PARM                    ErrorFlag         1
- 
+
       **   - invalid format or not numeric
      C     ErrorFlag     IFEQ      'Y'
      C     *IN97         OREQ      '0'
@@ -716,7 +719,7 @@
      C                   ENDIF
       *
      C                   SELECT
- 
+
       *  An error occured during the date conversion
       **********                                                                              CAP084
      C**********         WHEN      ErrorFlag  = 'Y'                                           CAP084
@@ -744,7 +747,7 @@
      C                   Z-ADD     WVDNR         BVVDNR                                       210546
      C                   Z-ADD     BVVDNR        BVVDRC                                       211983
      C**********         ENDIF                                                       210546 BUG26041
- 
+
       * Value Date must be after the back value Date
      C                   WHEN      WVDNR  <  WBVRD
      C                   Z-ADD     WBVRD         ZDAYNO
@@ -753,7 +756,7 @@
      C                   PARM                    BJDFIN
      C                   PARM                    ZDATE             6 0
      C                   PARM                    ZADATE            7
- 
+
      C                   MOVE      'N'           DDVdnrOK
      C                   ADD       1             Ix
      C**********         MOVEL     ZDATE         MsgDtaXAr(Ix)                              MD000091
@@ -763,7 +766,7 @@
      C                   MOVEL     'DDVDNR'      FldNamXAr(Ix)
      C                   MOVEL     'USR4444'     MsgIdXAr(Ix)
      C**********         MOVEL     'N'           WFLAG1                              210546 BUG26041
- 
+
       * Value Date cannot be after today's date
      C**********         WHEN      WVDNR  >  BJRDNB                                           CSC011
      C**********         WHEN      WVDNR  >  WRunDay                                   CSC011 CDL016
@@ -775,17 +778,17 @@
      C                   MOVEL     'DDVDNR'      FldNamXAr(Ix)
      C                   MOVEL     'USR4445'     MsgIdXAr(Ix)
      C**********         MOVEL     'N'           WFLAG1                              210546 BUG26041
- 
- 
+
+
       * Value Date is correct
      C                   OTHER
      C                   Z-ADD     WVDNR         BVVDNR
      C                   Z-ADD     BVVDNR        BVVDRC                                       211983
      C                   ENDSL
- 
+
      C                   ENDIF
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -795,9 +798,9 @@
       ** VISDADM  - Validate ISDA Definition and Designated Maturity
       *****************************************************************
      C     VISDADM       BEGSR
- 
+
       * Reset variables updated by each module
- 
+
      C                   EXSR      RESETERRS
       *
       *
@@ -834,7 +837,7 @@
      C                   PARM                    DDOmd2OK          1
       *
       * Update error info with that returned from the validation module
- 
+
      C                   EXSR      UPDATERRS
       *
      C                   ENDSR
@@ -960,6 +963,7 @@
                                                                                              BUG3124
      ** Used MOVE op code to validate Base Rate Code                                         BUG3124
                                                                                              BUG3124
+     C     AlphaCode     IFNE      'Y'                                                        CSD103
      C                   MOVE      DDBSRC        #1TESTN                                     BUG3124
      C     DDBSRC        IFLE      '00'                                                      BUG3124
      C     DDBSRC        ORGT      '99'                                                      BUG3124
@@ -970,6 +974,7 @@
      C                   EVAL      FldNamXAr(Idx) = 'DDBSRN'                                 BUG3124
      C                   EVAL      MsgIdXAr(Idx) = 'USR4572'                                 BUG3124
      C                   END                                                                 BUG3124
+     C                   ENDIF                                                                CSD103
                                                                                              BUG3124
                                                                                              BUG3124
       * Update error info with that returned from the validation module                      BUG3124
@@ -984,14 +989,14 @@
       *   Valid file record.                                         *
       *                                                               *
       *****************************************************************
- 
+
      C     SETUPVALID    BEGSR
- 
+
       * Other BVxxxx fields are set up during the individual data
       *  validation, such as the ones where the input & database formats
       *  are different, e.g. dates, amounts.
       * This SR sets up the fields with the same (or compatible) attributes
- 
+
       * Base rate Code
      C                   MOVE      DDCYCD        BVCYCD
      C                   MOVE      DDBSRC        BVBSRC
@@ -1015,17 +1020,17 @@
      C                   MOVE      'Y'           BVCSLR
       * Last Change Date
      C                   Z-ADD     BJRDNB        BVLCD
- 
+
       * Last Change type
      C                   MOVEL     DDACTN        BVTYLC
- 
+
      C                   SELECT
       * AMEND -  Set the specific fields for amend
      C                   WHEN         DDACTN = 'A'
       * Indicators
      C                   MOVE      'Y'           BVSYLL
      C                   MOVE      'Y'           BVSYLR
- 
+
       * INPUT -  Set the specific fields for input
      C                   WHEN         DDACTN = 'I'
       * Current Base Rate Code and value date
@@ -1038,16 +1043,16 @@
      C                   MOVE      *BLANKS       BVBSCD
       *
      C                   ENDSL
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       * Response mode (1A), from source system common header
      C                   PARM                    RespMode
@@ -1192,15 +1197,48 @@
      C     @RTCD         IFNE      *BLANK                                                     240065
      C                   EVAL      BNDCSP =  '.'                                              240065
      C                   END                                                                  240065
- 
+      ** Check for Alpha Num Base Rate Code system value                                      CSD103
+     C                   CALLB     'AOSVALR0'                                                 CSD103
+     C                   PARM      *BLANKS       @RTCD                                        CSD103
+     C                   PARM      AlphaBSRC     PSysVal01        20                          CSD103
+     C                   PARM      *BLANKS       PCurSet01       200                          CSD103
+     C                   PARM      *BLANKS       PSysVal02        20                          CSD103
+     C                   PARM      *BLANKS       PCurSet02       200                          CSD103
+     C                   PARM      *BLANKS       PSysVal03        20                          CSD103
+     C                   PARM      *BLANKS       PCurSet03       200                          CSD103
+     C                   PARM      *BLANKS       PSysVal04        20                          CSD103
+     C                   PARM      *BLANKS       PCurSet04       200                          CSD103
+     C                   PARM      *BLANKS       PSysVal05        20                          CSD103
+     C                   PARM      *BLANKS       PCurSet05       200                          CSD103
+     C                   PARM      *BLANKS       PSysVal06        20                          CSD103
+     C                   PARM      *BLANKS       PCurSet06       200                          CSD103
+     C                   PARM      *BLANKS       PSysVal07        20                          CSD103
+     C                   PARM      *BLANKS       PCurSet07       200                          CSD103
+     C                   PARM      *BLANKS       PSysVal08        20                          CSD103
+     C                   PARM      *BLANKS       PCurSet08       200                          CSD103
+     C                   PARM      *BLANKS       PSysVal09        20                          CSD103
+     C                   PARM      *BLANKS       PCurSet09       200                          CSD103
+     C                   PARM      *BLANKS       PSysVal10        20                          CSD103
+     C                   PARM      *BLANKS       PCurSet10       200                          CSD103
+      * If the system value is not found then default value to 'N'                            CSD103
+     C     @RTCD         IFNE      *BLANKS                                                    CSD103
+     C                   MOVE      'N'           AlphaCode         1                          CSD103
+     C                   ELSE                                                                 CSD103
+     C                   MOVEL     PCurSet01     AlphaCode         1                          CSD103
+     C                   ENDIF                                                                CSD103
+      *                                                                                       CSD103
+     C     SDBSRT        KLIST                                                                CSD103
+     C                   KFLD                    BACYCD                                       CSD103
+     C                   KFLD                    BABSRC                                       CSD103
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,SDBSRTV015
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1208,9 +1246,9 @@
       * RESETERRS - Reset error information that is received back     *
       *    from each validation module.                               *
       *****************************************************************
- 
+
      C     RESETERRS     BEGSR
- 
+
      C                   EVAL      RetCodeOut = *Blanks
      C                   EVAL      Ix = *ZERO
       *
@@ -1221,7 +1259,7 @@
      C                   MOVEL     *BLANK        WFldNmXAr
      C                   MOVEL     *BLANK        WMsgIDXAr
      C                   MOVEL     *BLANK        WMsgDtXAr
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1229,7 +1267,7 @@
       * UPDATERRS - Update error information with that received back  *
       *    from each validation module.                               *
       *****************************************************************
- 
+
      C     UPDATERRS     BEGSR
       *
       * Update error fields/message IDs/message data (arrays)

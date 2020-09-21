@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD030856           Date 06Nov19               *
-      *  Prev Amend No. MD054354           Date 23Oct19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD030856           Date 06Nov19               *
+      *                 MD054354           Date 23Oct19               *
       *                 MD055446           Date 04Apr20               *
       *                 MD054696           Date 29Oct19               *
       *                 MD054538           Date 08Oct19               *
@@ -225,6 +226,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD030856 - Introduced reject processing to FEEM              *
       *  MD054354 - Settlement of fee accrual for prior period for    *
       *             backdated notional change                         *
@@ -820,6 +822,9 @@
      D AuthUsers       S             20                                                       CFT163
      D P_SIGN          S              1                                                     MD054354
      D DRejFlg         S              1                                                     MD030856
+                                                                                              CSD103
+      ** BSRT Backward-Looking Rate Fields                                                    CSD103
+     D BasRBckfld      DS            27                                                       CSD103
       ** DS/variables to split up incoming parameter
      D APParm          DS          1000
      D  UPDATEYN               1      1
@@ -2859,6 +2864,9 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       BSEXLn        Bfp                                        BUG22140
      C     1             SUBST     BUFFER:Bfp    AAuth                                      BUG22140
      C                   ADD       1             Bfp                                        BUG22140
+      ** Backward-Looking Rate Fields                                                         CSD103
+     C     27            SUBST     BUFFER:Bfp    BasRBckfld                                   CSD103
+     C                   ADD       27            Bfp                                          CSD103
 
      C                   CALL      'SDBSRTVU'
 
@@ -2880,6 +2888,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    APIRetc
      C                   PARM                    @TimeStamp                                  BUG4469
      C                   PARM                    AAuth                                      BUG22140
+     C                   PARM                    BasRBckfld                                   CSD103
 
       ** Fees                                                                                BUG1100
      C     TransTYPE     WHENEQ    'FEEM'                                                    BUG1100

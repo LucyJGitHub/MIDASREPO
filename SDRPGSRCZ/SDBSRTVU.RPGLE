@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 BUG22152           Date 14Jan09               *
@@ -48,6 +49,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG22152 - Missing authorization field in repository.        *
@@ -137,6 +139,13 @@
       ** ¦ =========================            ¦
       ** +--------------------------------------+
 
+      ** +--------------------------------------+                                             CSD103
+      ** ¦ Named constants                      ¦                                             CSD103
+      ** ¦ ===============                      ¦                                             CSD103
+      ** +--------------------------------------+                                             CSD103
+      ** Alpha Num Base Rate Code                                                             CSD103
+     D AlphaBSRC       C                   Const('ALPHABASRATCOD')                            CSD103
+                                                                                              CSD103
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -195,6 +204,9 @@
      D wComitarr       S             10A   DIM(10)                                            CSC022
       ** Commitment Control Array                                                             CSC022
                                                                                               CSC022
+      ** BSRT Backward-Looking Rate Fields                                                    CSD103
+     D BasRBckfld      DS            27                                                       CSD103
+                                                                                              CSD103
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -325,9 +337,16 @@
 
       * Remerge buffer with all relevant data structures
      C*****************  EVAL                    Buffer = BaseRateIn + ExtData               BUG4469
+     C     AUTHRQ        IFEQ      'Y'                                                        CSD103
+     C                   MOVE      'N'           AUTOAUTH          1                          CSD103
+     C                   ELSE                                                                 CSD103
+     C                   MOVE      'Y'           AUTOAUTH          1                          CSD103
+     C                   ENDIF                                                                CSD103
      C                   EVAL                    Buffer = BaseRateIn                         BUG4469
      C                                                    + @TimeStamp                       BUG4469
      C                                                    + ExtData                          BUG4469
+     C                                                    + AUTOAUTH                          CSD103
+     C                                                    + BasRBckfld                        CSD103
 
      C                   RETURN
 
@@ -361,6 +380,7 @@
      C                   PARM                    APIRetc           1
      C                   PARM                    @TimeStamp       26                         BUG4469
      C                   PARM                    AAuth             1                        BUG22152
+     C                   PARM                    BasRBckfld                                   CSD103
 
       * Set up the names of the message files from which the message handler
       * will get the messages
@@ -557,6 +577,35 @@
      C                   EndIf                                                                CSC022
      C                   EndIf                                                                CSC022
                                                                                               CSC022
+      ** Check for Alpha Num Base Rate Code system value                                      CSD103
+     C                   CALLB     'AOSVALR0'                                                 CSD103
+     C                   PARM      *BLANKS       @RTCD                                        CSD103
+     C                   PARM      AlphaBSRC     SVALK1           20                          CSD103
+     C                   PARM      *BLANKS       SVAL1           200                          CSD103
+     C                   PARM      *BLANKS       SVALK2           20                          CSD103
+     C                   PARM      *BLANKS       SVAL2           200                          CSD103
+     C                   PARM      *BLANKS       SVALK3           20                          CSD103
+     C                   PARM      *BLANKS       SVAL3           200                          CSD103
+     C                   PARM      *BLANKS       SVALK4           20                          CSD103
+     C                   PARM      *BLANKS       SVAL4           200                          CSD103
+     C                   PARM      *BLANKS       SVALK5           20                          CSD103
+     C                   PARM      *BLANKS       SVAL5           200                          CSD103
+     C                   PARM      *BLANKS       SVALK6           20                          CSD103
+     C                   PARM      *BLANKS       SVAL6           200                          CSD103
+     C                   PARM      *BLANKS       SVALK7           20                          CSD103
+     C                   PARM      *BLANKS       SVAL7           200                          CSD103
+     C                   PARM      *BLANKS       SVALK8           20                          CSD103
+     C                   PARM      *BLANKS       SVAL8           200                          CSD103
+     C                   PARM      *BLANKS       SVALK9           20                          CSD103
+     C                   PARM      *BLANKS       SVAL9           200                          CSD103
+     C                   PARM      *BLANKS       SVALK0           20                          CSD103
+     C                   PARM      *BLANKS       SVAL10          200                          CSD103
+      * If the system value is not found then default value to 'N'                            CSD103
+     C     @RTCD         IFNE      *BLANKS                                                    CSD103
+     C                   MOVE      'N'           AlphaCode         1                          CSD103
+     C                   ELSE                                                                 CSD103
+     C                   MOVEL     SVAL1         AlphaCode         1                          CSD103
+     C                   ENDIF                                                                CSD103
       * Key list
      C     SDBSRT        KLIST
      C                   KFLD                    DDCYCD
@@ -599,6 +648,7 @@
                                                                                              BUG3124
      ** Used MOVE to validate Base Rate Code                                                 BUG3124
                                                                                              BUG3124
+     C     AlphaCode     IFNE      'Y'                                                        CSD103
      C                   MOVE      DDBSRC        #1TESTN                                     BUG3124
      C     DDBSRC        IFLE      '00'                                                      BUG3124
      C     DDBSRC        ORGT      '99'                                                      BUG3124
@@ -610,6 +660,7 @@
      C                   EVAL      FldNameArr(Idx) = 'DDBSRC'                                BUG3124
      C                   EVAL      MsgIDArr(Idx) = 'USR4572'                                 BUG3124
      C                   END                                                                 BUG3124
+     C                   ENDIF                                                                CSD103
                                                                                              BUG3124
       *
      C                   ENDSR

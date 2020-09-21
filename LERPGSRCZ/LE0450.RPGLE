@@ -12,9 +12,8 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD051347           Date 12Mar20               *
-      *                 AR819229           Date 10Dec18               *
+      *  Last Amend No. MD051347           Date 12Mar20               *
+      *  Prev Amend No. AR819229           Date 10Dec18               *       
       *                 AR932652           Date 06Aug13               *
       *                 AR927395           Date 05Aug13               *
       *                 252101             Date 06Nov19               *
@@ -424,14 +423,13 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD051347 - Interest on a loan taken at the wrong date. Also  *
       *             update value of IBDT to zero if NIPD is less than *
       *             or equal to rundate. Additional fix to AR819229.  *
       *  AR819229 - Interest on a loan taken at the wrong date.       *
       *             Update value of IBDT with NIPD on SR/ROLLOV and   *
       *             SR/MROLL. (Child: AR823033)                       *
-      *           - Applied for MD051347                              *
+      *           - Applied for MD051347                              *       
       *  AR932652 - Error on withholding tax accrual when past due    *
       *             interest is manually repaid. Reverse fix BUG12852.*
       *             (Child: AR932655)                                 *
@@ -3886,7 +3884,7 @@ L118 I                             P   72   77 7RTSPL
      ILEHISTL0  NS                                                              116330
      I                                 18   22 0VDAT#H                          116330
      I**********                       46   47 0BRTT#H                                 116330 CSD103
-     I                                 46   47  BRTT#H                                        CSD103
+     I                                 46   47  BRTT#H                                        CSD103 
      I                             P   48   53 7BRTE#H                          116330
       *                                                                   116330
      ILEHISTL2  NS                                                              116330
@@ -9853,7 +9851,8 @@ L118 I                             P   72   77 7RTSPL
      C     LNRF          SETGT     LEHISTL0                                                    11633
      C     LNRF          READPE    LEHISTL0                               69                   11633
      C     *IN69         IFEQ      *OFF                                                        11633
-     C                   Z-ADD     BRTT#H        BRTTL                                         11633
+     C**********         Z-ADD     BRTT#H        BRTTL                                  11633 CSD103
+     C                   MOVE      BRTT#H        BRTTL                                        CSD103
      C                   Z-ADD     BRTE#H        BRTEL                                         11633
      C                   Z-ADD     VDAT#H        VDAT                                          11633
      C                   ENDIF                                                                 11633
@@ -9954,7 +9953,7 @@ L118 I                             P   72   77 7RTSPL
 1484 C     INTAM         TAG                                                    ** INTAM TAG **
 1485 C**
 1486 C**********         Z-ADD     BRTT          BRTTL                                        CSD103
-     C                   MOVE      BRTT          BRTTL                                        CSD103
+1486 C                   MOVE      BRTT          BRTTL                                        CSD103
 1487 C                   Z-ADD     BRTE          BRTEL
 1488 C                   Z-ADD     RTSP          RTSPL
 1489 C                   MOVE      SPIN          SPINL
@@ -10069,7 +10068,8 @@ L118 I                             P   72   77 7RTSPL
 1491 C**
 1492 C**   CHECK FOR CHANGE OF DETAILS
 1493 C**
-1494 C     NBRA          COMP      0                                  8989
+1494 C*****NBRA*         COMP      0                                  8989                    CSD103
+1494 C     NBRA          COMP      *BLANKS                            8989                    CSD103
 1495 C  N89NRTS          COMP      0                                  8989
 1496 C  N89NSIN          COMP      ' '                                8989
 1497 C  N89NCAC          COMP      0                                  8989
@@ -10106,7 +10106,8 @@ L118 I                             P   72   77 7RTSPL
 1500 C**
 1501 C**   ZEROISE NEXT ROLL DETAILS
 1502 C**
-1503 C                   Z-ADD     0             NBRA
+1503 C**********         Z-ADD     0             NBRA                                         CSD103
+1503 C                   MOVE      *BLANKS       NBRA                                         CSD103
      C     CLE036        IFEQ      'Y'
      C                   Z-ADD     0             NBSR
      C                   ENDIF
@@ -11381,7 +11382,8 @@ L118 I                             P   72   77 7RTSPL
      C     LNRF          SETGT     LEHISTL0                                                    CLE00
      C     LNRF          READPE    LEHISTL0                               69                   CLE00
      C     *IN69         IFEQ      *OFF                                                        CLE00
-     C                   Z-ADD     BRTT#H        BRTTL                                         CLE00
+     C**********         Z-ADD     BRTT#H        BRTTL                                  CLE00 CSD103
+     C                   MOVE      BRTT#H        BRTTL                                        CSD103
      C                   Z-ADD     BRTE#H        BRTEL                                         CLE00
      C                   Z-ADD     VDAT#H        VDAT                                          CLE00
      C                   ENDIF                                                                 CLE00
@@ -11451,8 +11453,10 @@ L118 I                             P   72   77 7RTSPL
      C     RLCY          ANDNE     *BLANKS                                                     14491
      C*****BRTTL         ANDNE     *ZEROS                                               14491 CSD103
      C     BRTTL         ANDNE     *BLANKS                                                    CSD103
-     C     NBRA          ANDEQ     *ZEROS                                                      14491
-     C                   Z-ADD     BRTTL         NBRA                                          14491
+     C*****NBRA*         ANDEQ     *ZEROS                                               14491 CSD103
+     C     NBRA          ANDEQ     *BLANKS                                                    CSD103
+     C**********         Z-ADD     BRTTL         NBRA                                   14491 CSD103
+     C                   MOVE      BRTTL         NBRA                                         CSD103
      C                   ENDIF                                                                 14491
       *                                                                                       CLE036
      C     CEU020        IFEQ      'Y'
@@ -11464,7 +11468,8 @@ L118 I                             P   72   77 7RTSPL
      C                   Z-ADD     BASRL         NBSR
      C                   ENDIF
       *                                                                                       CLE036
-     C     NBRA          COMP      0                                  8989                     CLE00
+     C*****NBRA*         COMP      0                                  8989              CLE00 CSD103
+     C     NBRA          COMP      *BLANKS                            8989                    CSD103
      C  N89NRTS          COMP      0                                  8989                     CLE00
      C  N89NSIN          COMP      ' '                                8989                     CLE00
      C  N89NCAC          COMP      0                                  8989                     CLE00
@@ -11504,7 +11509,8 @@ L118 I                             P   72   77 7RTSPL
       **                                                                  CLE004
       **   ZEROISE NEXT ROLL DETAILS                                      CLE004
       **                                                                  CLE004
-     C                   Z-ADD     0             NBRA                                          CLE00
+     C**********         Z-ADD     0             NBRA                                   CLE00 CSD103
+     C                   MOVE      *BLANKS       NBRA                                         CSD103
      C     CLE036        IFEQ      'Y'
      C                   Z-ADD     0             NBSR
      C                   ENDIF
@@ -12892,7 +12898,8 @@ L118 I                             P   72   77 7RTSPL
      C   79              Z-ADD     FEPSTD        KSLID                                        CLE134
      C                   Z-ADD     MDAT          KMDAT                                        CLE134
      C   81              Z-ADD     RLDT          KMDAT                                        CLE134
-     C                   Z-ADD     BRTTL         KBRTT                                        CLE134
+     C**********         Z-ADD     BRTTL         KBRTT                                 CLE134 CSD103
+     C                   MOVE      BRTTL         KBRTT                                        CSD103
      C                   Z-ADD     BRTEL         KBRTE                                        CLE134
      C                   Z-ADD     RTSPL         KRTSP                                        CLE134
      C                   Z-ADD     INTRL         KINTR                                        CLE134

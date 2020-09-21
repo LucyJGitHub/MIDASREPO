@@ -450,7 +450,8 @@
      C                   DUMP
      C                   Exsr      SR_REINTD
  
-     C                   EVAL      WWBRAT = *ZEROS
+     C**********         EVAL      WWBRAT = *ZEROS                                            CSD103
+     C                   EVAL      WWBRAT = *BLANKS                                           CSD103
      C     BRT           IFNE      *ZEROS
      C                   MOVE      BRT           @BSRC             2
      C     BRKey         CHAIN     SDBSRTL1

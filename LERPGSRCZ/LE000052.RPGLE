@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. AR674226           Date 04Dec19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. AR674226           Date 04Dec19               *
+      *                 MD046248           Date 27Oct17               *
       *                 CLE148             Date 23Jul12               *
       *                 AR787620           Date 10Jun11               *
       *                 CLE064             Date 06Dec10               *
@@ -33,6 +34,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  AR674226 - Manual transaction reached 999. Increase the size *
       *             of utilisation sequence no. and transaction       *
       *             sequence. Recompile. (Child: AR674227)            *
@@ -55,32 +58,32 @@
       *  CLE041 - Collateralised Lending Phase 2B                     *
       *                                                               *
       *****************************************************************
- 
+
       ** Midas LE Agg. Facility amendment update index
      FLEAGAML0  UF A E           K DISK
- 
+
       ** Midas LE Agg Facility Amendment Trans Trailer
      FLEAGAMZZ  UF A E           K DISK
- 
+
       ** Midas LE Aggregate Facility File
      FLEAGFCL0  UF A E           K DISK    PREFIX(AG)
      F                                     IGNORE(FCLTYHHF:FCLTYFNF)
- 
+
       ** Midas LE Aggregate Facilities with Actions
      FLEAGACPD  UF A E           K DISK
      F/COPY WNCPYSRC,LEH00382
- 
+
       ** Midas LE Aggregate Facility History
      FLEAGHSPD  O    E             DISK
- 
+
       ** Midas LE Aggregated Facility Amendments - Audit
      FLE000052AUO    E             PRINTER
      F                                     INFDS(SPOOLU)
- 
+
       ** Midas LE Aggregated Facility Amendments - Report
      FLE000052P1O    E             PRINTER USROPN
      F                                     INFDS(SPOOL1)
- 
+
       *****************************************************************
       *                                                               *
       *  F U N C T I O N   O F   I N D I C A T O R S                  *
@@ -246,19 +249,19 @@
       *================================================================
       *  P R O G R A M   S T A R T                                    *
       *================================================================
- 
+
       ** Perform Initialisation.
- 
+
      C                   EXSR      SrINIT
- 
+
       ** Perform Detail Processing.
- 
+
      C                   EXSR      SrPROCES
- 
+
       ** Output Audit Report and End Program.
- 
+
      C                   EXSR      SrAUDIT
- 
+
       *================================================================
       *  P R O G R A M   E N D                                        *
       *================================================================
@@ -269,28 +272,28 @@
       *                                                               *
       *****************************************************************
      C     SrINIT        BEGSR
- 
+
       ** Set up copyright parameter
- 
+
      C                   EVAL      CPY2@ = CPY@(1)
- 
+
       ** Initialise LDA field.
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM = 'LE000052'
      C                   OUT       LDA
- 
+
      C/COPY WNCPYSRC,LEH00383
       ** Call Access Program for Bank Details - Title, Run Date and
       ** Run Day Number.
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*MSG   '     PRTCD
      C                   PARM      '*FIRST '     POPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Handle Database Error.
- 
+
      C                   IF        PRTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDBANKPD'
@@ -299,16 +302,16 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Call Access Program for GL ICD
- 
+
      C                   CALL      'AOGELRR1'
      C                   PARM      *BLANK        PRTCD
      C                   PARM      '*FIRST '     POPTN
      C     SDGELR        PARM      SDGELR        DSSDY
- 
+
       ***  Handle Database Error.
- 
+
      C                   IF        PRTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDGELRPD'
@@ -317,52 +320,52 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       **   Access RUNDAT for multibranching indicator
- 
+
      C                   IN        RUNDAT
- 
+
      C                   IF        AGMBIN = 'Y'
      C                   EVAL      *IN37 = *ON
      C                   ENDIF
- 
+
       ** Calculate for the event control date
- 
+
      C                   EVAL      WEventCDate = BJDNWD - 1
      C                   IF        BKAPDT < WEventCDate
      C                   EVAL      WEventCDate = BKAPDT
      C                   ENDIF
- 
+
       ** RCF Processing for Audit File.
- 
+
      C                   EXSR      SrRCFAU
- 
+
       ** Report Work fields.
- 
+
      C                   EVAL      RQDLN1 = 0
      C                   EVAL      DIFLN1 = 0
      C                   EVAL      WCount = 0
- 
+
       ** Initialise counters
- 
+
      C                   EVAL      WAgFAcDrop = 0
      C                   EVAL      WRcdWrHist = 0
      C                   EVAL      WLiveRec = 0
      C                   EVAL      WValLiveRec = 0
- 
+
       ** Key lists
- 
+
      C     KFacility     KLIST
      C                   KFLD                    WCust
      C                   KFLD                    WFType
      C                   KFLD                    WFSeq
      C                   KFLD                    WRcdt
- 
+
      C     KFacility2    KLIST
      C                   KFLD                    WBranch
      C                   KFLD                    WCust
      C                   KFLD                    WFacility
- 
+
      C                   ENDSR
       *****************************************************************
       /TITLE SR/SrPROCES
@@ -372,38 +375,38 @@
       *                                                               *
       *****************************************************************
      C     SrPROCES      BEGSR
- 
+
       ** Read first record from File.
- 
+
      C                   READ      LEAGAML0                               89
- 
+
       ** If End of Records, (*IN89), Perform: Audit Reporting (No
       ** Records).
- 
+
      C                   IF        *IN89 = *ON
      C                   EXSR      SrAUDIT
      C                   ENDIF
- 
+
       ** Do Until End of File.
- 
+
      C                   DOW       *IN89 = *OFF
- 
+
       ** Reversed record, remove from file
- 
+
      C                   IF        RECI = 'R'
      C                   DELETE    LEFCAMPF
      C                   ELSE
- 
+
       ** Check if existing in the table
- 
+
      C                   EVAL      WCust = CNUM
      C                   EVAL      WFType = FACT
      C                   EVAL      WFSeq = FCNO
      C                   EVAL      WRcdt = 'A'
      C     KFacility     CHAIN     LEAGFCL0                           80
- 
+
       ** DB Error if facility not found
- 
+
      C                   IF        *IN80 = *ON
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'LEAGFMPD'
@@ -413,9 +416,9 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C/COPY WNCPYSRC,LEH00395
- 
+
       ** Record existing, check if can be action today
- 
+
      C                   IF        *IN80 = *OFF
      C                   IF        VLDT <= WEventCDate
      C                   EXSR      SrREPORT
@@ -430,21 +433,21 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Read next record.
- 
+
      C                   READ      LEAGAML0                               89
- 
+
       ** End of Do Until End of Valid Records.
- 
+
      C                   ENDDO
- 
+
       ** Update the Trailer
- 
+
      C                   EXSR      SrTRAILER
- 
+
       ** Write final records and Totals to Report.
- 
+
      C                   IF        WCount <> 0
      C                   IF        *IN37 = *ON
      C                   EXSR      SrP1END
@@ -452,9 +455,9 @@
      C                   ENDIF
      C                   EXSR      SrP1END
      C                   ENDIF
- 
+
      C                   EXSR      SrAUDIT
- 
+
      C                   ENDSR
       *****************************************************************
       /TITLE SR/SrHISTORY
@@ -464,9 +467,9 @@
       *                                                               *
       *****************************************************************
      C     SrHISTORY     BEGSR
- 
+
       ** Write history record
- 
+
      C                   EVAL      AIRECI = 'D'
      C                   EVAL      AIBRCA = BRCA
      C                   EVAL      AICNUM = CNUM
@@ -474,7 +477,7 @@
      C                   MOVE      FCNO          AIFCTY
      C                   EVAL      AIDATE = VLDT
      C                   EVAL      AIRCIN = AGRVCR
- 
+
      C                   SELECT
      C                   WHEN      FATP = 'FI' OR FATP = 'FD'
      C                   EVAL      AISEQ  = 97
@@ -497,7 +500,7 @@
      C                   EVAL      AITSEQ = 0
      C                   EVAL      AIAFAM  = AGFAMT
      C                   ENDSL
- 
+
      C                   EVAL      AIACTN = FATP
      C                   EVAL      AIAAMT = AAMT
      C                   EVAL      AITRBR = *BLANK
@@ -513,25 +516,25 @@
      C                   EVAL      AIDEAL = *ZEROS
      C                   EVAL      AIUSEQ = *ZEROS
      C                   EVAL      AIMTID = *ZEROS
- 
+
      C                   IF        AIAFAM < 0
      C                   EVAL      AIFCAM = *ZEROS
      C                   ELSE
      C                   EVAL      AIFCAM = AIAFAM
      C                   ENDIF
      C                   EVAL      AIORED = BJRDNB
- 
+
      C/COPY WNCPYSRC,LEH00384
      C                   WRITE     LEAGHSD0
- 
+
       ** Write/Update record to LEAGACPD
- 
+
      C                   EVAL      WBranch = AIBRCA
      C                   EVAL      WCust = AICNUM
      C                   EVAL      WFacility = AIFCTY
- 
+
      C     KFacility2    CHAIN     LEAGACPD                           81
- 
+
      C                   IF        *IN81 = *OFF
      C                   IF        AIDATE < AJDATE
      C                   EVAL      AJDATE = AIDATE
@@ -544,9 +547,9 @@
      C                   EVAL      AJFCTY = AIFCTY
      C                   WRITE     LEAGACD0
      C                   ENDIF
- 
+
      C                   EVAL      WRcdWrHist = WRcdWrHist + 1
- 
+
      C                   ENDSR
       *****************************************************************
       /TITLE SR/SrFACUPDAT
@@ -556,13 +559,13 @@
       *                                                               *
       *****************************************************************
      C     SrFACUPDAT    BEGSR
- 
+
      C                   IF        FATP = 'FR'
      C                   EVAL      AGRECI = 'D'
      C                   ENDIF
- 
+
      C                   EVAL      WOldFAMT = AGFAMT
- 
+
      C                   SELECT
      C                   WHEN      FATP = 'FI'
      C                   EVAL      AGFAMT  = AGFAMT + AAMT
@@ -573,26 +576,26 @@
      C                   EVAL      AGDTEX  = NDEX
      C                   EVAL      AGAVLD  = NDEX
      C                   ENDSL
- 
+
      C                   IF        FATP = 'RC'
      C                   EVAL      AGRVCR = RVCR
      C                   EVAL      AGRVCD = VLDT
      C                   ENDIF
- 
+
      C                   UPDATE    FCLTYFMF
      C/COPY WNCPYSRC,LEH00385
- 
+
       ** Update trailer file
- 
+
      C**********         EVAL      WCust = 999999                                             CSD027
      C                   EVAL      WCust = '999999'                                           CSD027
      C                   EVAL      WFType = 999
      C                   EVAL      WFSeq = 99
      C                   EVAL      WRcdt = 'Z'
      C     KFacility     CHAIN     LEAGFCL0                           83
- 
+
       ** DB Error if facility not found
- 
+
      C                   IF        *IN83 = *ON
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'LEAGFZPD'
@@ -601,7 +604,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        FATP = 'FI' OR FATP = 'FD'
      C                             OR FATP = 'FR'
      C                   EVAL      AGLCD = BJRDNB
@@ -609,34 +612,34 @@
      C                   IF        FATP = 'FR' AND AGRECI = 'C'
      C                   EVAL      AGNLRB = AGNLRB + 2
      C                   ENDIF
- 
+
      C                   IF        FATP = 'FI' OR FATP = 'FD'
      C                   EVAL      WBkAmt = AGFAMT - WOldFAMT
      C                   ENDIF
      C                   IF        FATP = 'FR'
      C                   EVAL      WBkAmt = AGFAMT
      C                   ENDIF
- 
+
      C                   EVAL      WZAMT = WBkAmt/1000
      C                   Z-ADD     AGVLBF        WZTOTI
      C                   Z-ADD     AGVLBL        WZTOTD
      C                   EXSR      SRZADD
      C                   Z-ADD     WZTOTI        AGVLBF
      C                   Z-ADD     WZTOTD        AGVLBL
- 
+
      C                   IF        FATP = 'FR' AND AGRECI = 'C'
      C                   EVAL      AGNLRA = AGNLRA + 2
      C                   ENDIF
- 
+
      C                   Z-ADD     AGVLAF        WZTOTI
      C                   Z-ADD     AGVLAL        WZTOTD
      C                   EXSR      SRZADD
      C                   Z-ADD     WZTOTI        AGVLAF
      C                   Z-ADD     WZTOTD        AGVLAL
- 
+
      C                   UPDATE    FCLTYZZF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /TITLE SR/SrTRAILER
@@ -646,11 +649,11 @@
       *              file.                                            *
       *                                                               *
       *****************************************************************
- 
+
      C     SrTRAILER     BEGSR
- 
+
      C                   READ      LEAGAMZZ                               83
- 
+
      C                   IF        *IN83 = *ON
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'LEAGAMZZ'
@@ -659,7 +662,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      NORE = WLiveRec
      C                   EVAL      NINS = *ZEROS
      C                   EVAL      NAMD = *ZEROS
@@ -672,22 +675,22 @@
      C                   EVAL      VARL = *ZEROS
      C                   EVAL      VDRF = *ZEROS
      C                   EVAL      VDRL = *ZEROS
- 
+
      C                   EVAL      WZAMT = WValLiveRec/1000
      C                   Z-ADD     VLBF          WZTOTI
      C                   Z-ADD     VLBL          WZTOTD
      C                   EXSR      SRZADD
      C                   Z-ADD     WZTOTI        VLBF
      C                   Z-ADD     WZTOTD        VLBL
- 
+
      C                   Z-ADD     VLAF          WZTOTI
      C                   Z-ADD     VLAL          WZTOTD
      C                   EXSR      SRZADD
      C                   Z-ADD     WZTOTI        VLAF
      C                   Z-ADD     WZTOTD        VLAL
- 
+
      C                   UPDATE    LEFCAMZF
- 
+
      C                   ENDSR
       *****************************************************************
       /TITLE SR/SrREPORT
@@ -697,27 +700,27 @@
       *                                                               *
       *****************************************************************
      C     SrREPORT      BEGSR
- 
+
       ** Change in branch, write header details
- 
+
      C                   IF        OPNIND = '0'
      C                   OPEN      LE000052P1
      C                   EXSR      SrRCFP1
      C                   ENDIF
- 
+
      C                   IF        BRCA <> WBRCA
      C                   IF        WBRCA <> *BLANK
      C                   EXSR      SrP1END
      C                   CLOSE     LE000052P1
      C                   OPEN      LE000052P1
      C                   ENDIF
- 
+
      C                   CALL      'AOBRCHR1'
      C                   PARM      '*MSG   '     PRTCD
      C                   PARM      '*KEY   '     POPTN
      C                   PARM      BRCA          PBRCH
      C     SDBRCH        PARM      SDBRCH        DSSDY
- 
+
      C                   IF        PRTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDBRCHPD'
@@ -726,20 +729,20 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      WBRCA = BRCA
      C                   EVAL      RBRCA = A8BRCD
      C                   EVAL      RBRNM = A8BRNM
- 
+
      C                   WRITE     HEADP1
      C                   ENDIF
- 
+
       ** Write out the record.
- 
+
      C                   IF        *IN89 = *OFF
      C                   EXSR      SrP1REC
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /TITLE SR/SrP1REC
@@ -749,7 +752,7 @@
       *                                                               *
       *****************************************************************
      C     SrP1REC       BEGSR
- 
+
      C                   EVAL      RCNAME = *BLANK
      C                   EVAL      RCNUM = *BLANK
      C                   EVAL      RFCLT  = *BLANK
@@ -758,17 +761,17 @@
      C                   EVAL      RVDAT = *BLANK
      C                   EVAL      RACTN = *BLANK
      C                   EVAL      RDTLS = *BLANK
- 
+
      C                   EVAL      PCNUM = *BLANK
      C                   MOVEL     CNUM          PCNUM
- 
+
      C                   CALL      'AOCUSTR1'
      C                   PARM      *BLANK        PRTCD
      C                   PARM      '*KEY   '     POPTN
      C                   PARM                    PCNUM
      C                   PARM                    PCNST
      C     SDCUST        PARM      SDCUST        DSSDY
- 
+
      C                   IF        PRTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDCUSTPD'
@@ -777,18 +780,18 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      RCNUM = PCNUM
      C                   EVAL      RCNAME = BBCSSN
      C                   MOVE      FACT          RFCLT
      C                   MOVE      FCNO          RFCNO
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANK        PRTCD
      C                   PARM      '*KEY   '     POPTN
      C                   PARM      ACCY          PCURR
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        PRTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDCURRPD'
@@ -797,17 +800,17 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      RCCY = A6CYCD
- 
+
      C                   CALL      'ZDATE2'
      C                   PARM      VLDT          PDAYNO
      C                   PARM      BJDFIN        PDATFMT
      C                   PARM      *ZEROS        PZDATE
      C                   PARM      *BLANK        PCDATE
- 
+
      C                   EVAL      RVDAT = PCDATE
- 
+
      C                   SELECT
      C/COPY WNCPYSRC,LEH00386
      C                   WHEN      FATP = 'FI'
@@ -819,18 +822,18 @@
      C                   WHEN      FATP = 'RC'
      C                   EVAL      RACTN = 'REVOLVING CREDIT CHANGE'
      C                   ENDSL
- 
+
      C                   IF        FATP = 'FI' OR FATP = 'FD'
      C                             OR FATP = 'FR'
- 
+
      C                   MOVE      AAMT          PZFIELD
      C                   CALL      'ZEDIT'
      C                   PARM                    PZFIELD
      C                   PARM      A6NBDP        PZDEC
- 
+
      C                   EVAL      RDTLS = PZFIELD
      C                   ENDIF
- 
+
      C                   IF        FATP = 'RC'
      C                   SELECT
      C                   WHEN      AGRVCR = 'T'  AND RVCR = 'Y'
@@ -848,20 +851,20 @@
      C                   ENDSL
      C                   ENDIF
      C/COPY WNCPYSRC,LEH00387
- 
+
       ** Check that sufficient lines remain for the Format. If not,
       ** write out the Main Headings on a new page.
- 
+
      C                   Z-ADD     1             RQDLN1
      C     OFLLN1        SUB       PRTLN1        DIFLN1
      C     DIFLN1        IFLE      RQDLN1
      C                   WRITE     HEADP1
      C                   ENDIF
- 
+
       ** Write out Detail Record.
- 
+
      C                   WRITE     DETAIL
- 
+
      C                   ENDSR
       *****************************************************************
       /TITLE SR/SrP1END
@@ -871,20 +874,20 @@
       *                                                               *
       *****************************************************************
      C     SrP1END       BEGSR
- 
+
       ** Check that sufficient lines remain for the Format. If not,
       ** write out the Main Headings on a new page.
- 
+
      C                   Z-ADD     4             RQDLN1
      C     OFLLN1        SUB       PRTLN1        DIFLN1
      C     DIFLN1        IFLE      RQDLN1
      C                   WRITE     HEADP1
      C                   ENDIF
- 
+
       ** Write out Total Format.
- 
+
      C                   WRITE     TRAILP1
- 
+
      C                   ENDSR
       *****************************************************************
       /TITLE SR/SrAUDIT
@@ -895,23 +898,23 @@
       *                                                               *
       *****************************************************************
      C     SrAUDIT       BEGSR
- 
+
       ** Output Report Header and File Controls.
- 
+
      C                   WRITE     HEADAU
- 
+
       ** If there is a DB Error, Output the DB Error Information.
- 
+
      C                   IF        *INU7 = *ON
      C                   WRITE     DBERROR
      C                   ELSE
- 
+
       ** Or, if no records read, Output "No Details" message.
- 
+
      C                   IF        WCount = 0
      C                   WRITE     NODTLS
      C                   ELSE
- 
+
      C                   EVAL      RRDROP = WAgFacDrop
      C                   EVAL      RRTRLR = WLiveRec
      C                   EVAL      RVTRLR = WValLiveRec
@@ -919,12 +922,12 @@
      C                   WRITE     CONTROL
      C                   ENDIF
      C                   ENDIF
- 
+
       ** End Program and Return.
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /TITLE SR/*PSSR
@@ -934,9 +937,9 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
       ** Check to see that *PSSR has not already been called.
- 
+
      C                   IF        WRUN = *BLANK
      C                   EVAL      WRUN = 'Y'
      C                   EVAL      *INU7 = *ON
@@ -945,14 +948,14 @@
      C                   DUMP
      C                   EXSR      SrAUDIT
      C                   ENDIF
- 
+
       ** If *PSSR already run, then just end the program here.
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /TITLE SR/SrRCFP1
@@ -963,28 +966,28 @@
       *                                                               *
       *****************************************************************
      C     SrRCFP1       BEGSR
- 
+
       ***  Ensure Report Spool File recorded by RCF.
- 
+
      C                   Z-ADD     SFNUM1        PZSNUM
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM      *BLANKS       PSEQ
      C                   PARM      *BLANKS       PSENTY
      C                   PARM      SFILE1        PSFILE
      C                   PARM                    PZSNUM
      C                   PARM      *BLANKS       PZSERR
- 
+
       **  If Error occurs during ZSFILE processing, then return to the
       **  Calling Program.
- 
+
      C                   IF        PZSERR = 'Y'
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /TITLE SR/SrRCFAU
@@ -995,28 +998,28 @@
       *                                                               *
       *****************************************************************
      C     SrRCFAU       BEGSR
- 
+
       ** Ensure Audit Spool File recorded by RCF.
- 
+
      C                   Z-ADD     SFNUMU        PZSNUM
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM      *BLANKS       PSEQ
      C                   PARM      *BLANKS       PSENTY
      C                   PARM      SFILEU        PSFILE
      C                   PARM                    PZSNUM
      C                   PARM      *BLANK        PZSERR
- 
+
       **  If Error occurs during ZSFILE processing, then return to the
       **  Calling Program.
- 
+
      C                   IF        PZSERR = 'Y'
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /TITLE SR/SrZADD
@@ -1026,16 +1029,16 @@
       *                                                               *
       *****************************************************************
      C     SrZADD        BEGSR
- 
+
       ** Split WZAMT into integer and decimal fields
- 
+
      C                   Z-ADD     WZAMT         WZAMTI
      C                   MOVE      WZAMT         WZAMTD
- 
+
       ** Both WZAMTI and WZAMTD contain a 'sign' zone now
- 
+
      C                   EXSR      SrZSUM
- 
+
      C                   ENDSR
       *****************************************************************
       /TITLE SR/SrZSUM
@@ -1045,18 +1048,18 @@
       *                                                               *
       *****************************************************************
      C     SrZSUM        BEGSR
- 
+
       ** Save values of indicators to be used in the program
- 
+
      C                   MOVEA     *IN(91)       SaveIndDS
      C                   MOVEA     '00000'       *IN(91)
      C                   EVAL      *IN99 = *OFF
- 
+
      C                   DO
- 
+
       ** Determine sign of WZAMTI and WZAMTD, 92 IF NEG
       ** If both are zero, bypass processing
- 
+
      C                   IF        WZAMTI = *ZERO  AND
      C                             WZAMTD = *ZERO
      C                   LEAVE
@@ -1066,10 +1069,10 @@
      C                   EVAL      *IN92 = *ON
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Determine sign of WZTOTI and WZTOTD, 91 IF NEG.
       ** If WZTOTAL is ZERO, return ZZAMOUNT.
- 
+
      C                   IF        WZTOTI = *ZERO  AND
      C                             WZTOTD = *ZERO
      C                   Z-ADD     WZAMTI        WZTOTI
@@ -1081,37 +1084,37 @@
      C                   EVAL      *IN91 = *ON
      C                   ENDIF
      C                   ENDIF
- 
+
       ** If signs differ, bypass overflow checks
- 
+
      C                   IF        *IN91 = *OFF AND *IN92 = *OFF
      C                             OR *IN91 = *ON AND *IN92 = *ON
- 
+
      C     WZAMTD        ADD       WZTOTD        WZWK2
      C                   IF        WZWK2 > 999 OR WZWK2 <= 999 AND WZWK2 < -999
- 
+
      C                   IF        *IN92 = *OFF
      C     WZAMTI        ADD       1             WZWK3
      C                   ELSE
      C     WZAMTI        SUB       1             WZWK3
      C                   ENDIF
      C     WZTOTI        ADD       WZWK3         WZWK3
- 
+
      C                   ELSE
      C     WZTOTI        ADD       WZAMTI        WZWK3
      C                   ENDIF
- 
+
       ** If the modulus of WZWK3 is less than the modulus of WZTOTI,
       ** then overflow has occurred
- 
+
      C                   IF        *IN92 = *OFF
      C     WZWK3         COMP      WZTOTI                               99
      C                   ELSE
      C     WZWK3         COMP      WZTOTI                             99
      C                   ENDIF
- 
+
       ** If overflow occurs, zeroise WZAMT
- 
+
      C                   IF        *IN99 = *ON
      C                   Z-ADD     0             WZAMT
      C                   ELSE
@@ -1120,29 +1123,29 @@
      C                   ENDIF
      C                   LEAVE
      C                   ENDIF
- 
+
       ** the signs are different
- 
+
      C                   IF        *IN91 = *ON AND *IN92 = *OFF OR
      C                             *IN91 = *OFF AND *IN92 = *ON
- 
+
       ** If WZAMT was negative, make it positive to compare with WZTOT
- 
+
      C                   IF        *IN92 = *ON
      C                   Z-SUB     WZAMTI        WZAMTI
      C                   Z-SUB     WZAMTD        WZAMTD
      C                   ENDIF
- 
+
       ** If WZTOT was negative, make it positive to compare with WZAMT
- 
+
      C                   IF        *IN91 = *ON
      C                   Z-SUB     WZTOTI        WZTOTI
      C                   Z-SUB     WZTOTD        WZTOTD
      C                   ENDIF
- 
+
       ** Both WZAMT and WZTOT are now positive
       ** If WZTOT equals WZAMT, return zero
- 
+
      C                   EVAL      *IN93 = *OFF
      C                   IF        WZTOTI = WZAMTI AND WZTOTD = WZAMTD
      C                   Z-ADD     0             WZTOTI
@@ -1153,9 +1156,9 @@
      C                   EVAL      *IN93 = *ON
      C                   ENDIF
      C                   ENDIF
- 
+
       ** If WZTOT greater than WZAMT
- 
+
      C                   IF        *IN93 = *ON
      C                   IF        WZAMTD > WZTOTD
      C     WZTOTI        SUB       1             WZTOTI
@@ -1166,9 +1169,9 @@
      C     WZTOTI        SUB       WZAMTI        WZTOTI
      C     WZTOTD        SUB       WZAMTD        WZTOTD
      C                   ENDIF
- 
+
       ** If WZAMT greater than WZAMT
- 
+
      C                   ELSE
      C                   IF        WZTOTD > WZAMTD
      C     WZAMTI        SUB       1             WZWK3
@@ -1180,35 +1183,35 @@
      C     WZAMTD        SUB       WZTOTD        WZTOTD
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Reverse sign of WZTOT if larger input fields were negative
- 
+
      C                   IF        *IN93 = *ON AND *IN91 = *ON OR
      C                             *IN93 = *OFF AND *IN92 = *ON
      C                   Z-SUB     WZTOTI        WZTOTI
      C                   Z-SUB     WZTOTD        WZTOTD
      C                   ENDIF
- 
+
       ** Restore sign of WZAMTI & WZAMTD if reversed
- 
+
      C                   IF        *IN92 = *ON
      C                   Z-SUB     WZAMTI        WZAMTI
      C                   Z-SUB     WZAMTD        WZAMTD
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
       ** If WZTOTD is zero, and WZTOTI is negative, setup  WZNEGD
- 
+
      C                   IF        WZTOTD = *ZERO AND WZTOTI < *ZERO
      C                   MOVE      '.000-'       WZNEGD
      C                   ENDIF
- 
+
       ** Restore previous indicator values
- 
+
      C                   MOVEA     SaveIndDS     *IN(91)
- 
+
      C                   ENDSR
       *****************************************************************
 **  CPY@

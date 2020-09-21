@@ -15,13 +15,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *                 240065             Date 09Jun06               *
+      *  Prev Amend No. 240065             Date 09Jun06               *
       *                 BUG4660            Date 05Nov04               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
@@ -30,7 +29,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  240065 - Allow negative base rates to be displayed.          *
       *           Use ZA0841 instead of ZEDIT.                        *
@@ -45,7 +43,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
 
-      **********************************************a*******************
+      *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -121,17 +119,6 @@
      D ArrayNbrt       S              1A   DIM(12)                                            240065
       * Incoming Base Rate in screen format                                                   240065
                                                                                               240065
-      ** BSRT Backward-Looking Rate Fields                                                    CSD103
-     D BasRBckfld      DS            27                                                       CSD103
-     D DDBLRT                  1      1                                                       CSD103
-     D DDLBDY                  2      3                                                       CSD103
-     D DDLODY                  4      5                                                       CSD103
-     D DDPDLY                  6      7                                                       CSD103
-     D DDBADJ                  8     21                                                       CSD103
-     D DDAVOP                 22     22                                                       CSD103
-     D DDBRAC                 23     24                                                       CSD103
-     D DDWGHT                 25     25                                                       CSD103
-     D DDLBAC                 26     27                                                       CSD103
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -350,53 +337,6 @@
      C                   EXSR      ZA0770                                                     CSD006
      C                   MOVE      DateOut       DDTSDT                                       CSD006
      C                   ENDIF                                                                CSD006
-      *                                                                                       CSD103
-      * Backward-Looking Rate                                                                 CSD103
-      *                                                                                       CSD103
-     C                   MOVE      BABLRT        DDBLRT                                       CSD103
-      *                                                                                       CSD103
-      * Default Lookback Days for Settlement Base Rate                                        CSD103
-      *                                                                                       CSD103
-     C                   MOVE      BALBDY        DDLBDY                                       CSD103
-      *                                                                                       CSD103
-      * Default Lockout Days                                                                  CSD103
-      *                                                                                       CSD103
-     C                   MOVE      BALODY        DDLODY                                       CSD103
-      *                                                                                       CSD103
-      * Default Payment Delay Days                                                            CSD103
-      *                                                                                       CSD103
-     C                   MOVE      BAPDLY        DDPDLY                                       CSD103
-      *                                                                                       CSD103
-      * Benchmark Adjustment                                                                  CSD103
-      *                                                                                       CSD103
-     C                   MOVE      *BLANKS       @@ALPH                                       CSD103
-     C                   CALLB     'ZA0840'                                                   CSD103
-     C                   PARM      *BLANK        RetCodeOut                                   CSD103
-     C                   PARM      DDBADJ        @@ALPH                         Display field CSD103
-     C                   PARM      8             @@IDP                          no.of dec.plcsCSD103
-     C                   PARM      5             @@IINT                         no.of integersCSD103
-     C                   PARM      'N'           @@MTID                         Mil/Thou      CSD103
-     C                   PARM      *ZERO         @@ERCD                         Error code    CSD103
-     C                   PARM      *ZERO         @@AMT                          File field    CSD103
-     C                   PARM                    BNDCSP                                       CSD103
-      *                                                                                       CSD103
-     C                   MOVE      @@ALPH        DDBADJ                                       CSD103
-      *                                                                                       CSD103
-      * Averaging Option                                                                      CSD103
-      *                                                                                       CSD103
-     C                   MOVE      BAAVOP        DDAVOP                                       CSD103
-      *                                                                                       CSD103
-      * Base Rate for Accrual                                                                 CSD103
-      *                                                                                       CSD103
-     C                   MOVE      BABRAC        DDBRAC                                       CSD103
-      *                                                                                       CSD103
-      * Weight Convention                                                                     CSD103
-      *                                                                                       CSD103
-     C                   MOVE      BAWGHT        DDWGHT                                       CSD103
-      *                                                                                       CSD103
-      * Default Lookback Days for Accrual                                                     CSD103
-      *                                                                                       CSD103
-     C                   MOVE      BALBAC        DDLBAC                                       CSD103
                                                                                               CSD006
       *                                                                                       CSD006
      C                   ENDSR
@@ -427,7 +367,6 @@
       *
      C                   MOVEL     DDACTN        ##ACTN            1
      C                   MOVEL     *BLANK        BasRScnFmt
-     C                   MOVEL     *BLANK        BasRBckfld                                   CSD103
      C                   MOVEL     ##ACTN        DDACTN
       *
      C                   ENDSR
@@ -454,9 +393,6 @@
       *
       * Base Rate in screen format
      C                   PARM                    BasRScnFmt
-     C
-      * Backward-Looking Rate Fields                                                          CSD103
-     C                   PARM                    BasRBckfld                                   CSD103
       *
       *
       ** Initialize program name

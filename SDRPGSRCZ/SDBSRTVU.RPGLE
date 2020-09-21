@@ -797,9 +797,6 @@
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
-                                                                                              CSD103
-      * Backward-Looking Rate Fields                                                          CSD103
-     C                   PARM                    BasRBckfld                                   CSD103
 
      C                   ENDSR
       *****************************************************************

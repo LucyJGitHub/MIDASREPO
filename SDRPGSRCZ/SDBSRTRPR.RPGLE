@@ -14,11 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *                 256564             Date 17Sep08               *
+      *  Prev Amend No. 256564             Date 17Sep08               *
       *                 247439             Date 07Apr07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
@@ -34,7 +33,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  256564 - Recompile due to PF changes done by fix 256330      *
       *  247439 - Kondor transactions go missing...                   *
@@ -179,9 +177,6 @@
       **  Data Structure for AOSVALR0 string                                                  CSD012
      DSVAL1            DS           200                                                       CSD012
      DSVAL11                   1      1                                                       CSD012
-                                                                                              CSD103
-      ** BSRT Backward-Looking Rate Fields                                                    CSD103
-     D BasRBckfld      DS            27                                                       CSD103
 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -826,8 +821,6 @@
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIdArr
      C                   PARM                    WMsgDtaArr
-      * Backward-Looking Rate Fields                                                          CSD103
-     C                   PARM                    BasRBckfld                                   CSD103
       *
       * If errors returned
      C     Idx           IFNE      0
@@ -1002,8 +995,6 @@
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIdArr
      C                   PARM                    WMsgDtaArr
-      * Backward-Looking Rate Fields                                                          CSD103
-     C                   PARM                    BasRBckfld                                   CSD103
       *
       * If transaction is valid output message 'Press enter to accept'
       *

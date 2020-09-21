@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD050190           Date 04Apr18               *      
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD050190           Date 04Apr18               *      
+      *                 MD046248           Date 27Oct17               *
       *                 MD020772           Date 30Sep13               *
       *                 MD020656A          Date 30Sep13               *
       *                 MD020656           Date 30Sep13               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD050190 - Low performance of GOCACTS components.            *
       *           - Conditioned processing of ABC file GPACNTTD.      *      
       *  MD046248 - Finastra Rebranding                               *

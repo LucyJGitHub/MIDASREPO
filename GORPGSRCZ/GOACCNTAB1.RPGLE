@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1097467          Date 17Apr13               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1097467          Date 17Apr13               *
       *                 AR1095441          Date 11Mar13               *
       *                 CGO001AA           Date 06Aug12               *
       *                 AR854619           Date 06Jan12               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1097467B - Expected 15% COB run optimization not met       *
       *  AR1095441 - COBOP Compilation Issues                         *

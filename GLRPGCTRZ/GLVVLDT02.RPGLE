@@ -18,8 +18,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD052075           Date 07Jun19               *
-      *  Prev Amend No. CGL150             Date 13Jul18               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD052075           Date 07Jun19               *
+      *                 CGL150             Date 13Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD026695           Date 12May14               *
       *                 MD000091           Date 08May13               *
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD052075 - [CGL150] Warning message should be displayed when *
       *           the system defaults the value date.                 *
       *  CGL150 - Value date to back value date if prior to           *

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CMG008             Date 20Feb20               *
-      *  Prev Amend No. MD031848           Date 12Mar20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *                 MD031848           Date 12Mar20               *
       *                 AR401845           Date 12Mar20               *
       *                 MD055383           Date 30Apr20               *
       *                 MD045952           Date 06Jul17               *
@@ -57,6 +58,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD031848 - Recently Closed account not generating MT940      *
       *             Amend to include closed today.                    *

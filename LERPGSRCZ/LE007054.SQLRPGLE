@@ -20,12 +20,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CLE075BI           Date 06Aug12               *
-      *  Prev Amend No. AR1063739          Date 03Dec12               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CLE075BI           Date 06Aug12               *
+      *                 AR1063739          Date 03Dec12               *
       *                 AR700107 *CREATE   Date 01Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE075BI - COB Restructure - LE COB Optimisation Phase 1     *
       *  AR1063739 - SettlementAccount09 Issues                       *

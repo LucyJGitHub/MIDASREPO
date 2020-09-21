@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSW220             Date 09Mar20               *
-      *  Prev Amend No. MD054037           Date 23Sep19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CSW220             Date 09Mar20               *
+      *                 MD054037           Date 23Sep19               *
       *                 CSD102             Date 08Jan19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD037804           Date 25May16               *
@@ -94,6 +95,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CSW220 - SWIFT Changes 2020                                  *
       *  MD054037 - Outward payment routing from incoming (OPIN = Y)  *
       *             via API                                           *

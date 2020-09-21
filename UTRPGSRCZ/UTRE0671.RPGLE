@@ -15,12 +15,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD023799A          Date 09Jan13               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD023799A          Date 09Jan13               *
       *                 AR1055719 *CREATE  Date 26Nov13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD023799A - Amended the utility so that those account inser- *
       *              ted and those account with rate movement on      *
@@ -295,7 +297,8 @@
       *                                                                                    MD023799A
      C**********         IF        RPRECI = 'D'                                            MD023799A
  
-     C     RPDICT        IFNE      *Zeros
+     C*****RPDICT        IFNE      *Zeros                                                     CSD103
+     C     RPDICT        IFNE      *BLANKS                                                    CSD103
      C                   EVAL      KDRCR = 0
      C     KEY1          SETGT     REHRDJ
      C**********         READP     REHRDJ                                                  MD023799A
@@ -318,7 +321,8 @@
      C                   ENDIF                                                             MD023799A
  
      C     ACOLCR        IFNE      BJRDNB                                                  MD023799A
-     C     RPCICT        IFNE      *Zeros
+     C*****RPCICT        IFNE      *Zeros                                                     CSD103
+     C     RPCICT        IFNE      *BLANKS                                                    CSD103
      C                   EVAL      KDRCR = 1
      C     KEY1          SETGT     REHRCJ
      C**********         READP     REHRCJ                                                  MD023799A

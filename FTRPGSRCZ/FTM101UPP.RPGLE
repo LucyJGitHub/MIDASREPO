@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD034834           Date 30Jun15               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD034834           Date 30Jun15               *
       *                 CLE134             Date 01Aug12               *
       *                 CRE075             Date 06Dec10               *
       *                 AR750695           Date 26Apr11               *
@@ -47,6 +48,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034834 - Serious Midas error on Amend of Incoming RFTD     *
       *  CLE134 - Past Due Call Loan Processing                       *

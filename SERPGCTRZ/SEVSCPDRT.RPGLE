@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1077982          Date 28Jan13               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1077982          Date 28Jan13               *
       *                 AR826623           Date 17Sep12               *
       *                 AR750169           Date 17Sep12               *
       *                 CRE073             Date 06Dec10               *
@@ -45,6 +46,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1077982 - Blank value for Last Coupon Date triggers error  *
       *  AR826623 - ST: Serious midas error in Securities details.    *

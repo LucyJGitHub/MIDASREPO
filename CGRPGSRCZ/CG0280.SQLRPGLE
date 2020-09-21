@@ -20,8 +20,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055928           Date 02Jun20               *
-      *  Prev Amend No. MD054955           Date 16Dec19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD055928           Date 02Jun20               *
+      *                 MD054955           Date 16Dec19               *
       *                 MD046248           Date 27Oct17               *
       *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -60,6 +61,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055928 - Schedule cannot be inserted for Primary recipient.*
       *  MD054955 - Deliverable Data Split for Correspondence Mgr     *
       *  MD046248 - Finastra Rebranding                               *

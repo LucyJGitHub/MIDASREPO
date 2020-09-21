@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE064             Date 06Dec10               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE064             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER020             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -26,6 +27,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -37,12 +40,12 @@
       *           use as APIs - Funding Participation input.          *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -54,90 +57,90 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Funding Participant Details in Screen Format
      D FPRT          E DS                  EXTNAME(LEFPRTPD)
- 
+
       ** Funding Participant Details OK indicators
      D FPRT_OK       E DS                  EXTNAME(LEEFPRTPD)
- 
+
       ** Current Funding Participant Details in screen format
      D C_FPRT        E DS                  EXTNAME(LEFPRTPD)
      D                                     PREFIX(C_)
- 
+
       ** Current Funding Participant Details in file format
      D FCLTYFMFmt    E DS                  EXTNAME(FCLTYFM)
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *
       **  Compare fields with amended values.
       *
@@ -159,11 +162,11 @@
      C     ResetErrs     ANDEQ     'Y'
      C                   EXSR      RESETFLDS
      C                   ENDIF
- 
+
       * Return
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
@@ -171,19 +174,19 @@
       *             with those amended.                               *
       *****************************************************************
      C     COMPFLDS      BEGSR
- 
+
       *-----------------------------------------*
       * Joining date                            *
       *-----------------------------------------*
       ** This field can't be amended
- 
+
      C     S#JDTE        IFNE      C_S#JDTE
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'S#JDTE'
      C                   EVAL      MsgIDArr(Idx)   = 'LEP0100'
      C                   EVAL      S#JDTEok        = 'N'
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -191,14 +194,14 @@
       * RESETFLDS - Reset fields in Error                             *
       *****************************************************************
      C     RESETFLDS     BEGSR
- 
+
       * Reset fields in error to 'current' values
- 
+
       * Joining date
      C     S#JDTEOK      IFEQ      'N'
      C                   MOVEL     C_S#JDTE      S#JDTE
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -206,7 +209,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -246,9 +249,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5

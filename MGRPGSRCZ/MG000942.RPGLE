@@ -26,8 +26,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD055842           Date 02Jun20               *
-      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD055842           Date 02Jun20               *
+      *                 CMG008             Date 20Feb20               *
       *                 CMG006             Date 15Oct19               *
       *                 MD047450           Date 25Sep19               *
       *                 MD046248           Date 27Oct17               *
@@ -82,6 +83,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055842 - Second tag 86 not translated to To Characters.    *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  CMG006 - MT940, 941, 942 & 950 Field 25 Account              *

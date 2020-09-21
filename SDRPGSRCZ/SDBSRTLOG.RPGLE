@@ -31,7 +31,7 @@
       *  CSC011 - 24x7 Midas Availability                             *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -42,53 +42,56 @@
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       **------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Base Rate in File Format
      D BSRTFilFmt    E DS                  EXTNAME(SDBSRTPD)
- 
+
       ** Base Rate in Screen Format
      D BSRTScnFmt    E DS                  EXTNAME(SDBSRSPD)
- 
+
       ** SD Base Rate Maintenance Extra Data - File (D/B) format
      D BSRTExtDta    E DS                  EXTNAME(SDBSEXPD)
- 
+                                                                                              CSD103
+      ** BSRT Backward-Looking Rate Fields                                                    CSD103
+     D BasRBckfld      DS            27                                                       CSD103
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D TRANSDTL        S           5800A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -103,15 +106,15 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
      C                   EXSR      SRProc
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -123,35 +126,27 @@
       * Calls: SDBSRTCVT - Base Rate Conversion: File to Screen Fmt   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRProc        BEGSR
- 
+
      C                   EVAL      TRANSDTL = *Blanks
      C                   EVAL      DDACTN = BATYLC
- 
+
      C                   CALLB     'SDBSRTCVT'
      C                   PARM                    RetCodeOut
      C                   PARM                    BSRTFilFmt
      C                   PARM                    BSRTScnFmt
       * Backward-Looking Rate Fields                                                          CSD103
-     C                   PARM                    DDBLRT            1                          CSD103
-     C                   PARM                    DDLBDY            2                          CSD103
-     C                   PARM                    DDLODY            2                          CSD103
-     C                   PARM                    DDPDLY            2                          CSD103
-     C                   PARM                    DDBADJ           14                          CSD103
-     C                   PARM                    DDAVOP            1                          CSD103
-     C                   PARM                    DDBRAC            2                          CSD103
-     C                   PARM                    DDWGHT            1                          CSD103
-     C                   PARM                    DDLBAC            2                          CSD103
+     C                   PARM                    BasRBckfld                                   CSD103
 
      C                   IF        RetCodeOut <> *Blanks
      C                   EVAL      RetCodeIn = '*Error'
      C                   ELSE
      C                   EVAL      TRANSDTL = BSRTScnFmt + BSRTExtDta
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -163,21 +158,21 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    RetCodeIn
      C                   PARM                    BSRTFilFmt
      C                   PARM                    TRANSDTL
- 
+
       ** The following /COPY sets the program, module and procedure
       ** names for database error processing.
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

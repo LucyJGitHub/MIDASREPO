@@ -199,7 +199,8 @@
      I**#1DBRC******DS                             99                     CSW097
      I**#1DBRC      DS                            169              CSW097 CSD006
      I*#1DBRC***   DS                            289                                   CSD006 237311
-     I#1DBRC      DS                            309                                           237311
+     I*#1DBRC***  DS                            309                                    237311 CSD103
+     I#1DBRC      DS                            329                                           CSD103
       * Stored master file format fields
      I                                        1   1 #1DB1
       *
@@ -385,6 +386,9 @@
       ** Message data for 'The sign field must either be '+' or '-'.                          226723
       *                                                                                       226723
      I                                        1   1 ZA0023                                    226723
+      * Message data for 'This base rate code doesn't exist for currency &1'                  CSD103
+      * Base Rate for Accrual                                                                 CSD103
+     I                                        1   3 ZA0024                                    CSD103
       **********                                                                     226723 MD033488
       ***Message*data*for*'The*allowed*base*rate*code*to*use*'1'*is****              226723 MD033488
       ***base*rate*code*"77"*******************************************              226723 MD033488
@@ -1620,6 +1624,338 @@
      C                     MOVEL'Y2USRMSG'ZAMSGF
      C                     EXSR ZASNMS
      C                     END                             FI
+      *                                                                                       CSD103
+      ** Backward-Looking Rate                                                                CSD103
+      *                                                                                       CSD103
+     C           #1BLRT    IFEQ *BLANK                                                        CSD103
+     C                     MOVE 'N'       #1BLRT                                              CSD103
+     C                     ELSE                                                               CSD103
+      * Backward-Looking Rate must be Y or N                                                  CSD103
+     C           #1BLRT    IFNE 'N'                                                           CSD103
+     C           #1BLRT    ANDNE'Y'                                                           CSD103
+     C                     SETON                     9939                                     CSD103
+     C                     MOVEL'BSR0113' ZAMSID                                              CSD103
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                              CSD103
+     C                     EXSR ZASNMS                                                        CSD103
+     C                     ENDIF                                                              CSD103
+      *                                                                                       CSD103
+     C                     ENDIF                                                              CSD103
+      *                                                                                       CSD103
+      ** Def. Lookback Days for Accrual                                                       CSD103
+      *                                                                                       CSD103
+     C           #1LBDY    IFEQ *BLANKS                                                       CSD103
+     C                     MOVE '00'      #1LBDY                                              CSD103
+     C                     ELSE                                                               CSD103
+      *                                                                                       CSD103
+     C                     MOVEL*BLANKS   WUZASF                                              CSD103
+     C                     MOVEL#1LBDY    WUZASF                                              CSD103
+      *                                                                                       CSD103
+     C                     CALL 'ZALIGN'               90                                     CSD103
+     C           W0RTN     PARM W0RTN     WQ0080  7                                           CSD103
+     C           WUZASF    PARM WUZASF    WQ0081 16                                           CSD103
+     C                     PARM *ZERO     WQ0082  10                                          CSD103
+     C                     PARM 2         WQ0083  20                                          CSD103
+     C           WUZAFF    PARM *BLANK    WQ0084 16                                           CSD103
+      * Call to program ended in error                                                        CSD103
+     C           *IN90     IFEQ '1'                                                           CSD103
+     C                     MOVEL'Y2U0032' W0RTN                                               CSD103
+     C                     MOVEL*BLANKS   W0CLPG 10                                           CSD103
+     C                     MOVEL'ZALIGN'  W0CLPG                                              CSD103
+     C                     MOVEL'Y2U0032' ZAMSID                                              CSD103
+     C                     MOVEL'Y2USRMSG'ZAMSGF                                              CSD103
+     C                     MOVELW0CLPG    ZAMSDA                                              CSD103
+     C                     EXSR ZASNMS                                                        CSD103
+     C                     ELSE                                                               CSD103
+      *                                                                                       CSD103
+     C           W0RTN     IFEQ '*ERROR*'                                                     CSD103
+     C                     SETON                     9940                                     CSD103
+     C                     MOVEL'BSR0112' ZAMSID                                              CSD103
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                              CSD103
+     C                     EXSR ZASNMS                                                        CSD103
+     C                     ELSE                                                               CSD103
+     C                     MOVE WUZAFF    #1LBDY                                              CSD103
+     C                     ENDIF                                                              CSD103
+      *                                                                                       CSD103
+     C                     ENDIF                                                              CSD103
+      * Def. Lookback Days for Accrual must be 0 for Forward-Looking Rates                    CSD103
+     C           #1BLRT    IFNE 'Y'                                                           CSD103
+     C           #1LBDY    ANDNE'00'                                                          CSD103
+     C                     SETON                     9940                                     CSD103
+     C                     MOVEL'BSR0111' ZAMSID                                              CSD103
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                              CSD103
+     C                     EXSR ZASNMS                                                        CSD103
+     C                     ENDIF                                                              CSD103
+      *                                                                                       CSD103
+     C                     ENDIF                                                              CSD103
+      *                                                                                       CSD103
+      ** Def. Lockout Days                                                                    CSD103
+      *                                                                                       CSD103
+     C           #1LODY    IFEQ *BLANKS                                                       CSD103
+     C                     MOVE '00'      #1LODY                                              CSD103
+     C                     ELSE                                                               CSD103
+      *                                                                                       CSD103
+     C                     MOVEL*BLANKS   WUZASF                                              CSD103
+     C                     MOVEL#1LODY    WUZASF                                              CSD103
+      *                                                                                       CSD103
+     C                     CALL 'ZALIGN'               90                                     CSD103
+     C           W0RTN     PARM W0RTN     WQ0080  7                                           CSD103
+     C           WUZASF    PARM WUZASF    WQ0081 16                                           CSD103
+     C                     PARM *ZERO     WQ0082  10                                          CSD103
+     C                     PARM 2         WQ0083  20                                          CSD103
+     C           WUZAFF    PARM *BLANK    WQ0084 16                                           CSD103
+      * Call to program ended in error                                                        CSD103
+     C           *IN90     IFEQ '1'                                                           CSD103
+     C                     MOVEL'Y2U0032' W0RTN                                               CSD103
+     C                     MOVEL*BLANKS   W0CLPG 10                                           CSD103
+     C                     MOVEL'ZALIGN'  W0CLPG                                              CSD103
+     C                     MOVEL'Y2U0032' ZAMSID                                              CSD103
+     C                     MOVEL'Y2USRMSG'ZAMSGF                                              CSD103
+     C                     MOVELW0CLPG    ZAMSDA                                              CSD103
+     C                     EXSR ZASNMS                                                        CSD103
+     C                     ELSE                                                               CSD103
+      *                                                                                       CSD103
+     C           W0RTN     IFEQ '*ERROR*'                                                     CSD103
+     C                     SETON                     9941                                     CSD103
+     C                     MOVEL'BSR0112' ZAMSID                                              CSD103
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                              CSD103
+     C                     EXSR ZASNMS                                                        CSD103
+     C                     ELSE                                                               CSD103
+     C                     MOVE WUZAFF    #1LODY                                              CSD103
+     C                     ENDIF                                                              CSD103
+      *                                                                                       CSD103
+     C                     ENDIF                                                              CSD103
+      * Def. Lockout Days must be 0 for Forward-Looking Rates                                 CSD103
+     C           #1BLRT    IFNE 'Y'                                                           CSD103
+     C           #1LODY    ANDNE'00'                                                          CSD103
+     C                     SETON                     9941                                     CSD103
+     C                     MOVEL'BSR0109' ZAMSID                                              CSD103
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                              CSD103
+     C                     EXSR ZASNMS                                                        CSD103
+     C                     ENDIF                                                              CSD103
+      *                                                                                       CSD103
+     C                     ENDIF                                                              CSD103
+      *                                                                                       CSD103
+      ** Def. Payment Delay Days                                                              CSD103
+      *                                                                                       CSD103
+     C           #1PDLY    IFEQ *BLANKS                                                       CSD103
+     C                     MOVE '00'      #1PDLY                                              CSD103
+     C                     ELSE                                                               CSD103
+      *                                                                                       CSD103
+     C                     MOVEL*BLANKS   WUZASF                                              CSD103
+     C                     MOVEL#1PDLY    WUZASF                                              CSD103
+      *                                                                                       CSD103
+     C                     CALL 'ZALIGN'               90                                     CSD103
+     C           W0RTN     PARM W0RTN     WQ0080  7                                           CSD103
+     C           WUZASF    PARM WUZASF    WQ0081 16                                           CSD103
+     C                     PARM *ZERO     WQ0082  10                                          CSD103
+     C                     PARM 2         WQ0083  20                                          CSD103
+     C           WUZAFF    PARM *BLANK    WQ0084 16                                           CSD103
+      * Call to program ended in error                                                        CSD103
+     C           *IN90     IFEQ '1'                                                           CSD103
+     C                     MOVEL'Y2U0032' W0RTN                                               CSD103
+     C                     MOVEL*BLANKS   W0CLPG 10                                           CSD103
+     C                     MOVEL'ZALIGN'  W0CLPG                                              CSD103
+     C                     MOVEL'Y2U0032' ZAMSID                                              CSD103
+     C                     MOVEL'Y2USRMSG'ZAMSGF                                              CSD103
+     C                     MOVELW0CLPG    ZAMSDA                                              CSD103
+     C                     EXSR ZASNMS                                                        CSD103
+     C                     ELSE                                                               CSD103
+      *                                                                                       CSD103
+     C           W0RTN     IFEQ '*ERROR*'                                                     CSD103
+     C                     SETON                     9942                                     CSD103
+     C                     MOVEL'BSR0112' ZAMSID                                              CSD103
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                              CSD103
+     C                     EXSR ZASNMS                                                        CSD103
+     C                     ELSE                                                               CSD103
+     C                     MOVE WUZAFF    #1PDLY                                              CSD103
+     C                     ENDIF                                                              CSD103
+      *                                                                                       CSD103
+     C                     ENDIF                                                              CSD103
+      * Def. Payment Delay Days must be 0 for Forward-Looking Rates                           CSD103
+     C           #1BLRT    IFNE 'Y'                                                           CSD103
+     C           #1PDLY    ANDNE'00'                                                          CSD103
+     C                     SETON                     9942                                     CSD103
+     C                     MOVEL'BSR0107' ZAMSID                                              CSD103
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                              CSD103
+     C                     EXSR ZASNMS                                                        CSD103
+     C                     ENDIF                                                              CSD103
+      *                                                                                       CSD103
+     C                     ENDIF                                                              CSD103
+      *                                                                                       CSD103
+      ** Bechmark Adjustment must be numeric                                                  CSD103
+      *                                                                                       CSD103
+     C           #1BADJ    IFEQ *ZEROS                                                        CSD103
+     C                     MOVE *BLANKS   #1BADJ                                              CSD103
+     C                     ENDIF                                                              CSD103
+      *                                                                                       CSD103
+     C                     MOVEL*BLANKS   WUZASF                                              CSD103
+     C                     MOVEL#1BADJ    WUZASF                                              CSD103
+      *                                                                                       CSD103
+     C                     CALL 'ZALIGN'               90                                     CSD103
+     C           W0RTN     PARM W0RTN     WQ0080  7                                           CSD103
+     C           WUZASF    PARM WUZASF    WQ0081 16                                           CSD103
+     C                     PARM 8         WQ0082  10                                          CSD103
+     C                     PARM 5         WQ0083  20                                          CSD103
+     C           WUZAFF    PARM *BLANK    WQ0084 16                                           CSD103
+      * Call to program ended in error                                                        CSD103
+     C           *IN90     IFEQ '1'                                                           CSD103
+     C                     MOVEL'Y2U0032' W0RTN                                               CSD103
+     C                     MOVEL*BLANKS   W0CLPG 10                                           CSD103
+     C                     MOVEL'ZALIGN'  W0CLPG                                              CSD103
+     C                     MOVEL'Y2U0032' ZAMSID                                              CSD103
+     C                     MOVEL'Y2USRMSG'ZAMSGF                                              CSD103
+     C                     MOVELW0CLPG    ZAMSDA                                              CSD103
+     C                     EXSR ZASNMS                                                        CSD103
+     C                     ELSE                                                               CSD103
+      *                                                                                       CSD103
+     C           W0RTN     IFEQ '*ERROR*'                                                     CSD103
+     C                     SETON                     9943                                     CSD103
+     C                     MOVEL'BSR0116' ZAMSID                                              CSD103
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                              CSD103
+     C                     EXSR ZASNMS                                                        CSD103
+     C                     ELSE                                                               CSD103
+     C                     MOVE WUZAFF    #1BADJ                                              CSD103
+     C                     ENDIF                                                              CSD103
+      *                                                                                       CSD103
+     C                     ENDIF                                                              CSD103
+      *                                                                                       CSD103
+      ** Averaging Option                                                                     CSD103
+      *                                                                                       CSD103
+     C           #1AVOP    IFEQ *BLANKS                                                       CSD103
+     C                     MOVE '0'       #1AVOP                                              CSD103
+     C                     ENDIF                                                              CSD103
+      * Averaging Option must be '1', '2', '3' or '4' for Backward-Looking Rates              CSD103
+     C           #1BLRT    IFEQ 'Y'                                                           CSD103
+     C           #1AVOP    ANDEQ'0'                                                           CSD103
+     C                     SETON                     9944                                     CSD103
+     C                     MOVEL'BSR0105' ZAMSID                                              CSD103
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                              CSD103
+     C                     EXSR ZASNMS                                                        CSD103
+     C                     ELSE                                                               CSD103
+      * Averaging Option must be '0' for Forward-Looking Rates                                CSD103
+     C           #1BLRT    IFNE 'Y'                                                           CSD103
+     C           #1AVOP    ANDNE'0'                                                           CSD103
+     C                     SETON                     9944                                     CSD103
+     C                     MOVEL'BSR0106' ZAMSID                                              CSD103
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                              CSD103
+     C                     EXSR ZASNMS                                                        CSD103
+     C                     ELSE                                                               CSD103
+      * Averaging Option must be '0', '1', '2', '3' or '4' when entered                       CSD103
+     C           #1AVOP    IFNE '0'                                                           CSD103
+     C           #1AVOP    ANDNE'1'                                                           CSD103
+     C           #1AVOP    ANDNE'2'                                                           CSD103
+     C           #1AVOP    ANDNE'3'                                                           CSD103
+     C           #1AVOP    ANDNE'4'                                                           CSD103
+     C                     SETON                     9944                                     CSD103
+     C                     MOVEL'BSR0104' ZAMSID                                              CSD103
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                              CSD103
+     C                     EXSR ZASNMS                                                        CSD103
+     C                     ENDIF                                                              CSD103
+      *                                                                                       CSD103
+     C                     ENDIF                                                              CSD103
+      *                                                                                       CSD103
+     C                     ENDIF                                                              CSD103
+      *                                                                                       CSD103
+      ** Base Rate for Accrual                                                                CSD103
+      *                                                                                       CSD103
+     C           #1BRAC    IFNE *BLANKS                                                       CSD103
+      * Base Rate for Accrual must only be entered when Averaging Option is 1/2               CSD103
+     C           #1AVOP    IFNE '1'                                                           CSD103
+     C           #1AVOP    ANDNE'2'                                                           CSD103
+     C                     SETON                     9945                                     CSD103
+     C                     MOVEL'BSR0103' ZAMSID                                              CSD103
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                              CSD103
+     C                     EXSR ZASNMS                                                        CSD103
+     C                     ENDIF                                                              CSD103
+      * This base rate code doesn't exist for currency &1                                     CSD103
+     C           KRBRAC    KLIST                                                              CSD103
+     C                     KFLD           BACYCD           Currency Code                      CSD103
+     C                     KFLD           BABSRC           Base Rate Code                     CSD103
+     C                     MOVEL#1CYCD    BACYCD                                              CSD103
+     C                     MOVEL#1BRAC    BABSRC                                              CSD103
+     C           KRBRAC    CHAIN@BAREDH              90                                       CSD103
+     C           *IN90     IFEQ '1'                                                           CSD103
+     C                     SETON                     9945                                     CSD103
+     C                     MOVE #1CYCD    ZA0024                                              CSD103
+     C                     MOVEL'USR4435' ZAMSID                                              CSD103
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                              CSD103
+     C                     EXSR ZASNMS                                                        CSD103
+     C                     ELSE                                                               CSD103
+      * The Base Rate for Accrual must have (01D) or (O) Designated Maturity                  CSD103
+     C           #1DGMA    IFNE '01D'                                                         CSD103
+     C           #1DGMA    ANDNE'O  '                                                         CSD103
+     C                     SETON                     9945                                     CSD103
+     C                     MOVEL'BSR0114' ZAMSID                                              CSD103
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                              CSD103
+     C                     EXSR ZASNMS                                                        CSD103
+     C                     ENDIF                                                              CSD103
+      *                                                                                       CSD103
+     C                     ENDIF                                                              CSD103
+      *                                                                                       CSD103
+     C                     ENDIF                                                              CSD103
+      *                                                                                       CSD103
+      ** Weight Convention                                                                    CSD103
+      *                                                                                       CSD103
+     C           #1WGHT    IFEQ *BLANKS                                                       CSD103
+     C                     MOVE '1'       #1WGHT                                              CSD103
+     C                     ELSE                                                               CSD103
+      * Weight Convention must be '1' or '2' when entered                                     CSD103
+     C           #1WGHT    IFNE '1'                                                           CSD103
+     C           #1WGHT    ANDNE'2'                                                           CSD103
+     C                     SETON                     9946                                     CSD103
+     C                     MOVEL'BSR0102' ZAMSID                                              CSD103
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                              CSD103
+     C                     EXSR ZASNMS                                                        CSD103
+     C                     ENDIF                                                              CSD103
+      *                                                                                       CSD103
+     C                     ENDIF                                                              CSD103
+      *                                                                                       CSD103
+      ** Def. Lookback Days for Accrual                                                       CSD103
+      *                                                                                       CSD103
+     C           #1LBAC    IFEQ *BLANKS                                                       CSD103
+     C                     MOVE '00'      #1LBAC                                              CSD103
+     C                     ELSE                                                               CSD103
+      *                                                                                       CSD103
+     C                     MOVEL*BLANKS   WUZASF                                              CSD103
+     C                     MOVEL#1LBAC    WUZASF                                              CSD103
+      *                                                                                       CSD103
+     C                     CALL 'ZALIGN'               90                                     CSD103
+     C           W0RTN     PARM W0RTN     WQ0080  7                                           CSD103
+     C           WUZASF    PARM WUZASF    WQ0081 16                                           CSD103
+     C                     PARM *ZERO     WQ0082  10                                          CSD103
+     C                     PARM 2         WQ0083  20                                          CSD103
+     C           WUZAFF    PARM *BLANK    WQ0084 16                                           CSD103
+      * Call to program ended in error                                                        CSD103
+     C           *IN90     IFEQ '1'                                                           CSD103
+     C                     MOVEL'Y2U0032' W0RTN                                               CSD103
+     C                     MOVEL*BLANKS   W0CLPG 10                                           CSD103
+     C                     MOVEL'ZALIGN'  W0CLPG                                              CSD103
+     C                     MOVEL'Y2U0032' ZAMSID                                              CSD103
+     C                     MOVEL'Y2USRMSG'ZAMSGF                                              CSD103
+     C                     MOVELW0CLPG    ZAMSDA                                              CSD103
+     C                     EXSR ZASNMS                                                        CSD103
+     C                     ELSE                                                               CSD103
+      *                                                                                       CSD103
+     C           W0RTN     IFEQ '*ERROR*'                                                     CSD103
+     C                     SETON                     9947                                     CSD103
+     C                     MOVEL'BSR0112' ZAMSID                                              CSD103
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                              CSD103
+     C                     EXSR ZASNMS                                                        CSD103
+     C                     ELSE                                                               CSD103
+     C                     MOVE WUZAFF    #1LBAC                                              CSD103
+     C                     ENDIF                                                              CSD103
+      *                                                                                       CSD103
+     C                     ENDIF                                                              CSD103
+      * Def. Lookback Days for Accrual must be 0 for Forward-Looking Rates                    CSD103
+     C           #1BLRT    IFNE 'Y'                                                           CSD103
+     C           #1LBAC    ANDNE'00'                                                          CSD103
+     C                     SETON                     9947                                     CSD103
+     C                     MOVEL'BSR0100' ZAMSID                                              CSD103
+     C                     MOVEL'SDUSRMSG'ZAMSGF                                              CSD103
+     C                     EXSR ZASNMS                                                        CSD103
+     C                     ENDIF                                                              CSD103
+      *                                                                                       CSD103
+     C                     ENDIF                                                              CSD103
       *================================================================
      CSR         DCEXIT    ENDSR
       /EJECT
@@ -1800,6 +2136,15 @@
      C                     MOVEL*BLANK    #1DGMA           Designated Matu
      C                     MOVEL*BLANK    #1OMD1           Other Matur.desCSW097
      C                     MOVEL*BLANK    #1OMD2           Other Matur.desCSW097
+     C                     MOVEL*BLANK    #1BLRT           Backward-Looking Rate              CSD103
+     C                     MOVEL*BLANK    #1LBDY           Def.Lookbck.Dy.For.St              CSD103
+     C                     MOVEL*BLANK    #1LODY           Default Lockout Days               CSD103
+     C                     MOVEL*BLANK    #1PDLY           Def. Payment Delay Dy              CSD103
+     C                     MOVEL*BLANK    #1BADJ           Benchmark Adjustment               CSD103
+     C                     MOVEL*BLANK    #1AVOP           Averaging Option                   CSD103
+     C                     MOVEL*BLANK    #1BRAC           Base Rate for Accrual              CSD103
+     C                     MOVEL*BLANK    #1WGHT           Weight Convention                  CSD103
+     C                     MOVEL*BLANK    #1LBAC           Def.Lookbck.Dy.For.Ac              CSD103
       *================================================================
      CSR         MAEXIT    ENDSR
       /EJECT
@@ -1851,6 +2196,15 @@
      C                     MOVELBADGMA    #1DGMA           Designated Matu
      C                     MOVELBAOMD1    #1OMD1           Oth.Matur.Desc1CSW097
      C                     MOVELBAOMD2    #1OMD2           Oth.Matur.Desc2CSW097
+     C                     MOVELBABLRT    #1BLRT           Backward-Looking Rate              CSD103
+     C                     MOVELBALBDY    #1LBDY           Def.Lookbck.Dy.For.St              CSD103
+     C                     MOVELBALODY    #1LODY           Default Lockout Days               CSD103
+     C                     MOVELBAPDLY    #1PDLY           Def. Payment Delay Dy              CSD103
+     C                     MOVELBABADJ    #1BADJ           Benchmark Adjustment               CSD103
+     C                     MOVELBAAVOP    #1AVOP           Averaging Option                   CSD103
+     C                     MOVELBABRAC    #1BRAC           Base Rate for Accrual              CSD103
+     C                     MOVELBAWGHT    #1WGHT           Weight Convention                  CSD103
+     C                     MOVELBALBAC    #1LBAC           Def.Lookbck.Dy.For.Ac              CSD103
       * Hold existing record image
      C                     MOVEL@1DBRC    #1DBRC
       *================================================================
@@ -1970,6 +2324,15 @@
      C                     MOVEL#1DGMA    BADGMA           Designated Matu
      C                     MOVEL#1OMD1    BAOMD1           Oth.Matur.Desc1CSW097
      C                     MOVEL#1OMD2    BAOMD2           Oth.Matur.Desc2CSW097
+     C                     MOVEL#1BLRT    BABLRT           Backward-Looking Rate              CSD103
+     C                     MOVEL#1LBDY    BALBDY           Def.Lookbck.Dy.For.St              CSD103
+     C                     MOVEL#1LODY    BALODY           Default Lockout Days               CSD103
+     C                     MOVEL#1PDLY    BAPDLY           Def. Payment Delay Dy              CSD103
+     C                     MOVEL#1BADJ    BABADJ           Benchmark Adjustment               CSD103
+     C                     MOVEL#1AVOP    BAAVOP           Averaging Option                   CSD103
+     C                     MOVEL#1BRAC    BABRAC           Base Rate for Accrual              CSD103
+     C                     MOVEL#1WGHT    BAWGHT           Weight Convention                  CSD103
+     C                     MOVEL#1LBAC    BALBAC           Def.Lookbck.Dy.For.Ac              CSD103
       *                                                                                       201999
       ** Create a default timestamp in the correct structure                                  201999
       *                                                                                       201999
@@ -2077,6 +2440,7 @@
      C                     PARM BABSRS    WQ0044  5        Base Rate Short
      C                     PARM BATYLC    WQ0045  1        Type of Last Ch
      C                     PARM WURDNB    WQ0046  50       Run day number
+     C                     PARM BAACRC    WQ0077  1                                           CSD103
       *
      C           *IN90     IFEQ '1'
       * Call to program ended in error
@@ -2428,6 +2792,7 @@
      C                     PARM BABSRS    WQ0055  5        Base Rate Short
      C                     PARM WUTYLC    WQ0056  1        Type of Last Ch
      C                     PARM WURDNB    WQ0057  50       Run day number
+     C                     PARM BAACRC    WQ0078  1                                           CSD103
       *
      C           *IN90     IFEQ '1'
       * Call to program ended in error
@@ -2608,6 +2973,15 @@
      C                     MOVEL#1DGMA    BADGMA           Designated Matu
      C                     MOVEL#1OMD1    BAOMD1           Oth.Matur.Desc1CSW097
      C                     MOVEL#1OMD2    BAOMD2           Oth.Matur.Desc2CSW097
+     C                     MOVEL#1BLRT    BABLRT           Backward-Looking Rate              CSD103
+     C                     MOVEL#1LBDY    BALBDY           Def.Lookbck.Dy.For.St              CSD103
+     C                     MOVEL#1LODY    BALODY           Default Lockout Days               CSD103
+     C                     MOVEL#1PDLY    BAPDLY           Def. Payment Delay Dy              CSD103
+     C                     MOVEL#1BADJ    BABADJ           Benchmark Adjustment               CSD103
+     C                     MOVEL#1AVOP    BAAVOP           Averaging Option                   CSD103
+     C                     MOVEL#1BRAC    BABRAC           Base Rate for Accrual              CSD103
+     C                     MOVEL#1WGHT    BAWGHT           Weight Convention                  CSD103
+     C                     MOVEL#1LBAC    BALBAC           Def.Lookbck.Dy.For.Ac              CSD103
       *
       * Set PGM.*Record Data Changed flag
      C           @1DBRC    IFNE YCRDCS
@@ -2715,6 +3089,7 @@
      C                     PARM BABSRS    WQ0066  5        Base Rate Short
      C                     PARM BATYLC    WQ0067  1        Type of Last Ch
      C                     PARM WURDNB    WQ0068  50       Run day number
+     C                     PARM BAACRC    WQ0079  1                                           CSD103
       *
      C           *IN90     IFEQ '1'
       * Call to program ended in error

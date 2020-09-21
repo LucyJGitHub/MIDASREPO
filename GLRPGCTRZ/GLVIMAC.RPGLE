@@ -18,8 +18,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD055515           Date 13Apr20               *
-      *  Prev Amend No. CGL148             Date 13Jul18               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD055515           Date 13Apr20               *
+      *                 CGL148             Date 13Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD031707           Date 02Jul15               *
       *                 MD024136           Date 08Jan14               *
@@ -54,6 +55,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055515 - Batch Item allows customer as blank to be         *
       *             accepted. Amend GLVIMAC to ensure that JE Items   *
       *             with blank Customer will not be allowed even when *

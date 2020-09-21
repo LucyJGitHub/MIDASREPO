@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD031292           Date 06Nov19               *
-      *  Prev Amend No. MD025836           Date 06Nov19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD031292           Date 06Nov19               *
+      *                 MD025836           Date 06Nov19               *
       *                 MD055714           Date 06May20               *
       *                 MD054877           Date 14Jan20               *
       *                 CER050             Date 16Jun19               *
@@ -163,6 +164,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD031292 - Initialize CLOANCK when inserting to avoid        *
       *             update with data from previous loan.              *
       *  MD025836 - Loan principal increase causing excess. Remove    *

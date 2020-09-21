@@ -16,7 +16,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD054655           Date 06Dec19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
       *  Prev Amend No. MD048346           Date 20Dec17               *
       *                 MD046248           Date 27Oct17               *
       *                 MD046325           Date 26Jul17               *
@@ -26,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD054655 - GLC0802C seq.00001 fails. DBCE length too small   *
       *           - Introduced WDBCE 15,0 to hold result before move  *
       *             to DBCE                                           *

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD052922           Date 03Mar19               *
-      *  Prev Amend No. MD022945           Date 18Oct13               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD052922           Date 03Mar19               *
+      *                 MD022945           Date 18Oct13               *
       *                 MD051877A          Date 02Oct18               *
       *                 MD051877           Date 22Sep18               *
       *                 MD051932           Date 22Sep18               *
@@ -142,6 +143,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD052922 - Settlement Payment Customer details blank on WIP  *
       *             during dummy amend and reverse (SETL API).        *
       *  MD022945 - Incorrect message shown for /SRCE/ validation.    *

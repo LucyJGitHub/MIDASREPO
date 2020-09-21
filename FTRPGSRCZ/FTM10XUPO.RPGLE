@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR1084524          Date 13Feb13               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR1084524          Date 13Feb13               *
       *                 CFT120             Date 28Sep12               *
       *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -53,6 +54,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  AR1084524 - Performance issue on IPAY & OPAY listview        *
       *              (Recompile)                                      *

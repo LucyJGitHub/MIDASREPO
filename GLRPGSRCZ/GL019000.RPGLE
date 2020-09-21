@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD040242A          Date 02Sep16               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD040242A          Date 02Sep16               *
       *                 MD040242           Date 09Sep16               *
       *                 CRE075             Date 06Dec10               *
       *                 BUG27769           Date 09Jun10               *
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD040242A - Send error message when no account exists for    *
       *              entered selection criteria.                      *

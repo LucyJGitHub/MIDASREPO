@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CSD101             Date 07Dec18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CSD101             Date 07Dec18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD033895           Date 09Jun14               *
       *                 MD027428           Date 09Jun14               *
       *                 MD027243           Date 29May14               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CSD101 - Password Encryption                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  MD033895 - Correct parameters for UT000033.                  *

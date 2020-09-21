@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. AR1034683          Date 07Apr18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. AR1034683          Date 07Apr18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD034451C          Date 02Mar16               *
       *                 MD030959           Date 17Jun15               *
       *                 CRE095             Date 25Apr14               *
@@ -50,6 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  AR1034683 - Available Bal not updated with Cr Movements      *
       *             Allow update of GLACNTQD for accounts with        *
       *             attached facilities. Applied for CLE169.          *

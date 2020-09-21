@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD039559           Date 04Jul16               *
-      *  Prev Amend No. MD055514           Date 06Apr20               *
+      *  Last Amend No. FVT106             Date 22Jul20               *
+      *  Prev Amend No. MD039559           Date 04Jul16               *
+      *                 MD055514           Date 06Apr20               *
       *                 CER050             Date 16Jun19               *
       *                 CSD101             Date 07Dec18               *
       *                 MD051247           Date 16Jul18               *
@@ -88,10 +89,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  FVT106 - Automatic Account Closure and Account re-opening    *
+      *           Addition of hooks: FVT106_011 to FTV106_017         *
+      *           Amendment of core hook GLAMADIC01                   *
       *  MD039559 - account opening failed =>Data lost after clicking *
       *             of Next : Currency, Account code, Account Seq,    *
       *             Retail Number                                     *
-      *           - Applied partial fix 232076 which sets WCNUM value * 
+      *           - Applied partial fix 232076 which sets WCNUM value *
       *  MD055514 - Not able to open a new Retail Account. Amend to   *
       *             add check if account in REDEFD is valid.          *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -616,6 +620,7 @@
      C     DDACTN        IFEQ      'D'
      C                   EXSR      VALACD
      C                   END
+     C/COPY WNCPYSRC,FVT106_011                                                     FVT106
       *
       **  Carry out no further validation if errors occurred.
       *
@@ -647,6 +652,7 @@
      C**********         ENDIF                                                                CSD101
                                                                                               CSD101
      C                   IF        DDACTN = 'I' OR DDACTN = 'A'                               CSD101
+     C/COPY WNCPYSRC,FVT106_012                                                               FVT106
      C                   EVAL      E1PWPSWD = DDPSWD                                          CSD101
      C                   EVAL      E1PWCNUM = KCNUM                                           CSD101
      C                   EVAL      E1PWCCY  = KCCY                                            CSD101
@@ -722,6 +728,7 @@
      C     DDACTN        ANDNE     '3'
      C     DDACTN        ANDNE     '4'
      C     DDACTN        ANDNE     '5'
+     C/COPY WNCPYSRC,FVT106_013                                                               FVT106
      C                   MOVEL     'N'           OKACTN
      C                   ADD       1             Ix
      C                   MOVEL     'DDACTN'      FldNameArr(Ix)
@@ -812,6 +819,7 @@
      C     DDACTN        ANDNE     '4'
      C     DDACTN        ANDNE     '5'
      C     DDACTN        ANDNE     'R'                                                        194431
+     C/COPY WNCPYSRC,FVT106_014                                                               FVT106
      C                   MOVEL     'N'           OKACTN
      C                   ADD       1             Ix
      C                   MOVEL     'DDACTN'      FldNameArr(Ix)
@@ -1736,6 +1744,7 @@
      C                   ENDIF                                                                194431
       *                                                                                       194431
      C     EVALAR        ENDSR                                                                194431
+     C/COPY WNCPYSRC,FVT106_015                                                               FVT106
       *****************************************************************                       194431
       /EJECT
       *****************************************************************
@@ -1765,6 +1774,7 @@
      C                   MOVEL     'RE7103B'     MsgIdArr(Ix)
      C                   WHEN      DDACTN='D'
      C                   MOVEL     'RE7104B'     MsgIdArr(Ix)
+     C/COPY WNCPYSRC,FVT106_016                                                               FVT106
      C                   ENDSL
      C                   ENDIF
       *
@@ -1806,6 +1816,7 @@
      C                   MOVEL     'RE7103B'     MsgIdArr(Ix)
      C                   WHEN      DDACTN='D'
      C                   MOVEL     'RE7104B'     MsgIdArr(Ix)
+     C/COPY WNCPYSRC,FVT106_017                                                               FVT106
      C                   ENDSL
      C                   END
      C                   END

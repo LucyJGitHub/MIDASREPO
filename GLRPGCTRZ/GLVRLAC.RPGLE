@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CRE114             Date 19Feb18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. FVT106             Date 20Jul20               *
+      *  Prev Amend No. CRE114             Date 19Feb18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD042377           Date 01Dec16               *
       *                 MD034451C          Date 02Mar16               *
       *                 MD041157           Date 09Aug16               *
@@ -60,6 +61,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  FVT106 - Automatic Account Closure and Account re-opening    *
+      *           Addition of hooks FVT106_019 to FVT106_020          *
       *  CRE114   - Modulus 10 for Retail Account Number (FOB006)     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD042377 - Error RE71053 should only be validated against a  *
@@ -706,6 +709,7 @@
       ** IF ACCOUNT FOUND IT CANNOT BE FLAGGED FOR CLOSURE
      C     RECI          IfEq      '*'
      C     DACC          ORNE      0
+     C/COPY WNCPYSRC,FVT106_020                                                     FVT106
      C                   Move      'N'           DDCUSNOk
      C                   Move      'N'           DDCcyOk
      C                   Move      'N'           DDACodOk
@@ -1133,7 +1137,7 @@
      C                   Move      'N'           DDAcNoOk                                     CRE114
      C                   Add       1             Idx                                          CRE114
      C                   Movel     'DDACNO'      FldNamXAr(Idx)                               CRE114
-      ** Invalid entry – Retail account number does not pass Modulus 10 check                 CRE114
+      ** Invalid entry  Retail account number does not pass Modulus 10 check                 CRE114
      C                   Movel     'REL0022'     MsgIDXAr(Idx)                                CRE114
      C                   EndSl                                                                CRE114
       *                                                                                       CRE114
@@ -1332,6 +1336,7 @@
      C                   Parm      '*FIRST'      @OPTN                                        CRE114
      C     SDBANK        Parm                    DSFDY                                        CRE114
      C                   EndIf                                                                CRE114
+     C/COPY WNCPYSRC,FVT106_019                                                     FVT106
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

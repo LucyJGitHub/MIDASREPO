@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR891357A          Date 12Mar20               *
-      *  Prev Amend No. AR891357           Date 12Mar20               *
+      *  Last Amend No. FVT106             Date 16Sep20               *
+      *  Prev Amend No. AR891357A          Date 12Mar20               *
+      *                 AR891357           Date 12Mar20               *
       *                 CER050             Date 16Jun19               *
       *                 MD053470           Date 13Aug19               *
       *                 MD053978           Date 25Jul19               *
@@ -137,6 +138,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  FVT106 - Automatic Account Closure and Account re-opening    *
+      *           Addition of hooks: FVT106_021 and FVT106_022        *
       *  AR891357A - RUNDT field is not existing on the module.       *
       *              Change LACD (Last Activity date) should be set to*
       *              rundate (BJRDNB field not RUNDT).                *
@@ -2986,6 +2989,7 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   EVAL      AC_DCSP = *ZEROS                                           CRE073
      C                   EVAL      AC_CCSP = *ZEROS                                           CRE073
      C                   ENDIF                                                                CRE073
+     C/COPY WNCPYSRC,FVT106_022                                                               FVT106
       *                                                                                       CRE073
       ** UPDATE Account
      C                   UPDATE    ACCNTABF
@@ -7030,6 +7034,7 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   Eval      CER050 = 'N'                                               CER050
      C                   Endif                                                                CER050
                                                                                               CER050
+     C/COPY WNCPYSRC,FVT106_021                                                               FVT106
      C                   ENDSR
      C****************************************************************
       /EJECT

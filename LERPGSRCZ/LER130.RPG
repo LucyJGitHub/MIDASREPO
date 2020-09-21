@@ -20,9 +20,10 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD053375           Date 11Oct19               *
-      *  Prev Amend No. MD055481           Date 04Sep20               *
-      *                 MD055733           Date 03Jul20               *      
+      *  Last Amend No. MD028351           Date 14Aug14               *
+      *  Prev Amend No. MD053375           Date 11Oct19               *
+      *                 MD055481           Date 04Sep20               *
+      *                 MD055733           Date 03Jul20               *
       *                 MD056223           Date 15Jul20               *
       *                 MD026969           Date 23Oct19               *
       *                 MD052216           Date 04Apr19               *
@@ -213,6 +214,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD028351 - Condition 248821 to CLE122 if switched on.        *
       *  MD053375 - Incorrect fee settlement amount in LER170 report. *
       *             Write copy of fee record in LEFECPPD each time the*
       *             non-calculated fee is updated.                    *
@@ -221,7 +223,7 @@
       *             system value 'LoanCustOriginPurch' is equal to 'O'*
       *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
       *             components.                                       *
-      *           - Redeliver of MD050139.                            *      
+      *           - Redeliver of MD050139.                            *
       *  MD056223 - CLE031: Incorrect Posting narratives in           *
       *             Fee postings with conversion                      *
       *           - The amount and currency of the posting narratives *
@@ -4116,7 +4118,12 @@
      C**********           ENDIF                                                     CLE025 BUG13031
      C           FEPEND    IFLE WAPDAT                                    248821
      C********** FEPEND    ANDLEBJRDNB                                            MD023863 MD029938A
+     C           FEPEND    ANDGT0                                                           MD028351
+     C           CLE122    IFEQ 'Y'                                                         MD028351
      C                     Z-ADDBJRDNB    LKEDAT                          248821
+     C                     ELSE                                                             MD028351
+     C                     Z-ADDFEPEND    LKEDAT                                            MD028351
+     C                     ENDIF                                                            MD028351
      C                     ENDIF                                          248821
       *                                                                   CLE005
       ** Write record to account key file then report details
@@ -6767,6 +6774,28 @@
      C                     MOVEL'Y'       CLE159                                              CLE159
      C                     ENDIF                                                              CLE159
       *                                                                                       CLE159
+      ** Determine if SAR CLE122 is installed                                               MD028351
+      *                                                                                     MD028351
+     C                     CALL 'AOSARDR0'                                                  MD028351
+     C                     PARM *BLANKS   WRTCD                                             MD028351
+     C                     PARM '*VERIFY 'WOPTN                                             MD028351
+     C                     PARM 'CLE122'  WSARD                                             MD028351
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD028351
+      *                                                                                     MD028351
+     C           WRTCD     IFNE *BLANKS                                                     MD028351
+     C           WRTCD     ANDNE'*NRF   '                                                   MD028351
+     C                     MOVEL'SCSARDPD'DBFILE                                            MD028351
+     C                     Z-ADD55        DBASE                                             MD028351
+     C                     MOVEL'CLE122'  DBKEY                                             MD028351
+     C                     EXSR *PSSR                                                       MD028351
+     C                     ENDIF                                                            MD028351
+      *                                                                                     MD028351
+     C           WRTCD     IFEQ *BLANKS                                                     MD028351
+     C                     MOVE 'Y'       CLE122  1                                         MD028351
+     C                     ELSE                                                             MD028351
+     C                     MOVE 'N'       CLE122                                            MD028351
+     C                     ENDIF                                                            MD028351
+      *                                                                                     MD028351
       ***Key*list*for*LEACCNL6*****************************************              AR574425 CLE164
       *****************************************************************              AR574425 CLE164
      C********** ZLEACC    KLIST                                                     AR574425 CLE164

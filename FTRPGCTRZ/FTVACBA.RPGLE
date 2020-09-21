@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD035364           Date 07Aug15               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD035364           Date 07Aug15               *
       *                 CFT049             Date 20Feb15               *
       *                 MD024825           Date 19Aug14               *
       *                 CFT120             Date 28Sep12               *
@@ -52,6 +53,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD035364 - Unable to send message 5047550 for OPAY Template  *
       *  CFT049 - Account with Bank validation if EU/EEA Payment      *

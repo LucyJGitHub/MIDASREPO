@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD021337           Date 25May16               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD021337           Date 25May16               *
       *                 CSW215             Date 06Apr15               *
       *                 AR924684           Date 10Nov14               *
       *                 AR924563           Date 05Nov14               *
@@ -65,6 +66,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD021337 - Payment cannot be authorised due to blank BNCT.   *
       *             Set BNCT field if OKBnc fields is not 'N'.        *

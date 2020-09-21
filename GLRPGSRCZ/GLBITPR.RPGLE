@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL135A            Date 10Jul13               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL135A            Date 10Jul13               *
       *                 MD000091           Date 07May13               *
       *                 AR1005162          Date 16Jul12               *
       *                 CSC054             Date 23Feb12               *
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL135A - Accounting Rules Process                           *
       *            Added hooks: CGL135_051, CGL135_052, CGL135_053    *

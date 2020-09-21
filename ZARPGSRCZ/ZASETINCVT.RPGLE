@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD040199           Date 05Aug16               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD040199           Date 05Aug16               *
       *                 MD033870           Date 17Apr15               *
       *                 AR1023850          Date 25Nov14               *
       *                 CDL094             Date 03Jun14               *
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD040199 - ISDA Agreement Version reflected incorrectly in   *
       *             MT reports and deals enquiry. Reverse MD-33870.   *
@@ -67,37 +69,37 @@
       *  CAP002 - Conversion of Midas inputs to modular API structure *
       *                                                               *
       *****************************************************************
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       * DATA STRUCTURE FOR CUSTOMER DETAILS
- 
+
      D SDCNST        E DS                  EXTNAME(SDCNSTPD)
       ** EXTERNAL DS FOR COUNTERPARTY NOSTRO DETAILS
                                                                                               CLE033
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CLE033
       ** EXTERNAL DS FOR SAR DETAILS                                                          CLE033
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
      D ##RECF        E DS                  EXTNAME(SDESFRPD)
       * FILE RECEIVE INSTRUCTIONS
- 
+
      D ##PAYF        E DS                  EXTNAME(SDESFPPD)
       * FILE PAYMENT INSTRUCTIONS
- 
+
      D ##FRIF        E DS                  EXTNAME(SDESFFPD)
       * FILE FRA/IRS INSTRUCTIONS
- 
+
      D ##RECS        E DS                  EXTNAME(SDESSRPD)
       * SCREEN RECEIVE INSTRUCTIONS
- 
+
      D ##PAYS        E DS                  EXTNAME(SDESSPPD)
       * SCREEN PAYMENT INSTRUCTIONS
- 
+
      D ##FRIS        E DS                  EXTNAME(SDESSFPD)
       * SCREEN FRA/IRS INSTRUCTIONS
                                                                                              CSF011A
@@ -107,7 +109,7 @@
                                                                                              CSF011A
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)                                 CSF011A
       ** External DS for Nostro Details                                                      CSF011A
- 
+
      D RUNDAT          DS
      D  @MBIN                 13     13
       *

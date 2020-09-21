@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CMG008             Date 20Feb20               *
-      *  Prev Amend No. AR401845           Date 12Mar20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *                 AR401845           Date 12Mar20               *
       *                 MD045952           Date 06Jul17               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL178             Date 04Aug16               *
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  AR401845 - MT940 generation does not take into account       *
       *             regional holidays (CHILD: AR401846)               *

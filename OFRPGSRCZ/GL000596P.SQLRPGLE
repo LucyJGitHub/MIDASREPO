@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD034975           Date 23Oct15               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD034975           Date 23Oct15               *
       *                 CGL176             Date 05Aug15               *
       *                 MD031573           Date 11Dec14               *
       *                 CGL159             Date 27Aug14               *
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       * MD034975 - Bank position report not reflecting future or today*
       *            mvmts for transit accounts.                        *

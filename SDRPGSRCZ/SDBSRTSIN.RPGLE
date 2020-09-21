@@ -14,13 +14,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *                 CSC022             Date 24Feb04               *
+      *  Prev Amend No. CSC022             Date 24Feb04               *
       *                 213558             Date 22Jan03               *
       *                 CSD012             Date 15Oct02               *
       * Midas Release 4 --------------- Base -------------------------*
@@ -29,7 +28,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CSC022 - Commitment Control Changes for MidasPlus            *
       *  213558 - MDF Rate Maintenance Time/Date Stamp amendable      *
@@ -37,7 +35,7 @@
       *  CSD006 - Market Data Feed                                    *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -56,81 +54,81 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D CrBsFilFmt    E DS                  EXTNAME(SDBSRTPD)
       ** Current Deal in File Format
- 
+
      D CrBsScnFmt    E DS                  EXTNAME(SDBSRSPD)
       * (Current) Deal in Screen Format
      D                                     PREFIX(@)
- 
+
      D NwBsFilFmt    E DS                  EXTNAME(SDVBSRTPD)
      D                                     PREFIX(V)
       ** New Deal in File Format
- 
+
      D NwBsScnFmt    E DS                  EXTNAME(SDBSRSPD)
       ** New Deal in Screen Format
- 
+
      D ExtData       E DS                  EXTNAME(SDBSEXPD)
       ** FX Extra Data - File (D/B) format
- 
+
      D SDEBSRT       E DS                  EXTNAME(SDEBSRTPD)
       ** Error indicators
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** Midas Modules details accessed via access program
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** Externally described DS for switchable feature details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for Access Programs, short data structure
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Second DS for Access Programs, long data structure
- 
+
      D @CCI@M          DS
       ** Current Control Indicators for Main Detail Screen
      D  @EKYFD                 1      1
@@ -140,9 +138,9 @@
      D  @EINKJ                 5      5
      D  @EINKN                 6      6
      D  @EINKP                 7      7
- 
+
      D @PCI@M          DS             7
- 
+
       * Re-display Main details screen, in case of amends or inserts
      D REDSPLY         S              1A   INZ('Y')
       ** Previous Control Indicators for main detail screen
@@ -162,7 +160,7 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       * Switchable features
      D CSD006          S              1A                                                      CSD006
      D CSW005          S              1A
@@ -172,11 +170,11 @@
      D SVALKK          C                   CONST('AuthReqBaseRateMaint')                      CSD012
       ** Override SDAULGL0                                                                    CSD012
      D CMD             S              1    DIM(50) CTDATA PERRCD(50)                          CSD012
- 
+
       ** Response Mode, passed as a constant parameter to the VAL module
       ** This is always 'S' for Synchronous
      D RespMode        S              1A   INZ('S')
- 
+
       ** Commitment Control Variables                                                         CSC022
      D CSC022          S              1A   INZ('N')                                           CSC022
      D wSkip           S              1A   INZ('N')                                           CSC022
@@ -185,14 +183,14 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,SDBSRTS008
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -205,7 +203,7 @@
       ** +----------------------------------------------------------------+
       *
       /COPY WNCPYSRC,SDBSRTS001
- 
+
       * READ NEXT BROWSE SUBFILE RECORD
       *
      C     @SCRN         IFEQ      'R'
@@ -213,7 +211,7 @@
      C                   ENDIF
       *
       /COPY WNCPYSRC,SDBSRTS002
- 
+
       * DO WHILE SCREEN: MAIN DETAILS
       *
      C     @SCRN         DOWEQ     'M'
@@ -221,7 +219,7 @@
      C                   ENDDO
       *
       /COPY WNCPYSRC,SDBSRTS003
- 
+
       * SCREEN: CONFIRMATION OF INPUT
       *
      C     @SCRN         IFEQ      'C'
@@ -229,7 +227,7 @@
      C                   ENDIF
       *
       /COPY WNCPYSRC,SDBSRTS006
- 
+
       * DO FILE UPDATES
       *
      C     @SCRN         IFEQ      'U'
@@ -237,17 +235,17 @@
      C                   ENDIF
       *
       /COPY WNCPYSRC,SDBSRTS007
- 
+
       * TERMINATE PROGRAM
       *
      C     @SCRN         IFEQ      'T'
      C                   MOVE      '1'           *INLR
      C                   ENDIF
       *****************************************************************
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,SDBSRTS009
- 
+
       /EJECT
       *****************************************************************
       * SCRN@M - PROCESS SCREEN: MAIN DETAILS
@@ -261,7 +259,7 @@
      C                   MOVEL(P)  DDCYCD        @PCYCD            3
      C                   MOVEL(P)  DDBSRC        @PBSRC            2
      C                   MOVEL(P)  @CCI@M        @PCI@M
- 
+
       *
       * WRITE/READ DISPLAY SCREEN
       *
@@ -311,16 +309,6 @@
      C                   PARM                    ISDAFlag          1
      C                   PARM                    @HDTFD            1
      C                   PARM                    CLRSCRN
-      * Backward-Looking Rate Fields                                                          CSD103
-     C                   PARM                    DDBLRT            1                          CSD103
-     C                   PARM                    DDLBDY            2                          CSD103
-     C                   PARM                    DDLODY            2                          CSD103
-     C                   PARM                    DDPDLY            2                          CSD103
-     C                   PARM                    DDBADJ           14                          CSD103
-     C                   PARM                    DDAVOP            1                          CSD103
-     C                   PARM                    DDBRAC            2                          CSD103
-     C                   PARM                    DDWGHT            1                          CSD103
-     C                   PARM                    DDLBAC            2                          CSD103
       *
       * RESET ERRORS
       *
@@ -331,7 +319,7 @@
      C                   MOVEL     *BLANK        WFldNamArr
      C                   MOVEL     *BLANK        WMsgIdArr
      C                   MOVEL     *BLANK        WMsgDtaArr
- 
+
       *
       * If Enter is taken from main screen and key fields are blank, show the browse
       *
@@ -460,14 +448,14 @@
      C                   MOVE      *ALL'Y'       SDEBSRT
      C                   CLEAR                   NwBsFilFmt
       * IF AMEND
- 
+
       * Update Deal in File Format
       *
       *
       * Update Deal in File Format
       *
      C                   MOVEL     CrBsFilFmt    NwBsFilFmt
- 
+
      C                   IF        REDSPLY = 'Y'
      C                   EVAL      REDSPLY = 'N'
      C                   GOTO      EVAL@M
@@ -500,19 +488,9 @@
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIdArr
      C                   PARM                    WMsgDtaArr
-      * Backward-Looking Rate Fields                                                          CSD103
-     C                   PARM                    DDBLRT            1                          CSD103
-     C                   PARM                    DDLBDY            2                          CSD103
-     C                   PARM                    DDLODY            2                          CSD103
-     C                   PARM                    DDPDLY            2                          CSD103
-     C                   PARM                    DDBADJ           14                          CSD103
-     C                   PARM                    DDAVOP            1                          CSD103
-     C                   PARM                    DDBRAC            2                          CSD103
-     C                   PARM                    DDWGHT            1                          CSD103
-     C                   PARM                    DDLBAC            2                          CSD103
 
       * If errors returned
- 
+
      C                   IF        IDX = 0 AND WIDX = 0
      C                   MOVEL     'U'           @SCRN
      C                   ENDIF
@@ -661,7 +639,7 @@
      C                   PARM      *BLANK        @BSRC             2
      C                   PARM      '0'           @INKC             1
      C                   PARM      '0'           @INKI             1
- 
+
       *
       * IF DEAL READ FROM SUBFILE
       *
@@ -673,7 +651,7 @@
      C                   MOVEL     @BSRC         DDBSRC
      C                   MOVEL     @CYCD         DDCYCD
      C                   MOVEL     'N'           REDSPLY
- 
+
      C                   EXSR      SRRTV
       *                                                                                       CSD012
       * Stay on browse screen if there is an error on customer nu r nu                        CSD012
@@ -755,7 +733,7 @@
       *
       * OK - Customer Shortname
      C                   PARM      *BLANK        DDBSRCOK
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
@@ -801,21 +779,11 @@
       *
       * Deal in screen format
      C                   PARM                    NwBsScnFmt
-      * Backward-Looking Rate Fields                                                          CSD103
-     C                   PARM                    DDBLRT            1                          CSD103
-     C                   PARM                    DDLBDY            2                          CSD103
-     C                   PARM                    DDLODY            2                          CSD103
-     C                   PARM                    DDPDLY            2                          CSD103
-     C                   PARM                    DDBADJ           14                          CSD103
-     C                   PARM                    DDAVOP            1                          CSD103
-     C                   PARM                    DDBRAC            2                          CSD103
-     C                   PARM                    DDWGHT            1                          CSD103
-     C                   PARM                    DDLBAC            2                          CSD103
       *
       * Update 'Current' Deal with Deal in Screen Format
       *
      C                   MOVEL     NwBsScnFmt    CrBsScnFmt
- 
+
      C                   ENDSR
       *****************************************************************
       * SFDS@M - SET FIELD STATUS ON MAIN DETAILS SCREEN
@@ -1005,16 +973,6 @@
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIdArr
      C                   PARM                    WMsgDtaArr
-      * Backward-Looking Rate Fields                                                          CSD103
-     C                   PARM                    DDBLRT            1                          CSD103
-     C                   PARM                    DDLBDY            2                          CSD103
-     C                   PARM                    DDLODY            2                          CSD103
-     C                   PARM                    DDPDLY            2                          CSD103
-     C                   PARM                    DDBADJ           14                          CSD103
-     C                   PARM                    DDAVOP            1                          CSD103
-     C                   PARM                    DDBRAC            2                          CSD103
-     C                   PARM                    DDWGHT            1                          CSD103
-     C                   PARM                    DDLBAC            2                          CSD103
       *
       * If transaction is valid output message 'Press enter to accept'
       *
@@ -1071,16 +1029,6 @@
      C                   PARM                    ISDAFlag          1
      C                   PARM                    @HDTFD
      C                   PARM                    CLRSCRN
-      * Backward-Looking Rate Fields                                                          CSD103
-     C                   PARM                    DDBLRT            1                          CSD103
-     C                   PARM                    DDLBDY            2                          CSD103
-     C                   PARM                    DDLODY            2                          CSD103
-     C                   PARM                    DDPDLY            2                          CSD103
-     C                   PARM                    DDBADJ           14                          CSD103
-     C                   PARM                    DDAVOP            1                          CSD103
-     C                   PARM                    DDBRAC            2                          CSD103
-     C                   PARM                    DDWGHT            1                          CSD103
-     C                   PARM                    DDLBAC            2                          CSD103
       *
       * RESET ERRORS
       *
@@ -1164,9 +1112,9 @@
       * UPDATS - UPDATES
       *****************************************************************
      C     UPDATS        BEGSR
- 
+
      C                   EVAL      VBVTYLC = DDACTN
- 
+
      C                   CALLB     'SDBSRTUPD'
      C                   PARM      *BLANKS       RETURNCODE
      C                   PARM                    NwBsFilFmt
@@ -1323,7 +1271,7 @@
      C     @RTCD         IFEQ      *BLANK
      C                   MOVEL     'Y'           CSW005
      C                   ENDIF
- 
+
      C                   CALL      'AOSARDR0'                                                 CSD006
      C                   PARM      *BLANKS       @RTCD                                        CSD006
      C                   PARM      '*VERIFY'     @OPTN                                        CSD006
@@ -1334,7 +1282,7 @@
      C                   ELSE                                                                 CSD006
      C                   MOVE      'N'           CSD006                                       CSD006
      C                   ENDIF                                                                CSD006
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
@@ -1345,7 +1293,7 @@
      C                   ELSE
      C                   MOVE      'N'           CSW011
      C                   ENDIF
- 
+
       ** Check if CSD012 is installed                                                         CSD012
      C                   CALL      'AOSARDR0'                                                 CSD012
      C                   PARM      *BLANKS       @RTCD                                        CSD012
@@ -1473,7 +1421,7 @@
      C                   ELSE
      C                   MOVE      'N'           CSW200
      C                   ENDIF
- 
+
      C                   EVAL      ISDAFlag = '1'
      C                   IF        CSW005  =  'Y'  OR
      C                             CSW011  =  'Y'  AND
@@ -1490,10 +1438,10 @@
      C                   EXSR      IFDS@M
      C                   EXSR      IFKS@M
       *
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,SDBSRTS010
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

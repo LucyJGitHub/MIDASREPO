@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD039094           Date 15May18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD039094           Date 15May18               *
+      *                 MD046248           Date 27Oct17               *
       *               . CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE075             Date 06Dec10               *
@@ -47,6 +48,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD039094 - Adjust CFT157 to work with Rabo MHUB              *
       *           - Recompile due to changes in INPAYDD               *
       *           - Applied fix for MD050928                          *

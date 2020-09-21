@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD035766           Date 25May16               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD035766           Date 25May16               *
       *                 MD029739 *RENAMED* Date 15Aug14               *
       *                 MD029683           Date 19Aug14               *
       *                 MD023629           Date 22Nov13               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD035766 - Monitor Nostro Reconciliation Process screen is   *
       *             showing wrong Account ID for some Nostro accounts *

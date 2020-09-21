@@ -12,9 +12,8 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD051347           Date 12Mar20               *
-      *                 AR819229           Date 10Dec18               *
+      *  Last Amend No. MD051347           Date 12Mar20               *
+      *  Prev Amend No. AR819229           Date 10Dec18               *       
       *                 AR932652           Date 06Aug13               *
       *                 AR927395           Date 05Aug13               *
       *                 252101             Date 06Nov19               *
@@ -424,14 +423,13 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD051347 - Interest on a loan taken at the wrong date. Also  *
       *             update value of IBDT to zero if NIPD is less than *
       *             or equal to rundate. Additional fix to AR819229.  *
       *  AR819229 - Interest on a loan taken at the wrong date.       *
       *             Update value of IBDT with NIPD on SR/ROLLOV and   *
       *             SR/MROLL. (Child: AR823033)                       *
-      *           - Applied for MD051347                              *
+      *           - Applied for MD051347                              *       
       *  AR932652 - Error on withholding tax accrual when past due    *
       *             interest is manually repaid. Reverse fix BUG12852.*
       *             (Child: AR932655)                                 *
@@ -3886,7 +3884,7 @@ L118 I                             P   72   77 7RTSPL
      ILEHISTL0  NS                                                              116330
      I                                 18   22 0VDAT#H                          116330
      I**********                       46   47 0BRTT#H                                 116330 CSD103
-     I                                 46   47  BRTT#H                                        CSD103
+     I                                 46   47  BRTT#H                                        CSD103 
      I                             P   48   53 7BRTE#H                          116330
       *                                                                   116330
      ILEHISTL2  NS                                                              116330
@@ -9955,7 +9953,7 @@ L118 I                             P   72   77 7RTSPL
 1484 C     INTAM         TAG                                                    ** INTAM TAG **
 1485 C**
 1486 C**********         Z-ADD     BRTT          BRTTL                                        CSD103
-     C                   MOVE      BRTT          BRTTL                                        CSD103
+1486 C                   MOVE      BRTT          BRTTL                                        CSD103
 1487 C                   Z-ADD     BRTE          BRTEL
 1488 C                   Z-ADD     RTSP          RTSPL
 1489 C                   MOVE      SPIN          SPINL

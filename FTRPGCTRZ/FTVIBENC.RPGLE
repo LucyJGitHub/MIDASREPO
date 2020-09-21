@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD055570           Date 15May20               *
-      *  Prev Amend No. MD034521A          Date 14Sep15               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD055570           Date 15May20               *
+      *                 MD034521A          Date 14Sep15               *
       *                 MD039547           Date 20Sep16               *
       *                 MD047369A          Date 24Jan18               *
       *                 MD047369           Date 30Aug17               *
@@ -78,6 +79,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD055570 - Payment with account blocked (CR/DR) can be       *
       *             inserted.                                         *
       *  MD034521A - Error handling of Blocked account is not the     *

@@ -11,14 +11,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. CFT163             Date 04May18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CFT163             Date 04May18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD034756           Date 11Aug15               *
       *                 MD032097           Date 28Jan15               *
       *                 CAP212  *CREATE    Date 15Sep14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CFT163 - FT Nostro Transfer Authorisation (RPG)              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034756 - Create Projected movements during Amend/Reject    *

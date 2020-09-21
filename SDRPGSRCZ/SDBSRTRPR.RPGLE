@@ -14,11 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *                 256564             Date 17Sep08               *
+      *  Prev Amend No. 256564             Date 17Sep08               *
       *                 247439             Date 07Apr07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
@@ -34,7 +33,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  256564 - Recompile due to PF changes done by fix 256330      *
       *  247439 - Kondor transactions go missing...                   *
@@ -51,9 +49,9 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FZATRNERRL0IF   E           K DISK    INFSR(*PSSR)
- 
+
      FSDIBSRTL0 IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SDIBSRTD0:SDIBSRTX0)
      FSDIBSRTL1 UF   E           K DISK    INFSR(*PSSR)
@@ -62,11 +60,11 @@
       ** API Invalid Log File from Support Database                                           CSC011
      FAPILOGL0  UF   E           K DISK    INFSR(*PSSR) USROPN                                CSC011
      F                                     COMMIT                                             CSC011
- 
- 
+
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,SDBSRTR001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -78,95 +76,95 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D @EI             S              1    DIM(60)
- 
+
    41 ** Array of Fields in error, temporary store
    42D TmpFldNmAr      S             10A   DIM(ArrayMax)
    42 ** Array of error message IDs, temporary store
    42D TmpMsgIdAr      S                   DIM(ArrayMax)
    42D                                     LIKE(#MsgID)
- 
+
       * Current Base Rate in File Format
      D CrBsFilFmt    E DS                  EXTNAME(SDBSRTPD)
      D                                     PREFIX(C_)
- 
+
       * Current Base Rate in Screen Format - Primary Details
      D CrBsScnFmt    E DS                  EXTNAME(SDBSRSPD)
      D                                     PREFIX(@)
- 
+
       * New Base Rate in File Format
      D NwBsFilFmt    E DS                  EXTNAME(SDVBSRTPD)
- 
+
       * New Base Rate in Screen Format
      D NwBsScnFmt    E DS                  EXTNAME(SDBSRSPD)
- 
- 
+
+
       * Error indicators
      D OKFlagsDS     E DS                  EXTNAME(SDEBSRTPD)
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
      D SDAPI         E DS                  EXTNAME(SDAPIPD)
       ** EXTERNAL DS FOR API ICD
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
      D ExtData       E DS                  EXTNAME(SDBSEXPD)
       * SD Base Rates Extra Data - File (D/B) format
- 
+
       ** 24X7 status data area                                                                CSC011
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)                     CSC011
                                                                                               CSC011
@@ -179,38 +177,38 @@
       **  Data Structure for AOSVALR0 string                                                  CSD012
      DSVAL1            DS           200                                                       CSD012
      DSVAL11                   1      1                                                       CSD012
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       * Switchable features
      D CSD006          S              1A                                                      CSD006
      D CSW005          S              1A
      D CSW011          S              1A
      D CSW200          S              1A
- 
+
       * Clear Screen (Y / N)
      D CLRSCRN         S              1A
- 
+
       **   Timestamp selected
      D @TMESTPSEL      S             26Z
- 
+
       ** Response Mode, passed as a constant parameter to the VAL module
       ** This is always 'S' for Synchronous
      D RespMode        S              1A   INZ('S')
- 
+
       ** -------------------------------------------------------------------
       ** Fields for getting the starting field number from file (parameters
       ** to ZACGTFLDNO, plus the offset to the requested field).
      D Format          S             10A   INZ('SDBSRSPD')
- 
+
      D Field           S             10A   INZ('DDACTN')
- 
+
      D FieldNo         S              5P 0
      D FldOffset       S              5P 0
- 
+
       ** End of fields for getting starting field number
       ** -------------------------------------------------------------------
                                                                                               CSC011
@@ -229,19 +227,19 @@
      D SVALKK          C                   CONST('AuthReqBaseRateMaint')                      CSD012
       ** Override SDAULGL0                                                                    CSD012
      D CMD             S              1    DIM(50) CTDATA PERRCD(50)                          CSD012
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,SDBSRTR002
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -279,7 +277,7 @@
      C                   ENDDO
       *
       /COPY WNCPYSRC,SDBSRTR006
- 
+
       * SCREEN: CONFIRMATION OF INPUT
       *
      C     @SCRN         IFEQ      'C'
@@ -301,10 +299,10 @@
      C     @SCRN         IFEQ      'T'
      C                   MOVE      *ON           *INLR
      C                   ENDIF
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,SDBSRTR009
- 
+
       /EJECT
       *****************************************************************
       * SCRN@B - BROWSE INVALID BASE RATES
@@ -533,17 +531,17 @@
      C     C_BACYCD      IFNE      *BLANK
      C     C_BABSRC      ANDNE     *BLANK
      C     DDACTN        ANDEQ     'A'
- 
+
       * Data Substitution - Transaction Details
- 
+
      C     GHSUBS        ifne      *blank
- 
+
      C     GHSUBS        SCAN      NwBsScnFmt                             99
      C                   if        *in99
      C                   EXSR      TDtDtaSubs
      C                   endif
- 
- 
+
+
      C                   END
      C                   END
       *
@@ -557,10 +555,10 @@
      C                   END
       *
       * Send the Base Rate error messages to the details screen
- 
+
      C                   EXSR      SNDM@D
      C                   MOVE      'D'           @SCRN
- 
+
       * ELSE IF NO INVALID BASE RATE READ FROM SUBFILE
       *
      C                   ELSE
@@ -577,7 +575,7 @@
       * SNDM@D - SEND A MESSAGE TO DETAILS SCREEN
       *****************************************************************
      C     SNDM@D        BEGSR
- 
+
      C                   Z-ADD     Idx           E                 3 0
       *
       ** If there are fundamental errors in this transaction
@@ -616,13 +614,13 @@
       ** and set OK flag for field to 'N'
       *
      C     *IN99         DOWEQ     '0'
- 
+
      C                   CALLB     'ZACGTFLDNO'
      C                   PARM      *BLANK        ReturnCode
      C                   PARM                    Format
      C                   PARM                    ABFIELDNAM
      C                   PARM      *ZERO         FieldNo
- 
+
      C                   IF        ReturnCode = *blank
      C                   ADD       1             E
      C                   MOVEL     ABFIELDNAM    FldNameArr(E)
@@ -635,7 +633,7 @@
      C                   END
      C                   MOVE      'N'           @EI(F)
      C                   ENDIF
- 
+
      C     ZATRNKD0      READE     ZATRNERRD0                             99
      C                   ENDDO
       *
@@ -669,7 +667,7 @@
      C                   ELSE
      C                   MOVEL     'N'           @EINKJ
      C                   END
- 
+
       * Set function key status on PRIMARY screen
      C                   EXSR      SFKEYS
       *
@@ -721,16 +719,6 @@
      C                   PARM                    ISDAFlag          1
      C                   PARM      'N'           @HDTFD            1
      C                   PARM      'N'           CLRSCRN
-      * Backward-Looking Rate Fields                                                          CSD103
-     C                   PARM                    DDBLRT            1                          CSD103
-     C                   PARM                    DDLBDY            2                          CSD103
-     C                   PARM                    DDLODY            2                          CSD103
-     C                   PARM                    DDPDLY            2                          CSD103
-     C                   PARM                    DDBADJ           14                          CSD103
-     C                   PARM                    DDAVOP            1                          CSD103
-     C                   PARM                    DDBRAC            2                          CSD103
-     C                   PARM                    DDWGHT            1                          CSD103
-     C                   PARM                    DDLBAC            2                          CSD103
       *
       * RESET ERRORS ....
       *
@@ -802,21 +790,21 @@
      C                   CALLB     'SDBSRTVAL'
       *                  ¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
       * INPUTS :
- 
+
       * Response mode
      C                   PARM                    RespMode
- 
+
       * Base Rate Details (Screen Format)
      C                   PARM                    NwBsScnFmt
- 
+
       * Base Rate Extra Data file data
      C                   PARM                    ExtData
- 
+
       * OUTPUTS :
- 
+
       * Base Rate Details OK Flags
      C                   PARM                    OKFlagsDS
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
@@ -833,15 +821,6 @@
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIdArr
      C                   PARM                    WMsgDtaArr
-     C                   PARM                    DDBLRT            1                          CSD103
-     C                   PARM                    DDLBDY            2                          CSD103
-     C                   PARM                    DDLODY            2                          CSD103
-     C                   PARM                    DDPDLY            2                          CSD103
-     C                   PARM                    DDBADJ           14                          CSD103
-     C                   PARM                    DDAVOP            1                          CSD103
-     C                   PARM                    DDBRAC            2                          CSD103
-     C                   PARM                    DDWGHT            1                          CSD103
-     C                   PARM                    DDLBAC            2                          CSD103
       *
       * If errors returned
      C     Idx           IFNE      0
@@ -943,7 +922,7 @@
       * OUTPUTS
       * Customer - screen formats
      C                   PARM                    NwBsScnFmt
- 
+
       *
       * Update 'Current' Base Rate with Base Rate in Screen Format
       *
@@ -985,21 +964,21 @@
      C                   CALLB     'SDBSRTVAL'
       *
       * INPUTS :
- 
+
       * Response mode
      C                   PARM                    RespMode
- 
+
       * Base Rate Details (Screen Format)
      C                   PARM                    NwBsScnFmt
- 
+
       * Base Rate Extra Data file data
      C                   PARM                    ExtData
- 
+
       * OUTPUTS :
- 
+
       * Base Rate Details OK Flags
      C                   PARM                    OKFlagsDS
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
@@ -1016,15 +995,6 @@
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIdArr
      C                   PARM                    WMsgDtaArr
-     C                   PARM                    DDBLRT            1                          CSD103
-     C                   PARM                    DDLBDY            2                          CSD103
-     C                   PARM                    DDLODY            2                          CSD103
-     C                   PARM                    DDPDLY            2                          CSD103
-     C                   PARM                    DDBADJ           14                          CSD103
-     C                   PARM                    DDAVOP            1                          CSD103
-     C                   PARM                    DDBRAC            2                          CSD103
-     C                   PARM                    DDWGHT            1                          CSD103
-     C                   PARM                    DDLBAC            2                          CSD103
       *
       * If transaction is valid output message 'Press enter to accept'
       *
@@ -1082,16 +1052,6 @@
      C                   PARM                    ISDAFlag          1
      C                   PARM      'N'           @HDTFD            1
      C                   PARM      'N'           CLRSCRN
-      * Backward-Looking Rate Fields                                                          CSD103
-     C                   PARM                    DDBLRT            1                          CSD103
-     C                   PARM                    DDLBDY            2                          CSD103
-     C                   PARM                    DDLODY            2                          CSD103
-     C                   PARM                    DDPDLY            2                          CSD103
-     C                   PARM                    DDBADJ           14                          CSD103
-     C                   PARM                    DDAVOP            1                          CSD103
-     C                   PARM                    DDBRAC            2                          CSD103
-     C                   PARM                    DDWGHT            1                          CSD103
-     C                   PARM                    DDLBAC            2                          CSD103
       *
       * RESET ERRORS ....
       *
@@ -1324,13 +1284,13 @@
       * TDtDtaSubs - Transaction Details Data Substitution            *
       *                                                               *
       *****************************************************************
- 
+
      C     TDtDtaSubs    BEGSR
- 
- 
+
+
      C                   RESET                   ReturnCode
      C                   CALLB     'APDTASUBS'
- 
+
       * Return Code
      C                   PARM                    ReturnCode       10
       * Substitution character
@@ -1339,10 +1299,10 @@
      C                   PARM      NwBsScnFmt    IncDATA        2000
       * Current Data
      C                   PARM      CrBsScnFmt    CurDATA        2000
- 
+
      C                   MOVEL     IncDATA       NwBsScnFmt
- 
- 
+
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1455,7 +1415,7 @@
      C                   ELSE                                                                 CSD006
      C                   MOVE      'N'           CSD006                                       CSD006
      C                   ENDIF                                                                CSD006
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
@@ -1466,7 +1426,7 @@
      C                   ELSE
      C                   MOVE      'N'           CSW011
      C                   ENDIF
- 
+
      C                   CALL      'SWIF2000'
      C                   PARM      *BLANKS       @RTCD
       *
@@ -1475,7 +1435,7 @@
      C                   ELSE
      C                   MOVE      'N'           CSW200
      C                   ENDIF
- 
+
      C                   EVAL      ISDAFlag = '1'
      C                   IF        CSW005  =  'Y'  OR
      C                             CSW011  =  'Y'  AND
@@ -1607,12 +1567,12 @@
      C     ZATRNKX0      KLIST
      C                   KFLD                    @TMESTPSEL
      C                   KFLD                    @FOTRANSEL
- 
+
      C     KAPILOGL0     KLIST                                                                CSC011
      C                   KFLD                    KMsgType                                     CSC011
      C                   KFLD                    KFrntOffID                                   CSC011
      C                   KFLD                    KTimeStamp                                   CSC011
- 
+
       ** Get the field number for the action code field; the details
       ** screen fields start from that number.  Subtract one from it to
       ** give the value to subtract from each field's number.
@@ -1621,20 +1581,20 @@
      C                   PARM                    Format
      C                   PARM                    Field
      C                   PARM      *ZERO         FieldNo
- 
+
      C                   IF        ReturnCode = *blank
      C                   EVAL      FldOffset  = FieldNo - 1
      C                   ENDIF
- 
+
       *
       * Start on Browse Screen
       *
      C                   MOVEL     'B'           @SCRN             1
       *
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,SDBSRTR010
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

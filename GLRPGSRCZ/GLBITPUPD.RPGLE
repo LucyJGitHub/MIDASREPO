@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. CGL148             Date 13Jul18               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *                 CGL148             Date 13Jul18               *
       *                 MD025083           Date 13Jul18               *
       *                 MD047741           Date 31Jan18               *
       *                 MD046248           Date 27Oct17               *
@@ -90,6 +91,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  CGL148 - Automatic Opening of GL accounts                    *
       *         - Includes fix MD024246 and MD025083                  *

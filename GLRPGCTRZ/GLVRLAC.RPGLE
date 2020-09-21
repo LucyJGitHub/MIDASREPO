@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CRE114             Date 19Feb18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CRE114             Date 19Feb18               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD042377           Date 01Dec16               *
       *                 MD034451C          Date 02Mar16               *
       *                 MD041157           Date 09Aug16               *
@@ -60,6 +61,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CRE114   - Modulus 10 for Retail Account Number (FOB006)     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD042377 - Error RE71053 should only be validated against a  *

@@ -204,6 +204,9 @@
      D wComitarr       S             10A   DIM(10)                                            CSC022
       ** Commitment Control Array                                                             CSC022
                                                                                               CSC022
+      ** BSRT Backward-Looking Rate Fields                                                    CSD103
+     D BasRBckfld      DS            27                                                       CSD103
+                                                                                              CSD103
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -334,18 +337,16 @@
 
       * Remerge buffer with all relevant data structures
      C*****************  EVAL                    Buffer = BaseRateIn + ExtData               BUG4469
+     C     AUTHRQ        IFEQ      'Y'                                                        CSD103
+     C                   MOVE      'N'           AUTOAUTH          1                          CSD103
+     C                   ELSE                                                                 CSD103
+     C                   MOVE      'Y'           AUTOAUTH          1                          CSD103
+     C                   ENDIF                                                                CSD103
      C                   EVAL                    Buffer = BaseRateIn                         BUG4469
      C                                                    + @TimeStamp                       BUG4469
      C                                                    + ExtData                          BUG4469
-     C                                                    + DDBLRT                            CSD103
-     C                                                    + DDLBDY                            CSD103
-     C                                                    + DDLODY                            CSD103
-     C                                                    + DDPDLY                            CSD103
-     C                                                    + DDBADJ                            CSD103
-     C                                                    + DDAVOP                            CSD103
-     C                                                    + DDBRAC                            CSD103
-     C                                                    + DDWGHT                            CSD103
-     C                                                    + DDLBAC                            CSD103
+     C                                                    + AUTOAUTH                          CSD103
+     C                                                    + BasRBckfld                        CSD103
 
      C                   RETURN
 
@@ -379,15 +380,7 @@
      C                   PARM                    APIRetc           1
      C                   PARM                    @TimeStamp       26                         BUG4469
      C                   PARM                    AAuth             1                        BUG22152
-     C                   PARM                    DDBLRT            1                          CSD103
-     C                   PARM                    DDLBDY            2                          CSD103
-     C                   PARM                    DDLODY            2                          CSD103
-     C                   PARM                    DDPDLY            2                          CSD103
-     C                   PARM                    DDBADJ           14                          CSD103
-     C                   PARM                    DDAVOP            1                          CSD103
-     C                   PARM                    DDBRAC            2                          CSD103
-     C                   PARM                    DDWGHT            1                          CSD103
-     C                   PARM                    DDLBAC            2                          CSD103
+     C                   PARM                    BasRBckfld                                   CSD103
 
       * Set up the names of the message files from which the message handler
       * will get the messages
@@ -587,7 +580,8 @@
       ** Check for Alpha Num Base Rate Code system value                                      CSD103
      C                   CALLB     'AOSVALR0'                                                 CSD103
      C                   PARM      *BLANKS       @RTCD                                        CSD103
-     C                   PARM      AlphaBSRC     SVAL1           200                          CSD103
+     C                   PARM      AlphaBSRC     SVALK1           20                          CSD103
+     C                   PARM      *BLANKS       SVAL1           200                          CSD103
      C                   PARM      *BLANKS       SVALK2           20                          CSD103
      C                   PARM      *BLANKS       SVAL2           200                          CSD103
      C                   PARM      *BLANKS       SVALK3           20                          CSD103
@@ -606,14 +600,12 @@
      C                   PARM      *BLANKS       SVAL9           200                          CSD103
      C                   PARM      *BLANKS       SVALK0           20                          CSD103
      C                   PARM      *BLANKS       SVAL10          200                          CSD103
-                                                                                              CSD103
-     C                   IF        @RTCD <> *BLANKS                                           CSD103
-     C                   EVAL      DBFILE = 'SDSVALPD'                                        CSD103
-     C                   EVAL      DBASE = 906                                                CSD103
-     C                   EVAL      DBKEY = '*KEY    '                                         CSD103
-     C                   EXSR      *PSSR                                                      CSD103
-     C                   ENDIF                                                                CSD103
+      * If the system value is not found then default value to 'N'                            CSD103
+     C     @RTCD         IFNE      *BLANKS                                                    CSD103
+     C                   MOVE      'N'           AlphaCode         1                          CSD103
+     C                   ELSE                                                                 CSD103
      C                   MOVEL     SVAL1         AlphaCode         1                          CSD103
+     C                   ENDIF                                                                CSD103
       * Key list
      C     SDBSRT        KLIST
      C                   KFLD                    DDCYCD
@@ -805,17 +797,6 @@
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
-                                                                                              CSD103
-      * Backward-Looking Rate Fields                                                          CSD103
-     C                   PARM                    DDBLRT                                       CSD103
-     C                   PARM                    DDLBDY                                       CSD103
-     C                   PARM                    DDLODY                                       CSD103
-     C                   PARM                    DDPDLY                                       CSD103
-     C                   PARM                    DDBADJ                                       CSD103
-     C                   PARM                    DDAVOP                                       CSD103
-     C                   PARM                    DDBRAC                                       CSD103
-     C                   PARM                    DDWGHT                                       CSD103
-     C                   PARM                    DDLBAC                                       CSD103
 
      C                   ENDSR
       *****************************************************************

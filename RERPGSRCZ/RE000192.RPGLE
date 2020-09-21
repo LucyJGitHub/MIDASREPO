@@ -17,8 +17,9 @@
       *  Note: Any change on this program should also be applied on   *
       *        RE000193.                                              *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD025559           Date 18Mar14               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD025559           Date 18Mar14               *
       *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 BUG26106           Date 18Sep09               *
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD025559 - A Serious Midas Error encountered when completing *
       *             a Time Deposit Deal. Increase PMQString length to *

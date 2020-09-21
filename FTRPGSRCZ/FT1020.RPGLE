@@ -14,13 +14,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. AR978435           Date 17Jan13               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. AR978435           Date 17Jan13               *
+      *                 MD046248           Date 27Oct17               *
       *                 CRE075             Date 06Dec10               *
       *                 BUG26775 *CREATE   Date 20Nov09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  AR978435 - MT103 was generated even though Beneficiary       *
       *             Bank/Non bank indicator is 'Y'. (Child: AR978436) *      
       *  MD046248 - Finastra Rebranding                               *

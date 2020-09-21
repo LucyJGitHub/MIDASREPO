@@ -823,7 +823,8 @@
      DWFACLT           S              5
 
      DWAMTP            S              2
-     DWBRTT            S              2
+     D*BRTT*****       S              2                                                       CSD103
+     DWBRTT            S              2A                                                      CSD103
      DWRTSP            S             11  7
      DWPRAM            S             13  0
      DWINTA            S             13  0

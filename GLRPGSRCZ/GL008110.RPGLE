@@ -9,9 +9,10 @@
      F*  GL008110 - Create Postings from Stamp Tax Keys               *
      F*                                                               *
      F*  (c) Finastra International Limited 2010                      *
-     F*                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD040971           Date 30Aug16               *
+      *                                                               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD040971           Date 30Aug16               *
       *                 CLE148             Date 23Jul12               *
       *                 AR864045           Date 20Nov11               *
       *                 AR821972           Date 07Sep11               *
@@ -19,6 +20,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD040971 - GL0600 dumps due to account code set to zero.     *
       *             Call AOACODR0 with DSSFY instead as SDACODPD      *

@@ -84,7 +84,6 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
-     FSDBSRTL0  IF   E           K DISK    INFSR(*PSSR)                                       CSD103
 
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,SDBSRTV001
@@ -280,27 +279,6 @@
      D PZOut15         S             15A                                                      240065
      D PZFSign         S              1A                                                      240065
                                                                                               240065
-     D PSysVal01       S             20A                                                      CSD103
-     D PCurSet01       S            200A                                                      CSD103
-     D PSysVal02       S             20A                                                      CSD103
-     D PCurSet02       S            200A                                                      CSD103
-     D PSysVal03       S             20A                                                      CSD103
-     D PCurSet03       S            200A                                                      CSD103
-     D PSysVal04       S             20A                                                      CSD103
-     D PCurSet04       S            200A                                                      CSD103
-     D PSysVal05       S             20A                                                      CSD103
-     D PCurSet05       S            200A                                                      CSD103
-     D PSysVal06       S             20A                                                      CSD103
-     D PCurSet06       S            200A                                                      CSD103
-     D PSysVal07       S             20A                                                      CSD103
-     D PCurSet07       S            200A                                                      CSD103
-     D PSysVal08       S             20A                                                      CSD103
-     D PCurSet08       S            200A                                                      CSD103
-     D PSysVal09       S             20A                                                      CSD103
-     D PCurSet09       S            200A                                                      CSD103
-     D PSysVal10       S             20A                                                      CSD103
-     D PCurSet10       S            200A                                                      CSD103
-                                                                                              CSD103
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -418,264 +396,6 @@
       /COPY WNCPYSRC,SDBSRTV023                                                               CSD006
                                                                                               CSD006
      C                   ENDIF                                                                CSD006
-      *                                                                                       CSD103
-      * Validate Backward-Looking Rate                                                        CSD103
-      *                                                                                       CSD103
-     C     DDBLRT        IFEQ      *BLANKS                                                    CSD103
-     C                   MOVE      'N'           DDBLRT                         Default: N    CSD103
-     C                   ELSE                                                                 CSD103
-      *                                                                                       CSD103
-     C     DDBLRT        IFNE      'N'                                                        CSD103
-     C     DDBLRT        ANDNE     'Y'                                                        CSD103
-     C                   EXSR      RESETERRS                                                  CSD103
-     C                   MOVE      'N'           DDBLRTOK                                     CSD103
-     C                   ADD       1             Ix                                           CSD103
-     C                   MOVEL     'DDBLRT'      FldNamXAr(Ix)                                CSD103
-     C                   MOVEL     'BSR0113'     MsgIdXAr(Ix)                                 CSD103
-     C                   EXSR      UPDATERRS                                                  CSD103
-     C                   ENDIF                                                                CSD103
-      *                                                                                       CSD103
-     C                   ENDIF                                                                CSD103
-      *                                                                                       CSD103
-      * Default Lookback Days for Settlement Base Rate                                        CSD103
-      *                                                                                       CSD103
-     C     DDLBDY        IFEQ      *BLANKS                                      Default: 00   CSD103
-     C                   MOVE      '00'          DDBLRT                                       CSD103
-     C                   ELSE                                                                 CSD103
-      *                                                                                       CSD103
-     C                   MOVE      DDLBDY        #1TESTN                                      CSD103
-     C     DDLBDY        IFLT      '00'                                                       CSD103
-     C     DDLBDY        ORGT      '99'                                                       CSD103
-     C     #1TESTN       ORLT      '0'                                                        CSD103
-     C     #1TESTN       ORGT      '9'                                                        CSD103
-     C                   EXSR      RESETERRS                                                  CSD103
-     C                   MOVE      'N'           DDLBDYOK                                     CSD103
-     C                   ADD       1             Ix                                           CSD103
-     C                   MOVEL     'DDLBDY'      FldNamXAr(Ix)                                CSD103
-     C                   MOVEL     'BSR0112'     MsgIdXAr(Ix)                                 CSD103
-     C                   EXSR      UPDATERRS                                                  CSD103
-     C                   ENDIF                                                                CSD103
-      *                                                                                       CSD103
-     C     DDBLRT        IFNE      'Y'                                                        CSD103
-     C                   EXSR      RESETERRS                                                  CSD103
-     C                   MOVE      'N'           DDLBDYOK                                     CSD103
-     C                   ADD       1             Ix                                           CSD103
-     C                   MOVEL     'DDLBDY'      FldNamXAr(Ix)                                CSD103
-     C                   MOVEL     'BSR0111'     MsgIdXAr(Ix)                                 CSD103
-     C                   EXSR      UPDATERRS                                                  CSD103
-     C                   ENDIF                                                                CSD103
-      *                                                                                       CSD103
-     C                   ENDIF                                                                CSD103
-      *                                                                                       CSD103
-      * Default Lockout Days                                                                  CSD103
-      *                                                                                       CSD103
-     C     DDLODY        IFEQ      *BLANKS                                                    CSD103
-     C                   MOVE      '00'          DDLODY                         Default: 00   CSD103
-     C                   ELSE                                                                 CSD103
-      *                                                                                       CSD103
-     C                   MOVE      DDLODY        #1TESTN                                      CSD103
-     C     DDLODY        IFLT      '00'                                                       CSD103
-     C     DDLODY        ORGT      '99'                                                       CSD103
-     C     #1TESTN       ORLT      '0'                                                        CSD103
-     C     #1TESTN       ORGT      '9'                                                        CSD103
-     C                   EXSR      RESETERRS                                                  CSD103
-     C                   MOVE      'N'           DDLODYOK                                     CSD103
-     C                   ADD       1             Ix                                           CSD103
-     C                   MOVEL     'DDLODY'      FldNamXAr(Ix)                                CSD103
-     C                   MOVEL     'BSR0110'     MsgIdXAr(Ix)                                 CSD103
-     C                   EXSR      UPDATERRS                                                  CSD103
-     C                   ENDIF                                                                CSD103
-      *                                                                                       CSD103
-     C     DDBLRT        IFNE      'Y'                                                        CSD103
-     C                   EXSR      RESETERRS                                                  CSD103
-     C                   MOVE      'N'           DDLODYOK                                     CSD103
-     C                   ADD       1             Ix                                           CSD103
-     C                   MOVEL     'DDLODY'      FldNamXAr(Ix)                                CSD103
-     C                   MOVEL     'BSR0109'     MsgIdXAr(Ix)                                 CSD103
-     C                   EXSR      UPDATERRS                                                  CSD103
-     C                   ENDIF                                                                CSD103
-      *                                                                                       CSD103
-     C                   ENDIF                                                                CSD103
-      *                                                                                       CSD103
-      * Default Payment Delay Days                                                            CSD103
-      *                                                                                       CSD103
-     C     DDPDLY        IFEQ      *BLANKS                                                    CSD103
-     C                   MOVE      '00'          DDPDLY                         Default: 00   CSD103
-     C                   ELSE                                                                 CSD103
-      *                                                                                       CSD103
-     C                   MOVE      DDPDLY        #1TESTN                                      CSD103
-     C     DDPDLY        IFLT      '00'                                                       CSD103
-     C     DDPDLY        ORGT      '99'                                                       CSD103
-     C     #1TESTN       ORLT      '0'                                                        CSD103
-     C     #1TESTN       ORGT      '9'                                                        CSD103
-     C                   EXSR      RESETERRS                                                  CSD103
-     C                   MOVE      'N'           DDPDLYOK                                     CSD103
-     C                   ADD       1             Ix                                           CSD103
-     C                   MOVEL     'DDPDLY'      FldNamXAr(Ix)                                CSD103
-     C                   MOVEL     'BSR0108'     MsgIdXAr(Ix)                                 CSD103
-     C                   EXSR      UPDATERRS                                                  CSD103
-     C                   ENDIF                                                                CSD103
-      *                                                                                       CSD103
-     C     DDBLRT        IFNE      'Y'                                                        CSD103
-     C                   EXSR      RESETERRS                                                  CSD103
-     C                   MOVE      'N'           DDPDLYOK                                     CSD103
-     C                   ADD       1             Ix                                           CSD103
-     C                   MOVEL     'DDPDLY'      FldNamXAr(Ix)                                CSD103
-     C                   MOVEL     'BSR0107'     MsgIdXAr(Ix)                                 CSD103
-     C                   EXSR      UPDATERRS                                                  CSD103
-     C                   ENDIF                                                                CSD103
-      *                                                                                       CSD103
-     C                   ENDIF                                                                CSD103
-      *                                                                                       CSD103
-      * Benchmark Adjustment                                                                  CSD103
-      *                                                                                       CSD103
-     C     DDBADJ        IFEQ      *BLANKS                                                    CSD103
-     C                   MOVE      *ZEROS        DDBADJ                         Default: 0    CSD103
-     C                   ELSE                                                                 CSD103
-      *                                                                                       CSD103
-     C                   MOVE      *BLANKS       ZFIELD                                       CSD103
-     C                   MOVE      DDBADJ        ZFIELD                                       CSD103
-     C                   Z-ADD     5             ZADIG                                        CSD103
-     C                   Z-ADD     8             ZADEC                                        CSD103
-     C                   EXSR      ZALIGN                                                     CSD103
-      *                                                                                       CSD103
-     C     ZALIGNOK      IFNE      'Y'                                                        CSD103
-     C                   MOVEL     'ZALIGN'      DBFILE                                       CSD103
-     C                   MOVEL     '903'         DBASE                                        CSD103
-     C                   MOVEL     '*CALL'       DBKEY                                        CSD103
-     C                   EXSR      *PSSR                                                      CSD103
-     C                   ENDIF                                                                CSD103
-      *                                                                                       CSD103
-     C                   ENDIF                                                                CSD103
-      *                                                                                       CSD103
-      * Averaging Option                                                                      CSD103
-      *                                                                                       CSD103
-     C     DDAVOP        IFEQ      *BLANKS                                                    CSD103
-     C                   MOVE      '0'           DDAVOP                         Default: 0    CSD103
-     C                   ENDIF                                                                CSD103
-      *                                                                                       CSD103
-     C     DDBLRT        IFEQ      'Y'                                          DDBLRT EQ 'Y' CSD103
-     C     DDAVOP        ANDEQ     '0'                                                        CSD103
-     C                   EXSR      RESETERRS                                                  CSD103
-     C                   MOVE      'N'           DDAVOPOK                                     CSD103
-     C                   ADD       1             Ix                                           CSD103
-     C                   MOVEL     'DDAVOP'      FldNamXAr(Ix)                                CSD103
-     C                   MOVEL     'BSR0105'     MsgIdXAr(Ix)                                 CSD103
-     C                   EXSR      UPDATERRS                                                  CSD103
-     C                   ELSE                                                                 CSD103
-      *                                                                                       CSD103
-     C     DDBLRT        IFNE      'Y'                                          DDBLRT NE 'Y' CSD103
-     C     DDAVOP        ANDNE     '0'                                                        CSD103
-     C                   EXSR      RESETERRS                                                  CSD103
-     C                   MOVE      'N'           DDAVOPOK                                     CSD103
-     C                   ADD       1             Ix                                           CSD103
-     C                   MOVEL     'DDAVOP'      FldNamXAr(Ix)                                CSD103
-     C                   MOVEL     'BSR0106'     MsgIdXAr(Ix)                                 CSD103
-     C                   EXSR      UPDATERRS                                                  CSD103
-     C                   ELSE                                                                 CSD103
-      *                                                                                       CSD103
-     C     DDAVOP        IFNE      '0'                                                        CSD103
-     C     DDAVOP        ANDNE     '1'                                                        CSD103
-     C     DDAVOP        ANDNE     '2'                                                        CSD103
-     C     DDAVOP        ANDNE     '3'                                                        CSD103
-     C     DDAVOP        ANDNE     '4'                                                        CSD103
-     C                   EXSR      RESETERRS                                                  CSD103
-     C                   MOVE      'N'           DDAVOPOK                                     CSD103
-     C                   ADD       1             Ix                                           CSD103
-     C                   MOVEL     'DDAVOP'      FldNamXAr(Ix)                                CSD103
-     C                   MOVEL     'BSR0104'     MsgIdXAr(Ix)                                 CSD103
-     C                   EXSR      UPDATERRS                                                  CSD103
-     C                   ENDIF                                                                CSD103
-      *                                                                                       CSD103
-     C                   ENDIF                                                  DDBLRT NE 'Y' CSD103
-      *                                                                                       CSD103
-     C                   ENDIF                                                  DDBLRT EQ 'Y' CSD103
-      *                                                                                       CSD103
-      * Base Rate for Accrual                                                                 CSD103
-      *                                                                                       CSD103
-     C     DDBRAC        IFNE      *BLANKS                                                    CSD103
-      *                                                                                       CSD103
-     C     DDAVOP        IFNE      '1'                                                        CSD103
-     C     DDAVOP        ANDNE     '2'                                                        CSD103
-     C                   EXSR      RESETERRS                                                  CSD103
-     C                   MOVE      'N'           DDBRACOK                                     CSD103
-     C                   ADD       1             Ix                                           CSD103
-     C                   MOVEL     'DDBRAC'      FldNamXAr(Ix)                                CSD103
-     C                   MOVEL     'BSR0103'     MsgIdXAr(Ix)                                 CSD103
-     C                   EXSR      UPDATERRS                                                  CSD103
-     C                   ENDIF                                                                CSD103
-      *                                                                                       CSD103
-     C     SDBSRT        CHAIN     SDBSRTL0                           99                      CSD103
-     C     *IN99         IFEQ      '1'                                                        CSD103
-     C                   EXSR      RESETERRS                                                  CSD103
-     C                   MOVE      'N'           DDBRACOK                                     CSD103
-     C                   ADD       1             Ix                                           CSD103
-     C                   MOVEL     'DDBRAC'      FldNameArr(Ix)                               CSD103
-     C                   MOVEL     'USR4435'     MsgIdArr(Ix)                                 CSD103
-     C                   EVAL      BLen = %Len(%Trim(DDCYCD))                                 CSD103
-     C                   EVAL      MsgDtaArr(Ix) = LenStr + %Trim(DDCYCD)                     CSD103
-     C                   EXSR      UPDATERRS                                                  CSD103
-     C                   ELSE                                                                 CSD103
-     C     BADGMA        IFNE      '01D'                                                      CSD103
-     C     BADGMA        ANDNE     'O  '                                                      CSD103
-     C                   EXSR      RESETERRS                                                  CSD103
-     C                   MOVE      'N'           DDBRACOK                                     CSD103
-     C                   ADD       1             Ix                                           CSD103
-     C                   MOVEL     'DDBRAC'      FldNameArr(Ix)                               CSD103
-     C                   MOVEL     'BSR0114'     MsgIdArr(Ix)                                 CSD103
-     C                   EXSR      UPDATERRS                                                  CSD103
-     C                   ENDIF                                                                CSD103
-     C                   ENDIF                                                                CSD103
-      *                                                                                       CSD103
-     C                   ENDIF                                                                CSD103
-      *                                                                                       CSD103
-      * Weight Convention                                                                     CSD103
-      *                                                                                       CSD103
-     C     DDWGHT        IFEQ      *BLANKS                                                    CSD103
-     C                   MOVE      '1'           DDWGHT                         Default: 1    CSD103
-     C                   ELSE                                                                 CSD103
-      *                                                                                       CSD103
-     C     DDWGHT        IFNE      '1'                                                        CSD103
-     C     DDWGHT        ANDNE     '2'                                                        CSD103
-     C                   EXSR      RESETERRS                                                  CSD103
-     C                   MOVE      'N'           DDWGHTOK                                     CSD103
-     C                   ADD       1             Ix                                           CSD103
-     C                   MOVEL     'DDWGHT'      FldNamXAr(Ix)                                CSD103
-     C                   MOVEL     'BSR0102'     MsgIdXAr(Ix)                                 CSD103
-     C                   EXSR      UPDATERRS                                                  CSD103
-     C                   ENDIF                                                                CSD103
-      *                                                                                       CSD103
-     C                   ENDIF                                                                CSD103
-      *                                                                                       CSD103
-      * Default Lookback Days for Accrual                                                     CSD103
-      *                                                                                       CSD103
-     C     DDLBAC        IFEQ      *BLANKS                                                    CSD103
-     C                   MOVE      '00'          DDLBAC                         Default: 00   CSD103
-     C                   ELSE                                                                 CSD103
-      *                                                                                       CSD103
-     C                   MOVE      DDLBAC        #1TESTN                                      CSD103
-     C     DDLBAC        IFLT      '00'                                                       CSD103
-     C     DDLBAC        ORGT      '99'                                                       CSD103
-     C     #1TESTN       ORLT      '0'                                                        CSD103
-     C     #1TESTN       ORGT      '9'                                                        CSD103
-     C                   EXSR      RESETERRS                                                  CSD103
-     C                   MOVE      'N'           DDLBACOK                                     CSD103
-     C                   ADD       1             Idx                                          CSD103
-     C                   MOVEL     'DDLBAC'      FldNamXAr(Ix)                                CSD103
-     C                   MOVEL     'BSR0101'     MsgIdXAr(Ix)                                 CSD103
-     C                   EXSR      UPDATERRS                                                  CSD103
-     C                   ENDIF                                                                CSD103
-      *                                                                                       CSD103
-     C     DDBLRT        IFNE      'Y'                                                        CSD103
-     C                   EXSR      RESETERRS                                                  CSD103
-     C                   MOVE      'N'           DDLBACOK                                     CSD103
-     C                   ADD       1             Ix                                           CSD103
-     C                   MOVEL     'DDLBAC'      FldNamXAr(Ix)                                CSD103
-     C                   MOVEL     'BSR0100'     MsgIdXAr(Ix)                                 CSD103
-     C                   EXSR      UPDATERRS                                                  CSD103
-     C                   ENDIF                                                                CSD103
-      *                                                                                       CSD103
-     C                   ENDIF                                                                CSD103
       *  *-------------------------------------------------------*
       *  * If no errors set up outstanding fields for valid file *
       *  *-------------------------------------------------------*
@@ -1359,16 +1079,6 @@
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
-      * Backward-Looking Rate Fields                                                          CSD103
-     C                   PARM                    DDBLRT            1                          CSD103
-     C                   PARM                    DDLBDY            2                          CSD103
-     C                   PARM                    DDLODY            2                          CSD103
-     C                   PARM                    DDPDLY            2                          CSD103
-     C                   PARM                    DDBADJ           14                          CSD103
-     C                   PARM                    DDAVOP            1                          CSD103
-     C                   PARM                    DDBRAC            2                          CSD103
-     C                   PARM                    DDWGHT            1                          CSD103
-     C                   PARM                    DDLBAC            2                          CSD103
       *
       **  GET ZMUSER to access default branch.
       *
@@ -1489,39 +1199,37 @@
      C                   END                                                                  240065
       ** Check for Alpha Num Base Rate Code system value                                      CSD103
      C                   CALLB     'AOSVALR0'                                                 CSD103
-     C                   PARM      *BLANKS       PRtCd                                        CSD103
-     C                   PARM      AlphaBSRC     PSysVal01                                    CSD103
-     C                   PARM      *BLANKS       PCurSet01                                    CSD103
-     C                   PARM      *BLANKS       PSysVal02                                    CSD103
-     C                   PARM      *BLANKS       PCurSet02                                    CSD103
-     C                   PARM      *BLANKS       PSysVal03                                    CSD103
-     C                   PARM      *BLANKS       PCurSet03                                    CSD103
-     C                   PARM      *BLANKS       PSysVal04                                    CSD103
-     C                   PARM      *BLANKS       PCurSet04                                    CSD103
-     C                   PARM      *BLANKS       PSysVal05                                    CSD103
-     C                   PARM      *BLANKS       PCurSet05                                    CSD103
-     C                   PARM      *BLANKS       PSysVal06                                    CSD103
-     C                   PARM      *BLANKS       PCurSet06                                    CSD103
-     C                   PARM      *BLANKS       PSysVal07                                    CSD103
-     C                   PARM      *BLANKS       PCurSet07                                    CSD103
-     C                   PARM      *BLANKS       PSysVal08                                    CSD103
-     C                   PARM      *BLANKS       PCurSet08                                    CSD103
-     C                   PARM      *BLANKS       PSysVal09                                    CSD103
-     C                   PARM      *BLANKS       PCurSet09                                    CSD103
-     C                   PARM      *BLANKS       PSysVal10                                    CSD103
-     C                   PARM      *BLANKS       PCurSet10                                    CSD103
-                                                                                              CSD103
-     C                   IF        @RTCD <> *Blanks                                           CSD103
-     C                   EVAL      DBFILE = 'SDSVALPD'                                        CSD103
-     C                   EVAL      DBASE = 906                                                CSD103
-     C                   EVAL      DBKEY = '*KEY    '                                         CSD103
-     C                   EXSR      *PSSR                                                      CSD103
-     C                   ENDIF                                                                CSD103
+     C                   PARM      *BLANKS       @RTCD                                        CSD103
+     C                   PARM      AlphaBSRC     PSysVal01        20                          CSD103
+     C                   PARM      *BLANKS       PCurSet01       200                          CSD103
+     C                   PARM      *BLANKS       PSysVal02        20                          CSD103
+     C                   PARM      *BLANKS       PCurSet02       200                          CSD103
+     C                   PARM      *BLANKS       PSysVal03        20                          CSD103
+     C                   PARM      *BLANKS       PCurSet03       200                          CSD103
+     C                   PARM      *BLANKS       PSysVal04        20                          CSD103
+     C                   PARM      *BLANKS       PCurSet04       200                          CSD103
+     C                   PARM      *BLANKS       PSysVal05        20                          CSD103
+     C                   PARM      *BLANKS       PCurSet05       200                          CSD103
+     C                   PARM      *BLANKS       PSysVal06        20                          CSD103
+     C                   PARM      *BLANKS       PCurSet06       200                          CSD103
+     C                   PARM      *BLANKS       PSysVal07        20                          CSD103
+     C                   PARM      *BLANKS       PCurSet07       200                          CSD103
+     C                   PARM      *BLANKS       PSysVal08        20                          CSD103
+     C                   PARM      *BLANKS       PCurSet08       200                          CSD103
+     C                   PARM      *BLANKS       PSysVal09        20                          CSD103
+     C                   PARM      *BLANKS       PCurSet09       200                          CSD103
+     C                   PARM      *BLANKS       PSysVal10        20                          CSD103
+     C                   PARM      *BLANKS       PCurSet10       200                          CSD103
+      * If the system value is not found then default value to 'N'                            CSD103
+     C     @RTCD         IFNE      *BLANKS                                                    CSD103
+     C                   MOVE      'N'           AlphaCode         1                          CSD103
+     C                   ELSE                                                                 CSD103
      C                   MOVEL     PCurSet01     AlphaCode         1                          CSD103
+     C                   ENDIF                                                                CSD103
       *                                                                                       CSD103
      C     SDBSRT        KLIST                                                                CSD103
-     C                   KFLD                    DDCYCD                                       CSD103
-     C                   KFLD                    DDBRAC                                       CSD103
+     C                   KFLD                    BACYCD                                       CSD103
+     C                   KFLD                    BABSRC                                       CSD103
 
       ** Program, module and procedure names for database error processing.
       ** =================================================================
@@ -1593,16 +1301,6 @@
      C     I             SUB       1             WIdx
       *
      C                   ENDSR
-      *****************************************************************                       CSD103
-      /EJECT                                                                                  CSD103
-      *****************************************************************                       CSD103
-     C     ZALIGN        BEGSR                                                                CSD103
-     C                   CALLB     'ZALIGN'                                                   CSD103
-     C                   PARM      'Y'           ZALIGNOK          1                          CSD103
-     C                   PARM                    ZFIELD           16                          CSD103
-     C                   PARM                    ZADEC             1 0                        CSD103
-     C                   PARM                    ZADIG             2 0                        CSD103
-     C                   ENDSR                                                                CSD103
       *****************************************************************
       /EJECT
       *****************************************************************

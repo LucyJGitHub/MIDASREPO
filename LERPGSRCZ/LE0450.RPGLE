@@ -14,7 +14,7 @@
       *                                                               *
       *  Last Amend No. CSD103             Date 10Aug20               *
       *  Prev Amend No. MD051347           Date 12Mar20               *
-      *                 AR819229           Date 10Dec18               *
+      *                 AR819229           Date 10Dec18               *       
       *                 AR932652           Date 06Aug13               *
       *                 AR927395           Date 05Aug13               *
       *                 252101             Date 06Nov19               *
@@ -163,8 +163,8 @@
       *                 CER020             Date 19May08               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. BUG22968           Date 07Mar09               *
-      *  Prev Amend No. CCB016             Date 12Apr07               *
+      *                 BUG22968           Date 07Mar09               *
+      *                 CCB016             Date 12Apr07               *
       *                 CSC042             Date 16Feb09               *
       *                 239569             Date 26Jul06               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -431,7 +431,7 @@
       *  AR819229 - Interest on a loan taken at the wrong date.       *
       *             Update value of IBDT with NIPD on SR/ROLLOV and   *
       *             SR/MROLL. (Child: AR823033)                       *
-      *           - Applied for MD051347                              *
+      *           - Applied for MD051347                              *       
       *  AR932652 - Error on withholding tax accrual when past due    *
       *             interest is manually repaid. Reverse fix BUG12852.*
       *             (Child: AR932655)                                 *
@@ -3886,7 +3886,7 @@ L118 I                             P   72   77 7RTSPL
      ILEHISTL0  NS                                                              116330
      I                                 18   22 0VDAT#H                          116330
      I**********                       46   47 0BRTT#H                                 116330 CSD103
-     I                                 46   47  BRTT#H                                        CSD103
+     I                                 46   47  BRTT#H                                        CSD103 
      I                             P   48   53 7BRTE#H                          116330
       *                                                                   116330
      ILEHISTL2  NS                                                              116330

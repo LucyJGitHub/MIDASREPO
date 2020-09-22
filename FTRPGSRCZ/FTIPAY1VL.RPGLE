@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD047369A          Date 24Jan18               *      
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD047369A          Date 24Jan18               *      
+      *                 MD046248           Date 27Oct17               *
       *                 CSW215             Date 06Apr15               *
       *                 AR900506           Date 04Nov14               *
       *                 CFT157             Date 29Aug14               *
@@ -81,6 +82,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD047369A - Funds transfter does not check block Dr flag on  *
       *              beneficary customer account.                     *      
       *  MD046248 - Finastra Rebranding                               *

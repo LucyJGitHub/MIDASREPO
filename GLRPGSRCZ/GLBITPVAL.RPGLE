@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD053869           Date 07Jan20               *
-      *  Prev Amend No. MD052075           Date 07Jun19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD053869           Date 07Jan20               *
+      *                 MD052075           Date 07Jun19               *
       *                 CGL148             Date 13Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 LLN022A            Date 03Jun15               *
@@ -69,6 +70,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD053869 - Do not validate batch item on delete.             *
       *  MD052075 - [CGL150] Warning message should be displayed when *
       *           the system defaults the value date.                 *

@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD051347           Date 12Mar20               *
-      *  Prev Amend No. AR819229           Date 10Dec18               *       
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD051347           Date 12Mar20               *
+      *                 AR819229           Date 10Dec18               *       
       *                 AR932652           Date 06Aug13               *
       *                 AR927395           Date 05Aug13               *
       *                 252101             Date 06Nov19               *
@@ -162,8 +163,8 @@
       *                 CER020             Date 19May08               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. BUG22968           Date 07Mar09               *
-      *  Prev Amend No. CCB016             Date 12Apr07               *
+      *                 BUG22968           Date 07Mar09               *
+      *                 CCB016             Date 12Apr07               *
       *                 CSC042             Date 16Feb09               *
       *                 239569             Date 26Jul06               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -423,6 +424,7 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD051347 - Interest on a loan taken at the wrong date. Also  *
       *             update value of IBDT to zero if NIPD is less than *
       *             or equal to rundate. Additional fix to AR819229.  *

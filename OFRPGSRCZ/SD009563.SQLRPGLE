@@ -13,13 +13,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL176             Date 20Jul15               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL176             Date 20Jul15               *
       *                 MD031323           Date 27Nov14               *
       *                 CGL159  *CREATE    Date 27Aug14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL176 - Optimisation of Nostro Balances by Company          *
       *  MD031323 - Pool is being created automatically after         *

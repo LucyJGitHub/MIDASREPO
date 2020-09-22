@@ -15,11 +15,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR316215 *CREATE   Date 01Aug12               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR316215 *CREATE   Date 01Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  AR316218 - Unable to extract some fields of RUDWH library    *
       *             tables due to corrupted data.                     *
@@ -34,7 +37,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FHISTSHM   UF   E             DISK    INFSR(*PSSR)
      F                                     INFDS(HISTMF)
      F                                     PREFIX(LM_)
@@ -63,9 +66,9 @@
      F                                     INFDS(MHSTQF)
      F                                     PREFIX(MQ_)
      F                                     RENAME(HISTSHQF:MHISTQF)
- 
+
      FUTL00493P1O    E             PRINTER
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -75,59 +78,59 @@
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** The following /COPY includes the LE standard declares:
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
- 
+
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** Bank Details
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** General Ledger Details
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       ** Short Data structure for Access Program
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Long Data structure for Access Program
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      DHISTMF           DS
      D  LM_AITN              180    186P 0
      D  TM_AITN              180    186
@@ -139,13 +142,13 @@
      D  TM_FSPRAM            201    207
      D  LM_FSCPAM            208    214P 0
      D  TM_FSCPAM            208    214
- 
+
      DHISTNF           DS
      D  LN_INTN              119    125P 0
      D  TN_INTN              119    125
      D  LN_FSPRAM            126    132P 0
      D  TN_FSPRAM            126    132
- 
+
      DHISTPF           DS
      D  LP_AITN              186    192P 0
      D  TP_AITN              186    192
@@ -159,7 +162,7 @@
      D  TP_FSPRAM            214    220
      D  LP_FSCPAM            221    227P 0
      D  TP_FSCPAM            221    227
- 
+
      DHISTQF           DS
      D  LQ_AITN              179    185P 0
      D  TQ_AITN              179    185
@@ -169,7 +172,7 @@
      D  TQ_IPRN              193    199
      D  LQ_FSCPAM            200    206P 0
      D  TQ_FSCPAM            200    206
- 
+
      DMHSTMF           DS
      D  MM_AITN              180    186P 0
      D  CM_AITN              180    186
@@ -181,13 +184,13 @@
      D  CM_FSPRAM            201    207
      D  MM_FSCPAM            208    214P 0
      D  CM_FSCPAM            208    214
- 
+
      DMHSTNF           DS
      D  MN_INTN              119    125P 0
      D  CN_INTN              119    125
      D  MN_FSPRAM            126    132P 0
      D  CN_FSPRAM            126    132
- 
+
      DMHSTPF           DS
      D  MP_AITN              186    192P 0
      D  CP_AITN              186    192
@@ -201,7 +204,7 @@
      D  CP_FSPRAM            214    220
      D  MP_FSCPAM            221    227P 0
      D  CP_FSCPAM            221    227
- 
+
      DMHSTQF           DS
      D  MQ_AITN              179    185P 0
      D  CQ_AITN              179    185
@@ -211,29 +214,29 @@
      D  CQ_IPRN              193    199
      D  MQ_FSCPAM            200    206P 0
      D  CQ_FSCPAM            200    206
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** Initialize work variables
- 
+
      C                   Z-ADD     0             HLMTOT           13 0
      C                   Z-ADD     0             HLNTOT           13 0
      C                   Z-ADD     0             HLPTOT           13 0
@@ -243,27 +246,27 @@
      C                   Z-ADD     0             HMPTOT           13 0
      C                   Z-ADD     0             HMQTOT           13 0
      C                   MOVE      *BLANKS       FORMAT            3
- 
+
       ** Select Audit or Update mode.
- 
+
      C     WMODE         IFEQ      'U'
      C     WMODE         OREQ      'u'
      C                   MOVE      '1'           *IN11
      C                   ELSE
      C                   MOVE      '0'           *IN11
      C                   ENDIF
- 
+
       ** Update CAS005 fields for both live and matured
       ** History files.
- 
+
      C                   EXSR      SrUpdHF
- 
+
      C                   WRITE     DETAIL1
      C                   WRITE     FOOTER1
- 
+
      C                   SETON                                        LR
      C                   RETURN
- 
+
       /SPACE 5
       *****************************************************************
       *                                                               *
@@ -271,15 +274,15 @@
       *                                                               *
       *****************************************************************
      C     SrUpdHF       BEGSR
- 
+
      C                   WRITE     HEADER1
- 
+
       ** Check through entire HISTSHM
- 
+
      C     1             SETLL     HISTSHMF
      C                   READ      HISTSHMF                               01
      C     *IN01         DOWEQ     '0'
- 
+
      C                   EVAL      FORMAT = 'LMF'
      C                   EXSR      SrNumTst
      C     '1'           LOOKUP    *IN(40)                                50
@@ -294,20 +297,20 @@
      C                   ENDIF
      C                   ADD       1             HLMTOT
      C                   ENDIF
- 
+
      C                   READ      HISTSHMF                               01
- 
+
      C     *IN01         IFEQ      '1'
      C                   Z-ADD     HLMTOT        HLMRPT
      C                   ENDIF
      C                   ENDDO
- 
+
       ** Check through entire HISTSHN
- 
+
      C     1             SETLL     HISTSHNF
      C                   READ      HISTSHNF                               01
      C     *IN01         DOWEQ     '0'
- 
+
      C                   EVAL      FORMAT = 'LNF'
      C                   EXSR      SrNumTst
      C     '1'           LOOKUP    *IN(40)                                50
@@ -319,20 +322,20 @@
      C                   ENDIF
      C                   ADD       1             HLNTOT
      C                   ENDIF
- 
+
      C                   READ      HISTSHNF                               01
- 
+
      C     *IN01         IFEQ      '1'
      C                   Z-ADD     HLNTOT        HLNRPT
      C                   ENDIF
      C                   ENDDO
- 
+
       ** Check through entire HISTSHP
- 
+
      C     1             SETLL     HISTSHPF
      C                   READ      HISTSHPF                               01
      C     *IN01         DOWEQ     '0'
- 
+
      C                   EVAL      FORMAT = 'LPF'
      C                   EXSR      SrNumTst
      C     '1'           LOOKUP    *IN(40)                                50
@@ -348,20 +351,20 @@
      C                   ENDIF
      C                   ADD       1             HLPTOT
      C                   ENDIF
- 
+
      C                   READ      HISTSHPF                               01
- 
+
      C     *IN01         IFEQ      '1'
      C                   Z-ADD     HLPTOT        HLPRPT
      C                   ENDIF
      C                   ENDDO
- 
+
       ** Check through entire HISTSHQ
- 
+
      C     1             SETLL     HISTSHQF
      C                   READ      HISTSHQF                               01
      C     *IN01         DOWEQ     '0'
- 
+
      C                   EVAL      FORMAT = 'LQF'
      C                   EXSR      SrNumTst
      C     '1'           LOOKUP    *IN(40)                                50
@@ -375,20 +378,20 @@
      C                   ENDIF
      C                   ADD       1             HLQTOT
      C                   ENDIF
- 
+
      C                   READ      HISTSHQF                               01
- 
+
      C     *IN01         IFEQ      '1'
      C                   Z-ADD     HLQTOT        HLQRPT
      C                   ENDIF
      C                   ENDDO
- 
+
       ** Check through entire MHISTHM
- 
+
      C     1             SETLL     MHISTMF
      C                   READ      MHISTMF                                01
      C     *IN01         DOWEQ     '0'
- 
+
      C                   EVAL      FORMAT = 'MMF'
      C                   EXSR      SrNumTst
      C     '1'           LOOKUP    *IN(40)                                50
@@ -403,20 +406,20 @@
      C                   ENDIF
      C                   ADD       1             HMMTOT
      C                   ENDIF
- 
+
      C                   READ      MHISTMF                                01
- 
+
      C     *IN01         IFEQ      '1'
      C                   Z-ADD     HMMTOT        HMMRPT
      C                   ENDIF
      C                   ENDDO
- 
+
       ** Check through entire MHISTHN
- 
+
      C     1             SETLL     MHISTNF
      C                   READ      MHISTNF                                01
      C     *IN01         DOWEQ     '0'
- 
+
      C                   EVAL      FORMAT = 'MNF'
      C                   EXSR      SrNumTst
      C     '1'           LOOKUP    *IN(40)                                50
@@ -428,20 +431,20 @@
      C                   ENDIF
      C                   ADD       1             HMNTOT
      C                   ENDIF
- 
+
      C                   READ      MHISTNF                                01
- 
+
      C     *IN01         IFEQ      '1'
      C                   Z-ADD     HMNTOT        HMNRPT
      C                   ENDIF
      C                   ENDDO
- 
+
       ** Check through entire MHISTHP
- 
+
      C     1             SETLL     MHISTPF
      C                   READ      MHISTPF                                01
      C     *IN01         DOWEQ     '0'
- 
+
      C                   EVAL      FORMAT = 'MPF'
      C                   EXSR      SrNumTst
      C     '1'           LOOKUP    *IN(40)                                50
@@ -457,20 +460,20 @@
      C                   ENDIF
      C                   ADD       1             HMPTOT
      C                   ENDIF
- 
+
      C                   READ      MHISTPF                                01
- 
+
      C     *IN01         IFEQ      '1'
      C                   Z-ADD     HMPTOT        HMPRPT
      C                   ENDIF
      C                   ENDDO
- 
+
       ** Check through entire MHISTHQ
- 
+
      C     1             SETLL     MHISTQF
      C                   READ      MHISTQF                                01
      C     *IN01         DOWEQ     '0'
- 
+
      C                   EVAL      FORMAT = 'MQF'
      C                   EXSR      SrNumTst
      C     '1'           LOOKUP    *IN(40)                                50
@@ -484,14 +487,14 @@
      C                   ENDIF
      C                   ADD       1             HMQTOT
      C                   ENDIF
- 
+
      C                   READ      MHISTQF                                01
- 
+
      C     *IN01         IFEQ      '1'
      C                   Z-ADD     HMQTOT        HMQRPT
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   ENDSR
       /SPACE 5
       *****************************************************************
@@ -500,22 +503,22 @@
       *                                                               *
       *****************************************************************
      C     SrNumTst      BEGSR
- 
+
      C                   MOVEA     '0000000'     *IN(40)
- 
+
      C                   SELECT
- 
+
      C     FORMAT        WHENEQ    'LMF'
      C                   TESTN                   TM_AITN                  41
      C                   TESTN                   TM_AIAN                  42
      C                   TESTN                   TM_IPRN                  43
      C                   TESTN                   TM_FSPRAM                44
      C                   TESTN                   TM_FSCPAM                45
- 
+
      C     FORMAT        WHENEQ    'LNF'
      C                   TESTN                   TN_INTN                  41
      C                   TESTN                   TN_FSPRAM                42
- 
+
      C     FORMAT        WHENEQ    'LPF'
      C                   TESTN                   TP_INTN                  41
      C                   TESTN                   TP_AITN                  42
@@ -523,24 +526,24 @@
      C                   TESTN                   TP_IPRN                  44
      C                   TESTN                   TP_FSPRAM                45
      C                   TESTN                   TP_FSCPAM                46
- 
+
      C     FORMAT        WHENEQ    'LQF'
      C                   TESTN                   TQ_AITN                  41
      C                   TESTN                   TQ_AIAN                  42
      C                   TESTN                   TQ_IPRN                  43
      C                   TESTN                   TQ_FSCPAM                44
- 
+
      C     FORMAT        WHENEQ    'MMF'
      C                   TESTN                   CM_AITN                  41
      C                   TESTN                   CM_AIAN                  42
      C                   TESTN                   CM_IPRN                  43
      C                   TESTN                   CM_FSPRAM                44
      C                   TESTN                   CM_FSCPAM                45
- 
+
      C     FORMAT        WHENEQ    'MNF'
      C                   TESTN                   CN_INTN                  41
      C                   TESTN                   CN_FSPRAM                42
- 
+
      C     FORMAT        WHENEQ    'MPF'
      C                   TESTN                   CP_INTN                  41
      C                   TESTN                   CP_AITN                  42
@@ -548,15 +551,15 @@
      C                   TESTN                   CP_IPRN                  44
      C                   TESTN                   CP_FSPRAM                45
      C                   TESTN                   CP_FSCPAM                46
- 
+
      C     FORMAT        WHENEQ    'MQF'
      C                   TESTN                   CQ_AITN                  41
      C                   TESTN                   CQ_AIAN                  42
      C                   TESTN                   CQ_IPRN                  43
      C                   TESTN                   CQ_FSCPAM                44
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
       /SPACE 5
       *****************************************************************
@@ -565,20 +568,20 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       ** INPUT.
- 
+
      C                   PARM                    WMODE             1
- 
+
       ** Access Bank Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '       '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     '*ERROR '     RetCodeIn
      C                   MOVEL     'SDBANKPD'    DBFILE
@@ -586,14 +589,14 @@
      C                   MOVEL     '*FIRST  '    DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Access General Ledger Details
- 
+
      C                   CALL      'AOGELRR0'
      C                   PARM      '       '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDGELR        PARM      SDGELR        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     '*ERROR '     RetCodeIn
      C                   MOVEL     'SDGELRPD'    DBFILE
@@ -601,14 +604,14 @@
      C                   MOVEL     '*FIRST  '    DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       /SPACE 5
       *****************************************************************
@@ -617,18 +620,18 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   IF        RunBefore <> 'Y'
      C                   EVAL      RunBefore = 'Y'
      C                   CALL      'DBERRCTL'
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
      C                   ENDSR
       ********************************************************************

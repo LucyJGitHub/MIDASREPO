@@ -14,13 +14,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSD103             Date 10Aug20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *                 CSC022             Date 24Feb04               *
+      *  Prev Amend No. CSC022             Date 24Feb04               *
       *                 213558             Date 22Jan03               *
       *                 CSD012             Date 15Oct02               *
       * Midas Release 4 --------------- Base -------------------------*
@@ -29,7 +28,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CSC022 - Commitment Control Changes for MidasPlus            *
       *  213558 - MDF Rate Maintenance Time/Date Stamp amendable      *
@@ -158,9 +156,6 @@
      D wComitarr       S             10A   DIM(10)                                            CSC022
       ** Commitment Control Array                                                             CSC022
                                                                                               CSC022
-      ** BSRT Backward-Looking Rate Fields                                                    CSD103
-     D BasRBckfld      DS            27                                                       CSD103
-                                                                                              CSD103
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -493,8 +488,6 @@
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIdArr
      C                   PARM                    WMsgDtaArr
-      * Backward-Looking Rate Fields                                                          CSD103
-     C                   PARM                    BasRBckfld                                   CSD103
 
       * If errors returned
 
@@ -786,8 +779,6 @@
       *
       * Deal in screen format
      C                   PARM                    NwBsScnFmt
-      * Backward-Looking Rate Fields                                                          CSD103
-     C                   PARM                    BasRBckfld                                   CSD103
       *
       * Update 'Current' Deal with Deal in Screen Format
       *
@@ -982,8 +973,6 @@
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIdArr
      C                   PARM                    WMsgDtaArr
-      * Backward-Looking Rate Fields                                                          CSD103
-     C                   PARM                    BasRBckfld                                   CSD103
       *
       * If transaction is valid output message 'Press enter to accept'
       *

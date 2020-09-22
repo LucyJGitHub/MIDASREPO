@@ -393,8 +393,6 @@
       * Outputs
       * Current base rate in screen format
      C                   PARM                    BasRScnfmt
-      * Backward-Looking Rate Fields                                                          CSD103
-     C                   PARM                    BasRBckfld                                   CSD103
 
       * The file structure is a bit weird - there is a 'current' rate plus
       * value date, and a 'new' one.  The 'new' rate will apply after the

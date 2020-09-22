@@ -23,8 +23,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD000091           Date 14May13               *
+      *  Last Amend No. MD056472           Date 22Sep20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD000091           Date 14May13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -38,6 +39,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056472 - Unknown characters are displayed for error        *
+      *             message id 45033939 in LDNI                       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  191138 - System validates base currency rate in amend mode   *
@@ -72,48 +75,48 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Error message field received as a parameter
      D     Msgid1      S                   LIKE(#MsgID)
       ** Base Currency Rate - received as a parameter
@@ -128,7 +131,7 @@
      D     A6SCEX      S              1S 0
       ** Mult/Divide Ind (SDCURRPD) received as a parameter
      D     A6MDIN      S              1A
- 
+
       ** Decimal separator (SDDEALPD) via caller
      D     BNDCSP      S              1A
      D     BJCYCD      S              3A
@@ -159,12 +162,12 @@
      D     @ULIM       S             30  9                                      154453
      D     @@AMTW      S             13  0
      D     @BRATN      S             13  8
- 
+
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
      D   LenStr                1      2                                                     MD000091
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -172,14 +175,14 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Reset error flags & msgs to prevent problems on subsequent calls
      C                   RESET                   ErrorFound
      C                   RESET                   Msgid1
@@ -243,11 +246,11 @@
      C                   MOVEL     @@AMTD        DDBRAT                         154453
      C                   ENDIF                                                  154453
       *                                                                         154453
- 
+
       ** Place the derived amount into the field that will be used to set
       **  up the value to go out on to file
      C                   Z-ADD     @@AMTW        @@AMT
- 
+
       **  Check it is a valid figure with 8 decimal places max.
      C                   ELSE
       *
@@ -353,8 +356,9 @@
       *
      C                   MOVE      *BLANKS       #MSGDATA
      C**********         MOVEL     @@AMTD        #MSGDATA                                   MD000091
-     C                   EVAL      BLen = %Len(%Trim(@@AMTD))                               MD000091
-     C                   EVAL      #MSGDATA = LenStr +%TRIM(@@AMTD)                         MD000091
+     C**********         EVAL      BLen = %Len(%Trim(@@AMTD))                      MD000091 MD056472
+     C**********         EVAL      #MSGDATA = LenStr +%TRIM(@@AMTD)                MD000091 MD056472
+     C                   EVAL      #MSGDATA = %TRIM(@@AMTD)                                 MD056472
      C                   MOVEL     'MMM0414'     MSGID1
      C                   MOVE      'Y'           ErrorFound
      C                   END
@@ -391,9 +395,9 @@
      C                   IF        ErrorFound = 'Y'
      C                   EVAL      RetCodeIn = 'Error'
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -405,9 +409,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    RetCodeIn
      C                   PARM                    MSGID1
@@ -433,13 +437,13 @@
      C                   PARM                    IKMMDI            1
       ** Action Code                                                                          191138
      C                   PARM                    DDACTN            1                          191138
- 
+
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       ********************************************************************

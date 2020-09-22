@@ -42,6 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *

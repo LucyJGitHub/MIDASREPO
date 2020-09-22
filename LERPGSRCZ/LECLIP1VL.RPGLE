@@ -927,7 +927,8 @@
      D  MCRAM                109    109
      D  PTYPM                110    111  0
      D  RLDTM                112    116  0
-     D  NBRAM                117    118  0
+     D**NBRAM***             117    118  0                                                    CSD103
+     D  NBRAM                117    118                                                       CSD103
      D  NCASM                119    119  0
      D  NCHIM                120    120
      D  NCCYM                121    123
@@ -3224,7 +3225,8 @@ B003 C     CLE006        IFEQ      'Y'
      C                   MOVE      'B'           WEPAR
      C     WKLON         CHAIN(N)  CLOAN                              99
 B004 C     *IN99         IFEQ      '0'
-     C                   Z-ADD     NBRA          NBRAM             2 0
+     C**********         Z-ADD     NBRA          NBRAM             2 0                        CSD103
+     C                   MOVE      NBRA          NBRAM             2                          CSD103
      C                   Z-ADD     NCAS          NCASM             1 0
      C                   MOVE      NCHI          NCHIM             1
      C                   MOVE      NCCY          NCCYM             3

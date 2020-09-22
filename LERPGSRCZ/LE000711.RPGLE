@@ -229,7 +229,8 @@
      D POptn           S              7A
      D PCcy            S              3A
      D PCcyB           S              3A
-     D PNBRA           S              2
+     D*PNBRA****       S              2                                                       CSD103
+     D PNBRA           S              2A                                                      CSD103
      D PSard           S              6
  
       ** Parameters for ZSFILE

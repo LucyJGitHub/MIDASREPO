@@ -9,22 +9,25 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE154  *CREATE    Date 06Aug12               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE154  *CREATE    Date 06Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - Libor Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement                 *
       *                                                               *
       *****************************************************************
- 
+
       * Midas Loans File
      FCLOAN     IF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(CLOANHHF:CLOANCKF:CLOANZ1F)
       * Midas Loan Amendments File
      FLELOAML3  IF   E           K DISK    INFSR(*PSSR)
- 
+
      ******************************************************************
       *                                                               *
       *  F U N C T I O N   O F   I N D I C A T O R S                  *
@@ -71,24 +74,24 @@
       **       Defines:                     142 170 DBKEY
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
- 
+
       ** Data Structure
      D ZOUT22          DS            22
      D ZOUT21                  1     21
      D ZOUT20                  1     20
      D ZNEG                   21     21
- 
+
       ** Data structure to define variables used in holiday sub-routines
      D  ZIND           S              1
      D  ZDAYNO         S              5  0
      D  ZCCY           S              3
      D  ZLOC           S              3
- 
+
      C/TITLE Main Processing
       *================================================================
       *  P R O G R A M   S T A R T                                    *
       *================================================================
- 
+
      C                   MOVE      LNRFA         K@LNRF
      C                   MOVE      'A'           K@RCDT
      C     KEYLnrf       CHAIN     CLOAN
@@ -152,11 +155,11 @@
       *
      C     Lnrf          READE     LOAMSDKF                               89
      C                   ENDDO
- 
+
      C                   Z-ADD     TotRep        ZFLD15           15 0
      C                   MOVE      'J'           ZECODE
      C                   EXSR      ZFRPED
- 
+
      C                   If        ZNEG = '-'
      C                   MOVE      ZOUT21        WrkTotalRepay
      C                   else
@@ -169,15 +172,15 @@
       *
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
       *****************************************************************
       *                                                               *
       *  SROSIN - Calculate Outstanding Interest via Rule of 78       *
       *                                                               *
       *****************************************************************
- 
+
      C     SROSIN        BEGSR
- 
+
      C                   Z-ADD     VDAT          W78VDT
      C                   Z-ADD     MDAT          W78MDT
      C                   Z-ADD     FLTI          W78FLT
@@ -192,7 +195,7 @@
       *
      C                   EXSR      RULE78
      C                   Z-ADD     W78INT        ZINTR
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -201,16 +204,16 @@
       *  ZFRPED                                                       *
       *                                                               *
       *****************************************************************
- 
+
      C     ZFRPED        BEGSR
- 
+
      C                   CALLB     'ZFRPED'
      C                   PARM                    ZFLD15
      C                   PARM                    ZDECS
      C                   PARM                    ZECODE            1
      C                   PARM      *BLANKS       ZOUT22           22
      C                   PARM      *BLANKS       ZOUT25           25
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -219,9 +222,9 @@
       *  GLINTC - Calculate interest on period                        *
       *                                                               *
       *****************************************************************
- 
+
      C     GLINTC        BEGSR
- 
+
      C                   CALLB     'GLINTC'
      C                   PARM                    ZIBEG             5 0       STARTING DATE
      C                   PARM                    ZIEND             5 0       FINISHING DATE
@@ -229,7 +232,7 @@
      C                   PARM                    ZIAMT            15 0       PRINCIPAL
      C                   PARM                    ZIRATE           11 7       RATE OF INTRST
      C                   PARM                    ZINTR            30 9       INTEREST
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -238,7 +241,7 @@
       *  RULE78 - Calculate Outstanding interest for a given period   *
       *           based on Rule of 78                                 *
       *****************************************************************
- 
+
      C     RULE78        BEGSR
       *
       ** Define input and output fields
@@ -424,7 +427,7 @@
      C                   Z-ADD     WZMDAY        ZMDAY
      C                   MOVE      WZCCY         ZCCY
      C                   MOVE      WZLOC         ZLOC
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -434,7 +437,7 @@
       *                                                               *
       *****************************************************************
      C     ZFREQB        BEGSR
- 
+
      C                   CallB     'ZFREQB'
      C                   Parm      *blanks       RetCodeIn         7
      C                   Parm                    ZFREQ             1
@@ -444,7 +447,7 @@
      C                   Parm                    ZMDAY             2 0
      C                   Parm                    BJDFIN
      C                   Parm      SDGELR        SDGELR
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -453,7 +456,7 @@
       *  *INZSR - Initial processing                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
       *
       ***  Entry Parameter
@@ -517,7 +520,7 @@
      C     KEYLnrf       KLIST
      C                   KFLD                    K@LNRF            6
      C                   KFLD                    K@RCDT            1
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -526,9 +529,9 @@
       *  *PSSR  - Standard DB Error processing                        *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   MOVE      *ON           *INU7
      C                   MOVE      *ON           *INU8
      C                   MOVEL     'ERROR  '     ReturnCode
@@ -536,7 +539,7 @@
      C                   MOVE      *ON           *INLR
      C                   CALL      'DBERRCTL'
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

@@ -11,10 +11,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2019                      *
       *                                                               *
-      *  Last Amend No. MD054707 *CREATE   Date 06Nov19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD054707 *CREATE   Date 06Nov19               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CSD103 - Libor Deregulation - Common Layer/Standing Data     *
+      *           (Recompile)                                         *
       *  MD054707 - CER050 Comp LEC06A 00010 failed during COB Run    *
       *                                                               *
       *****************************************************************

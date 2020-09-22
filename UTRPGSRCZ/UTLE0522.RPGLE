@@ -12,12 +12,15 @@
       *                                                               *
       *  (C) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR545781 *CREATE   Date 24Aug16               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR545781 *CREATE   Date 24Aug16               *
       *                 XNNNNNNN           Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
+      *             (Recompile)                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  AR545781 - Missing/Multiple IH on history file. Provide a    *
       *             datapatch utility to update loan                  *
@@ -373,7 +376,8 @@
      C                   Z-ADD     WKRTSP        HNRTSP
      C                   Z-ADD     WKCALC        HNCALC
      C                   MOVEL     WKSPIN        HNSPIN
-     C                   Z-ADD     WKBRTT        HNBRTT
+     C**********         Z-ADD     WKBRTT        HNBRTT                                       CSD103
+     C                   MOVE      WKBRTT        HNBRTT                                       CSD103
      C                   Z-ADD     0             HNSTPG
      C                   Z-ADD     0             HNPPIS
      C                   Z-ADD     0             HNIPIS
@@ -440,7 +444,8 @@
      C                   Z-ADD     WKRTSP        HNRTSP
      C                   Z-ADD     WKCALC        HNCALC
      C                   MOVEL     WKSPIN        HNSPIN
-     C                   Z-ADD     WKBRTT        HNBRTT
+     C**********         Z-ADD     WKBRTT        HNBRTT                                       CSD103
+     C                   MOVE      WKBRTT        HNBRTT                                       CSD103
       *
      C                   Z-ADD     WKCPAM        HNPRAM
      C     WKAITC        ADD       WKAIAP        HNINTA
@@ -604,7 +609,8 @@
      C                   Z-ADD     0             WKVDAT            5 0
      C                   Z-ADD     0             WKAIAP           13 0
      C                   Z-ADD     0             WKCALC            1 0
-     C                   Z-ADD     0             WKBRTT            2 0
+     C**********         Z-ADD     0             WKBRTT            2 0                        CSD103
+     C                   MOVE      *BLANKS       WKBRTT            2                          CSD103
      C                   Z-ADD     0             WKBRTE           11 7
      C                   Z-ADD     0             WKRTSP           11 7
      C                   MOVE      *BLANKS       WKSPIN            1
@@ -657,17 +663,20 @@
      C     HQAMTP        OREQ      'MC'
      C     HQAMTP        OREQ      'ST'
      C                   Z-ADD     HQCALC        WKCALC
-     C                   Z-ADD     HQBRTT        WKBRTT
+     C**********         Z-ADD     HQBRTT        WKBRTT                                       CSD103
+     C                   MOVE      HQBRTT        WKBRTT                                       CSD103
      C                   Z-ADD     HQBRTE        WKBRTE
      C                   Z-ADD     HQRTSP        WKRTSP
      C                   MOVE      HQSPIN        WKSPIN
      C                   ENDIF
      C     HQAMTP        IFEQ      'BC'
-     C                   Z-ADD     HQBRTT        WKBRTT
+     C**********         Z-ADD     HQBRTT        WKBRTT                                       CSD103
+     C                   MOVE      HQBRTT        WKBRTT                                       CSD103
      C                   Z-ADD     HQBRTE        WKBRTE
      C                   ENDIF
      C     HQAMTP        IFEQ      'BR'
-     C                   Z-ADD     HQBRTT        WKBRTT
+     C**********         Z-ADD     HQBRTT        WKBRTT                                       CSD103
+     C                   MOVE      HQBRTT        WKBRTT                                       CSD103
      C                   Z-ADD     HQBRTE        WKBRTE
      C                   ENDIF
      C     HQAMTP        IFEQ      'SC'

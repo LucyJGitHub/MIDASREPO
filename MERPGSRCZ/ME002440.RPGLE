@@ -123,14 +123,15 @@
      D  DSCHAR3                3      3A                                                    MD051648
      D  DSMN                   4      5S 0                                                  MD051648
      D  DSHHMN                 1      5A                                                    MD051648
+      *                                                                                     MD051648
       ** Data structure for time format 'HH:MN'                                             MD051648
       *                                                                                     MD051648
      D DSTIME          DS                                                                   MD051648
      D  DSTIMEHH               1      2S 0                                                  MD051648
      D  DSTIMEMN               3      4S 0                                                  MD051648
+      *                                                                                     MD051648
       ** Data structure for time format 'HHMN'                                              MD051648
       *                                                                                     MD051648
-
       ** Declared variables
       ** ------------------
       *
@@ -247,6 +248,7 @@
       *
      C**********         MOVEL     F1STIM        WWHour                                     MD051648
      C**********         MOVE      F1STIM        WWMinute                                   MD051648
+      *                                                                                     MD051648
       ** Convert time from 'HH:MN:' to 'HHMN'                                               MD051648
       *                                                                                     MD051648
      C                   EVAL      DSHHMN = F1STIM                                          MD051648
@@ -379,6 +381,7 @@
 
       ** End Time
       *
+      *                                                                                     MD051648
       ** Convert time from 'HH:MN:' to 'HHMN'                                               MD051648
       *                                                                                     MD051648
      C                   EVAL      DSHHMN = F1ETIM                                          MD051648
@@ -387,7 +390,7 @@
      C                   EVAL      WWHour   = DSHH                                          MD051648
      C                   EVAL      WWMinute = DSMN                                          MD051648
      C                   MOVE      DSTIME        WF1ETIM                                    MD051648
-                                                                                            MD051648
+      *                                                                                     MD051648
  B1  C                   SELECT
       *
       ** -- The field must be left to zeros if no Period is entered

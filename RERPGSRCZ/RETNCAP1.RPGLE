@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CCB020             Date 06Aug12               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CCB020             Date 06Aug12               *
       *                 CRE073             Date 06Dec10               *
       *                 CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -23,7 +24,8 @@
       *                 223609             Date 18Dec09               *
       *                 CRE015  *CREATE    Date 18Dec09               *
       *---------------------------------------------------------------*
-      *  MD046248 - Finastra Rebranding                               *
+      *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *

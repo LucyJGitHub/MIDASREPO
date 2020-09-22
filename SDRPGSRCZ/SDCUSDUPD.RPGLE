@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD026746           Date 05Feb20               *
-      *  Prev Amend No. MD025022           Date 05Feb20               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD026746           Date 05Feb20               *
+      *                 MD025022           Date 05Feb20               *
       *                 MD055446           Date 04Apr20               *
       *                 260405             Date 04Apr20               *
       *                 MD055210           Date 03Feb20               *
@@ -152,6 +153,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD026746 - File control out of balance due to customer       *
       *             closure. Extend fix MD025022 to cover scenario    *
       *             where customer has been closed or released.       *

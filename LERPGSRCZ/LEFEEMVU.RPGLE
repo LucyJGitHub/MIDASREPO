@@ -536,7 +536,7 @@
 
       ** Parameter for LEFEEMRTV                                                              244636
      D*PRcvParm*       S             92                                               244636 CSF011A
-     D********** PRcvParm        S            320                                   CSF011A MD050688
+     D*PRcvParm*       S            320                                             CSF011A MD050688
      D PRcvParm        S            545                                                     MD050688
                                                                                               244636
      D BlankSTYP       S              2A                                                      CSD095

@@ -256,7 +256,7 @@
      D WIdx            S              3P 0
                                                                                               244636
       ** Parameter for LEFEEMRTV                                                              244636
-     D********** PRcvParm        S             92                                    244636 MD050688
+     D*PRcvParm*       S             92                                              244636 MD050688
      D PRcvParm        S            545                                                     MD050688
                                                                                             AR375892
      D PPayParm        S           1045                                                     AR375892

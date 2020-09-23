@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD031003           Date 08Sep20               *
-      *  Prev Amend No. MD052696           Date 04Apr19               *
+      *  Last Amend No. AR375891B          Date 26Aug20               *
+      *  Prev Amend No. AR375892           Date 26Aug20               *
+      *                 MD052696           Date 04Apr19               *
       *                 MD004904           Date 04Apr19               *
       *                 AR1049357          Date 04Apr19               *
       *                 AR994776           Date 04Apr19               *
@@ -116,8 +117,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD031003 - Facility Fee amount divided by 100 upon rejection *
-      *             of change in Fee end date.                        *
+      *  AR375891B - Amendment to Settlement details do not reflect   *
+      *              on file. Ensure currency is set correctly.       *
+      *              (Child: AR375892)                                *
+      *  AR375892 - Incorrect projection for fees attached to parts   *
+      *             sold loan. Use Payment Settlement instead of      *
+      *             Receipt Settlement.                               *
       *  MD052696 - Unauthorised Loans and fees not visible in WIP,   *
       *             after rejecting amendments to their maturity dates*
       *  MD004904 - Rejection causes incorrect exchange rate and      *
@@ -958,7 +963,9 @@
      C                   EXSR      SRTEXT
      C                   MOVEL     ZAMSTP        DDFETP
      C**********         MOVE      'P'           WPTFI                                        CLE106
-     C                   MOVE      CL_LPFI       WPTFI                                        CLE106
+     C**********         MOVE      CL_LPFI       WPTFI                               CLE106 AR375892
+     C**********         MOVE      'P'           WPTFI                            AR375892 AR375891B
+     C                   MOVE      CL_LPFI       WPTFI                                     AR375891B
      C                   ENDIF
       *
      C     CL_PTYP       IFEQ      64
@@ -4233,8 +4240,14 @@
      C                   ELSE
       ** info coming from input parameter
      C     WPTFI         IFEQ      ' '
+     C                   IF        CL_PTYP = 66 or CL_PTYP = 67                            AR375891B
+     C                             or CL_PTYP = 69 or CL_PTYP = 72                         AR375891B
+     C                   EVAL      VFSCCY = DDPSCY                                         AR375891B
+     C                   EVAL      VFICCY = DDIC72                                         AR375891B
+     C                   ELSE                                                              AR375891B
      C                   EVAL      VFSCCY = DDRSCY
      C                   EVAL      VFICCY = *BLANKS
+     C                   ENDIF                                                             AR375891B
      C                   ENDIF
      C     WPTFI         IFEQ      'P'
      C     WPTFI         OREQ      'S'                                                        CLE106

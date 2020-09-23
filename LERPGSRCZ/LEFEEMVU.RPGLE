@@ -22,8 +22,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD052696           Date 04Apr19               *
-      *  Prev Amend No. MD031692           Date 12Mar20               *
+      *  Last Amend No. MD050688           Date 16Sep20               *
+      *  Prev Amend No. AR375891B          Date 26Aug20               *
+      *                 AR375892           Date 26Aug20               *
+      *                 MD031692           Date 12Mar20               *
       *                 MD030856           Date 06Nov19               *
       *                 CER050             Date 16Jun19               *
       *                 CSD102             Date 08Jan19               *
@@ -86,11 +88,20 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050688 - Funnel Item                                       *
+      *           - If the fee is attached to a non-Part Sold loan    *
+      *             clear the Payment Settlement details.             *
+      *  AR375891B - Amendment to Settlement details do not reflect   *
+      *              on file. Ensure protect indicator set correctly. *
+      *              (Child: AR375892)                                *
+      *  AR375892 - Incorrect projection for fees attached to parts   *
+      *             sold loan. Use Payment Settlement instead of      *
+      *             Receipt Settlement.                               *
       *  MD052696 - Unauthorised Loans and fees not visible in WIP,   *
       *             after rejecting amendments to their maturity dates*
       *  MD031692 - Incorrect accrual when fee rate is changed on     *
       *             payment date. Add warning message parameters in   *
-      *             LEFEEMAMD.                                        *      
+      *             LEFEEMAMD.                                        *
       *  MD030856 - Introduced reject processing to FEEM              *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -530,6 +541,7 @@
      D BlankSTYP       S              2A                                                      CSD095
      D BlankBRCA       S              3A                                                      CSD095
                                                                                               CSD095
+     D PPayParm        S            594                                                     AR375892
       ** +--------------------------------------+
       ** Ê End of D-specs                       Ê
       ** Ê ==============                       Ê
@@ -596,12 +608,26 @@
      C                   WHEN      DDACTN = 'I'
                                                                                             AR693137
       ** Default settlement details from related loan                                       AR693137
+      ** Use Pay Settlement if attached to parts sold                                       AR375892
+      *                                                                                     AR375892
+     C                   IF        CL_PTYP <> 66                                            AR375892
+     C                             And CL_PTYP <> 67                                        AR375892
+     C                             And CL_PTYP <> 69                                        AR375892
+     C                             And CL_PTYP <> 72                                        AR375892
                                                                                             AR693137
      C                   IF        ##RECS = *blank AND                                      AR693137
      C                             PRcvParm <> *blank                                       AR693137
      C                   MOVEL     PRcvParm      ##RECS                                     AR693137
      C                   ENDIF                                                              AR693137
-      *
+      *                                                                                     AR375892
+     C                   ELSE                                                               AR375892
+      *                                                                                     AR375892
+     C                   IF        ##PAYS = *blank AND                                      AR375892
+     C                             PPayParm <> *blank                                       AR375892
+     C                   MOVEL     PPayParm      ##PAYS                                     AR375892
+     C                   ENDIF                                                              AR375892
+     C                   ENDIF                                                              AR375892
+      *                                                                                     AR375892
      C                   EXSR      ValidateTr
      C                   EVAL      WrkDftSettl = 'Y'
       *****************************************************************              244636 AR693137
@@ -747,6 +773,7 @@
       ** Array index (3P0) from/to caller
      C                   PARM                    Idx
      C                   PARM                    PRcvParm                                     244636
+     C                   PARM                    PPayParm                                   AR375892
 
      C                   Z-ADD     FE_FETNLU     H#TNLU
 
@@ -905,8 +932,14 @@
      C                   ENDIF
 
      C     WPTFI         IFEQ      *BLANK
+     C                   IF        CL_PTYP = 66 or CL_PTYP = 67                            AR375891B
+     C                             or CL_PTYP = 69 or CL_PTYP = 72                         AR375891B
+     C                   MOVE      'N'           ##PPAY                                    AR375891B
+     C                   MOVE      'Y'           ##PREC                                    AR375891B
+     C                   ELSE                                                              AR375891B
      C                   MOVE      'Y'           ##PPAY
      C                   MOVE      'N'           ##PREC
+     C                   ENDIF                                                             AR375891B
      C                   ENDIF
 
      C                   ENDIF
@@ -1224,6 +1257,13 @@
      C     DDRSTM        IFEQ      *BLANK
      C                   MOVE      '00'          DDRSTM
      C                   ENDIF
+      *                                                                                     MD050688
+     C** If the Fee is attached to non-Part Sold loan clear Payment Settlement Details      MD050688
+     C*                                                                                     MD050688
+     C                   IF        CL_PTYP <> 66                                            MD050688
+     C                             AND CL_PTYP <> 67                                        MD050688
+     C                             AND CL_PTYP <> 69                                        MD050688
+     C                             AND CL_PTYP <> 72                                        MD050688
                                                                                            BUG21889A
       ** If the Participant Type is 'A' (agent) or 'I' (internal) or 'blank' and           BUG21889A
       ** CLE106 = 'Y' where the Settlement Payment Tab need not to be shown (patterned     BUG21889A
@@ -1241,6 +1281,7 @@
      C**********         EVAL      DDPSTM = *BLANKS                               BUG21889A AR674765
      C                   EVAL      ##PAYS = *BLANKS                                         AR674765
      C                   ENDIF                                                             BUG21889A
+     C                   ENDIF                                                              MD050688
                                                                                            BUG21889A
       ** If the Participant Type is not 'A' (agent) or not 'blank' or CLE106 not           BUG21889A
       ** equal to 'N' where the Settlement Receipt Tab need not to be shown (patterned     BUG21889A
@@ -1593,7 +1634,7 @@
       ** Array index (3P0) from/to caller                                                   MD031692
                                                                                             MD031692
      C                   PARM                    WIdx                                       MD031692
-                                                                                            MD031692     
+                                                                                            MD031692
       ** If any errors overwrite previous error information
 
      C                   IF        AmIdx <> 0

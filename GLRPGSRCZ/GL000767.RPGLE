@@ -15,8 +15,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD056237           Date 20Jul20               *
-      *  Prev Amend No. MD054940           Date 18Feb20               *
+      *  Last Amend No. CGL194             Date 01Aug20               *
+      *  Prev Amend No. MD056237           Date 20Jul20               *
+      *                 MD054940           Date 18Feb20               *
+      *                 MD055078           Date 18Feb20               *
       *                 MD055071           Date 29Jan20               *
       *                 MD054986           Date 27Jan20               *
       *                 MD054905           Date 04Dec19               *
@@ -29,10 +31,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL194 - CRS XML 2.0 Schema                                  *
       *  MD056237 - Reporting Group/Accounts were removed from the    *
       *             CRS Report after authorization. Amend to          *
       *             correctly get data from file.                     *
       *  MD054940 - CRS Issue: Controlling Person Type                *
+      *  MD055078 - Information on non-account holders is missing     *
       *  MD055071- Correct A/C Holder Type for N/PA. With ContPerson  *
       *            = CRS101, Wihtout ContPerson = CRS103              *
       *  MD054986 - CRS Issue: Account Holder/Organisation            *
@@ -215,6 +219,11 @@
       ** Midas GL Report Management                                                           CGL185
      FGLCAPAL1  UF A E           K DISK    INFSR(*PSSR)                                       CGL185
                                                                                               CGL185
+      ** Midas GL Report Management Data File                                                 CGL194
+     FGLCRMDLC  UF A E           K DISK    INFSR(*PSSR)                                       CGL194
+     F                                     RENAME(GLCRMDD0:GLCRMDC1)                          CGL194
+     F                                     PREFIX(C1_)                                        CGL194
+
 
       *****************************************************************
       /EJECT
@@ -539,6 +548,10 @@
      D KDCTY           S              2A
      D WNUM3           S              3S 0
      D WTINElem        S                   LIKE(MGELMT)                                     MD054940
+     D WAcctRept       S              1A                                                      CGL194
+     D KMsgApp         S                   LIKE(MGMSID)                                       CGL194
+     D WFIDocTyp       S             10A                                                      CGL194
+     D WMsIdG          S             22A                                                      CGL194
 
       *****************************************************************
       /EJECT
@@ -766,15 +779,19 @@
      C                   EVAL      MGDATA = MGMSID
      C                   EXSR      SRWrite
 
-     C                   EVAL      MGELMT = 'CorrMessageRefID'
-     C                   IF        PActn = 'C'
-     C                             OR PActn = 'O'
-     C                             OR PActn = 'I'
-     C                   EVAL      MGDATA = PMsid
-     C                   ELSE
-     C                   EVAL      MGDATA = *BLANK
-     C                   ENDIF
-     C                   EXSR      SRWrite
+     C                   EVAL      MGELMT = 'MessageTypeIndic'                                CGL194
+     C                   EVAL      MGDATA = 'CRS701'                                          CGL194
+     C                   EXSR      SRWrite                                                    CGL194
+                                                                                              CGL194
+     C**********         EVAL      MGELMT = 'CorrMessageRefID'                                CGL194
+     C**********         IF        PActn = 'C'                                                CGL194
+     C**********                   OR PActn = 'O'                                             CGL194
+     C**********                   OR PActn = 'I'                                             CGL194
+     C**********         EVAL      MGDATA = PMsid                                             CGL194
+     C**********         ELSE                                                                 CGL194
+     C**********         EVAL      MGDATA = *BLANK                                            CGL194
+     C**********         ENDIF                                                                CGL194
+     C**********         EXSR      SRWrite                                                    CGL194
 
      C                   EVAL      MGELMT = 'ReportingPeriod'
      C                   EVAL      MGDATA = PYEAR + '-12-31'
@@ -822,17 +839,23 @@
      C                   SELECT
      C                   WHEN      MGELMT = 'MessageRefId'
      C                   EVAL      MGDATA = MGMSID
-     C                   WHEN      MGELMT = 'CorrMessageRefID'
-     C                   IF        PActn = 'C'
-     C                             OR PActn = 'O'
-     C                             OR PActn = 'I'
-     C                   EVAL      MGDATA = PMsid
-     C                   ENDIF
+     C**********         WHEN      MGELMT = 'CorrMessageRefID'                                CGL194
+     C**********         IF        PActn = 'C'                                                CGL194
+     C**********                   OR PActn = 'O'                                             CGL194
+     C**********                   OR PActn = 'I'                                             CGL194
+     C**********         EVAL      MGDATA = PMsid                                             CGL194
+     C**********         ENDIF                                                                CGL194
      C                   WHEN      MGELMT = 'Timestamp'
      C                   EVAL      MGDATA = %SUBST(WTMST:1:10)
      C                                      + 'T' + %SUBST(WTMST:12:2)
      C                                      + ':' + %SUBST(WTMST:15:2)
      C                                      + ':' + %SUBST(WTMST:18:2)
+                                                                                              CGL194
+     C                   WHEN      MGELMT = 'MessageTypeIndic'                                CGL194
+     C                   IF        PActn = 'C'                                                CGL194
+     C                             OR PActn = 'I'                                             CGL194
+     C                   EVAL      MGDATA = 'CRS702'                                          CGL194
+     C                   ENDIF                                                                CGL194
      C                   ENDSL
 
      C                   EXSR      SRWrite
@@ -850,6 +873,8 @@
       *****************************************************************
      C     SRReportFI    BEGSR
 
+     C                   EXSR      SRRFIDocTyp                                                CGL194
+                                                                                              CGL194
      C                   IF        PRpDocRef <> *BLANKS
      C                             AND PActn = 'C'
      C                             OR PActn = 'N'
@@ -913,7 +938,8 @@
      C                   EVAL      MGTPMT = 'ReportingFI'
 
      C                   EVAL      MGELMT = 'DocTypeIndic'
-     C                   EVAL      MGDATA = WDoctyp
+     C**********         EVAL      MGDATA = WDoctyp                                           CGL194
+     C                   EVAL      MGDATA = WFIDocTyp                                         CGL194
      C                   EXSR      SRWrite
 
      C                   EVAL      MGELMT = 'DocRefId'
@@ -928,7 +954,25 @@
      C                   EXSR      SRWrite
 
      C                   ELSE
+      * Check for previous corrected ReportingFI                                              CGL194
+     C                   IF        PRpDocRef = *BLANKS                                        CGL194
+     C                             AND PActn = 'C'                                            CGL194
+     C                   EVAL      KMsgApp = %SUBST(PMsId:1:22) + '.999ZZ'                    CGL194
+     C     KMSgId        SETGT     GLCRMGL1                                                   CGL194
+     C                   READP     GLCRMGL1                                                   CGL194
+     C                   EVAL      WMsIdG = %SUBST(PMsId:1:22)                                CGL194
+     C                   DOW       NOT %EOF(GLCRMGL1)                                         CGL194
+     C                             AND %SUBST(R1_GGMSID:1:22) = WMsIdG                        CGL194
+     C                   IF        %SUBST(R1_GGMSID:27:1) = 'A'                               CGL194
+     C                   EVAL      KMsgNo = R1_GGMSID                                         CGL194
+     C                   LEAVE                                                                CGL194
+     C                   ENDIF                                                                CGL194
+     C                   READP     GLCRMGL1                                                   CGL194
+     C                   ENDDO                                                                CGL194
+     C                   ELSE                                                                 CGL194
      C                   EVAL      KMsgNo = PMsId
+     C                   ENDIF                                                                CGL194
+                                                                                              CGL194
      C                   EVAL      KTopMT = 'ReportingFI'
      C     KRepFI        SETLL     GLCRMDL0
      C     KRepFI        READE     GLCRMDL0
@@ -950,6 +994,12 @@
      C                   EVAL      Iz = %SCAN('.':MGDATA) + 1
      C                   EVAL      %SUBST(MGDATA:Iz:6) = WMsgAcSq + WMsgDtyp
      C                                                   + WMsgActn
+                                                                                              CGL194
+     C                   WHEN      MGELMT = 'CorrDocRefId'                                    CGL194
+     C                   EVAL      MGDATA = *BLANKS                                           CGL194
+                                                                                              CGL194
+     C                   WHEN      MGELMT = 'DocTypeIndic'                                    CGL194
+     C                   EVAL      MGDATA = WFIDocTyp                                         CGL194
      C                   ENDSL
 
      C                   EXSR      SRWrite
@@ -969,6 +1019,7 @@
 
      C                   EXSR      SRInit
      C                   EVAL      IxPayment = 3001
+     C                   EVAL      WAcctRept = 'N'                                            CGL194
 
      C     PBrcd         SETLL     GLCRMXL0
      C     PBrcd         READE     GLCRMXL0
@@ -1074,7 +1125,19 @@
      C                   WHEN      WPrevRepJn = 'Y'
      C                   EXSR      SRComPayJac
      C                   ENDSL
-
+                                                                                              CGL194
+     C                   IF        WAcctRept <> 'Y'                                           CGL194
+     C                   EVAL      KMsgNo = MGMSID                                            CGL194
+     C                   EVAL      KTopMT = 'MessageSpec'                                     CGL194
+     C                   EVAL      KElemnam = 'MessageTypeIndic'                              CGL194
+                                                                                              CGL194
+     C     KMSpec        CHAIN     GLCRMDLC                                                   CGL194
+     C                   IF        %FOUND(GLCRMDLC)                                           CGL194
+     C                   EVAL      C1_MGDATA = 'CRS703'                                       CGL194
+     C                   UPDATE    GLCRMDC1                                                   CGL194
+     C                   ENDIF                                                                CGL194
+     C                   ENDIF                                                                CGL194
+                                                                                              CGL194
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1404,6 +1467,7 @@
      C     SRCsActRepHdr BEGSR
 
      C                   EVAL      MGSEQU = 1
+     C                   EVAL      WAcctRept = 'Y'                                            CGL194
 
      C                   EVAL      KGroupNm = 'AccountReport'
      C                   EVAL      KElemNm  = 'DocSpec'
@@ -2827,10 +2891,16 @@
      C                   DOW       NOT %EOF(SDCUAHL0)
 
      C                   IF        CAPCNT <> *Blanks
-     C                   MOVE      CAPCNT        WNUM3                                                
+     C                   MOVE      CAPCNT        WNUM3                                      MD055078
+     C                   ELSE                                                               MD055078
+     C                   EVAL      WNUM3 = *ZERO                                            MD055078
+     C                   ENDIF                                                              MD055078
+     C**********         MOVE      CAPCNT        WNUM3                                      MD055078
+     C                   IF        WNUM3 <> *ZERO                                           MD055078
+     C                             OR CACINT = 'Y'                                          MD055078
      C                   EVAL      IxConPer =IxConPer + 1
      C                   EVAL      MGSEQU =  IxConPer
-     C                   IF        WNUM3 <> *ZERO                                                        
+     C**********         IF        WNUM3 <> *ZERO                                           MD055078
      C                   EVAL      MGCUST = EXCUSD
      C                   EVAL      MGACHO = EXCUSD
      C                   EVAL      MGMTYP = 'CUST'
@@ -2853,6 +2923,7 @@
      C                   EXSR      SRWrite
 
      C                   EVAL      MGELMT = 'ControllingPerson'
+     C                   EVAL      PCuah = CAAUTH                                           MD055078
      C                   CALL      'AOCUSTR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY'        POptn
@@ -3001,7 +3072,7 @@
      C                   ENDIF
 
      C                   ENDIF
-     C                   ENDIF                                                                         
+     C**********         ENDIF                                                              MD055078
      C     XCust         READE     SDCUAHL0
      C                   ENDDO
 
@@ -3488,6 +3559,10 @@
      C                             AND PRType = 'APPROVED NEW'
      C                   EVAL      WRType = 'DRAFT CORRECTED'
       *
+     C                   WHEN      PActn = 'C'                                                CGL194
+     C                             AND PRType = 'APPROVED CORRECTED'                          CGL194
+     C                   EVAL      WRType = 'DRAFT CORRECTED'                                 CGL194
+      *                                                                                       CGL194
      C                   WHEN      PActn = 'O'
      C                             AND PRType = 'APPROVED'
      C                   EVAL      WRType = 'DRAFT DELETE'
@@ -3662,6 +3737,63 @@
      C                   ENDSL
 
      C                   ENDSR
+                                                                                              CGL194
+      *****************************************************************                       CGL194
+      /EJECT                                                                                  CGL194
+      *****************************************************************                       CGL194
+      *                                                               *                       CGL194
+      * SRRFIDocTyp - Determine Document Type of Reporting FI         *                       CGL194
+      *                                                               *                       CGL194
+      *****************************************************************                       CGL194
+     C     SRRFIDocTyp   BEGSR                                                                CGL194
+      *                                                                                       CGL194
+     C                   IF        Pstat = 'LIVE'                                             CGL194
+     C                   SELECT                                                               CGL194
+     C                   WHEN      PRpDocRef = *BLANKS                                        CGL194
+     C                             AND PActn = 'C'                                            CGL194
+     C                   EVAL      WFIDocTyp = 'OECD0'                                        CGL194
+     C                   WHEN      PActn = 'I'                                                CGL194
+     C                   EVAL      WFIDocTyp = 'OECD0'                                        CGL194
+     C                   WHEN      PActn = 'N'                                                CGL194
+     C                             OR PActn = 'R'                                             CGL194
+     C                   EVAL      WFIDocTyp = 'OECD1'                                        CGL194
+     C                   EVAL      WActn  = 'N'                                               CGL194
+     C                   WHEN      PRpDocRef <> *BLANKS                                       CGL194
+     C                             AND PActn = 'C'                                            CGL194
+     C                   EVAL      WFIDocTyp = 'OECD2'                                        CGL194
+     C                   WHEN      PActn = 'O'                                                CGL194
+     C                             AND PRtype = 'DRAFT NEW'                                   CGL194
+     C                   EVAL      WFIDocTyp = 'OECD1'                                        CGL194
+     C                   WHEN      PActn = 'O'                                                CGL194
+     C                             AND PRtype <> 'DRAFT NEW'                                  CGL194
+     C                   EVAL      WFIDocTyp = 'OECD0'                                        CGL194
+     C                   ENDSL                                                                CGL194
+     C                   ENDIF                                                                CGL194
+                                                                                              CGL194
+     C                   IF        PStat = 'TEST'                                             CGL194
+     C                   SELECT                                                               CGL194
+     C                   WHEN      PRpDocRef = *BLANKS                                        CGL194
+     C                             AND PActn = 'C'                                            CGL194
+     C                   EVAL      WFIDocTyp = 'OECD10'                                       CGL194
+     C                   WHEN      PActn = 'I'                                                CGL194
+     C                   EVAL      WFIDocTyp = 'OECD10'                                       CGL194
+     C                   WHEN      PActn = 'N'                                                CGL194
+     C                             OR PActn = 'R'                                             CGL194
+     C                   EVAL      WFIDocTyp = 'OECD11'                                       CGL194
+     C                   WHEN      PRpDocRef <> *BLANKS                                       CGL194
+     C                             AND PActn = 'C'                                            CGL194
+     C                   EVAL      WFIDocTyp = 'OECD12'                                       CGL194
+     C                   WHEN      PActn = 'O'                                                CGL194
+     C                             AND PRtype = 'DRAFT NEW'                                   CGL194
+     C                   EVAL      WFIDocTyp = 'OECD11'                                       CGL194
+     C                   WHEN      PActn = 'O'                                                CGL194
+     C                             AND PRtype <> 'DRAFT NEW'                                  CGL194
+     C                   EVAL      WFIDocTyp = 'OECD10'                                       CGL194
+     C                   ENDSL                                                                CGL194
+     C                   ENDIF                                                                CGL194
+                                                                                              CGL194
+     C                   ENDSR                                                                CGL194
+                                                                                              CGL194
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -4453,6 +4585,11 @@
 
      C                   DOW       NOT %EOF(SDCUAHL0)
      C                   IF        CAPCNT <> *Blanks
+     C                   MOVE      CAPCNT        WNUM3                                      MD055078
+     C                   ELSE                                                               MD055078
+     C                   EVAL      WNUM3 = 0                                                MD055078
+     C                   ENDIF                                                              MD055078
+     C                   IF        WNUM3 <> *ZERO                                           MD055078
      C                             OR CACINT = 'Y'                                          MD055071
      C**********         MOVE      CAPCNT        WNUM3                                      MD055071
      C**********         IF        WNUM3 <> *ZERO                                           MD055071
@@ -4732,6 +4869,15 @@
      C                   KFLD                    KDNah
      C                   KFLD                    KDCty
 
+     C     KMSpec        KLIST                                                                CGL194
+     C                   KFLD                    KMsgNo                                       CGL194
+     C                   KFLD                    KTopMT                                       CGL194
+     C                   KFLD                    KElemnam                                     CGL194
+                                                                                              CGL194
+     C     KMSgId        KLIST                                                                CGL194
+     C                   KFLD                    PCtry                                        CGL194
+     C                   KFLD                    KMsgApp                                      CGL194
+                                                                                              CGL194
      C                   ENDSR
       *****************************************************************
       /EJECT

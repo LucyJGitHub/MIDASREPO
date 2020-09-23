@@ -11,13 +11,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD054905           Date 04Dec19               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. CGL194             Date 01Aug20               *
+      *  Prev Amend No. MD054905           Date 04Dec19               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD040875           Date 26Aug16               *
       *                 CGL177  *CREATE    Date 11Jan16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL194 - CRS XML 2.0 Schema                                  *
       *  MD054905 - Change Message Ref Id format                      *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD040875 - Message Ref ID for another branch with different  *
@@ -674,6 +676,7 @@
      C                             OR DDRPTY = 'APPROVED CORRECTED'
      C                             OR DDRPTY = 'APPROVED DELETE')
      C                             AND (DDACTN <> 'E'
+     C                             AND DDACTN <> 'C'                                          CGL194
      C                             AND DDACTN <> 'P')
      C                   EVAL      *In95 = *On
      C                   SELECT

@@ -19,8 +19,9 @@
       *                                                               *
       *  (c)Finastra International Limited 2004                       *
       *                                                               *
-      *  Last Amend No. MD046248           Date 05Feb18               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 05Feb18               *
+      *                 CDL099             Date 06Oct17               *
       *                 AR847010           Date 25May16               *
       *                 MD031950           Date 17Jun15               *
       *                 CAP212             Date 15Sep14               *
@@ -47,6 +48,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  AR847010 - Audit report not found in FCREPTPD causing comp.  *

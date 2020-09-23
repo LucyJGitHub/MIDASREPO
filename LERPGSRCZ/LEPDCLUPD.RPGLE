@@ -560,7 +560,8 @@
      D ZAMTCO          S             15  0
  
      D WAMTP           S              2
-     D WBRTT           S              2
+     D*WBRTT****       S              2                                                       CSD103
+     D WBRTT           S              2A                                                      CSD103
      D WRTSP           S             11  7
      D WPRAM           S             13  0
      D WINTA           S             13  0

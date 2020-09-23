@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD054782           Date 04Dec19               *
-      *  Prev Amend No. AR674226           Date 04Dec19               *
+      *  Last Amend No. MD027065           Date 22Sep20               *
+      *  Prev Amend No. MD054782           Date 04Dec19               *
+      *                 AR674226           Date 04Dec19               *
       *                 CLE071             Date 18Jul18               *
       *                 CLE160             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
@@ -79,6 +80,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD027065 - Expiry date of CA facility cannot be earlier than *
+      *             TR facility attached to it. Pattern after 239194. *
       *  MD054782 - SQNO of LEFCAMPD is same with LEMNFUPD.           *
       *             Rename SQNO of LEMNFUPF to FSQNO                  *
       *  AR674226 - Manual transaction reached 999. Increase the size *
@@ -2338,6 +2341,36 @@ E4   C                   ENDIF
      C                   Movel     'LEF0269'     MsgIDXAr(Idx)
      C                   ENDIF
       *
+      **Expiry date of CA should not be before the expiry date of its tranches              MD027065
+      *                                                                                     MD027065
+     C                   MOVE      '0'           *IN36                                      MD027065
+     C                   MOVE      @@CNUM        K0CANM                                     MD027065
+     C                   MOVE      @@FACT        K0CAFT                                     MD027065
+     C                   MOVE      @@FCNO        K0CAFN                                     MD027065
+      *                                                                                     MD027065
+     C     K#KY10        SETLL     LEFCLTL9                                                 MD027065
+     C     K#KY10        READE     LEFCLTL9                               80                MD027065
+      *                                                                                     MD027065
+     C     *IN80         DOWEQ     '0'                                                      MD027065
+     C     *IN36         ANDEQ     '0'                                                      MD027065
+      *                                                                                     MD027065
+      ** If new Expiry date is earlier than TR's Expiry date, display                       MD027065
+      ** error message                                                                      MD027065
+      *                                                                                     MD027065
+     C     W#DTEX        IFLT      LEDTEX                                                   MD027065
+     C     LETRCA        ANDEQ     'TR'                                                     MD027065
+     C     LERECI        ANDEQ     'D'                                                      MD027065
+     C                   Move      'N'           DDDTEXOK                                   MD027065
+     C                   Add       1             Idx                                        MD027065
+     C                   Movel     'DDDTEX'      FldNamXAr(Idx)                             MD027065
+     C                   Movel     '5049413'     MsgIDXAr(Idx)                              MD027065
+     C                   Move      '1'           *IN36                                      MD027065
+     C                   ENDIF                                                              MD027065
+      *                                                                                     MD027065
+     C     K#KY10        READE     LEFCLTL9                               80                MD027065
+      *                                                                                     MD027065
+     C                   ENDDO                                                              MD027065
+      *                                                                                     MD027065
      C                   MOVE      *BLANKS       CACY
      C                   ENDIF
       *

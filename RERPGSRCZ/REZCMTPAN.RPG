@@ -19,8 +19,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *  Last Amend No. AR1004252          Date 06Aug12               *
+      *  Prev Amend No. AR928996A          Date 03May12               *
+      *                 AR928996           Date 27Mar12               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CRE075             Date 06Dec10               *
       *                 AR676213           Date 19Nov10               *
       *                 CER059             Date 19Jul10               *
       *                 CER047             Date 19May08               *
@@ -42,6 +45,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1004252 - Check functions fail to recognise account as CM  *
+      *              and hence payment is not STP'd. Change REZCMTOPA *
+      *              and REZCMTPAN to also check Account name and     *
+      *              Alternative address "X". (Child: AR1004253)      *
+      *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
+      *             data structure field to have the correct length.  *
+      *             (Child: AR928997A)                                *
+      *  AR928996 - Data lost due to rate field :36: being truncated. *
+      *             (Child: AR928997)                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  AR676213 - Incorrect definition of CLGLAI field (Recompile)  *
@@ -70,6 +82,9 @@
      FREZSHLJ1IF  E           K        DISK
      FREZSHDL0IF  E           K        DISK
       *
+     FSDALTNL1IF  E           K        DISK                                                AR1004252
+     F            @BCREDE                           KRENAME@ALTNL1                         AR1004252
+      *                                                                                    AR1004252
      E                    CPY@    1   1 80
       ** Array containing Copyright statement
       *
@@ -210,6 +225,18 @@
      C                     MOVE *BLANK    RETFLD
      C                     MOVELSBSMSG    WUTGCK
      C                     MOVE 'N'       FOUND   1
+      *                                                                                    AR1004252
+     C                     MOVEL*BLANKS   W#IBAN                                           AR1004252
+     C                     CALL 'AOIBANR4'             90                                  AR1004252
+     C                     PARM           P@RTCD                                           AR1004252
+     C                     PARM '*KEY   ' P@OPTN                                           AR1004252
+     C                     PARM           @IBAN                                            AR1004252
+     C           ACCT      PARM ACCT      DSFDY                                            AR1004252
+      *                                                                                    AR1004252
+     C           P@RTCD    IFEQ *BLANK                                                     AR1004252
+     C           RECI      ANDEQ'D'                                                        AR1004252
+     C                     MOVEL'Y'       W#IBAN  1                                        AR1004252
+     C                     ENDIF                                                           AR1004252
       *
      C* It must be an account line
      C           @SLASH    IFEQ '/'
@@ -241,6 +268,7 @@
      C*
      C* CHECK  IF GL ACCOUNT
      C           @BL16     WHEQ *BLANK
+     C           W#IBAN    ANDNE'Y'                                                        AR1004252
      C                     MOVEL@BRCA     P@BRCA
      C                     MOVEL@CNUM     P@CNUM
      C                     MOVEL@CCY      P@CUCD
@@ -305,9 +333,32 @@
      C                     PARM           @KEY1  10
      C                     PARM *BLANK    @KYST   7
      C           SDCUST    PARM SDCUST    DSSDY
+      *                                                                                    AR1004252
+      ** Get Alternate address I                                                           AR1004252
+      *                                                                                    AR1004252
+     C           KALTN1    KLIST                                                           AR1004252
+     C                     KFLD           BCCUST                                           AR1004252
+     C                     KFLD           BCADCD                                           AR1004252
+      *                                                                                    AR1004252
+     C           @RTCD     IFEQ *BLANK                                                     AR1004252
+     C                     MOVELBBCUST    BCCUST                                           AR1004252
+     C                     MOVEL'X'       BCADCD                                           AR1004252
+     C           KALTN1    CHAIN@ALTNL1              91                                    AR1004252
+     C                     ENDIF                                                           AR1004252
      C*
      C           @RTCD     IFEQ *BLANK
      C           BBCNA1    ANDEQXNAME
+      *                                                                                    AR1004252
+      ** Or equal to alternate address line I                                              AR1004252
+      *                                                                                    AR1004252
+     C           @RTCD     OREQ *BLANK                                                     AR1004252
+     C           *IN91     ANDEQ*OFF                                                       AR1004252
+     C           BCCNA1    ANDEQXNAME                                                      AR1004252
+      *                                                                                    AR1004252
+      ** Or equal to Account Name                                                          AR1004252
+      *                                                                                    AR1004252
+     C           @RTCD     OREQ *BLANK                                                     AR1004252
+     C           ANAM      ANDEQXNAME                                                      AR1004252
      C*
      C* Top Account must be a Master Account as well.
      C*

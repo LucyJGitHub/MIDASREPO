@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD047971           Date 16Oct17               *
+      *  Last Amend No. MD031031           Date 23Feb15               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD047971           Date 16Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 MD036070           Date 19Oct15               *
       *                 CDL094             Date 11Jun14               *
@@ -84,6 +85,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031031 - F1DLNO missing in DLDLDnQD file for LDNI, NASP,   *
+      *             NASS, FRA, CIRS and SIRS. Write to extension file *
+      *             whether CLE025 is *ON or *OFF.                    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD047971 - Do not allow amendment to settlement account if   *
       *             that side is already netted.                      *      
@@ -2272,7 +2276,8 @@
                                                                                               244036
       ** Add record within Deals Master Extension File (done from Java layer).                244036
      C**********         IF        DDACTN = 'I'                                         244036247888
-     C                   IF        DDACTN = 'I' AND CLE025 = 'Y'                              247888
+     C**********         IF        DDACTN = 'I' AND CLE025 = 'Y'                     247888 MD031031
+     C                   IF        DDACTN = 'I'                                             MD031031
      C                   EXSR      WriteDLDLDB                                                244036
      C                   END                                                                  244036
                                                                                               244036

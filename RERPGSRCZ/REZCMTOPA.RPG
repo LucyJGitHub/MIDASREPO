@@ -18,8 +18,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *  Last Amend No. AR1004252          Date 06Aug12               *
+      *  Prev Amend No. AR973615           Date 28May12               *
+      *                 211499A            Date 28May12               *
+      *                 223783             Date 28May12               *
+      *                 AR928996A          Date 03May12               *
+      *                 AR928996           Date 27Mar12               *
+      *                 MD046248           Date 27Oct17               *
+      *                 CRE075             Date 06Dec10               *
       *                 AR676213           Date 19Nov10               *
       *                 CER059             Date 19Jul10               *
       *                 CER047             Date 19May08               *
@@ -37,6 +43,25 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1004252 - Check functions fail to recognise account as CM  *
+      *              and hence payment is not STP'd. Change REZCMTOPA *
+      *              and REZCMTPAN to also check Account name and     *
+      *              Alternative address "X". (Child: AR1004253)      *
+      *  AR973615 - Add XNAME on the I specs so that 211499A would be *
+      *             able to compile. (Child: AR973617)                *
+      *  211499A- Missing part of fix 211499.                         *
+      *           Apply the same function as RECMTPAN about name.     *
+      *           The name has to be the same as the account          *
+      *           customer's name.                                    *
+      *         - Applied for AR973615 (Child: AR973617)              *
+      *  223783 - Call AOIBANR4 with correct parameter.               *
+      *         - Applied for AR973615 (Child: AR973617)              *
+      *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
+      *             data structure field to have the correct length.  *
+      *             (Recompile) (Child: AR928997A)                    *
+      *  AR928996 - Data lost due to rate field :36: being truncated. *
+      *             (Recompile)                                       *
+      *             (Child: AR928997)                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  AR676213 - Incorrect definition of CLGLAI field (Recompile)  *
@@ -57,6 +82,9 @@
       *
      FREZSHLJ1IF  E           K        DISK
       *
+     FSDALTNL1IF  E           K        DISK                                                AR1004252
+     F            @BCREDE                           KRENAME@ALTNL1                         AR1004252
+      *                                                                                    AR1004252
      E                    CPY@    1   1 80
       ** Array containing Copyright statement
       *
@@ -65,6 +93,7 @@
      IACCT      E DSACCNTAB
      IDSFDY     E DSDSFDY
      IDSSDY     E DSDSSDY
+     ISDCUST    E DSSDCUSTPD                                                                 211499A
      ISCSARD    E DSSCSARDPD
      I              LCD                             WLCD
      I            DS
@@ -122,6 +151,7 @@
      I**********                             26  59 @IBAN                                     CGL029
      I                                       32  65 @IBAN                                     CGL029
       *
+     I                                       66 100 XNAME                                   AR973615
      I            DS
      I**********                              1  18 @TOPAC                                    CGL029
      I                                        1  24 @TOPAC                                    CGL029
@@ -255,7 +285,8 @@
      C           CFT004    WHEQ 'Y'
      C                     CALL 'AOIBANR4'             90
      C                     PARM           P@RTCD
-     C                     PARM '*VERIFY' P@OPTN
+     C**********           PARM '*VERIFY' P@OPTN                                              223783
+     C                     PARM '*KEY   ' P@OPTN                                              223783
      C                     PARM           @IBAN
      C           ACCT      PARM ACCT      DSSDY
      C*
@@ -278,6 +309,42 @@
      C           *IN70     IFEQ '0'
      C           ZDDEST    ANDNE*BLANK
      C           POPER     ANDEQ'EQ'
+      *                                                                                      211499A
+      ** Check if NAME is name of account owner                                              211499A
+      *                                                                                      211499A
+     C                     MOVELKCNUM     @KEY1                                              211499A
+     C                     CALL 'AOCUSTR0'                                                   211499A
+     C                     PARM *BLANKS   @RTCD   7                                          211499A
+     C                     PARM '*KEY   ' @OPTN   7                                          211499A
+     C                     PARM           @KEY1  10                                          211499A
+     C                     PARM *BLANK    @KYST   7                                          211499A
+     C           SDCUST    PARM SDCUST    DSSDY                                              211499A
+      *                                                                                    AR1004252
+      ** Get Alternate address I                                                           AR1004252
+      *                                                                                    AR1004252
+     C           KALTN1    KLIST                                                           AR1004252
+     C                     KFLD           BCCUST                                           AR1004252
+     C                     KFLD           BCADCD                                           AR1004252
+      *                                                                                    AR1004252
+     C           @RTCD     IFEQ *BLANK                                                     AR1004252
+     C                     MOVELBBCUST    BCCUST                                           AR1004252
+     C                     MOVEL'X'       BCADCD                                           AR1004252
+     C           KALTN1    CHAIN@ALTNL1              91                                    AR1004252
+     C                     ENDIF                                                           AR1004252
+      *                                                                                      211499A
+     C           @RTCD     IFEQ *BLANK                                                       211499A
+     C           BBCNA1    ANDEQXNAME                                                        211499A
+      *                                                                                    AR1004252
+      ** Or equal to alternate address line I                                              AR1004252
+      *                                                                                    AR1004252
+     C           @RTCD     OREQ *BLANK                                                     AR1004252
+     C           *IN91     ANDEQ*OFF                                                       AR1004252
+     C           BCCNA1    ANDEQXNAME                                                      AR1004252
+      *                                                                                    AR1004252
+      ** Or equal to Account name                                                          AR1004252
+      *                                                                                    AR1004252
+     C           @RTCD     OREQ *BLANK                                                     AR1004252
+     C           ANAM      ANDEQXNAME                                                      AR1004252
      C*                                                                    211499
      C* Top Account must be a Master Account as well.                      211499
      C*                                                                    211499
@@ -294,6 +361,17 @@
      C                     CAT  @TOPAC:0  RETFLD
      C                     CAT  '/':0     RETFLD
      C                     ENDIF
+     C                     ELSE                                                              211499A
+      *                                                                                      211499A
+      ** Log, if test failed (name is not account owner)                                     211499A
+      *                                                                                      211499A
+     C           MEMSDT    CAT  PMTAG:0   MEMSDT    P                                        211499A
+     C                     MOVELPCPGM     MEPGMQ                                             211499A
+     C                     MOVEL'RE75959' MEMSID                                             211499A
+     C                     MOVEL'REUSRMSG'MEMSGF           Msg file                          211499A
+     C                     EXSR MESNMS                                                       211499A
+     C                     GOTO RETN                                                         211499A
+     C                     ENDIF                                                             211499A
      C                     ENDIF                                           211499
      C                     ENDIF
       *

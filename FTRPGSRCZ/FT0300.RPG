@@ -12,8 +12,19 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055849           Date 15May20               *
-      *  Prev Amend No. CSW220             Date 09Mar20               *
+      *  Last Amend No. AR918985           Date 20Feb12               *
+      *  Prev Amend No. AR921987           Date 22Feb12               *
+      *                 AR962605           Date 01May12               *
+      *                 261691             Date 19Sep13               *
+      *                 AR918264           Date 23Jan12               *
+      *                 AR907620           Date 14Feb12               *
+      *                 AR928894           Date 05Mar12               *
+      *                 AR937689           Date 15Mar12               *
+      *                 AR920363           Date 23Feb12               *
+      *                 AR928996A          Date 03May12               *
+      *                 AR928996           Date 27Mar12               *
+      *                 MD055849           Date 15May20               *
+      *                 CSW220             Date 09Mar20               *
       *                 MD055612           Date 09Apr20               *
       *                 MD046248           Date 27Oct17               *
       *                 CFT151             Date 21Mar14               *
@@ -138,6 +149,38 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR918985 - Correct Retail account validation on From/To      *
+      *             account data.                                     *
+      *             (Child: AR922601)                                 *      
+      *  AR921987 - If Sender's Correspondent is decoded it must be   *
+      *             placed in Receiver's Correspondent for IN (if     *
+      *             Receiver's Correspondent is blank and Sender's    *
+      *             Correspondent is non-blank).                      *
+      *             (Child: AR921990)                                 *
+      *  AR962605   FT:STP'd payments missing record on UDF files     *
+      *             (Child:AR962606)                                  *
+      *  261691 - Recompiled due to changes to /copy SFT0345S6.       *
+      *         - Applied for MD011265.                               *
+      *  AR918264 - Wherever possible always quote the Retail Ac/No   *
+      *           - If RetAcNo in :59: don't convert to Gl A/c        *
+      *             (Child: AR918265)                                 *
+      *  AR907620 - Correct Senders Charges :71F: mapping on DSTRAN   *
+      *             to allow for 10 digit account code.               *
+      *             (Child: AR907621)                                 *
+      *  AR928894 - Correct settle/pay base currency equivalents for  *
+      *             OPs.                                              *
+      *             (Child: AR928897)                                 *
+      *  AR937689 - DB error when due to V#TOGL being blank         . *
+      *             SRB103 being called when error in validation      *
+      *             (Child: AR937690)                                 *
+      *  AR920363 - Ordering Bank details cleared during STP charges  *
+      *             defaulting.                                       *
+      *             (Child: AR922611)                                 *
+      *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
+      *             data structure field to have the correct length.  *
+      *             (Child: AR928997A)                                *
+      *  AR928996 - Data lost due to rate field :36: being truncated. *
+      *             (Child: AR928997)                                 *
       *  MD055849 - Incoming Messages other than MT103 updates FTM199 *
       *  CSW220 - SWIFT Changes 2020                                  *
       *  MD055612 -  Compilation Core error                           *
@@ -519,7 +562,8 @@
       *                                                                   CFT014
       ** Work array Multiple Lines of First Line of Pxx fields            CFT014
       *                                                                   CFT014
-     E                    LFLT        5 59                                CFT014
+     E************        LFLT        5 59                                           CFT014 AR907620
+     E                    LFLT        5 65                                                  AR907620
       *                                                                   CFT014
       ** Work array Multiple Lines of Charges Amounts                     CFT014
       *                                                                   CFT014
@@ -1276,17 +1320,28 @@
       *  Lines of first line of tag                                       CFT014
       *                                                                   CFT014
      ILFLTDS      DS                                                      CFT014
-     I                                        1 295 LFLT                  CFT014
-     I                                        1  24 BG1                   CFT014
-     I                                       25  59 TV1                   CFT014
-     I                                       60  83 BG2                   CFT014
-     I                                       84 118 TV2                   CFT014
-     I                                      119 142 BG3                   CFT014
-     I                                      143 177 TV3                   CFT014
-     I                                      178 201 BG4                   CFT014
-     I                                      202 236 TV4                   CFT014
-     I                                      237 260 BG5                   CFT014
-     I                                      261 295 TV5                   CFT014
+     I**********                              1 295 LFLT                             CFT014 AR907620
+     I**********                              1  24 BG1                              CFT014 AR907620
+     I**********                             25  59 TV1                              CFT014 AR907620
+     I**********                             60  83 BG2                              CFT014 AR907620
+     I**********                             84 118 TV2                              CFT014 AR907620
+     I**********                            119 142 BG3                              CFT014 AR907620
+     I**********                            143 177 TV3                              CFT014 AR907620
+     I**********                            178 201 BG4                              CFT014 AR907620
+     I**********                            202 236 TV4                              CFT014 AR907620
+     I**********                            237 260 BG5                              CFT014 AR907620
+     I**********                            261 295 TV5                              CFT014 AR907620
+     I                                        1 325 LFLT                                    AR907620
+     I                                        1  30 BG1                                     AR907620
+     I                                       31  65 TV1                                     AR907620
+     I                                       66  95 BG2                                     AR907620
+     I                                       96 130 TV2                                     AR907620
+     I                                      131 160 BG3                                     AR907620
+     I                                      161 195 TV3                                     AR907620
+     I                                      196 225 BG4                                     AR907620
+     I                                      226 260 TV4                                     AR907620
+     I                                      261 390 BG5                                     AR907620
+     I                                      291 325 TV5                                     AR907620
       *                                                                   CFT009
       *  Incoming Payments Details data structure                         CFT009
       *                                                                   CFT009
@@ -4794,6 +4849,7 @@
       ** Find out if this OP will potentially create a MT103.                               BUG24724
       *                                                                                     BUG24724
      C           CFT014    IFEQ 'Y'                                                         BUG24724
+     C           E#NOUP    ANDEQ*BLANKS                                                     AR937689
      C                     EXSR SRB103                                                      BUG24724
      C                     ENDIF                                                            BUG24724
       *
@@ -6316,6 +6372,12 @@
      C                     MOVELIPFRNT    IPFRID                                            BUG25944
      C                     WRITEINPAYQD0                                                    BUG25944
      C                     ENDIF                                                            BUG25944
+      ** User Defined Forms enabled                                                         AR962605
+     C           CSF003    IFEQ 'Y'                                                         AR962605
+     C                     CALL 'FTS0001'                                                   AR962605
+     C                     PARM *BLANKS   P@RTCD           Return Code                      AR962605
+     C                     PARM           PREF             Payment Reference                AR962605
+     C                     ENDIF                                                            AR962605
       *
       *  Update FT Refs network information
       *
@@ -8092,6 +8154,12 @@
      C                     MOVELOTFRNT    OTFRID                                            BUG25944
      C                     WRITEOTPAYQD0                                                    BUG25944
      C                     ENDIF                                                            BUG25944
+      ** User Defined Forms enabled                                                         AR962605
+     C           CSF003    IFEQ 'Y'                                                         AR962605
+     C                     CALL 'FTS0001'                                                   AR962605
+     C                     PARM *BLANKS   P@RTCD           Return Code                      AR962605
+     C                     PARM           PREF             Payment Reference                AR962605
+     C                     ENDIF                                                            AR962605
       *                                                                   S01408
      C/COPY WNCPYSRC,FT0300CCP4                                           S01408
       *                                                                   S01408
@@ -8617,6 +8685,8 @@
      C                     MOVELINMTPY    INMTPY
      C                     Z-ADDINMSGR    INMSGR
      C                     Z-ADDINKPRT    INKPRT
+     C                     Z-ADDINMSGR    IPMSGR                                            AR921987
+     C                     Z-ADDINKPRT    IPKPRT                                            AR921987
       *
       *  Book code and profit centre
       *
@@ -9284,6 +9354,15 @@
       *
      C                     Z-ADDD#TAMT    PBCQ
      C                     END
+      *                                                                                     AR928894
+      ** If Pay Currency is Base then set SBCQ to PBCQ                                      AR928894
+      ** else set PBCQ to SBCQ                                                              AR928894
+      *                                                                                     AR928894
+     C           PCCY      IFEQ V#BCCY                                                      AR928894
+     C                     Z-ADDPBCQ      SBCQ                                              AR928894
+     C                     ELSE                                                             AR928894
+     C                     Z-ADDSBCQ      PBCQ                                              AR928894
+     C                     END                                                              AR928894
       *
       *  Booking and originating branches
       *
@@ -12276,6 +12355,17 @@ a     *                                                                         
      C                     MOVE 'N'       CSW220                                              CSW220
      C                     ENDIF                                                              CSW220
       *                                                                                       CSW220
+      ** Determine if CSF003 is installed                                                   AR962605
+     C                     MOVEL'N'       CSF003  1                                         AR962605
+     C                     CALL 'AOSARDR0'                                                  AR962605
+     C                     PARM '       ' @RTCD                                             AR962605
+     C                     PARM '*VERIFY' @OPTN                                             AR962605
+     C                     PARM 'CSF003'  @SARD                                             AR962605
+     C           SCSARD    PARM SCSARD    DSFDY                                             AR962605
+      *                                                                                     AR962605
+     C           @RTCD     IFEQ *BLANKS                                                     AR962605
+     C                     MOVEL'Y'       CSF003                                            AR962605
+     C                     ENDIF                                                            AR962605
       *
      CSR                   ENDSR
       *****************************************************************   CAC002
@@ -12503,9 +12593,11 @@ a     *                                                                         
       *                                                                   CFT002
       * If local and account currency local then use retail number        CFT002
       *                                                                   CFT002
-     C           BJLCCY    WHEQ S1SMCY                                    CFT002
-     C           TRCYCD    ANDEQS1SMCY                                    CFT002
-     C           ##ACNO    ANDNE0                                         CFT002
+     C********** BJLCCY    WHEQ S1SMCY                                               CFT002 AR918264
+     C********** TRCYCD    ANDEQS1SMCY                                               CFT002 AR918264
+     C********** ##ACNO    ANDNE0                                                    CFT002 AR918264
+      ** If Retail then use retail number                                                   AR918264
+     C           ##ACNO    WHNE 0                                                           AR918264
      C                     MOVEL*BLANKS   S1SND                           CFT002
      C                     MOVEL##ACNO    S1SND1                          CFT002
       *                                                                   CFT002
@@ -12562,33 +12654,42 @@ a     *                                                                         
       *                                                                   CFT002
       * If local and account currency local then use retail number        CFT002
       *                                                                   CFT002
-     C           BJLCCY    WHEQ S1SMCY                                    CFT002
-     C           TRCYCD    ANDEQS1SMCY                                    CFT002
-     C           ##ACNO    ANDNE0                                         CFT002
-     C                     MOVEL*BLANKS   S1SND                           CFT002
-     C                     MOVEL##ACNO    S1SND1                          CFT002
+     C********** BJLCCY    WHEQ S1SMCY                                               CFT002 AR918264
+     C********** TRCYCD    ANDEQS1SMCY                                               CFT002 AR918264
+     C********** ##ACNO    ANDNE0                                                    CFT002 AR918264
+     C           ##ACNO    WHNE 0                                                           AR918264
+     C***********          MOVEL*BLANKS   S1SND                                      CFT002 AR921987
+     C***********          MOVEL##ACNO    S1SND1                                     CFT002 AR921987
+     C                     MOVEL*BLANKS   S1RCCO                                            AR921987
+     C                     MOVEL##ACNO    S1RCCO                                            AR921987
       *                                                                   CFT002
       * If currency the same as settle and nostro, use nostro             CFT002
       *                                                                   CFT002
      C           ##NCCY    WHEQ S1SMCY                                    CFT002
      C           ##NONB    ANDNE*BLANKS                                   CFT002
-     C                     MOVEL*BLANKS   S1SND                           CFT002
-     C           ##NCCY    CAT  ##NONB    S1SND1    P                     CFT002
+     C**********           MOVEL*BLANKS   S1SND                                      CFT002 AR921987
+     C********** ##NCCY    CAT  ##NONB    S1SND1    P                                CFT002 AR921987
+     C                     MOVEL*BLANKS   S1RCCO                                            AR921987
+     C           ##NCCY    CAT  ##NONB    S1RCCO    P                                       AR921987
       *                                                                   CFT002
       * If currency the same use GL Account                               CFT002
       *                                                                   CFT002
      C           TRCYCD    WHEQ S1SMCY                                    CFT002
-     C                     MOVEL*BLANKS   S1SND                           CFT002
+     C**********           MOVEL*BLANKS   S1SND                                      CFT002 AR921987
+     C                     MOVEL*BLANKS   S1RCCO                                            AR921987
      C           BGMBIN    IFNE 'Y'                                       CFT002
      C                     MOVE '   '     TRCODE                          CFT002
      C                     END                                            CFT002
-     C                     MOVELTRCODE    S1SND1                          CFT002
+     C**********           MOVELTRCODE    S1SND1                                     CFT002 AR921987
+     C                     MOVELTRCODE    S1RCCO                                            AR921987
       *                                                                   CFT002
       * Use customer number                                               CFT002
       *                                                                   CFT002
      C                     OTHER                                          CFT002
-     C                     MOVEL*BLANKS   S1SND                           CFT002
-     C                     MOVELTRCNUM    S1SND1                          CFT002
+     C**********           MOVEL*BLANKS   S1SND                                      CFT002 AR921987
+     C**********           MOVELTRCNUM    S1SND1                                     CFT002 AR921987
+     C                     MOVEL*BLANKS   S1RCCO                                            AR921987
+     C                     MOVELTRCNUM    S1RCCO                                            AR921987
      C                     ENDSL                                          CFT002
      C                     ENDIF                                          CFT002
      C                     ENDIF                                          CFT002
@@ -12615,9 +12716,10 @@ a     *                                                                         
       *                                                                   CFT002
       * If local and account currency local then use retail number        CFT002
       *                                                                   CFT002
-     C           BJLCCY    WHEQ S1SMCY                                    CFT002
-     C           TRCYCD    ANDEQS1SMCY                                    CFT002
-     C           ##ACNO    ANDNE0                                         CFT002
+     C********** BJLCCY    WHEQ S1SMCY                                               CFT002 AR918264
+     C********** TRCYCD    ANDEQS1SMCY                                               CFT002 AR918264
+     C********** ##ACNO    ANDNE0                                                    CFT002 AR918264
+     C           ##ACNO    WHNE 0                                         CFT002            AR918264
      C                     MOVEL*BLANKS   S1RCCO                          CFT002
      C                     MOVEL##ACNO    S1RCCO                          CFT002
       *                                                                   CFT002
@@ -12654,9 +12756,10 @@ a     *                                                                         
       *                                                                   CFT014
       * If local and account currency local then use retail number        CFT014
       *                                                                   CFT014
-     C           BJLCCY    WHEQ S1SMCY                                    CFT014
-     C           TRCYCD    ANDEQS1SMCY                                    CFT014
-     C           ##ACNO    ANDNE0                                         CFT014
+     C********** BJLCCY    WHEQ S1SMCY                                               CFT014 AR918264
+     C********** TRCYCD    ANDEQS1SMCY                                               CFT014 AR918264
+     C********** ##ACNO    ANDNE0                                                    CFT014 AR918264
+     C           ##ACNO    WHNE 0                                                           AR918264
      C                     MOVEL*BLANKS   S1TRIB                          CFT014
      C                     MOVEL##ACNO    S1TRIB                          CFT014
       *                                                                   CFT014
@@ -12701,9 +12804,10 @@ a     *                                                                         
       * If local and account currency local then use retail number        CFT002
       * Save if CFT012 is on                                              CFT012
       *                                                                   CFT002
-     C           BJLCCY    WHEQ S1SMCY                                    CFT002
-     C           TRCYCD    ANDEQS1SMCY                                    CFT002
-     C           ##ACNO    ANDNE0                                         CFT002
+     C********** BJLCCY    WHEQ S1SMCY                                               CFT002 AR918264
+     C********** TRCYCD    ANDEQS1SMCY                                               CFT002 AR918264
+     C********** ##ACNO    ANDNE0                                                    CFT002 AR918264
+     C           ##ACNO    WHNE 0                                         CFT002            AR918264
      C           CFT012    ANDEQ'N'                                       CFT012
      C                     MOVEL*BLANKS   S1ACBK                          CFT002
      C                     MOVEL##ACNO    S1ACBK                          CFT002
@@ -12774,9 +12878,10 @@ a     *                                                                         
       * If local and account currency local then use retail number        CFT002
       * Save if CFT012 is on                                              CFT012
       *                                                                   CFT002
-     C           BJLCCY    WHEQ S1SMCY                                    CFT002
-     C           TRCYCD    ANDEQS1SMCY                                    CFT002
-     C           ##ACNO    ANDNE0                                         CFT002
+     C********** BJLCCY    WHEQ S1SMCY                                               CFT002 AR918264
+     C********** TRCYCD    ANDEQS1SMCY                                               CFT002 AR918264
+     C********** ##ACNO    ANDNE0                                                    CFT002 AR918264
+     C           ##ACNO    WHNE 0                                                           AR918264
      C           CFT012    ANDEQ'N'                                       CFT012
      C                     MOVEL*BLANKS   S1BNC                           CFT002
      C                     MOVEL##ACNO    S1BNC1                          CFT002
@@ -12842,9 +12947,10 @@ a     *                                                                         
       * If local and account currency local then use retail number        CFT002
       * Save if CFT012 is on                                              CFT012
       *                                                                   CFT002
-     C           BJLCCY    WHEQ S1SMCY                                    CFT002
-     C           TRCYCD    ANDEQS1SMCY                                    CFT002
-     C           ##ACNO    ANDNE0                                         CFT002
+     C********** BJLCCY    WHEQ S1SMCY                                               CFT002 AR918264
+     C********** TRCYCD    ANDEQS1SMCY                                               CFT002 AR918264
+     C********** ##ACNO    ANDNE0                                                    CFT002 AR918264
+     C           ##ACNO    WHNE 0                                                           AR918264
      C           CFT012    ANDEQ'N'                                       CFT012
      C                     MOVEL*BLANKS   S1BNC                           CFT002
      C                     MOVEL##ACNO    S1BNC1                          CFT002
@@ -12860,20 +12966,20 @@ a     *                                                                         
       *                                                                   CFT002
      C           TRCYCD    WHEQ S1SMCY                                    CFT002
      C           CFT012    ANDEQ'N'                                       CFT012
-     C                     MOVEL*BLANKS   S1BNC                           CFT002
+     C**********           MOVEL*BLANKS   S1BNC                                      CFT002 AR918264
      C           BGMBIN    IFNE 'Y'                                       CFT002
      C                     MOVEL*BLANKS   TRBRCD                          CFT002
      C                     ENDIF                                          CFT002
-     C           TRCNUM    CAT  TRCSB     S1BNC1                          CFT002
+     C********** TRCNUM    CAT  TRCSB     S1BNC1                                     CFT002 AR918264
       *                                                                   CFT012
      C           CFT012    WHEQ 'Y'                                       CFT012
      C           TRCYCD    ANDNE*BLANK                                    CFT012
      C           TRCSB     ANDNE*BLANK                                    CFT012
-     C                     MOVEL*BLANKS   S1BNC                           CFT012
+     C**********           MOVEL*BLANKS   S1BNC                                      CFT012 AR918264
      C           BGMBIN    IFNE 'Y'                                       CFT012
      C                     MOVEL*BLANKS   TRBRCD                          CFT012
      C                     ENDIF                                          CFT012
-     C           TRCNUM    CAT  TRCSB     S1BNC1                          CFT012
+     C********** TRCNUM    CAT  TRCSB     S1BNC1                                     CFT012 AR918264
      C                     MOVELTRCYCD    S1PCCY                          CFT012
       *                                                                   CFT002
       * Use customer number                                               CFT002
@@ -13113,9 +13219,10 @@ a     *                                                                         
       * If local and account currency local then use retail number        CFT014
       * Save if CFT012 is on                                              CFT014
       *                                                                   CFT014
-     C           BJLCCY    WHEQ S4SMCY                                    CFT014
-     C           TRCYCD    ANDEQS4SMCY                                    CFT014
-     C           ##ACNO    ANDNE0                                         CFT014
+     C********** BJLCCY    WHEQ S4SMCY                                               CFT014 AR918264
+     C********** TRCYCD    ANDEQS4SMCY                                               CFT014 AR918264
+     C********** ##ACNO    ANDNE0                                                    CFT014 AR918264
+     C           ##ACNO    WHNE 0                                                           AR918264
      C           CFT012    ANDEQ'N'                                       CFT014
      C                     MOVEL*BLANKS   S4ORBK                          CFT014
      C                     MOVEL##ACNO    S4ORBK                          CFT014
@@ -13191,9 +13298,10 @@ a     *                                                                         
       * If local and account currency local then use retail number        CFT002
       * Save if CFT012 is on                                              CFT012
       *                                                                   CFT002
-     C           BJLCCY    WHEQ S4SMCY                                    CFT002
-     C           TRCYCD    ANDEQS4SMCY                                    CFT002
-     C           ##ACNO    ANDNE0                                         CFT002
+     C********** BJLCCY    WHEQ S4SMCY                                               CFT002 AR918264
+     C********** TRCYCD    ANDEQS4SMCY                                               CFT002 AR918264
+     C********** ##ACNO    ANDNE0                                                    CFT002 AR918264
+     C           ##ACNO    WHNE 0                                                           AR918264
      C           CFT012    ANDEQ'N'                                       CFT012
      C                     MOVEL*BLANKS   S4ORBK                          CFT002
      C                     MOVEL##ACNO    S4ORBK                          CFT002
@@ -13268,9 +13376,10 @@ a     *                                                                         
       * If local and account currency local then use retail number        CFT002
       * Save if CFT012 is on                                              CFT012
       *                                                                   CFT002
-     C           BJLCCY    WHEQ S4SMCY                                    CFT002
-     C           TRCYCD    ANDEQS4SMCY                                    CFT002
-     C           ##ACNO    ANDNE0                                         CFT002
+     C********** BJLCCY    WHEQ S4SMCY                                               CFT002 AR918264
+     C********** TRCYCD    ANDEQS4SMCY                                               CFT002 AR918264
+     C********** ##ACNO    ANDNE0                                                    CFT002 AR918264
+     C           ##ACNO    WHNE 0                                                           AR918264
      C           CFT012    ANDEQ'N'                                       CFT012
      C                     MOVEL*BLANKS   S4ORBK                          CFT002
      C                     MOVEL##ACNO    S4ORBK                          CFT002
@@ -13347,9 +13456,10 @@ a     *                                                                         
       * If local and account currency local then use retail number        CFT002
       * Save if CFT012 is on                                              CFT012
       *                                                                   CFT002
-     C           BJLCCY    WHEQ S4SMCY                                    CFT002
-     C           TRCYCD    ANDEQS4SMCY                                    CFT002
-     C           ##ACNO    ANDNE0                                         CFT002
+     C********** BJLCCY    WHEQ S4SMCY                                               CFT002 AR918264
+     C********** TRCYCD    ANDEQS4SMCY                                               CFT002 AR918264
+     C********** ##ACNO    ANDNE0                                                    CFT002 AR918264
+     C           ##ACNO    WHNE 0                                                           AR918264
      C           CFT012    ANDEQ'N'                                       CFT012
      C                     MOVEL*BLANKS   S4ORBK                          CFT002
      C                     MOVEL##ACNO    S4ORBK                          CFT002
@@ -13429,9 +13539,10 @@ a     *                                                                         
       * If local and account currency local then use retail number        CFT002
       * Save if CFT012 is on                                              CFT012
       *                                                                   CFT002
-     C           BJLCCY    WHEQ S4SMCY                                    CFT002
-     C           TRCYCD    ANDEQS4SMCY                                    CFT002
-     C           ##ACNO    ANDNE0                                         CFT002
+     C********** BJLCCY    WHEQ S4SMCY                                               CFT002 AR918264
+     C********** TRCYCD    ANDEQS4SMCY                                               CFT002 AR918264
+     C********** ##ACNO    ANDNE0                                                    CFT002 AR918264
+     C           ##ACNO    WHNE 0                                                           AR918264
      C           CFT012    ANDEQ'N'                                       CFT012
      C                     MOVEL*BLANKS   S4ORBK                          CFT002
      C                     MOVEL##ACNO    S4ORBK                          CFT002
@@ -13638,16 +13749,18 @@ a     *                                                                         
       *                                                                   CFT002
       * If local and account currency local then use retail number        CFT002
       *                                                                   CFT002
-     C           BJLCCY    WHEQ S4SMCY                                    CFT002
-     C           TRCYCD    ANDEQS4SMCY                                    CFT002
-     C           ##ACNO    ANDNE0                                         CFT002
+     C********** BJLCCY    WHEQ S4SMCY                                               CFT002 AR918264
+     C********** TRCYCD    ANDEQS4SMCY                                               CFT002 AR918264
+     C********** ##ACNO    ANDNE0                                                    CFT002 AR918264
+     C           ##ACNO    WHNE 0                                                           AR918264
      C           CFT012    ANDEQ'N'                                       CFT012
      C                     MOVEL*BLANKS   S4DST                           CFT002
      C                     MOVEL##ACNO    S4DST1                          CFT002
       *                                                                   CFT012
-     C           BJLCCY    WHEQ WMGCCY                                    CFT012
-     C           TRCYCD    ANDEQWMGCCY                                    CFT012
-     C           ##ACNO    ANDNE0                                         CFT012
+     C********** BJLCCY    WHEQ WMGCCY                                               CFT012 AR918264
+     C********** TRCYCD    ANDEQWMGCCY                                               CFT012 AR918264
+     C********** ##ACNO    ANDNE0                                                    CFT012 AR918264
+     C           ##ACNO    WHNE 0                                                           AR918264
      C           CFT012    ANDEQ'Y'                                       CFT012
      C                     MOVEL*BLANKS   S4DST                           CFT012
      C                     MOVEL##ACNO    S4DST1                          CFT012
@@ -13776,9 +13889,10 @@ a     *                                                                         
       * If local and account currency local then use retail number        CFT014
       * Save if CFT012 is on                                              CFT014
       *                                                                   CFT014
-     C           BJLCCY    WHEQ S4SMCY                                    CFT014
-     C           TRCYCD    ANDEQS4SMCY                                    CFT014
-     C           ##ACNO    ANDNE0                                         CFT014
+     C********** BJLCCY    WHEQ S4SMCY                                               CFT014 AR918264
+     C********** TRCYCD    ANDEQS4SMCY                                               CFT014 AR918264
+     C********** ##ACNO    ANDNE0                                                    CFT014 AR918264
+     C           ##ACNO    WHNE 0                                                           AR918264
      C           CFT012    ANDEQ'N'                                       CFT014
      C                     MOVEL*BLANKS   S4ORBK                          CFT014
      C                     MOVEL##ACNO    S4ORBK                          CFT014
@@ -13854,9 +13968,10 @@ a     *                                                                         
       * If local and account currency local then use retail number        CFT002
       * Save if CFT012 is on                                              CFT012
       *                                                                   CFT002
-     C           BJLCCY    WHEQ S4SMCY                                    CFT002
-     C           TRCYCD    ANDEQS4SMCY                                    CFT002
-     C           ##ACNO    ANDNE0                                         CFT002
+     C********** BJLCCY    WHEQ S4SMCY                                               CFT002 AR918264
+     C********** TRCYCD    ANDEQS4SMCY                                               CFT002 AR918264
+     C********** ##ACNO    ANDNE0                                                    CFT002 AR918264
+     C           ##ACNO    WHNE 0                                                           AR918264
      C           CFT012    ANDEQ'N'                                       CFT012
      C                     MOVEL*BLANKS   S4ORBK                          CFT002
      C                     MOVEL##ACNO    S4ORBK                          CFT002
@@ -13931,9 +14046,10 @@ a     *                                                                         
       * If local and account currency local then use retail number        CFT002
       * Save if CFT012 is on                                              CFT012
       *                                                                   CFT002
-     C           BJLCCY    WHEQ S4SMCY                                    CFT002
-     C           TRCYCD    ANDEQS4SMCY                                    CFT002
-     C           ##ACNO    ANDNE0                                         CFT002
+     C********** BJLCCY    WHEQ S4SMCY                                               CFT002 AR918264
+     C********** TRCYCD    ANDEQS4SMCY                                               CFT002 AR918264
+     C********** ##ACNO    ANDNE0                                                    CFT002 AR918264
+     C           ##ACNO    WHNE 0                                                           AR918264
      C           CFT012    ANDEQ'N'                                       CFT012
      C                     MOVEL*BLANKS   S4ORBK                          CFT002
      C                     MOVEL##ACNO    S4ORBK                          CFT002
@@ -14010,9 +14126,10 @@ a     *                                                                         
       * If local and account currency local then use retail number        CFT002
       * Save if CFT012 is on                                              CFT012
       *                                                                   CFT002
-     C           BJLCCY    WHEQ S4SMCY                                    CFT002
-     C           TRCYCD    ANDEQS4SMCY                                    CFT002
-     C           ##ACNO    ANDNE0                                         CFT002
+     C********** BJLCCY    WHEQ S4SMCY                                               CFT002 AR918264
+     C********** TRCYCD    ANDEQS4SMCY                                               CFT002 AR918264
+     C********** ##ACNO    ANDNE0                                                    CFT002 AR918264
+     C           ##ACNO    WHNE 0                                                           AR918264
      C           CFT012    ANDEQ'N'                                       CFT012
      C                     MOVEL*BLANKS   S4ORBK                          CFT002
      C                     MOVEL##ACNO    S4ORBK                          CFT002
@@ -14093,9 +14210,10 @@ a     *                                                                         
       * If local and account currency local then use retail number        CFT002
       * Save if CFT012 is on                                              CFT012
       *                                                                   CFT002
-     C           BJLCCY    WHEQ S4SMCY                                    CFT002
-     C           TRCYCD    ANDEQS4SMCY                                    CFT002
-     C           ##ACNO    ANDNE0                                         CFT002
+     C********** BJLCCY    WHEQ S4SMCY                                               CFT002 AR918264
+     C********** TRCYCD    ANDEQS4SMCY                                               CFT002 AR918264
+     C********** ##ACNO    ANDNE0                                                    CFT002 AR918264
+     C           ##ACNO    WHNE 0                                                           AR918264
      C           CFT012    ANDEQ'N'                                       CFT012
      C                     MOVEL*BLANKS   S4ORBK                          CFT002
      C                     MOVEL##ACNO    S4ORBK                          CFT002
@@ -16187,7 +16305,13 @@ a     *                                                                         
       * Receivers Correspondent                                           CGL009
       *                                                                   CGL009
      C           P54       IFNE *BLANKS                                   CGL009
+     C           P54       OREQ *BLANKS                                                     AR921987
+     C           P53       ANDNE*BLANKS                                                     AR921987
+     C           P54       IFNE *BLANKS                                                     AR921987
      C                     MOVELP54       DSTRAN                          CGL009
+     C                     ELSE                                                             AR921987
+     C                     MOVELP53       DSTRAN                                            AR921987
+     C                     ENDIF                                                            AR921987
      C*********************MOVELTMLIN1    INRCO1                    CGL009CFT014
      C*********************MOVELTMLIN2    INRCO2                    CGL009CFT014
      C*********************MOVELTMLIN3    INRCO3                    CGL009CFT014
@@ -20443,10 +20567,31 @@ a     *                                                                         
      C                     ADD  1         Q       50                      CFT009
      C                     MOVEL'DFOCHG'  @STK,Q                          CFT009
       *                                                                   CFT009
+     C           *LIKE     DEFN OPORBT    SVORBT                        AR920363
+     C           *LIKE     DEFN OPORB1    SVORB1                        AR920363
+     C           *LIKE     DEFN OPORB2    SVORB2                        AR920363
+     C           *LIKE     DEFN OPORB3    SVORB3                        AR920363
+     C           *LIKE     DEFN OPORB4    SVORB4                        AR920363
+     C           *LIKE     DEFN OPORB5    SVORB5                        AR920363
+      *                                                                 AR920363
+     C                     MOVELOPORBT    SVORBT                        AR920363
+     C                     MOVELOPORB1    SVORB1                        AR920363
+     C                     MOVELOPORB2    SVORB2                        AR920363
+     C                     MOVELOPORB3    SVORB3                        AR920363
+     C                     MOVELOPORB4    SVORB4                        AR920363
+     C                     MOVELOPORB5    SVORB5                        AR920363
+      *                                                                 AR920363
      C                     CLEAROTPYDS                                    CFT009
      C                     CLEAROTPXDS                                    CFT009
      C                     CLEARTRNDET                                    CFT009
      C                     CLEARTRNEXT                                    CFT009
+      *                                                                 AR920363
+     C                     MOVELSVORBT    OPORBT                        AR920363
+     C                     MOVELSVORB1    OPORB1                        AR920363
+     C                     MOVELSVORB2    OPORB2                        AR920363
+     C                     MOVELSVORB3    OPORB3                        AR920363
+     C                     MOVELSVORB4    OPORB4                        AR920363
+     C                     MOVELSVORB5    OPORB5                        AR920363
       *                                                                   CFT009
       * Move details into outgoing payment details DS                     CFT009
       *                                                                   CFT009
@@ -21151,6 +21296,15 @@ a     *                                                                         
       *                                                                   CFT009
      C                     Z-ADDD#TAMT    OTPBCQ                          CFT009
      C                     END                                            CFT009
+      *                                                                                     AR928894
+      ** If Pay Currency is Base then set SBCQ to PBCQ                                      AR928894
+      ** else set PBCQ to SBCQ                                                              AR928894
+      *                                                                                     AR928894
+     C           OTPCCY    IFEQ V#BCCY                                                      AR928894
+     C                     Z-ADDOTPBCQ    OTSBCQ                                            AR928894
+     C                     ELSE                                                             AR928894
+     C                     Z-ADDOTSBCQ    OTPBCQ                                            AR928894
+     C                     END                                                              AR928894
       *                                                                   CFT009
       *  Booking and originating branches                                 CFT009
       *                                                                   CFT009
@@ -21193,6 +21347,8 @@ a     *                                                                         
       *                                                                   CFT009
      C                     Z-ADDOPMSGR    OPMSGR                          CFT009
      C                     Z-ADDOPKPRT    OPKPRT                          CFT009
+     C                     Z-ADDOPMSGR    OTMSGR                                            AR921987
+     C                     Z-ADDOPKPRT    OTKPRT                                            AR921987
       *                                                                   CFT009
       ** Notified delivery currency and amount                            CFT009
       *                                                                   CFT009
@@ -24588,6 +24744,9 @@ a     *                                                                         
      C                     EXSR SRERR                                                         208219
      C                     ENDIF                                                              208219
      C                     MOVELA7CUST    WCNUM  10                                           208219
+      *                                                                                     AR918985
+     C           F4DSTT    WHEQ 'R'                                                         AR918985
+     C           6         SUBSTV#TOGL:1  WCNUM     P                                       AR918985
       *                                                                                       208219
      C           F4DSTT    WHEQ 'C'                                                           208219
      C           10        SUBSTS4DST1:1  WCNUM                                               208219

@@ -14,8 +14,9 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. 220877             Date 22Mar19               * 
-      *  Prev Amend No. CGL188             Date 19Feb18               *
+      *  Last Amend No. AR1088283          Date 20Mar13               *
+      *  Prev Amend No. 220877             Date 22Mar19               *
+      *                 CGL188             Date 19Feb18               *
       *                 MD046248           Date 27Oct17               *
       *                 CGL184             Date 07Dec16               *
       *                 MD037536           Date 26Apr16               *
@@ -159,6 +160,9 @@
 0008 F*                                                               *
 0013 F*---------------------------------------------------------------*
       *                                                               *
+      *  AR1088283 - Group Account narrative appears unconditionally. *
+      *              Must take consideration hierarchy level setting  *
+      *              for Top ob Balance Sheet (Child: AR1088286)      *
       *  220877 - GL0420 Statements produced do not include the       *
       *           IBAN even if CFT004 is switched on.                 *
       *         - Applied for MD052224.                               *
@@ -608,6 +612,7 @@
      FAPOST     IF   F  620    24AIDISK    KEYLOC(2)                                          CGL029
      F/COPY WNCPYSRC,GL0420F004
      F*                                                                   S01408
+     FREGAHDL0  IF   E           K DISK                                                AR1088283
 0018 FGLAPSTPD  IF   E           K DISK                                         CEU013
      FGLAPSGL0  IF   E           K DISK                                         216937
      FSDCMANL0  IF   E           K DISK                                         216006
@@ -2345,8 +2350,16 @@
      C     CRE008        IFEQ      'Y'                                                        216006
      C     KREGAH        CHAIN     REGAHLJ2                           77                      216006
      C     *IN77         IFEQ      '0'                                                        216006
+     C     CLHIER        CHAIN     REGAHDL0                           77                   AR1088283
+     C     *IN77         IFEQ      '0'                                                     AR1088283
+     C     CLCCAT        IFNE      'T'                                                     AR1088283
+     C     GDTOPB        ANDEQ     'Y'                                                     AR1088283
+     C     CLCCAT        OREQ      'T'                                                     AR1088283
+     C     GDTOPB        ANDEQ     'N'                                                     AR1088283
      C                   MOVE      '1'           *IN82                                        216006
      C                   ENDIF                                                                216006
+     C                   ENDIF                                                             AR1088283
+     C                   ENDIF                                                             AR1088283
      C                   ENDIF                                                                216006
      C*                                                                   216006
      C*                                                                   S01408

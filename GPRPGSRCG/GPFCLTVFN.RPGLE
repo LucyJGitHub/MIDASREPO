@@ -12,9 +12,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. AR727693           Date 20Jun14               *
-      *  Prev Amend No. MD049445           Date 05Feb18               *
-      *                 MD046248           Date 27Oct17               *
+      *  Last Amend No. MD049445           Date 05Feb18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       *                 CGP017             Date 06Aug12               *
       *                 CLE134             Date 01Aug12               *
       *                 CER059             Date 19Jul10               *
@@ -25,11 +24,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  AR727693 - Facilities List view screen is unable to display  *
-      *             properly facilities with dates that are later than*
-      *             31/12/1999. Correct conversion of dates for year  *
-      *             20XX. (Child:AR727694)                            *
-      *           - Applied for MD027518                              *
       *  MD049445 - Listview not displaying correct available amount. *
       *             Added SFAMT and SAVAILAMT computation.            *      
       *  MD046248 - Finastra Rebranding                               *
@@ -60,11 +54,6 @@
      D Z_FCLTYFN     E DS                  EXTNAME(GZFCLTYFN )
      D G_FCLTYFN     E DS                  EXTNAME(GZFCLTYFN ) PREFIX(G_)
  
-      *                                                                                     AR727693
-      **  Variables                                                                         AR727693
-      *                                                                                     AR727693
-     DCentFlag                        2A    INZ(*BLANKS)                                    AR727693
-     DCharDate                       30A    INZ(*BLANKS)                                    AR727693
      D RPAYAMT         S             15  0                                                  MD049445
      D WFCBAL          S             15  0                                                  MD049445
      D KBRCA           S              3                                                     MD049445
@@ -149,122 +138,62 @@
  
      C                   If        G_RUN0 <> *Zero
      C                   Eval      ZDAYNO = G_RUN0
-     C                   ExSr      CENT20                                                   AR727693
      C                   ExSr      ZDATE2
      C                   Eval      G_FRUN00 = %Date(ZDATE :*DMY)
-     C                   If        CentFlag = 'Y'                                           AR727693
-     C                   Eval      CharDate  =  %CHAR(G_FRUN00)                             AR727693
-     C                   Eval      CharDate = %REPLACE('20':CHARDATE:1:2)                   AR727693
-     C                   Eval      G_FRUN00 = %Date(CHARDATE)                               AR727693
-     C                   EndIf                                                              AR727693
      C                   EndIf
  
      C                   If        G_RUN1 <> *Zero
      C                   Eval      ZDAYNO = G_RUN1
-     C                   ExSr      CENT20                                                   AR727693
      C                   ExSr      ZDATE2
      C                   Eval      G_FRUN01 = %Date(ZDATE :*DMY)
-     C                   If        CentFlag = 'Y'                                           AR727693
-     C                   Eval      CharDate  =  %CHAR(G_FRUN01)                             AR727693
-     C                   Eval      CharDate = %REPLACE('20':CHARDATE:1:2)                   AR727693
-     C                   Eval      G_FRUN01 = %Date(CHARDATE)                               AR727693
-     C                   EndIf                                                              AR727693
      C                   EndIf
  
      C                   If        G_RUN2 <> *Zero
      C                   Eval      ZDAYNO = G_RUN2
-     C                   ExSr      CENT20                                                   AR727693
      C                   ExSr      ZDATE2
      C                   Eval      G_FRUN02 = %Date(ZDATE :*DMY)
-     C                   If        CentFlag = 'Y'                                           AR727693
-     C                   Eval      CharDate  =  %CHAR(G_FRUN02)                             AR727693
-     C                   Eval      CharDate = %REPLACE('20':CHARDATE:1:2)                   AR727693
-     C                   Eval      G_FRUN02 = %Date(CHARDATE)                               AR727693
-     C                   EndIf                                                              AR727693
      C                   EndIf
  
      C                   If        G_RUN3 <> *Zero
      C                   Eval      ZDAYNO = G_RUN3
-     C                   ExSr      CENT20                                                   AR727693
      C                   ExSr      ZDATE2
      C                   Eval      G_FRUN03 = %Date(ZDATE :*DMY)
-     C                   If        CentFlag = 'Y'                                           AR727693
-     C                   Eval      CharDate  =  %CHAR(G_FRUN03)                             AR727693
-     C                   Eval      CharDate = %REPLACE('20':CHARDATE:1:2)                   AR727693
-     C                   Eval      G_FRUN03 = %Date(CHARDATE)                               AR727693
-     C                   EndIf                                                              AR727693
      C                   EndIf
  
      C                   If        G_RUN4 <> *Zero
      C                   Eval      ZDAYNO = G_RUN4
-     C                   ExSr      CENT20                                                   AR727693
      C                   ExSr      ZDATE2
      C                   Eval      G_FRUN04 = %Date(ZDATE :*DMY)
-     C                   If        CentFlag = 'Y'                                           AR727693
-     C                   Eval      CharDate  =  %CHAR(G_FRUN04)                             AR727693
-     C                   Eval      CharDate = %REPLACE('20':CHARDATE:1:2)                   AR727693
-     C                   Eval      G_FRUN04 = %Date(CHARDATE)                               AR727693
-     C                   EndIf                                                              AR727693
      C                   EndIf
  
      C                   If        G_RUN5 <> *Zero
      C                   Eval      ZDAYNO = G_RUN5
-     C                   ExSr      CENT20                                                   AR727693
      C                   ExSr      ZDATE2
      C                   Eval      G_FRUN05 = %Date(ZDATE :*DMY)
-     C                   If        CentFlag = 'Y'                                           AR727693
-     C                   Eval      CharDate  =  %CHAR(G_FRUN05)                             AR727693
-     C                   Eval      CharDate = %REPLACE('20':CHARDATE:1:2)                   AR727693
-     C                   Eval      G_FRUN05 = %Date(CHARDATE)                               AR727693
-     C                   EndIf                                                              AR727693
      C                   EndIf
  
      C                   If        G_RUN6 <> *Zero
      C                   Eval      ZDAYNO = G_RUN6
-     C                   ExSr      CENT20                                                   AR727693
      C                   ExSr      ZDATE2
      C                   Eval      G_FRUN06 = %Date(ZDATE :*DMY)
-     C                   If        CentFlag = 'Y'                                           AR727693
-     C                   Eval      CharDate  =  %CHAR(G_FRUN06)                             AR727693
-     C                   Eval      CharDate = %REPLACE('20':CHARDATE:1:2)                   AR727693
-     C                   Eval      G_FRUN06 = %Date(CHARDATE)                               AR727693
-     C                   EndIf                                                              AR727693
      C                   EndIf
  
      C                   If        G_RUN7 <> *Zero
      C                   Eval      ZDAYNO = G_RUN7
-     C                   ExSr      CENT20                                                   AR991435
      C                   ExSr      ZDATE2
      C                   Eval      G_FRUN07 = %Date(ZDATE :*DMY)
-     C                   If        CentFlag = 'Y'                                           AR727693
-     C                   Eval      CharDate  =  %CHAR(G_FRUN07)                             AR727693
-     C                   Eval      CharDate = %REPLACE('20':CHARDATE:1:2)                   AR727693
-     C                   Eval      G_FRUN07 = %Date(CHARDATE)                               AR727693
-     C                   EndIf                                                              AR727693
      C                   EndIf
  
      C                   If        G_RUN8 <> *Zero
      C                   Eval      ZDAYNO = G_RUN8
-     C                   ExSr      CENT20                                                   AR727693
      C                   ExSr      ZDATE2
      C                   Eval      G_FRUN08 = %Date(ZDATE :*DMY)
-     C                   If        CentFlag = 'Y'                                           AR727693
-     C                   Eval      CharDate  =  %CHAR(G_FRUN08)                             AR727693
-     C                   Eval      CharDate = %REPLACE('20':CHARDATE:1:2)                   AR727693
-     C                   Eval      G_FRUN08 = %Date(CHARDATE)                               AR727693
-     C                   EndIf                                                              AR727693
      C                   EndIf
  
      C                   If        G_RUN9 <> *Zero
      C                   Eval      ZDAYNO = G_RUN9
-     C                   ExSr      CENT20                                                   AR727693
      C                   ExSr      ZDATE2
      C                   Eval      G_FRUN09 = %Date(ZDATE :*DMY)
-     C                   If        CentFlag = 'Y'                                           AR727693
-     C                   Eval      CharDate  =  %CHAR(G_FRUN09)                             AR727693
-     C                   Eval      CharDate = %REPLACE('20':CHARDATE:1:2)                   AR727693
-     C                   Eval      G_FRUN09 = %Date(CHARDATE)                               AR727693
-     C                   EndIf                                                              AR727693
      C                   EndIf
  
      C                   Eval      G_SCAMD  = G_CAMD                                        BUG27993
@@ -456,19 +385,6 @@
  
      C                   EndSr
       ********************************************************************
-      *****************************************************************                     AR727693
-      * Cent20     - Convert Midas date to *DMY format for 20xx.      *                     AR727693
-      *****************************************************************                     AR727693
-     C     Cent20        BegSr                                                              AR727693
-                                                                                            AR727693
-     C                   EVAL       CentFlag = *Blanks                                      AR727693
-     C                   If        ZDAYNO > 10227                                           AR727693
-     C                   EVAL      CharDate = *blanks                                       AR727693
-     C                   EVAL      CentFlag = 'Y'                                           AR727693
-     C                   EndIf                                                              AR727693
-                                                                                            AR727693
-     C                   EndSr                                                              AR727693
-      *****************************************************************                     AR727693
       /SPACE 5
       *********************************************************************
       * *PSSR  --- ABNORMAL ERROR CONDITIONS

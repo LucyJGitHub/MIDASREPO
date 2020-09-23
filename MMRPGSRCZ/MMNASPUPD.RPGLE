@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD031031           Date 13Mar15               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 01Sep14               *
@@ -56,6 +57,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031031 - F1DLNO missing in DLDLDnQD file for LDNI, NASP,   *
+      *             NASS, FRA, CIRS and SIRS. Write to extension file *
+      *             whether CLE025 is *ON or *OFF.                    *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -109,6 +113,9 @@
      FREADVCL1  UF   E           K DISK    COMMIT                                             CRE020
      F                                     USROPN                                             CRE020
       ** Midas RE Settled Transaction Index File by Ref No/Pgm Ref                            CRE020
+     FDLDEALNA  UF A E           K DISK                                                     MD031031
+     F                                     COMMIT                                           MD031031
+      ** Deals Extension file                                                               MD031031
                                                                                               CRE020
      F/COPY WNCPYSRC,MMNASPDF01
       *****************************************************************
@@ -667,6 +674,9 @@
      C                   EXSR      SRIdxTrn                                                   CRE020
      C                   ENDIF                                                                CRE020
                                                                                               CRE020
+     C                   MOVE      DLNO          F1DLNO                                     MD031031
+     C                   Eval      F1BRCA = BRCA                                            MD031031
+     C                   WRITE     DLDLDDD0                                                 MD031031
      C/COPY WNCPYSRC,MMNASPDC13
       *
      C                   ENDSR

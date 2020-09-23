@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR375891B          Date 26Aug20               *
-      *  Prev Amend No. AR375892           Date 26Aug20               *
+      *  Last Amend No. MD050688           Date 26Aug20               *
+      *  Prev Amend No. AR375891B          Date 26Aug20               *
+      *                 AR375892           Date 26Aug20               *
       *                 MD052696           Date 04Apr19               *
       *                 MD031692           Date 12Mar20               *
       *                 MD030856           Date 06Nov19               *
@@ -50,6 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050688 - Align PRcvParm length with PF/SDESSRPD            *
       *  AR375891B - Amendment to Settlement details do not reflect   *
       *              on file. Ensure protect indicator set correctly. *
       *              (Child: AR375892)                                *
@@ -360,9 +362,10 @@
       ***  -------------------------------------------------------------------
                                                                                               244636
       ** Parameter for LEFEEMRTV                                                              244636
-     D PRcvParm        S             92                                                       244636
+     D********** PRcvParm        S             92                                    244636 MD050688
+     D PRcvParm        S            545                                                     MD050688
                                                                                               244636
-     D PPayParm        S            594                                                     AR375892
+     D PPayParm        S           1045                                                     AR375892
      D #TRCCY          S              3A                                                     CSF011A
      D #TPCCY          S              3A                                                     CSF011A
      D WTRCcy          S              3A                                                     CSF011A

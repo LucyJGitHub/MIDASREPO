@@ -13,6 +13,7 @@
       *                                                               *
       *  Last Amend No. AR375891B          Date 26Aug20               *
       *  Prev Amend No. AR375892           Date 26Aug20               *
+      *                 MD031003           Date 08Sep20               *      
       *                 MD052696           Date 04Apr19               *
       *                 MD004904           Date 04Apr19               *
       *                 AR1049357          Date 04Apr19               *
@@ -123,6 +124,8 @@
       *  AR375892 - Incorrect projection for fees attached to parts   *
       *             sold loan. Use Payment Settlement instead of      *
       *             Receipt Settlement.                               *
+      *  MD031003 - Facility Fee amount divided by 100 upon rejection *
+      *             of change in Fee end date.                        *      
       *  MD052696 - Unauthorised Loans and fees not visible in WIP,   *
       *             after rejecting amendments to their maturity dates*
       *  MD004904 - Rejection causes incorrect exchange rate and      *

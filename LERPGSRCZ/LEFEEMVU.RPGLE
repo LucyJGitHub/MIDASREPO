@@ -22,7 +22,7 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD050688           Date 16Sep20               *
+      *  Last Amend No. MD050688           Date 26Aug20               *
       *  Prev Amend No. AR375891B          Date 26Aug20               *
       *                 AR375892           Date 26Aug20               *
       *                 MD031692           Date 12Mar20               *
@@ -88,7 +88,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD050688 - Funnel Item                                       *
+      *  MD050688 - Align PRcvParm length with PF/SDESSRPD            *
       *           - If the fee is attached to a non-Part Sold loan    *
       *             clear the Payment Settlement details.             *
       *  AR375891B - Amendment to Settlement details do not reflect   *
@@ -536,12 +536,13 @@
 
       ** Parameter for LEFEEMRTV                                                              244636
      D*PRcvParm*       S             92                                               244636 CSF011A
-     D PRcvParm        S            320                                                      CSF011A
+     D********** PRcvParm        S            320                                   CSF011A MD050688
+     D PRcvParm        S            545                                                     MD050688
                                                                                               244636
      D BlankSTYP       S              2A                                                      CSD095
      D BlankBRCA       S              3A                                                      CSD095
                                                                                               CSD095
-     D PPayParm        S            594                                                     AR375892
+     D PPayParm        S           1045                                                     AR375892
       ** +--------------------------------------+
       ** Ê End of D-specs                       Ê
       ** Ê ==============                       Ê
@@ -611,9 +612,9 @@
       ** Use Pay Settlement if attached to parts sold                                       AR375892
       *                                                                                     AR375892
      C                   IF        CL_PTYP <> 66                                            AR375892
-     C                             And CL_PTYP <> 67                                        AR375892
-     C                             And CL_PTYP <> 69                                        AR375892
-     C                             And CL_PTYP <> 72                                        AR375892
+     C                             AND CL_PTYP <> 67                                        AR375892
+     C                             AND CL_PTYP <> 69                                        AR375892
+     C                             AND CL_PTYP <> 72                                        AR375892
                                                                                             AR693137
      C                   IF        ##RECS = *blank AND                                      AR693137
      C                             PRcvParm <> *blank                                       AR693137

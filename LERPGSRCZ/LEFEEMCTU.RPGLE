@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR375892           Date 26Aug20               *
-      *  Prev Amend No. MD052696           Date 04Apr19               *
+      *  Last Amend No. MD050688           Date 26Aug20               *
+      *  Prev Amend No. AR375892           Date 26Aug20               *
+      *                 MD052696           Date 04Apr19               *
       *                 MD030856           Date 06Nov19               *
       *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
@@ -49,6 +50,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050688 - Align PRcvParm length with PF/SDESSRPD            *
       *  AR375892 - Incorrect projection for fees attached to parts   *
       *             sold loan. Use Payment Settlement instead of      *
       *             Receipt Settlement.                               *
@@ -325,9 +327,10 @@
      D RespMode        S              1A
                                                                                               244636
       ** Parameter for LEFEEMRTV                                                              244636
-     D PRcvParm        S             92                                                       244636
+     D********** PRcvParm        S             92                                    244636 MD050688
+     D PRcvParm        S            545                                                     MD050688
                                                                                             AR375892
-     D PPayParm        S            594                                                     AR375892
+     D PPayParm        S           1045                                                     AR375892
 
      D #TRCCY          S              3A                                                     CSF011A
      D #TPCCY          S              3A                                                     CSF011A

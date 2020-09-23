@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD034449           Date 24Jan19               *      
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD034449           Date 24Jan19               *      
       *                 MD046248           Date 27Oct17               *
       *                 CLE141             Date 08Feb16               *
       *                 MD025521           Date 19Aug14               *
@@ -48,6 +49,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD034449 - Negative Rate/Spread field is not displayed       *
       *           - Applied for MD052515                              *
@@ -241,7 +243,8 @@
       *
       ***  Base rate code
       *
-     C     BRTT          IFNE      *ZERO
+     C*****BRTT*         IFNE      *ZERO                                                      CSD103
+     C     BRTT          IFNE      *BLANKS                                                    CSD103
      C                   MOVE      BRTT          DDBRTT
      C                   ENDIF
       *
@@ -281,7 +284,8 @@
      C                   ENDIF                                                                CRE073
      C**********         MOVE      ZFIELD        DDRTSP                              BUG9491 BUG9720
      C**********         IF        CLE036 = 'Y'                                      BUG9491 BUG9720
-     C                   IF        BASR = *ZEROS And BRTT = *ZEROS                            CLE035
+     C**********         IF        BASR = *ZEROS And BRTT = *ZEROS                     CLE035 CSD103
+     C                   IF        BASR = *ZEROS And BRTT = *BLANKS                           CSD103
      C**********                   And CLE035 = 'Y'                                   CLE035 BUG9491
      C                             AND CLE036 = 'Y'                                          BUG9720
      C**********         MOVE      ZFIELD        DDFXRT                                CLE035 CRE073

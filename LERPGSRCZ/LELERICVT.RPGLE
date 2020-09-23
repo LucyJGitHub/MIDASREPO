@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CER050             Date 16Jun19               *
-      *  Prev Amend No. MD034449           Date 24Jan19               *
+      *  Last Amend No. CSD103             Date 10Aug20               *
+      *  Prev Amend No. CER050             Date 16Jun19               *
+      *                 MD034449           Date 24Jan19               *
       *                 MD044083           Date 12Feb19               *
       *                 MD046248           Date 27Oct17               *
       *                 MD028338           Date 25Nov14               *
@@ -51,6 +52,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CSD103 - LIBOR Deregulation - Common Layer/Standing Data     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
       *  MD034449 - Correct negative discount amount display          *
       *           - Applied for MD052515                              *
@@ -317,7 +319,8 @@
       **  New fixed rate,                                                                     CLE106
       **  interest calculation basis, change indicator
       *
-     C     NBRA          IFNE      *ZERO
+     C*****NBRA*         IFNE      *ZERO                                                      CSD103
+     C     NBRA          IFNE      *BLANKS                                                    CSD103
      C                   MOVEL     NBRA          DDNBRA
      C                   ENDIF
                                                                                               CLE106
@@ -346,7 +349,8 @@
                                                                                               CLE106
      C**********         MOVE      ZFIELD        DDNRTS                              BUG9507 BUG9737
      C**********         IF        CLE036 = 'Y'                                      BUG9507 BUG9737
-     C                   IF        NBRA = *Zeros And NBSR = *Zeros                            CLE106
+     C**********         IF        NBRA = *Zeros And NBSR = *Zeros                     CLE106 CSD103
+     C                   IF        NBRA = *BLANKSAnd NBSR = *Zeros                            CSD103
      C                             AND CLE036 = 'Y'                                          BUG9737
      C**********         MOVE      ZFIELD        DDNRTF                                CLE106 CRE073
      C**********         MOVEL     ZFIELD        DDNRTF                              CRE073 MD044083

@@ -11,8 +11,10 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD055733           Date 03Jul20               *
-      *  Prev Amend No. MD055483           Date 01Jul20               *
+      *  Last Amend No. 161789             Date 26May20               *
+      *  Prev Amend No. MD052272           Date 12May20               *
+      *                 MD055733           Date 03Jul20               *
+      *                 MD055483           Date 01Jul20               *
       *                 MD054636           Date 27Jan20               *
       *                 MD050139           Date 23Mar18               *
       *                 MD046248           Date 27Oct17               *
@@ -69,6 +71,15 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  161789 - Reverse 086125 AND S01522 because user is forced to *
+      *           enter narrative at AMAC input option, this will then*
+      *           have to be part of the generated entry posting in   *
+      *           GEAAPD whether UDC module is present with feature   *
+      *           GLPNAR switched ON or not .                         *
+      *         - Applied for MD-55825                                *
+      *  MD052272 - Component GLC1140 failed during COB due to close  *
+      *             GLAMACL0, GLNAMA1D file.                          *
+      *           - Applied for MD-55790                              *
       *  MD055733 - COB: Multiple UTCHOBJEX calls in LEC06A           *
       *             components                                        *
       *           - Redeliver of MD050139.                            *
@@ -965,9 +976,9 @@
      C                     ENDIF                                          CGL003
 0290 C*                                                                   GL1140
 0291 C           DT0100    TAG                             ** DT0100 TAG**GL1140
-     C*                                                                   S01522
-     C* Determine narratives:                                             S01522
-     C                     EXSR SRPNAR                                    S01522
+     C***********                                                                      S01522 161789
+     C**Determine*narratives:                                                          S01522 161789
+     C***********          EXSR SRPNAR                                                 S01522 161789
 0292 C*                                                                   GL1140
 0293 C** SKIP OUTPUT HASHING IF NO RECORD TO BE OUTPUT                    GL1140
 0294 C   50                GOTO DT0120                                    GL1140
@@ -1369,157 +1380,157 @@
 0576 CSR                   ENDSR                             ** ENDSR **  GL1140
 0577 C********************************************************************GL1140
      C/EJECT
-     C********************************************************************S01522
-     C**  Subroutine SRPNAR determines the required narratives.         **S01522
-     C********************************************************************S01522
-     C           SRPNAR    BEGSR                           * S R P N A R *S01522
-     C*                                                                   S01522
-     C* Define the destination narrative fields:                          S01522
-     C*                                                                   S01522
-     C           *LIKE     DEFN NARR      O#NAR1                          S01522
-     C           *LIKE     DEFN NARR      O#NAR2                          S01522
-     C*                                                                   S01522
-     C* Define the data structure parameter:                              S01522
-     C*                                                                   S01522
-     C           *LIKE     DEFN CGPNAR    ##PNAR                          S01522
-     C*                                                                   S01522
-     C* Fill the narrative fields with the existing value:                S01522
-     C*                                                                   S01522
-     C                     MOVE NARR      O#NAR1                          S01522
-     C                     MOVE NARR      O#NAR2                          S01522
-     C/COPY WNCPYSRC,GL1140C006
-     C*                                                                   S01522
-     C* If the facility is switched off or unavailable,                   S01522
-     C*  or UDC is not installed, exit this subroutine:                   S01522
-     C*                                                                   S01522
-     C           GLPNAR    IFNE 'Y'                                       S01522
-     C                     GOTO EXPNAR                                    S01522
-     C                     ENDIF                                          S01522
-     C*...................................................................S01522
-     C/EJECT                                                              S01522
-     C*...................................................................S01522
-     C* Determine the debit customer's name:                              S01522
-     C*                                                                   S01522
-     C                     MOVELDRCN      ##KEY     P                     S01522
-     C*                                                                   S01522
-     C                     CALL 'AOCUSTR0'                                S01522
-     C                     PARM           ##RTN   7                       S01522
-     C                     PARM '*KEY   ' ##OPT   7                       S01522
-     C                     PARM           ##KEY  10                       S01522
-     C                     PARM           ##STS   7                       S01522
-     C           SDCUST    PARM SDCUST    DSSDY                           S01522
-     C*                                                                   S01522
-     C           ##RTN     IFNE *BLANKS                                   S01522
-     C                     MOVEL'SDCUSTPD'DBFILE             *************S01522
-     C                     MOVEL'101'     DBASE              * DBERR 101 *S01522
-     C                     MOVEL##OPT     DBOPTN             *************S01522
-     C                     MOVELDRCN      DBKEY                           S01522
-     C                     EXSR *PSSR                                     S01522
-     C                     SETON                     U7U8LR               S01522
-     C                     GOTO DEND                                      S01522
-     C                     ENDIF                                          S01522
-     C*                                                                   S01522
-     C* Determine the value for the first narrative using AOPNARR0:       S01522
-     C*                                                                   S01522
-     C                     CLEARCGPNAR                                    S01522
-     C                     CLEAR##PRM1                                    086125
-     C                     MOVELREFN      MNTRNO    P                     S01522
-     C                     MOVE 'GL'      MNMODI                          S01522
-     C                     MOVE DRCN      MNCUST                          S01522
-     C                     MOVE BRCA      MNBRCA                          S01522
-     C                     MOVE CCY       MNCYCD                          S01522
-     C                     MOVE DRAC      MNACCD                          S01522
-     C                     MOVE DRSQ      MNACSQ                          S01522
-     C                     MOVE BBCRNM    MNCRNM                          S01522
-     C                     MOVE BOKC      MNBOKC                          S01522
-     C                     MOVE DRACNO    MNRACN                          S01522
-     C                     MOVELNARR      MNNARR    P                     S01522
-     C/COPY WNCPYSRC,GLH00757
-     C*                                                                   S01522
-     C                     CALL 'AOPNARR0'                                S01522
-     C                     PARM           ##RTN                           S01522
-     C                     PARM 'GB00450' ##MGID  7                       S01522
-     C                     PARM           ##PRM1                          086125
-     C           CGPNAR    PARM CGPNAR    ##PNAR                          S01522
-     C                     PARM           ##NARR 50                       S01522
-     C/COPY WNCPYSRC,GLH00758
-     C*...................................................................S01522
-     C/EJECT                                                              S01522
-     C*...................................................................S01522
-     C           ##RTN     IFNE *BLANKS                                   S01522
-     C                     MOVEL'CGPNARPD'DBFILE             *************S01522
-     C                     MOVEL'102'     DBASE              * DBERR 102 *S01522
-     C                     MOVELMNCUST    DBKEY              *************S01522
-     C                     EXSR *PSSR                                     S01522
-     C                     SETON                     U7U8LR               S01522
-     C                     GOTO DEND                                      S01522
-     C                     ENDIF                                          S01522
-     C*                                                                   S01522
-     C                     MOVEL##NARR    O#NAR1    P                     S01522
-     C*                                                                   S01522
-     C* Determine the credit customer's name:                             S01522
-     C*                                                                   S01522
-     C                     MOVELCRCN      ##KEY     P                     S01522
-     C*                                                                   S01522
-     C                     CALL 'AOCUSTR0'                                S01522
-     C                     PARM           ##RTN                           S01522
-     C                     PARM '*KEY   ' ##OPT                           S01522
-     C                     PARM           ##KEY                           S01522
-     C                     PARM           ##STS                           S01522
-     C           SDCUST    PARM SDCUST    DSSDY                           S01522
-     C*                                                                   S01522
-     C           ##RTN     IFNE *BLANKS                                   S01522
-     C                     MOVEL'SDCUSTPD'DBFILE             *************S01522
-     C                     MOVEL'103'     DBASE              * DBERR 103 *S01522
-     C                     MOVEL##OPT     DBOPTN             *************S01522
-     C                     MOVELCRCN      DBKEY                           S01522
-     C                     EXSR *PSSR                                     S01522
-     C                     SETON                     U7U8LR               S01522
-     C                     GOTO DEND                                      S01522
-     C                     ENDIF                                          S01522
-     C*...................................................................S01522
-     C/EJECT                                                              S01522
-     C*...................................................................S01522
-     C* Determine the value for the second narrative using AOPNARR0:      S01522
-     C*                                                                   S01522
-     C                     CLEARCGPNAR                                    S01522
-     C                     CLEAR##PRM1                                    086125
-     C                     MOVELREFN      MNTRNO    P                     S01522
-     C                     MOVE 'GL'      MNMODI                          S01522
-     C                     MOVE CRCN      MNCUST                          S01522
-     C                     MOVE BRCA      MNBRCA                          S01522
-     C                     MOVE CCY       MNCYCD                          S01522
-     C                     MOVE CRAC      MNACCD                          S01522
-     C                     MOVE CRSQ      MNACSQ                          S01522
-     C                     MOVE BBCRNM    MNCRNM                          S01522
-     C                     MOVE BOKC      MNBOKC                          S01522
-     C                     MOVE CRACNO    MNRACN                          S01522
-     C                     MOVELNARR      MNNARR    P                     S01522
-     C/COPY WNCPYSRC,GLH00759
-     C*                                                                   S01522
-     C                     CALL 'AOPNARR0'                                S01522
-     C                     PARM           ##RTN                           S01522
-     C                     PARM 'GB00460' ##MGID                          S01522
-     C                     PARM           ##PRM1                          086125
-     C           CGPNAR    PARM CGPNAR    ##PNAR                          S01522
-     C                     PARM           ##NARR                          S01522
-     C/COPY WNCPYSRC,GLH00760
-     C*                                                                   S01522
-     C           ##RTN     IFNE *BLANKS                                   S01522
-     C                     MOVEL'CGPNARPD'DBFILE             *************S01522
-     C                     MOVEL'104'     DBASE              * DBERR 104 *S01522
-     C                     MOVELMNCUST    DBKEY              *************S01522
-     C                     EXSR *PSSR                                     S01522
-     C                     SETON                     U7U8LR               S01522
-     C                     GOTO DEND                                      S01522
-     C                     ENDIF                                          S01522
-     C*                                                                   S01522
-     C                     MOVEL##NARR    O#NAR2    P                     S01522
-     C*                                                                   S01522
-     C           EXPNAR    TAG                             < EXPNAR       S01522
-     C*                                                                   S01522
-     C                     ENDSR                                          S01522
-     C********************************************************************S01522
+     C******************************************************************               S01522 161789
+     C****Subroutine*SRPNAR*determines*the*required*narratives.*********               S01522 161789
+     C******************************************************************               S01522 161789
+     C***********SRPNAR    BEGSR                    * S R P N A R *                    S01522 161789
+     C***********                                                                      S01522 161789
+     C**Define*the*destination*narrative*fields:                                       S01522 161789
+     C***********                                                                      S01522 161789
+     C************LIKE     DEFN NARR      O#NAR1                                       S01522 161789
+     C************LIKE     DEFN NARR      O#NAR2                                       S01522 161789
+     C***********                                                                      S01522 161789
+     C**Define*the*data*structure*parameter:                                           S01522 161789
+     C***********                                                                      S01522 161789
+     C************LIKE     DEFN CGPNAR    ##PNAR                                       S01522 161789
+     C***********                                                                      S01522 161789
+     C**Fill*the*narrative*fields*with*the*existing*value:                             S01522 161789
+     C***********                                                                      S01522 161789
+     C************         MOVE NARR      O#NAR1                                       S01522 161789
+     C************         MOVE NARR      O#NAR2                                       S01522 161789
+     C***/COPY WNCPYSRC,GL1140C006                                                            161789
+     C***********                                                                      S01522 161789
+     C**If*the*facility*is*switched*off*or*unavailable,                                S01522 161789
+     C***or*UDC*is*not*installed,*exit*this*subroutine:                                S01522 161789
+     C***********                                                                      S01522 161789
+     C***********GLPNAR    IFNE 'Y'                                                    S01522 161789
+     C***********          GOTO EXPNAR                                                 S01522 161789
+     C***********          ENDIF                                                       S01522 161789
+     C**...........................................................                    S01522 161789
+     C***/EJECT*                                                                       S01522 161789
+     C*............................................................                    S01522 161789
+     C**Determine*the*debit*customer's*name:***************************                S01522 161789
+     C***********                                                                      S01522 161789
+     C***********          MOVELDRCN      ##KEY     P                                  S01522 161789
+     C***********                                                                      S01522 161789
+     C***********          CALL 'AOCUSTR0'                                             S01522 161789
+     C***********          PARM           ##RTN   7                                    S01522 161789
+     C***********          PARM '*KEY   ' ##OPT   7                                    S01522 161789
+     C***********          PARM           ##KEY  10                                    S01522 161789
+     C***********          PARM           ##STS   7                                    S01522 161789
+     C***********SDCUST    PARM SDCUST    DSSDY                                        S01522 161789
+     C***********                                                                      S01522 161789
+     C***********##RTN     IFNE *BLANKS                                                S01522 161789
+     C***********          MOVEL'SDCUSTPD'DBFILE      *************                    S01522 161789
+     C***********          MOVEL'101'     DBASE       * DBERR 101 *                    S01522 161789
+     C***********          MOVEL##OPT     DBOPTN      *************                    S01522 161789
+     C***********          MOVELDRCN      DBKEY                                        S01522 161789
+     C***********          EXSR *PSSR                                                  S01522 161789
+     C***********          SETON                     U7U8LR                            S01522 161789
+     C***********          GOTO DEND                                                   S01522 161789
+     C***********          ENDIF                                                       S01522 161789
+     C***********                                                                      S01522 161789
+     C**Determine*the*value*for*the*first*narrative*using*AOPNARR0:****                S01522 161789
+     C***********                                                                      S01522 161789
+     C***********          CLEARCGPNAR                                                 S01522 161789
+     C***********          CLEAR##PRM1                                                 S01522 161789
+     C***********          MOVELREFN      MNTRNO    P                                  S01522 161789
+     C***********          MOVE 'GL'      MNMODI                                       S01522 161789
+     C***********          MOVE DRCN      MNCUST                                       S01522 161789
+     C***********          MOVE BRCA      MNBRCA                                       S01522 161789
+     C***********          MOVE CCY       MNCYCD                                       S01522 161789
+     C***********          MOVE DRAC      MNACCD                                       S01522 161789
+     C***********          MOVE DRSQ      MNACSQ                                       S01522 161789
+     C***********          MOVE BBCRNM    MNCRNM                                       S01522 161789
+     C***********          MOVE BOKC      MNBOKC                                       S01522 161789
+     C***********          MOVE DRACNO    MNRACN                                       S01522 161789
+     C***********          MOVELNARR      MNNARR    P                                  S01522 161789
+     C***/COPY WNCPYSRC,GLH00757                                                              161789
+     C***********                                                                      S01522 161789
+     C***********          CALL 'AOPNARR0'                                             S01522 161789
+     C***********          PARM           ##RTN                                        S01522 161789
+     C***********          PARM 'GB00450' ##MGID  7                                    S01522 161789
+     C***********          PARM           ##PRM1                                       S01522 161789
+     C***********CGPNAR    PARM CGPNAR    ##PNAR                                       S01522 161789
+     C***********          PARM           ##NARR 50                                    S01522 161789
+     C***/COPY WNCPYSRC,GLH00758                                                              161789
+     C**...........................................................                    S01522 161789
+     C***/EJECT**                                                                      S01522 161789
+     C**...........................................................                    S01522 161789
+     C***********##RTN     IFNE *BLANKS                                                S01522 161789
+     C***********          MOVEL'CGPNARPD'DBFILE      *************                    S01522 161789
+     C***********          MOVEL'102'     DBASE       * DBERR 102 *                    S01522 161789
+     C***********          MOVELMNCUST    DBKEY       *************                    S01522 161789
+     C***********          EXSR *PSSR                                                  S01522 161789
+     C***********          SETON                     U7U8LR                            S01522 161789
+     C***********          GOTO DEND                                                   S01522 161789
+     C***********          ENDIF                                                       S01522 161789
+     C***********                                                                      S01522 161789
+     C***********          MOVEL##NARR    O#NAR1    P                                  S01522 161789
+     C***********                                                                      S01522 161789
+     C**Determine*the*credit*customer's*name:                                          S01522 161789
+     C***********                                                                      S01522 161789
+     C***********          MOVELCRCN      ##KEY     P                                  S01522 161789
+     C***********                                                                      S01522 161789
+     C***********          CALL 'AOCUSTR0'                                             S01522 161789
+     C***********          PARM           ##RTN                                        S01522 161789
+     C***********          PARM '*KEY   ' ##OPT                                        S01522 161789
+     C***********          PARM           ##KEY                                        S01522 161789
+     C***********          PARM           ##STS                                        S01522 161789
+     C***********SDCUST    PARM SDCUST    DSSDY                                        S01522 161789
+     C***********                                                                      S01522 161789
+     C***********##RTN     IFNE *BLANKS                                                S01522 161789
+     C***********          MOVEL'SDCUSTPD'DBFILE    *************                      S01522 161789
+     C***********          MOVEL'103'     DBASE     * DBERR 103 *                      S01522 161789
+     C***********          MOVEL##OPT     DBOPTN    *************                      S01522 161789
+     C***********          MOVELCRCN      DBKEY                                        S01522 161789
+     C***********          EXSR *PSSR                                                  S01522 161789
+     C***********          SETON                     U7U8LR                            S01522 161789
+     C***********          GOTO DEND                                                   S01522 161789
+     C***********          ENDIF                                                       S01522 161789
+     C**...........................................................                    S01522 161789
+     C***/EJECT**                                                                      S01522 161789
+     C**...........................................................                    S01522 161789
+     C**Determine*the*value*for*the*second*narrative*usingAOPNARR0******               S01522 161789
+     C***********                                                                      S01522 161789
+     C***********          CLEARCGPNAR                                                 S01522 161789
+     C***********          CLEAR##PRM1                                                 086125 161789
+     C***********          MOVELREFN      MNTRNO    P                                  S01522 161789
+     C***********          MOVE 'GL'      MNMODI                                       S01522 161789
+     C***********          MOVE CRCN      MNCUST                                       S01522 161789
+     C***********          MOVE BRCA      MNBRCA                                       S01522 161789
+     C***********          MOVE CCY       MNCYCD                                       S01522 161789
+     C***********          MOVE CRAC      MNACCD                                       S01522 161789
+     C***********          MOVE CRSQ      MNACSQ                                       S01522 161789
+     C***********          MOVE BBCRNM    MNCRNM                                       S01522 161789
+     C***********          MOVE BOKC      MNBOKC                                       S01522 161789
+     C***********          MOVE CRACNO    MNRACN                                       S01522 161789
+     C***********          MOVELNARR      MNNARR    P                                  S01522 161789
+     C***/COPY WNCPYSRC,GLH00759                                                              161789
+     C***********                                                                      S01522 161789
+     C***********          CALL 'AOPNARR0'                                             S01522 161789
+     C***********          PARM           ##RTN                                        S01522 161789
+     C***********          PARM 'GB00460' ##MGID                                       S01522 161789
+     C***********          PARM           ##PRM1                                       086125 161789
+     C***********CGPNAR    PARM CGPNAR    ##PNAR                                       S01522 161789
+     C***********          PARM           ##NARR                                       S01522 161789
+     C***/COPY WNCPYSRC,GLH00760                                                              161789
+     C***********                                                                      S01522 161789
+     C***********##RTN     IFNE *BLANKS                                                S01522 161789
+     C***********          MOVEL'CGPNARPD'DBFILE      *************                    S01522 161789
+     C***********          MOVEL'104'     DBASE       * DBERR 104 *                    S01522 161789
+     C***********          MOVELMNCUST    DBKEY       *************                    S01522 161789
+     C***********          EXSR *PSSR                                                  S01522 161789
+     C***********          SETON                     U7U8LR                            S01522 161789
+     C***********          GOTO DEND                                                   S01522 161789
+     C***********          ENDIF                                                       S01522 161789
+     C***********                                                                      S01522 161789
+     C***********          MOVEL##NARR    O#NAR2    P                                  S01522 161789
+     C***********                                                                      S01522 161789
+     C***********EXPNAR    TAG                         < EXPNARS                       S01522 161789
+     C***********                                                                      S01522 161789
+     C***********          ENDSR                                                       S01522 161789
+     C******************************************************************               S01522 161789
      C/EJECT
       *                                                                                       190679
       **  CALEOM - Calculates the End of Month Date.                                          190679
@@ -1765,7 +1776,8 @@
 0722 O                N46    62BKAPDT    38P                              CGL003
 0722 O                 46    62AMAPDA    38P                              CGL003
 0723 O*********** S01522       NARR      73                               S01522
-     O                         O#NAR1    73                               S01522
+     O***********              O#NAR1    73                                            S01522 161789
+     O                         NARR      73                                                   161789
 0724 O                         PAMT      80P                              GL1140
 0725 O                                   81 '0'                           GL1140
 0726 O                       60          81 '1'                           GL1140
@@ -1892,7 +1904,8 @@
 0722 O                N46    62BKAPDT    38P                              CGL003
 0722 O                 46    62AMAPDA    38P                              CGL003
 0751 O*********** S01522       NARR      73                               S01522
-     O                         O#NAR2    73                               S01522
+     O***********              O#NAR2    73                                            S01522 161789
+     O                         NARR      73                                                   161789
 0752 O                         PAMT      80P                              GL1140
 0753 O                                   81 '1'                           GL1140
 0754 O                       60          81 '0'                           GL1140

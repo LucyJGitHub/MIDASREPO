@@ -13,8 +13,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. CRE083BD           Date 06Aug12              */
+/*       Last Amend No. MD035795           Date 07Oct15              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      CRE083BD           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -32,6 +33,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD035795 - Account Closure does not generate a turnover stmt*/
+/*                  charge when indicated. Ensure that extra daily   */
+/*                  chg will be posted if a/c has non-charge posting */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CRE083BD - COB Restructure - RE COB Optimisation Phase 1    */
 /*                  (Added Header Box warning text).                 */
@@ -259,6 +263,7 @@ LOOP:                                                                 /*CCB003*/
                                                                       /*CCB003*/
 RESTART:     OVRDBF     FILE(GEICPD) TOFILE(GEIC2PD)                  /*CCB003*/
              OVRDBF     FILE(GEICZZ) TOFILE(GEIC2ZZ)                  /*CCB003*/
+             OVRDBF     FILE(GEICL4) TOFILE(GEIC2L4)                                    /*MD035795*/
 /*/COPY WNCPYSRC,REC116D002                                          */
              CALL       PGM(RE3116) PARM(&RESTART)                    /*CCB003*/
 /*/COPY WNCPYSRC,REC116D003                                          */

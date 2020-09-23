@@ -15,8 +15,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD025682           Date 19Aug14               *
+      *  Last Amend No. MD055914           Date 10Aug20               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD025682           Date 19Aug14               *
       *                 MD020569           Date 28May13               *
       *                  AR1089839             Date 19Feb13           *
       *                  AR988376B             Date 12Feb13           *
@@ -26,6 +27,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055914 - Incorrect TRLR menu processing in Bridge for      *
+      *             SDCUSTPD. Replaced DOU condition with DOW NOT.    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD025682 - Correct SDCMRKPD trailer failure in COB.          *
       *  MD020569 - SDC0602 seq 00001 has failed during COB run       *
@@ -175,7 +178,8 @@
      C     *LOVAL        SETLL     SDCUSTL8                                                AR988376B
      C                   READ      SDCUSTL8                                                AR988376B
       *                                                                                    AR988376B
-     C                   DOU       %EOF(SDCUSTL8)                                          AR988376B
+     C**********         DOU       %EOF(SDCUSTL8)                                 AR988376B MD055914
+     C                   DOW       NOT %EOF(SDCUSTL8)                                       MD055914
      C                   EVAL      WFLD = WFLD + 1                                         AR988376B
      C                   READ      SDCUSTL8                                                AR988376B
      C                   ENDDO                                                             AR988376B

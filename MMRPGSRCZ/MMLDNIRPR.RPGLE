@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054028           Date 05Sep19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD031031           Date 24Feb15               *
+      *  Prev Amend No. MD054028           Date 05Sep19               *
+      *                 CER050             Date 16Jun19               *
       *                 MD046248           Date 27Oct17               *
       *                 AR701789           Date 26Sep16               *
       *                 MD036070           Date 19Oct15               *
@@ -102,6 +103,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031031 - F1DLNO missing in DLDLDnQD file for LDNI, NASP,   *
+      *             NASS, FRA, CIRS and SIRS. Write to extension file *
+      *             whether CLE025 is *ON or *OFF.                    *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
       *             being updated                                     *
       *  CER050 - Annualised Percentage Rate (Recompile)              *
@@ -3056,7 +3060,8 @@
                                                                                               244036
       ** Add record within Deals Master Extension File (done from Java layer).                244036
      C**********         IF        DDACTN = 'I'                                         244036247888
-     C                   IF        DDACTN = 'I' AND CLE025 = 'Y'                              247888
+     C**********         IF        DDACTN = 'I' AND CLE025 = 'Y'                     247888 MD031031
+     C                   IF        DDACTN = 'I'                                             MD031031
      C                   EXSR      WriteDLDLDC                                                244036
      C                   END                                                                  244036
                                                                                               244036

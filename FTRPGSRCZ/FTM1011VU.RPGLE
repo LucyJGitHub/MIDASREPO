@@ -33,8 +33,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD102             Date 08Jan19               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR928996A          Date 03May12               *
+      *  Prev Amend No. AR928996           Date 27Mar12               *
+      *                 CSD102             Date 08Jan19               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR750695           Date 26Apr11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG24998           Date 17Jul09               *
@@ -54,6 +56,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
+      *             data structure field to have the correct length.  *
+      *             (Child: AR928997A)                                *
+      *  AR928996 - Data lost due to rate field :36: being truncated. *
+      *             (Child: AR928997)                                 *
       *  CSD102 - Password Length Extension (Recompile)               *
       *  MD046248 - Finastra Rebranding                               *
       *  AR750695 - RFTD fails to create shadow postings. Expected    *
@@ -80,9 +87,9 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -101,108 +108,108 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **-----------------------------------------------------------------------
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes the definitions for arrays
       ** specific to API CTL & VU modules.
      D/COPY ZACPYSRC,APICTLARR
       **-----------------------------------------------------------------------
- 
+
      D/COPY MECPYSRC,ME1100_ILE
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Incoming header
      D HeadIn        E DS                  EXTNAME(APHEADPD)
- 
+
       * Incoming transaction in screen format
      D TranInRFTD    E DS                  EXTNAME(FT101HSPD)
      D PPBRCA        E                     EXTFLD(PBRCA)
- 
+
       * Valid Incoming transaction in file format
      D ValInRFTD     E DS                  EXTNAME(FT101HPD)
      D                                     PREFIX(VL)
- 
+
       * Current transaction record in file format
      D RFTDFilFmt    E DS                  EXTNAME(FT101HPD)
- 
+
       * Current transaction in screen format
      D CurTrRFTD     E DS                  EXTNAME(FT101HSPD)
      D                                     PREFIX(@)
       ** Current Incoming Debit Details
      D DtlRcdIn      E DS                  EXTNAME(FT101DPD) PREFIX(CR)
- 
+
       * Error indicators
      D OKTrRFTD      E DS                  EXTNAME(FTE101HBPD)
       *
       ** Ok RFT Header Details
      D OKHdr         E DS                  EXTNAME(FTE101HPD) PREFIX(OH)
- 
+
      D MREFARR         S              8    DIM(100)
       ** Message reference array
- 
+
      D MPRTARR         S              3    DIM(100)
       ** Message part array
- 
+
       **                                                                                      CSC022
       ** Commitment Control Job Array                                                         CSC022
      D WJobs           S             10A   Dim(10)                                            CSC022
       **                                                                                      CSC022
       * External DS for bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       * External DS for API ICD
      D SDAPI         E DS                  EXTNAME(SDAPIPD)
- 
+
       * External DS for SAR details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)
- 
+
       * First DS for access programs - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       * Second DS for access programs - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
       **                                                                                      CSC022
@@ -210,7 +217,7 @@
      D SCCMTJOB      E DS                  EXTNAME(SCCMTJOB) DTAARA(SCCMTJOB)                 CSC022
      D  WDSJobs                4    103A                                                      CSC022
       **                                                                                      CSC022
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -227,31 +234,31 @@
       ** Previous Incoming Debit Details                                                    AR750695
      D PDtlRcdIn     E DS                  EXTNAME(FT101DPD) PREFIX(PD)                     AR750695
       *                                                                                     AR750695
- 
+
       * Error message field(s)
      D     Msg1        S                   LIKE(#MsgID)
- 
+
       * Index for arrays of error message ids etc in amend validation
      D AmIdx           S              3P 0 INZ(0)
- 
+
       * Index for arrays of error message ids etc
      D Idx             S              3P 0 INZ(0)
- 
+
       * Index for arrays of warning message ids etc
      D WIdx            S              3P 0 INZ(0)
- 
+
       * Fields (500A) to receive the incoming transaction
      D Trans5001       S            500A
      D Trans5002       S            500A
- 
+
       * Indices for arrays used to set up corresponding
       * sequence numbers for the fields that are in error
      D Ix              S              3P 0
      D Iy              S              3P 0
- 
+
       * Timestamp for the transaction
      D TimeStamp       S               Z
- 
+
       ** Response Mode, passed as a constant parameter to the VAL module
       ** This is always 'S' for Synchronous
      D RespMode        S              1A   INZ('S')
@@ -271,18 +278,18 @@
      D POptn           S              7A                                                      CSC022
      D PSard           S              6A                                                      CSC022
       **                                                                                      CSC022
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -292,7 +299,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       * Incoming transaction is broken into 500A fields, so that a common CL
       * can be used between this module and the one that read the MQ queue.
       * This module needs to break these 500A fields by loading them into
@@ -309,14 +316,14 @@ ssh  C                   EVAL      PRSEQNO = 0                                  
      C                   Clear                   NDtlRcdIn                                  AR750695
      C                   Clear                   PHdrRcdIn                                  AR750695
      C                   Clear                   PDtlRcdIn                                  AR750695
- 
+
       ** Generate a timestamp for this transaction
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
       * Reset variables gradually updated
      C                   EXSR      RESETCYCLE
- 
+
       * Validate action code
      C                   EXSR      ValidateAc
       *
@@ -324,47 +331,47 @@ ssh  C                   EVAL      PRSEQNO = 0                                  
      C                   IF        Idx <> 0
      C                   GOTO      INVALID
      C                   ENDIF
- 
+
       * Processing depends upon action code
      C                   SELECT
- 
+
       * Processing for inserts
      C                   WHEN         DDACTN = 'I'
      C                   EXSR      ValidateTr
- 
+
       * Processing for amends or changes
      C                   WHEN         DDACTN = 'A'
      C                   EXSR      ValdateAmd
- 
+
       * If error in validation, fail this input
      C                   IF        Idx <> 0
      C                   GOTO      INVALID
      C                   ENDIF
- 
+
      C                   EXSR      ValidateTr
                                                                                              BUG4482
      C                   WHEN      DDACTN = 'X'                                              BUG4482
       *  Processing for Authorises                                                           BUG4482
      C                   EXSR      ValidateTr                                                BUG4482
- 
+
      C                   ENDSL
       *
      C     INVALID       TAG
- 
+
       * Write to database
      C     UpdateYN      IFEQ      'Y'
      C     Idx           ANDEQ     0
      C                   EXSR      SETUPVALID
      C                   EXSR      UpdateDB
      C                   ENDIF
- 
+
      C                   SETON                                        LR
- 
+
       * Remerge buffer with all relevant data structures
      C                   EVAL                    Buffer = DDACTN+TranInRFTD
- 
+
      C                   RETURN
- 
+
       ********************************************************************
       /EJECT
       *****************************************************************
@@ -373,12 +380,12 @@ ssh  C                   EVAL      PRSEQNO = 0                                  
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
- 
+
       * Transaction information
      C                   PARM                    Trans5001
      C                   PARM                    Trans5002
@@ -392,11 +399,11 @@ ssh  C                   EVAL      PRSEQNO = 0                                  
      C                   PARM                    UpdateYN          1
      C                   PARM                    Buffer         6000
      C                   PARM                    APIRetc           1
- 
+
       * Set up the name of the primary and secondary message files from
       * which the message handler will get the messages
      C                   EVAL      MsgFArray(1) = 'FTUSRMSG'
- 
+
       * Hook to enable non-core message files to be included
      D/COPY WNCPYSRC,FTM101M01
       *
@@ -406,7 +413,7 @@ ssh  C                   EVAL      PRSEQNO = 0                                  
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       * Access API ICD via access program
      C                   CALLB     'AOAPIR0'
      C                   PARM      '*DBERR '     @RTCD
@@ -453,7 +460,7 @@ ssh  C                   EVAL      PRSEQNO = 0                                  
      C                   EndIf                                                                CSC022
      C                   EndIf                                                                CSC022
       **                                                                                      CSC022
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -471,18 +478,18 @@ ssh  C                   EVAL      PRSEQNO = 0                                  
      C                   IF        DDACTN <>'I' AND  DDACTN <> 'X' AND
      C                             DDACTN <> 'A' AND DDACTN <> 'D' AND
      C                             DDACTN <> 'E' AND DDACTN <> *BLANKS
- 
+
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx)='DDACTN'
      C                   MOVE      'RFV0064'     MsgIdArr(Idx)
      C                   GOTO      INVALID
      C                   ENDIF
- 
+
      C                   RESET                   ReturnCode
- 
+
      C                   IF        DDACTN <> 'I'
      C                   CALLB     'FTM1011RV'
- 
+
       * Return code
      C                   Parm                    ReturnCode
       * Action Code
@@ -507,7 +514,7 @@ ssh  C                   EVAL      PRSEQNO = 0                                  
      C                   PARM                    MREFARR
       * Message part array
      C                   PARM                    MPRTARR
- 
+
       ** Errors produced during retrieve operation
      C                   Parm                    OKTrRFTD
      C                   Parm                    Idx
@@ -518,53 +525,53 @@ ssh  C                   EVAL      PRSEQNO = 0                                  
       ** Store original values of the transaction                                           AR750695
       *                                                                                     AR750695
      C                   EVAL      PHdrRcdIn = RFTDFilFmt                                   AR750695
- 
+
       ** If authorised, you cannot action the RFT
- 
+
      C                   IF        AUIN = 'Y' OR DDACTN <> 'X' AND
      C                             AUP1 <> *BLANKS
- 
+
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx)='DDACTN'
      C                   MOVE      'RFV0065'     MsgIdArr(Idx)
- 
+
      C                   ELSE
- 
+
       ** If action code is authorise, user must not be the same as authorise
       ** user on file
- 
+
      C                   IF        DDACTN = 'X'
- 
+
       * Validate user authorisation threshold
      C                   CallB     'FTVTHTH01'
      C                   Parm                    RetCodeIn
      C                   Parm                    RFTDFilFmt
- 
+
       * Validate header and detail records
- 
+
      C                   MOVE      INUSER        SAVUSER          10
      C                   CallB     'FTM1016VL'
      C                   Parm                    ValErrCde        10
      C                   Parm                    DDACTN
      C                   Parm                    RFTDFilFmt
      C                   Eval      Inuser = SavUser
- 
+
      C                   Select
- 
+
      C                   When      ValErrCde = '*VALERROR'
- 
+
      C                   Add       1             Idx
      C                   EVAL      FldNameArr(Idx)='DDACTN'
      C                   Move      'RFV0146'     MsgIdArr(Idx)
- 
+
      C                   When      RetCodeIn = 'TooSmall'
- 
+
      C                   Add       1             Idx
      C                   EVAL      FldNameArr(Idx)='DDACTN'
      C                   Move      'RFV0142'     MsgIdArr(Idx)
- 
+
      C                   Endsl
- 
+
       ** Retrieve user
      C                   CALL      'SFC000026'
      C*******************PARM      *BLANKS       USER             10            BUG1901
@@ -574,17 +581,17 @@ ssh  C                   EVAL      PRSEQNO = 0                                  
      C*******************          user = updusr                                BUG1901
      C                   If        username = inuser  or                        BUG1901
      C                             username = updusr                            BUG1901
- 
+
      C                   Add       1             Idx
      C                   EVAL      FldNameArr(Idx)='DDACTN'
      C                   Move      'RFV0075'     MsgIdArr(Idx)
      C                   Endif
      C                   Endif
      C                   Endif
- 
+
      C                   ENDIF
- 
- 
+
+
      C                   ENDSR
       ******************************************************************
       /EJECT
@@ -594,10 +601,10 @@ ssh  C                   EVAL      PRSEQNO = 0                                  
       *                                                                *
       ******************************************************************
      C     ValidateTr    BEGSR
- 
+
       * Validate transaction details
      C                   RESET                   ReturnCode
- 
+
      C                   CALLB     'FTM1011VL'
       *
      C                   PARM                    ReturnCode
@@ -617,7 +624,7 @@ ssh  C                   EVAL      PRSEQNO = 0                                  
      C                   PARM                    WMsgDtaArr
       *
      C                   PARM                    WIdx
- 
+
      C     EValidTr      ENDSR
       *****************************************************************
       /EJECT
@@ -627,12 +634,12 @@ ssh  C                   EVAL      PRSEQNO = 0                                  
       *              are amendable.                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     ValdateAmd    BEGSR
- 
+
       * Convert file format to screen format
      C                   RESET                   ReturnCode
- 
+
      C                   CALLB     'FTM1011CT'
       * Return Code
      C                   Parm                    ReturnCode
@@ -656,7 +663,7 @@ ssh  C                   EVAL      PRSEQNO = 0                                  
       *
       * RFT details in screen format
      C                   Parm                    CurTrRFTD
- 
+
       * Sender's reference cannot be amended
      C     PSNDREF       IFNE      @PSNDREF
      C                   ADD       1             AmIdx
@@ -664,7 +671,7 @@ ssh  C                   EVAL      PRSEQNO = 0                                  
      C                   EVAL      AmMsgIdArr(AmIdx)   = 'RFV0908'
      C                   EVAL      AmMsgDtaAr(AmIdx)  = @PSNDREF
      C                   ENDIF
- 
+
       * RFT type cannot be amended
      C     PPTYP         IFNE      @PPTYP
      C                   ADD       1             AmIdx
@@ -672,7 +679,7 @@ ssh  C                   EVAL      PRSEQNO = 0                                  
      C                   EVAL      AmMsgIdArr(AmIdx)   = 'RFV0909'
      C                   EVAL      AmMsgDtaAr(AmIdx)  = @PPTYP
      C                   ENDIF
- 
+
       * If any errors overwrite previous error information
      C                   IF        AmIdx <> 0
      C                   MOVEA     AmMsgIdArr    MsgidArr
@@ -680,7 +687,7 @@ ssh  C                   EVAL      PRSEQNO = 0                                  
      C                   MOVEA     AmMsgDtaAr    MsgDtaArr
      C                   Z-ADD     AmIdx         Idx
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -691,32 +698,32 @@ ssh  C                   EVAL      PRSEQNO = 0                                  
       *                                                               *
       *****************************************************************
      C     RESETCYCLE    BEGSR
- 
+
      C                   RESET                   FldNameArr
      C                   RESET                   MsgIDArr
      C                   RESET                   MsgDtaArr
      C                   RESET                   Idx
- 
+
      C                   RESET                   WFldNamArr
      C                   RESET                   WMsgIDArr
      C                   RESET                   WMsgDtaArr
      C                   RESET                   WIdx
- 
+
      C                   RESET                   AmFldNamAr
      C                   RESET                   AmMsgIDArr
      C                   RESET                   AmMsgDtaAr
      C                   RESET                   AmIdx
- 
- 
+
+
      C                   RESET                   FldNoArr
- 
+
      C                   CLEAR                   CurTrRFTD
- 
+
      C                   MOVE      *ALL'Y'       OKTrRFTD
      C                   MOVE      *ALL'Y'       OKHdr
- 
+
      C                   CLEAR                   ValInRFTD
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -726,9 +733,9 @@ ssh  C                   EVAL      PRSEQNO = 0                                  
       *              valid file record.                               *
       *                                                               *
       *****************************************************************
- 
+
      C     SETUPVALID    BEGSR
- 
+
      C                   CALLB     'FTM1011CT'
       * Return Code
      C                   Parm      *BLANKS       ReturnCode
@@ -752,9 +759,9 @@ ssh  C                   EVAL      PRSEQNO = 0                                  
       *
       * RFT details in screen format
      C                   Parm                    TranInRFTD
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -762,13 +769,13 @@ ssh  C                   EVAL      PRSEQNO = 0                                  
       * UPDATEDB - Update database                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     UPDATEDB      BEGSR
       *
       * Update
      C                   RESET                   ReturnCode
      C                   EVAL      NHdrRcdIn = ValInRFTD                                    AR750695
- 
+
       * Remove all forward positions.
      C                   CALLB     'FTM101UPP'
      C                   PARM                    ReturnCode
@@ -782,7 +789,7 @@ ssh  C                   EVAL      PRSEQNO = 0                                  
      C                   PARM      'Y'           HdrInfo                                    AR750695
      C                   PARM      'N'           DtlInfo                                    AR750695
      C                   PARM      'N'           FTSTP             1                        AR750695
- 
+
      C                   IF        ReturnCode <> *BLANK
      C                   EVAL      DBFILE = 'FTM101UPP'
      C                   EVAL      DBASE = 001
@@ -791,9 +798,9 @@ ssh  C                   EVAL      PRSEQNO = 0                                  
      C                   EVAL      *INU8 = *ON
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   RESET                   ReturnCode
- 
+
      C                   CALLB     'FTM101UPD'
      C                   PARM                    ReturnCode
      C                   PARM                    DDACTN
@@ -810,7 +817,7 @@ ssh  C                   EVAL      PRSEQNO = 0                                  
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
- 
+
       *
       * If there were any errors in the update functions, rollback any
       * updates (done in *PSSR) and end this program. Otherwise commit.
@@ -818,7 +825,7 @@ ssh  C                   EVAL      PRSEQNO = 0                                  
      C                   MOVEL     '0'           APIRetc
      C                   EXSR      *PSSR
      C                   ELSE
- 
+
      C                   RESET                   ReturnCode
      C                   EVAL      NHdrRcdIn = ValInRFTD                                    AR750695
       *
@@ -850,17 +857,17 @@ ssh  C                   EVAL      PRSEQNO = 0                                  
      C                             Or (CSC022 = 'Y' and WSkpComtRolbk = 'N')                  CSC022
      C                   COMMIT
      C                   EndIf                                                                CSC022
- 
+
       * Return RFT ID as this is defaulted and sender's reference
      C                   IF        DDACTN = 'I'
      C                   EVAL      PRFTID = VLRFTID
      C                   EVAL      PSNDREF = VLSNDREF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

@@ -11,10 +11,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR989214           Date 28Jun12               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. BUG17927           Date 23Apr08               *
+      *                 BUG17927           Date 23Apr08               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 237337             Date 03Oct06               *
@@ -53,6 +54,10 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  AR989214 - Dbase error AOCUSTR0 if Customer has been flagged *
+      *             for or been deleted. Amended program to add msgid *
+      *             ACO1012, ACO1013 and msgf GBMIUSRMSG.             *
+      *             (Child: AR989216)                                 *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG17927 - Add new RTCD passed, if record found but customer *
       *             closed.                                           *
@@ -446,8 +451,12 @@
      C   97              MOVE      '*KEY   '     P@RTCD                         Invalid key
      C   54              MOVE      '*NOSEL '     P@RTCD                         No selection
      C   55              MOVE      '*CALL  '     P@RTCD                         Call error
-     C   80              MOVE      '*CUSDEL'     P@RTCD                         Cust deleted  237337
-     C   81              MOVE      '*CUSCLS'     P@RTCD                         Cust closed BUG17927
+     C***80*****         MOVE      '*CUSDEL'     P@RTCD                         Cust 237337 AR989214
+     C***81*****         MOVE      '*CUSCLS'     P@RTCD                         CusBUG17927 AR989214
+     C   80              MOVE      '*MSG   '     W@RTCD                                     AR989214
+     C   80              MOVE      *BLANKS       P@RTCD                                     AR989214
+     C   81              MOVE      *BLANKS       P@RTCD                                     AR989214
+     C   81              MOVE      '*MSG   '     W@RTCD                                     AR989214
      C   97              MOVE      '*ERROR '     P@KYST                         Key status
       *
       * Caller requests message sent to program queue :
@@ -465,7 +474,9 @@
      C   97              MOVE      'ACO1008'     P@MGID                           Invalid key
      C   54              MOVE      'ACO1009'     P@MGID                           No selection
      C   55              MOVE      'ACO1010'     P@MGID                           Call error
-     C   81              MOVE      'ACO1011'     P@MGID                           Cust clse BUG17927
+     C***81*****         MOVE      'ACO1011'     P@MGID                           CBUG17927 AR989214
+     C   80              MOVE      'ACO1012'     P@MGID                                     AR989214
+     C   81              MOVE      'ACO1013'     P@MGID                                     AR989214
      C                   CALLB     'ZASNMG'                                       <SEND MESSAGE>
      C                   PARM      *BLANK        W@RTCD            7              B:Return code
      C                   PARM      PGNAME        P@PGNM           10              I:Program name

@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSC043             Date 18Jun10               *
+      *  Last Amend No. AR920119           Date 09Mar12               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSC043             Date 18Jun10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -27,6 +28,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR920119 - Do not start updater if Close of Business is      *
+      *             running in the zone. (Child: AR920127)            *
       *  MD046248 - Finastra Rebranding                               *
       *  CSC043 - MidasPlus IASP Enablement                           *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -48,6 +51,7 @@
      FGPUTJSPDN UF   E             DISK    INFSR(*PSSR)
      F                                     RENAME(GPUTJSD0:GPUTJSDN)
      FGPULOGPD  O  A E             DISK    INFSR(*PSSR)
+     FGPDWNLL0  IF A E           K DISK    INFSR(*PSSR)                                     AR920119
  
       *****************************************************************
  
@@ -119,6 +123,10 @@
      D PSARD           S              6                                                       CLE024
      D PRTCD           S              7                                                       CLE024
      D POPTN           S              7                                                       CLE024
+     D ZONID           S              2                                                     AR920119
+     D PHASKEY         S             20    INZ('MidasPhaseOfDay')                           AR920119
+     D PHAS50          S             50                                                     AR920119
+     D PHAS1           S              1                                                     AR920119
  
      C     *ENTRY        PLIST
      C                   PARM                    JournalEnt
@@ -556,6 +564,32 @@
  
      C                   Z-ADD     1             ZZ                2 0
      C     #_ZOZONE(ZZ)  DOWNE     *BLANK
+      *                                                                                     AR920119
+      ** Check whether the zone is in Close of Business by chaining to                      AR920119
+      ** the 'MidasPhaseOfDay' record for the zone on the dashboard                         AR920119
+      ** file GPDWNLL0.                                                                     AR920119
+      *                                                                                     AR920119
+     C                   EVAL      ZONID = #_ZOMSYS(ZZ)                                     AR920119
+     C     DWNKEY        CHAIN     GPDWNLL0                           66                    AR920119
+      *                                                                                     AR920119
+      ** If chain is successful, determine value of Midas phase of day                      AR920119
+      *                                                                                     AR920119
+     C     *IN66         IFEQ      *OFF                                                     AR920119
+     C                   MOVEL     DLVAL         PHAS50                                     AR920119
+     C                   MOVEL     PHAS50        PHAS1                                      AR920119
+      *                                                                                     AR920119
+      ** If Close of Business is running                                                    AR920119
+      *                                                                                     AR920119
+     C     PHAS1         IFNE      'A'                                                      AR920119
+     C     PHAS1         ANDNE     'F'                                                      AR920119
+      *                                                                                     AR920119
+      ** Set 'submit job' flag to 'N'                                                       AR920119
+      *                                                                                     AR920119
+     C                   EVAL      #_ZOSTRJ(ZZ) = 'N'                                       AR920119
+     C                   ENDIF                                                              AR920119
+      *                                                                                     AR920119
+     C                   ENDIF                                                              AR920119
+      *                                                                                     AR920119
      C     #_ZOSTRJ(ZZ)  IFEQ      'Y'
      C                   MOVEL     *BLANK        #_ZOSTRJ(ZZ)
      C                   MOVEL     #_ZOZONE(ZZ)  ZOZONE
@@ -751,6 +785,12 @@
  
      C                   EXSR      END_UPDATERS
      C                   EXSR      STR_UPDATERS
+      *                                                                                     AR920119
+      ** Define key list for GPDWNLL0                                                       AR920119
+      *                                                                                     AR920119
+     C     DWNKEY        KLIST                                                              AR920119
+     C                   KFLD                    ZONID                                      AR920119
+     C                   KFLD                    PHASKEY                                    AR920119
  
      C                   ENDSR
       *********************************************************************

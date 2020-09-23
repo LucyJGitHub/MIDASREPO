@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CMG008             Date 20Feb20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. AR661786           Date 15Sep14               *
+      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *                 MD046248           Date 27Oct17               *
       *                 AR787620           Date 10Jun11               *
       *                 CRE075             Date 06Dec10               *
       *                 AR676213           Date 19Nov10               *
@@ -43,6 +44,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR661786 - MT941/2 intra day show unauthorised and deleted FT*
+      *             payments. Only include authorised transactions and*
+      *             add checking for FX/MM and Sweeping.              *
+      *           - Applied for MD026592                              *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD046248 - Finastra Rebranding                               *
       *  AR787620 - Hooks Incorporation                               *
@@ -97,6 +102,36 @@
      FGL001421AUO    E             PRINTER USROPN         INFSR(*PSSR)
       ** Midas GL MT942 File Extract - Audit Report.
  
+      * Test for status of transaction                                                      AR661786
+      *                                                                                     AR661786
+     FINPAY     IF   E           K Disk    Infsr(*PSSR)                                     AR661786
+     F                                     Prefix(In_)                                      AR661786
+      ** Midas FT Incoming Payments                                                         AR661786
+      *                                                                                     AR661786
+     FOTPAY     IF   E           K Disk    Infsr(*PSSR)                                     AR661786
+     F                                     Prefix(Op_)                                      AR661786
+      ** Midas FT Outgoing Payments                                                         AR661786
+      *                                                                                     AR661786
+     FCQCOD     IF   E           K Disk    Infsr(*PSSR)                                     AR661786
+     F                                     Prefix(Cc_)                                      AR661786
+      ** Midas FT Cheques for Collection                                                    AR661786
+      *                                                                                     AR661786
+     FCQPAC     IF   E           K Disk    Infsr(*PSSR)                                     AR661786
+     F                                     Prefix(Cp_)                                      AR661786
+      ** Midas FT Cheques to be Paid                                                        AR661786
+      *                                                                                     AR661786
+     FNTRAN     IF   E           K Disk    Infsr(*PSSR)                                     AR661786
+     F                                     Prefix(Nt_)                                      AR661786
+      ** Midas FT Nostro Transfers                                                          AR661786
+      *                                                                                     AR661786
+     FMMDEALLL  IF   E           K Disk    Infsr(*PSSR)                                     AR661786
+     F                                     Prefix(MM_)                                      AR661786
+      ** Midas Dealing Transactions                                                         AR661786
+      *                                                                                     AR661786
+     FFXDEALLL  IF   E           K Disk    Infsr(*PSSR)                                     AR661786
+     F                                     Prefix(FX_)                                      AR661786
+      ** Midas Dealing Transactions                                                         AR661786
+      *                                                                                     AR661786
       *========================================================================*
       *                                                                        *
       * Use of Indicators                                                      *
@@ -240,6 +275,11 @@
  
      D WkErrRpt        S              1A   INZ('N')                             Error Reported
      D X               S              5U 0                                      Working Index
+      *                                                                                     AR661786
+      ** Check for Authorised Status on Funds Transfer                                      AR661786
+      *                                                                                     AR661786
+     D Ft_Aut          S              1A                                                    AR661786
+      *                                                                                     AR661786
       *                                                                                       CER030
       ** Parameters for EDEXET program                                                        CER030
       *                                                                                       CER030
@@ -527,6 +567,94 @@
      C     KeyPost       READE     GLPOSTD0                               28
  
      C                   DOW       NOT *IN28 AND NOT *IN40
+      *                                                                                     AR661786
+      ** Check for Authorised Status on Funds Transfer                                      AR661786
+      *                                                                                     AR661786
+     C                   Eval      Ft_Aut = *blanks                                         AR661786
+     C                   If        GlGetp = 'G'                                             AR661786
+     C     GlPref        Chain     InPayddf                                                 AR661786
+     C                   If        %Found                                                   AR661786
+      *                                                                                     AR661786
+      ** Set flag if authorised                                                             AR661786
+      *                                                                                     AR661786
+     C                   If        In_Auin = 'Y'                                            AR661786
+     C                   Eval      Ft_Aut = 'Y'                                             AR661786
+     C                   Endif                                                              AR661786
+     C                   Else                                                               AR661786
+     C     GlPref        Chain     OtPayddf                                                 AR661786
+     C                   If        %Found                                                   AR661786
+      *                                                                                     AR661786
+      ** Set flag if authorised                                                             AR661786
+      *                                                                                     AR661786
+     C                   If        Op_Auin = 'Y'                                            AR661786
+     C                   Eval      Ft_Aut = 'Y'                                             AR661786
+     C                   Endif                                                              AR661786
+     C                   Else                                                               AR661786
+     C     GlPref        Chain     Ntranddf                                                 AR661786
+     C                   If        %Found                                                   AR661786
+      *                                                                                     AR661786
+      ** Set flag if authorised                                                             AR661786
+      *                                                                                     AR661786
+     C                   If        Nt_Auin = 'Y'                                            AR661786
+     C                   Eval      Ft_Aut = 'Y'                                             AR661786
+     C                   Endif                                                              AR661786
+     C                   Else                                                               AR661786
+     C     GlPref        Chain     CqCodddf                                                 AR661786
+     C                   If        %Found                                                   AR661786
+      *                                                                                     AR661786
+      ** Set flag if authorised                                                             AR661786
+      *                                                                                     AR661786
+     C                   If        Cc_Auin = 'Y'                                            AR661786
+     C                   Eval      Ft_Aut = 'Y'                                             AR661786
+     C                   Endif                                                              AR661786
+     C                   Else                                                               AR661786
+     C     GlPref        Chain     CqPacddf                                                 AR661786
+     C                   If        %Found                                                   AR661786
+      *                                                                                     AR661786
+      ** Set flag if authorised                                                             AR661786
+      *                                                                                     AR661786
+     C                   If        Cp_Auin = 'Y'                                            AR661786
+     C                   Eval      Ft_Aut = 'Y'                                             AR661786
+     C                   Endif                                                              AR661786
+     C                   Else                                                               AR661786
+      *                                                                                     AR661786
+     C                   MOVE      GLDLREF       MMDLREF           6 0                      AR661786
+     C     MMDLREF       Chain     MMDEALLL                                                 AR661786
+     C                   If        %Found                                                   AR661786
+      *                                                                                     AR661786
+      ** Set flag if authorised                                                             AR661786
+      *                                                                                     AR661786
+     C                   If        MM_HKDSTS = 'A'                                          AR661786
+     C                   Eval      Ft_Aut = 'Y'                                             AR661786
+     C                   Endif                                                              AR661786
+     C                   Else                                                               AR661786
+     C                   MOVE      GLDLREF       FXDLREF           6 0                      AR661786
+     C     FXDLREF       Chain     FXDEALLL                                                 AR661786
+     C                   If        %Found                                                   AR661786
+      *                                                                                     AR661786
+      ** Set flag if authorised                                                             AR661786
+      *                                                                                     AR661786
+     C                   If        FX_FHDSTS = 'A'                                          AR661786
+     C                   Eval      Ft_Aut = 'Y'                                             AR661786
+     C                   Endif                                                              AR661786
+     C                   Else                                                               AR661786
+     C                   Endif                                                              AR661786
+     C                   Endif                                                              AR661786
+      *                                                                                     AR661786
+     C                   Endif                                                              AR661786
+     C                   Endif                                                              AR661786
+     C                   Endif                                                              AR661786
+     C                   Endif                                                              AR661786
+     C                   Endif                                                              AR661786
+      *                                                                                     AR661786
+      ** If not authorised read again and iterate                                           AR661786
+      *                                                                                     AR661786
+     C                   If        Ft_Aut = *blanks                                         AR661786
+     C     KeyPost       Reade     GlPostD0                               28                AR661786
+     C                   Iter                                                               AR661786
+     C                   Endif                                                              AR661786
+      *                                                                                     AR661786
+     C                   Endif                                                              AR661786
  
       ** Report only movements with a value date less or equal to the run date,
       ** and not yet flagged as processed.

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD036070           Date 19Oct15               *
+      *  Last Amend No. MD031031           Date 27Feb15               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD036070           Date 19Oct15               *
       *                 CDL094             Date 11Jun14               *
       *                 CSD095             Date 08Apr14               *
       *                 CSF011A            Date 28Nov11               *
@@ -56,6 +57,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031031 - F1DLNO missing in DLDLDnQD file for LDNI, NASP,   *
+      *             NASS, FRA, CIRS and SIRS. Write to extension file *
+      *             whether CLE025 is *ON or *OFF.                    *
       *  MD046248 - Finastra Rebranding                               *
       *  MD036070 - No way to go back to main deal details screen     *
       *             after reaching settlement screen.  Introduce new  *
@@ -125,6 +129,8 @@
      F                                     COMMIT
      FAPILOGL0  UF   E           K DISK    INFSR(*PSSR) USROPN                                CSC011
      F                                     COMMIT                                             CSC011
+     FDLDEALNA  UF A E           K DISK    INFSR(*PSSR)                                     MD031031
+     F                                     COMMIT                                           MD031031 
  
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,MMNASSR009
@@ -1866,6 +1872,11 @@
      C                   ENDIF                                                  168345
      C                                                                          CAP006
      C                   ELSE
+      ** Add record within Deals Master Extension File (done from Java layer).              MD031031
+     C                   IF        DDACTN = 'I'                                             MD031031
+     C                   EXSR      WriteDLDLDE                                              MD031031
+     C                   ENDIF                                                              MD031031
+                                                                                            MD031031
      C     ZATRNKD0      CHAIN     MMINASSD0                          99
      C  N99              DELETE    MMINASSD0
      C     APDSETK0      CHAIN     APIDSETD0                          99
@@ -2029,6 +2040,29 @@
                                                                                 CAP011
      C                   ENDSR                                                  CAP011
       *****************************************************************         CAP011
+      /EJECT                                                                                MD031031
+      *****************************************************************                     MD031031
+      *                                                               *                     MD031031
+      * WriteDLDLDE - WRITE NASS Extension record                     *                     MD031031
+      *               (usually done from java layer)                  *                     MD031031
+      *                                                               *                     MD031031
+      *****************************************************************                     MD031031
+     C     WriteDLDLDE   BEGSR                                                              MD031031
+      *                                                                                     MD031031
+      ** When opening new deals within DEALSDE, write a corresponding                       MD031031
+      ** record in the Deals details extension file DLDLDEQD.                               MD031031
+      *                                                                                     MD031031
+     C                   MOVEL     DDDLNO        F1DLNO                                     MD031031
+     C     F1DLNO        CHAIN     DLDLDED0                           82                    MD031031
+      *                                                                                     MD031031
+     C     *IN82         IFEQ      *ON                                                      MD031031
+     C                   EVAL      F1BRCA = DDORBR                                          MD031031
+     C                   WRITE     DLDLDED0                                                 MD031031
+                                                                                            MD031031
+     C                   ENDIF                                                              MD031031
+                                                                                            MD031031
+     C                   ENDSR                                                              MD031031
+      *****************************************************************                     MD031031
       /EJECT
       *****************************************************************
       * *INZSR - INITIAL PROCESSING

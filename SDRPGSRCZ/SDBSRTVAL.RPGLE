@@ -216,6 +216,17 @@
      D   LenStr                1      2                                                     MD000091
      D   MsgDtaTmp                   99                                                     MD000091
       ** Data Structure for Event Codes Substitution                                        MD000091
+                                                                                              CSD103
+      ** BSRT Backward-Looking Rate Fields                                                    CSD103
+     D BasRBckfld      DS            27                                                       CSD103
+     D  DDBLRT                 1      1                                                       CSD103
+     D  DDLBDY                 2      3                                                       CSD103
+     D  DDLODY                 4      5                                                       CSD103
+     D  DDPDLY                 6      7                                                       CSD103
+     D  DDBADJ                 8     21                                                       CSD103
+     D  DDAVOP                22     22                                                       CSD103
+     D  DDBRAC                23     24                                                       CSD103
+     D  DDWGHT                25     25                                                       CSD103
 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -1007,6 +1018,15 @@
      C                   MOVE      DDDGMA        BVDGMA
      C                   MOVE      DDOMD1        BVOMD1
      C                   MOVE      DDOMD2        BVOMD2
+      *                                                                                       CSD103
+     C                   MOVEL     DDBLRT        BVBLRT                                       CSD103
+     C                   MOVEL     DDLBDY        BVLBDY                                       CSD103
+     C                   MOVEL     DDLODY        BVLODY                                       CSD103
+     C                   MOVEL     DDPDLY        BVPDLY                                       CSD103
+     C                   MOVEL     DDBADJ        BVBADJ                                       CSD103
+     C                   MOVEL     DDAVOP        BVAVOP                                       CSD103
+     C                   MOVEL     DDBRAC        BVBRAC                                       CSD103
+     C                   MOVEL     DDWGHT        BVWGHT                                       CSD103
       *
       *
      C     DDCYCD        CAT       DDBSRC        DDBSRS
@@ -1079,6 +1099,8 @@
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
+      * Backward-Looking Rate Fields                                                          CSD103
+     C                   PARM                    BasRBckfld                                   CSD103
       *
       **  GET ZMUSER to access default branch.
       *
@@ -1226,10 +1248,6 @@
      C                   ELSE                                                                 CSD103
      C                   MOVEL     PCurSet01     AlphaCode         1                          CSD103
      C                   ENDIF                                                                CSD103
-      *                                                                                       CSD103
-     C     SDBSRT        KLIST                                                                CSD103
-     C                   KFLD                    BACYCD                                       CSD103
-     C                   KFLD                    BABSRC                                       CSD103
 
       ** Program, module and procedure names for database error processing.
       ** =================================================================

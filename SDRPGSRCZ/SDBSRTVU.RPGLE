@@ -337,15 +337,10 @@
 
       * Remerge buffer with all relevant data structures
      C*****************  EVAL                    Buffer = BaseRateIn + ExtData               BUG4469
-     C     AUTHRQ        IFEQ      'Y'                                                        CSD103
-     C                   MOVE      'N'           AUTOAUTH          1                          CSD103
-     C                   ELSE                                                                 CSD103
-     C                   MOVE      'Y'           AUTOAUTH          1                          CSD103
-     C                   ENDIF                                                                CSD103
      C                   EVAL                    Buffer = BaseRateIn                         BUG4469
      C                                                    + @TimeStamp                       BUG4469
      C                                                    + ExtData                          BUG4469
-     C                                                    + AUTOAUTH                          CSD103
+     C                                                    + AAuth                             CSD103
      C                                                    + BasRBckfld                        CSD103
 
      C                   RETURN
@@ -797,6 +792,8 @@
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
+      * Backward-Looking Rate Fields                                                          CSD103
+     C                   PARM                    BasRBckfld                                   CSD103
 
      C                   ENDSR
       *****************************************************************

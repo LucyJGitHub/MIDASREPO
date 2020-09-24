@@ -34,7 +34,14 @@
       *  CAP084 - Synchronous calling of APIs                         *
       *                                                               *
       *****************************************************************
-
+      ** +--------------------------------------+                                             CSD103
+      ** ¦ F-specs                              ¦                                             CSD103
+      ** ¦ =======                              ¦                                             CSD103
+      ** +--------------------------------------+                                             CSD103
+      *****************************************************************                       CSD103
+     FSDBSRTL0  IF   E           K DISK    INFSR(*PSSR)                                       CSD103
+     F                                     RENAME(@BAREDG:SDBSRTXX)                           CSD103
+                                                                                              CSD103
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -108,8 +115,15 @@
                                                                                               CSD103
       * SD Extra data in file (D/B) format                                                    CSD103
      D ExtData       E DS                  EXTNAME(SDBSEXPD)                                  CSD103
+                                                                                              CSD103
       **  Data Structure for Backward-Looking Rate Fields                                     CSD103
-     DBasRBckfld       DS            27                                                       CSD103
+     D BasRBckfld      DS            27                                                       CSD103
+     D  DDLBAC                26     27                                                       CSD103
+                                                                                              CSD103
+     D SDBSRTDS      E DS                  EXTNAME(SDBSRTL0:*INPUT)                           CSD103
+     D                                     PREFIX(W)                                          CSD103
+                                                                                              CSD103
+     D AAuth           S              1A                                                      CSD103
 
       ** +--- Start of main processing -----------------------------------+
 
@@ -163,16 +177,15 @@
      C                   ENDIF
 
       * Build buffer with required output
-     C                   MOVE      BATMST        @TimeStamp       26                         BUG4469
-     C     AUTHRQ        IFEQ      'Y'                                                        CSD103
-     C                   MOVE      'N'           AUTOAUTH          1                          CSD103
-     C                   ELSE                                                                 CSD103
-     C                   MOVE      'Y'           AUTOAUTH          1                          CSD103
+     C     SDBRAC        CHAIN     SDBSRTXX      SDBSRTDS             99                      CSD103
+     C     *IN99         IFNE      '1'                                                        CSD103
+     C                   MOVE      WBALBDY       DDLBAC                                       CSD103
      C                   ENDIF                                                                CSD103
-     C                   EVAL      Buffer = BasRScnfmt                                        CSD103
+     C                   MOVE      BATMST        @TimeStamp       26                         BUG4469
+     C                   EVAL      Buffer = BasRScnfmt
      C                                      + @TimeStamp                                     BUG4469
      C                                      + ExtData                                         CSD103
-     C                                      + AUTOAUTH                                        CSD103
+     C                                      + AAuth                                           CSD103
      C                                      + BasRBckfld                                      CSD103
 
      C                   SETON                                        LR
@@ -276,6 +289,10 @@
       *
  E1  C                   ENDIF
       *
+     C     SDBRAC        KLIST                                                                CSD103
+     C                   KFLD                    BACYCD                                       CSD103
+     C                   KFLD                    BABRAC                                       CSD103
+      *                                                                                       CSD103
      C                   ENDSR
       **********************************************************************
       /EJECT

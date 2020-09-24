@@ -422,7 +422,6 @@
      C                   MOVEL     BVAVOP        BAAVOP                                       CSD103
      C                   MOVEL     BVBRAC        BABRAC                                       CSD103
      C                   MOVEL     BVWGHT        BAWGHT                                       CSD103
-     C                   MOVEL     BVLBAC        BALBAC                                       CSD103
       *                                                                                       CSD012
      C                   WRITE     SDBRSHD0                                                   CSD012
      C                   ENDIF                                                                CSD012

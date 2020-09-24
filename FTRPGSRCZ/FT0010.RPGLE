@@ -43,8 +43,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD053553           Date 21Jan20               *
-      *  Prev Amend No. MD050134           Date 21Mar18               *
+      *  Last Amend No. MD056483           Date 15Sep20               *
+      *  Prev Amend No. MD053553           Date 21Jan20               *
+      *                 MD050134           Date 21Mar18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD045094           Date 10May17               *
       *                 MD030406           Date 27Oct14               *
@@ -83,6 +84,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056483 - Validate credit/debit amount using                *
+      *             rate +/- 0.000000005                              *
       *  MD053553 - FT Incoming EUR-USD: Invalid Pay Amount           *
       *  MD050134 - A serious midas error encountered when exchange   *
       *             rate exceeds tolerance level                      *
@@ -225,6 +228,40 @@
      D WINVER          S              1A                                                    MD045094
      D NRATE           S             14  9                                                  MD053553
      D D9              S              1  0                                                  MD053553
+     D WMODE           S              1  0                                                  MD056483
+     D W1DIFF          S             15  0                                                  MD056483
+     D W2DIFF          S             15  0                                                  MD056483
+     D W1PASS          S              1A                                                    MD056483
+     D W2PASS          S              1A                                                    MD056483
+     D WMOD21          S              1A                                                    MD056483
+     D WMOD22          S              1A                                                    MD056483
+     D WMOD31          S              1A                                                    MD056483
+     D WMOD32          S              1A                                                    MD056483
+     D OKAmtTolr       S              1A                                                    MD056483
+     D WAmtTolr        S              1A                                                    MD056483
+      *                                                                                     MD056483
+      ** Parameters to call AOSVALR0                                                        MD056483
+     D PSValK1         S             20A                                                    MD056483
+     D PSValK2         S             20A                                                    MD056483
+     D PSValK3         S             20A                                                    MD056483
+     D PSValK4         S             20A                                                    MD056483
+     D PSValK5         S             20A                                                    MD056483
+     D PSValK6         S             20A                                                    MD056483
+     D PSValK7         S             20A                                                    MD056483
+     D PSValK8         S             20A                                                    MD056483
+     D PSValK9         S             20A                                                    MD056483
+     D PSValK10        S             20A                                                    MD056483
+     D PSVal1          S            200A                                                    MD056483
+     D PSVal2          S            200A                                                    MD056483
+     D PSVal3          S            200A                                                    MD056483
+     D PSVal4          S            200A                                                    MD056483
+     D PSVal5          S            200A                                                    MD056483
+     D PSVal6          S            200A                                                    MD056483
+     D PSVal7          S            200A                                                    MD056483
+     D PSVal8          S            200A                                                    MD056483
+     D PSVal9          S            200A                                                    MD056483
+     D PSVal10         S            200A                                                    MD056483
+     D SValK1          C                   CONST('FT2UnitAmtTolerance')                     MD056483
       /SPACE 3
       *
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
@@ -373,6 +410,44 @@
      C                   ENDIF                                                                CRE072
      C                   ENDIF                                                                CRE072
       *                                                                                       CRE072
+     C                   CALL      'AOSVALR0'                                               MD056483
+     C                   PARM      *BLANKS       PRtcd                                      MD056483
+     C                   PARM      SValK1        PSValK1                                    MD056483
+     C                   PARM                    PSVal1                                     MD056483
+     C                   PARM      *BLANKS       PSValK2                                    MD056483
+     C                   PARM                    PSVal2                                     MD056483
+     C                   PARM      *BLANKS       PSValK3                                    MD056483
+     C                   PARM                    PSVal3                                     MD056483
+     C                   PARM      *BLANKS       PSValK4                                    MD056483
+     C                   PARM                    PSVal4                                     MD056483
+     C                   PARM      *BLANKS       PSValK5                                    MD056483
+     C                   PARM                    PSVal5                                     MD056483
+     C                   PARM      *BLANKS       PSValK6                                    MD056483
+     C                   PARM                    PSVal6                                     MD056483
+     C                   PARM      *BLANKS       PSValK7                                    MD056483
+     C                   PARM                    PSVal7                                     MD056483
+     C                   PARM      *BLANKS       PSValK8                                    MD056483
+     C                   PARM                    PSVal8                                     MD056483
+     C                   PARM      *BLANKS       PSValK9                                    MD056483
+     C                   PARM                    PSVal9                                     MD056483
+     C                   PARM      *BLANKS       PSValK10                                   MD056483
+     C                   PARM                    PSVal10                                    MD056483
+      *                                                                                     MD056483
+     C                   IF        PRTCD <> *BLANKS                                         MD056483
+     C     *LOCK         IN        LDA                                                      MD056483
+     C                   MOVEL     'SDSVALPD'    DBFILE                                     MD056483
+      *                                                                                     MD056483
+     C                   IF        PSVal1 = '*NRF  '                                        MD056483
+     C                   MOVE      '009'         DBASE                                      MD056483
+     C                   MOVEL     SValK1        DBKEY                                      MD056483
+     C                   ENDIF                                                              MD056483
+      *                                                                                     MD056483
+     C                   OUT       LDA                                                      MD056483
+     C                   EXSR      *PSSR                                                    MD056483
+      *                                                                                     MD056483
+     C                   ELSE                                                               MD056483
+     C                   EVAL      WAmtTolr = PSVal1                                        MD056483
+     C                   ENDIF                                                              MD056483
      C/COPY WNCPYSRC,FT0010C009
       *
       ***  Setup array CCY
@@ -593,6 +668,15 @@
      C                   Endif                                                  187222
      C                   Eval      FTMSID = *Blanks                             187222
       *                                                                         187222
+      ** Clear pass variables                                                               MD056483
+      *                                                                                     MD056483
+     C                   EVAL      W1PASS = *BLANKS                                         MD056483
+     C                   EVAL      W2PASS = *BLANKS                                         MD056483
+     C                   EVAL      WMOD21 = *BLANKS                                         MD056483
+     C                   EVAL      WMOD22 = *BLANKS                                         MD056483
+     C                   EVAL      WMOD31 = *BLANKS                                         MD056483
+     C                   EVAL      WMOD32 = *BLANKS                                         MD056483
+     C                   EVAL      OKAmtTolr = *BLANKS                                      MD056483
      C                   ENDSR
       *
       /EJECT
@@ -1734,13 +1818,33 @@
      C                   EXSR      SrVAmtNR9D                                               MD053553
      C                   ENDIF                                                              MD053553
       *                                                                                     MD053553
+      ** If amounts still don't agree, try the rate +/- 0.000000005                         MD056483
+      ** if system value 'FT2UnitAmtTolerance' = 'Y'                                        MD056483
+      *                                                                                     MD056483
+     C                   IF        WAmtTolr = 'Y'                                           MD056483
+     C                   EVAL      OKAmtTolr = 'N'                                          MD056483
+     C     AMNT(T)       IFNE      ZAMTT                                                    MD056483
+     C                   EVAL      WMODE = 2                                                MD056483
+     C                   EXSR      SRVAmtRPM5                                               MD056483
+     C                   EVAL      WMODE = 3                                                MD056483
+     C                   EXSR      SRVAmtRPM5                                               MD056483
+     C                   IF        WMOD21 = 'Y' OR WMOD22 = 'Y' OR                          MD056483
+     C                             WMOD31 = 'Y' OR WMOD32 = 'Y'                             MD056483
+     C                   EVAL      OKAmtTolr = 'Y'                                          MD056483
+     C                   ENDIF                                                              MD056483
+     C                   ENDIF                                                              MD056483
+     C                   ENDIF                                                              MD056483
+      *                                                                                     MD056483
      C                   IF        CRE072 = 'Y'                                               CRE072
      C                   EXSR      SETHILO                                                    CRE072
      C                   ENDIF                                                                CRE072
       *
      C*****AMNT(T)       IFNE      ZAMTT                                                      CRE072
      C                   IF        AMNT(T) <> ZAMTT AND                                       CRE072
-     C                             (CRE072 = 'N' OR                                           CRE072
+     C**********                   (CRE072 = 'N' OR                                  CRE072 MD056483
+     C                             ((CRE072 = 'N' AND WAmtTolr  <> 'Y') OR                  MD056483
+     C                              (CRE072 = 'N' AND WAmtTolr  =  'Y'                      MD056483
+     C                                            AND OkAmtTolr =  'N') OR                  MD056483
       *                                                                                       CRE072
       ** If CRE072 is ON, check if amount is not within tolerance                             CRE072
       *                                                                                       CRE072
@@ -2071,6 +2175,178 @@
      C                   ENDIF                                                              MD053553
      C                   ENDSR                                                              MD053553
       /EJECT
+      *****************************************************************                     MD056483
+      *                                                               *                     MD056483
+      *  SrVAmtRPM5 - Validate amounts using rate +/- 0.000000005     *                     MD056483
+      *                                                               *                     MD056483
+      *  Called By:TRNAMT                                             *                     MD056483
+      *  Calls: SrCalcAmtXR                                           *                     MD056483
+      *                                                               *                     MD056483
+      *****************************************************************                     MD056483
+     C     SrVAmtRPM5    BEGSR                                                              MD056483
+      *                                                                                     MD056483
+      ** If input rate is zero, use ZRATEX                                                  MD056483
+      *                                                                                     MD056483
+     C                   IF        P#RATE <> 0                                              MD056483
+     C                   Z-ADD     P#RATE        NRATE                                      MD056483
+      *                                                                                     MD056483
+     C                   IF        WINVER = 'Y'                                             MD056483
+     C                   Z-ADD     WGRATE        NRATE                                      MD056483
+     C                   ENDIF                                                              MD056483
+      *                                                                                     MD056483
+     C                   ELSE                                                               MD056483
+     C                   Z-ADD     ZRATEX        NRATE                                      MD056483
+     C                   ENDIF                                                              MD056483
+      *                                                                                     MD056483
+     C                   IF        WMODE = 2                                                MD056483
+     C                   EVAL      NRATE += 0.000000005                                     MD056483
+     C                   ENDIF                                                              MD056483
+     C                   IF        WMODE = 3                                                MD056483
+     C                   EVAL      NRATE -= 0.000000005                                     MD056483
+     C                   ENDIF                                                              MD056483
+      *                                                                                     MD056483
+      ** Reset differences (between actual and calculated amounts)                          MD056483
+      *                                                                                     MD056483
+     C                   EVAL      W1DIFF = 1                                               MD056483
+     C                   EVAL      W2DIFF = 1                                               MD056483
+      *                                                                                     MD056483
+      ** Initialize pass variables that will check if cross validation                      MD056483
+      ** passes the 2 units tolerance test                                                  MD056483
+      *                                                                                     MD056483
+     C                   EVAL      W1PASS = 'N'                                             MD056483
+     C                   EVAL      W2PASS = 'N'                                             MD056483
+      *                                                                                     MD056483
+     C                   IF        AMNT(2) <> 0                                             MD056483
+     C                   EVAL      F = 2                                                    MD056483
+     C                   EVAL      T = 3                                                    MD056483
+     C                   EVAL      ZCRSMD = ZMDIX                                           MD056483
+     C                   ELSE                                                               MD056483
+     C                   EVAL      F = 3                                                    MD056483
+     C                   EVAL      T = 2                                                    MD056483
+     C                   IF        ZMDIX = 'M'                                              MD056483
+     C                   EVAL      ZCRSMD = 'D'                                             MD056483
+     C                   ELSE                                                               MD056483
+     C                   EVAL      ZCRSMD = 'M'                                             MD056483
+     C                   ENDIF                                                              MD056483
+     C                   ENDIF                                                              MD056483
+      *                                                                                     MD056483
+      ** Calculate amount in one currency to another currency using an                      MD056483
+      ** exchange rate between the two currencies                                           MD056483
+      *                                                                                     MD056483
+     C                   EVAL      ZAMTF = AMNT(F)                                          MD056483
+     C                   EVAL      ZCDPF = NBDP(F)                                          MD056483
+     C                   EVAL      ZCDPT = NBDP(T)                                          MD056483
+     C                   EXSR      SRCalcAmtXR                                              MD056483
+      *                                                                                     MD056483
+     C                   SELECT                                                             MD056483
+     C                   WHEN      AMNT(T) = 0                                              MD056483
+     C                   EVAL      AMNT(T) = ZAMTT                                          MD056483
+     C                   EVAL      W1PASS = 'Y'                                             MD056483
+     C                   EVAL      W2PASS = 'Y'                                             MD056483
+      *                                                                                     MD056483
+     C                   WHEN      AMNT(T) <> ZAMTT                                         MD056483
+     C                   EVAL      W1DIFF = ZAMTT - AMNT(T)                                 MD056483
+      *                                                                                     MD056483
+     C                   IF        W1DIFF >= -2 AND W1DIFF <=2                              MD056483
+     C                   EVAL      W1PASS = 'Y'                                             MD056483
+     C                   ENDIF                                                              MD056483
+      *                                                                                     MD056483
+     C                   IF        W1PASS = 'N'                                             MD056483
+      *                                                                                     MD056483
+      ** Try the calculation in the opposite direction                                      MD056483
+      *                                                                                     MD056483
+     C                   IF        F = 3                                                    MD056483
+     C                   EVAL      F = 2                                                    MD056483
+     C                   EVAL      T = 3                                                    MD056483
+     C                   EVAL      ZMDIX = ZCRSMD                                           MD056483
+     C                   ELSE                                                               MD056483
+     C                   EVAL      F = 3                                                    MD056483
+     C                   EVAL      T = 2                                                    MD056483
+     C                   IF        ZMDIX = 'M'                                              MD056483
+     C                   EVAL      ZCRSMD = 'D'                                             MD056483
+     C                   ELSE                                                               MD056483
+     C                   EVAL      ZCRSMD = 'M'                                             MD056483
+     C                   ENDIF                                                              MD056483
+     C                   ENDIF                                                              MD056483
+      *                                                                                     MD056483
+     C                   EVAL      ZAMTF = AMNT(F)                                          MD056483
+     C                   EVAL      ZCDPF = NBDP(F)                                          MD056483
+     C                   EVAL      ZCDPT = NBDP(T)                                          MD056483
+     C                   EXSR      SRCalcAmtXR                                              MD056483
+      *                                                                                     MD056483
+     C                   EVAL      W2DIFF = ZAMTT - AMNT(T)                                 MD056483
+      *                                                                                     MD056483
+     C                   IF        W2DIFF >= -2 AND W2DIFF <=2                              MD056483
+     C                   EVAL      W2PASS = 'Y'                                             MD056483
+     C                   ENDIF                                                              MD056483
+     C                   ENDIF                                                              MD056483
+                                                                                            MD056483
+     C                   ENDSL                                                              MD056483
+      *                                                                                     MD056483
+      ** Save values of pass variables                                                      MD056483
+      *                                                                                     MD056483
+     C                   IF        WMODE = 2                                                MD056483
+     C                   EVAL      WMOD21 = W1PASS                                          MD056483
+     C                   EVAL      WMOD22 = W2PASS                                          MD056483
+     C                   ENDIF                                                              MD056483
+     C                   IF        WMODE = 3                                                MD056483
+     C                   EVAL      WMOD31 = W1PASS                                          MD056483
+     C                   EVAL      WMOD32 = W2PASS                                          MD056483
+     C                   ENDIF                                                              MD056483
+      *                                                                                     MD056483
+     C                   ENDSR                                                              MD056483
+      /EJECT                                                                                MD056483
+      *****************************************************************                     MD056483
+      *                                                               *                     MD056483
+      *  SrCalcAmtXR - Calculates amount in one currency to another   *                     MD056483
+      *                currency using the exchange rate between the   *                     MD056483
+      *                two currencies (same as SR/ZCCYXR, but uses    *                     MD056483
+      *                NRATE)                                         *                     MD056483
+      *                                                               *                     MD056483
+      *  Called By: SrVAmtRPM5                                        *                     MD056483
+      *  Calls: None                                                  *                     MD056483
+      *                                                               *                     MD056483
+      *****************************************************************                     MD056483
+     C     SrCalcAmtXR   BEGSR                                                              MD056483
+      *                                                                                     MD056483
+     C                   IF        ZCDPF = ZCDPT                                            MD056483
+      *                                                                                     MD056483
+     C                   IF        ZCRSMD = 'D'                                             MD056483
+     C                   EVAL      ZAMTT = ZAMTF                                            MD056483
+     C                   EVAL(H)   ZAMTT /= NRATE                                           MD056483
+     C                   ENDIF                                                              MD056483
+      *                                                                                     MD056483
+     C                   IF        ZCRSMD = 'M'                                             MD056483
+     C                   EVAL      ZAMTT = ZAMTF                                            MD056483
+     C                   EVAL(H)   ZAMTT *= NRATE                                           MD056483
+     C                   ENDIF                                                              MD056483
+     C                   ENDIF                                                              MD056483
+      *                                                                                     MD056483
+     C                   IF        ZCDPF <> ZCDPT                                           MD056483
+     C                   EVAL      ZWKPX = ZCDPT - ZCDPF                                    MD056483
+     C                   EVAL      B = ZWKPX + 4                                            MD056483
+     C                   IF        POWER(B) < 1                                             MD056483
+     C                   EVAL      ZWK153 = POWER(B) * ZAMTF                                MD056483
+     C                   IF        ZCRSMD = 'D'                                             MD056483
+     C                   EVAL(H)   ZAMTT = ZWK153 / NRATE                                   MD056483
+     C                   ENDIF                                                              MD056483
+     C                   IF        ZCRSMD = 'M'                                             MD056483
+     C                   EVAL(H)   ZAMTT = ZWK153 * NRATE                                   MD056483
+     C                   ENDIF                                                              MD056483
+     C                   ENDIF                                                              MD056483
+     C                   IF        POWER(B) > 1                                             MD056483
+     C                   EVAL      ZAMTF *= POWER(B)                                        MD056483
+     C                   IF        ZCRSMD = 'D'                                             MD056483
+     C                   EVAL(H)   ZAMTT = ZAMTF / NRATE                                    MD056483
+     C                   ENDIF                                                              MD056483
+     C                   IF        ZCRSMD = 'M'                                             MD056483
+     C                   EVAL(H)   ZAMTT = ZAMTF * NRATE                                    MD056483
+     C                   ENDIF                                                              MD056483
+     C                   ENDIF                                                              MD056483
+     C                   ENDIF                                                              MD056483
+      *                                                                                     MD056483
+     C                   ENDSR                                                              MD056483
+       /EJECT                                                                               MD056483      
       *****************************************************************
       *                                                               *
       *  RETURN - Sets parameters to be returned and returns control  *

@@ -13,8 +13,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR1001991          Date 06Aug12               *
-      *  Prev Amend No. MD055857           Date 26May20               *
+      *  Last Amend No. AR939238           Date 23Apr12               *
+      *  Prev Amend No. AR1001991          Date 06Aug12               *
       *                 CRE114             Date 19Feb18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD042377           Date 01Dec16               *
@@ -62,6 +62,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR939238 - Array Index Error whenever during retail account  *
+      *             closure when there are more than 20 Stopped or    *
+      *             Held Items. Send RE71055/6 only once.             *
+      *             (Child:AR939239)                                  *
       *  AR1001991 - Cannot close a/cs. Error message "MsgId RE75964 -*
       *              Ac cannot be mbr of Group A/c Hierarchy" is      *
       *              encounter. Accounts are allowed to be closed if  *
@@ -928,6 +932,10 @@
      C                   Add       1             Idx
      C                   Movel     'DDAcNo'      FldNamXAr(Idx)
      C                   Movel     'RE71055'     MsgIDXAr(Idx)
+      *                                                                                     AR939238
+      ** Only send message once. Exit DO loop                                               AR939238
+      *                                                                                     AR939238
+     C                   Eval      *IN90=True                                               AR939238
      C                   EndIf
      C                   EndDo
      C                   EndIf
@@ -951,6 +959,10 @@
      C                   Add       1             Idx
      C                   Movel     'DDAcNo'      FldNamXAr(Idx)
      C                   Movel     'RE71056'     MsgIDXAr(Idx)
+      *                                                                                     AR939238
+      ** Only send message once. Exit DO loop                                               AR939238
+      *                                                                                     AR939238
+     C                   Eval      *IN90=True                                               AR939238
      C                   EndIf
      C                   EndDo
      C                   EndIf

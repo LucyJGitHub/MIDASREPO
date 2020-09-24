@@ -49,8 +49,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD055657           Date 14May20               *
-      *  Prev Amend No. AR674226           Date 04Dec19               *
+      *  Last Amend No. MD026171           Date 07Apr14               *
+      *  Prev Amend No. MD055657           Date 14May20               *
+      *                 AR674226           Date 04Dec19               *
       *                 CER050             Date 16Jun19               *
       *                 CLE168             Date 26Feb18               *
       *                 MD046248           Date 27Oct17               *
@@ -77,6 +78,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD026171 - Decimal data error occurred. Initialise field     *
+      *             INMAAN to zero this will prevent the DBERR.       *
       *  MD055657 - Manual transaction from FFC TI Interface went to  *
       *             repair queue because the facility exchange rate is*
       *             longer than the defined facility exchange rate in *
@@ -333,7 +336,8 @@
      D  INFSEQ                36     37  0
      D  INACAJ                68     74P 0
      D  INCASN                75     75
-     D  INMAAN                76     82P 0
+     D**INMAAN**              76     82P 0                                                  MD026171
+     D  INMAAN                76     82P 0 INZ(0)                                           MD026171
      D  INMASN                83     83
      D  INUDTM               188    193  0
      D  NAVT                 194    196  0

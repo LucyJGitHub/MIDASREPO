@@ -11,8 +11,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD053942           Date 23Jul19               *
-      *  Prev Amend No. CER050             Date 16Jun19               *
+      *  Last Amend No. MD027706           Date 01Jul14               *
+      *  Prev Amend No  MD022452A          Date 01Oct13               *
+      *                 AR950498           Date 16Apr12               *
+      *                 MD053942           Date 23Jul19               *
+      *                 CER050             Date 16Jun19               *
       *                 MD053837           Date 28Aug19               *
       *                 MD021377           Date 18Jul18               *
       *                 CLE071             Date 18Jul18               *
@@ -111,6 +114,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD027706 - AR950498 is not applicable for Shanghai branch.   *
+      *  MD022452A - LER0014: Fee sequence - invalid number or type   *
+      *              of characters entered.                           *
+      *            - Condition execution of AR950498 to non 'SG'      *
+      *              country.                                         *
+      *  AR950498 - Retrieval of system value                         *
+      *             SetFcltyAvailToZero to combine with MD022452A fix *
+      *             (Child: AR950499)                                 *
       *  MD053942 - Incorrect defaulting of DDEXRT for loan fees. Add *
       *             exchange rate default process for loan fee only   *
       *             when fee currency not equal to loan currency.     *
@@ -1765,6 +1776,12 @@
 
      C     WPEND         IFLT      FA_DTAP
      C     WPEND         ORGT      FA_DTEX
+     C     WPEND         ORGT      FA_AVLD                                                 MD022452A
+      ** AR950498 not applicable to Nordea Singapore                                       MD022452A
+     C     SETZER        ANDEQ     'Y'                                                     MD022452A
+     C     DDCALT        ANDLE     '06'                                                    MD022452A
+     C     BJCNCD        ANDNE     'SG'                                                    MD022452A
+     C     BJCNCD        ANDNE     'CN'                                                     MD027706
       *
       ** If calculation type output error message rather than
       ** warning message
@@ -4721,6 +4738,8 @@
      C                   MOVEL     WPARM         SVALK1                                       242377
       *                                                                                     MD046370
      C                   EVAL      SVALK2 = 'AutoEndCalcLoanFee'                            MD046370
+      *                                                                                     AR950498
+     C                   EVAL      SVALK3 = 'SetFcltyAvailToZero'                           AR950498
       *                                                                                       242377
       * Call Access object:                                                                   242377
      C                   CALL      'AOSVALR0'                                                 242377
@@ -4764,6 +4783,7 @@
       *                                                                                     MD046370
      C                   MOVEL     SVAL2         AutoEndFee        1                        MD046370
       *                                                                                     MD046370
+     C                   MOVEL     SVAL3         SETZER            1                        AR950498
      C                   ENDIF                                                                242377
       *
      C                   ENDSR

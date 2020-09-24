@@ -1209,7 +1209,7 @@
      C                   MOVE      M1LNRF        M2LNRF
      C                   MOVE      M1VDAT        M2VDAT
      C                   MOVE      M1LASN        M2LASN
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5

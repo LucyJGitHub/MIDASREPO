@@ -24,7 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  212319 - Refelect SWIFT fromatting when printing ICD text    *
+      *  212319 - Refelect SWIFT fromatting when printing ICD text.   *
       *         - Applied for AR973615 (Child: AR973617)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE008 - Cash Management                                     *

@@ -47,8 +47,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  223783 - (Reopen) Recompile.                                 *
-      *         - Applied for AR973615 (Child: AR973617)              *
+      *  223783 - (Reopen) Applied for AR973615 (Child: AR973617)     *
+      *           (Recompile)                                         *
       *  223783 - Use IBAN when formatting field 86.                  *
       *         - Applied for AR973615 (Child: AR973617)              *
       *  CMG009 - MT942 without Forward Value Postings                *

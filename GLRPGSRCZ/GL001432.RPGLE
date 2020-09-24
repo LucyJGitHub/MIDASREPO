@@ -55,8 +55,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  223783 - (Reopen) Recompile.                                 *
-      *         - Applied for AR973615 (Child: AR973617)              *
+      *  223783 - (Reopen) Applied for AR973615 (Child: AR973617)     *
+      *           (Recompile)                                         *
       *  223783 - Edit field 86.                                      *
       *         - Applied for AR973615 (Child: AR973617)              *
       *  CMG008 - SWIFT Character Translation Table                   *

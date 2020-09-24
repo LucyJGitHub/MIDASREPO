@@ -34,7 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  223783 - Applied for AR973615 (Child: AR973617) (Recompile)  *
+      *  223783 - Applied for AR973615.(Child: AR973617) (Recompile)  *
       *  CMG009 - MT942 without Forward Value Postings                *
       *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *

@@ -61,7 +61,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  223783 - Recompile. Applied for AR973615 (Child: AR973617)   *
+      *  223783 - Applied for AR973615 (Child: AR973617) (Recompile)  *
       *  222088 - Conditioning of CM narrative should account for     *
       *           details on heirarchy, not ICD.                      *
       *         - Applied for AR973615 (Child: AR973617)              *

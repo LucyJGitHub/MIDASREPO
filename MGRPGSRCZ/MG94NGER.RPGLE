@@ -47,7 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  223783 - Applied for AR973615 (Child: AR973617) (Recompile)  *
+      *  223783 - Applied for AR973615.(Child: AR973617) (Recompile)  *
       *  CMG008 - SWIFT Character Translation Table                   *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD046248 - Finastra Rebranding                               *

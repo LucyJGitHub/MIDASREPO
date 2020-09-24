@@ -32,7 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  223783 - Applied for AR973615 (Child: AR973617) (Recompile)  *
+      *  223783 - Applied for AR973615.(Child: AR973617) (Recompile)  *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD023885 - Technical drop of deleted accounting rules        *

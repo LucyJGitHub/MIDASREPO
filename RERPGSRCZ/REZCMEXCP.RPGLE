@@ -57,7 +57,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  223783 - Call AOIBANR4 with correct parameter.               *
+      *  223783 - Call AOIBANR4 with correct parameter                *
       *         - Applied for AR973615 (Child: AR973617)              *
       *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
       *             data structure field to have the correct length.  *

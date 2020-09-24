@@ -31,7 +31,7 @@
       *                                                               *
       *  212319 - Change the format of ICD text so that it matches    *
       *           what will appear onto SWIFT statement               *
-      *           (3 * 65 char + 5 char)                              *
+      *           (3 * 65 char + 5 char).                             *
       *         - Applied for AR973615 (Child: AR973617)              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL154 - FATCA Reporting (Recompile)                         *

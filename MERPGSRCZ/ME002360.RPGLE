@@ -33,7 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  223783 - Applied for AR973615 (Child: AR973617) (Recompile)  *
+      *  223783 - Applied for AR973615.(Child: AR973617) (Recompile)  *
       *  MD046248 - Finastra Rebranding                               *
       *  AR647426 - Schedules must be updated also when floors change.*
       *  CER059 - German Feature Upgrade to Delhi                     *

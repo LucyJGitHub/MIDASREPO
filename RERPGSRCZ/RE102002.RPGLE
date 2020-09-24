@@ -47,7 +47,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  239476 - Reverse fix 223783 for this program.                *
-      *         - Correct field 61 sub7 and field 86.                 *
+      *         - Correct field 61 sub7 and field 86                  *
       *         - Applied for AR973615 (Child: AR973617)              *
       *  223783 - Format field 61 and field 86.                       *
       *         - Applied for AR973615 (Child: AR973617)              *

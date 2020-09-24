@@ -62,7 +62,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  223783 - Use IBAN as account number.                         *
-      *         - Applied for AR973615 (Child: AR973617)              *
+      *         - Applied for AR973615.(Child: AR973617)              *
       *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
       *             data structure field to have the correct length.  *
       *             (Child: AR928997A)                                *

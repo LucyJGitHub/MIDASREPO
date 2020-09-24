@@ -39,7 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  223783 - Applied for AR973615 (Child: AR973617) (Recompile)  *
+      *  223783 - Applied for AR973615.(Child: AR973617) (Recompile)  *
       *  MD046248 - Finastra Rebranding                               *
       *  AR549926 - GLPOSTPD and MGX950PD tables have a total size    *
       *             of about 1.4GB. These tables hold  records printed*

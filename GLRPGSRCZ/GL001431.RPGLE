@@ -45,7 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  223783 - Applied for AR973615 (Child: AR973617) (Recompile)  *
+      *  223783 - Applied for AR973615.(Child: AR973617) (Recompile)  *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  AR401845 - MT940 generation does not take into account       *
       *             regional holidays (CHILD: AR401846)               *

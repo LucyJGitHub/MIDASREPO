@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CMG008             Date 20Feb20               *
-      *  Prev Amend No. CMG009             Date 24Oct19               *
+      *  Last Amend No. 223783 (Reopen)    Date 28May12               *
+      *  Prev Amend No. 223783             Date 28May12               *
+      *                 CMG008             Date 20Feb20               *
+      *                 CMG009             Date 24Oct19               *
       *                 MD050696           Date 15May18               *
       *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
@@ -53,6 +55,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  223783 - (Reopen) Recompile.                                 *
+      *         - Applied for AR973615 (Child: AR973617)              *
+      *  223783 - Edit field 86.                                      *
+      *         - Applied for AR973615 (Child: AR973617)              *
       *  CMG008 - SWIFT Character Translation Table                   *
       *  CMG009 - MT942 without Forward Value Postings.               *
       *  MD050696 - Multicash extended narratives from BuN interface  *
@@ -177,6 +183,9 @@
 
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       **  Data Structure for Customer record format.
+                                                                                              223783
+     D DSACCT        E DS                  EXTNAME(ACCNTAB) PREFIX(XG)                        223783
+      **  Data Structure for Account Details.                                                 223783
                                                                                             BUG26832
      D SDNWRK        E DS                  EXTNAME(SDNWRKPD)                                BUG26832
       **  Data Structure for Network Description format                                     BUG26832
@@ -243,6 +252,13 @@
      D WkField6        S              6A                                        Working Field 6
      D WkField30       S             30A                                        Working Field 30
      D CRE008          S              6                                         CRE008 flag   CRE008
+     D ZA1             S              1    DIM(51)                                            223783
+     D ZA2             S              1    DIM(99)                                            223783
+     D WFIELD          S             99A                                                      223783
+     D WNARR           DS            65                                                       223783
+     D WFIELD1                 1      4A                                                      223783
+     D WFIELD2                 5     14A                                                      223783
+     D WFIELD3                15     65A                                                      223783
      D CGL152          S              1                                         CGL152 flag   CGL152
      D CMG009          S              1                                         CMG009 flag   CMG009
      D/COPY WNCPYSRC,GLH00416
@@ -1005,6 +1021,49 @@
       *                                                                                     BUG25147
      C                   ENDIF                                                              BUG25147
      C/COPY WNCPYSRC,GLH00207
+      *                                                                                       223783
+      ** Check if we have ti use IBAN.                                                        223783
+      *                                                                                       223783
+     C                   MOVEL     MGADI1        WNARR                                        223783
+     C                   MOVEL     WFIELD2       @RETL                                        223783
+     C                   MOVEL     *BLANK        @CNUM                                        223783
+     C                   MOVEL     *BLANK        @CUCD                                        223783
+     C                   MOVEL     *BLANK        @ACCD                                        223783
+     C                   MOVEL     *BLANK        @ACSQ                                        223783
+     C                   MOVEL     *BLANK        @BRCA                                        223783
+     C                   CALL      'AOACCTR0'                           80                    223783
+     C                   PARM                    @RTCD             7                          223783
+     C                   PARM      '*KEY'        @OPTN             7                          223783
+     C                   PARM                    @RETL            10                          223783
+     C                   PARM                    @CNUM             6                          223783
+     C                   PARM                    @CUCD             3                          223783
+     C                   PARM                    @ACCD             4                          223783
+     C                   PARM                    @ACSQ             2                          223783
+     C                   PARM                    @BRCA             3                          223783
+     C     DSACCT        PARM      *BLANKS       DSSDY                                        223783
+     C     @RTCD         IFEQ      *BLANKS                                                    223783
+     C     XGRECI        ANDEQ     'D'                                                        223783
+     C     XGIBAN        ANDNE     *BLANKS                                                    223783
+     C                   MOVE      *BLANKS       WFIELD                                       223783
+     C                   MOVEA     *BLANKS       ZA2                                          223783
+     C                   EVAL      WFIELD = WFIELD1 + XGIBAN                                  223783
+     C     ' '           SCAN      WFIELD        Z                 2 0    99                  223783
+     C                   SUB       1             Z                                            223783
+     C                   Z-ADD     1             X                                            223783
+     C                   Z-ADD     1             Y                 2 0                        223783
+     C     1             DO        Z             X                                            223783
+     C                   EVAL      ZA2(Y) = %SUBST(WFIELD:X:1)                                223783
+     C                   ADD       1             Y                                            223783
+     C                   ENDDO                                                                223783
+     C                   Z-ADD     1             X                                            223783
+     C     1             DO        51            X                                            223783
+     C                   EVAL      ZA2(Y) = %SUBST(WFIELD3:X:1)                               223783
+     C                   ADD       1             Y                                            223783
+     C                   ENDDO                                                                223783
+     C                   MOVE      *BLANKS       WFIELD                                       223783
+     C                   MOVEA     ZA2           WFIELD                                       223783
+     C                   MOVEL     WFIELD        MGADI1                                       223783
+     C                   ENDIF                                                                223783
 
       ** If CMG008 is ON, convert French characters based on translation table.               CMG008
       ** Also convert any non-SWIFT character not in translation table to *BLANK.             CMG008

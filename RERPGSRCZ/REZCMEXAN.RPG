@@ -20,8 +20,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR928996A          Date 03May12               *
-      *  Prev Amend No. AR928996           Date 27Mar12               *
+      *  Last Amend No. 239684             Date 28May12               *
+      *  Prev Amend No. 223783             Date 28May12               *
+      *                 224609             Date 28May12               *
+      *                 AR928996A          Date 03May12               *
+      *                 AR928996           Date 27Mar12               *
       *                 MD046248           Date 27Oct17               *
       *                 CRE075             Date 06Dec10               *
       *                 AR676213           Date 19Nov10               *
@@ -40,6 +43,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  239684 - Incorrect message when the account does not         *
+      *           correspond to external account.                     *
+      *         - Applied for AR973615 (Child: AR973617)              *
+      *  223783 - Call AOIBANR4 with correct parameter.               *
+      *         - Applied for AR973615 (Child: AR973617)              *
+      *  224609 - Added account line validation                       *
+      *         - Applied for AR973615 (Child: AR973617)              *
       *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
       *             data structure field to have the correct length.  *
       *             (Child: AR928997A)                                *
@@ -267,7 +277,8 @@
      C           CFT004    WHEQ 'Y'
      C                     CALL 'AOIBANR4'             90
      C                     PARM           P@RTCD
-     C                     PARM '*VERIFY' P@OPTN
+     C**********           PARM '*VERIFY' P@OPTN                                              223783
+     C                     PARM '*KEY   ' P@OPTN                                              223783
      C                     PARM           @IBAN
      C           ACCT      PARM ACCT      DSSDY
      C*
@@ -297,6 +308,7 @@
      C*    use @XNAME if external account present, else @YNAME
      C           @SLASH    IFEQ '/'
      C           ZDEXA2    ANDEQ@XNAME
+     C           ZDEXA1    ANDEQ@YNAME                                                        224609
      C           @SLASH    ORNE '/'
      C           ZDEXA2    ANDEQ@YNAME
      C                     MOVEL'T'       RTNCDE    P
@@ -304,11 +316,25 @@
      C                     CAT  @EXTAC:0  RETFLD
      C                     CAT  '/':0     RETFLD
      C                     ELSE
+     C           @SLASH    IFEQ '/'                                                           224609
+     C           ZDEXA2    ANDNE@XNAME                                                        224609
+     C           @SLASH    ORNE '/'                                                           224609
+     C           ZDEXA2    ANDNE@YNAME                                                        224609
      C           MEMSDT    CAT  PMTAG:0   MEMSDT
      C                     MOVELPCPGM     MEPGMQ
      C                     MOVEL'RE75960' MEMSID
      C                     MOVEL'REUSRMSG'MEMSGF           Msg file
      C                     EXSR MESNMS
+     C                     ENDIF                                                              224609
+     C           @SLASH    IFEQ '/'                                                           224609
+     C           ZDEXA1    ANDNE@YNAME                                                        224609
+     C           MEMSDT    CAT  PMTAG:0   MEMSDT                                              224609
+     C                     MOVELPCPGM     MEPGMQ                                              224609
+     C********             MOVEL'RE75964' MEMSID                                       224609 239684
+     C                     MOVEL'RE75966' MEMSID                                              239684
+     C                     MOVEL'REUSRMSG'MEMSGF                                              224609
+     C                     EXSR MESNMS                                                        224609
+     C                     ENDIF                                                              224609
      C                     GOTO RETN
      C                     ENDIF
      C                     ENDIF

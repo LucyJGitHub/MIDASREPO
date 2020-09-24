@@ -18,11 +18,13 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. BUG28073 *CREATE   Date 12Aug10               *
+      *  Last Amend No. 223783             Date 28May12               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 BUG28073 *CREATE   Date 12Aug10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  223783 - Applied for AR973615 (Child: AR973617) (Recompile)  *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG28073 - Add missing files in ATU                          *
       *                                                               *
@@ -32,7 +34,7 @@
       *   90          Error in AOBANKR0                               *
       *                                                               *
       *****************************************************************
- 
+
      FGLPOSTL9  UF A E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
      F                                     RENAME(GLPOSTD0:GLPOSTF9)
@@ -40,12 +42,12 @@
      F                                     COMMIT
       /EJECT
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
- 
+
       ** Array containing Copyright statement
- 
+
       /SPACE 3
      D LDA           E DS           256    EXTNAME(LDA)
- 
+
       ** Local data area for database error details
       ** *LOCK IN LDA immediately before and OUT LDA immediately
       ** after each database error handling.
@@ -54,42 +56,42 @@
       **       Defines:                     142 170 DBKEY
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
      D DSFRAC          DS
      D  DSFCNU                 1      6
      D  DSFCCY                 7      9
      D  DSFACO                10     19
      D  DSFACS                20     21
      D  DSFBRC                22     24
- 
+
      D DSTOAC          DS
      D  DSTCNU                 1      6
      D  DSTCCY                 7      9
      D  DSTACO                10     19
      D  DSTACS                20     21
      D  DSTBRC                22     24
- 
+
      D DSKITE          DS            90
      D  KBRCA                  1      3
      D  KCNUM                  4      9
      D  KCCY                  10     12
      D  KACOD                 13     22  0
      D  KACSQ                 23     24  0
- 
+
       ** Data Area giving Installation Control Details
- 
+
      D PSDS           SDS
- 
+
       ** Program Status Data Structure
- 
+
      D  PGM              *PROC
      D  WSID                 244    253
      D  USER                 254    263
- 
+
      D @RUN            S              1A
      D WKCCYY          S              4S 0
      D WKDFMT          S              9A
@@ -102,30 +104,30 @@
      D P@FRAC          S             24A
      D P@TOAC          S             24A
      D P@RTCD          S              1A
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    P@PRCD
      C                   PARM                    P@RFNO
      C     DSFRAC        PARM                    P@FRAC
      C     DSTOAC        PARM                    P@TOAC
      C                   PARM                    P@RTCD
- 
+
      C                   EXSR      SRINIT
- 
+
      C                   IF        P@PRCD = '*LR '
      C                   EVAL      *INLR = *ON
      C                   RETURN
      C                   ENDIF
- 
+
      C                   EXSR      XSIV01
      C                   EXSR      XMPOST
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -137,12 +139,12 @@
       *  Calls:     XSAUDT                                            *
       *                                                               *
       *****************************************************************
- 
+
      C     XMPOST        BEGSR
- 
+
      C     KPOST         SETLL     GLPOSTF9
      C     KPOST         READE     GLPOSTF9
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'GLPOSTL9'
@@ -151,12 +153,12 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Delete and Write Records until End of File for Selected Account
- 
+
      C                   DOW       NOT %EOF(GLPOSTL9)
      C                   DELETE    GLPOSTF9
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'GLPOSTL9'
@@ -165,15 +167,15 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      BRCA = DSTBRC
      C                   EVAL      CNUM = DSTCNU
      C                   EVAL      CCY  = DSTCCY
      C                   MOVEL     DSTACO        ACOD
      C                   MOVEL     DSTACS        ACSQ
- 
+
      C                   WRITE     GLPOSTF9
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'GLPOSTL9'
@@ -182,13 +184,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   CLEAR                   GLAUTFD0
      C                   EVAL      AULFIL = 'GLPOSTL9'
      C                   EXSR      XSAUDT
- 
+
      C     KPOST         READE     GLPOSTF9
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'GLPOSTL9'
@@ -198,7 +200,7 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -211,9 +213,9 @@
       *  Calls:     None                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     XSAUDT        BEGSR
- 
+
      C                   EVAL      AURFNO = P@RFNO
      C                   EVAL      AUFILE = 'GLPOSTPD'
      C                   EVAL      AUFBRC = DSFBRC
@@ -227,7 +229,7 @@
      C     IPDN          CAT(P)    PNAR:1        AUTEXT
      C                   EVAL      AUCRTD = WKDFMT
      C                   WRITE     GLAUTFD0
- 
+
      C                   IF        %ERROR
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'GLAUTFPD'
@@ -236,7 +238,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -249,15 +251,15 @@
       *  Calls:     None                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     XSIV01        BEGSR
- 
+
      C                   EVAL      KBRCA = DSFBRC
      C                   EVAL      KCNUM = DSFCNU
      C                   EVAL      KCCY  = DSFCCY
      C                   MOVEL     DSFACO        KACOD
      C                   MOVEL     DSFACS        KACSQ
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -270,25 +272,25 @@
       *  Calls:     None                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     SRINIT        BEGSR
- 
+
       ** Set up copyright parameter
- 
+
      C                   MOVEA     CPY@          CPY2@
- 
+
      C     *DTAARA       DEFINE                  LDA
- 
+
       ** Retrieve Run Date.
- 
+
      C                   CALL      'AOBANKR0'                           9090
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** If return with an error (LR seton in called program) then
       ** process for database error.
- 
+
      C                   IF        *IN90 = '1' OR
      C                             @RTCD <> *BLANKS
      C     *LOCK         IN        LDA
@@ -298,27 +300,27 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      WKDFMT = BJMRDT
      C                   MOVE      BJMRDT        WKYEAR
- 
+
      C                   IF        WKYEAR < 72
      C                   EVAL      WKCCYY = WKYEAR + 2000
      C                   ELSE
      C                   EVAL      WKCCYY = WKYEAR + 1900
      C                   ENDIF
- 
+
      C                   MOVE      WKCCYY        WKDFMT
- 
+
      C     KPOST         KLIST
      C                   KFLD                    KBRCA
      C                   KFLD                    KCNUM
      C                   KFLD                    KCCY
      C                   KFLD                    KACOD
      C                   KFLD                    KACSQ
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -333,20 +335,20 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   EVAL      P@RTCD = 'F'
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   SETON                                        U7U8LR
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       ********************************************************************
 **  CPY@
 (c) Finastra International Limited 2010

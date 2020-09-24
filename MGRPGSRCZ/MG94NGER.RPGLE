@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CMG008             Date 20Feb20               *
-      *  Prev Amend No. MD054605           Date 17Oct19               *
+      *  Last Amend No. 223783             Date 28May12               *
+      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *                 MD054605           Date 17Oct19               *
       *                 MD046248           Date 27Oct17               *
       *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  223783 - Applied for AR973615 (Child: AR973617) (Recompile)  *
       *  CMG008 - SWIFT Character Translation Table                   *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  MD046248 - Finastra Rebranding                               *

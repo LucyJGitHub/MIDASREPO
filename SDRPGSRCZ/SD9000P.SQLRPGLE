@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD054605           Date 17Oct19               *
-      *  Prev Amend No. CSD101             Date 07Dec18               *
+      *  Last Amend No. MD056358           Date 14Sep20               *
+      *  Prev Amend No. MD054605           Date 17Oct19               *
+      *                 CSD101             Date 07Dec18               *
       *                 CLE071             Date 18Jul18               *
       *                 MD046248           Date 27Oct17               *
       *                 CTI006             Date 31Mar14               *
@@ -199,6 +200,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD056358 - SDC0602 goes MSGW because of a decimal data error *
+      *             Make sure to retrive the decimal value of the base*
+      *             currency when processing Funds Transfer.          *
       *  MD054605 - Deliverable Data Split for SDSVALPD               *
       *  CSD101 - Password Encryption (Recompile)                     *
       *  CLE071 - Value Dating of Rate Changes to Fees                *
@@ -4141,6 +4145,22 @@
      C     P@MODE        OREQ      'A'                                          Audit - E.O.D.
      C********** BTAAVA    ANDEQWUAKTX                     LCD = Rundate  S01251
      C     BTLCD         ANDEQ     WURDNB                                       LCD = Rundate  S0125
+      *                                                                                     MD056358
+      ** Access the base currency details.                                                  MD056358
+      *                                                                                     MD056358
+     C                   CALL      'AOCURRR0'                                               MD056358
+     C     RTNCDE        PARM      *BLANKS       RTNCDE                                     MD056358
+     C                   PARM      '*KEY'        OPTION                                     MD056358
+     C                   PARM      BJCYCD        KEYF                                       MD056358
+     C     SDCURR        PARM      *BLANKS       P@FMT                                      MD056358
+      *                                                                                     MD056358
+     C     RTNCDE        IFNE      *BLANKS                                                  MD056358
+     C                   MOVE      62            N                                          MD056358
+     C                   MOVEL     'SDCURRPD'    DBF(N)                                     MD056358
+     C                   MOVEL     BJCYCD        DBK(N)                                     MD056358
+     C                   EXSR      DBERR                                                    MD056358
+     C                   GOTO      ENDT                                                     MD056358
+     C                   ENDIF                                                              MD056358
      C**
      C**   Convert Last Change Date, Day Number, To DDMMMYY Format. * FTFR
      C**********           Z-ADDBTAAVA    ZDAYNO           Last Change DatS01251

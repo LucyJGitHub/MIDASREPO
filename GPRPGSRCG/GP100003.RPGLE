@@ -11,10 +11,11 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055681         Date 31Jul20                 *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. 256978             Date 07Oct08               *
+      *                 256978             Date 07Oct08               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CSD027             Date 09Dec05               *
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD046248 - Finastra Rebranding                               *
       *  256978 - Fix, SPF: Authorize to all ends in error 065        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -44,7 +46,7 @@
      FGPWMACBRDDUF A E           K DISK
      F                                     RENAME(MACBRDDF:GPWMACBRDF)
      F                                     PREFIX(SF)
- 
+
      F/EJECT
       *****************************************************************
       *                                                               *
@@ -152,18 +154,18 @@
      D PSDS           SDS
      D  SWSID                244    253
      D  USRID                254    263
- 
+
       ** Midas SF Valid action codes for user/brch/item Temporary File
      D SFMACBRFmt    E DS                  EXTNAME(GPWMACBRDD)
      D                                     PREFIX(SF)
      D  SFALLOW               23     32
- 
+
       ** Midas SF Valid action codes for user/brch/item
      D MACBRDDFmt    E DS                  EXTNAME(GPMACBRDD)
      D RECIAC        E                     EXTFLD(RECI)
      D  ALLOW                 23     32
- 
- 
+
+
      I/SPACE 2
      I@MENUJ0
      I*    MIDAS MENU ITEMS FILE
@@ -357,9 +359,9 @@
      C     *IN45         IFEQ      '1'
       *
      C     B             DOWLE     900
- 
+
       * Get branch details
- 
+
      C     BRU(B)        CHAIN     SDBRCHD0                           75
      C     *IN75         IFEQ      *ON
      C                   MOVEL     'SDBRCHPD'    DBFILE

@@ -12,10 +12,12 @@
       *                                                               *
       *  (c) Finastra International 2020                              *
       *                                                               *
-      *  Last Amend No. MD056103   *CREATE   Date 17Jun20             *
+      *  Last Amend No. MD055681             Date 31Jul20             *
+      *  Prev Amend No. MD056103   *CREATE   Date 17Jun20             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD056103 - Deliverable Data Split migration                  *
       *                                                               *
       *****************************************************************
@@ -27,6 +29,8 @@
      D INDEX           S             10A
      D TABLEB          S             10A
      D TABLEX          S             10A
+     D OLDFILE_S       S             10A                                                    MD055681
+     D OSCHEMA_S       S             10A                                                    MD055681
      D KColumn         S             10A
      D KOrdinal        S              9  0
      D KeyArr          S             10A   DIM(12)
@@ -83,6 +87,14 @@
      C                   exsr      SR_Synch2
      C                   ENDIF
 
+      * Special process for GPSAREPD and SCSAREPD                                           MD055681
+     C                   If        DDSFILE = 'SCSRDCTD' or DDSFILE = 'GPSRDCTD'             MD055681
+     C                   exsr      SR_SAREPD                                                MD055681
+     C                   If        TotRow > 0                                               MD055681
+     C                   exsr      SR_Synch2                                                MD055681
+     C                   ENDIF                                                              MD055681
+     C                   ENDIF                                                              MD055681
+                                                                                            MD055681
       * 4. Update Extension file with content of 'old file'
      C                   exsr      SR_UpdExt
 
@@ -291,6 +303,16 @@
      C     SR_AddBTD     BEGSR
 
 
+      * for SCSARSPD migration, all core features are delivered in SCSRSCTD                 MD055681
+      * what is non core is the old SCSARZPD, these are the ones to be added in BTD         MD055681
+      * set OLDFILE to SCSARZPD                                                             MD055681
+     C                   eval      OLDFILE_S = OLDFILE                                      MD055681
+     C                   eval      OSCHEMA_S = OSCHEMA                                      MD055681
+     C                   if        DDSFILE = 'SCSRSCTD'                                     MD055681
+     C                   eval      OLDFILE = 'SCSARZPD'                                     MD055681
+     C                   eval      OSCHEMA = %SUBST(OSCHEMA:1:2) + 'DMLIB'                  MD055681
+     C                   endif                                                              MD055681
+                                                                                            MD055681
      C                   eval      TotRow = 0
      C                   eval      First = 'Y'
      C                   eval      PINSERT = *BLANKS
@@ -323,14 +345,26 @@
      C                   DOW       SQLCODE = 0
 
      C                   IF        %SUBST(X_Field:3:4) <> 'MODE'
+     C                             and %SUBST(X_Field:1:4) <> 'MODE'                        MD055681
      C                   IF        First = 'Y'
       ** Get until the fieldadd to the end of the table.
      C                   eval      PINSERTB = %trimr(PINSERTB) + X_Field
      C                   eval      PSELECTB = %trimr(PSELECTB) + 'A.' + X_Field
      C                   eval      First = 'N'
      C                   ELSE
+     C                   IF        X_Field = 'AXPROT'                                       MD055681
+     C                   eval      PINSERTB = %trimr(PINSERTB) + ',' + X_Field              MD055681
+     C                   eval      PSELECTB = %trimr(PSELECTB) + ', ' + '''Y'''             MD055681
+     C                   else                                                               MD055681
+      * for ENABLD field                                                                    MD055681
+     C                   IF        X_Field = 'ENABLD'                                       MD055681
+     C                   eval      PINSERTB = %trimr(PINSERTB) + ',' + X_Field              MD055681
+     C                   eval      PSELECTB = %trimr(PSELECTB) + ', ' + '''E'''             MD055681
+     C                   else                                                               MD055681
      C                   eval      PINSERTB = %trimr(PINSERTB) + ',' + X_Field
      C                   eval      PSELECTB = %trimr(PSELECTB) + ',A.' + X_Field
+     C                   ENDIF                                                              MD055681
+     C                   ENDIF                                                              MD055681
      C                   ENDIF
      C                   else
      C                   eval      PINSERTB = %trimr(PINSERTB) + ',' + X_Field
@@ -460,6 +494,8 @@
      C     X_Field       SCAN      KeyFld                                 99
      C                   IF        *IN99  = '0'
      C                             and %SUBST(X_Field:3:4) <> 'MODE'
+     C                             and %SUBST(X_Field:1:4) <> 'MODE'                        MD055681
+     C                             and X_Field <> 'ENABLD'                                  MD055681
      C                   IF        First = 'Y'
      C                   eval      PINSERTX = %trimr(PINSERTX) + 'B.' + X_Field
      C                   eval      PSELECTX = %trimr(PSELECTX) + 'A.' + X_Field
@@ -534,3 +570,127 @@
       *
       *****************************************************************
       /EJECT
+      *****************************************************************                     MD055681
+                                                                                            MD055681
+      * SR_SAREPD - Special process to migrate disabled features                            MD055681
+                                                                                            MD055681
+      *****************************************************************                     MD055681
+     C     SR_SAREPD     BEGSR                                                              MD055681
+                                                                                            MD055681
+                                                                                            MD055681
+     C                   eval      OLDFILE_S = OLDFILE                                      MD055681
+     C                   eval      OSCHEMA_S = OSCHEMA                                      MD055681
+     C                   if        DDSFILE = 'SCSRDCTD'                                     MD055681
+     C                   eval      OLDFILE = 'SCSAREPD'                                     MD055681
+     C                   eval      OSCHEMA = %SUBST(OSCHEMA:1:2) + 'DMLIB'                  MD055681
+     C                   endif                                                              MD055681
+     C                   if        DDSFILE = 'GPSRDCTD'                                     MD055681
+     C                   eval      OLDFILE = 'GPSAREPD'                                     MD055681
+     C                   eval      OSCHEMA = %SUBST(OSCHEMA:1:2) + 'GMLIB'                  MD055681
+     C                   endif                                                              MD055681
+                                                                                            MD055681
+     C                   eval      TotRow = 0                                               MD055681
+     C                   eval      First = 'Y'                                              MD055681
+     C                   eval      PINSERT = *BLANKS                                        MD055681
+     C                   eval      PSELECT = *BLANKS                                        MD055681
+      ** Call program to produce file field description outfile of  file.                   MD055681
+     C                   EVAL      OutFile = 'UDFOLD'                                       MD055681
+     C                   EVAL      O_File = TABLEB                                          MD055681
+     C                   EVAL      O_Lib = SCHEMAM                                          MD055681
+     C                   EXSR      BldOutFile                                               MD055681
+                                                                                            MD055681
+     C/exec SQL                                                                             MD055681
+     C+ declare GetFieldsE cursor for                                                       MD055681
+     C+ select WHFLDI                                                                       MD055681
+     C+ from UDFOLD                                                                         MD055681
+     C/end-exec                                                                             MD055681
+      *                                                                                     MD055681
+     C/exec SQL                                                                             MD055681
+     C+ open GetFieldsE                                                                     MD055681
+     C/end-exec                                                                             MD055681
+      *                                                                                     MD055681
+     C/exec SQL                                                                             MD055681
+     C+ fetch next                                                                          MD055681
+     C+ from GetFieldsE                                                                     MD055681
+     C+ into :X_Field                                                                       MD055681
+     C/end-exec                                                                             MD055681
+                                                                                            MD055681
+     C                   eval      PINSERTB = *BLANKS                                       MD055681
+     C                   eval      PSELECTB = *BLANKS                                       MD055681
+                                                                                            MD055681
+     C                   DOW       SQLCODE = 0                                              MD055681
+                                                                                            MD055681
+     C                   IF        %SUBST(X_Field:3:4) <> 'MODE'                            MD055681
+     C                             and %SUBST(X_Field:1:4) <> 'MODE'                        MD055681
+     C                   IF        First = 'Y'                                              MD055681
+      ** Get until the fieldadd to the end of the table.                                    MD055681
+     C                   eval      PINSERTB = %trimr(PINSERTB) + X_Field                    MD055681
+     C                   eval      PSELECTB = %trimr(PSELECTB) + 'A.' + X_Field             MD055681
+     C                   eval      First = 'N'                                              MD055681
+     C                   ELSE                                                               MD055681
+     C                   IF        X_Field = 'AXPROT'                                       MD055681
+     C                   eval      PINSERTB = %trimr(PINSERTB) + ',' + X_Field              MD055681
+     C                   eval      PSELECTB = %trimr(PSELECTB) + ', ' + '''Y'''             MD055681
+     C                   else                                                               MD055681
+      * for ENABLD field, those will be disabled                                            MD055681
+     C                   IF        X_Field = 'ENABLD'                                       MD055681
+     C                   eval      PINSERTB = %trimr(PINSERTB) + ',' + X_Field              MD055681
+     C                   eval      PSELECTB = %trimr(PSELECTB) + ', ' + '''D'''             MD055681
+     C                   else                                                               MD055681
+     C                   eval      PINSERTB = %trimr(PINSERTB) + ',' + X_Field              MD055681
+     C                   eval      PSELECTB = %trimr(PSELECTB) + ',A.' + X_Field            MD055681
+     C                   ENDIF                                                              MD055681
+     C                   ENDIF                                                              MD055681
+     C                   ENDIF                                                              MD055681
+     C                   else                                                               MD055681
+     C                   eval      PINSERTB = %trimr(PINSERTB) + ',' + X_Field              MD055681
+     C                   eval      PSELECTB = %trimr(PSELECTB) + ', ' + '''B'''             MD055681
+     C                   Endif                                                              MD055681
+      *                                                                                     MD055681
+     C/exec SQL                                                                             MD055681
+     C+ fetch next                                                                          MD055681
+     C+ from GetFieldsE                                                                     MD055681
+     C+ into :X_Field                                                                       MD055681
+     C/end-exec                                                                             MD055681
+      *                                                                                     MD055681
+     C                   ENDDO                                                              MD055681
+      *                                                                                     MD055681
+     C/exec SQL                                                                             MD055681
+     C+ close GetFieldsE                                                                    MD055681
+     C/end-exec                                                                             MD055681
+                                                                                            MD055681
+     C                   eval      SQLDynStmt = *Blanks                                     MD055681
+     C                   eval      SQLDynStmt = 'insert into ' +                            MD055681
+     C                             %trimr(SCHEMAM) + '/' + TABLEB +                         MD055681
+     C                             ' (select ' +                                            MD055681
+     C                             %trimr(PSELECTB) + ' from ' +                            MD055681
+     C                             %trimr(OSCHEMA) + '/' + OLDFILE +                        MD055681
+     C                             ' A where not exists (select * from ' +                  MD055681
+     C                             %trimr(SCHEMAT) + '/' + DDSFILE +                        MD055681
+     C                             ' B ' + %trimr(WHEREK) + '))'                            MD055681
+                                                                                            MD055681
+     C/EXEC SQL                                                                             MD055681
+     C+ prepare DynSQLStmnt                                                                 MD055681
+     C+ from :SQLDynStmt                                                                    MD055681
+     C/END-EXEC                                                                             MD055681
+                                                                                            MD055681
+     C/exec SQL                                                                             MD055681
+     C+ execute DynSQLStmnt                                                                 MD055681
+     C/end-exec                                                                             MD055681
+                                                                                            MD055681
+     C/EXEC SQL                                                                             MD055681
+     C+ get diagnostics :TotRow  = ROW_COUNT                                                MD055681
+     C/END-EXEC                                                                             MD055681
+                                                                                            MD055681
+     C                   If        SQLCode <> 0                                             MD055681
+     C                             and SQLCode <> 100                                       MD055681
+     C                   eval      ERROR = '*Error'                                         MD055681
+     C                   Return                                                             MD055681
+     C                   Endif                                                              MD055681
+                                                                                            MD055681
+     C                   eval      OLDFILE = OLDFILE_S                                      MD055681
+     C                   eval      OSCHEMA = OSCHEMA_S                                      MD055681
+                                                                                            MD055681
+     C                   ENDSR                                                              MD055681
+                                                                                            MD055681
+      *****************************************************************                     MD055681

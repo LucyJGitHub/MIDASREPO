@@ -26,8 +26,9 @@
       *================================================================
      F*****************************************************************
      F*                                                               *
-      *  Last Amend No. MD055265           Date 10Feb20               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD055681           Date 31Jul20               *
+      *  Prev Amend No. MD055265           Date 10Feb20               *
+      *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -46,6 +47,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD055265 - Deliverable Data Split for Report Control Facility*
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -130,7 +132,8 @@
      D FCREPT        E DS                  EXTNAME(FCREPJW1)                                MD055265
      D FCREPTL       E DS                  EXTNAME(FCREPJW0)                                MD055265
      D                                     PREFIX(L)                                        MD055265
-     D NullInds2       s              5i 0 dim(19)                                          MD055265
+     D*NullInds2       s              5i 0 dim(19)                                 MD055265 MD055681
+     D NullInds2       s              5i 0 dim(20)                                          MD055681
                                                                                             MD055265
      D RUNDAT          DS
      D  RUNA                   1      7
@@ -162,10 +165,13 @@
      D  J1COTT                 1     10                                         S01407
      D  J1CSEQ                11     15                                         S01407
      D FCRCOM        E DS                  EXTNAME(FCRCOJW1)                                MD055265
-     D  XSARD        E                     EXTFLD(SARD)                                     MD055265
+     D**XSARD***     E                     EXTFLD(SARD)                            MD055265 MD055681
+     D  XSARN        E                     EXTFLD(SARN)                                     MD055681
+     D  XENABLD      E                     EXTFLD(ENABLD)                                   MD055681
      D FCRCOML       E DS                  EXTNAME(FCRCOJW0)                                MD055265
      D                                     PREFIX(L)                                        MD055265
-     D NullInds        s              5i 0 dim(12)                                          MD055265
+     D*NullInds*       s              5i 0 dim(12)                                 MD055265 MD055681
+     D NullInds        s              5i 0 dim(13)                                          MD055681
       /EJECT
      C********************************************************************S01314
       *                                                                   S01314

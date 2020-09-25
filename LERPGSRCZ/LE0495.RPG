@@ -18,8 +18,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR674226           Date 04Dec19               *
-      *  Prev Amend No. 246586             Date 08Jun18               *
+      *  Last Amend No. MD027067           Date 27May14               *
+      *  Prev Amend No. MD024726           Date 24Apr14               *
+      *                 AR674226           Date 04Dec19               *
+      *                 246586             Date 08Jun18               *
       *                 MD050131           Date 08Jun18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD044070           Date 30Jun17               *
@@ -95,6 +97,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD027067 - Recompile due to changes in LEFCAMLD.             *
+      *  MD024726 - Revolving credit status 'Yes',facility amount     *
+      *             decreased. Introduced indicator variable to       *
+      *             determine revolving credit indicator amendments.  *
       *  AR674226 - Manual transaction reached 999. Increase the size *
       *             of utilisation sequence no. and transaction       *
       *             sequence. Recompile. (Child: AR674227)            *
@@ -245,6 +251,9 @@
      FLETRAGL0IF  E           K        DISK         KINFSR *PSSR                              CLE041
      FPEFCLFL1IF  E           K        DISK         KINFSR *PSSR          128287
      F            FCLTYFMF                          KRENAMEPEFCLFLF       128287
+      ** Facility amendments file                                                           MD024726
+      *                                                                                     MD024726
+     FLEFCAMLDIF  E           K        DISK         KINFSR *PSSR                            MD024726
      FHISACT  O   E                    DISK         KINFSR *PSSR
      FLE0495AUO   E                    PRINTER
      F                                              KINFDS SPOOLU
@@ -262,6 +271,7 @@
       *   45  - Display REVERSAL                                      *
       *   50  - Overflow Indicator - LE0495P1                         *
       *   60  - Read Indicator                                        *
+      *   67  - Chain to LEFCAMLD                                     *                     MD024726
       *   71  - Lokup Indicator                                       *
       *   72  - Lokup Indicator                                       *
       *   80  - Chain Indicator                                       *
@@ -836,6 +846,18 @@
      C                     MOVELWKEY1     DBKEY            ***************
      C                     EXSR *PSSR
      C                     ENDIF
+      *                                                                                     MD024726
+      ** Check if there is a recent change in revolving credit                              MD024726
+      ** indicator                                                                          MD024726
+      *                                                                                     MD024726
+     C                     MOVE 'N'       W2RVCR  1                                         MD024726
+     C           K#KY01    CHAINLEFCAMLD             67                                     MD024726
+     C           *IN67     IFEQ '0'                                                         MD024726
+     C           AFATP     ANDEQ'RC'                                                        MD024726
+     C           ARVCR     ANDEQ'Y'                                                         MD024726
+     C           AVLDT     ANDLEBJRDNB                                                      MD024726
+     C                     MOVE 'Y'       W2RVCR                                            MD024726
+     C                     ENDIF                                                            MD024726
       *
       **  Record id is not 'R'
       *
@@ -1847,6 +1869,11 @@
      C                     ENDIF
       *
      C                     MOVE *BLANKS   REDAMT  1
+      *                                                                                     MD024726
+     C           TRCA      IFEQ 'CA'                                                        MD024726
+     C           RVCR      ANDNE'T'                                                         MD024726
+     C                     MOVELRVCR      W2RVCR                                            MD024726
+     C                     ENDIF                                                            MD024726
       *
      C           HADATE    IFLT AGRDNB
       *
@@ -1886,13 +1913,16 @@
       *
      C           RVCR      IFEQ 'N'
      C           CLE014    ANDEQ'N'                                       CLE014
+     C           W2RVCR    ANDEQ'N'                                                         MD024726
      C           RVCR      OREQ 'N'                                       CLE014
      C********** WCAUPD    ANDEQ'Y'                                       CLE014              204652
      C           CLE014    ANDEQ'Y'                                       CLE014
+     C           W2RVCR    ANDEQ'N'                                                         MD024726
      C           RVCR      OREQ 'T'                                       CLE014
      C           WRVCR     ANDEQ'N'                                       CLE014
      C           WCAUPD    ANDEQ'Y'                                       CLE014
      C           CLE014    ANDEQ'Y'                                       CLE014
+     C           W2RVCR    ANDEQ'N'                                                         MD024726
      C                     MOVE 'Y'       REDAMT
      C                     ENDIF
      C                     ENDIF

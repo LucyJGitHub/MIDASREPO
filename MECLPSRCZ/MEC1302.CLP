@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR545296           Date 19Aug14              */
+/*       Last Amend No. AR918980           Date 15Mar12              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      AR545296           Date 19Aug14              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -24,6 +25,10 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       AR918980 - When STP job restarted, incorrect data queue     */
+/*                  allocation. Correct data queue name on clear.    */
+/*                  Need to deallocate MEFTIMM *DTAQ.                */
+/*                  (Child: AR922604)                                */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR545296 - STP job ends after running through items to be   */
 /*                processed. The DTAQ to be cleared is invalid.      */
@@ -390,6 +395,11 @@ ALCOBJ:                                                                         
              CALL       PGM(QCLRDTAQ) PARM('MEFTIMM' '*LIBL ')                          /*AR545296*/
              CHGDTAARA  DTAARA(MEDTA (191 26)) VALUE(' ')
 /**/
+              DLCOBJ     OBJ((MEFTIMM *DTAQ *EXCL))                                     /*AR918980*/
+              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                                 /*AR918980*/
+              DLCOBJ     OBJ((MEFTIMM *DTAQ *SHRUPD))                                   /*AR918980*/
+              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                                 /*AR918980*/
+/**/                                                                                    /*AR918980*/
              ENDDO
 /* End 'End' */
              GOTO       CMDLBL(ENDCLPGM)

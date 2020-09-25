@@ -29,8 +29,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD041126           Date 11May20               *
-      *  Prev Amend No. CSD102             Date 08Jan19               *
+      *  Last Amend No. AR989496           Date 13Jun12               *
+      *  Prev Amend No. MD041126           Date 11May20               *
+      *                 AR989496           Date 13Jun12               *
+      *                 CSD102             Date 08Jan19               *
       *                 MD048231           Date 17Jan18               *
       *                 MD046248           Date 27Oct17               *
       *                 AR214111           Date 26Jun15               *
@@ -81,6 +83,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR989496 - Remove redundant code related to dtaara/MEDTA     *
+      *           - Causes DBase Error in MS_MED2MID job              *
+      *           - (Child:AR989497)                                  *
       *  MD041126 - Certify WebSphere MQ 9 with Midas product line    *
       *           - Applied for MD055868.                             *
       *  CSD102 - Password Length Extension (Recompile)               *
@@ -1469,12 +1474,12 @@
      C                   callb     'MEC1024M'                           9090
      C                   parm      *blanks       p@rtcd            7
       *
-      ** Update received network information
-     C     *dtaara       define                  medta
-     C     *lock         in        medta
-     C                   movel     MOR           DAMOR
-     C                   movel     MIR           DAMIR
-     C                   out       medta
+      ***Update*received*network*information                                                AR989496
+     C******dtaara       define                  medta                                      AR989496
+     C******lock         in        medta                                                    AR989496
+     C**********         movel     MOR           DAMOR                                      AR989496
+     C**********         movel     MIR           DAMIR                                      AR989496
+     C**********         out       medta
       *
      C                   endif
       *

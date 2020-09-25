@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD051347           Date 12Mar20               *
-      *  Prev Amend No. AR819229           Date 10Dec18               *       
+      *  Last Amend No. AR923246           Date 15Mar12               *
+      *  Prev Amend No. MD051347           Date 12Mar20               *
+      *                 AR819229           Date 10Dec18               *
       *                 AR932652           Date 06Aug13               *
       *                 AR927395           Date 05Aug13               *
       *                 252101             Date 06Nov19               *
@@ -423,13 +424,16 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR923246 - Job CALCMGR_xx failing due to data mapping error. *
+      *             Prevent data corruption for MLNR field on MCLONCL *
+      *             when written. (Child: AR923248)                   *
       *  MD051347 - Interest on a loan taken at the wrong date. Also  *
       *             update value of IBDT to zero if NIPD is less than *
       *             or equal to rundate. Additional fix to AR819229.  *
       *  AR819229 - Interest on a loan taken at the wrong date.       *
       *             Update value of IBDT with NIPD on SR/ROLLOV and   *
       *             SR/MROLL. (Child: AR823033)                       *
-      *           - Applied for MD051347                              *       
+      *           - Applied for MD051347                              *
       *  AR932652 - Error on withholding tax accrual when past due    *
       *             interest is manually repaid. Reverse fix BUG12852.*
       *             (Child: AR932655)                                 *
@@ -2796,6 +2800,7 @@ L118 I                             P   72   77 7RTSPL
      I                                271  273  ORBR                            S01117
      I                                274  277  PRFC                            S01117
      I                                278  280  FCLB                            S01117
+     I                                281  286  MLNR                                        AR923246
 0162 I                                287  287  BTIN
      I/COPY WNCPYSRC,LE0450I003
 0163 I                                288  289 0BLDY
@@ -21717,6 +21722,7 @@ C    C                   ENDIF                                                  
 3427 O                       ORBR               273                             S10227
 3427 O                       PRFC               277                             S10227
 3427 O                       FCLB               280                             S10227
+     O                       MLNR               286                                         AR923246
 3427 O                       BTIN               287                             S10227
      O/COPY WNCPYSRC,LE0450O004
 3427 O                       BLDY               289                             S10227

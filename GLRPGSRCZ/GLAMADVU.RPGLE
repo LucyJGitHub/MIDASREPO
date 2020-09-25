@@ -34,8 +34,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. 260405             Date 04Apr20               *      
-      *  Prev Amend No. MD055514           Date 06Apr20               *
+      *  Last Amend No. AR979910           Date 07Jun12               *
+      *  Prev Amend No. 260405             Date 04Apr20               *      
+      *                 MD055514           Date 06Apr20               *
       *                 MD055212           Date 14Feb20               *
       *                 MD054028           Date 05Sep19               *
       *                 MD041837           Date 16Jun19               *
@@ -143,6 +144,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR979910 - MMM1067 on Amend of existing Account. Added a     *
+      *             constant timestamp value constant for validation  *
+      *             indicating that no change has occured yet.        *
+      *             (Child:AR979911)                                  *
       *  260405 - BRT Participation Date of Birth field is missing.   *
       *           Upgrade fix 235425. Recompile over changed SDCBRTPD.*
       *         - Applied for MD055446.                               *      
@@ -875,6 +880,8 @@
       ** Introduced by CER048                                                               BUG22742
       *                                                                                     BUG22742
      D CER048          S              1                                                     BUG22742
+      ** Timestamp default value                                                            AR979910
+     D WConstantTS     S             26A   INZ('0001-01-01-00.00.00.000000')                AR979910
       *                                                                                     BUG22742
      D/COPY OFCPYSRCZ,CRE101_039                                                              CRE101
      D/COPY WNCPYSRC,GLAMADVD01
@@ -1334,6 +1341,7 @@
      C                   MOVEL     TMST          TimeStamp        26                          245648
       *                                                                                       CER001
      C     @TimeStamp    IFNE      *BLANKS                                                  BUG23484
+     C     TimeStamp     AndNe     WConstantTS                                              AR979910
       *                                                                                     BUG23484
      C     @TimeStamp    IFNE      TimeStamp                                                  245648
      C                   ADD       1             Ix                                           245648

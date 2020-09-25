@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD055842           Date 02Jun20               *
-      *  Prev Amend No. CMG008             Date 20Feb20               *
+      *  Last Amend No. AR898442           Date 24Feb12               *
+      *  Prev Amend No. MD055842           Date 02Jun20               *
+      *                 CMG008             Date 20Feb20               *
       *                 CMG006             Date 15Oct19               *
       *                 MD052633           Date 08Oct19               *
       *                 MD046248           Date 27Oct17               *
@@ -81,6 +82,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR898442 - MT940 nacked if narrative starts with a /         *
+      *             (Child: AR898443)                                 *
       *  MD055842 - Second tag 86 not translated to To Characters.    *
       *  CMG008 - SWIFT Character Translation Table (Recompile)       *
       *  CMG006 - MT940, 941, 942 & 950 Field 25 Account              *
@@ -1351,6 +1354,13 @@
      C                   Movel     X_MGSFD8      Subfld8
 
       *    Subfld 9 = Supplementary Details
+     C                   Movel     X_MGSFD9      Wrk1              1                        AR898442
+     C     Wrk1          ifeq      '/'                                                      AR898442
+     C     Wrk1          oreq      '-'                                                      AR898442
+     C                   Move      X_MGSFD9      Wrk33            33                        AR898442
+     C                   Move      *Blanks       X_MGSFD9                                   AR898442
+     C                   Movel     Wrk33         X_MGSFD9                                   AR898442
+     C                   Endif                                                              AR898442
      C                   Movel     X_MGSFD9      Subfld9
      C/COPY WNCPYSRC,MGH00024
       *                                                                                       CER030

@@ -20,8 +20,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR676213           Date 19Nov10               *
+      *  Last Amend No. AR928996A          Date 03May12               *
+      *  Prev Amend No. AR928996           Date 27Mar12               *
+      *                 MD046248           Date 27Oct17               *
+      *                 AR676213           Date 19Nov10               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -40,6 +42,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR928996A- Data truncation error. Amended PDATA and PDAT2    *
+      *             data structure field to have the correct length.  *
+      *             (Child: AR928997A) (Recompile)                    *
+      *  AR928996 - Data lost due to rate field :36: being truncated. *
+      *             (Child: AR928997) (Recompile)                     *
       *  MD046248 - Finastra Rebranding                               *
       *  AR676213 - Incorrect definition of CLGLAI field (Recompile)  *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -59,7 +66,7 @@
       *  CRE008 - Cash Management                                     *
       *                                                               *
       *****************************************************************
- 
+
      FGLPSTTL0  UF A E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(E_)
      F                                     COMMIT
@@ -78,7 +85,7 @@
      F                                     PREFIX(O_)                           216421
      F                                     COMMIT                               215901
       ********************************************************************
- 
+
      D I_XRFN          S             10    DIM(6)
       *
       * Standard D Specifications
@@ -87,7 +94,7 @@
      D/COPY ZACPYSRC,PSDS
       * Incoming Message Data Structure
      D/COPY MECPYSRC,ME1100_ILE
- 
+
      D O_ENTRY       E DS                  EXTNAME(APOSTPD)
      D                                     PREFIX(E_)
       * Output Entry
@@ -117,25 +124,25 @@
       ** Second DS for access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First  DS for access programs
- 
+
      D X               S              3  0
      D Y               S              3  0
- 
+
      D*@ChgACNO********S             10  0                                      215901
      D*@ChgACSC********S              2                                         215901
      D*@ChgPRFC********S              4                                         215901
      D*@ChgATYP********S              1                                         215901
- 
+
      D @ChIACNO        S             10  0
      D @ChIACSC        S              2
      D @ChIPRFC        S              4
      D @ChIATYP        S              1
- 
+
      D @ACNO           S             10  0
      D @PRFC           S              4
      D @ACSC           S              2
      D @ATYP           S              1
- 
+
      D WPSTA           S             15
      D @PSTA           S             15  0
      D XPSTA           S             15  0
@@ -158,7 +165,7 @@
      D WVDATD          S              6
      D KXRFI           S              3
      D KXRFN           S             10  0
- 
+
      D*@TOPAC***       DS            18                                                       CGL029
      D @TOPAC          DS            24                                                       CGL029
      D  @BRCA                  1      3
@@ -169,7 +176,7 @@
      D**@ACSQ***              17     18  0                                                    CGL029
      D  @ACCD                 13     22  0                                                    CGL029
      D  @ACSQ                 23     24  0                                                    CGL029
- 
+
      D*@ChgAcct*       DS            18                                                       CGL029
      D @ChgAcct        DS            24                                                       CGL029
      D  @ChgBRCA               1      3
@@ -202,45 +209,45 @@
      D**@ChIACSQ              17     18  0                                                    CGL029
      D  @ChIACCD              13     22  0                                                    CGL029
      D  @ChIACSQ              23     24  0                                                    CGL029
- 
+
      D WVDAT           DS             6
      D  YY                     1      2
      D  MM                     3      4
      D  DD                     5      6
- 
+
       *****************************************************************
- 
+
      C                   EXSR      SRINIT
- 
+
      C                   EXSR      SRPROC
- 
+
      C                   RETURN
- 
+
       ********************************************************************
       * Initial Processing
       ********************************************************************
- 
+
      C     SRINIT        Begsr
- 
+
      C     *ENTRY        Plist
- 
+
       * Return code
      C                   Parm                    P@RTCD            7
      C                   Parm                    PHEAD
      C                   Parm                    PDATA
       * Message information
      C                   Parm                    P@INFO          256
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*DBERR  '    @RTCD             7
      C                   PARM      '*FIRST  '    @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C                   CALLB     'AOCMANR0'
      C                   PARM      '*DBERR  '    @RTCD             7
      C                   PARM      '*FIRST  '    @OPTN             7
      C     SDCMAN        PARM      SDCMAN        DSSDY
- 
+
       * Key lists
      C
      C     KAccnt        Klist
@@ -256,61 +263,61 @@
      C************       Kfld                    @ChgACCD                       215901
      C************       Kfld                    @ChgACSQ                       215901
      C************       Kfld                    @ChgBRCA                       215901
- 
+
      C     KReicsi       Klist
      C                   Kfld                    IDHIER
      C                   Kfld                    IDLINK
      C                   Kfld                    IDPRCD
      C                   Kfld                    IDSNUM
- 
+
      C     KGlpst        Klist
      C                   Kfld                    KXRFI
      C                   Kfld                    KXRFN
- 
+
       * Count of entries
       * Extension Ref. Nos.
      C                   Z-ADD     0             C                 2 0
      C                   MOVEL     *BLANK        I_XRFN
- 
+
      C                   Endsr
       ********************************************************************
       * SRPROC - Main Processing
       ********************************************************************
      C     SRPROC        Begsr
- 
+
       *  Get heirarchy details
      C                   Exsr      GetHierDet
- 
+
       *  Get top a/c details
      C                   Exsr      GetTopAcct
- 
+
       *  Get relevant MT103 Details
      C                   Exsr      GetMT103Det
- 
+
       *  Get request MT101 details from REICSDPD
      C                   Exsr      GetMT101Det
- 
+
       *  Update Posting entries in GLPSTTPD and GLPSTZSPD
- 
+
      C                   Exsr      Upd_Post
- 
+
       * Update REICSDPD record to flag the MT101 request as matched.
- 
+
      C                   Exsr      Upd_ICS
- 
- 
+
+
      C**********         ADD       1             C                              215901
      C**********         MOVEL     O_XRFN        I_XRFN(C)                      215901
       **********                                                                215901
       **Write*Charges entries only if Receiver's charge is given                215901
- 
+
      C                   If        @RCHGA <> 0
- 
+
      C***********        If        ZDCAC3 <> *blank                             213569
      C***********        Exsr      GetChgAcDet                                  215901
      C***********        Endif                                                  213569
      C                   Exsr      GetChIAcDet
- 
+
       **Get*Next*Available Ref. No.                                             215901
       ***********                                                               215901
      C***********        EXSR      Get_Apna                                     215901
@@ -321,22 +328,22 @@
       ***********                                                               215901
      C***********        ADD       1             C                              215901
      C***********        MOVEL     O_XRFN        I_XRFN(C)                      215901
- 
+
       * Get Next Available Ref. No.
      C                   EXSR      Get_Apna
- 
+
       * Write Credit Charge Entry (posted to charge income)
      C                   Exsr      Wrt_CChgExtsn
      C                   Exsr      Wrt_CChgEntry
                                                                                 215901
       * Write Item Record to REICSIPD                                           215901
      C                   Exsr      Wrt_ICSI                                     215901
- 
+
      C                   ADD       1             C
      C                   MOVEL     O_XRFN        I_XRFN(C)
- 
+
      C                   Endif
- 
+
      C                   Endsr
       *******************************************************************
       * GetMT103Det - Get MT103 Message Details                          *
@@ -344,7 +351,7 @@
      C     GetMT103Det   BEGSR
       *
       * The MT103 message details are from DS/PDATA, PHEAD, P@INFO
- 
+
       *  Retrieve Message Input Reference
      C                   Movel     PHMIR         WSMIR
       *  Retrieve Message Transaction Reference
@@ -385,7 +392,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   Endif
- 
+
       *  Retrieve Posting Amount
      C                   Movel     TVAMT         WPSTA
      C                   Eval      X=%scan(',' : WPSTA)
@@ -415,7 +422,7 @@
       *
      C                   Move      ZAFLD         @PSTA
      C                   Endif
- 
+
       *  Retrieve Receiver's Charge amount, if available
      C                   Z-add     0             @RCHGA
      C                   Eval      WRCHGA = %subst(P71G : 28 : 15)
@@ -450,11 +457,11 @@
       *  If Receiver's Charge is specified, this should be deducted from
       *  posting amount.
      C                   Sub       @RCHGA        @PSTA
- 
+
       *  P70 = XXX/account number/customer reference
      C                   Movel     P70           DSTRAN
      C                   Movel     TMLIN         @DETP
- 
+
       *  Retrieve Details of Charges
      C                   Movel     P71           DSTRAN
      C                   Movel     TMLIN         @DETC
@@ -474,7 +481,7 @@
      C                   Eval      XTRNO  = %subst(P@INFO : X + 5 : Y - X - 5)
      C                   Endif
      C                   Endif
- 
+
       * If transaction number not retrieved, error
      C                   IF        XTRNO = *blank
      C     *LOCK         IN        LDA
@@ -484,7 +491,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   Endif
- 
+
       * Access REICSDL3 using TRNO
      C     XTRNO         Chain     REICSDL3                           60
      C                   IF        *IN60 = *ON
@@ -516,7 +523,7 @@
      C                   Eval      @TOPAC = %subst(P@INFO : X + 5 : Y - X - 5)
      C                   Endif
      C                   Endif
- 
+
       * If top account not retrieved, error
      C                   IF        @TOPAC = *blank
      C     *LOCK         IN        LDA
@@ -526,9 +533,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   Endif
- 
+
       ** Retrieve heirarchy number
- 
+
      C     KAccnt        Chain     REZSHLJ1                           50
      C                   If        *IN50 = *ON
      C     *LOCK         IN        LDA
@@ -538,9 +545,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   Endif
- 
+
       ** Access hierarchy detail group detail record
- 
+
      C                   CALLB     'RE100601'
       * Return code
       * Error Message
@@ -552,11 +559,11 @@
      C                   PARM      J_CLHIER      I_HIER            9 0
       * Hierarchy Type
      C                   PARM      'ZS'          I_HTYP            2
- 
+
      C                   PARM                    O_CMHD
      C                   PARM                    O_ZSHD
      C                   PARM                    O_GAHD
- 
+
       ** Database error if record not found
      C                   IF        X_RTCD = '*NOREC'
      C     *LOCK         IN        LDA
@@ -566,7 +573,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   Endif
- 
+
       *  Get Link details
      C                   CALLB     'RE100602'
       * Return code
@@ -593,11 +600,11 @@
      C**********         PARM      J_CLCACD      I_CACD            4 0                        CGL029
      C                   PARM      J_CLCACD      I_CACD           10 0                        CGL029
      C                   PARM      J_CLCASN      I_CASN            2 0
- 
+
      C                   PARM                    O_CMHL
      C                   PARM                    O_ZSHL
      C                   PARM                    O_GAHL
- 
+
       ** Database error if record not found
      C                   IF        X_RTCD = '*NOREC'
      C     *LOCK         IN        LDA
@@ -607,15 +614,15 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   Endif
- 
+
      C                   ENDSR
       ********************************************************************
       * GetTopAcct - Get Top Account Details                             *
       ********************************************************************
      C     GetTopAcct    BEGSR
- 
+
       * Access account
- 
+
      C     Kaccnt        Chain     ACCNTABF                           60
      C                   IF        *IN60 = *ON  Or
      C                             RECI <> 'D'
@@ -629,9 +636,9 @@
       *
      C                   Eval      @ACNO = ACNO
      C                   Eval      @PRFC = PRFC
- 
+
       * Access account code details
- 
+
      C                   MOVEL     @ACCD         X_ACCD
      C                   CALLB     'ZAACSACOD'
      C**********         PARM                    X_ACCD            4                          CGL029
@@ -660,7 +667,7 @@
       *  First, access REICSIPD (there should be 2 records
      C     KReicsi       Setll     REICSIL1
      C     KReicsi       READE     REICSIL1                               60
- 
+
      C                   DOW       *IN60 = *OFF
      C
       *  Update GLPSTTPD
@@ -775,22 +782,22 @@
       *  Get_Apna - Get next available reference number                  *
       ********************************************************************
      C     Get_Apna      Begsr
- 
+
       * Get next number
      C                   CALLB     'ZAGETAPNA'
- 
+
       * Return code
       * Error Message
      C                   PARM      *BLANK        X_RTCD
      C                   PARM      *BLANK        X_ERMS
- 
+
       * INPUTS
       * Ext.File Ref.ID
      C                   PARM      'ZS '         I_XRFI            3
       * OUTPUTS
       * Ext.File Ref.No.
      C                   PARM      *ZERO         O_XRFN           10 0
- 
+
      C     X_RTCD        IFEQ      '*ERROR'
      C     *LOCK         IN        LDA
      C                   Z-ADD     10            DBASE                            * * * * * * *
@@ -799,13 +806,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   Endif
- 
+
      C                   ENDSR
       *******************************************************************
       * GetChgAcDet  - Get Charge Account Details
       ********************************************************************
      C     GetChgAcDet   BEGSR
- 
+
      C***********        Movel     ZDCAC3        @ChgAcct                213569 215901
      C* First, get nostro of top account                                 213569 215901
      C***********        CALL      'AONOSTR0'                            213569 215901
@@ -1157,7 +1164,7 @@
       * Wrt_CChgExtsn  - Write credit charge extension record to GLPSTZSPD
       ********************************************************************
      C     Wrt_CChgExtsn Begsr
- 
+
       * Ext.File Ref.ID
      C                   MOVEL     I_XRFI        AZXRFI
       * Ext.File Ref.No.
@@ -1169,7 +1176,7 @@
      C                   MOVEL     @ChIACCD      AZAACD
      C                   MOVEL     @ChIACSQ      AZAASN
      C                   MOVEL     @ChIACNO      AZARNO
- 
+
       * A/c is source or destination
      C                   MOVEL     *Blank        AZASDA
       * Contra posting amount
@@ -1208,17 +1215,17 @@
      C                   Eval      AZF865 = *blank
       * MT94X Field 86 - 6
      C                   Eval      AZF866 = *blank
- 
+
      C                   WRITE     GLAPZSD0
- 
+
      C                   Endsr
      C********************************************************************
       * Wrt_CChgEntry - Write credit charge posting entry to  GLPSTTPD
       ********************************************************************
      C     Wrt_CChgEntry Begsr
- 
+
       * Clear output entry
- 
+
      C                   CLEAR                   O_ENTRY
       * Record ID
      C                   MOVEL     'P'           E_RECI
@@ -1245,7 +1252,7 @@
      C                   MOVE      'GE-CX'       E_SPOS
       * Branch
      C                   MOVEL     @ChIBRCA      E_BRCA
- 
+
       * Retail indicator
       * A/c type
      C                   Z-ADD     0             E_RIND
@@ -1266,18 +1273,18 @@
      C                   Z-ADD     AZXRFN        E_XRFN
       * Transaction Sub-type
      C                   MOVEL     CLLEVL        E_TRST
- 
+
      C                   WRITE     APOSTPDF
- 
+
      C                   Endsr
      C********************************************************************
       * Shp_Entry - Write Shadow Posting Entries
       ********************************************************************
      C     Shp_Entry     Begsr
- 
- 
+
+
      C                   CALLB     'RE100605'
- 
+
       * Return code
       * Error Message
      C                   PARM      *BLANK        X_RTCD
@@ -1285,7 +1292,7 @@
       * INPUTS
       * Entry
      C                   PARM                    O_ENTRY
- 
+
      C                   IF        X_RTCD = '*ERROR'
      C     *LOCK         IN        LDA
      C                   Z-ADD     14            DBASE                            * * * * * * *
@@ -1294,13 +1301,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   Endif
- 
+
      C                   Endsr
      C********************************************************************
       * Upd_ICS - Update REICSDPD record
       ********************************************************************
      C     Upd_ICS       Begsr
- 
+
       *  Shadow Posted
      C                   Movel     'Y'           IDSPTD
       *  Matched?
@@ -1308,9 +1315,9 @@
       *  Incoming Message Reference
      C                   Movel     WSMIR         IDSMIR
      C                   Movel     WSMSR         IDSMSR
- 
+
      C                   Update    REICSDD0
- 
+
      C                   Endsr
       ********************************************************************      215901
       * Write Item records                                                      215901
@@ -1338,14 +1345,14 @@
       *          This subroutine DUMPs the program just once.         *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   MOVEL     '*ERROR'      P@RTCD
      C                   DUMP
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
- 
+
      C                   ENDSR

@@ -34,8 +34,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD039577           Date 08Jul16               *
-      *  Prev Amend No. 260405             Date 04Apr20               *      
+      *  Last Amend No. FVT106             Date 20Jul20               *
+      *  Prev Amend No. MD039577           Date 08Jul16               *
+      *                 260405             Date 04Apr20               *
       *                 MD055514           Date 06Apr20               *
       *                 MD055212           Date 14Feb20               *
       *                 MD054028           Date 05Sep19               *
@@ -144,12 +145,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  FVT106 - Automatic Account Closure and Account re-opening    *
+      *           Addition of hooks: FVT106_006 to FVT106_010         *
+      *           Amendment of core hook GLH00652                     *
       *  MD039577 - Account maintenance - Account name different from *
       *  260405 - BRT Participation Date of Birth field is missing.   *
       *           Upgrade fix 235425. Recompile over changed SDCBRTPD.*
-      *         - Applied for MD055446.                               *      
+      *         - Applied for MD055446.                               *
       *  MD055514 - Not able to open a new Retail Account. Amend to   *
-      *             add check if account in REDEFD is valid.          *      
+      *             add check if account in REDEFD is valid.          *
       *  MD055212 - Remove the defaulting of values for DDBAC, DDBAD, *
       *             DDRAC, DDRAD to 'N'.                              *
       *  MD054028 - Encountered issues in MQ Testing due to XML not   *
@@ -1054,12 +1058,15 @@
      C                   EXSR      ValidateBOE                                              MD044880
                                                                                              BUG9141
      C                   WHEN         DDACTN = 'D'                                           BUG9141
+     C/COPY WNCPYSRC,FVT106_006                                                               FVT106
       ***Processing*for*Inserts                                                     BUG9141 MD024398
       *  Processing for Deletes - set up field values from file to prevent                  MD024398
       *  failures in validation                                                             MD024398
      C                   EXSR      SetupAmd                                                 MD024398
      C                   MOVEL     CurAcMast     AccnInMast                                 MD024398
+     C/COPY WNCPYSRC,FVT106_007                                                               FVT106
      C                   EVAL      DDACTN = 'D'                                             MD024398
+     C/COPY WNCPYSRC,FVT106_008                                                               FVT106
      C                   MOVEL     CurAcDebi     AccnInDebi                                 MD024398
      C                   MOVEL     CurAcCred     AccnInCred                                 MD024398
      C                   MOVEL     CurAcComm     AccnInComm                                 MD024398
@@ -2570,6 +2577,7 @@
 
       * Set Valid file field for a delete.
      C                   IF        DDACTN = 'D'
+     C/COPY WNCPYSRC,FVT106_009                                                               FVT106
      C                   EVAL      ValidAccn = AccnFilFmt
      C                   MOVEL     ExCOFilFmt    ValidExCO                                   BUG4252
      C                   MOVEL     ExPWFilFmt    ValidExPW                                   BUG4252
@@ -2606,6 +2614,7 @@
      C                   IF        CAP086 = 'Y'                                               CAP086
      C                   EVAL      V_AMAUTH = IF_AUTH                                         CAP086
      C                   ENDIF                                                                CAP086
+     C/COPY WNCPYSRC,FVT106_010                                                               FVT106
 
      C                   ENDSR
       *****************************************************************

@@ -26,8 +26,9 @@
       * Standard RPG Creation PAR - standard functions  *
      F*****************************************************************
      F*                                                               *
-      *  Last Amend No. MD056040           Date 29Jun20               (
-      *  Prev Amend No. MD055265           Date 10Feb20               *
+      *  Last Amend No. MD055681           Date 31Jul20               *
+      *  Prev Amend No. MD056040           Date 29Jun20               *
+      *                 MD055265           Date 10Feb20               *
       *                 MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -65,6 +66,7 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD055681 - Deliverable Data Split for SAR                    *
       *  MD056040 - Make description protected.(Recompiled)           *
       *  MD055265 - Deliverable Data Split for Report Control Facility*
       *  MD046248 - Finastra Rebranding                               *
@@ -188,7 +190,8 @@
      D FCREPT        E DS                  EXTNAME(FCREPJW1)                                MD055265
      D FCREPTL       E DS                  EXTNAME(FCREPJW0)                                MD055265
      D                                     PREFIX(L)                                        MD055265
-     D NullInds        s              5i 0 dim(19)                                          MD055265
+     D*NullInds*       s              5i 0 dim(19)                                 MD055265 MD055681
+     D NullInds        s              5i 0 dim(20)                                          MD055681
      D FCRSFX        E DS                  EXTNAME(FCRSFJW0)                                MD055265
       *
      D*1DBRC******DS**************************** 84                       LN0587

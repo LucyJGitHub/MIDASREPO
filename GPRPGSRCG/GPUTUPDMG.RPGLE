@@ -581,7 +581,7 @@
       ** If Close of Business is running                                                    AR920119
       *                                                                                     AR920119
      C     PHAS1         IFNE      'A'                                                      AR920119
-     C     PHAS1         ANDNE     'F'                                                      AR920119
+     C     PHAS1         ANDNE     'G'                                                      AR920119
       *                                                                                     AR920119
       ** Set 'submit job' flag to 'N'                                                       AR920119
       *                                                                                     AR920119
